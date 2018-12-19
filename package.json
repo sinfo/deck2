@@ -1,0 +1,46 @@
+{
+  "name": "deck2",
+  "version": "1.0.0",
+  "description": "Version 2 of eventdeck",
+  "engines": {
+    "node": ">=9.11.1"
+  },
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "watch": "./node_modules/.bin/nodemon",
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha",
+    "lint": "./node_modules/.bin/eslint --ext .js ."
+  },
+  "pre-commit": [
+    "lint",
+    "test"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sinfo/deck2.git"
+  },
+  "author": "SINFO",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sinfo/deck2/issues"
+  },
+  "homepage": "https://github.com/sinfo/deck2#readme",
+  "dependencies": {
+    "@sinfo/logger": "^1.0.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint": "^5.10.0",
+    "eslint-plugin-chai-friendly": "^0.4.1",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-security": "^1.4.0",
+    "eslint-plugin-standard": "^4.0.0",
+    "mocha": "^5.2.0",
+    "mongodb": "^3.1.10",
+    "nodemon": "^1.18.9",
+    "pre-commit": "^1.2.2"
+  }
+}
