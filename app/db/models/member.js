@@ -5,21 +5,11 @@ let memberSchema = mongoose.Schema({
   name: String,
   img: String,
   participations: [{
-    event: String,
-    role: String
+    event: { type: String, required: true },
+    role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
+    team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' }
   }],
-  socials: {
-    facebook: String,
-    skype: String,
-    github: String,
-    twitter: String
-  },
-  phone: String,
-  mails: {
-    sinfo: String,
-    ist: String,
-    personal: String
-  },
+  contact: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact' },
   auth: String,
   subscriptions: {
     all: Boolean,
