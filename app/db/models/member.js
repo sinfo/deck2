@@ -1,4 +1,5 @@
 let mongoose = require('mongoose')
+const config = require('../../../config')
 
 let memberSchema = mongoose.Schema({
   id: { type: String, unique: true },
@@ -6,7 +7,12 @@ let memberSchema = mongoose.Schema({
   img: String,
   participations: [{
     event: { type: String, required: true },
-    role: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
+    role: {
+      type: String,
+      enum: config.MONGO.ROLES,
+      required: true,
+      default: 'PENDING'
+    },
     team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' }
   }],
   contact: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact' },

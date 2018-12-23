@@ -28,7 +28,7 @@ module.exports = [
     method: 'GET',
     path: '/auth',
     config: {
-      auth: 'member',
+      auth: 'MEMBER',
       tags: ['api'],
       description: 'Check token validation',
       handler: async (request, h) => {

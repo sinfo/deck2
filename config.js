@@ -19,7 +19,10 @@ const config = {
   MONGO: {
     DB: process.env.DECK_MONGO_DB || 'deck',
     TEST: process.env.DECK_MONGO_DB_TEST || 'deck_test',
-    PORT: process.env.DECK_MONGO_PORT || 27017
+    PORT: process.env.DECK_MONGO_PORT || 27017,
+
+    // roles must be sorted by priviledge level
+    ROLES: ['MEMBER', 'TEAM_LEADER', 'COORDINATOR', 'ADMIN']
   },
 
   GOOGLE: process.env.DECK_GOOGLE ? JSON.parse(process.env.DECK_GOOGLE) : undefined,
