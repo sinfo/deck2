@@ -11,7 +11,7 @@ let memberSchema = mongoose.Schema({
       type: String,
       enum: config.MONGO.ROLES,
       required: true,
-      default: 'PENDING'
+      default: config.MONGO.ROLES[0]
     },
     team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' }
   }],
