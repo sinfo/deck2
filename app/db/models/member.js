@@ -3,7 +3,7 @@ const config = require('../../../config')
 
 let memberSchema = mongoose.Schema({
   id: { type: String, unique: true },
-  name: String,
+  name: { type: String, required: true },
   img: String,
   participations: [{
     event: { type: String, required: true },
@@ -11,15 +11,19 @@ let memberSchema = mongoose.Schema({
       type: String,
       enum: config.MONGO.ROLES,
       required: true,
-      default: config.MONGO.ROLES[0]
+      default: config.MONGO.ROLES[0] // minimum
     },
     team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' }
   }],
-  contact: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact' },
+  contact: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true },
   auth: String,
   subscriptions: {
-    all: Boolean,
-    mainPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MainPost' }]
+    all: { type: Boolean, default: false },
+    mainPosts: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'MainPost',
+      default: []
+    }]
   }
 }, {
   toJSON: {

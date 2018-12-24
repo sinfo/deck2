@@ -17,8 +17,8 @@ const config = {
     : ['*'],
 
   MONGO: {
-    DB: process.env.DECK_MONGO_DB || 'deck',
-    TEST: process.env.DECK_MONGO_DB_TEST || 'deck_test',
+    DB: process.env.DECK_MONGO_DB || 'deck2',
+    TEST: process.env.DECK_MONGO_DB_TEST || 'deck2_test',
     PORT: process.env.DECK_MONGO_PORT || 27017,
 
     // roles must be sorted by priviledge level

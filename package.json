@@ -9,7 +9,7 @@
   "scripts": {
     "start": "mkdir -p keys; node index.js",
     "watch": "mkdir -p keys; ./node_modules/.bin/nodemon",
-    "test": "NODE_ENV=test ./node_modules/.bin/mocha",
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --file ./test/prepareServer ./test/* --exit --timeout 10000 --slow 1000",
     "lint": "./node_modules/.bin/eslint --ext .js ."
   },
   "pre-commit": [
