@@ -9,6 +9,7 @@ let billingSchema = new mongoose.Schema({
   },
   info: {
     name: { type: String, required: true },
+    contact: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true },
     address: { type: String, required: true },
     tin: { type: String, required: true }, // tax identification number (NIF)
     value: { type: Number, required: true }, // €
