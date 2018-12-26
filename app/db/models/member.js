@@ -2,11 +2,10 @@ let mongoose = require('mongoose')
 const config = require('../../../config')
 
 let memberSchema = mongoose.Schema({
-  id: { type: String, unique: true },
   name: { type: String, required: true },
   img: String,
   participations: [{
-    event: { type: String, required: true },
+    event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
     role: {
       type: String,
       enum: config.MONGO.ROLES,

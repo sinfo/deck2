@@ -2,7 +2,7 @@ let mongoose = require('mongoose')
 
 let contactSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  phone: String,
+  phone: [ String ],
   socials: {
     facebook: String,
     skype: String,
