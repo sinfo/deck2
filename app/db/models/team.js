@@ -1,7 +1,7 @@
 let mongoose = require('mongoose')
 
 let teamSchema = new mongoose.Schema({
-  event: { type: String, required: true },
+  event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
   name: { type: String, required: true }
 }, {
   toJSON: {
