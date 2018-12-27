@@ -1,5 +1,5 @@
 let mongoose = require('mongoose')
-const config = require('../../../config')
+const config = require('@config')
 
 let memberSchema = mongoose.Schema({
   name: { type: String, required: true },

@@ -1,22 +1,22 @@
 let mongoose = require('mongoose')
-const config = require('../../../config')
+const config = require('@config')
 
 let companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
   img: String,
   site: String,
-  contacts: [{
-    type: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true },
+  contacts: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true }],
     default: [],
     required: true
-  }],
-  posts: [{
-    type: { type: mongoose.Schema.Types.ObjectId, ref: 'MainPost', required: true },
+  },
+  posts: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MainPost', required: true }],
     default: [],
     required: true
-  }],
-  participations: [{
+  },
+  participations: {
     type: [{
       event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
       member: { type: String, required: true },
@@ -52,7 +52,7 @@ let companySchema = new mongoose.Schema({
       }
     }],
     default: []
-  }]
+  }
 }, {
   toJSON: {
     transform: function (doc, ret) {

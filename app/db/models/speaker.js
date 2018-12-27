@@ -1,24 +1,24 @@
 let mongoose = require('mongoose')
-const config = require('../../../config')
+const config = require('@config')
 
 let speakerSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  contacts: [{
-    type: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true },
+  contacts: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Contact' }],
     default: [],
     required: true
-  }],
+  },
   title: { type: String, default: '' },
   description: { type: String, default: '' },
   information: { type: String, default: '' },
   img: String,
-  posts: [{
-    type: { type: mongoose.Schema.Types.ObjectId, ref: 'MainPost', required: true },
+  posts: {
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MainPost' }],
     default: [],
     required: true
-  }],
+  },
   participations: [{
-    event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
+    event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
     member: { type: String, required: true },
     status: {
       type: String,
@@ -27,22 +27,22 @@ let speakerSchema = new mongoose.Schema({
       default: config.MONGO.PARTICIPATION_STATUS[0] // suggested
     },
     imgs: {
-      speaker: [{
-        type: {
+      speaker: {
+        type: [{
           img: String,
           public: { type: Boolean, default: false }
-        },
+        }],
         default: [],
         required: true
-      }],
-      company: [{
-        type: {
+      },
+      company: {
+        type: [{
           img: String,
           public: { type: Boolean, default: false }
-        },
+        }],
         default: [],
         required: true
-      }]
+      }
     },
     feedback: String
   }]

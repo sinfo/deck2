@@ -1,4 +1,7 @@
-const config = require('../config')
+// require paths explicit on package.json under "_moduleAliases"
+require('module-alias/register')
+
+const config = require('@config')
 const logger = require('@sinfo/logger').getLogger()
 const Hapi = require('hapi')
 const Inert = require('inert')

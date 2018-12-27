@@ -1,5 +1,5 @@
 let mongoose = require('mongoose')
-const config = require('../../../config')
+const config = require('@config')
 
 let meetingSchema = new mongoose.Schema({
   begin: { type: Date, required: true },
