@@ -30,7 +30,8 @@ const config = {
       'REJECTED', 'GIVEN_UP', 'ANNOUNCED'
     ],
     ADVERTISING_PACKAGE: ['MINIMUM', 'MEDIUM', 'MAXIMUM', 'EXCLUSIVE', 'PARTNERSHIP'],
-    POST_STATUS: ['PENDING', 'REVIEWD', 'APPROVED']
+    POST_STATUS: ['PENDING', 'REVIEWD', 'APPROVED'],
+    POST_KIND: ['TEMPLATE', 'TO', 'FROM', 'MEETING']
   },
 
   GOOGLE: process.env.DECK_GOOGLE ? JSON.parse(process.env.DECK_GOOGLE) : undefined,

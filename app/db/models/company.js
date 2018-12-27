@@ -12,7 +12,7 @@ let companySchema = new mongoose.Schema({
     required: true
   },
   posts: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MainPost', required: true }],
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Communication', required: true }],
     default: [],
     required: true
   },

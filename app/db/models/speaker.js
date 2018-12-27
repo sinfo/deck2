@@ -13,7 +13,7 @@ let speakerSchema = new mongoose.Schema({
   information: { type: String, default: '' },
   img: String,
   posts: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MainPost' }],
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Communication' }],
     default: [],
     required: true
   },
