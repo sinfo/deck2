@@ -12,11 +12,6 @@ let speakerSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   information: { type: String, default: '' },
   img: String,
-  posts: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Communication' }],
-    default: [],
-    required: true
-  },
   participations: [{
     event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
     member: { type: String, required: true },
@@ -25,6 +20,11 @@ let speakerSchema = new mongoose.Schema({
       enum: config.MONGO.PARTICIPATION_STATUS,
       required: true,
       default: config.MONGO.PARTICIPATION_STATUS[0] // suggested
+    },
+    posts: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Communication' }],
+      default: [],
+      required: true
     },
     imgs: {
       speaker: {

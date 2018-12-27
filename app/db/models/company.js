@@ -11,11 +11,6 @@ let companySchema = new mongoose.Schema({
     default: [],
     required: true
   },
-  posts: {
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Communication', required: true }],
-    default: [],
-    required: true
-  },
   participations: {
     type: [{
       event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
@@ -25,6 +20,11 @@ let companySchema = new mongoose.Schema({
         enum: config.MONGO.PARTICIPATION_STATUS,
         required: true,
         default: config.MONGO.PARTICIPATION_STATUS[0] // suggested
+      },
+      posts: {
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Communication', required: true }],
+        default: [],
+        required: true
       },
       billing: { type: mongoose.Schema.Types.ObjectId, ref: 'Billing' },
       package: {
