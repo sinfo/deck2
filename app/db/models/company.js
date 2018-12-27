@@ -1,34 +1,52 @@
 let mongoose = require('mongoose')
+const config = require('../../../config')
 
 let companySchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
   img: String,
   site: String,
-  contacts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true }],
-  history: String,
+  contacts: [{
+    type: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true },
+    default: [],
+    required: true
+  }],
+  posts: [{
+    type: { type: mongoose.Schema.Types.ObjectId, ref: 'MainPost', required: true },
+    default: [],
+    required: true
+  }],
   participations: [{
-    event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
-    member: { type: String, required: true },
-    status: { type: String, required: true },
-    billing: { type: mongoose.Schema.Types.ObjectId, ref: 'Billing' },
-    package: {
-      advertising: {
-        items: {
-          type: [{
-            item: { type: mongoose.Schema.Types.ObjectId, ref: 'AdvertisingItem' },
-            size: String
-          }],
-          required: true,
-          default: []
-        },
-        package: String // minimum, medium, maximum, exclusive...
+    type: [{
+      event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
+      member: { type: String, required: true },
+      status: {
+        type: String,
+        enum: config.MONGO.PARTICIPATION_STATUS,
+        required: true,
+        default: config.MONGO.PARTICIPATION_STATUS[0] // suggested
       },
-      price: { type: Number, required: true }, // €
-      curricula: Boolean,
-      days: Number,
-      confirmation: { type: Date, required: true }
-    }
+      billing: { type: mongoose.Schema.Types.ObjectId, ref: 'Billing' },
+      package: {
+        advertising: {
+          items: {
+            type: [{
+              item: { type: mongoose.Schema.Types.ObjectId, ref: 'AdvertisingItem' },
+              size: String
+            }],
+            required: true,
+            default: []
+          },
+          package: String // minimum, medium, maximum, exclusive...
+        },
+        price: { type: Number, required: true }, // €
+        curricula: Boolean,
+        days: Number,
+        confirmation: { type: Date, required: true },
+        notes: String
+      }
+    }],
+    default: []
   }]
 }, {
   toJSON: {

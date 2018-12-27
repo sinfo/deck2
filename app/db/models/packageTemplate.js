@@ -14,8 +14,8 @@ let packageTemplateSchema = new mongoose.Schema({
     package: String // minimum, medium, maximum, exclusive...
   },
   price: { type: Number, required: true },
-  curricula: Boolean,
-  days: Number
+  curricula: { type: Boolean, required: true, default: false },
+  days: { type: Number, required: true }
 }, {
   toJSON: {
     transform: function (doc, ret) {

@@ -22,7 +22,13 @@ const config = {
     PORT: process.env.DECK_MONGO_PORT || 27017,
 
     // roles must be sorted by priviledge level
-    ROLES: ['MEMBER', 'TEAM_LEADER', 'COORDINATOR', 'ADMIN']
+    ROLES: ['MEMBER', 'TEAM_LEADER', 'COORDINATOR', 'ADMIN'],
+    EVENT_TYPES: ['TEAM', 'SINFO', 'COMPANY'],
+    PARTICIPATION_STATUS: [
+      'SUGGESTED', 'SELECTED', 'APPROVED',
+      'CONTACTED', 'IN_CONVERSATIONS', 'ACCEPTED',
+      'REJECTED', 'GIVEN_UP', 'ANNOUNCED'
+    ]
   },
 
   GOOGLE: process.env.DECK_GOOGLE ? JSON.parse(process.env.DECK_GOOGLE) : undefined,

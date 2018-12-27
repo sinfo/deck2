@@ -1,12 +1,13 @@
 let mongoose = require('mongoose')
 
 let postSchema = mongoose.Schema({
-  event: { type: String, required: true },
+  event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
   member: { type: String, required: true },
   text: { type: String, required: true },
   posts: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
-    default: []
+    default: [],
+    required: true
   },
   posted: { type: Date, default: Date.now },
   updated: { type: Date, default: Date.now }

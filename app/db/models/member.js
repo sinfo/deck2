@@ -15,15 +15,7 @@ let memberSchema = mongoose.Schema({
     team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' }
   }],
   contact: { type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true },
-  auth: String,
-  subscriptions: {
-    all: { type: Boolean, default: false },
-    mainPosts: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'MainPost',
-      default: []
-    }]
-  }
+  auth: String
 }, {
   toJSON: {
     transform: function (doc, ret) {
@@ -32,7 +24,5 @@ let memberSchema = mongoose.Schema({
     }
   }
 })
-
-memberSchema.index({ 'participations.event': 1 })
 
 module.exports = mongoose.model('Member', memberSchema)

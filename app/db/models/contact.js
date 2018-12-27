@@ -2,7 +2,10 @@ let mongoose = require('mongoose')
 
 let contactSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  phone: [ String ],
+  phones: [{
+    phone: String,
+    valid: { type: Boolean, default: true }
+  }],
   socials: {
     facebook: String,
     skype: String,
@@ -12,8 +15,14 @@ let contactSchema = new mongoose.Schema({
   mails: {
     sinfo: String,
     ist: String,
-    personal: String,
-    professional: String
+    personal: {
+      mail: String,
+      valid: { type: Boolean, default: true }
+    },
+    professional: {
+      mail: String,
+      valid: { type: Boolean, default: true }
+    }
   }
 }, {
   toJSON: {

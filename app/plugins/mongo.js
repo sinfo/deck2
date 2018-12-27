@@ -33,8 +33,12 @@ module.exports = {
       logger.error(`Connection error: ${err.message}`)
     })
 
+    db.on('reconnected', () => {
+      logger.info(`Reconnected to ${MONGO_URL}`)
+    })
+
     if (process.env.NODE_ENV !== 'test') {
-      db.once('open', function () {
+      db.on('open', function () {
         logger.info(`Connected to ${MONGO_URL}`)
       })
     }
