@@ -11,6 +11,4 @@ let teamSchema = new mongoose.Schema({
   }
 })
 
-teamSchema.index({ event: 1, name: 1 })
-
 module.exports = mongoose.model('Team', teamSchema)

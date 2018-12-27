@@ -20,8 +20,4 @@ let postSchema = mongoose.Schema({
   }
 })
 
-postSchema.index({ posts: 1, posted: -1 })
-postSchema.index({ event: 1, posted: -1 })
-postSchema.index({ member: 1 })
-
 module.exports = mongoose.model('Post', postSchema)

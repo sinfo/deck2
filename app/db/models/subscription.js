@@ -5,6 +5,12 @@ var subscriptionSchema = new mongoose.Schema({
   member: { type: mongoose.Schema.Types.ObjectId, ref: 'Member', required: true },
   post: { type: mongoose.Schema.Types.ObjectId, ref: 'MainPost', required: true },
   subposts: { type: Boolean, default: false }
+}, {
+  toJSON: {
+    transform: function (doc, ret) {
+      delete ret.__v
+    }
+  }
 })
 
 module.exports = mongoose.model('Subscription', subscriptionSchema)

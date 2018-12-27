@@ -12,6 +12,12 @@ let notificationSchema = new mongoose.Schema({
     required: true
   }],
   posted: { type: Date, required: true }
+}, {
+  toJSON: {
+    transform: function (doc, ret) {
+      delete ret.__v
+    }
+  }
 })
 
 notificationSchema.index({ posted: -1 })

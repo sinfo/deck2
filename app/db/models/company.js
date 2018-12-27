@@ -37,7 +37,12 @@ let companySchema = new mongoose.Schema({
             required: true,
             default: []
           },
-          package: String // minimum, medium, maximum, exclusive...
+          package: {
+            type: String,
+            enum: config.MONGO.ADVERTISING_PACKAGE,
+            required: true,
+            default: config.MONGO.ADVERTISING_PACKAGE[0] // min
+          } // minimum, medium, maximum, exclusive...
         },
         price: { type: Number, required: true }, // €
         curricula: Boolean,

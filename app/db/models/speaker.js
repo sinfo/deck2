@@ -46,6 +46,12 @@ let speakerSchema = new mongoose.Schema({
     },
     feedback: String
   }]
+}, {
+  toJSON: {
+    transform: function (doc, ret) {
+      delete ret.__v
+    }
+  }
 })
 
 module.exports = mongoose.model('Speaker', speakerSchema)

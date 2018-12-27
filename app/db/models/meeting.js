@@ -11,6 +11,12 @@ let meetingSchema = new mongoose.Schema({
     required: true
   },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Contact', required: true }]
+}, {
+  toJSON: {
+    transform: function (doc, ret) {
+      delete ret.__v
+    }
+  }
 })
 
 meetingSchema.index({ begin: -1 })

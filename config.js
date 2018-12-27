@@ -28,7 +28,8 @@ const config = {
       'SUGGESTED', 'SELECTED', 'APPROVED',
       'CONTACTED', 'IN_CONVERSATIONS', 'ACCEPTED',
       'REJECTED', 'GIVEN_UP', 'ANNOUNCED'
-    ]
+    ],
+    ADVERTISING_PACKAGE: ['min', 'med', 'max', 'exclusive', 'partnership']
   },
 
   GOOGLE: process.env.DECK_GOOGLE ? JSON.parse(process.env.DECK_GOOGLE) : undefined,
