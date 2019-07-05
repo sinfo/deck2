@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/sinfo/deck2/entities"
 
@@ -31,7 +32,7 @@ func CreateCompany(name string, description string, site string) (*entities.Comp
 	}
 
 	if err := companies.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&newCompany); err != nil {
-		fmt.Errorf("Error finding created company: %s", err)
+		fmt.Println("Error finding created company:", err)
 		return nil, err
 	}
 
@@ -39,21 +40,28 @@ func CreateCompany(name string, description string, site string) (*entities.Comp
 }
 
 // AddParticipation adds a participation on the current event to the company with the indicated id
-func AddParticipation(id primitive.ObjectID, member string, partner bool) (*entities.Company, error) {
+// TODO: add participation to the _current_ event
+func AddParticipation(id primitive.ObjectID, member primitive.ObjectID, partner bool) (*entities.Company, error) {
 
 	var updatedCompany entities.Company
 
 	var updateQuery = bson.M{
-		"$set": bson.M{
-			"member":  member,
-			"partner": partner,
+		"$addToSet": bson.M{
+			"participations": bson.M{
+				"member":  member,
+				"partner": partner,
+				"status":  "SUGGESTED",
+			},
 		},
 	}
 
 	var filterQuery = bson.M{"_id": id}
 
-	if err := companies.FindOneAndUpdate(ctx, filterQuery, updateQuery).Decode(&updatedCompany); err != nil {
-		fmt.Errorf("Error finding created company: %s", err)
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := companies.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error finding created company:", err)
 		return nil, err
 	}
 

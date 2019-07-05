@@ -1,10 +1,10 @@
 package mongodb
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"testing"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"gotest.tools/assert"
 )
@@ -33,26 +33,40 @@ func TestCreateCompany(t *testing.T) {
 
 	newCompany, err := CreateCompany(name, description, site)
 
-	assert.NilError(err)
-
-	fmt.Println("created company: ", newCompany)
+	assert.NilError(t, err)
+	assert.Equal(t, newCompany.Name, name)
+	assert.Equal(t, newCompany.Description, description)
+	assert.Equal(t, newCompany.Site, site)
 }
 
 func TestAddParticipation(t *testing.T) {
+
+	defer companies.Drop(ctx)
 
 	var name = "MyCompany Inc"
 	var description = "This is a really cool company"
 	var site = "mycompany.net"
 
+	var member = primitive.NewObjectID()
+	var partner = true
+
 	company, _ := CreateCompany(name, description, site)
 
-	companies.Drop(ctx)
+	updatedCompany, err := AddParticipation(company.ID, member, partner)
 
-	updatedCompany, err := AddParticipation(company.ID, "some_member", true)
+	assert.NilError(t, err)
+	assert.Equal(t, updatedCompany.Name, name)
+	assert.Equal(t, updatedCompany.Description, description)
+	assert.Equal(t, updatedCompany.Site, site)
 
-	if err != nil {
-		log.Fatal("Caugh an error!", err)
+	var found = false
+
+	for _, p := range updatedCompany.Participations {
+		if p.Member == member && p.Partner == partner {
+			found = true
+			break
+		}
 	}
 
-	fmt.Println("updated company: ", updatedCompany)
+	assert.Equal(t, found, true)
 }
