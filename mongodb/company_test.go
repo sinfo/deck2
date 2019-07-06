@@ -41,7 +41,7 @@ func TestCreateCompany(t *testing.T) {
 
 func TestAddParticipation(t *testing.T) {
 
-	defer companies.Drop(ctx)
+	//defer companies.Drop(ctx)
 
 	var name = "MyCompany Inc"
 	var description = "This is a really cool company"

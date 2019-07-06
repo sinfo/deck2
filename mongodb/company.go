@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/sinfo/deck2/entities"
+	"github.com/sinfo/deck2/models"
 
 	"github.com/globalsign/mgo/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,8 +16,8 @@ import (
 var companies *mongo.Collection
 
 // CreateCompany creates a new company and saves it to the database
-func CreateCompany(name string, description string, site string) (*entities.Company, error) {
-	var newCompany entities.Company
+func CreateCompany(name string, description string, site string) (*models.Company, error) {
+	var newCompany models.Company
 
 	var c = bson.M{
 		"name":        name,
@@ -41,21 +41,22 @@ func CreateCompany(name string, description string, site string) (*entities.Comp
 
 // AddParticipation adds a participation on the current event to the company with the indicated id
 // TODO: add participation to the _current_ event
-func AddParticipation(id primitive.ObjectID, member primitive.ObjectID, partner bool) (*entities.Company, error) {
+func AddParticipation(
+	companyID primitive.ObjectID, memberID primitive.ObjectID, partner bool) (*models.Company, error) {
 
-	var updatedCompany entities.Company
+	var updatedCompany models.Company
 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
 			"participations": bson.M{
-				"member":  member,
+				"member":  memberID,
 				"partner": partner,
 				"status":  "SUGGESTED",
 			},
 		},
 	}
 
-	var filterQuery = bson.M{"_id": id}
+	var filterQuery = bson.M{"_id": companyID}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
@@ -66,4 +67,15 @@ func AddParticipation(id primitive.ObjectID, member primitive.ObjectID, partner 
 	}
 
 	return &updatedCompany, nil
+}
+
+// TODO:
+func StepStatus(companyID primitive.ObjectID, eventID primitive.ObjectID, step int) (*models.Company, error) {
+	//var updatedCompany models.Company
+
+	//var updateQuery = bson.M{}
+
+	//var filterQuery = bson.M{"_id": companyID}
+
+	return nil, nil
 }
