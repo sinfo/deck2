@@ -29,18 +29,8 @@ type SpeakerParticipations struct {
 	// Member is an _id of Member (see models.Member).
 	Member primitive.ObjectID `json:"member" bson:"member"`
 
-	// Participation's status.
-	// Must be one of the following:
-	//   - SUGGESTED
-	//   - SELECTED
-	//   - ON_HOLD
-	//   - CONTACTED
-	//   - IN_CONVERSATIONS
-	//   - ACCEPTED
-	//   - REJECTED
-	//   - GIVEN_UP
-	//   - ANNOUNCED
-	Status string `json:"status" bson:"status"`
+	// Participation's status. See models.Company
+	Status ParticipationStatus `json:"status" bson:"status"`
 
 	// Communications is an array of _id of Communication (see models.Communication).
 	Communications []primitive.ObjectID `json:"communications" bson:"communications"`

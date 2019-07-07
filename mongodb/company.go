@@ -57,7 +57,7 @@ func AddParticipation(companyID primitive.ObjectID, memberID primitive.ObjectID,
 				"event":   currentEvent.ID,
 				"member":  memberID,
 				"partner": partner,
-				"status":  "SUGGESTED",
+				"status":  models.Suggested,
 			},
 		},
 	}

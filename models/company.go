@@ -8,6 +8,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type ParticipationStatus string
+
+const (
+	Suggested       ParticipationStatus = "SUGGESTED"
+	Selected        ParticipationStatus = "SELECTED"
+	OnHold          ParticipationStatus = "ON_HOLD"
+	Contacted       ParticipationStatus = "CONTACTED"
+	InConversations ParticipationStatus = "IN_CONVERSATIONS"
+	Accepted        ParticipationStatus = "ACCEPTED"
+	Rejected        ParticipationStatus = "REJECTED"
+	GivenUp         ParticipationStatus = "GIVEN_UP"
+	Announced       ParticipationStatus = "ANNOUNCED"
+)
+
 // CompanyParticipation stores a company's participation info.
 type CompanyParticipation struct {
 
@@ -17,18 +31,8 @@ type CompanyParticipation struct {
 	// Member in charge of this participation is a Member _id (see models.Member).
 	Member primitive.ObjectID `json:"member" bson:"member"`
 
-	// Participation's status
-	// Must be one of the following:
-	//   - SUGGESTED
-	//   - SELECTED
-	//   - ON_HOLD
-	//   - CONTACTED
-	//   - IN_CONVERSATIONS
-	//   - ACCEPTED
-	//   - REJECTED
-	//   - GIVEN_UP
-	//   - ANNOUNCED
-	Status string `json:"status" bson:"status"`
+	// Participation's status.
+	Status ParticipationStatus `json:"status" bson:"status"`
 
 	// Participation's communications (array of IDs of Threads).
 	Communications []primitive.ObjectID `json:"communications" bson:"communications"`
@@ -128,64 +132,64 @@ func (c *Company) ToBson() bson.M {
 //      1 => ANNOUNCED
 func (p *CompanyParticipation) AdvanceStatus(step int) error {
 	switch p.Status {
-	case "SUGGESTION":
+	case Suggested:
 		if step == 1 {
-			p.Status = "SELECTED"
+			p.Status = Selected
 		} else if step == 2 {
-			p.Status = "ON_HOLD"
+			p.Status = OnHold
 		} else {
 			return errors.New("Invalid step")
 		}
 
 		break
 
-	case "SELECTED":
+	case Selected:
 		if step == 1 {
-			p.Status = "CONTACTED"
+			p.Status = Contacted
 		} else {
 			return errors.New("Invalid step")
 		}
 
 		break
 
-	case "ON_HOLD":
+	case OnHold:
 		if step == 1 {
-			p.Status = "SELECTED"
+			p.Status = Selected
 		} else {
 			return errors.New("Invalid step")
 		}
 
 		break
 
-	case "CONTACTED":
+	case Contacted:
 		if step == 1 {
-			p.Status = "IN_CONVERSATIONS"
+			p.Status = InConversations
 		} else if step == 2 {
-			p.Status = "REJECTED"
+			p.Status = Rejected
 		} else if step == 3 {
-			p.Status = "GIVEN_UP"
+			p.Status = GivenUp
 		} else {
 			return errors.New("Invalid step")
 		}
 
 		break
 
-	case "IN_CONVERSATIONS":
+	case InConversations:
 		if step == 1 {
-			p.Status = "ACCEPTED"
+			p.Status = Accepted
 		} else if step == 2 {
-			p.Status = "REJECTED"
+			p.Status = Rejected
 		} else if step == 3 {
-			p.Status = "GIVEN_UP"
+			p.Status = GivenUp
 		} else {
 			return errors.New("Invalid step")
 		}
 
 		break
 
-	case "ACCEPTED":
+	case Accepted:
 		if step == 1 {
-			p.Status = "ANNOUNCED"
+			p.Status = Announced
 		} else {
 			return errors.New("Invalid step")
 		}
