@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// MongoDB collection of companies. Initialized on setup.go.
 var companies *mongo.Collection
 
 // CreateCompany creates a new company and saves it to the database
@@ -39,16 +40,21 @@ func CreateCompany(name string, description string, site string) (*models.Compan
 	return &newCompany, nil
 }
 
-// AddParticipation adds a participation on the current event to the company with the indicated id
-// TODO: add participation to the _current_ event
-func AddParticipation(
-	companyID primitive.ObjectID, memberID primitive.ObjectID, partner bool) (*models.Company, error) {
+// AddParticipation adds a participation on the current event to the company with the indicated id.
+func AddParticipation(companyID primitive.ObjectID, memberID primitive.ObjectID, partner bool) (*models.Company, error) {
+
+	currentEvent, err := GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
 
 	var updatedCompany models.Company
 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
 			"participations": bson.M{
+				"event":   currentEvent.ID,
 				"member":  memberID,
 				"partner": partner,
 				"status":  "SUGGESTED",

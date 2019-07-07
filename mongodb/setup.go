@@ -10,6 +10,7 @@ import (
 )
 
 var ctx context.Context
+var db *mongo.Database
 
 // Setup initializes the database connection
 func Setup() {
@@ -36,5 +37,8 @@ func Setup() {
 		log.Fatal(err)
 	}
 
+	db = client.Database("deck2_testing")
+
 	companies = client.Database("deck2_testing").Collection("companies")
+	events = client.Database("deck2_testing").Collection("events")
 }

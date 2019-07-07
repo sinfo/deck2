@@ -12,7 +12,7 @@ import (
 type CompanyParticipation struct {
 
 	// Participation's event (ID of Event).
-	Event primitive.ObjectID `json:"event" bson:"event"`
+	Event int `json:"event" bson:"event"`
 
 	// Member in charge of this participation is a Member _id (see models.Member).
 	Member primitive.ObjectID `json:"member" bson:"member"`

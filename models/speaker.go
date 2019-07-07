@@ -24,7 +24,7 @@ type SpeakerParticipationGuests struct {
 type SpeakerParticipations struct {
 
 	// Event is an _id of Event (see models.Event).
-	Event primitive.ObjectID `json:"event" bson:"event"`
+	Event int `json:"event" bson:"event"`
 
 	// Member is an _id of Member (see models.Member).
 	Member primitive.ObjectID `json:"member" bson:"member"`

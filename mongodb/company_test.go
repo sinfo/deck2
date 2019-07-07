@@ -1,9 +1,11 @@
 package mongodb
 
 import (
+	"log"
 	"os"
 	"testing"
 
+	"github.com/globalsign/mgo/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"gotest.tools/assert"
@@ -15,7 +17,16 @@ func TestMain(m *testing.M) {
 	//tempDir, _ := ioutil.TempDir("", "testing")
 	//Server.SetPath(tempDir)
 
+	defer db.Drop(ctx)
+
 	Setup()
+
+	// Database setup
+	_, err := events.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Run the test suite
 	retCode := m.Run()
@@ -41,7 +52,7 @@ func TestCreateCompany(t *testing.T) {
 
 func TestAddParticipation(t *testing.T) {
 
-	//defer companies.Drop(ctx)
+	defer companies.Drop(ctx)
 
 	var name = "MyCompany Inc"
 	var description = "This is a really cool company"
