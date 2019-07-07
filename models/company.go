@@ -115,7 +115,7 @@ func (c *Company) ToBson() bson.M {
 // This follows a state machine well defined.
 //   SUGGESTIONS
 //      1 => SELECTED
-// 	    2 => ON_HOLD
+//      2 => ON_HOLD
 //   SELECTED
 //      1 => CONTACTED
 //   ON_HOLD
