@@ -24,8 +24,11 @@ type ContactMail struct {
 // Contact stores contacts' information. It doesn't hold a name, because it's used on models.CompanyRep,
 // models.Member and models.Speaker. All of them already hold a name.
 type Contact struct {
-	ID      primitive.ObjectID `json:"id" bson:"_id"`
-	Phones  []ContactPhone     `json:"phones" bson:"phones"`
-	Socials ContactSocials     `json:"socials" bson:"socials"`
-	Mails   []ContactMail      `json:"mails" bson:"mails"`
+
+	// Contact's ID (_id of mongodb).
+	ID primitive.ObjectID `json:"id" bson:"_id"`
+
+	Phones  []ContactPhone `json:"phones" bson:"phones"`
+	Socials ContactSocials `json:"socials" bson:"socials"`
+	Mails   []ContactMail  `json:"mails" bson:"mails"`
 }

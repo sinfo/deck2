@@ -8,17 +8,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CompanyParticipation stores a company's participation info
+// CompanyParticipation stores a company's participation info.
 type CompanyParticipation struct {
 
-	// participation's event (ID of Event)
+	// Participation's event (ID of Event).
 	Event primitive.ObjectID `json:"event" bson:"event"`
 
-	// member in charge of this participation is a Member _id (see models.Member)
+	// Member in charge of this participation is a Member _id (see models.Member).
 	Member primitive.ObjectID `json:"member" bson:"member"`
 
-	// participation's status
-	// must be one of the following:
+	// Participation's status
+	// Must be one of the following:
 	//   - SUGGESTED
 	//   - SELECTED
 	//   - ON_HOLD
@@ -30,73 +30,75 @@ type CompanyParticipation struct {
 	//   - ANNOUNCED
 	Status string `json:"status" bson:"status"`
 
-	// participation's communications (array of IDs of Threads)
+	// Participation's communications (array of IDs of Threads).
 	Communications []primitive.ObjectID `json:"communications" bson:"communications"`
 
-	// participation's subscribers (array of IDs of Member)
-	// all members in here will be notified on this participation's modification
+	// Participation's subscribers (array of IDs of Member).
+	// All members in here will be notified on this participation's modification.
 	Subscribers []primitive.ObjectID `json:"subscribers" bson:"subscribers"`
 
-	// participation's billing is a Billing _id (see models.Billing)
+	// Participation's billing is a Billing _id (see models.Billing).
 	Billing primitive.ObjectID `json:"billing" bson:"billing"`
 
-	// participation's package is a Package _id (see models.Package)
+	// Participation's package is a Package _id (see models.Package).
 	Package primitive.ObjectID `json:"package" bson:"package"`
 
 	Confirmed time.Time `json:"confirmed" bson:"confirmed"`
 
-	// is this company participating as a partner
+	// Is this company participating as a partner.
 	Partner bool `json:"partner" bson:"partner"`
 
-	// some random notes about this participation
+	// Some random notes about this participation.
 	Notes string `json:"notes" bson:"notes"`
 }
 
-// BillingInfo of company
+// CompanyBillingInfo of company
 type CompanyBillingInfo struct {
 
-	// registered name of the company
+	// Registered name of the company.
 	Name string `json:"name" bson:"name"`
 
-	// registered address of the company
+	// Registered address of the company.
 	Address string `json:"address" bson:"address"`
 
-	// tax payer identification number of the company
+	// Tax payer identification number of the company.
 	TIN string `json:"tin" bson:"tin"`
 }
 
-// Images of company
+// CompanyImages of company.
 type CompanyImages struct {
-	// internal image URL (hosted somewhere)
+
+	// Internal image URL (hosted somewhere).
 	Internal string `json:"internal" bson:"internal"`
 
-	// public image URL (hosted somewhere)
+	// Public image URL (hosted somewhere).
 	Public string `json:"public" bson:"public"`
 }
 
-// Company represents a company to be stored in the database and parsed from http requests
+// Company represents a company to be contacted by the team, that will hopefully participate
+// on the event.
 type Company struct {
 
-	// company's ID (_id of mongodb)
+	// Company's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
 	Name        string `json:"name" bson:"name"`
 	Description string `json:"description" bson:"description"`
 
-	// company's images (public and internal)
+	// Company's images (public and internal).
 	Images CompanyImages `json:"imgs" bson:"imgs"`
 
 	Site string `json:"site" bson:"site"`
 
-	// company's contacts is an array of CompanyRep _id (see models.CompanyRep)
+	// Company's contacts is an array of CompanyRep _id (see models.CompanyRep).
 	Employers []primitive.ObjectID `json:"employers" bson:"employers"`
 
 	BillingInfo    CompanyBillingInfo     `json:"billingInfo" bson:"billingInfo"`
 	Participations []CompanyParticipation `json:"participations" bson:"participations"`
 }
 
-// ToBson converts a company to a bson format
-// Really usefull to create a company and adding it to the database without compromising the id
+// ToBson converts a company to a bson format.
+// Really usefull to create a company and adding it to the database without compromising the id.
 func (c *Company) ToBson() bson.M {
 	return bson.M{
 		"name":        c.Name,

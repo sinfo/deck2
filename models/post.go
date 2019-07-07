@@ -7,9 +7,16 @@ import (
 )
 
 type Post struct {
-	ID      primitive.ObjectID `json:"id" bson:"_id"`
-	Member  primitive.ObjectID
-	Text    string
-	Posted  time.Time
-	Updated time.Time
+
+	// Post's ID (_id of mongodb).
+	ID primitive.ObjectID `json:"id" bson:"_id"`
+
+	// Member is an _id of Member (see models.Member).
+	Member primitive.ObjectID `json:"member" bson:"member"`
+
+	// Actual content of the post.
+	Text string `json:"text" bson:"text"`
+
+	Posted  time.Time `json:"posted" bson:"posted"`
+	Updated time.Time `json:"updated" bson:"updated"`
 }

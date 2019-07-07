@@ -3,41 +3,98 @@ package models
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type SpeakerParticipationRoom struct {
-	Type  string
-	Costs int
-	Notes string
+
+	// Small description of the booking.
+	Type string `json:"type" bson:"type"`
+
+	// Cost of the booking in cents (€).
+	Cost int `json:"cost" bson:"cost"`
+
+	// Additional information, like which hotel, its address, etc.
+	Notes string `json:"notes" bson:"notes"`
 }
 
 type SpeakerParticipationGuests struct {
-	Name    string
-	Flights primitive.ObjectID
+	Name string `json:"name" bson:"name"`
+
+	// Flights is an _id of FlightInfo (see models.FlighInfo).
+	Flight primitive.ObjectID `json:"flight" bson:"flight"`
 }
 
 type SpeakerParticipations struct {
-	Event          primitive.ObjectID
-	Member         primitive.ObjectID
-	Status         string
-	Communications []primitive.ObjectID
-	Subscribers    []primitive.ObjectID
-	Feedback       string
-	Flights        primitive.ObjectID
-	Guests         SpeakerParticipationGuests
-	Room           SpeakerParticipationRoom
+
+	// Event is an _id of Event (see models.Event).
+	Event primitive.ObjectID `json:"event" bson:"event"`
+
+	// Member is an _id of Member (see models.Member).
+	Member primitive.ObjectID `json:"member" bson:"member"`
+
+	// Participation's status.
+	// Must be one of the following:
+	//   - SUGGESTED
+	//   - SELECTED
+	//   - ON_HOLD
+	//   - CONTACTED
+	//   - IN_CONVERSATIONS
+	//   - ACCEPTED
+	//   - REJECTED
+	//   - GIVEN_UP
+	//   - ANNOUNCED
+	Status string `json:"status" bson:"status"`
+
+	// Communications is an array of _id of Communication (see models.Communication).
+	Communications []primitive.ObjectID `json:"communications" bson:"communications"`
+
+	// Subscribers is an array of _id of Member (see models.Member).
+	Subscribers []primitive.ObjectID `json:"subscribers" bson:"subscribers"`
+
+	// Feedback given by the speaker regarding the conference. This will be visible on
+	// our website.
+	Feedback string `json:"feedback" bson:"feedback"`
+
+	// Flights is an array of _id of FlightInfo (see models.FlightInfo).
+	Flights primitive.ObjectID `json:"flights" bson:"flights"`
+
+	// Speaker's family members, girlfriend/boyfriend, etc. Only relevant if they
+	// will also be attending the event.
+	Guests SpeakerParticipationGuests `json:"guests" bson:"guests"`
+
+	// Hotel information regarding this speaker.
+	Room SpeakerParticipationRoom `json:"room" bson:"room"`
 }
 
 type SpeakerImages struct {
-	Internal string
-	Speaker  string
-	Company  string
+
+	// Internal image, only visible by the team.
+	Internal string `json:"internal" bson:"internal"`
+
+	// Speaker photo. This is a URL pointing to the photo, stored somewhere. It will
+	// be visible on our website.
+	Speaker string `json:"speaker" bson:"speaker"`
+
+	// Speaker's company photo. This is a URL pointing to the photo, stored somewhere. It will
+	// be visible on our website.
+	Company string `json:"company" bson:"company"`
 }
 
 type Speaker struct {
-	ID             primitive.ObjectID `json:"id" bson:"_id"`
-	Name           string
-	Contact        primitive.ObjectID
-	Title          string
-	Bio            string
-	Notes          string
-	Images         SpeakerImages
-	Participations []SpeakerParticipations
+
+	// Speaker's ID (_id of mongodb).
+	ID primitive.ObjectID `json:"id" bson:"_id"`
+
+	Name string `json:"name" bson:"name"`
+
+	// Contact is an _id of Contact (see models.Contact).
+	Contact primitive.ObjectID `json:"contact" bson:"contact"`
+
+	// Title of the speaker (CEO @ HugeCorportation, for example).
+	Title string `json:"title" bson:"title"`
+
+	// Bio of the speaker. Careful, this will be visible on our website!
+	Bio string `json:"bio" bson:"bio"`
+
+	// This is only visible by the team. Praise and trash talk at will.
+	Notes          string                  `json:"notes" bson:"notes"`
+	Images         SpeakerImages           `json:"img" bson:"img"`
+	Participations []SpeakerParticipations `json:"participations" bson:"participations"`
 }

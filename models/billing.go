@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// BillingStatus is the status of the bill
+// BillingStatus is the status of the bill.
 type BillingStatus struct {
 	ProForma bool `json:"proForma" bson:"proForma"`
 	Invoice  bool `json:"invoice" bson:"invoice"`
@@ -14,15 +14,15 @@ type BillingStatus struct {
 	Payed    bool `json:"payed" bson:"payed"`
 }
 
-// Billing (used on company participations)
+// Billing (used on company participations).
 type Billing struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id"`
 	Status BillingStatus      `json:"status" bson:"status"`
 
-	// Employer is a CompanyRep _id (see models.CompanyRep)
+	// Employer is a CompanyRep _id (see models.CompanyRep).
 	Employer primitive.ObjectID `json:"employer" bson:"employer"`
 
-	// Value is the billing value in cents (€)
+	// Value is the billing value in cents (€).
 	Value int `json:"value" bson:"value"`
 
 	InvoiceNumber string    `json:"invoiceNumber" bson:"invoiceNumber"`
