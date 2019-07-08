@@ -3,7 +3,6 @@ package mongodb
 import (
 	"context"
 	"log"
-	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -17,8 +16,6 @@ var (
 	Companies *CompaniesCollection
 )
 
-// MongoDB collection of events. Initialized on setup.go.
-
 // Setup initializes the database connection
 func Setup() {
 
@@ -28,8 +25,7 @@ func Setup() {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
+	ctx := context.Background()
 
 	err = client.Connect(ctx)
 	if err != nil {
@@ -46,6 +42,14 @@ func Setup() {
 
 	db = client.Database("deck2_testing")
 
-	Events.Collection = client.Database("deck2_testing").Collection("events")
-	Companies.Collection = client.Database("deck2_testing").Collection("companies")
+	Events = &EventsCollection{
+		Collection: db.Collection("events"),
+		Context:    ctx,
+	}
+
+	Companies = &CompaniesCollection{
+		Collection: db.Collection("companies"),
+		Context:    ctx,
+	}
+
 }

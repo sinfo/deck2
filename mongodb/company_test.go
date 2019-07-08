@@ -12,18 +12,16 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// The tempdir is created so MongoDB has a location to store its files.
-	// Contents are wiped once the server stops
-	//tempDir, _ := ioutil.TempDir("", "testing")
-	//Server.SetPath(tempDir)
-
-	defer db.Drop(ctx)
-
-	Setup()
 
 	// Database setup
-	_, err := events.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
+	Setup()
+	_, err := Events.Collection.InsertOne(Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
 
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = Events.CreateEvent("SINFO2")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,18 +29,20 @@ func TestMain(m *testing.M) {
 	// Run the test suite
 	retCode := m.Run()
 
+	db.Drop(ctx)
+
 	os.Exit(retCode)
 }
 
 func TestCreateCompany(t *testing.T) {
 
-	defer companies.Drop(ctx)
+	defer Companies.Collection.Drop(Companies.Context)
 
 	var name = "MyCompany Inc"
 	var description = "This is a really cool company"
 	var site = "mycompany.net"
 
-	newCompany, err := CreateCompany(name, description, site)
+	newCompany, err := Companies.CreateCompany(name, description, site)
 
 	assert.NilError(t, err)
 	assert.Equal(t, newCompany.Name, name)
@@ -50,9 +50,10 @@ func TestCreateCompany(t *testing.T) {
 	assert.Equal(t, newCompany.Site, site)
 }
 
+// Test if a participation is added to the current event
 func TestAddParticipation(t *testing.T) {
 
-	defer companies.Drop(ctx)
+	defer Companies.Collection.Drop(Companies.Context)
 
 	var name = "MyCompany Inc"
 	var description = "This is a really cool company"
@@ -61,19 +62,20 @@ func TestAddParticipation(t *testing.T) {
 	var member = primitive.NewObjectID()
 	var partner = true
 
-	company, _ := CreateCompany(name, description, site)
+	company, _ := Companies.CreateCompany(name, description, site)
+	currentEvent, _ := Events.GetCurrentEvent()
 
-	updatedCompany, err := AddParticipation(company.ID, member, partner)
+	updatedCompany, err := Companies.AddParticipation(company.ID, member, partner)
 
 	assert.NilError(t, err)
 	assert.Equal(t, updatedCompany.Name, name)
 	assert.Equal(t, updatedCompany.Description, description)
 	assert.Equal(t, updatedCompany.Site, site)
+	assert.Equal(t, len(updatedCompany.Participations), 1)
 
 	var found = false
-
 	for _, p := range updatedCompany.Participations {
-		if p.Member == member && p.Partner == partner {
+		if p.Member == member && p.Partner == partner && p.Event == currentEvent.ID {
 			found = true
 			break
 		}

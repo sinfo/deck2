@@ -130,13 +130,13 @@ func (c *Company) ToBson() bson.M {
 //      3 => GIVEN_UP
 //   ACCEPTED
 //      1 => ANNOUNCED
-func (p *CompanyParticipation) AdvanceStatus(step int) error {
-	switch p.Status {
+func (s *ParticipationStatus) Next(step int) error {
+	switch *s {
 	case Suggested:
 		if step == 1 {
-			p.Status = Selected
+			*s = Selected
 		} else if step == 2 {
-			p.Status = OnHold
+			*s = OnHold
 		} else {
 			return errors.New("Invalid step")
 		}
@@ -145,7 +145,7 @@ func (p *CompanyParticipation) AdvanceStatus(step int) error {
 
 	case Selected:
 		if step == 1 {
-			p.Status = Contacted
+			*s = Contacted
 		} else {
 			return errors.New("Invalid step")
 		}
@@ -154,7 +154,7 @@ func (p *CompanyParticipation) AdvanceStatus(step int) error {
 
 	case OnHold:
 		if step == 1 {
-			p.Status = Selected
+			*s = Selected
 		} else {
 			return errors.New("Invalid step")
 		}
@@ -163,11 +163,11 @@ func (p *CompanyParticipation) AdvanceStatus(step int) error {
 
 	case Contacted:
 		if step == 1 {
-			p.Status = InConversations
+			*s = InConversations
 		} else if step == 2 {
-			p.Status = Rejected
+			*s = Rejected
 		} else if step == 3 {
-			p.Status = GivenUp
+			*s = GivenUp
 		} else {
 			return errors.New("Invalid step")
 		}
@@ -176,11 +176,11 @@ func (p *CompanyParticipation) AdvanceStatus(step int) error {
 
 	case InConversations:
 		if step == 1 {
-			p.Status = Accepted
+			*s = Accepted
 		} else if step == 2 {
-			p.Status = Rejected
+			*s = Rejected
 		} else if step == 3 {
-			p.Status = GivenUp
+			*s = GivenUp
 		} else {
 			return errors.New("Invalid step")
 		}
@@ -189,7 +189,7 @@ func (p *CompanyParticipation) AdvanceStatus(step int) error {
 
 	case Accepted:
 		if step == 1 {
-			p.Status = Announced
+			*s = Announced
 		} else {
 			return errors.New("Invalid step")
 		}
