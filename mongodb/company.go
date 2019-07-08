@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -36,7 +35,7 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	newCompany, err := c.GetCompany(insertResult.InsertedID.(primitive.ObjectID))
