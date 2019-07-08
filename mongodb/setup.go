@@ -12,8 +12,8 @@ var ctx context.Context
 var db *mongo.Database
 
 var (
-	Events    *EventsCollection
-	Companies *CompaniesCollection
+	Events    *EventsType
+	Companies *CompaniesType
 )
 
 // Setup initializes the database connection
@@ -42,12 +42,12 @@ func Setup() {
 
 	db = client.Database("deck2_testing")
 
-	Events = &EventsCollection{
+	Events = &EventsType{
 		Collection: db.Collection("events"),
 		Context:    ctx,
 	}
 
-	Companies = &CompaniesCollection{
+	Companies = &CompaniesType{
 		Collection: db.Collection("companies"),
 		Context:    ctx,
 	}

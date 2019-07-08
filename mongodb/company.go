@@ -15,27 +15,31 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type CompaniesCollection struct {
+type CompaniesType struct {
 	Collection *mongo.Collection
 	Context    context.Context
 }
 
+type CreateCompanyData struct {
+	Name        string
+	Description string
+	Site        string
+}
+
 // CreateCompany creates a new company and saves it to the database
-func (companies *CompaniesCollection) CreateCompany(name string, description string, site string) (*models.Company, error) {
+func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, error) {
 
-	var c = bson.M{
-		"name":        name,
-		"description": description,
-		"site":        site,
-	}
-
-	insertResult, err := companies.Collection.InsertOne(companies.Context, c)
+	insertResult, err := c.Collection.InsertOne(c.Context, bson.M{
+		"name":        data.Name,
+		"description": data.Description,
+		"site":        data.Site,
+	})
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	newCompany, err := companies.GetCompany(insertResult.InsertedID.(primitive.ObjectID))
+	newCompany, err := c.GetCompany(insertResult.InsertedID.(primitive.ObjectID))
 
 	if err != nil {
 		fmt.Println("Error finding created company:", err)
@@ -46,10 +50,10 @@ func (companies *CompaniesCollection) CreateCompany(name string, description str
 }
 
 // GetCompany gets a company by its ID.
-func (companies *CompaniesCollection) GetCompany(companyID primitive.ObjectID) (*models.Company, error) {
+func (c *CompaniesType) GetCompany(companyID primitive.ObjectID) (*models.Company, error) {
 	var company models.Company
 
-	err := companies.Collection.FindOne(companies.Context, bson.M{"_id": companyID}).Decode(&company)
+	err := c.Collection.FindOne(c.Context, bson.M{"_id": companyID}).Decode(&company)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +61,13 @@ func (companies *CompaniesCollection) GetCompany(companyID primitive.ObjectID) (
 	return &company, nil
 }
 
+type AddParticipationData struct {
+	MemberID primitive.ObjectID
+	Partner  bool
+}
+
 // AddParticipation adds a participation on the current event to the company with the indicated id.
-func (companies *CompaniesCollection) AddParticipation(companyID primitive.ObjectID, memberID primitive.ObjectID, partner bool) (*models.Company, error) {
+func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, data AddParticipationData) (*models.Company, error) {
 
 	currentEvent, err := Events.GetCurrentEvent()
 
@@ -72,8 +81,8 @@ func (companies *CompaniesCollection) AddParticipation(companyID primitive.Objec
 		"$addToSet": bson.M{
 			"participations": bson.M{
 				"event":   currentEvent.ID,
-				"member":  memberID,
-				"partner": partner,
+				"member":  data.MemberID,
+				"partner": data.Partner,
 				"status":  models.Suggested,
 			},
 		},
@@ -84,7 +93,7 @@ func (companies *CompaniesCollection) AddParticipation(companyID primitive.Objec
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := companies.Collection.FindOneAndUpdate(companies.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
 		fmt.Println("Error finding created company:", err)
 		return nil, err
 	}
@@ -94,11 +103,11 @@ func (companies *CompaniesCollection) AddParticipation(companyID primitive.Objec
 
 // StepStatus advances the status of a company's participation in the current event,
 // according to the given step (see models.Company).
-func (companies *CompaniesCollection) StepStatus(companyID primitive.ObjectID, eventID primitive.ObjectID, step int) (*models.Company, error) {
+func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, eventID primitive.ObjectID, step int) (*models.Company, error) {
 
 	var updatedCompany models.Company
 
-	company, err := companies.GetCompany(companyID)
+	company, err := c.GetCompany(companyID)
 	if err != nil {
 		return nil, err
 	}
@@ -130,8 +139,8 @@ func (companies *CompaniesCollection) StepStatus(companyID primitive.ObjectID, e
 		var optionsQuery = options.FindOneAndUpdate()
 		optionsQuery.SetReturnDocument(options.After)
 
-		if err := companies.Collection.FindOneAndUpdate(companies.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-			fmt.Println("Error finding created company:", err)
+		if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+			fmt.Println("Error updating company's status:", err)
 			return nil, err
 		}
 
@@ -139,4 +148,58 @@ func (companies *CompaniesCollection) StepStatus(companyID primitive.ObjectID, e
 	}
 
 	return nil, errors.New("company without participation on the current event")
+}
+
+type UpdateCompanyData struct {
+	Name        string
+	Description string
+	Site        string
+	BillingInfo models.CompanyBillingInfo
+}
+
+func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateCompanyData) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"name":                data.Name,
+			"description":         data.Description,
+			"site":                data.Site,
+			"billingInfo.name":    data.BillingInfo.Name,
+			"billingInfo.address": data.BillingInfo.Address,
+			"billingInfo.tin":     data.BillingInfo.TIN,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("error updating company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Company, error) {
+
+	company, err := Companies.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResult, err := Companies.Collection.DeleteOne(Companies.Context, bson.M{"_id": companyID})
+	if err != nil {
+		return nil, err
+	}
+
+	if deleteResult.DeletedCount != 1 {
+		return nil, fmt.Errorf("should have deleted 1 company, deleted %v", deleteResult.DeletedCount)
+	}
+
+	return company, nil
 }
