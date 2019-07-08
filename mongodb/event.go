@@ -1,6 +1,7 @@
 package mongodb
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -10,8 +11,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// MongoDB collection of events. Initialized on setup.go.
-var events *mongo.Collection
+type EventsCollection struct {
+	Collection *mongo.Collection
+	Context    context.Context
+}
 
 // Cached version of the latest event.
 var currentEvent *models.Event
@@ -20,7 +23,7 @@ var currentEvent *models.Event
 // The error is only returned if there is no cached version of the
 // latest event, and it is impossible to make a connection to the database, or
 // when there are no events. In this last case, something is terribly wrong.
-func GetCurrentEvent() (*models.Event, error) {
+func (events *EventsCollection) GetCurrentEvent() (*models.Event, error) {
 
 	// Return cached version.
 	if currentEvent != nil {
@@ -30,7 +33,7 @@ func GetCurrentEvent() (*models.Event, error) {
 	var event *models.Event
 
 	// Query for all events.
-	cur, err := events.Find(ctx, bson.M{})
+	cur, err := events.Collection.Find(ctx, bson.M{})
 
 	if err != nil {
 		return nil, err
@@ -70,10 +73,10 @@ func GetCurrentEvent() (*models.Event, error) {
 // CreateEvent creates a new event. It just takes a name as argument, because the only information being
 // created is de id and name. The id is incremented to the latest event.
 // WARNING: the first event should be added to the database manually.
-func CreateEvent(name string) (*models.Event, error) {
+func (events *EventsCollection) CreateEvent(name string) (*models.Event, error) {
 	var newEvent models.Event
 
-	latestEvent, err := GetCurrentEvent()
+	latestEvent, err := events.GetCurrentEvent()
 
 	if err != nil {
 		return nil, err
@@ -84,13 +87,13 @@ func CreateEvent(name string) (*models.Event, error) {
 		"name": name,
 	}
 
-	insertResult, err := events.InsertOne(ctx, c)
+	insertResult, err := events.Collection.InsertOne(ctx, c)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := events.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&newEvent); err != nil {
+	if err := events.Collection.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&newEvent); err != nil {
 		fmt.Println("Error finding created event:", err)
 		return nil, err
 	}

@@ -12,6 +12,13 @@ import (
 var ctx context.Context
 var db *mongo.Database
 
+var (
+	Events    *EventsCollection
+	Companies *CompaniesCollection
+)
+
+// MongoDB collection of events. Initialized on setup.go.
+
 // Setup initializes the database connection
 func Setup() {
 
@@ -39,6 +46,6 @@ func Setup() {
 
 	db = client.Database("deck2_testing")
 
-	companies = client.Database("deck2_testing").Collection("companies")
-	events = client.Database("deck2_testing").Collection("events")
+	Events.Collection = client.Database("deck2_testing").Collection("events")
+	Companies.Collection = client.Database("deck2_testing").Collection("companies")
 }

@@ -1,6 +1,7 @@
 package mongodb
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -13,11 +14,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// MongoDB collection of companies. Initialized on setup.go.
-var companies *mongo.Collection
+type CompaniesCollection struct {
+	Collection *mongo.Collection
+	Context    context.Context
+}
 
 // CreateCompany creates a new company and saves it to the database
-func CreateCompany(name string, description string, site string) (*models.Company, error) {
+func (companies *CompaniesCollection) CreateCompany(name string, description string, site string) (*models.Company, error) {
 	var newCompany models.Company
 
 	var c = bson.M{
@@ -26,13 +29,13 @@ func CreateCompany(name string, description string, site string) (*models.Compan
 		"site":        site,
 	}
 
-	insertResult, err := companies.InsertOne(ctx, c)
+	insertResult, err := companies.Collection.InsertOne(ctx, c)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := companies.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&newCompany); err != nil {
+	if err := companies.Collection.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&newCompany); err != nil {
 		fmt.Println("Error finding created company:", err)
 		return nil, err
 	}
@@ -41,9 +44,9 @@ func CreateCompany(name string, description string, site string) (*models.Compan
 }
 
 // AddParticipation adds a participation on the current event to the company with the indicated id.
-func AddParticipation(companyID primitive.ObjectID, memberID primitive.ObjectID, partner bool) (*models.Company, error) {
+func (companies *CompaniesCollection) AddParticipation(companyID primitive.ObjectID, memberID primitive.ObjectID, partner bool) (*models.Company, error) {
 
-	currentEvent, err := GetCurrentEvent()
+	currentEvent, err := Events.GetCurrentEvent()
 
 	if err != nil {
 		return nil, err
@@ -67,7 +70,7 @@ func AddParticipation(companyID primitive.ObjectID, memberID primitive.ObjectID,
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := companies.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+	if err := companies.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
 		fmt.Println("Error finding created company:", err)
 		return nil, err
 	}
@@ -76,7 +79,7 @@ func AddParticipation(companyID primitive.ObjectID, memberID primitive.ObjectID,
 }
 
 // TODO:
-func StepStatus(companyID primitive.ObjectID, eventID primitive.ObjectID, step int) (*models.Company, error) {
+func (companies *CompaniesCollection) StepStatus(companyID primitive.ObjectID, eventID primitive.ObjectID, step int) (*models.Company, error) {
 	//var updatedCompany models.Company
 
 	//var updateQuery = bson.M{}
