@@ -3,7 +3,6 @@ package mongodb
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/globalsign/mgo/bson"
@@ -94,7 +93,7 @@ func (e *EventsType) CreateEvent(name string) (*models.Event, error) {
 	}
 
 	if err := e.Collection.FindOne(e.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&newEvent); err != nil {
-		fmt.Println("Error finding created event:", err)
+		log.Println("Error finding created event:", err)
 		return nil, err
 	}
 

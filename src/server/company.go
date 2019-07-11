@@ -2,28 +2,26 @@ package server
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func GetCompanies(w http.ResponseWriter, r *http.Request) {
+func getCompanies(w http.ResponseWriter, r *http.Request) {
 
 	query := bson.M{}
 
 	companies, err := mongodb.Companies.GetCompanies(query)
 
 	if err != nil {
-		log.Fatal(err)
 		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
 	}
 
 	json.NewEncoder(w).Encode(companies)
 }
 
-func CreateCompany(w http.ResponseWriter, r *http.Request) {
+func createCompany(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 

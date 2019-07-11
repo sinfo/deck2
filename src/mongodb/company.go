@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -57,7 +58,7 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 	newCompany, err := c.GetCompany(insertResult.InsertedID.(primitive.ObjectID))
 
 	if err != nil {
-		fmt.Println("Error finding created company:", err)
+		log.Println("Error finding created company", err)
 		return nil, err
 	}
 
@@ -141,7 +142,7 @@ func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, data AddP
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error finding created company:", err)
+		log.Println("Error finding created company:", err)
 		return nil, err
 	}
 
@@ -173,7 +174,7 @@ func (c *CompaniesType) RemoveParticipation(companyID primitive.ObjectID) (*mode
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error removing participation:", err)
+		log.Println("Error removing participation:", err)
 		return nil, err
 	}
 
@@ -219,7 +220,7 @@ func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, step int) (*mod
 		optionsQuery.SetReturnDocument(options.After)
 
 		if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-			fmt.Println("Error updating company's status:", err)
+			log.Println("Error updating company's status:", err)
 			return nil, err
 		}
 
@@ -253,7 +254,7 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error updating company's status:", err)
+		log.Println("Error updating company's status:", err)
 		return nil, err
 	}
 
@@ -290,7 +291,7 @@ func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateC
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("error updating company:", err)
+		log.Println("error updating company:", err)
 		return nil, err
 	}
 
@@ -314,7 +315,7 @@ func (c *CompaniesType) UpdateCompanyInternalImage(companyID primitive.ObjectID,
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("error updating company:", err)
+		log.Println("error updating company:", err)
 		return nil, err
 	}
 
@@ -338,7 +339,7 @@ func (c *CompaniesType) UpdateCompanyPublicImage(companyID primitive.ObjectID, u
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("error updating company:", err)
+		log.Println("error updating company:", err)
 		return nil, err
 	}
 
@@ -382,7 +383,7 @@ func (c *CompaniesType) AddEmployer(companyID primitive.ObjectID, companyRepID p
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error finding created company:", err)
+		log.Println("Error finding created company:", err)
 		return nil, err
 	}
 
@@ -406,7 +407,7 @@ func (c *CompaniesType) RemoveEmployer(companyID primitive.ObjectID, companyRep 
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error finding created company:", err)
+		log.Println("Error finding created company:", err)
 		return nil, err
 	}
 
@@ -436,7 +437,7 @@ func (c *CompaniesType) AddCommunication(companyID primitive.ObjectID, threadID 
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error adding communication to company's participation:", err)
+		log.Println("Error adding communication to company's participation:", err)
 		return nil, err
 	}
 
@@ -466,7 +467,7 @@ func (c *CompaniesType) RemoveCommunication(companyID primitive.ObjectID, thread
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error removing communication to company's participation:", err)
+		log.Println("Error removing communication to company's participation:", err)
 		return nil, err
 	}
 
@@ -496,7 +497,7 @@ func (c *CompaniesType) AddSubscriber(companyID primitive.ObjectID, memberID pri
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error adding subscriber to company's participation:", err)
+		log.Println("Error adding subscriber to company's participation:", err)
 		return nil, err
 	}
 
@@ -526,7 +527,7 @@ func (c *CompaniesType) RemoveSubscriber(companyID primitive.ObjectID, memberID 
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error removing subscriber to company's participation:", err)
+		log.Println("Error removing subscriber to company's participation:", err)
 		return nil, err
 	}
 
@@ -557,7 +558,7 @@ func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID pr
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error updating company's participation's billing:", err)
+		log.Println("Error updating company's participation's billing:", err)
 		return nil, err
 	}
 
@@ -588,7 +589,7 @@ func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID pr
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		fmt.Println("Error updating company's participation's package:", err)
+		log.Println("Error updating company's participation's package:", err)
 		return nil, err
 	}
 
