@@ -111,9 +111,9 @@ func (c *Company) ToBson() bson.M {
 	}
 }
 
-// AdvanceStatus advances status of participation.
+// Next advances status of participation.
 // This follows a state machine well defined.
-//   SUGGESTIONS
+//   SUGGESTED
 //      1 => SELECTED
 //      2 => ON_HOLD
 //   SELECTED

@@ -60,6 +60,8 @@ func (c *CompaniesType) GetCompany(companyID primitive.ObjectID) (*models.Compan
 	return &company, nil
 }
 
+// AddParticipationData is used on AddParticipation. Is the data to be given in order to add a new participation
+// to a company, related to the current event.
 type AddParticipationData struct {
 	MemberID primitive.ObjectID
 	Partner  bool
@@ -100,9 +102,41 @@ func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, data AddP
 	return &updatedCompany, nil
 }
 
+// RemoveParticipation removes a company's participation on the current event.
+func (c *CompaniesType) RemoveParticipation(companyID primitive.ObjectID) (*models.Company, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations": bson.M{
+				"event": currentEvent.ID,
+			},
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error removing participation:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
 // StepStatus advances the status of a company's participation in the current event,
 // according to the given step (see models.Company).
-func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, eventID primitive.ObjectID, step int) (*models.Company, error) {
+func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, step int) (*models.Company, error) {
 
 	var updatedCompany models.Company
 
@@ -149,6 +183,38 @@ func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, eventID primiti
 	return nil, errors.New("company without participation on the current event")
 }
 
+// UpdateCompanyParticipationStatus updates a company's participation status
+// related to the current event. This is the method used when one does not want necessarily to follow
+// the state machine described on models.ParticipationStatus.
+func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.ObjectID, eventID int, status models.ParticipationStatus) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.status": status,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error updating company's status:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
 type UpdateCompanyData struct {
 	Name        string
 	Description string
@@ -156,6 +222,7 @@ type UpdateCompanyData struct {
 	BillingInfo models.CompanyBillingInfo
 }
 
+// UpdateCompany updates the general information about a company, unrelated to other data types stored in de database.
 func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateCompanyData) (*models.Company, error) {
 
 	var updatedCompany models.Company
@@ -184,6 +251,55 @@ func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateC
 	return &updatedCompany, nil
 }
 
+// UpdateCompanyInternalImage updates the company's internal image.
+func (c *CompaniesType) UpdateCompanyInternalImage(companyID primitive.ObjectID, url string) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"imgs.internal": url,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("error updating company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// UpdateCompanyPublicImage updates the company's public image.
+func (c *CompaniesType) UpdateCompanyPublicImage(companyID primitive.ObjectID, url string) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"imgs.public": url,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("error updating company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// DeleteCompany deletes a company.
 func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Company, error) {
 
 	company, err := Companies.GetCompany(companyID)
@@ -201,4 +317,234 @@ func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Com
 	}
 
 	return company, nil
+}
+
+// AddEmployer adds a models.CompanyRep to a company.
+func (c *CompaniesType) AddEmployer(companyID primitive.ObjectID, companyRepID primitive.ObjectID) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"employers": companyRepID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error finding created company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// RemoveEmployer removes a models.CompanyRep from a company.
+func (c *CompaniesType) RemoveEmployer(companyID primitive.ObjectID, companyRep primitive.ObjectID) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"employers": companyRep,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error finding created company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// AddCommunication adds a models.Thread to a company's participation's list of communications (related to the current event).
+func (c *CompaniesType) AddCommunication(companyID primitive.ObjectID, threadID primitive.ObjectID) (*models.Company, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"participations.$.communications": threadID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error adding communication to company's participation:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// RemoveCommunication removes a models.Thread from a company's participation's list of communications (related to the current event).
+func (c *CompaniesType) RemoveCommunication(companyID primitive.ObjectID, threadID primitive.ObjectID) (*models.Company, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.communications": threadID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error removing communication to company's participation:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// AddSubscriber adds a models.Member to the list of subscribers of a company's participation in the current event.
+func (c *CompaniesType) AddSubscriber(companyID primitive.ObjectID, memberID primitive.ObjectID) (*models.Company, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"participations.$.subscribers": memberID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error adding subscriber to company's participation:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// RemoveSubscriber removes a models.Member from the list of subscribers of a company's participation in the current event.
+func (c *CompaniesType) RemoveSubscriber(companyID primitive.ObjectID, memberID primitive.ObjectID) (*models.Company, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.subscribers": memberID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error removing subscriber to company's participation:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// UpdateBilling updates the billing information on a company's participation related to the current event.
+// Uses a models.Billing ID to store this information.
+func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID primitive.ObjectID) (*models.Company, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.billing": billingID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error updating company's participation's billing:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// UpdatePackage updates the package of a company's participation related to the current event.
+// Uses a models.Package ID to store this information.
+func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID primitive.ObjectID) (*models.Company, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.package": packageID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		fmt.Println("Error updating company's participation's package:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
 }
