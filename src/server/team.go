@@ -6,6 +6,10 @@ import (
 
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+
+	"github.com/gorilla/mux"
 )
 
 func getTeams(w http.ResponseWriter, r *http.Request) {
@@ -40,4 +44,23 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(newTeam)
+}
+
+func getTeam(w http.ResponseWriter, r *http.Request) {
+	params :=mux.Vars(r)
+	id,_ := primitive.ObjectIDFromHex(params["id"])
+	
+	team, err := mongodb.Teams.GetTeam(id)
+	
+	if err != nil {
+		http.Error(w, "Could not fetch team", http.StatusBadRequest)
+		return
+	}
+
+	if team == nil {
+		http.Error(w, "Team not found", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(team)
 }

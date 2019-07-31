@@ -31,6 +31,7 @@ func InitializeServer() {
 	teamRouter := r.PathPrefix("/teams").Subrouter()
 	teamRouter.HandleFunc("", getTeams).Methods("GET")
 	teamRouter.HandleFunc("", createTeam).Methods("POST")
+	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
 
 	http.ListenAndServe(":8080", r)
 }
