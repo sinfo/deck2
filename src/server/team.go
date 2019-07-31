@@ -53,12 +53,21 @@ func getTeam(w http.ResponseWriter, r *http.Request) {
 	team, err := mongodb.Teams.GetTeam(id)
 	
 	if err != nil {
-		http.Error(w, "Could not fetch team", http.StatusBadRequest)
+		http.Error(w, "Could not find team", http.StatusNotFound)
 		return
 	}
 
-	if team == nil {
-		http.Error(w, "Team not found", http.StatusNotFound)
+	json.NewEncoder(w).Encode(team)
+}
+
+func deleteTeam(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id,_ := primitive.ObjectIDFromHex(params["id"])
+
+	team, err := mongodb.Teams.DeleteTeam(id)
+
+	if err != nil {
+		http.Error(w, "Could not find team", http.StatusBadRequest)
 		return
 	}
 

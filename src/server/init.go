@@ -32,6 +32,7 @@ func InitializeServer() {
 	teamRouter.HandleFunc("", getTeams).Methods("GET")
 	teamRouter.HandleFunc("", createTeam).Methods("POST")
 	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
+	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
 
 	http.ListenAndServe(":8080", r)
 }

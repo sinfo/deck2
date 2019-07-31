@@ -100,3 +100,15 @@ func (t *TeamsType) GetTeam(teamID primitive.ObjectID) (*models.Team, error) {
 
 	return &team, nil
 }
+
+// DeleteTeam deletes a team by its ID.
+func (t* TeamsType) DeleteTeam(teamID primitive.ObjectID) (*models.Team, error) {
+	var team models.Team
+
+	err := t.Collection.FindOneAndDelete(t.Context, bson.M{"_id": teamID}).Decode(&team)
+	if err != nil {
+		return nil, err
+	}
+
+	return &team, nil
+}
