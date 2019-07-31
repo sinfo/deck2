@@ -12,6 +12,9 @@ build:
 	go test -c $(SRCDIR)/mongodb -o $(BINDIR)/mongodb.test
 	go test -c $(SRCDIR)/server -o $(BINDIR)/server.test
 
+test:
+	./bin/mongodb.test
+
 run: build
 	$(BINDIR)/$(BINARY_FILENAME)
 
