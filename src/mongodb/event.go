@@ -2,7 +2,9 @@ package mongodb
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
 	"log"
 	"time"
 
@@ -72,10 +74,28 @@ func (e *EventsType) GetCurrentEvent() (*models.Event, error) {
 	return event, nil
 }
 
+type CreateEventData struct {
+	Name string `json:"name"`
+}
+
+// ParseBody fills the CreateEventData from a body
+func (ced *CreateEventData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ced); err != nil {
+		return err
+	}
+
+	if len(ced.Name) == 0 {
+		return errors.New("invalid name")
+	}
+
+	return nil
+}
+
 // CreateEvent creates a new event. It just takes a name as argument, because the only information being
 // created is de id and name. The id is incremented to the latest event.
 // WARNING: the first event should be added to the database manually.
-func (e *EventsType) CreateEvent(name string) (*models.Event, error) {
+func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
 	var newEvent models.Event
 
 	latestEvent, err := e.GetCurrentEvent()
@@ -86,7 +106,7 @@ func (e *EventsType) CreateEvent(name string) (*models.Event, error) {
 
 	var c = bson.M{
 		"_id":      latestEvent.ID + 1,
-		"name":     name,
+		"name":     data.Name,
 		"themes":   make([]string, 0),
 		"packages": make([]models.EventPackages, 0),
 		"items":    make([]models.EventItems, 0),

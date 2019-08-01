@@ -85,3 +85,24 @@ func getEvent(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(event)
 }
+
+func createEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	var ced = &mongodb.CreateEventData{}
+
+	if err := ced.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	newEvent, err := mongodb.Events.CreateEvent(*ced)
+
+	if err != nil {
+		http.Error(w, "Could not create event", http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newEvent)
+}

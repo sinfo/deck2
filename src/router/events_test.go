@@ -1,6 +1,7 @@
 package router
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -247,4 +248,47 @@ func TestGetEventBadID(t *testing.T) {
 	assert.NilError(t, err)
 
 	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestCreateEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var newEvent models.Event
+
+	createEventData := &mongodb.CreateEventData{Name: Event2.Name}
+
+	b, errMarshal := json.Marshal(createEventData)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/events", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&newEvent)
+
+	assert.Equal(t, newEvent.ID, Event2.ID)
+	assert.Equal(t, newEvent.Name, Event2.Name)
+}
+
+func TestCreateEventInvalidName(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createEventData := &mongodb.CreateEventData{Name: ""}
+
+	b, errMarshal := json.Marshal(createEventData)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/events", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
 }

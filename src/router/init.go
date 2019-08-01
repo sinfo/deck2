@@ -42,6 +42,7 @@ func InitializeRouter() {
 	// event handlers
 	eventRouter := r.PathPrefix("/events").Subrouter()
 	eventRouter.HandleFunc("", getEvents).Methods("GET")
+	eventRouter.HandleFunc("", createEvent).Methods("POST")
 	eventRouter.HandleFunc("/{id:[0-9]+}", getEvent).Methods("GET")
 
 	// team handlers
