@@ -29,9 +29,9 @@ type Event struct {
 	// Example: SINFO 26 has id=26.
 	ID int `json:"id" bson:"_id"`
 
-	Name  string    `json:"name" bson:"name"`
-	Begin time.Time `json:"begin" bson:"begin"`
-	End   time.Time `json:"end" bson:"end"`
+	Name  string     `json:"name" bson:"name"`
+	Begin *time.Time `json:"begin,omitempty" bson:"begin,omitempty"`
+	End   *time.Time `json:"end,omitempty" bson:"end,omitempty"`
 
 	// Event days' themes.
 	// Each index of the array corresponds to a week day during the event.

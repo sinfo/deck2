@@ -14,7 +14,7 @@ var db *mongo.Database
 var (
 	Events    *EventsType
 	Companies *CompaniesType
-	Teams	  *TeamsType
+	Teams     *TeamsType
 )
 
 // InitializeDatabase initializes the database connection
@@ -55,7 +55,8 @@ func InitializeDatabase() {
 
 	Teams = &TeamsType{
 		Collection: db.Collection("teams"),
-		Context:	ctx,
+		Context:    ctx,
 	}
 
+	log.Println("Connected to the database successfully")
 }

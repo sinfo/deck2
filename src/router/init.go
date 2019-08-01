@@ -1,4 +1,4 @@
-package server
+package router
 
 import (
 	"log"
@@ -16,18 +16,35 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func InitializeServer() {
+func headersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Router is the exported router.
+var Router http.Handler
+
+func InitializeRouter() {
 	r := mux.NewRouter()
 
+	Router = r
+
 	r.Use(loggingMiddleware)
+	r.Use(headersMiddleware)
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
 	companyRouter.HandleFunc("", getCompanies).Methods("GET")
 	companyRouter.HandleFunc("", createCompany).Methods("POST")
 
-	// team handlers
+	// event handlers
+	eventRouter := r.PathPrefix("/events").Subrouter()
+	eventRouter.HandleFunc("", getEvents).Methods("GET")
+	eventRouter.HandleFunc("/{id:[0-9]+}", getEvent).Methods("GET")
 
+	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
 	teamRouter.HandleFunc("", GetTeamsHandler).Methods("GET")
 	teamRouter.HandleFunc("", CreateTeamHandler).Methods("POST")

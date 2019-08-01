@@ -10,7 +10,7 @@ build:
 	go build -o $(BINDIR)/$(BINARY_FILENAME) $(SRCDIR)/*.go
 	go test -c $(SRCDIR)/models -o $(BINDIR)/models.test
 	go test -c $(SRCDIR)/mongodb -o $(BINDIR)/mongodb.test
-	go test -c $(SRCDIR)/server -o $(BINDIR)/server.test
+	go test -c $(SRCDIR)/router -o $(BINDIR)/router.test
 
 test:
 	./bin/mongodb.test
