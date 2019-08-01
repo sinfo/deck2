@@ -1,4 +1,4 @@
-package server
+package router
 
 import (
 	"log"
@@ -23,8 +23,13 @@ func headersMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func InitializeServer() {
+// Router is the exported router.
+var Router http.Handler
+
+func InitializeRouter() {
 	r := mux.NewRouter()
+
+	Router = r
 
 	r.Use(loggingMiddleware)
 	r.Use(headersMiddleware)
@@ -44,6 +49,4 @@ func InitializeServer() {
 	teamRouter.HandleFunc("", createTeam).Methods("POST")
 	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
 	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
-
-	http.ListenAndServe(":8080", r)
 }

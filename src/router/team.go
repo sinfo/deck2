@@ -1,4 +1,4 @@
-package server
+package router
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
 
 	"github.com/gorilla/mux"
 )
@@ -47,11 +46,11 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTeam(w http.ResponseWriter, r *http.Request) {
-	params :=mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
-	
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
 	team, err := mongodb.Teams.GetTeam(id)
-	
+
 	if err != nil {
 		http.Error(w, "Could not find team", http.StatusNotFound)
 		return
@@ -62,7 +61,7 @@ func getTeam(w http.ResponseWriter, r *http.Request) {
 
 func deleteTeam(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
+	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	team, err := mongodb.Teams.DeleteTeam(id)
 
