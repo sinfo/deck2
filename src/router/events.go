@@ -3,8 +3,10 @@ package router
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/sinfo/deck2/src/mongodb"
 )
 
@@ -63,4 +65,23 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(events)
+}
+
+func getEvent(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, errConverter := strconv.Atoi(params["id"])
+
+	if errConverter != nil {
+		http.Error(w, "Could not find event", http.StatusNotFound)
+		return
+	}
+
+	event, err := mongodb.Events.GetEvent(id)
+
+	if err != nil {
+		http.Error(w, "Could not find event", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(event)
 }

@@ -171,3 +171,15 @@ func (e *EventsType) GetEvents(options GetEventsOptions) ([]*models.Event, error
 
 	return events, nil
 }
+
+// GetEvent gets an event by its ID
+func (e *EventsType) GetEvent(eventID int) (*models.Event, error) {
+	var event models.Event
+
+	err := e.Collection.FindOne(e.Context, bson.M{"_id": eventID}).Decode(&event)
+	if err != nil {
+		return nil, err
+	}
+
+	return &event, nil
+}

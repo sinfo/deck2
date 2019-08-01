@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -210,4 +211,40 @@ func TestGetEventsBadQuery(t *testing.T) {
 	assert.Equal(t, res1.Code, http.StatusBadRequest)
 	assert.Equal(t, res2.Code, http.StatusBadRequest)
 	assert.Equal(t, res3.Code, http.StatusBadRequest)
+}
+
+func TestGetEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var event1, event2 models.Event
+
+	res1, err1 := executeRequest("GET", fmt.Sprintf("/events/%v", Event1.ID), nil)
+	res2, err2 := executeRequest("GET", fmt.Sprintf("/events/%v", Event2.ID), nil)
+	assert.NilError(t, err1)
+	assert.NilError(t, err2)
+	assert.Equal(t, res1.Code, http.StatusOK)
+	assert.Equal(t, res2.Code, http.StatusOK)
+
+	json.NewDecoder(res1.Body).Decode(&event1)
+	json.NewDecoder(res2.Body).Decode(&event2)
+
+	assert.Equal(t, event1.ID, Event1.ID)
+	assert.Equal(t, event2.ID, Event2.ID)
+}
+
+func TestGetEventBadID(t *testing.T) {
+
+	res, err := executeRequest("GET", "/events/bad_ID", nil)
+	assert.NilError(t, err)
+
+	assert.Equal(t, res.Code, http.StatusNotFound)
 }
