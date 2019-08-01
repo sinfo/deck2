@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	//"net/url"
 
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,9 +13,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func getTeams(w http.ResponseWriter, r *http.Request) {
+func GetTeamsHandler(w http.ResponseWriter, r *http.Request) {
 
-	query := bson.M{}
+	query := bson.M{} //BuildQuery(r.URL.Query())
 
 	teams, err := mongodb.Teams.GetTeams(query)
 
@@ -25,7 +26,7 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(teams)
 }
 
-func createTeam(w http.ResponseWriter, r *http.Request) {
+func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
@@ -46,7 +47,7 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newTeam)
 }
 
-func getTeam(w http.ResponseWriter, r *http.Request) {
+func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 	params :=mux.Vars(r)
 	id,_ := primitive.ObjectIDFromHex(params["id"])
 	
@@ -60,7 +61,7 @@ func getTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(team)
 }
 
-func deleteTeam(w http.ResponseWriter, r *http.Request) {
+func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id,_ := primitive.ObjectIDFromHex(params["id"])
 

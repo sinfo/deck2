@@ -29,10 +29,10 @@ func InitializeServer() {
 	// team handlers
 
 	teamRouter := r.PathPrefix("/teams").Subrouter()
-	teamRouter.HandleFunc("", getTeams).Methods("GET")
-	teamRouter.HandleFunc("", createTeam).Methods("POST")
-	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
-	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
+	teamRouter.HandleFunc("", GetTeamsHandler).Methods("GET")
+	teamRouter.HandleFunc("", CreateTeamHandler).Methods("POST")
+	teamRouter.HandleFunc("/{id}", GetTeamHandler).Methods("GET")
+	teamRouter.HandleFunc("/{id}", DeleteTeamHandler).Methods("DELETE")
 
 	http.ListenAndServe(":8080", r)
 }

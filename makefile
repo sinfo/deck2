@@ -14,6 +14,7 @@ build:
 
 test:
 	./bin/mongodb.test
+	./bin/server.test
 
 run: build
 	$(BINDIR)/$(BINARY_FILENAME)
