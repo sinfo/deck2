@@ -292,3 +292,97 @@ func TestCreateEventInvalidName(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
+
+func TestUpdateEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	var future = TimeAfter.Add(time.Hour * 10)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var updatedEvent models.Event
+
+	updateEventData := &mongodb.UpdateEventData{Name: Event3.Name, Begin: TimeAfter.UTC(), End: future.UTC()}
+
+	b, errMarshal := json.Marshal(updateEventData)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/events", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedEvent)
+
+	assert.Equal(t, updatedEvent.Name, Event3.Name)
+	assert.Equal(t, updatedEvent.Begin != nil, true)
+	assert.Equal(t, updatedEvent.End != nil, true)
+	assert.Equal(t, updatedEvent.Begin.Sub(TimeAfter).Seconds() < 10e-3, true) // millisecond precision
+	assert.Equal(t, updatedEvent.End.Sub(future).Seconds() < 10e-3, true)      // millisecond precision
+}
+
+func TestUpdateEventIncompletePayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	type IncompletePayload struct {
+		Name string
+	}
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	updateEventData := IncompletePayload{Name: Event3.Name}
+
+	b, errMarshal := json.Marshal(updateEventData)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/events", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestUpdateEventWrongPayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	type IncompletePayload struct {
+		Name  string
+		Begin string
+		End   string
+	}
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	updateEventData := IncompletePayload{Name: Event3.Name, Begin: "wrong", End: "dates"}
+
+	b, errMarshal := json.Marshal(updateEventData)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/events", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}

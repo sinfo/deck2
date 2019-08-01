@@ -106,3 +106,31 @@ func createEvent(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(newEvent)
 }
+
+func updateEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusExpectationFailed)
+		return
+	}
+
+	var ued = &mongodb.UpdateEventData{}
+
+	if err := ued.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedEvent, err := mongodb.Events.UpdateEvent(currentEvent.ID, *ued)
+
+	if err != nil {
+		http.Error(w, "Could not update event", http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedEvent)
+}

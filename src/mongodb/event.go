@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -202,4 +204,58 @@ func (e *EventsType) GetEvent(eventID int) (*models.Event, error) {
 	}
 
 	return &event, nil
+}
+
+type UpdateEventData struct {
+	Name  string    `json:"name"`
+	Begin time.Time `json:"begin"`
+	End   time.Time `json:"end"`
+}
+
+// ParseBody fills the CreateEventData from a body
+func (ued *UpdateEventData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ued); err != nil {
+		return err
+	}
+
+	if len(ued.Name) == 0 {
+		return errors.New("invalid name")
+	}
+
+	var now = time.Now()
+
+	if now.After(ued.Begin) || now.After(ued.End) {
+		return errors.New("invalid begin or end dates: must be in the future")
+	}
+
+	return nil
+}
+
+// UpdateEvent updates an event with ID eventID with the new data, using the UpdateEventData structure.
+func (e *EventsType) UpdateEvent(eventID int, data UpdateEventData) (*models.Event, error) {
+
+	var updatedEvent models.Event
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"name":  data.Name,
+			"begin": data.Begin.UTC(),
+			"end":   data.End.UTC(),
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+		log.Println("error updating event:", err)
+		return nil, err
+	}
+
+	fmt.Println(updatedEvent)
+
+	return &updatedEvent, nil
 }
