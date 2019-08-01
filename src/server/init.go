@@ -16,18 +16,29 @@ func loggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func headersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func InitializeServer() {
 	r := mux.NewRouter()
 
 	r.Use(loggingMiddleware)
+	r.Use(headersMiddleware)
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
 	companyRouter.HandleFunc("", getCompanies).Methods("GET")
 	companyRouter.HandleFunc("", createCompany).Methods("POST")
 
-	// team handlers
+	// event handlers
+	eventRouter := r.PathPrefix("/events").Subrouter()
+	eventRouter.HandleFunc("", getEvents).Methods("GET")
 
+	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
 	teamRouter.HandleFunc("", getTeams).Methods("GET")
 	teamRouter.HandleFunc("", createTeam).Methods("POST")

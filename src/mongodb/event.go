@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"log"
+	"time"
 
-	"github.com/globalsign/mgo/bson"
 	"github.com/sinfo/deck2/src/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type EventsType struct {
@@ -82,8 +85,13 @@ func (e *EventsType) CreateEvent(name string) (*models.Event, error) {
 	}
 
 	var c = bson.M{
-		"_id":  latestEvent.ID + 1,
-		"name": name,
+		"_id":      latestEvent.ID + 1,
+		"name":     name,
+		"themes":   make([]string, 0),
+		"packages": make([]models.EventPackages, 0),
+		"items":    make([]models.EventItems, 0),
+		"meetings": make([]primitive.ObjectID, 0),
+		"sessions": make([]primitive.ObjectID, 0),
 	}
 
 	insertResult, err := e.Collection.InsertOne(e.Context, c)
@@ -100,4 +108,66 @@ func (e *EventsType) CreateEvent(name string) (*models.Event, error) {
 	currentEvent = &newEvent
 
 	return &newEvent, nil
+}
+
+// GetEventsOptions is the options to give to GetEvents.
+// All the fields are optional, and as such we use pointers as a "hack" to deal
+// with non-existent fields.
+// The field is non-existent if it has a nil value.
+// This filter will behave like a logical *and*.
+type GetEventsOptions struct {
+	Name   *string
+	Before *time.Time
+	After  *time.Time
+	During *time.Time
+}
+
+// GetEvents gets an array of events using a filter.
+func (e *EventsType) GetEvents(options GetEventsOptions) ([]*models.Event, error) {
+
+	var events = make([]*models.Event, 0)
+
+	filter := bson.M{}
+
+	if options.Name != nil {
+		filter["name"] = options.Name
+	}
+
+	if options.Before != nil {
+		filter["begin"] = bson.M{"$lt": options.Before}
+	}
+
+	if options.After != nil {
+		filter["begin"] = bson.M{"$gt": options.After}
+	}
+
+	if options.During != nil {
+		filter["begin"] = bson.M{"$lte": options.During}
+		filter["end"] = bson.M{"$gte": options.During}
+	}
+
+	cur, err := e.Collection.Find(e.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(e.Context) {
+
+		// create a value into which the single document can be decoded
+		var e models.Event
+		err := cur.Decode(&e)
+		if err != nil {
+			return nil, err
+		}
+
+		events = append(events, &e)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(e.Context)
+
+	return events, nil
 }
