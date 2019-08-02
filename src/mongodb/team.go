@@ -56,13 +56,11 @@ func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
 	insertResult, err := t.Collection.InsertOne(t.Context, bson.M{
 		"name":        data.Name,
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
 	newTeam, err := t.GetTeam(insertResult.InsertedID.(primitive.ObjectID))
-	
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +69,16 @@ func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
 	if err != nil{
 		return nil, err
 	}
+	
 	teams:= append(event.Teams,newTeam.ID )
-	if err = Events.Collection.FindOneAndUpdate(Events.Context, bson.M{"_id": event.ID}, bson.M{"teams": teams}, optionsQuery).Decode(&updatedEvent); err != nil {
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"teams":  teams,
+		},
+	}
+
+	if err = Events.Collection.FindOneAndUpdate(Events.Context, bson.M{"_id": event.ID}, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("Error updating events teams",err)
 		return nil, err
 	}
@@ -103,14 +109,11 @@ func (t *TeamsType) GetTeams(options GetTeamsOptions) ([]*models.Team, error) {
 	var err error
 
 	if options.Event != nil {
-		log.Println("GetEvent")
 		event, err  = Events.GetEvent(*options.Event)
 		if err != nil{
 			return nil, err
 		}
-		log.Println(*event)
 	} else{
-		log.Println("Getting currentEvent")
 		event, err = Events.GetCurrentEvent(); 
 		if err != nil {
 			return nil, err

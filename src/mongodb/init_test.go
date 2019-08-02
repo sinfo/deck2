@@ -9,7 +9,10 @@ import (
 )
 
 func SetupTest() {
-	_, err := Events.CreateEvent("SINFO2")
+	ced := CreateEventData{
+		Name: "SINFO2",
+	}
+	_, err := Events.CreateEvent(ced)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -80,8 +80,6 @@ func TestGetTeams(t *testing.T) {
 	name := "1"
 	event,_ := Events.GetCurrentEvent()
 	id := event.ID
-	t.Log(id)
-	t.Log(event)
 
 	gto0 := GetTeamsOptions{
 		Name: nil,
