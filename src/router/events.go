@@ -85,3 +85,71 @@ func getEvent(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(event)
 }
+
+func createEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	var ced = &mongodb.CreateEventData{}
+
+	if err := ced.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	newEvent, err := mongodb.Events.CreateEvent(*ced)
+
+	if err != nil {
+		http.Error(w, "Could not create event", http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newEvent)
+}
+
+func updateEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusExpectationFailed)
+		return
+	}
+
+	var ued = &mongodb.UpdateEventData{}
+
+	if err := ued.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedEvent, err := mongodb.Events.UpdateEvent(currentEvent.ID, *ued)
+
+	if err != nil {
+		http.Error(w, "Could not update event", http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedEvent)
+}
+
+func deleteEvent(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, errConverter := strconv.Atoi(params["id"])
+
+	if errConverter != nil {
+		http.Error(w, "Could not find event", http.StatusNotFound)
+		return
+	}
+
+	event, err := mongodb.Events.DeleteEvent(id)
+
+	if err != nil {
+		http.Error(w, "Could not delete event", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(event)
+}

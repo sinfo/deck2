@@ -2,13 +2,17 @@ package mongodb
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"time"
 
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -72,10 +76,28 @@ func (e *EventsType) GetCurrentEvent() (*models.Event, error) {
 	return event, nil
 }
 
+type CreateEventData struct {
+	Name string `json:"name"`
+}
+
+// ParseBody fills the CreateEventData from a body
+func (ced *CreateEventData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ced); err != nil {
+		return err
+	}
+
+	if len(ced.Name) == 0 {
+		return errors.New("invalid name")
+	}
+
+	return nil
+}
+
 // CreateEvent creates a new event. It just takes a name as argument, because the only information being
 // created is de id and name. The id is incremented to the latest event.
 // WARNING: the first event should be added to the database manually.
-func (e *EventsType) CreateEvent(name string) (*models.Event, error) {
+func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
 	var newEvent models.Event
 
 	latestEvent, err := e.GetCurrentEvent()
@@ -86,7 +108,7 @@ func (e *EventsType) CreateEvent(name string) (*models.Event, error) {
 
 	var c = bson.M{
 		"_id":      latestEvent.ID + 1,
-		"name":     name,
+		"name":     data.Name,
 		"themes":   make([]string, 0),
 		"packages": make([]models.EventPackages, 0),
 		"items":    make([]models.EventItems, 0),
@@ -183,4 +205,76 @@ func (e *EventsType) GetEvent(eventID int) (*models.Event, error) {
 	}
 
 	return &event, nil
+}
+
+type UpdateEventData struct {
+	Name  string    `json:"name"`
+	Begin time.Time `json:"begin"`
+	End   time.Time `json:"end"`
+}
+
+// ParseBody fills the CreateEventData from a body
+func (ued *UpdateEventData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ued); err != nil {
+		return err
+	}
+
+	if len(ued.Name) == 0 {
+		return errors.New("invalid name")
+	}
+
+	var now = time.Now()
+
+	if now.After(ued.Begin) || now.After(ued.End) {
+		return errors.New("invalid begin or end dates: must be in the future")
+	}
+
+	return nil
+}
+
+// UpdateEvent updates an event with ID eventID with the new data, using the UpdateEventData structure.
+func (e *EventsType) UpdateEvent(eventID int, data UpdateEventData) (*models.Event, error) {
+
+	var updatedEvent models.Event
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"name":  data.Name,
+			"begin": data.Begin.UTC(),
+			"end":   data.End.UTC(),
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+		log.Println("error updating event:", err)
+		return nil, err
+	}
+
+	return &updatedEvent, nil
+}
+
+// DeleteEvent deletes an event.
+func (e *EventsType) DeleteEvent(eventID int) (*models.Event, error) {
+
+	event, err := Events.GetEvent(eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResult, err := Events.Collection.DeleteOne(e.Context, bson.M{"_id": eventID})
+	if err != nil {
+		return nil, err
+	}
+
+	if deleteResult.DeletedCount != 1 {
+		return nil, fmt.Errorf("should have deleted 1 event, deleted %v", deleteResult.DeletedCount)
+	}
+
+	return event, nil
 }

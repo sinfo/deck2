@@ -153,7 +153,7 @@ func TestStepStatusCompany(t *testing.T) {
 	assert.NilError(t, err0)
 	assert.Equal(t, c0.Participations[0].Status, models.Suggested)
 
-	Events.CreateEvent("event2")
+	Events.CreateEvent(CreateEventData{Name: "event2"})
 	c1, err1 := Companies.AddParticipation(company.ID, addParticipationData) // SUGGESTED
 	c2, err2 := Companies.StepStatus(company.ID, 1)                          // SELECTED
 	c3, err3 := Companies.StepStatus(company.ID, 1)                          // CONTACTED
@@ -175,7 +175,7 @@ func TestStepStatusCompany(t *testing.T) {
 	assert.Equal(t, c5.Participations[1].Status, models.Accepted)
 	assert.Equal(t, c6.Participations[1].Status, models.Announced)
 
-	Events.CreateEvent("event3")
+	Events.CreateEvent(CreateEventData{Name: "event3"})
 	c7, err7 := Companies.AddParticipation(company.ID, addParticipationData) // SUGGESTED
 	c8, err8 := Companies.StepStatus(company.ID, 2)                          // ON_HOLD
 	c9, err9 := Companies.StepStatus(company.ID, 1)                          // SELECTED
@@ -188,7 +188,7 @@ func TestStepStatusCompany(t *testing.T) {
 	assert.Equal(t, c8.Participations[2].Status, models.OnHold)
 	assert.Equal(t, c9.Participations[2].Status, models.Selected)
 
-	Events.CreateEvent("event4")
+	Events.CreateEvent(CreateEventData{Name: "event4"})
 	c10, err10 := Companies.AddParticipation(company.ID, addParticipationData) // SUGGESTED
 	c11, err11 := Companies.StepStatus(company.ID, 1)                          // SELECTED
 	c12, err12 := Companies.StepStatus(company.ID, 1)                          // CONTACTED
@@ -204,7 +204,7 @@ func TestStepStatusCompany(t *testing.T) {
 	assert.Equal(t, c12.Participations[3].Status, models.Contacted)
 	assert.Equal(t, c13.Participations[3].Status, models.Rejected)
 
-	Events.CreateEvent("event5")
+	Events.CreateEvent(CreateEventData{Name: "event5"})
 	c14, err14 := Companies.AddParticipation(company.ID, addParticipationData) // SUGGESTED
 	c15, err15 := Companies.StepStatus(company.ID, 1)                          // SELECTED
 	c16, err16 := Companies.StepStatus(company.ID, 1)                          // CONTACTED
@@ -220,7 +220,7 @@ func TestStepStatusCompany(t *testing.T) {
 	assert.Equal(t, c16.Participations[4].Status, models.Contacted)
 	assert.Equal(t, c17.Participations[4].Status, models.GivenUp)
 
-	Events.CreateEvent("event6")
+	Events.CreateEvent(CreateEventData{Name: "event6"})
 	c18, err18 := Companies.AddParticipation(company.ID, addParticipationData) // SUGGESTED
 	c19, err19 := Companies.StepStatus(company.ID, 1)                          // SELECTED
 	c20, err20 := Companies.StepStatus(company.ID, 1)                          // CONTACTED
@@ -239,7 +239,7 @@ func TestStepStatusCompany(t *testing.T) {
 	assert.Equal(t, c21.Participations[5].Status, models.InConversations)
 	assert.Equal(t, c22.Participations[5].Status, models.Rejected)
 
-	Events.CreateEvent("event7")
+	Events.CreateEvent(CreateEventData{Name: "event7"})
 	c23, err23 := Companies.AddParticipation(company.ID, addParticipationData) // SUGGESTED
 	c24, err24 := Companies.StepStatus(company.ID, 1)                          // SELECTED
 	c25, err25 := Companies.StepStatus(company.ID, 1)                          // CONTACTED
