@@ -1,0 +1,185 @@
+---
+swagger: "2.0"
+info:
+  description: |
+    SINFO's internal management application
+  version: 1.0.0
+  title: Swagger Deck2
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: devteam@sinfo.org
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+host: virtserver.swaggerhub.com
+basePath: /fpereira/deck2/1.0.0
+tags:
+- name: billings
+  description: Saved bills
+- name: companies
+  description: Contacted companies
+- name: companyRep
+  description: Person representing a certain company
+- name: contacts
+  description: All of our saved contacts
+- name: events
+  description: Information relative to each event
+- name: flightInfo
+  description: Saved flight information
+- name: items
+  description: Items in packages sold by SINFO
+- name: meetings
+  description: Saved meetings' information
+- name: members
+  description: Information related to each SINFO's member
+- name: notifications
+  description: Notifications for our members to keep up with updated information
+- name: packages
+  description: Packages sold/traded by SINFO to companies
+- name: posts
+  description: Messages shared by SINFO's members
+- name: sessions
+  description: Scheduled sessions for the event's week, such as keynotes, presentations, etc
+- name: speakers
+  description: Speakers for the event's keynotes
+- name: teams
+  description: SINFO's teams
+- name: threads
+  description: Additional communication taken inside the posts
+schemes:
+- https
+- http
+paths:
+  /events:
+    post:
+      tags:
+      - events
+      summary: Create a new event
+      operationId: createEvent
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: payload
+        description: Information needed to create the new event.
+        required: true
+        schema:
+          type: object
+          required:
+              - name
+          properties:
+            name:
+              type: string
+      responses:
+        200:
+          description: Created event. The new ID will be an increment to the current event.
+          schema:
+            $ref: '#/definitions/Event'
+        400:
+          description: Invalid input or couldn't create the new event.
+    put:
+      tags:
+      - events
+      summary: Update the current event
+      operationId: updateEvent
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: payload
+        description: New event data
+        required: true
+        schema:
+          type: object
+          required:
+              - name
+          properties:
+            name:
+              type: string
+            begin:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+      responses:
+        400:
+          description: Invalid ID supplied
+        404:
+          description: Pet not found
+        405:
+          description: Validation exception
+definitions:
+  Event:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      begin:
+        type: string
+        format: date-time
+      end:
+        type: string
+        format: date-time
+      themes:
+        type: array
+        items:
+          type: string
+      teams:
+        type: array
+        items:
+          type: string
+      packages:
+        type: array
+        items:
+          $ref: '#/definitions/Event_packages'
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/Event_items'
+      meetings:
+        type: array
+        items:
+          type: string
+      sessions:
+        type: array
+        items:
+          type: string
+  ApiResponse:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      type:
+        type: string
+      message:
+        type: string
+  payload:
+    type: object
+    required:
+    - name
+    properties:
+      name:
+        type: string
+  Event_packages:
+    properties:
+      template:
+        type: string
+      available:
+        type: boolean
+  Event_items:
+    properties:
+      item:
+        type: string
+      available:
+        type: integer
+        format: int64
+externalDocs:
+  description: Find out more about Swagger
+  url: http://swagger.io
