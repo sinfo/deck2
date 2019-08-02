@@ -386,3 +386,37 @@ func TestUpdateEventWrongPayload(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
+
+func TestDeleteEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var deletedEvent models.Event
+
+	res, err := executeRequest("DELETE", fmt.Sprintf("/events/%v", Event2.ID), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&deletedEvent)
+
+	assert.Equal(t, deletedEvent.ID, Event2.ID)
+
+	events, _ := mongodb.Events.GetEvents(mongodb.GetEventsOptions{})
+	assert.Equal(t, len(events), 1)
+	assert.Equal(t, events[0].ID, Event1.ID)
+}
+
+func TestDeleteNonExistentEvent(t *testing.T) {
+
+	res, err := executeRequest("DELETE", fmt.Sprintf("/events/%v", Event2.ID), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}

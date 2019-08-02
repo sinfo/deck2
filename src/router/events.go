@@ -134,3 +134,22 @@ func updateEvent(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedEvent)
 }
+
+func deleteEvent(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, errConverter := strconv.Atoi(params["id"])
+
+	if errConverter != nil {
+		http.Error(w, "Could not find event", http.StatusNotFound)
+		return
+	}
+
+	event, err := mongodb.Events.DeleteEvent(id)
+
+	if err != nil {
+		http.Error(w, "Could not delete event", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(event)
+}

@@ -255,7 +255,25 @@ func (e *EventsType) UpdateEvent(eventID int, data UpdateEventData) (*models.Eve
 		return nil, err
 	}
 
-	fmt.Println(updatedEvent)
-
 	return &updatedEvent, nil
+}
+
+// DeleteEvent deletes an event.
+func (e *EventsType) DeleteEvent(eventID int) (*models.Event, error) {
+
+	event, err := Events.GetEvent(eventID)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResult, err := Events.Collection.DeleteOne(e.Context, bson.M{"_id": eventID})
+	if err != nil {
+		return nil, err
+	}
+
+	if deleteResult.DeletedCount != 1 {
+		return nil, fmt.Errorf("should have deleted 1 event, deleted %v", deleteResult.DeletedCount)
+	}
+
+	return event, nil
 }
