@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -13,6 +14,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type TeamsType struct {
@@ -22,6 +24,12 @@ type TeamsType struct {
 
 type CreateTeamData struct {
 	Name        string `json:"name"`
+}
+
+type GetTeamsOptions struct {
+	Name		*string 
+	Event		*int
+	Member		*primitive.ObjectID
 }
 
 // ParseBody fills the CreateTeamData from a body
@@ -38,8 +46,12 @@ func (ctd *CreateTeamData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-// CreateTeam creates a new team and saves it to the database
+// CreateTeam creates a new team and adds it to the current event
 func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+	var updatedEvent models.Event
 
 	insertResult, err := t.Collection.InsertOne(t.Context, bson.M{
 		"name":        data.Name,
@@ -50,43 +62,24 @@ func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
 	}
 
 	newTeam, err := t.GetTeam(insertResult.InsertedID.(primitive.ObjectID))
-
+	
 	if err != nil {
-		log.Println("Error finding created team", err)
 		return nil, err
 	}
+	
+	event, err := Events.GetCurrentEvent()
+	if err != nil{
+		return nil, err
+	}
+	teams:= append(event.Teams,newTeam.ID )
+	if err = Events.Collection.FindOneAndUpdate(Events.Context, bson.M{"_id": event.ID}, bson.M{"teams": teams}, optionsQuery).Decode(&updatedEvent); err != nil {
+		log.Println("Error updating events teams",err)
+		return nil, err
+	}
+
+	currentEvent = &updatedEvent
 
 	return newTeam, nil
-}
-
-// GetTeams gets all teams specified with a query
-func (t *TeamsType) GetTeams(query bson.M) ([]*models.Team, error) {
-	var teams = make([]*models.Team, 0)
-
-	cur, err := t.Collection.Find(t.Context, query)
-	if err != nil {
-		return nil, err
-	}
-
-	for cur.Next(t.Context) {
-
-		// create a value into which the single document can be decoded
-		var t models.Team
-		err := cur.Decode(&t)
-		if err != nil {
-			return nil, err
-		}
-
-		teams = append(teams, &t)
-	}
-
-	if err := cur.Err(); err != nil {
-		return nil, err
-	}
-
-	cur.Close(t.Context)
-
-	return teams, nil
 }
 
 // GetTeam gets a team by its ID.
@@ -100,6 +93,53 @@ func (t *TeamsType) GetTeam(teamID primitive.ObjectID) (*models.Team, error) {
 
 	return &team, nil
 }
+
+// GetTeams gets all teams specified with a query.
+// Options can be Event id, member id or team name
+// Event id defaults to currentEvent.
+func (t *TeamsType) GetTeams(options GetTeamsOptions) ([]*models.Team, error) {
+	var teams = make([]*models.Team, 0)
+	var event *models.Event
+	var err error
+
+	if options.Event != nil {
+		log.Println("GetEvent")
+		event, err  = Events.GetEvent(*options.Event)
+		if err != nil{
+			return nil, err
+		}
+		log.Println(*event)
+	} else{
+		log.Println("Getting currentEvent")
+		event, err = Events.GetCurrentEvent(); 
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _,s := range event.Teams {
+		team, err := t.GetTeam(s);
+		if err != nil {
+			return nil, err
+		}
+		if options.Name == nil{
+			if options.Member == nil{
+				teams = append(teams, team)
+			}else if team.HasMember(*options.Member){
+				teams = append(teams, team)
+			}
+		} else if strings.Contains(strings.ToLower(team.Name),strings.ToLower(*options.Name)){
+			if options.Member == nil{
+				teams = append(teams, team)
+			}else if team.HasMember(*options.Member){
+				teams = append(teams, team)
+			}
+		}
+	}
+
+	return teams, nil
+}
+
 
 // DeleteTeam deletes a team by its ID.
 func (t* TeamsType) DeleteTeam(teamID primitive.ObjectID) (*models.Team, error) {

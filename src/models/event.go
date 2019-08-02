@@ -47,4 +47,7 @@ type Event struct {
 
 	// Sessions is an array of Session _id (see models.Session).
 	Sessions []primitive.ObjectID `json:"sessions" bson:"sessions"`
+
+	// Teams is an array of Team_id (see models.Team).
+	Teams []primitive.ObjectID `json:"teams" bson:"teams"`
 }

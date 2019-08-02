@@ -11,6 +11,7 @@ type TeamMembers struct {
 	Role string `json:"role" bson:"role"`
 }
 
+// Team struct
 type Team struct {
 
 	// Team's ID (_id of mongodb).
@@ -24,4 +25,15 @@ type Team struct {
 	// Meetings is an array of Meeting (see models.Meeting).
 	// This represents meetings specific to this team.
 	Meetings []primitive.ObjectID `json:"meetings" bson:"meetings"`
+}
+
+
+// HasMember returns true if member is in the team and false otherwise.
+func (t *Team) HasMember(member primitive.ObjectID) bool {
+	for _, s := range t.Members {
+		if s.Member == member {
+			return true
+		}
+	}
+	return false
 }

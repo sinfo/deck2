@@ -92,6 +92,7 @@ func (e *EventsType) CreateEvent(name string) (*models.Event, error) {
 		"items":    make([]models.EventItems, 0),
 		"meetings": make([]primitive.ObjectID, 0),
 		"sessions": make([]primitive.ObjectID, 0),
+		"teams":	make([]primitive.ObjectID, 0),		
 	}
 
 	insertResult, err := e.Collection.InsertOne(e.Context, c)

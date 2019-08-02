@@ -3,20 +3,50 @@ package router
 import (
 	"encoding/json"
 	"net/http"
-	//"net/url"
+	"strconv"
 
 	"github.com/sinfo/deck2/src/mongodb"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gorilla/mux"
 )
 
+
+// GetTeamsHandler is the handler for the GET /teams request.
+// Has a query with event={EventID}, member={MemberID}, name={Name}.
+// EventID is an int, memberID is a hexed primitive.ObjectID and name is a string.
 func GetTeamsHandler(w http.ResponseWriter, r *http.Request) {
 
-	query := bson.M{} //BuildQuery(r.URL.Query())
+	urlQuery := r.URL.Query()
+	options := mongodb.GetTeamsOptions{}
 
-	teams, err := mongodb.Teams.GetTeams(query)
+	name := urlQuery.Get("name")
+	member := urlQuery.Get("member")
+	event := urlQuery.Get("event")
+
+	if len(name) >0 {
+		options.Name = &name
+	}
+
+	if len(member) >0 {
+		memberID, err :=primitive.ObjectIDFromHex(member)
+		if err != nil {
+			http.Error(w, "Invalid member ID format", http.StatusBadRequest)
+			return
+		}
+		options.Member = &memberID
+	}
+
+	if len(event) > 0 {
+		eventID, err :=strconv.Atoi(event)
+		if err !=nil {
+			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+			return
+		}
+		options.Event = &eventID
+	}
+
+	teams, err := mongodb.Teams.GetTeams(options)
 
 	if err != nil {
 		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
@@ -25,6 +55,9 @@ func GetTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(teams)
 }
 
+
+// CreateTeamHandler is the handler for the POST /teams request.
+// Takes in a payload with {name: string}
 func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
@@ -46,6 +79,9 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newTeam)
 }
 
+
+// GetTeamHandler is the handler for the GET /teams/{id} request.
+// id is a hexed primitive.ObjectID
 func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 	params :=mux.Vars(r)
 	id,_ := primitive.ObjectIDFromHex(params["id"])
@@ -60,6 +96,8 @@ func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(team)
 }
 
+// DeleteTeamHandler is the handler for the DELETE /teams/{id} request.
+// id is a hexed primitive.ObjectID
 func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])

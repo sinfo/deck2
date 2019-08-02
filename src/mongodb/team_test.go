@@ -21,6 +21,11 @@ func TestCreateTeam(t *testing.T) {
 
 	assert.NilError(t, err)
 	assert.Equal(t, newTeam.Name, createTeamData.Name)
+
+	event, err := Events.GetCurrentEvent()
+
+	assert.NilError(t,err)
+	assert.Equal(t, len(event.Teams), 1)
 }
 
 func TestGetTeam(t *testing.T) {
@@ -57,4 +62,53 @@ func TestDeleteTeam(t *testing.T) {
 	team3, err := Teams.GetTeam(team2.ID)
 	
 	assert.Assert(t, is.Nil(team3))
+}
+
+func TestGetTeams(t *testing.T) {
+	
+	SetupTest()
+	defer db.Drop(ctx)
+	
+	CreateTeamData1 := CreateTeamData{
+		Name: "team1",
+	}
+	CreateTeamData2 := CreateTeamData{
+		Name: "team2",
+	}
+	team1, _ := Teams.CreateTeam(CreateTeamData1)
+	team2, _ := Teams.CreateTeam(CreateTeamData2)
+	name := "1"
+	event,_ := Events.GetCurrentEvent()
+	id := event.ID
+	t.Log(id)
+	t.Log(event)
+
+	gto0 := GetTeamsOptions{
+		Name: nil,
+		Event: nil,
+		Member: nil,
+	}
+	teams, err := Teams.GetTeams(gto0)
+	assert.NilError(t, err)
+	assert.Equal(t, len(teams), 2)
+
+	gto1 := GetTeamsOptions{
+		Name: &name,
+		Event: nil,
+		Member: nil,
+	}
+	teams,err = Teams.GetTeams(gto1)
+	assert.NilError(t, err)
+	assert.Equal(t, len(teams), 1)
+	assert.Equal(t, teams[0].ID, team1.ID )
+
+	gto2 := GetTeamsOptions{
+		Name: nil,
+		Event: &(id),
+		Member: nil,
+	}
+	teams, err = Teams.GetTeams(gto2)
+	assert.NilError(t, err)
+	assert.Equal(t, len(teams), 2)
+	assert.Equal(t, teams[1].ID, team2.ID)
 }
