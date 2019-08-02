@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -50,4 +51,24 @@ type Event struct {
 
 	// Teams is an array of Team_id (see models.Team).
 	Teams []primitive.ObjectID `json:"teams" bson:"teams"`
+}
+
+// DurationInDays returns the duration of the event in days.
+func (e Event) DurationInDays() (int, error) {
+
+	var result = 1
+
+	if e.Begin == nil || e.End == nil {
+		return -1, errors.New("event's dates not set'")
+	}
+
+	var start = *e.Begin
+	var end = *e.End
+
+	for start.Day() != end.Day() {
+		result++
+		start = start.Add(time.Hour * 24)
+	}
+
+	return result, nil
 }

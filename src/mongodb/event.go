@@ -98,7 +98,6 @@ func (ced *CreateEventData) ParseBody(body io.Reader) error {
 // created is de id and name. The id is incremented to the latest event.
 // WARNING: the first event should be added to the database manually.
 func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
-	var newEvent models.Event
 
 	latestEvent, err := e.GetCurrentEvent()
 
@@ -123,14 +122,12 @@ func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
 		log.Fatal(err)
 	}
 
-	if err := e.Collection.FindOne(e.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&newEvent); err != nil {
+	if err := e.Collection.FindOne(e.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&currentEvent); err != nil {
 		log.Println("Error finding created event:", err)
 		return nil, err
 	}
 
-	currentEvent = &newEvent
-
-	return &newEvent, nil
+	return currentEvent, nil
 }
 
 // GetEventsOptions is the options to give to GetEvents.
@@ -236,8 +233,6 @@ func (ued *UpdateEventData) ParseBody(body io.Reader) error {
 // UpdateEvent updates an event with ID eventID with the new data, using the UpdateEventData structure.
 func (e *EventsType) UpdateEvent(eventID int, data UpdateEventData) (*models.Event, error) {
 
-	var updatedEvent models.Event
-
 	var updateQuery = bson.M{
 		"$set": bson.M{
 			"name":  data.Name,
@@ -251,12 +246,12 @@ func (e *EventsType) UpdateEvent(eventID int, data UpdateEventData) (*models.Eve
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
 		log.Println("error updating event:", err)
 		return nil, err
 	}
 
-	return &updatedEvent, nil
+	return currentEvent, nil
 }
 
 // DeleteEvent deletes an event.
@@ -276,5 +271,72 @@ func (e *EventsType) DeleteEvent(eventID int) (*models.Event, error) {
 		return nil, fmt.Errorf("should have deleted 1 event, deleted %v", deleteResult.DeletedCount)
 	}
 
+	currentEvent = nil
+
 	return event, nil
+}
+
+// UpdateEventThemesData is the structure used for updating the event's themes.
+type UpdateEventThemesData struct {
+	Themes []string `json:themes`
+}
+
+// ParseBody fills the CreateEventData from a body
+func (uetd *UpdateEventThemesData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(uetd); err != nil {
+		return err
+	}
+
+	for _, t := range uetd.Themes {
+		if len(t) == 0 {
+			return errors.New("empty theme")
+		}
+	}
+
+	return nil
+}
+
+// UpdateThemes updates an event with ID eventID with new days' themes.
+func (e *EventsType) UpdateThemes(eventID int, data UpdateEventThemesData) (*models.Event, error) {
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"themes": data.Themes,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
+		log.Println("error updating event's themes:", err)
+		return nil, err
+	}
+
+	return currentEvent, nil
+}
+
+// UpdateTeams updates an event with ID eventID with new teams.
+func (e *EventsType) UpdateTeams(eventID int, teams []primitive.ObjectID) (*models.Event, error) {
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"teams": teams,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
+		log.Println("error updating event's themes:", err)
+		return nil, err
+	}
+
+	return currentEvent, nil
 }
