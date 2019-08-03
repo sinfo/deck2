@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -40,32 +37,9 @@ func containsEvent(events []models.Event, event models.Event) bool {
 	return false
 }
 
-func executeRequest(method string, path string, payload io.Reader) (*httptest.ResponseRecorder, error) {
-	req, errReq := http.NewRequest(method, path, payload)
-
-	if errReq != nil {
-		return nil, errReq
-	}
-
-	rr := httptest.NewRecorder()
-	Router.ServeHTTP(rr, req)
-
-	return rr, nil
-}
-
-func TestMain(m *testing.M) {
-
-	// Database setup
-	mongodb.InitializeDatabase()
-
-	// Router setup
-	InitializeRouter()
-
-	retCode := m.Run()
-	os.Exit(retCode)
-}
-
 func TestGetEvents(t *testing.T) {
+
+	log.Println("testing events")
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
