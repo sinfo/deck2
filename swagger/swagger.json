@@ -1,0 +1,103 @@
+﻿{
+	"swagger": "2.0",
+	"info": {
+		"description": "SINFO's internal management application\n",
+		"version": "1.0.0",
+		"title": "Swagger Deck2",
+		"termsOfService": "http://swagger.io/terms/",
+		"contact": {
+			"email": "devteam@sinfo.org"
+		},
+		"license": {
+			"name": "Apache 2.0",
+			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+		}
+	},
+	"host": "virtserver.swaggerhub.com",
+	"basePath": "/",
+	"tags": [
+		{
+			"name": "billings",
+			"description": "Saved bills"
+		},
+		{
+			"name": "companies",
+			"description": "Contacted companies"
+		},
+		{
+			"name": "companyRep",
+			"description": "Person representing a certain company"
+		},
+		{
+			"name": "contacts",
+			"description": "All of our saved contacts"
+		},
+		{
+			"name": "events",
+			"description": "Information relative to each event"
+		},
+		{
+			"name": "flightInfo",
+			"description": "Saved flight information"
+		},
+		{
+			"name": "items",
+			"description": "Items in packages sold by SINFO"
+		},
+		{
+			"name": "meetings",
+			"description": "Saved meetings' information"
+		},
+		{
+			"name": "members",
+			"description": "Information related to each SINFO's member"
+		},
+		{
+			"name": "notifications",
+			"description": "Notifications for our members to keep up with updated information"
+		},
+		{
+			"name": "packages",
+			"description": "Packages sold/traded by SINFO to companies"
+		},
+		{
+			"name": "posts",
+			"description": "Messages shared by SINFO's members"
+		},
+		{
+			"name": "sessions",
+			"description": "Scheduled sessions for the event's week, such as keynotes, presentations, etc"
+		},
+		{
+			"name": "speakers",
+			"description": "Speakers for the event's keynotes"
+		},
+		{
+			"name": "teams",
+			"description": "SINFO's teams"
+		},
+		{
+			"name": "threads",
+			"description": "Additional communication taken inside the posts"
+		}
+	],
+	"schemes": [
+		"https",
+		"http"
+	],
+	"paths": {
+		"/events": {
+			"$ref": "./endpoints/events.json"
+		},
+		"/events/{id}": {
+			"$ref": "./endpoints/events-id.json"
+		},
+		"/events/themes": {
+			"$ref": "./endpoints/events-themes.json"
+		}
+	},
+	"externalDocs": {
+		"description": "Find out more about Swagger",
+		"url": "http://swagger.io"
+	}
+}

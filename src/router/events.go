@@ -141,7 +141,7 @@ func deleteEvent(w http.ResponseWriter, r *http.Request) {
 	id, errConverter := strconv.Atoi(params["id"])
 
 	if errConverter != nil {
-		http.Error(w, "Could not find event", http.StatusNotFound)
+		http.Error(w, "Could not convert event ID to integer", http.StatusNotFound)
 		return
 	}
 
@@ -162,7 +162,7 @@ func updateEventThemes(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusExpectationFailed)
+		http.Error(w, "Could not find current event", http.StatusNotFound)
 		return
 	}
 
@@ -181,7 +181,7 @@ func updateEventThemes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// must be bigger than 0, you can set the themes to an empty string (in case you messed up)
-	if len(uetd.Themes) > 0 && len(uetd.Themes) != days {
+	if uetd.Themes != nil && len(*uetd.Themes) > 0 && len(*uetd.Themes) != days {
 		http.Error(w, fmt.Sprintf("Number of themes must be equal to the event's duration (%v days).", days), http.StatusBadRequest)
 		return
 	}

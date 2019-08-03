@@ -278,7 +278,10 @@ func (e *EventsType) DeleteEvent(eventID int) (*models.Event, error) {
 
 // UpdateEventThemesData is the structure used for updating the event's themes.
 type UpdateEventThemesData struct {
-	Themes []string `json:themes`
+
+	// Themes for the event. It's a pointer for giving a nil value if the body to parse doesn't have
+	// a themes key. Otherwise would give an empty array, because that's the starting value.
+	Themes *[]string `json:"themes"`
 }
 
 // ParseBody fills the CreateEventData from a body
@@ -288,7 +291,11 @@ func (uetd *UpdateEventThemesData) ParseBody(body io.Reader) error {
 		return err
 	}
 
-	for _, t := range uetd.Themes {
+	if uetd.Themes == nil {
+		return errors.New("invalid body")
+	}
+
+	for _, t := range *uetd.Themes {
 		if len(t) == 0 {
 			return errors.New("empty theme")
 		}

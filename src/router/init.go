@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -23,16 +24,29 @@ func headersMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func healthCheck(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
+
 // Router is the exported router.
 var Router http.Handler
 
 func InitializeRouter() {
 	r := mux.NewRouter()
 
-	Router = r
-
 	r.Use(loggingMiddleware)
 	r.Use(headersMiddleware)
+
+	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
+	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+
+	// healthcheck endpoint
+	r.HandleFunc("/health", healthCheck)
+
+	// swagger config
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
@@ -55,6 +69,11 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
 	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
 
+<<<<<<< HEAD
 	http.ListenAndServe(":8080", r)
 	
+=======
+	// save router instance
+	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
+>>>>>>> 1a08647b724b9e50567d1be7d86b08bdd9cefa27
 }
