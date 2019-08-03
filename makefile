@@ -20,11 +20,7 @@ build:
 
 test:
 	./bin/mongodb.test
-<<<<<<< HEAD
-	./bin/server.test
-=======
 	./bin/router.test
->>>>>>> 1a08647b724b9e50567d1be7d86b08bdd9cefa27
 
 run: build
 	$(BINDIR)/$(BINARY_FILENAME)

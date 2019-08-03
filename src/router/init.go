@@ -69,11 +69,6 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
 	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
 
-<<<<<<< HEAD
-	http.ListenAndServe(":8080", r)
-	
-=======
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
->>>>>>> 1a08647b724b9e50567d1be7d86b08bdd9cefa27
 }
