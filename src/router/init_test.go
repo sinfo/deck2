@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"log"
 	"testing"
 
 	"github.com/sinfo/deck2/src/mongodb"
@@ -25,11 +26,15 @@ func executeRequest(method string, path string, payload io.Reader) (*httptest.Re
 
 func TestMain(m *testing.M) {
 
+	log.Println("Testing main")
+
 	// Database setup
 	mongodb.InitializeDatabase()
 
 	// Router setup
 	InitializeRouter()
+
+	log.Println("Running")
 
 	retCode := m.Run()
 	os.Exit(retCode)

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"strconv"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
@@ -16,12 +17,12 @@ import (
 )
 
 var (
-	ID1,_		= primitive.ObjectIDFromHex("1")
-	ID2,_		= primitive.ObjectIDFromHex("2")
-	ID3,_		= primitive.ObjectIDFromHex("3")
+	ID1,_		= primitive.ObjectIDFromHex("4")
+	ID2,_		= primitive.ObjectIDFromHex("5")
 	Team1		= models.Team{ID: ID1, Name: "TEAM1"}
 	Team2		= models.Team{ID: ID2, Name: "TEAM2"}
-	Team3		= models.Team{ID: ID3, Name: "TEAM3"}
+	TeamEvent1	= models.Event{ID: 1, Name: "SINFO1"}
+	TeamEvent2		*models.Event
 	TeamsArr	= make([]primitive.ObjectID, 0)
 )
 
@@ -35,9 +36,32 @@ func containsTeam(teams []models.Team, team models.Team) bool {
 	return false
 }
 
-func TestGetTeamsHandler(t *testing.T) {
+func setupTest(){
+
+	log.Println("Setting up test")
+
+	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	ced := mongodb.CreateEventData{
+		Name: "SINFO2",
+	}
+	TeamEvent2, err = mongodb.Events.CreateEvent(ced)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func TestGetTeams(t *testing.T) {
+
+	println("Testing GetTeams")
+
+	setupTest()
 
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
 	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team1.ID, "name": Team1.Name}); err != nil {
 		log.Fatal(err)
@@ -61,7 +85,10 @@ func TestGetTeamsHandler(t *testing.T) {
 
 func TestGetTeamsByName(t *testing.T) {
 
+	setupTest()
+
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
 	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team1.ID, "name": Team1.Name}); err != nil {
 		log.Fatal(err)
@@ -86,13 +113,10 @@ func TestGetTeamsByName(t *testing.T) {
 
 func TestGetTeamsByEvent(t *testing.T) {
 
+	setupTest()
+
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
-		"_id": Event1.ID, "name": Event1.Name, "teams": append(TeamsArr, Team1.ID)}); err != nil {
-		log.Fatal(err)
-	}
 
 	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{
 		"_id": Team1.ID, "name": Team1.Name}); err != nil {
@@ -105,7 +129,7 @@ func TestGetTeamsByEvent(t *testing.T) {
 	}
 
 	var teams []models.Team
-	id := primitive.ObjectID.Hex(Team1.ID)
+	id := strconv.Itoa(TeamEvent2.ID)
 	var query = "?event=" + url.QueryEscape(id)
 
 	res, err := executeRequest("GET", "/teams"+query, nil)
@@ -138,6 +162,9 @@ func TestGetTeamsBadQuery(t *testing.T) {
 
 func TestGetTeam(t *testing.T) {
 
+	setupTest()
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
 	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team1.ID, "name": Team1.Name}); err != nil {

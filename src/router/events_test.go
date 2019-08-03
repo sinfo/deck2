@@ -39,6 +39,8 @@ func containsEvent(events []models.Event, event models.Event) bool {
 
 func TestGetEvents(t *testing.T) {
 
+	log.Println("testing events")
+
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {

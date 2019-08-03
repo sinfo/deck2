@@ -15,7 +15,7 @@ import (
 // GetTeamsHandler is the handler for the GET /teams request.
 // Has a query with event={EventID}, member={MemberID}, name={Name}.
 // EventID is an int, memberID is a hexed primitive.ObjectID and name is a string.
-func GetTeamsHandler(w http.ResponseWriter, r *http.Request) {
+func getTeams(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
 	options := mongodb.GetTeamsOptions{}
@@ -58,7 +58,7 @@ func GetTeamsHandler(w http.ResponseWriter, r *http.Request) {
 
 // CreateTeamHandler is the handler for the POST /teams request.
 // Takes in a payload with {name: string}
-func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
+func createTeam(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
@@ -82,7 +82,7 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetTeamHandler is the handler for the GET /teams/{id} request.
 // id is a hexed primitive.ObjectID
-func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
+func getTeam(w http.ResponseWriter, r *http.Request) {
 	params :=mux.Vars(r)
 	id,_ := primitive.ObjectIDFromHex(params["id"])
 	
@@ -98,7 +98,7 @@ func GetTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 // DeleteTeamHandler is the handler for the DELETE /teams/{id} request.
 // id is a hexed primitive.ObjectID
-func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
+func deleteTeam(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
