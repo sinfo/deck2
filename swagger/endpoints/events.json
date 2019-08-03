@@ -1,0 +1,158 @@
+{
+    "get": {
+        "tags": [
+            "events"
+        ],
+        "summary": "Get all events",
+        "operationId": "getEvents",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the event",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "before",
+                "description": "Event happened before this date",
+                "type": "string",
+                "format": "date-time"
+            },
+            {
+                "in": "query",
+                "name": "after",
+                "description": "Event happened after this date",
+                "type": "string",
+                "format": "date-time"
+            },
+            {
+                "in": "query",
+                "name": "during",
+                "description": "Event happened during this date",
+                "type": "string",
+                "format": "date-time"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Events filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/event.json"
+                    }
+                }
+            },
+            "400": {
+                "description": "Invalid date format on query"
+            },
+            "417": {
+                "description": "Unable to get events"
+            }
+        }
+    },
+    "post": {
+        "tags": [
+            "events"
+        ],
+        "summary": "Create a new event",
+        "operationId": "createEvent",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "Information needed to create the new event.",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created event. The new ID will be an increment to the current event",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "400": {
+                "description": "Invalid input or couldn't create the new event"
+            }
+        }
+    },
+    "put": {
+        "tags": [
+            "events"
+        ],
+        "summary": "Update the current event",
+        "operationId": "updateEvent",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "New event data",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "begin": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "end": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated event",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload, or couldn't update event"
+            },
+            "417": {
+                "description": "Couldn't find current event"
+            }
+        }
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "put": {
+        "tags": [
+            "events"
+        ],
+        "summary": "Update the current event's themes",
+        "operationId": "updateEventThemes",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "themes",
+                "description": "Themes for the event. Must have the same number of elements as there are days in the duration of the event, or be empty",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "themes"
+                    ],
+                    "properties": {
+                        "themes": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Event with the updated themes",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload (be it format, or number of elements in the array)"
+            },
+            "404": {
+                "description": "Event not found"
+            }
+        }
+    }
+}

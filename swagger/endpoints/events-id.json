@@ -1,0 +1,68 @@
+{
+    "get": {
+        "tags": [
+            "events"
+        ],
+        "summary": "Get event by ID",
+        "operationId": "getEvent",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the event",
+                "required": true,
+				"type": "integer"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Event with the specific ID",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "404": {
+                "description": "Event not found"
+            }
+        }
+    },
+    "delete": {
+        "tags": [
+            "events"
+        ],
+        "summary": "Deletes an event",
+        "operationId": "deleteEvent",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the event",
+                "required": true,
+				"type": "integer"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Deleted event",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "404": {
+                "description": "Event not found"
+            }
+        }
+    }
+}

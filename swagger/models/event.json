@@ -1,0 +1,70 @@
+{
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "integer",
+			"format": "int64"
+		},
+		"begin": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"end": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"themes": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"teams": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"packages": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"template": {
+						"type": "string"
+					},
+					"available": {
+						"type": "boolean"
+					}
+				}
+			}
+		},
+		"items": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"item": {
+						"type": "string"
+					},
+					"available": {
+						"type": "integer",
+						"format": "int64"
+					}
+				}
+			}
+		},
+		"meetings": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		},
+		"sessions": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
+		}
+	}
+}
