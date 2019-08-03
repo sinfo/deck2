@@ -2,7 +2,6 @@ package router
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -17,16 +16,13 @@ import (
 )
 
 var (
-	ID1,_		= primitive.ObjectIDFromHex("4")
-	ID2,_		= primitive.ObjectIDFromHex("5")
-	Team1		= models.Team{ID: ID1, Name: "TEAM1"}
-	Team2		= models.Team{ID: ID2, Name: "TEAM2"}
-	TeamEvent1	= models.Event{ID: 1, Name: "SINFO1"}
-	TeamEvent2		*models.Event
+	Team1		*models.Team
+	Team2		*models.Team
+	TeamEvent2	*models.Event
 	TeamsArr	= make([]primitive.ObjectID, 0)
 )
 
-func containsTeam(teams []models.Team, team models.Team) bool {
+func containsTeam(teams []models.Team, team *models.Team) bool {
 	for _, s := range teams {
 		if s.ID == team.ID && s.Name == team.Name {
 			return true
@@ -37,8 +33,6 @@ func containsTeam(teams []models.Team, team models.Team) bool {
 }
 
 func setupTest(){
-
-	log.Println("Setting up test")
 
 	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
 
@@ -56,18 +50,18 @@ func setupTest(){
 
 func TestGetTeams(t *testing.T) {
 
-	println("Testing GetTeams")
-
 	setupTest()
 
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team1.ID, "name": Team1.Name}); err != nil {
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team2.ID, "name": Team2.Name}); err != nil {
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -90,11 +84,13 @@ func TestGetTeamsByName(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team1.ID, "name": Team1.Name}); err != nil {
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team2.ID, "name": Team2.Name}); err != nil {
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -109,6 +105,14 @@ func TestGetTeamsByName(t *testing.T) {
 
 	assert.Equal(t, containsTeam(teams, Team1), true)
 	assert.Equal(t, containsTeam(teams, Team2), false)
+
+	res, err = executeRequest("GET", "/teams?name=wrong",nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code,http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&teams)
+
+	assert.Equal(t, len(teams),0)
 }
 
 func TestGetTeamsByEvent(t *testing.T) {
@@ -118,15 +122,20 @@ func TestGetTeamsByEvent(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 
-	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{
-		"_id": Team1.ID, "name": Team1.Name}); err != nil {
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{
-		"_id": Team2.ID, "name": Team2.Name}); err != nil {
-			log.Fatal(err)
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: "TestEvent"}); err != nil {
+		log.Fatal(err)
 	}
+
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 
 	var teams []models.Team
 	id := strconv.Itoa(TeamEvent2.ID)
@@ -146,18 +155,14 @@ func TestGetTeamsBadQuery(t *testing.T) {
 
 	var badQuery1 = "?event=wrong"
 	var badQuery2 = "?member=wrong"
-	var badQuery3 = "?name=wrong"
 
 	res1, err1 := executeRequest("GET", "/teams"+badQuery1, nil)
 	res2, err2 := executeRequest("GET", "/teams"+badQuery2, nil)
-	res3, err3 := executeRequest("GET", "/teams"+badQuery3, nil)
 	assert.NilError(t, err1)
 	assert.NilError(t, err2)
-	assert.NilError(t, err3)
 
 	assert.Equal(t, res1.Code, http.StatusBadRequest)
 	assert.Equal(t, res2.Code, http.StatusBadRequest)
-	assert.Equal(t, res3.Code, http.StatusBadRequest)
 }
 
 func TestGetTeam(t *testing.T) {
@@ -167,18 +172,20 @@ func TestGetTeam(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team1.ID, "name": Team1.Name}); err != nil {
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Teams.Collection.InsertOne(mongodb.Teams.Context, bson.M{"_id": Team2.ID, "name": Team2.Name}); err != nil {
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	var team1, team2 models.Team
 
-	res1, err1 := executeRequest("GET", fmt.Sprintf("/teams/%v", Event1.ID), nil)
-	res2, err2 := executeRequest("GET", fmt.Sprintf("/teams/%v", Event2.ID), nil)
+	res1, err1 := executeRequest("GET", "/teams/"+ Team1.ID.Hex(), nil)
+	res2, err2 := executeRequest("GET", "/teams/"+ Team2.ID.Hex(), nil)
 	assert.NilError(t, err1)
 	assert.NilError(t, err2)
 	assert.Equal(t, res1.Code, http.StatusOK)
