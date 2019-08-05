@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
@@ -512,4 +514,119 @@ func TestAddPackageToEvent(t *testing.T) {
 			assert.Equal(t, updatedEvent.Themes[i], themes[i])
 		}
 	*/
+}
+
+func TestAddItemToEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createItemData := mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Image:       Item.Image,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	newItem, err := mongodb.Items.CreateItem(createItemData)
+	assert.NilError(t, err)
+
+	var available = 4
+
+	var updatedEvent models.Event
+	var aeid = mongodb.AddEventItemData{ItemID: &newItem.ID, Available: &available}
+	b, errMarshal := json.Marshal(aeid)
+	assert.NilError(t, errMarshal)
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	assert.NilError(t, err)
+
+	res, err := executeRequest("POST", "/events/items", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedEvent)
+
+	assert.Equal(t, updatedEvent.ID, currentEvent.ID)
+	assert.Equal(t, len(updatedEvent.Items) == 1, true)
+	assert.Equal(t, updatedEvent.Items[0].Item, newItem.ID)
+	assert.Equal(t, updatedEvent.Items[0].Available, available)
+}
+func TestAddItemToEventInvalidPayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createItemData := mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Image:       Item.Image,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	newItem, err := mongodb.Items.CreateItem(createItemData)
+	assert.NilError(t, err)
+
+	type InvalidPayload struct {
+		ItemID primitive.ObjectID `json:"id"`
+	}
+
+	var aeid = InvalidPayload{ItemID: newItem.ID}
+	b, errMarshal := json.Marshal(aeid)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/events/items", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestAddItemToEventItemNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var available = 4
+
+	var itemID = primitive.NewObjectID()
+	var aeid = mongodb.AddEventItemData{ItemID: &itemID, Available: &available}
+	b, errMarshal := json.Marshal(aeid)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/events/items", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
 }

@@ -405,6 +405,14 @@ func (aeid *AddEventItemData) ParseBody(body io.Reader) error {
 		return err
 	}
 
+	if aeid.ItemID == nil {
+		return errors.New("no item ID given")
+	}
+
+	if aeid.Available == nil {
+		return errors.New("no number of available items given")
+	}
+
 	return nil
 }
 
@@ -429,7 +437,7 @@ func (e *EventsType) AddItem(eventID int, data AddEventItemData) (*models.Event,
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
-		log.Println("error updating event's packages:", err)
+		log.Println("error updating event's items:", err)
 		return nil, err
 	}
 

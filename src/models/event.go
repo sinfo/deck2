@@ -20,7 +20,7 @@ type EventItems struct {
 	// Item is a Item _id (see models.Item).
 	Item primitive.ObjectID `json:"item" bson:"item"`
 
-	Available bool `json:"available" bson:"available"`
+	Available int `json:"available" bson:"available"`
 }
 
 // Event info.
