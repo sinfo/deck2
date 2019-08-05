@@ -13,7 +13,7 @@
 			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
 		}
 	},
-	"host": "virtserver.swaggerhub.com",
+	"host": "localhost:8080",
 	"basePath": "/",
 	"tags": [
 		{
@@ -82,7 +82,6 @@
 		}
 	],
 	"schemes": [
-		"https",
 		"http"
 	],
 	"paths": {
@@ -100,6 +99,15 @@
 		},
 		"/teams/{id}": {
 			"$ref": "./endpoints/teams-id.json"
+		},
+		"/events/packages": {
+			"$ref": "./endpoints/events-packages.json"
+		},
+		"/events/items": {
+			"$ref": "./endpoints/events-items.json"
+		},
+		"/items": {
+			"$ref": "./endpoints/items.json"
 		}
 	},
 	"externalDocs": {

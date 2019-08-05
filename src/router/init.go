@@ -61,6 +61,8 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/{id:[0-9]+}", getEvent).Methods("GET")
 	eventRouter.HandleFunc("/{id:[0-9]+}", deleteEvent).Methods("DELETE")
 	eventRouter.HandleFunc("/themes", updateEventThemes).Methods("PUT")
+	eventRouter.HandleFunc("/packages", addPackageToEvent).Methods("POST")
+	eventRouter.HandleFunc("/items", addItemToEvent).Methods("POST")
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
@@ -75,6 +77,10 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("", getMembers).Methods("GET")
 	memberRouter.HandleFunc("", createMember).Methods("POST")
 	memberRouter.HandleFunc("/{id}", getMember).Methods("GET")
+
+	// item handlers
+	itemRouter := r.PathPrefix("/items").Subrouter()
+	itemRouter.HandleFunc("", createItem).Methods("POST")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

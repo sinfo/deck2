@@ -16,6 +16,7 @@ var (
 	Companies	*CompaniesType
 	Teams     	*TeamsType
 	Members	  	*MembersType		
+	Items 		*ItemsType
 )
 
 // InitializeDatabase initializes the database connection
@@ -62,6 +63,11 @@ func InitializeDatabase() {
 	Members = &MembersType{
 		Collection: db.Collection("members"),
 		Context:	ctx,
+	}
+	
+	Items = &ItemsType{
+		Collection: db.Collection("items"),
+		Context:    ctx,
 	}
 
 	log.Println("Connected to the database successfully")
