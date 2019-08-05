@@ -18,6 +18,14 @@ func createPackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if the IDs are valid
+	for _, packageItem := range *cpd.Items {
+		if _, err := mongodb.Items.GetItem(packageItem.Item); err != nil {
+			http.Error(w, "Item ID not valid in list of items given", http.StatusNotFound)
+			return
+		}
+	}
+
 	newPackage, err := mongodb.Packages.CreatePackage(*cpd)
 
 	if err != nil {

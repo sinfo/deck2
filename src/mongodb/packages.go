@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/sinfo/deck2/src/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -71,4 +72,16 @@ func (p *PackagesType) CreatePackage(data CreatePackageData) (*models.Package, e
 	}
 
 	return &newPackage, nil
+}
+
+// GetPackage gets a package by its ID
+func (p *PackagesType) GetPackage(packageID primitive.ObjectID) (*models.Package, error) {
+	var result models.Package
+
+	err := p.Collection.FindOne(p.Context, bson.M{"_id": packageID}).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

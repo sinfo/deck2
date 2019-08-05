@@ -78,6 +78,7 @@ func TestCreatePackageInvalidPayload(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
 
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
@@ -97,4 +98,30 @@ func TestCreatePackageInvalidPayload(t *testing.T) {
 	res, err := executeRequest("POST", "/packages", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestCreatePackageInvalidItemID(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	Package.Items[0].Item = primitive.NewObjectID()
+
+	createPackageData := &mongodb.CreatePackageData{
+		Name:  &Package.Name,
+		Items: &Package.Items,
+		Price: &Package.Price,
+		VAT:   &Package.VAT,
+	}
+
+	b, errMarshal := json.Marshal(createPackageData)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/packages", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
 }
