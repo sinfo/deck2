@@ -17,6 +17,7 @@ var (
 	Teams     	*TeamsType
 	Members	  	*MembersType		
 	Items 		*ItemsType
+	Packages  	*PackagesType
 )
 
 // InitializeDatabase initializes the database connection
@@ -67,6 +68,11 @@ func InitializeDatabase() {
 	
 	Items = &ItemsType{
 		Collection: db.Collection("items"),
+		Context:    ctx,
+	}
+
+	Packages = &PackagesType{
+		Collection: db.Collection("packages"),
 		Context:    ctx,
 	}
 

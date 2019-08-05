@@ -114,6 +114,9 @@
 		},
 		"/members/{id}":{
 			"$ref":"./endpoints/members-id.json"
+		},
+		"/packages": {
+			"$ref": "./endpoints/packages.json"
 		}
 	},
 	"externalDocs": {

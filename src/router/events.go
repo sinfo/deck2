@@ -214,11 +214,9 @@ func addPackageToEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, p := range currentEvent.Packages {
-		if p.Template == *aepd.Template {
-			http.Error(w, "Package already stored in the current event", http.StatusConflict)
-			return
-		}
+	if _, err := mongodb.Packages.GetPackage(*aepd.Template); err != nil {
+		http.Error(w, "Package not found", http.StatusNotFound)
+		return
 	}
 
 	newEvent, err := mongodb.Events.AddPackage(currentEvent.ID, *aepd)

@@ -1,7 +1,7 @@
 {
     "post": {
         "tags": [
-            "events"
+            "events", "packages"
         ],
         "summary": "Add template to packages of the current event and make it available",
         "operationId": "addEventPackage",
@@ -44,10 +44,7 @@
                 "description": "Invalid payload"
             },
             "404": {
-                "description": "Event not found"
-            },
-            "409": {
-                "description": "Package already stored on the current event"
+                "description": "Event not found, or package not found"
             }
         }
     }

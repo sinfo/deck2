@@ -1,0 +1,68 @@
+{
+    "post": {
+        "tags": [
+            "packages"
+        ],
+        "summary": "Creates a new package",
+        "operationId": "createPackage",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "package",
+                "description": "New package data",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name", "items", "price", "vat"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "item": {
+                                    "type": "string"
+                                },
+                                "quantity": {
+                                    "type": "integer"
+                                }
+                            }
+                        },
+                        "price": {
+                            "type": "integer"
+                        },
+                        "vat": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created package",
+                "schema": {
+                    "$ref": "./models/package.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload"
+            },
+            "404": {
+                "description": "Invalid item ID"
+            },
+            "417": {
+                "description": "Unable to create the package"
+            }
+        }
+    }
+}

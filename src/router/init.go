@@ -84,6 +84,10 @@ func InitializeRouter() {
 	itemRouter := r.PathPrefix("/items").Subrouter()
 	itemRouter.HandleFunc("", createItem).Methods("POST")
 
+	// package handlers
+	packageRouter := r.PathPrefix("/packages").Subrouter()
+	packageRouter.HandleFunc("", createPackage).Methods("POST")
+
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
 }
