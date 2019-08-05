@@ -1,7 +1,7 @@
 {
     "post": {
         "tags": [
-            "events"
+            "events", "packages"
         ],
         "summary": "Add template to packages of the current event and make it available",
         "operationId": "addEventPackage",

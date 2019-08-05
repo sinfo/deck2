@@ -1,7 +1,7 @@
 {
     "post": {
         "tags": [
-            "events"
+            "events", "items"
         ],
         "summary": "Adds an item to the current event",
         "operationId": "addEventItem",

@@ -102,6 +102,9 @@
 		},
 		"/items": {
 			"$ref": "./endpoints/items.json"
+		},
+		"/packages": {
+			"$ref": "./endpoints/packages.json"
 		}
 	},
 	"externalDocs": {
