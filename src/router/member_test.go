@@ -1,6 +1,7 @@
 package router
 
 import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"encoding/json"
 	"log"
 	"bytes"
@@ -228,4 +229,132 @@ func TestCreateMemberBadPayload(t *testing.T){
 	res, err = executeRequest("POST", "/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestUpdateMember(t *testing.T){
+	defer  mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	Member1, err := mongodb.Members.CreateMember(Member1Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b, errMarshal := json.Marshal(Member2Data)
+	assert.NilError(t, errMarshal)
+
+
+	res, err := executeRequest("PUT", "/members/"+Member1.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var member models.Member
+
+	json.NewDecoder(res.Body).Decode(&member)
+
+	assert.Equal(t, Member2Data.Name, member.Name)
+	assert.Equal(t, Member1.ID, member.ID)
+}
+
+func TestUpdateMemberBadPayload(t *testing.T){
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	Member1, err := mongodb.Members.CreateMember(Member1Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cmdName := mongodb.CreateMemberData{
+		Name: "",
+		Image:"Image.png",
+		Istid: "ist111111",
+	}
+
+	b, errMarshal := json.Marshal(cmdName)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/members/"+Member1.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	cmdImage := mongodb.CreateMemberData{
+		Name: "Name",
+		Image:"",
+		Istid: "ist111111",
+	}
+
+	b, errMarshal = json.Marshal(cmdImage)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("PUT", "/members/"+Member1.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	cmdIstid0 := mongodb.CreateMemberData{
+		Name: "Name",
+		Image:"Image.png",
+		Istid: "",
+	}
+
+	b, errMarshal = json.Marshal(cmdIstid0)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("PUT", "/members/"+Member1.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	cmdIstidIst := mongodb.CreateMemberData{
+		Name: "Name",
+		Image:"Image.png",
+		Istid: "123456",
+	}
+
+	b, errMarshal = json.Marshal(cmdIstidIst)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("PUT", "/members/"+Member1.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestUpdateMemberContact(t *testing.T){
+	defer  mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	Member1, err := mongodb.Members.CreateMember(Member1Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	updateData := mongodb.UpdateMemberContactData{
+		Contact: primitive.NewObjectID(),
+	}
+
+	b, errMarshal := json.Marshal(updateData)
+	assert.NilError(t, errMarshal)
+
+
+	res, err := executeRequest("PUT", "/members/"+Member1.ID.Hex()+"/contact", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var member models.Member
+
+	json.NewDecoder(res.Body).Decode(&member)
+
+	assert.Equal(t, updateData.Contact, member.Contact)
+	assert.Equal(t, Member1.ID, member.ID)
+}
+
+func TestUpdateMemberContactBadID(t *testing.T){
+	
+	updateData := mongodb.UpdateMemberContactData{
+		Contact: primitive.NewObjectID(),
+	}
+
+	b, errMarshal := json.Marshal(updateData)
+	assert.NilError(t, errMarshal)
+
+
+	res, err := executeRequest("PUT", "/members/wrong/contact", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
 }

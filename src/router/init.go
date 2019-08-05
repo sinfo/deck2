@@ -77,7 +77,9 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("", getMembers).Methods("GET")
 	memberRouter.HandleFunc("", createMember).Methods("POST")
 	memberRouter.HandleFunc("/{id}", getMember).Methods("GET")
-
+	memberRouter.HandleFunc("/{id}", updateMember).Methods("PUT")
+	memberRouter.HandleFunc("/{id}/contact", updateMemberContact).Methods("PUT")
+	
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
 	itemRouter.HandleFunc("", createItem).Methods("POST")

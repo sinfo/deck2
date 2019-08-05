@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,7 +13,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	//"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 
@@ -31,11 +30,15 @@ type GetMemberOptions struct {
 
 // CreateMemberData contains all info needed to create a new member
 type CreateMemberData struct {
-	Name	string
-	Image	string
-	Istid	string
+	Name	string	`json:"name"`
+	Image	string	`json:"img"`
+	Istid	string	`json:"istid"`
 }
 
+// UpdateMemberContactData contains info needed to update a member's contact
+type UpdateMemberContactData struct {
+	Contact	primitive.ObjectID `json:"contact"`
+}
 
 // ParseBody fills the CreateTeamData from a body
 func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
@@ -64,7 +67,6 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 
 	cur, err := m.Collection.Find(m.Context, bson.M{})
 	if err != nil{
-		log.Println("error 1")
 		return nil, err
 	}
 
@@ -73,7 +75,6 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 		var x models.Member
 
 		if err := cur.Decode(&x); err != nil{
-			log.Println("error 2")
 			return nil, err
 		}
 
@@ -85,7 +86,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 	}
 
 	if err := cur.Err(); err != nil {
-		log.Println("error 3")
+
 		return nil, err
 	}
 
@@ -126,5 +127,50 @@ func (m *MembersType) CreateMember (data CreateMemberData) (*models.Member,error
 	}
 
 	return newMember,nil
+}
+
+// UpdateMemberContact updates a member's contact 
+func (m *MembersType) UpdateMemberContact(id primitive.ObjectID, data UpdateMemberContactData) (*models.Member, error){
+
+	// TODO: Verify that contact exists
+
+	var member models.Member
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"contact":  data.Contact,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil{
+		return nil, err
+	}
+
+	return &member, nil
+}
+
+// UpdateMember updates a member's name, image and istid
+func (m *MembersType) UpdateMember(id primitive.ObjectID, data CreateMemberData) (*models.Member, error){
+	var member models.Member
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"name":		data.Name,
+			"img":		data.Image,
+			"istid":	data.Istid,		
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil{
+		return nil, err
+	}
+
+	return &member, nil
 }
 

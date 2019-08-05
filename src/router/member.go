@@ -65,3 +65,46 @@ func getMember(w http.ResponseWriter, r *http.Request){
 
 	json.NewEncoder(w).Encode(member)
 }
+
+func updateMember(w http.ResponseWriter, r *http.Request){
+	defer r.Body.Close()
+
+	var cmd = &mongodb.CreateMemberData{}
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if err := cmd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedMember, err := mongodb.Members.UpdateMember(id, *cmd)
+
+	if err != nil {
+		http.Error(w, "Could not update member", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedMember)
+}
+
+func updateMemberContact(w http.ResponseWriter, r *http.Request){
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	var umcd = &mongodb.UpdateMemberContactData{}
+
+	if err := json.NewDecoder(r.Body).Decode(umcd); err != nil{
+		http.Error(w, "Could not parse body.", http.StatusBadRequest)
+		return
+	}
+
+	updatedMember, err := mongodb.Members.UpdateMemberContact(id, *umcd)
+	if err != nil{
+		http.Error(w, "Could not update member", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedMember)
+}
