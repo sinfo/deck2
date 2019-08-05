@@ -108,6 +108,12 @@
 		},
 		"/items": {
 			"$ref": "./endpoints/items.json"
+		},
+		"/members":{
+			"$ref": "./endpoints/members.json"
+		},
+		"/members/{id}":{
+			"$ref":"./endpoints/members-id.json"
 		}
 	},
 	"externalDocs": {

@@ -1,10 +1,10 @@
 {
     "get": {
         "tags": [
-            "teams"
+            "members"
         ],
-        "summary": "Get all teams",
-        "operationId": "getTeams",
+        "summary": "Get all members",
+        "operationId": "getMembers",
         "consumes": [
             "application/json"
         ],
@@ -15,44 +15,31 @@
             {
                 "in": "query",
                 "name": "name",
-                "description": "Name of the team",
+                "description": "Partial and case insensitive match for name",
                 "type": "string"
-            },
-            {
-                "in": "query",
-                "name": "member",
-                "description": "Contains this member",
-                "type": "string"
-            },
-            {
-                "in": "query",
-                "name": "event",
-                "description": "Team from this event",
-                "type": "integer",
-                "format": "int64"
             }
         ],
         "responses": {
             "200": {
-                "description": "Teams filtered by the query",
+                "description": "Members filtered by the query",
                 "schema": {
                     "type": "array",
                     "items": {
-                        "$ref": "./models/team.json"
+                        "$ref": "./models/member.json"
                     }
                 }
             },
             "417": {
-                "description": "Unable to get teams"
+                "description": "Unable to get members"
             }
         }
     },
     "post": {
         "tags": [
-            "teams"
+            "members"
         ],
-        "summary": "Create a new team",
-        "operationId": "createTeam",
+        "summary": "Create a new member",
+        "operationId": "createMember",
         "consumes": [
             "application/json"
         ],
@@ -63,15 +50,21 @@
             {
                 "in": "body",
                 "name": "payload",
-                "description": "Information needed to create the new team.",
+                "description": "Information needed to create the new member.",
                 "required": true,
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name"
+                        "name", "img", "istid"
                     ],
                     "properties": {
                         "name": {
+                            "type": "string"
+                        },
+                        "img":{
+                            "type": "string"
+                        },
+                        "istid":{
                             "type": "string"
                         }
                     }
@@ -80,13 +73,13 @@
         ],
         "responses": {
             "200": {
-                "description": "Created team.",
+                "description": "Created member.",
                 "schema": {
-                    "$ref": "./models/team.json"
+                    "$ref": "./models/member.json"
                 }
             },
             "400": {
-                "description": "Invalid input or couldn't create the new team."
+                "description": "Invalid input or couldn't create the new member."
             }
         }
     }

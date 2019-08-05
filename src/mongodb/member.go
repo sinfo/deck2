@@ -34,7 +34,6 @@ type CreateMemberData struct {
 	Name	string
 	Image	string
 	Istid	string
-	Contact	primitive.ObjectID
 }
 
 
@@ -54,8 +53,6 @@ func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
 	if len(cmd.Istid) < 3 ||cmd.Istid[:3] != "ist" {
 		return errors.New("invalid name")
 	}
-
-	//TODO: Check if contact exists
 
 	return nil
 }
@@ -117,7 +114,6 @@ func (m *MembersType) CreateMember (data CreateMemberData) (*models.Member,error
 	insertData["name"] = data.Name
 	insertData["img"] = data.Image
 	insertData["istid"] = data.Istid
-	insertData["contact"] = data.Contact
 
 	insertResult, err := m.Collection.InsertOne(m.Context, insertData)
 	if err != nil{

@@ -10,7 +10,6 @@ import (
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gotest.tools/assert"
 )
 
@@ -19,13 +18,11 @@ var (
 		Name: "Member1",
 		Image: "Image1.png",
 		Istid: "ist123456",
-		Contact: primitive.NewObjectID(),
 	}
 	Member2Data = mongodb.CreateMemberData{
 		Name: "Member2",
 		Image: "Image2.png",
 		Istid: "ist654321",
-		Contact: primitive.NewObjectID(),
 	}
 	Member1		*models.Member
 	Member2		*models.Member
@@ -184,7 +181,6 @@ func TestCreateMemberBadPayload(t *testing.T){
 		Name: "",
 		Image:"Image.png",
 		Istid: "ist111111",
-		Contact: primitive.NewObjectID(),
 	}
 
 	b, errMarshal := json.Marshal(cmdName)
@@ -198,7 +194,6 @@ func TestCreateMemberBadPayload(t *testing.T){
 		Name: "Name",
 		Image:"",
 		Istid: "ist111111",
-		Contact: primitive.NewObjectID(),
 	}
 
 	b, errMarshal = json.Marshal(cmdImage)
@@ -212,7 +207,6 @@ func TestCreateMemberBadPayload(t *testing.T){
 		Name: "Name",
 		Image:"Image.png",
 		Istid: "",
-		Contact: primitive.NewObjectID(),
 	}
 
 	b, errMarshal = json.Marshal(cmdIstid0)
@@ -226,7 +220,6 @@ func TestCreateMemberBadPayload(t *testing.T){
 		Name: "Name",
 		Image:"Image.png",
 		Istid: "123456",
-		Contact: primitive.NewObjectID(),
 	}
 
 	b, errMarshal = json.Marshal(cmdIstidIst)
