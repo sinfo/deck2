@@ -94,6 +94,12 @@
 		},
 		"/events/themes": {
 			"$ref": "./endpoints/events-themes.json"
+		},
+		"/teams": {
+			"$ref": "./endpoints/teams.json"
+		},
+		"/teams/{id}": {
+			"$ref": "./endpoints/teams-id.json"
 		}
 	},
 	"externalDocs": {

@@ -105,7 +105,7 @@ func deleteTeam(w http.ResponseWriter, r *http.Request) {
 	team, err := mongodb.Teams.DeleteTeam(id)
 
 	if err != nil {
-		http.Error(w, "Could not find team", http.StatusBadRequest)
+		http.Error(w, "Could not find team", http.StatusNotFound)
 		return
 	}
 
