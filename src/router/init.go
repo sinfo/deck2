@@ -68,6 +68,7 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("", createTeam).Methods("POST")
 	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
 	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
+	teamRouter.HandleFunc("/{id}", updateTeam).Methods("PUT")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

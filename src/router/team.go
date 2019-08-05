@@ -111,3 +111,27 @@ func deleteTeam(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(team)
 }
+
+
+func updateTeam(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	var ctd = &mongodb.CreateTeamData{}
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if err := ctd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedTeam, err := mongodb.Teams.UpdateTeam(id, *ctd)
+
+	if err != nil {
+		http.Error(w, "Could not update team", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedTeam)
+}

@@ -64,5 +64,59 @@
                 "description": "Team not found"
             }
         }
+    },
+    "put": {
+        "tags": [
+            "teams"
+        ],
+        "summary": "Updates a teams's name",
+        "operationId": "updateTeam",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "New team data",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the team",
+                "required": true,
+				"type": "string"
+            }
+            
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated team",
+                "schema": {
+                    "$ref": "./models/team.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload, or couldn't update team"
+            },
+            "417": {
+                "description": "Couldn't find team"
+            }
+        }
     }
 }

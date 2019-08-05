@@ -292,3 +292,82 @@ func TestCreateTeam(t *testing.T) {
 	assert.Equal(t, team2.Name, newTeam.Name)
 	assert.Equal(t, team2.ID, newTeam.ID)
 }
+
+func TestUpdateTeam(t *testing.T){
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+
+	setupTest()
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var updatedTeam models.Team
+
+	var name = "TEAM2"
+	utd := &mongodb.CreateTeamData{Name: name}
+
+	b, errMarshal := json.Marshal(utd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/teams/"+Team1.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedTeam)
+
+	assert.Equal(t, updatedTeam.ID, Team1.ID)
+	assert.Equal(t, updatedTeam.Name, name)
+}
+
+func TestUpdateTeamBadPayload (t *testing.T){
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+
+	setupTest()
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var name = ""
+	utd := &mongodb.CreateTeamData{Name: name}
+
+	b, errMarshal := json.Marshal(utd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/teams/"+Team1.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestUpdateTeamBadID (t *testing.T){
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+
+	setupTest()
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var name = "TEAM2"
+	utd := &mongodb.CreateTeamData{Name: name}
+
+	b, errMarshal := json.Marshal(utd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/teams/wrong", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
+	team, err := mongodb.Teams.GetTeam(Team1.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, team.Name, Team1.Name)
+
+}

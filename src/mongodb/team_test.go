@@ -110,3 +110,24 @@ func TestGetTeams(t *testing.T) {
 	assert.Equal(t, len(teams), 2)
 	assert.Equal(t, teams[1].ID, team2.ID)
 }
+
+func TestUpdateTeam(t *testing.T){
+	defer db.Drop(ctx)
+
+	SetupTest()
+
+	ctd := CreateTeamData{
+		Name: "Team1",
+	}
+
+	utd := CreateTeamData{
+		Name: "Team2",
+	}
+
+	team1, err := Teams.CreateTeam(ctd)
+	assert.NilError(t, err)
+
+	team2, err := Teams.UpdateTeam(team1.ID, utd)
+	assert.NilError(t, err)
+	assert.Equal(t, team2.Name, utd.Name)
+}

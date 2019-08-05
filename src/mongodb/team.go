@@ -146,10 +146,32 @@ func (t *TeamsType) GetTeams(options GetTeamsOptions) ([]*models.Team, error) {
 
 // DeleteTeam deletes a team by its ID.
 func (t* TeamsType) DeleteTeam(teamID primitive.ObjectID) (*models.Team, error) {
+
 	var team models.Team
 
 	err := t.Collection.FindOneAndDelete(t.Context, bson.M{"_id": teamID}).Decode(&team)
 	if err != nil {
+		return nil, err
+	}
+
+	return &team, nil
+}
+
+// UpdateTeam updates the team name.
+func (t* TeamsType) UpdateTeam(teamID primitive.ObjectID, data CreateTeamData) (*models.Team, error){
+
+	var team models.Team
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"name":  data.Name,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": teamID}, updateQuery, optionsQuery).Decode(&team); err != nil{
 		return nil, err
 	}
 
