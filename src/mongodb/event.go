@@ -377,7 +377,6 @@ func (aepd *AddEventPackageData) ParseBody(body io.Reader) error {
 }
 
 // AddPackage adds a template to an event's packages.
-// TODO: check if the template received exists on the db
 func (e *EventsType) AddPackage(eventID int, data AddEventPackageData) (*models.Event, error) {
 
 	var updateQuery = bson.M{
@@ -397,6 +396,30 @@ func (e *EventsType) AddPackage(eventID int, data AddEventPackageData) (*models.
 
 	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
 		log.Println("error updating event's packages:", err)
+		return nil, err
+	}
+
+	return currentEvent, nil
+}
+
+// RemovePackage removes a template from an event's packages.
+func (e *EventsType) RemovePackage(eventID int, packageID primitive.ObjectID) (*models.Event, error) {
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"packages": bson.M{
+				"template": packageID,
+			},
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
+		log.Println("error removing package from the current event:", err)
 		return nil, err
 	}
 

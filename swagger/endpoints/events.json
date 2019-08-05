@@ -151,7 +151,7 @@
                 "description": "Invalid payload, or couldn't update event"
             },
             "417": {
-                "description": "Couldn't find current event"
+                "description": "Unable to update event"
             }
         }
     }

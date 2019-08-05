@@ -45,6 +45,9 @@
             },
             "404": {
                 "description": "Event not found"
+            },
+            "417": {
+                "description": "Unable to update event's themes"
             }
         }
     }

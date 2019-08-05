@@ -1,0 +1,38 @@
+{
+    "delete": {
+        "tags": [
+            "events", "packages"
+        ],
+        "summary": "Removes template to packages from the current event",
+        "operationId": "RemoveEventPackage",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the package",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Event with the updated packages",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "404": {
+                "description": "Event not found"
+            },
+            "417": {
+                "description": "Unable to remove package from event"
+            }
+        }
+    }
+}

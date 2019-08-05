@@ -97,6 +97,9 @@
 		"/events/packages": {
 			"$ref": "./endpoints/events-packages.json"
 		},
+		"/events/packages/{id}": {
+			"$ref": "./endpoints/events-packages-id.json"
+		},
 		"/events/items": {
 			"$ref": "./endpoints/events-items.json"
 		},

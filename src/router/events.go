@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sinfo/deck2/src/mongodb"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func getEvents(w http.ResponseWriter, r *http.Request) {
@@ -129,7 +130,7 @@ func updateEvent(w http.ResponseWriter, r *http.Request) {
 	updatedEvent, err := mongodb.Events.UpdateEvent(currentEvent.ID, *ued)
 
 	if err != nil {
-		http.Error(w, "Could not update event", http.StatusBadRequest)
+		http.Error(w, "Could not update event", http.StatusExpectationFailed)
 		return
 	}
 
@@ -189,7 +190,7 @@ func updateEventThemes(w http.ResponseWriter, r *http.Request) {
 	updatedEvent, err := mongodb.Events.UpdateThemes(currentEvent.ID, *uetd)
 
 	if err != nil {
-		http.Error(w, "Could not update event's themes", http.StatusBadRequest)
+		http.Error(w, "Could not update event's themes", http.StatusExpectationFailed)
 		return
 	}
 
@@ -222,7 +223,31 @@ func addPackageToEvent(w http.ResponseWriter, r *http.Request) {
 	newEvent, err := mongodb.Events.AddPackage(currentEvent.ID, *aepd)
 
 	if err != nil {
-		http.Error(w, "Could not save package on event", http.StatusBadRequest)
+		http.Error(w, "Could not save package on event", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newEvent)
+}
+
+func removePackageFromEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	packageID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusNotFound)
+		return
+	}
+
+	newEvent, err := mongodb.Events.RemovePackage(currentEvent.ID, packageID)
+
+	if err != nil {
+		http.Error(w, "Could not remove package from the current event", http.StatusExpectationFailed)
 		return
 	}
 
