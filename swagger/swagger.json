@@ -94,6 +94,12 @@
 		"/events/themes": {
 			"$ref": "./endpoints/events-themes.json"
 		},
+		"/teams": {
+			"$ref": "./endpoints/teams.json"
+		},
+		"/teams/{id}": {
+			"$ref": "./endpoints/teams-id.json"
+		},
 		"/events/packages": {
 			"$ref": "./endpoints/events-packages.json"
 		},
@@ -105,6 +111,12 @@
 		},
 		"/items": {
 			"$ref": "./endpoints/items.json"
+		},
+		"/members":{
+			"$ref": "./endpoints/members.json"
+		},
+		"/members/{id}":{
+			"$ref":"./endpoints/members-id.json"
 		},
 		"/packages": {
 			"$ref": "./endpoints/packages.json"

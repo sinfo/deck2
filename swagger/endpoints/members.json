@@ -1,0 +1,86 @@
+{
+    "get": {
+        "tags": [
+            "members"
+        ],
+        "summary": "Get all members",
+        "operationId": "getMembers",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Partial and case insensitive match for name",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Members filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/member.json"
+                    }
+                }
+            },
+            "417": {
+                "description": "Unable to get members"
+            }
+        }
+    },
+    "post": {
+        "tags": [
+            "members"
+        ],
+        "summary": "Create a new member",
+        "operationId": "createMember",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "Information needed to create the new member.",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name", "img", "istid"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "img":{
+                            "type": "string"
+                        },
+                        "istid":{
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created member.",
+                "schema": {
+                    "$ref": "./models/member.json"
+                }
+            },
+            "400": {
+                "description": "Invalid input or couldn't create the new member."
+            }
+        }
+    }
+}
