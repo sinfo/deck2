@@ -5,6 +5,9 @@
 			"type": "integer",
 			"format": "int64"
 		},
+		"name": {
+			"type": "string"
+		},
 		"begin": {
 			"type": "string",
 			"format": "date-time"

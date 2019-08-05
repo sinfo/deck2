@@ -479,3 +479,37 @@ func TestUpdateEventThemesIncompletePayload(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
+
+func TestAddPackageToEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	/*
+		var updatedEvent models.Event
+		var uetd = mongodb.UpdateEventThemesData{Themes: &themes}
+		b, errMarshal := json.Marshal(uetd)
+		assert.NilError(t, errMarshal)
+
+		res, err := executeRequest("PUT", "/events/themes", bytes.NewBuffer(b))
+		assert.NilError(t, err)
+		assert.Equal(t, res.Code, http.StatusOK)
+
+		json.NewDecoder(res.Body).Decode(&updatedEvent)
+
+		assert.Equal(t, updatedEvent.ID, currentEvent.ID)
+		assert.Equal(t, updatedEvent.Name, Event3.Name)
+		for i := 0; i < days; i++ {
+			assert.Equal(t, updatedEvent.Themes[i], themes[i])
+		}
+	*/
+}

@@ -195,3 +195,71 @@ func updateEventThemes(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedEvent)
 }
+
+func addPackageToEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusNotFound)
+		return
+	}
+
+	var aepd = &mongodb.AddEventPackageData{}
+
+	if err := aepd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	for _, p := range currentEvent.Packages {
+		if p.Template == *aepd.Template {
+			http.Error(w, "Package already stored in the current event", http.StatusConflict)
+			return
+		}
+	}
+
+	newEvent, err := mongodb.Events.AddPackage(currentEvent.ID, *aepd)
+
+	if err != nil {
+		http.Error(w, "Could not save package on event", http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newEvent)
+}
+
+func addItemToEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusNotFound)
+		return
+	}
+
+	var aeid = &mongodb.AddEventItemData{}
+
+	if err := aeid.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	if _, err = mongodb.Items.GetItem(*aeid.ItemID); err != nil {
+		http.Error(w, "Could not find item", http.StatusNotFound)
+		return
+	}
+
+	updatedEvent, err := mongodb.Events.AddItem(currentEvent.ID, *aeid)
+
+	if err != nil {
+		http.Error(w, "Could not save item on event", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedEvent)
+}

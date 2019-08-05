@@ -1,0 +1,63 @@
+{
+    "post": {
+        "tags": [
+            "items"
+        ],
+        "summary": "Creates a new item",
+        "operationId": "createItem",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "item",
+                "description": "New item data",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name", "type", "description", "price", "vat"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "type": "string"
+                        },
+                        "description": {
+                            "type": "string"
+                        },
+                        "img": {
+                            "type": "string"
+                        },
+                        "price": {
+                            "type": "integer"
+                            },
+                        "vat": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created item",
+                "schema": {
+                    "$ref": "./models/item.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload"
+            },
+            "417": {
+                "description": "Unable to create the item"
+            }
+        }
+    }
+}

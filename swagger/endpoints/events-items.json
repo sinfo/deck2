@@ -1,0 +1,54 @@
+{
+    "post": {
+        "tags": [
+            "events"
+        ],
+        "summary": "Adds an item to the current event",
+        "operationId": "addEventItem",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "item",
+                "description": "Item to store on the current event",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "id"
+                    ],
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "available": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated event",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload"
+            },
+            "404": {
+                "description": "Event not found, or item not found"
+            },
+            "417": {
+                "description": "Unable to add item"
+            }
+        }
+    }
+}

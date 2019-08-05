@@ -1,0 +1,48 @@
+{
+    "post": {
+        "tags": [
+            "events"
+        ],
+        "summary": "Add template to packages of the current event and make it available",
+        "operationId": "addEventPackage",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "template",
+                "description": "Package (template) to store on the current event",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "template"
+                    ],
+                    "properties": {
+                        "template": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Event with the updated packages",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "404": {
+                "description": "Event not found"
+            },
+            "409": {
+                "description": "Package already stored on the current event"
+            }
+        }
+    }
+}

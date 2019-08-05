@@ -113,7 +113,7 @@ func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
 		"items":    make([]models.EventItems, 0),
 		"meetings": make([]primitive.ObjectID, 0),
 		"sessions": make([]primitive.ObjectID, 0),
-		"teams":	make([]primitive.ObjectID, 0),		
+		"teams":    make([]primitive.ObjectID, 0),
 	}
 
 	insertResult, err := e.Collection.InsertOne(e.Context, c)
@@ -342,6 +342,94 @@ func (e *EventsType) UpdateTeams(eventID int, teams []primitive.ObjectID) (*mode
 
 	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
 		log.Println("error updating event's themes:", err)
+		return nil, err
+	}
+
+	return currentEvent, nil
+}
+
+// AddEventPackageData is the structure used for adding a template to the event's packages.
+type AddEventPackageData struct {
+
+	// Template for the event. It's a pointer for giving a nil value if the body to parse doesn't have
+	// a template key. Otherwise would give an empty string, because that's the starting value.
+	Template *primitive.ObjectID `json:"template"`
+}
+
+// ParseBody fills the CreateTeamData from a body
+func (aepd *AddEventPackageData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(aepd); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// AddPackage adds a template to an event's packages.
+// TODO: check if the template received exists on the db
+func (e *EventsType) AddPackage(eventID int, data AddEventPackageData) (*models.Event, error) {
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"packages": bson.M{
+				"template":  data.Template,
+				"available": true,
+			},
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
+		log.Println("error updating event's packages:", err)
+		return nil, err
+	}
+
+	return currentEvent, nil
+}
+
+// AddEventItemData is the structure used for adding an item to an event.
+type AddEventItemData struct {
+	ItemID    *primitive.ObjectID `json:"template"`
+	Available *int                `json:"available"`
+}
+
+// ParseBody fills the CreateTeamData from a body
+func (aeid *AddEventItemData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(aeid); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// AddItem adds an item to an event.
+func (e *EventsType) AddItem(eventID int, data AddEventItemData) (*models.Event, error) {
+
+	var itemToAdd = bson.M{"item": *data.ItemID}
+
+	if data.Available != nil {
+		itemToAdd["available"] = *data.Available
+	}
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"items": itemToAdd,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(currentEvent); err != nil {
+		log.Println("error updating event's packages:", err)
 		return nil, err
 	}
 
