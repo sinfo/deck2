@@ -32,6 +32,11 @@ type GetTeamsOptions struct {
 	Member		*primitive.ObjectID
 }
 
+type UpdateTeamMemberData struct {
+	Member	*primitive.ObjectID `json:"member"`
+	Role	*string				`json:"role"`
+}
+
 // ParseBody fills the CreateTeamData from a body
 func (ctd *CreateTeamData) ParseBody(body io.Reader) error {
 
@@ -41,6 +46,21 @@ func (ctd *CreateTeamData) ParseBody(body io.Reader) error {
 
 	if len(ctd.Name) == 0 {
 		return errors.New("invalid name")
+	}
+
+	return nil
+}
+
+// ParseBody fills the UpdateTeamMemberData from a body
+func (utmd *UpdateTeamMemberData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(utmd); err != nil {
+		log.Println("err 1")
+		return err
+	}
+
+	if len(*utmd.Role) == 0 {
+		return errors.New("invalid body")
 	}
 
 	return nil
@@ -172,6 +192,40 @@ func (t* TeamsType) UpdateTeam(teamID primitive.ObjectID, data CreateTeamData) (
 	optionsQuery.SetReturnDocument(options.After)
 
 	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": teamID}, updateQuery, optionsQuery).Decode(&team); err != nil{
+		return nil, err
+	}
+
+	return &team, nil
+}
+
+// AddTeamMembers adds a member to a team.
+func (t *TeamsType) AddTeamMembers(id primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error){
+
+	var team models.Team
+	var members []models.TeamMembers
+
+	team1, err := t.GetTeam(id)
+	if err != nil {
+		return nil, err
+	}
+
+	member := models.TeamMembers{
+		Member: *data.Member,
+		Role:	*data.Role,
+	}
+
+	members = append(team1.Members, member)
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"members":  members,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil{
 		return nil, err
 	}
 

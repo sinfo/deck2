@@ -135,3 +135,24 @@ func updateTeam(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedTeam)
 }
+
+func addTeamMembers(w http.ResponseWriter, r *http.Request){
+	defer r.Body.Close()
+
+	var utmd = &mongodb.UpdateTeamMemberData{}
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if err := utmd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	team, err := mongodb.Teams.AddTeamMembers(id, *utmd)
+	if err != nil{
+		http.Error(w, "Team or member not found", http.StatusNotFound)	
+		return
+	}
+
+	json.NewEncoder(w).Encode(team)
+}

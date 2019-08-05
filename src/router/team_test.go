@@ -371,3 +371,43 @@ func TestUpdateTeamBadID (t *testing.T){
 	assert.Equal(t, team.Name, Team1.Name)
 
 }
+
+func TestAddTeamMember(t *testing.T){
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	setupTest()
+
+	var team models.Team
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cmd := mongodb.CreateMemberData{
+		Name: "Member",
+		Image: "IMG",
+		Istid:"ist123456",
+	}
+
+	member, err := mongodb.Members.CreateMember(cmd)
+
+	utmd := &mongodb.UpdateTeamMemberData{
+		Member: &member.ID,
+		Role: &cmd.Name,
+	}
+
+	b, errMarshal := json.Marshal(utmd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&team)
+	assert.Equal(t, len(team.Members), 1)
+	assert.Equal(t, team.Members[0].Member, member.ID)
+
+}

@@ -71,6 +71,7 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
 	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
 	teamRouter.HandleFunc("/{id}", updateTeam).Methods("PUT")
+	teamRouter.HandleFunc("/{id}/member", addTeamMembers).Methods("POST")
 
 	// member handlers
 	memberRouter := r.PathPrefix("/members").Subrouter()
