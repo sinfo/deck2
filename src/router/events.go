@@ -315,3 +315,25 @@ func addItemToEvent(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedEvent)
 }
+
+func removeItemToEvent(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	itemID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusNotFound)
+		return
+	}
+
+	updatedEvent, err := mongodb.Events.RemoveItem(currentEvent.ID, itemID)
+
+	if err != nil {
+		http.Error(w, "Could not remove item from event", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedEvent)
+}

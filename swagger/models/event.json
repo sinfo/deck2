@@ -38,6 +38,9 @@
 					},
 					"available": {
 						"type": "boolean"
+					},
+					"public_name": {
+						"type": "string"
 					}
 				}
 			}

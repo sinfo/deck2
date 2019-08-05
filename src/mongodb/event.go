@@ -550,3 +550,31 @@ func (e *EventsType) AddItem(eventID int, data AddEventItemData) (*models.Event,
 
 	return &updatedEvent, nil
 }
+
+// RemoveItem removes an item from an event.
+func (e *EventsType) RemoveItem(eventID int, itemID primitive.ObjectID) (*models.Event, error) {
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"items": itemID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedEvent models.Event
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+		log.Println("error remove event's item:", err)
+		return nil, err
+	}
+
+	if updatedEvent.ID == currentEvent.ID {
+		currentEvent = &updatedEvent
+	}
+
+	return &updatedEvent, nil
+}

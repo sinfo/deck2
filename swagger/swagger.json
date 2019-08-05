@@ -109,6 +109,9 @@
 		"/events/items": {
 			"$ref": "./endpoints/events-items.json"
 		},
+		"/events/items/{id}": {
+			"$ref": "./endpoints/events-items-id.json"
+		},
 		"/items": {
 			"$ref": "./endpoints/items.json"
 		},

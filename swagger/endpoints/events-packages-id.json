@@ -65,11 +65,11 @@
                     ],
                     "type": "object",
                     "properties": {
-                        "template": {
-                            "type": "string"
-                        },
                         "public_name": {
                             "type": "string"
+                        },
+                        "available": {
+                            "type": "boolean"
                         }
                     }
                 }

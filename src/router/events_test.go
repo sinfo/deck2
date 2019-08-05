@@ -883,3 +883,48 @@ func TestAddItemToEventItemNotFound(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
+
+func TestRemoveItemFromEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createItemData := mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Image:       Item.Image,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	newItem, err := mongodb.Items.CreateItem(createItemData)
+	assert.NilError(t, err)
+
+	var addEventItemData = mongodb.AddEventItemData{ItemID: &newItem.ID}
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	assert.NilError(t, err)
+
+	updatedEvent, err := mongodb.Events.AddItem(currentEvent.ID, addEventItemData)
+	assert.NilError(t, err)
+
+	res, err := executeRequest("DELETE", "/events/items/"+newItem.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedEvent)
+
+	assert.Equal(t, updatedEvent.ID, currentEvent.ID)
+	assert.Equal(t, len(updatedEvent.Items) == 0, true)
+}
