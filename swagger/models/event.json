@@ -45,16 +45,7 @@
 		"items": {
 			"type": "array",
 			"items": {
-				"type": "object",
-				"properties": {
-					"item": {
-						"type": "string"
-					},
-					"available": {
-						"type": "integer",
-						"format": "int64"
-					}
-				}
+				"type": "string"
 			}
 		},
 		"meetings": {

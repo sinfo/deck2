@@ -20,10 +20,13 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "template"
+                        "template", "public_name"
                     ],
                     "properties": {
                         "template": {
+                            "type": "string"
+                        },
+                        "public_name": {
                             "type": "string"
                         }
                     }
@@ -36,6 +39,9 @@
                 "schema": {
                     "$ref": "./models/event.json"
                 }
+            },
+            "400": {
+                "description": "Invalid payload"
             },
             "404": {
                 "description": "Event not found"

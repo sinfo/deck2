@@ -23,11 +23,8 @@
                         "id"
                     ],
                     "properties": {
-                        "id": {
+                        "item": {
                             "type": "string"
-                        },
-                        "available": {
-                            "type": "integer"
                         }
                     }
                 }

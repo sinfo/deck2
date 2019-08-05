@@ -12,15 +12,9 @@ type EventPackages struct {
 	// Template is a Package _id (see models.Package).
 	Template primitive.ObjectID `json:"template" bson:"template"`
 
+	PublicName string `json:"public_name" bson:"public_name"`
+
 	Available bool `json:"available" bson:"available"`
-}
-
-type EventItems struct {
-
-	// Item is a Item _id (see models.Item).
-	Item primitive.ObjectID `json:"item" bson:"item"`
-
-	Available int `json:"available" bson:"available"`
 }
 
 // Event info.
@@ -40,8 +34,8 @@ type Event struct {
 	// The themes can be "Software Engineer", "Security", "Gaming", etc.
 	Themes []string `json:"themes" bson:"themes"`
 
-	Packages []EventPackages `json:"packages" bson:"packages"`
-	Items    []EventItems    `json:"items" bson:"items"`
+	Packages []EventPackages      `json:"packages" bson:"packages"`
+	Items    []primitive.ObjectID `json:"items" bson:"items"`
 
 	// Meetings is an array of Meeting _id (see models.Meeting).
 	Meetings []primitive.ObjectID `json:"meetings" bson:"meetings"`

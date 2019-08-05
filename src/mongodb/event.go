@@ -110,7 +110,7 @@ func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
 		"name":     data.Name,
 		"themes":   make([]string, 0),
 		"packages": make([]models.EventPackages, 0),
-		"items":    make([]models.EventItems, 0),
+		"items":    make([]primitive.ObjectID, 0),
 		"meetings": make([]primitive.ObjectID, 0),
 		"sessions": make([]primitive.ObjectID, 0),
 		"teams":    make([]primitive.ObjectID, 0),
@@ -354,6 +354,8 @@ type AddEventPackageData struct {
 	// Template for the event. It's a pointer for giving a nil value if the body to parse doesn't have
 	// a template key. Otherwise would give an empty string, because that's the starting value.
 	Template *primitive.ObjectID `json:"template"`
+
+	PublicName *string `json:"public_name"`
 }
 
 // ParseBody fills the CreateTeamData from a body
@@ -361,6 +363,14 @@ func (aepd *AddEventPackageData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(aepd); err != nil {
 		return err
+	}
+
+	if aepd.Template == nil {
+		return errors.New("no package ID given")
+	}
+
+	if aepd.PublicName == nil {
+		return errors.New("no public name given")
 	}
 
 	return nil
@@ -373,8 +383,9 @@ func (e *EventsType) AddPackage(eventID int, data AddEventPackageData) (*models.
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
 			"packages": bson.M{
-				"template":  data.Template,
-				"available": true,
+				"template":    data.Template,
+				"public_name": data.PublicName,
+				"available":   true,
 			},
 		},
 	}
@@ -394,8 +405,7 @@ func (e *EventsType) AddPackage(eventID int, data AddEventPackageData) (*models.
 
 // AddEventItemData is the structure used for adding an item to an event.
 type AddEventItemData struct {
-	ItemID    *primitive.ObjectID `json:"template"`
-	Available *int                `json:"available"`
+	ItemID *primitive.ObjectID `json:"item"`
 }
 
 // ParseBody fills the CreateTeamData from a body
@@ -409,25 +419,15 @@ func (aeid *AddEventItemData) ParseBody(body io.Reader) error {
 		return errors.New("no item ID given")
 	}
 
-	if aeid.Available == nil {
-		return errors.New("no number of available items given")
-	}
-
 	return nil
 }
 
 // AddItem adds an item to an event.
 func (e *EventsType) AddItem(eventID int, data AddEventItemData) (*models.Event, error) {
 
-	var itemToAdd = bson.M{"item": *data.ItemID}
-
-	if data.Available != nil {
-		itemToAdd["available"] = *data.Available
-	}
-
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
-			"items": itemToAdd,
+			"items": *data.ItemID,
 		},
 	}
 

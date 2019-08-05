@@ -543,10 +543,8 @@ func TestAddItemToEvent(t *testing.T) {
 	newItem, err := mongodb.Items.CreateItem(createItemData)
 	assert.NilError(t, err)
 
-	var available = 4
-
 	var updatedEvent models.Event
-	var aeid = mongodb.AddEventItemData{ItemID: &newItem.ID, Available: &available}
+	var aeid = mongodb.AddEventItemData{ItemID: &newItem.ID}
 	b, errMarshal := json.Marshal(aeid)
 	assert.NilError(t, errMarshal)
 
@@ -561,8 +559,7 @@ func TestAddItemToEvent(t *testing.T) {
 
 	assert.Equal(t, updatedEvent.ID, currentEvent.ID)
 	assert.Equal(t, len(updatedEvent.Items) == 1, true)
-	assert.Equal(t, updatedEvent.Items[0].Item, newItem.ID)
-	assert.Equal(t, updatedEvent.Items[0].Available, available)
+	assert.Equal(t, updatedEvent.Items[0], newItem.ID)
 }
 func TestAddItemToEventInvalidPayload(t *testing.T) {
 
@@ -619,10 +616,8 @@ func TestAddItemToEventItemNotFound(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	var available = 4
-
 	var itemID = primitive.NewObjectID()
-	var aeid = mongodb.AddEventItemData{ItemID: &itemID, Available: &available}
+	var aeid = mongodb.AddEventItemData{ItemID: &itemID}
 	b, errMarshal := json.Marshal(aeid)
 	assert.NilError(t, errMarshal)
 
