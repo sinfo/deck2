@@ -1,0 +1,93 @@
+{
+    "get": {
+        "tags": [
+            "teams"
+        ],
+        "summary": "Get all teams",
+        "operationId": "getTeams",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the team",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "member",
+                "description": "Contains this member",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Team from this event",
+                "type": "integer",
+                "format": "int64"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Teams filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/team.json"
+                    }
+                }
+            },
+            "417": {
+                "description": "Unable to get teams"
+            }
+        }
+    },
+    "post": {
+        "tags": [
+            "teams"
+        ],
+        "summary": "Create a new team",
+        "operationId": "createTeam",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "Information needed to create the new team.",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created team.",
+                "schema": {
+                    "$ref": "./models/team.json"
+                }
+            },
+            "400": {
+                "description": "Invalid input or couldn't create the new team."
+            }
+        }
+    }
+}

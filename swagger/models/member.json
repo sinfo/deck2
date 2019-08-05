@@ -1,0 +1,26 @@
+{
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string"
+		},
+		"name": {
+            "type": "string"
+        },
+        "img": {
+			"type": "string"
+		},
+		"istid": {
+            "type": "string"
+        },
+        "contact": {
+			"type": "string"
+		},
+        "notifications": {
+			"type": "array",
+			"items": {
+				"type": "string"
+            }
+        }
+	}
+}
