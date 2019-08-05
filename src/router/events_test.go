@@ -628,6 +628,152 @@ func TestAddPackageToEventInvalidPayload(t *testing.T) {
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
 
+func TestRemovePackageFromEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createItemData := &mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Image:       Item.Image,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	newItem, err := mongodb.Items.CreateItem(*createItemData)
+	assert.NilError(t, err)
+
+	Package.Items[0].Item = newItem.ID
+
+	createPackageData := &mongodb.CreatePackageData{
+		Name:  &Package.Name,
+		Items: &Package.Items,
+		Price: &Package.Price,
+		VAT:   &Package.VAT,
+	}
+
+	newPackage, err := mongodb.Packages.CreatePackage(*createPackageData)
+	assert.NilError(t, err)
+
+	var publicName = "public name"
+
+	addEventPackageData := &mongodb.AddEventPackageData{
+		Template:   &newPackage.ID,
+		PublicName: &publicName,
+	}
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	assert.NilError(t, err)
+
+	currentEvent, err = mongodb.Events.AddPackage(currentEvent.ID, *addEventPackageData)
+	assert.NilError(t, err)
+
+	var updatedEvent models.Event
+
+	res, err := executeRequest("DELETE", "/events/packages/"+newPackage.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedEvent)
+
+	assert.Equal(t, updatedEvent.ID, currentEvent.ID)
+	assert.Equal(t, updatedEvent.Name, Event3.Name)
+	assert.Equal(t, len(updatedEvent.Packages) == 0, true)
+}
+
+func TestUpdatePackageFromEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createItemData := &mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Image:       Item.Image,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	newItem, err := mongodb.Items.CreateItem(*createItemData)
+	assert.NilError(t, err)
+
+	Package.Items[0].Item = newItem.ID
+
+	createPackageData := &mongodb.CreatePackageData{
+		Name:  &Package.Name,
+		Items: &Package.Items,
+		Price: &Package.Price,
+		VAT:   &Package.VAT,
+	}
+
+	newPackage, err := mongodb.Packages.CreatePackage(*createPackageData)
+	assert.NilError(t, err)
+
+	var publicName = "public name"
+
+	addEventPackageData := &mongodb.AddEventPackageData{
+		Template:   &newPackage.ID,
+		PublicName: &publicName,
+	}
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	assert.NilError(t, err)
+
+	currentEvent, err = mongodb.Events.AddPackage(currentEvent.ID, *addEventPackageData)
+	assert.NilError(t, err)
+
+	var newPublicName = "new public name"
+	var available = false
+
+	var uped = mongodb.UpdateEventPackageData{
+		PublicName: &newPublicName,
+		Available:  &available,
+	}
+
+	b, errMarshal := json.Marshal(uped)
+	assert.NilError(t, errMarshal)
+
+	var updatedEvent models.Event
+
+	res, err := executeRequest("PUT", "/events/packages/"+newPackage.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedEvent)
+
+	assert.Equal(t, updatedEvent.ID, currentEvent.ID)
+	assert.Equal(t, updatedEvent.Name, Event3.Name)
+	assert.Equal(t, len(updatedEvent.Packages) == 1, true)
+	assert.Equal(t, updatedEvent.Packages[0].Template, newPackage.ID)
+	assert.Equal(t, updatedEvent.Packages[0].PublicName, newPublicName)
+	assert.Equal(t, updatedEvent.Packages[0].Available, available)
+}
+
 func TestAddItemToEvent(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)

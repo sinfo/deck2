@@ -62,7 +62,8 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/{id:[0-9]+}", deleteEvent).Methods("DELETE")
 	eventRouter.HandleFunc("/themes", updateEventThemes).Methods("PUT")
 	eventRouter.HandleFunc("/packages", addPackageToEvent).Methods("POST")
-	eventRouter.HandleFunc("/packages/{id}", addPackageToEvent).Methods("DELETE")
+	eventRouter.HandleFunc("/packages/{id}", removePackageFromEvent).Methods("DELETE")
+	eventRouter.HandleFunc("/packages/{id}", updatePackageFromEvent).Methods("PUT")
 	eventRouter.HandleFunc("/items", addItemToEvent).Methods("POST")
 
 	// team handlers
@@ -80,7 +81,7 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("/{id}", getMember).Methods("GET")
 	memberRouter.HandleFunc("/{id}", updateMember).Methods("PUT")
 	memberRouter.HandleFunc("/{id}/contact", updateMemberContact).Methods("PUT")
-	
+
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
 	itemRouter.HandleFunc("", createItem).Methods("POST")

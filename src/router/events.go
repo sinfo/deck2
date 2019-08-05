@@ -232,8 +232,6 @@ func addPackageToEvent(w http.ResponseWriter, r *http.Request) {
 
 func removePackageFromEvent(w http.ResponseWriter, r *http.Request) {
 
-	defer r.Body.Close()
-
 	params := mux.Vars(r)
 	packageID, _ := primitive.ObjectIDFromHex(params["id"])
 
@@ -248,6 +246,37 @@ func removePackageFromEvent(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "Could not remove package from the current event", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newEvent)
+}
+
+func updatePackageFromEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	packageID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusNotFound)
+		return
+	}
+
+	var uepd = &mongodb.UpdateEventPackageData{}
+
+	if err := uepd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	newEvent, err := mongodb.Events.UpdatePackage(currentEvent.ID, packageID, *uepd)
+
+	if err != nil {
+		http.Error(w, "Could not update template on the current event", http.StatusExpectationFailed)
 		return
 	}
 
