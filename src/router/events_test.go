@@ -40,6 +40,16 @@ func containsEvent(events []models.Event, event models.Event) bool {
 	return false
 }
 
+func containsPublicEvent(events []models.EventPublic, event models.Event) bool {
+	for _, s := range events {
+		if s.ID == event.ID && s.Name == event.Name {
+			return true
+		}
+	}
+
+	return false
+}
+
 func TestGetEvents(t *testing.T) {
 
 	log.Println("testing events")
@@ -64,6 +74,32 @@ func TestGetEvents(t *testing.T) {
 
 	assert.Equal(t, containsEvent(events, Event1), true)
 	assert.Equal(t, containsEvent(events, Event2), true)
+}
+
+func TestGetPublicEvents(t *testing.T) {
+
+	log.Println("testing events")
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var events []models.EventPublic
+
+	res, err := executeRequest("GET", "/public/events", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&events)
+
+	assert.Equal(t, containsPublicEvent(events, Event1), true)
+	assert.Equal(t, containsPublicEvent(events, Event2), true)
 }
 
 func TestGetEventsByName(t *testing.T) {
@@ -974,4 +1010,67 @@ func TestAddMeetingToEvent(t *testing.T) {
 
 	assert.Equal(t, createdMeeting.Begin.Sub(Meeting.Begin).Seconds() < 10e-3, true) // millisecond precision
 	assert.Equal(t, createdMeeting.End.Sub(Meeting.End).Seconds() < 10e-3, true)     // millisecond precision
+}
+
+func TestRemoveMeetingFromEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	cmd := mongodb.CreateMeetingData{
+		Begin: &Meeting.Begin,
+		End:   &Meeting.End,
+		Place: &Meeting.Place,
+	}
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	assert.NilError(t, err)
+
+	newMeeting, err := mongodb.Meetings.CreateMeeting(cmd)
+	assert.NilError(t, err)
+
+	updatedEvent, err := mongodb.Events.AddMeeting(currentEvent.ID, newMeeting.ID)
+	assert.NilError(t, err)
+
+	res, err := executeRequest("DELETE", "/events/meetings/"+newMeeting.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedEvent)
+
+	assert.Equal(t, updatedEvent.ID, currentEvent.ID)
+	assert.Equal(t, len(updatedEvent.Meetings) == 0, true)
+
+	_, err = mongodb.Meetings.GetMeeting(newMeeting.ID)
+	assert.Equal(t, err != nil, true)
+}
+
+func TestRemoveMeetingFromEventMeetingNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	res, err := executeRequest("DELETE", "/events/meetings/"+primitive.NewObjectID().Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
 }

@@ -192,6 +192,56 @@ func (e *EventsType) GetEvents(options GetEventsOptions) ([]*models.Event, error
 	return events, nil
 }
 
+// GetPublicEvents gets an array of events using a filter, for public usage.
+func (e *EventsType) GetPublicEvents(options GetEventsOptions) ([]*models.EventPublic, error) {
+
+	var events = make([]*models.EventPublic, 0)
+
+	filter := bson.M{}
+
+	if options.Name != nil {
+		filter["name"] = options.Name
+	}
+
+	if options.Before != nil {
+		filter["begin"] = bson.M{"$lt": options.Before}
+	}
+
+	if options.After != nil {
+		filter["begin"] = bson.M{"$gt": options.After}
+	}
+
+	if options.During != nil {
+		filter["begin"] = bson.M{"$lte": options.During}
+		filter["end"] = bson.M{"$gte": options.During}
+	}
+
+	cur, err := e.Collection.Find(e.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(e.Context) {
+
+		// create a value into which the single document can be decoded
+		var e models.EventPublic
+		err := cur.Decode(&e)
+		if err != nil {
+			return nil, err
+		}
+
+		events = append(events, &e)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(e.Context)
+
+	return events, nil
+}
+
 // GetEvent gets an event by its ID
 func (e *EventsType) GetEvent(eventID int) (*models.Event, error) {
 	var event models.Event
@@ -596,6 +646,34 @@ func (e *EventsType) AddMeeting(eventID int, meetingID primitive.ObjectID) (*mod
 
 	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating event's meetings:", err)
+		return nil, err
+	}
+
+	if updatedEvent.ID == currentEvent.ID {
+		currentEvent = &updatedEvent
+	}
+
+	return &updatedEvent, nil
+}
+
+// RemoveMeeting removes a meeting from an event.
+func (e *EventsType) RemoveMeeting(eventID int, meetingID primitive.ObjectID) (*models.Event, error) {
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"meetings": meetingID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedEvent models.Event
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+		log.Println("error remove event's item:", err)
 		return nil, err
 	}
 
