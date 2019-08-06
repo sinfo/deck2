@@ -1,0 +1,52 @@
+{
+    "delete": {
+        "tags": [
+            "members", "notifications"
+        ],
+        "summary": "Deletes a member's notification",
+        "operationId": "deleteMemberNotification",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the member",
+                "required": true,
+				"type": "string"
+            },
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "Notification id",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "notification"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated member",
+                "schema": {
+                    "$ref": "./models/member.json"
+                }
+            },
+            "404": {
+                "description": "Member or notification not found"
+            }
+        }
+    }
+}

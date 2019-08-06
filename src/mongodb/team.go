@@ -37,6 +37,10 @@ type UpdateTeamMemberData struct {
 	Role	*string				`json:"role"`
 }
 
+type DeleteTeamMemberData struct {
+	Member *primitive.ObjectID	`json:"member"`
+}
+
 // ParseBody fills the CreateTeamData from a body
 func (ctd *CreateTeamData) ParseBody(body io.Reader) error {
 
@@ -204,17 +208,116 @@ func (t *TeamsType) AddTeamMembers(id primitive.ObjectID, data UpdateTeamMemberD
 	var team models.Team
 	var members []models.TeamMembers
 
+	// Check if member exists
+	if _, err := Members.GetMember(*data.Member); err != nil{
+		return nil, err
+	}
+
+
 	team1, err := t.GetTeam(id)
 	if err != nil {
 		return nil, err
 	}
 
-	member := models.TeamMembers{
-		Member: *data.Member,
-		Role:	*data.Role,
+	// Check for duplicate member
+	if team1.HasMember(*data.Member){
+		return nil, errors.New("Duplicate member")
 	}
 
-	members = append(team1.Members, member)
+	members = append(team1.Members, models.TeamMembers{
+		Member: *data.Member,
+		Role:	*data.Role,
+	})
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"members":  members,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil{
+		return nil, err
+	}
+
+	return &team, nil
+}
+
+// UpdateTeamMemberRole changes the role of a team member
+func (t *TeamsType) UpdateTeamMemberRole (id primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error){
+
+	var team models.Team
+	var members []models.TeamMembers
+
+	// Check if member exists
+	if _, err := Members.GetMember(*data.Member); err != nil{
+		return nil, err
+	}
+
+
+	team1, err := t.GetTeam(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for existent member
+	if !team1.HasMember(*data.Member){
+		return nil, errors.New("Member not found")
+	}
+
+	members = team1.Members
+	for i, s := range members{
+		if s.Member == *data.Member{
+			members[i].Role = *data.Role
+		}
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"members":  members,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil{
+		return nil, err
+	}
+
+	return &team, nil
+}
+
+// DeleteTeamMember removes a member from a team.
+func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMemberData) (*models.Team, error){
+
+	var team models.Team
+	var members []models.TeamMembers
+
+	// Check if member exists
+	if _, err := Members.GetMember(*data.Member); err != nil{
+		return nil, err
+	}
+
+
+	team1, err := t.GetTeam(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for non-existent member
+	if !team1.HasMember(*data.Member){
+		return nil, errors.New("Member not found")
+	}
+
+	for i,s := range team1.Members{
+		if s.Member == *data.Member{
+			members = append(team1.Members[:i], team1.Members[i+1:]...)
+			break
+		}
+	}
 
 	var updateQuery = bson.M{
 		"$set": bson.M{

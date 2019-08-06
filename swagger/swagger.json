@@ -94,17 +94,20 @@
 		"/events/themes": {
 			"$ref": "./endpoints/events-themes.json"
 		},
+		"/events/packages": {
+			"$ref": "./endpoints/events-packages.json"
+		},
+		"/events/items": {
+			"$ref": "./endpoints/events-items.json"
+		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"
 		},
 		"/teams/{id}": {
 			"$ref": "./endpoints/teams-id.json"
 		},
-		"/events/packages": {
-			"$ref": "./endpoints/events-packages.json"
-		},
-		"/events/items": {
-			"$ref": "./endpoints/events-items.json"
+		"/teams/{id}/member":{
+			"$ref": "./endpoints/teams-id-member.json"
 		},
 		"/items": {
 			"$ref": "./endpoints/items.json"
@@ -114,6 +117,13 @@
 		},
 		"/members/{id}":{
 			"$ref":"./endpoints/members-id.json"
+		},
+		
+		"/members/{id}/contact":{
+			"$ref": "./endpoints/members-id-contact.json"
+		},
+		"/members/{id}/notification":{
+			"$ref": "./endpoints/members-id-notification.json"
 		},
 		"/packages": {
 			"$ref": "./endpoints/packages.json"
