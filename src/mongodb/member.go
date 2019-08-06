@@ -40,6 +40,11 @@ type UpdateMemberContactData struct {
 	Contact	primitive.ObjectID `json:"contact"`
 }
 
+// DeleteMemberNotificationData contains info needed to delete a member's notification
+type DeleteMemberNotificationData struct {
+	Notification primitive.ObjectID `json:"notification"`
+}
+
 // ParseBody fills the CreateTeamData from a body
 func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
 
@@ -174,3 +179,66 @@ func (m *MembersType) UpdateMember(id primitive.ObjectID, data CreateMemberData)
 	return &member, nil
 }
 
+// UpdateMemberNotification adds notifications.
+func (m *MembersType) UpdateMemberNotification(id primitive.ObjectID, notifs []primitive.ObjectID) (*models.Member, error){
+
+	member, err := m.GetMember(id)
+	if err != nil{
+		return nil, err
+	}
+
+	notifications := append(member.Notifications, notifs...)
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"notifications" : notifications,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(member); err != nil{
+		return nil, err
+	}
+
+	return member, nil
+}
+
+// DeleteMemberNotification deletes a notification from a member.
+func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, notif DeleteMemberNotificationData) (*models.Member, error){
+	member, err := m.GetMember(memberID)
+	if err != nil{
+		return nil, err
+	}
+
+	var notifications []primitive.ObjectID
+	var found = false
+	for i, s := range member.Notifications{
+		if s == notif.Notification{
+			notifications = append(member.Notifications[:i], member.Notifications[i+1:]...)
+			found = true
+		}
+	} 
+
+	if !found {
+		return nil, errors.New("Notification not found")
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"notifications": notifications,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+	
+	var result models.Member
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&result); err != nil{
+		return nil, err
+	}
+
+	return &result, nil
+}

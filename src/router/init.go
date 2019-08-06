@@ -74,6 +74,9 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
 	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
 	teamRouter.HandleFunc("/{id}", updateTeam).Methods("PUT")
+	teamRouter.HandleFunc("/{id}/member", addTeamMembers).Methods("POST")
+	teamRouter.HandleFunc("/{id}/member", updateTeamMemberRole).Methods("PUT")
+	teamRouter.HandleFunc("/{id}/member", deleteTeamMember).Methods("DELETE")
 
 	// member handlers
 	memberRouter := r.PathPrefix("/members").Subrouter()
@@ -82,7 +85,8 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("/{id}", getMember).Methods("GET")
 	memberRouter.HandleFunc("/{id}", updateMember).Methods("PUT")
 	memberRouter.HandleFunc("/{id}/contact", updateMemberContact).Methods("PUT")
-
+	memberRouter.HandleFunc("/{id}/notification", deleteMemberNotification).Methods("DELETE")
+	
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
 	itemRouter.HandleFunc("", createItem).Methods("POST")
