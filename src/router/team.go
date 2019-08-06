@@ -11,10 +11,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-
-// GetTeamsHandler is the handler for the GET /teams request.
-// Has a query with event={EventID}, member={MemberID}, name={Name}.
-// EventID is an int, memberID is a hexed primitive.ObjectID and name is a string.
 func getTeams(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
@@ -55,9 +51,6 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(teams)
 }
 
-
-// CreateTeamHandler is the handler for the POST /teams request.
-// Takes in a payload with {name: string}
 func createTeam(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
@@ -79,9 +72,6 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newTeam)
 }
 
-
-// GetTeamHandler is the handler for the GET /teams/{id} request.
-// id is a hexed primitive.ObjectID
 func getTeam(w http.ResponseWriter, r *http.Request) {
 	params :=mux.Vars(r)
 	id,_ := primitive.ObjectIDFromHex(params["id"])
@@ -96,8 +86,6 @@ func getTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(team)
 }
 
-// DeleteTeamHandler is the handler for the DELETE /teams/{id} request.
-// id is a hexed primitive.ObjectID
 func deleteTeam(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
@@ -201,4 +189,30 @@ func deleteTeamMember(w http.ResponseWriter, r *http.Request){
 	}
 
 	json.NewEncoder(w).Encode(team)
+}
+
+// PUBLIC ENDPOINTS
+
+func getPublicTeams(w http.ResponseWriter, r *http.Request){
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetTeamsOptions{}
+	event := urlQuery.Get("event")
+
+	if len(event) > 0 {
+		eventID, err :=strconv.Atoi(event)
+		if err !=nil {
+			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+			return
+		}
+		options.Event = &eventID
+	}
+
+	teams, err := mongodb.Teams.GetPublicTeams(options)
+
+	if err != nil {
+		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+	}
+
+	json.NewEncoder(w).Encode(teams)
 }

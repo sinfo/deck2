@@ -45,6 +45,13 @@ type DeleteMemberNotificationData struct {
 	Notification primitive.ObjectID `json:"notification"`
 }
 
+// PublicMemberData contains public information about a member
+type PublicMemberData struct {
+	ID		primitive.ObjectID	`json:"id"`
+	Name	string				`json:"name"`
+	Image	string				`json:"img"`
+}
+
 // ParseBody fills the CreateTeamData from a body
 func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
 

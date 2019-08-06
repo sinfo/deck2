@@ -617,3 +617,47 @@ func TestDeleteTeamMember(t *testing.T){
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
+
+func TestGetPublicTeams(t *testing.T){
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+
+	setupTest()
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var teams []mongodb.PublicTeamData
+
+	res, err := executeRequest("GET", "/public/teams", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&teams)
+
+	assert.Equal(t, len(teams), 1)
+	assert.Equal(t, teams[0].ID, Team1.ID)
+
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: "TestEvent"}); err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	id := strconv.Itoa(TeamEvent2.ID)
+	var query = "?event=" + url.QueryEscape(id)
+
+	res, err = executeRequest("GET", "/public/teams"+query, nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&teams)
+
+	assert.Equal(t, len(teams), 1)
+	assert.Equal(t, teams[0].ID, Team1.ID)
+}

@@ -17,28 +17,40 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// TeamsType contains database information on teams 
 type TeamsType struct {
 	Collection *mongo.Collection
 	Context    context.Context
 }
 
+// CreateTeamData contains the data needed to create a team
 type CreateTeamData struct {
 	Name        string `json:"name"`
 }
 
+// GetTeamsOptions contains filters for the GetTeams method
 type GetTeamsOptions struct {
 	Name		*string 
 	Event		*int
 	Member		*primitive.ObjectID
 }
 
+// UpdateTeamMemberData contains data needed to update or create a team member
 type UpdateTeamMemberData struct {
 	Member	*primitive.ObjectID `json:"member"`
 	Role	*string				`json:"role"`
 }
 
+// DeleteTeamMemberData contains data needed to delete a team member
 type DeleteTeamMemberData struct {
 	Member *primitive.ObjectID	`json:"member"`
+}
+
+// PublicTeamData stores public data for a team.
+type PublicTeamData struct {
+	ID		primitive.ObjectID		`json:"id"` 
+	Name	string 					`json:"name"`
+	Members	[]models.TeamMembers	`json:"members"`
 }
 
 // ParseBody fills the CreateTeamData from a body
@@ -333,4 +345,38 @@ func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMembe
 	}
 
 	return &team, nil
+}
+
+// GetPublicTeams gets all teams from an event and returns only public information
+func (t *TeamsType) GetPublicTeams(options GetTeamsOptions) ([]*PublicTeamData, error) {
+	var teams = make([]*PublicTeamData, 0)
+	var event *models.Event
+	var err error
+
+	if options.Event != nil {
+		event, err  = Events.GetEvent(*options.Event)
+		if err != nil{
+			return nil, err
+		}
+	} else{
+		event, err = Events.GetCurrentEvent(); 
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _,s := range event.Teams {
+		team, err := t.GetTeam(s);
+		if err != nil{
+			return nil, err
+		}
+		publicTeam := &PublicTeamData{
+			Name:		team.Name,
+			ID:			team.ID,
+			Members:	team.Members,
+		}
+		teams = append(teams, publicTeam)
+	}
+
+	return teams, nil
 }
