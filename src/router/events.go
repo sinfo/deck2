@@ -337,3 +337,37 @@ func removeItemToEvent(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedEvent)
 }
+
+func addMeetingToEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusNotFound)
+		return
+	}
+
+	var cmd = &mongodb.CreateMeetingData{}
+
+	if err := cmd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	newMeeting, err := mongodb.Meetings.CreateMeeting(*cmd)
+	if err != nil {
+		http.Error(w, "Could not create a new meeting", http.StatusExpectationFailed)
+		return
+	}
+
+	updatedEvent, err := mongodb.Events.AddMeeting(currentEvent.ID, newMeeting.ID)
+
+	if err != nil {
+		http.Error(w, "Could not save meeting on event", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedEvent)
+}

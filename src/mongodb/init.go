@@ -12,12 +12,13 @@ var ctx context.Context
 var db *mongo.Database
 
 var (
-	Events		*EventsType
-	Companies	*CompaniesType
-	Teams     	*TeamsType
-	Members	  	*MembersType		
-	Items 		*ItemsType
-	Packages  	*PackagesType
+	Events    *EventsType
+	Companies *CompaniesType
+	Teams     *TeamsType
+	Members   *MembersType
+	Items     *ItemsType
+	Packages  *PackagesType
+	Meetings  *MeetingsType
 )
 
 // InitializeDatabase initializes the database connection
@@ -63,9 +64,9 @@ func InitializeDatabase() {
 
 	Members = &MembersType{
 		Collection: db.Collection("members"),
-		Context:	ctx,
+		Context:    ctx,
 	}
-	
+
 	Items = &ItemsType{
 		Collection: db.Collection("items"),
 		Context:    ctx,
@@ -73,6 +74,11 @@ func InitializeDatabase() {
 
 	Packages = &PackagesType{
 		Collection: db.Collection("packages"),
+		Context:    ctx,
+	}
+
+	Meetings = &MeetingsType{
+		Collection: db.Collection("meetings"),
 		Context:    ctx,
 	}
 

@@ -27,6 +27,7 @@ var (
 	Event1     = models.Event{ID: 1, Name: "SINFO1"}
 	Event2     = models.Event{ID: 2, Name: "SINFO2", Begin: &TimeBefore, End: &TimeNow}
 	Event3     = models.Event{ID: 3, Name: "SINFO3", Begin: &TimeNow, End: &TimeAfter}
+	Meeting    = models.Meeting{Begin: TimeNow, End: TimeAfter, Place: "some place"}
 )
 
 func containsEvent(events []models.Event, event models.Event) bool {
@@ -819,6 +820,7 @@ func TestAddItemToEvent(t *testing.T) {
 	assert.Equal(t, len(updatedEvent.Items) == 1, true)
 	assert.Equal(t, updatedEvent.Items[0], newItem.ID)
 }
+
 func TestAddItemToEventInvalidPayload(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
@@ -927,4 +929,49 @@ func TestRemoveItemFromEvent(t *testing.T) {
 
 	assert.Equal(t, updatedEvent.ID, currentEvent.ID)
 	assert.Equal(t, len(updatedEvent.Items) == 0, true)
+}
+
+func TestAddMeetingToEvent(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	// Without this, because of previous tests, the variable currentEvent will be pointing to other event, different
+	// from the event created on the line before this.
+	if _, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: Event3.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	cmd := mongodb.CreateMeetingData{
+		Begin: &Meeting.Begin,
+		End:   &Meeting.End,
+		Place: &Meeting.Place,
+	}
+
+	b, errMarshal := json.Marshal(cmd)
+	assert.NilError(t, errMarshal)
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	assert.NilError(t, err)
+
+	var updatedEvent models.Event
+
+	res, err := executeRequest("POST", "/events/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedEvent)
+
+	assert.Equal(t, updatedEvent.ID, currentEvent.ID)
+	assert.Equal(t, len(updatedEvent.Meetings) == 1, true)
+
+	createdMeeting, err := mongodb.Meetings.GetMeeting(updatedEvent.Meetings[0])
+	assert.NilError(t, err)
+
+	assert.Equal(t, createdMeeting.Begin.Sub(Meeting.Begin).Seconds() < 10e-3, true) // millisecond precision
+	assert.Equal(t, createdMeeting.End.Sub(Meeting.End).Seconds() < 10e-3, true)     // millisecond precision
 }

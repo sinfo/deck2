@@ -1,0 +1,36 @@
+{
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string"
+		},
+		"begin": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"end": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"place": {
+            "type": "string"
+        },
+        "minute": {
+			"type": "string"
+		},
+		"participants": {
+			"type": "object",
+			"properties": {
+				"members": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"companyReps": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	}
+}

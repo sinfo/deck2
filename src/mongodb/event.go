@@ -578,3 +578,30 @@ func (e *EventsType) RemoveItem(eventID int, itemID primitive.ObjectID) (*models
 
 	return &updatedEvent, nil
 }
+
+// AddMeeting adds a meeting to an event.
+func (e *EventsType) AddMeeting(eventID int, meetingID primitive.ObjectID) (*models.Event, error) {
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"meetings": meetingID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedEvent models.Event
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+		log.Println("error updating event's meetings:", err)
+		return nil, err
+	}
+
+	if updatedEvent.ID == currentEvent.ID {
+		currentEvent = &updatedEvent
+	}
+
+	return &updatedEvent, nil
+}
