@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -10,15 +11,21 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func getMembers (w http.ResponseWriter, r *http.Request){
+func getMembers(w http.ResponseWriter, r *http.Request){
 
 	urlQuery := r.URL.Query()
 	options := mongodb.GetMemberOptions{}
 
 	name := urlQuery.Get("name")
+	event := urlQuery.Get("event")
+	var eventID int
 
 	if len(name) >0 {
 		options.Name = &name
+	}
+	if len(event) > 0{
+		eventID, _ = strconv.Atoi(event)
+		options.Event = &eventID
 	}
 
 	members, err := mongodb.Members.GetMembers(options)

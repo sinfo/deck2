@@ -51,6 +51,8 @@ func InitializeRouter() {
 	// public handlers
 	publicRouter := r.PathPrefix("/public").Subrouter()
 	publicRouter.HandleFunc("/events", getEventsPublic).Methods("GET")
+	publicRouter.HandleFunc("/teams", getTeamsPublic).Methods("GET")
+	publicRouter.HandleFunc("/teams/{id}", getTeamPublic).Methods("GET")
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
@@ -100,10 +102,6 @@ func InitializeRouter() {
 	// package handlers
 	packageRouter := r.PathPrefix("/packages").Subrouter()
 	packageRouter.HandleFunc("", createPackage).Methods("POST")
-
-	// public handlers
-	publicRouter := r.PathPrefix("/public").Subrouter()
-	publicRouter.HandleFunc("/teams", getPublicTeams).Methods("GET")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

@@ -1,16 +1,20 @@
 package router
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"encoding/json"
 	"log"
 	"bytes"
 	"net/http"
 	"net/url"
 	"testing"
+	"strconv"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
+
 	"gotest.tools/assert"
 )
 
@@ -120,6 +124,69 @@ func TestGetMembersName(t *testing.T){
 	assert.Equal(t, containsMember(members, Member1), false)
 	assert.Equal(t, containsMember(members, Member2), false)
 
+}
+
+func TestGetMembersEvent(t *testing.T){
+
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	 _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name":"SINFO1"})
+	 assert.NilError(t, err)
+
+	event1, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: "SINFO2"})
+	assert.NilError(t, err)
+
+	team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	Member1, err = mongodb.Members.CreateMember(Member1Data)
+	assert.NilError(t, err)
+
+	var role = "MEMBER"
+
+	team1, err = mongodb.Teams.AddTeamMembers(team1.ID, mongodb.UpdateTeamMemberData{
+		Member: &Member1.ID,
+		Role:	&role,
+	})
+	assert.NilError(t, err)
+	assert.Equal(t, len(team1.Members), 1)
+	assert.Equal(t, team1.Members[0].Member, Member1.ID)
+
+	var members []models.Member
+	var query = "?event=" + url.QueryEscape(strconv.Itoa(event1.ID))
+
+	res, err := executeRequest("GET", "/members"+query,nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+	
+	json.NewDecoder(res.Body).Decode(&members)
+
+	assert.Equal(t, len(members), 1)
+	assert.Equal(t, members[0].ID, Member1.ID)
+
+	// Test Duplicate member
+
+	team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	team2, err = mongodb.Teams.AddTeamMembers(team2.ID, mongodb.UpdateTeamMemberData{
+		Member: &Member1.ID,
+		Role:	&role,
+	})
+	assert.NilError(t, err)
+	assert.Equal(t, len(team2.Members), 1)
+	assert.Equal(t, team2.Members[0].Member, Member1.ID)
+
+	res, err = executeRequest("GET", "/members"+query,nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+	
+	json.NewDecoder(res.Body).Decode(&members)
+
+	assert.Equal(t, len(members), 1)
+	assert.Equal(t, members[0].ID, Member1.ID)
 }
 
 func TestGetMember(t *testing.T){

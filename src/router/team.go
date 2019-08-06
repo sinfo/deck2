@@ -193,11 +193,41 @@ func deleteTeamMember(w http.ResponseWriter, r *http.Request){
 
 // PUBLIC ENDPOINTS
 
-func getPublicTeams(w http.ResponseWriter, r *http.Request){
+func getTeamPublic(w http.ResponseWriter, r *http.Request) {
+	params :=mux.Vars(r)
+	id,_ := primitive.ObjectIDFromHex(params["id"])
+	
+	team, err := mongodb.Teams.GetTeamPublic(id)
+
+	if err != nil {
+		http.Error(w, "Could not find team", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(team)
+}
+
+func getTeamsPublic(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
 	options := mongodb.GetTeamsOptions{}
+
+	name := urlQuery.Get("name")
+	member := urlQuery.Get("member")
 	event := urlQuery.Get("event")
+
+	if len(name) >0 {
+		options.Name = &name
+	}
+
+	if len(member) >0 {
+		memberID, err :=primitive.ObjectIDFromHex(member)
+		if err != nil {
+			http.Error(w, "Invalid member ID format", http.StatusBadRequest)
+			return
+		}
+		options.Member = &memberID
+	}
 
 	if len(event) > 0 {
 		eventID, err :=strconv.Atoi(event)
@@ -208,7 +238,7 @@ func getPublicTeams(w http.ResponseWriter, r *http.Request){
 		options.Event = &eventID
 	}
 
-	teams, err := mongodb.Teams.GetPublicTeams(options)
+	teams, err := mongodb.Teams.GetTeamsPublic(options)
 
 	if err != nil {
 		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)

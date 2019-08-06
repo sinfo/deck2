@@ -17,6 +17,12 @@
                 "name": "name",
                 "description": "Partial and case insensitive match for name",
                 "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Members from this event",
+                "type": "string"
             }
         ],
         "responses": {

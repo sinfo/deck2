@@ -46,13 +46,6 @@ type DeleteTeamMemberData struct {
 	Member *primitive.ObjectID	`json:"member"`
 }
 
-// PublicTeamData stores public data for a team.
-type PublicTeamData struct {
-	ID		primitive.ObjectID		`json:"id"` 
-	Name	string 					`json:"name"`
-	Members	[]models.TeamMembers	`json:"members"`
-}
-
 // ParseBody fills the CreateTeamData from a body
 func (ctd *CreateTeamData) ParseBody(body io.Reader) error {
 
@@ -347,9 +340,28 @@ func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMembe
 	return &team, nil
 }
 
-// GetPublicTeams gets all teams from an event and returns only public information
-func (t *TeamsType) GetPublicTeams(options GetTeamsOptions) ([]*PublicTeamData, error) {
-	var teams = make([]*PublicTeamData, 0)
+// PUBLIC METHODS
+
+// GetTeamPublic gets a team by it's id.
+func (t *TeamsType) GetTeamPublic(teamID primitive.ObjectID) (*models.TeamPublic, error) {
+	var team models.Team
+
+	err := t.Collection.FindOne(t.Context, bson.M{"_id": teamID}).Decode(&team)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.TeamPublic{
+		ID: team.ID,
+		Name: team.Name,
+		Members: team.Members,
+	}, nil
+}
+
+
+// GetTeamsPublic gets all teams from an event and returns only public information
+func (t *TeamsType) GetTeamsPublic(options GetTeamsOptions) ([]*models.TeamPublic, error) {
+	var teams = make([]*models.TeamPublic, 0)
 	var event *models.Event
 	var err error
 
@@ -366,17 +378,25 @@ func (t *TeamsType) GetPublicTeams(options GetTeamsOptions) ([]*PublicTeamData, 
 	}
 
 	for _,s := range event.Teams {
-		team, err := t.GetTeam(s);
-		if err != nil{
+		team, err := t.GetTeamPublic(s);
+		if err != nil {
 			return nil, err
 		}
-		publicTeam := &PublicTeamData{
-			Name:		team.Name,
-			ID:			team.ID,
-			Members:	team.Members,
+		if options.Name == nil{
+			if options.Member == nil{
+				teams = append(teams, team)
+			}else if team.HasMember(*options.Member){
+				teams = append(teams, team)
+			}
+		} else if strings.Contains(strings.ToLower(team.Name),strings.ToLower(*options.Name)){
+			if options.Member == nil{
+				teams = append(teams, team)
+			}else if team.HasMember(*options.Member){
+				teams = append(teams, team)
+			}
 		}
-		teams = append(teams, publicTeam)
 	}
 
 	return teams, nil
 }
+

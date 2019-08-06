@@ -26,6 +26,7 @@ type MembersType struct {
 // GetMemberOptions is a filter for GetMembers
 type GetMemberOptions struct {
 	Name	*string
+	Event	*int
 }
 
 // CreateMemberData contains all info needed to create a new member
@@ -71,40 +72,20 @@ func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
 
 	return nil
 }
-// GetMembers retrieves all members if no name is given or all members 
-// with a case insensitive partial match to given name
-func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, error) {
 
-	var members []*models.Member
-
-	cur, err := m.Collection.Find(m.Context, bson.M{})
-	if err != nil{
-		return nil, err
-	}
-
-	for cur.Next(m.Context) {
-		
-		var x models.Member
-
-		if err := cur.Decode(&x); err != nil{
-			return nil, err
+func filterDuplicates(orig []*models.Member) (res []*models.Member){
+	for _, s := range orig{
+		dup := false
+		for _, t := range res{
+			if t.ID == s.ID{
+				dup = true
+			}
 		}
-
-		if options.Name == nil{
-			members = append(members, &x)
-		}else if strings.Contains(strings.ToLower(x.Name),strings.ToLower(*options.Name)){
-			members = append(members, &x)
+		if !dup{
+			res = append(res, s)
 		}
 	}
-
-	if err := cur.Err(); err != nil {
-
-		return nil, err
-	}
-
-	cur.Close(m.Context)
-
-	return members, nil
+	return
 }
 
 // GetMember finds a member with specified id.
@@ -119,8 +100,71 @@ func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error){
 	return &member, nil
 }
 
+// GetMembers retrieves all members if no name is given or all members 
+// with a case insensitive partial match to given name
+// or all members in event if event is given
+func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, error) {
+
+	var members []*models.Member
+
+	if options.Event == nil{
+
+		cur, err := m.Collection.Find(m.Context, bson.M{})
+		if err != nil{
+			return nil, err
+		}
+
+		for cur.Next(m.Context) {
+			
+			var x models.Member
+
+			if err := cur.Decode(&x); err != nil{
+				return nil, err
+			}
+
+			if options.Name == nil{
+				members = append(members, &x)
+			}else if strings.Contains(strings.ToLower(x.Name),strings.ToLower(*options.Name)){
+				members = append(members, &x)
+			}
+		}
+
+		if err := cur.Err(); err != nil {
+
+			return nil, err
+		}
+
+		cur.Close(m.Context)
+
+	}else{
+		event, err := Events.GetEvent(*options.Event)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, s := range event.Teams{
+			team, err := Teams.GetTeam(s)
+			if err != nil{
+				return nil, err
+			}
+			for _, t := range team.Members{
+				member, err := m.GetMember(t.Member)
+				if err != nil {
+					return nil, err
+				}
+				if options.Name == nil{
+					members = append(members, member)
+				}else if strings.Contains(strings.ToLower(member.Name),strings.ToLower(*options.Name)){
+					members = append(members, member)
+				}
+			}
+		}
+	}
+	return filterDuplicates(members), nil
+}
+
 // CreateMember creates a new member
-func (m *MembersType) CreateMember (data CreateMemberData) (*models.Member,error){
+func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member,error){
 
 	insertData := bson.M{}
 

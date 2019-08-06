@@ -1,0 +1,50 @@
+{
+    "get": {
+        "tags": [
+            "teams"
+        ],
+        "summary": "Get all teams",
+        "operationId": "getTeamsPublic",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the team",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "member",
+                "description": "Contains this member",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Team from this event",
+                "type": "integer",
+                "format": "int64"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Teams filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/public-team.json"
+                    }
+                }
+            },
+            "417": {
+                "description": "Unable to get teams"
+            }
+        }
+    }
+}
