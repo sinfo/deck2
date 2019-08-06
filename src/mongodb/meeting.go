@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"time"
@@ -89,6 +90,27 @@ func (m *MeetingsType) GetMeeting(meetingID primitive.ObjectID) (*models.Meeting
 	err := m.Collection.FindOne(m.Context, bson.M{"_id": meetingID}).Decode(&meeting)
 	if err != nil {
 		return nil, err
+	}
+
+	return &meeting, nil
+}
+
+// DeleteMeeting removes a meeting by its ID
+func (m *MeetingsType) DeleteMeeting(meetingID primitive.ObjectID) (*models.Meeting, error) {
+	var meeting models.Meeting
+
+	err := m.Collection.FindOne(m.Context, bson.M{"_id": meetingID}).Decode(&meeting)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResult, err := Meetings.Collection.DeleteOne(m.Context, bson.M{"_id": meetingID})
+	if err != nil {
+		return nil, err
+	}
+
+	if deleteResult.DeletedCount != 1 {
+		return nil, fmt.Errorf("should have deleted 1 meeting, deleted %v", deleteResult.DeletedCount)
 	}
 
 	return &meeting, nil

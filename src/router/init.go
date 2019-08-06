@@ -67,6 +67,7 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/items", addItemToEvent).Methods("POST")
 	eventRouter.HandleFunc("/items/{id}", removeItemToEvent).Methods("DELETE")
 	eventRouter.HandleFunc("/meetings", addMeetingToEvent).Methods("POST")
+	eventRouter.HandleFunc("/meetings/{id}", removeMeetingFromEvent).Methods("DELETE")
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()

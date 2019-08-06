@@ -118,6 +118,9 @@
 		"/events/meetings": {
 			"$ref": "./endpoints/events-meetings.json"
 		},
+		"/events/meetings/{id}": {
+			"$ref": "./endpoints/events-meetings-id.json"
+		},
 		"/items": {
 			"$ref": "./endpoints/items.json"
 		},
