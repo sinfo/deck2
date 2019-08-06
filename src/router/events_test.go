@@ -40,6 +40,16 @@ func containsEvent(events []models.Event, event models.Event) bool {
 	return false
 }
 
+func containsPublicEvent(events []models.EventPublic, event models.Event) bool {
+	for _, s := range events {
+		if s.ID == event.ID && s.Name == event.Name {
+			return true
+		}
+	}
+
+	return false
+}
+
 func TestGetEvents(t *testing.T) {
 
 	log.Println("testing events")
@@ -64,6 +74,32 @@ func TestGetEvents(t *testing.T) {
 
 	assert.Equal(t, containsEvent(events, Event1), true)
 	assert.Equal(t, containsEvent(events, Event2), true)
+}
+
+func TestGetPublicEvents(t *testing.T) {
+
+	log.Println("testing events")
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var events []models.EventPublic
+
+	res, err := executeRequest("GET", "/public/events", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&events)
+
+	assert.Equal(t, containsPublicEvent(events, Event1), true)
+	assert.Equal(t, containsPublicEvent(events, Event2), true)
 }
 
 func TestGetEventsByName(t *testing.T) {

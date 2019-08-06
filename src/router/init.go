@@ -48,6 +48,10 @@ func InitializeRouter() {
 	// swagger config
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
+	// public handlers
+	publicRouter := r.PathPrefix("/public").Subrouter()
+	publicRouter.HandleFunc("/events", getEventsPublic).Methods("GET")
+
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
 	companyRouter.HandleFunc("", getCompanies).Methods("GET")

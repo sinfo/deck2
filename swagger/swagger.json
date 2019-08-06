@@ -17,6 +17,10 @@
 	"basePath": "/",
 	"tags": [
 		{
+			"name": "public",
+			"description": "Public endpoints (don't need authentication)"
+		},
+		{
 			"name": "billings",
 			"description": "Saved bills"
 		},
@@ -85,6 +89,9 @@
 		"http"
 	],
 	"paths": {
+		"/public/events": {
+			"$ref": "./endpoints/public-events.json"
+		},
 		"/events": {
 			"$ref": "./endpoints/events.json"
 		},

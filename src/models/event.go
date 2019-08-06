@@ -66,3 +66,40 @@ func (e Event) DurationInDays() (int, error) {
 
 	return result, nil
 }
+
+// EventPublic info.
+type EventPublic struct {
+
+	// Event's ID (_id of mongodb).
+	// Example: SINFO 26 has id=26.
+	ID int `json:"id" bson:"_id"`
+
+	Name  string     `json:"name" bson:"name"`
+	Begin *time.Time `json:"begin,omitempty" bson:"begin,omitempty"`
+	End   *time.Time `json:"end,omitempty" bson:"end,omitempty"`
+
+	// Event days' themes.
+	// Each index of the array corresponds to a week day during the event.
+	// Example: index 1 corresponds to monday, index 2 to tuesday, etc).
+	// The themes can be "Software Engineer", "Security", "Gaming", etc.
+	Themes []string `json:"themes" bson:"themes"`
+}
+
+// DurationInDays returns the duration of the event in days.
+func (e EventPublic) DurationInDays() (int, error) {
+	var result = 1
+
+	if e.Begin == nil || e.End == nil {
+		return -1, errors.New("event's dates not set'")
+	}
+
+	var start = *e.Begin
+	var end = *e.End
+
+	for start.Day() != end.Day() {
+		result++
+		start = start.Add(time.Hour * 24)
+	}
+
+	return result, nil
+}
