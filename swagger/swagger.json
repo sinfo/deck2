@@ -109,6 +109,12 @@
 		"/teams/{id}/member":{
 			"$ref": "./endpoints/teams-id-member.json"
 		},
+		"/events/packages/{id}": {
+			"$ref": "./endpoints/events-packages-id.json"
+		},
+		"/events/items/{id}": {
+			"$ref": "./endpoints/events-items-id.json"
+		},
 		"/items": {
 			"$ref": "./endpoints/items.json"
 		},

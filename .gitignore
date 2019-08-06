@@ -65,3 +65,4 @@ keys
 
 .vscode
 bin
+static/swagger.json
