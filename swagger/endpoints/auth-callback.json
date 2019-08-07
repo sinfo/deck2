@@ -1,0 +1,27 @@
+{
+    "get": {
+        "tags": [
+            "auth"
+        ],
+        "summary": "Authentication callback endpoint",
+        "operationId": "authCallback",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+            "200": {
+                "description": "Authentication code",
+                "schema": {
+                    "$ref": "./models/auth.json"
+                }
+            },
+            "401": {
+                "description": "Unauthorized (reason in the body of the response)"
+            }
+        }
+    }
+}

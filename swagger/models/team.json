@@ -10,7 +10,16 @@
         "members": {
 			"type": "array",
 			"items": {
-				"type": "string"
+				"type": "object",
+				"properties": {
+					"member": {
+						"type": "string"
+					},
+					"role": {
+						"type": "string",
+						"enum": ["MEMBER", "TEAMLEADER", "COORDINATOR", "ADMIN"]
+					}
+				}
 			}
 		},
 		"meetings": {

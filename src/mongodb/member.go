@@ -16,7 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
 // MembersType contains database information on Members
 type MembersType struct {
 	Collection *mongo.Collection
@@ -31,14 +30,15 @@ type GetMemberOptions struct {
 
 // CreateMemberData contains all info needed to create a new member
 type CreateMemberData struct {
-	Name	string	`json:"name"`
-	Image	string	`json:"img"`
-	Istid	string	`json:"istid"`
+	Name    string `json:"name"`
+	Image   string `json:"img"`
+	Istid   string `json:"istid"`
+	SinfoID string `json:"sinfoEmail"`
 }
 
 // UpdateMemberContactData contains info needed to update a member's contact
 type UpdateMemberContactData struct {
-	Contact	primitive.ObjectID `json:"contact"`
+	Contact primitive.ObjectID `json:"contact"`
 }
 
 // DeleteMemberNotificationData contains info needed to delete a member's notification
@@ -66,8 +66,11 @@ func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
 	if len(cmd.Image) == 0 {
 		return errors.New("invalid image")
 	}
-	if len(cmd.Istid) < 3 ||cmd.Istid[:3] != "ist" {
+	if len(cmd.Istid) < 3 || cmd.Istid[:3] != "ist" {
 		return errors.New("invalid name")
+	}
+	if len(cmd.SinfoID) == 0 {
+		return errors.New("invalid sinfo ID")
 	}
 
 	return nil
@@ -104,11 +107,11 @@ func filterDuplicatesPublic(orig []*models.MemberPublic) (res []*models.MemberPu
 }
 
 // GetMember finds a member with specified id.
-func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error){
+func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
 
 	var member models.Member
 
-	if err := m.Collection.FindOne(m.Context, bson.M{"_id": id}).Decode(&member); err != nil{
+	if err := m.Collection.FindOne(m.Context, bson.M{"_id": id}).Decode(&member); err != nil {
 		return nil, err
 	}
 
@@ -178,17 +181,72 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 	return filterDuplicates(members), nil
 }
 
+// GetMemberAuthCredentials finds a member and returns his/her information for auth purposes.
+func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.AuthorizationCredentials, error) {
+
+	var member models.Member
+	var result models.AuthorizationCredentials
+
+	if err := m.Collection.FindOne(m.Context, bson.M{"sinfoid": sinfoID}).Decode(&member); err != nil {
+		return nil, err
+	}
+
+	result.ID = member.ID
+	result.SINFOID = member.SINFOID
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var options = GetTeamsOptions{Event: &currentEvent.ID, Member: &member.ID}
+	teams, err := Teams.GetTeams(options)
+	if err != nil {
+		return nil, err
+	}
+
+	var level = -1
+	var role models.TeamRole
+	for _, team := range teams {
+		member, err := team.GetMember(member.ID)
+
+		if err != nil {
+			continue
+		}
+
+		l := member.Role.AccessLevel()
+
+		if l == -1 {
+			continue
+		}
+
+		if level == -1 || level > l {
+			level = l
+			role = member.Role
+		}
+	}
+
+	if level == -1 {
+		return nil, errors.New("member without team")
+	}
+
+	result.Role = role
+
+	return &result, nil
+}
+
 // CreateMember creates a new member
-func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member,error){
+func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error) {
 
 	insertData := bson.M{}
 
 	insertData["name"] = data.Name
 	insertData["img"] = data.Image
 	insertData["istid"] = data.Istid
+	insertData["sinfoid"] = data.SinfoID
 
 	insertResult, err := m.Collection.InsertOne(m.Context, insertData)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -197,7 +255,7 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member,error)
 		return nil, err
 	}
 
-	return newMember,nil
+	return newMember, nil
 }
 
 // CreateMemberContact updates a member's contact 
@@ -243,21 +301,21 @@ func (m *MembersType) UpdateMemberContact(memberID, contactID primitive.ObjectID
 }
 
 // UpdateMember updates a member's name, image and istid
-func (m *MembersType) UpdateMember(id primitive.ObjectID, data CreateMemberData) (*models.Member, error){
+func (m *MembersType) UpdateMember(id primitive.ObjectID, data CreateMemberData) (*models.Member, error) {
 	var member models.Member
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"name":		data.Name,
-			"img":		data.Image,
-			"istid":	data.Istid,		
+			"name":  data.Name,
+			"img":   data.Image,
+			"istid": data.Istid,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil{
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil {
 		return nil, err
 	}
 
@@ -265,10 +323,10 @@ func (m *MembersType) UpdateMember(id primitive.ObjectID, data CreateMemberData)
 }
 
 // UpdateMemberNotification adds notifications.
-func (m *MembersType) UpdateMemberNotification(id primitive.ObjectID, notifs []primitive.ObjectID) (*models.Member, error){
+func (m *MembersType) UpdateMemberNotification(id primitive.ObjectID, notifs []primitive.ObjectID) (*models.Member, error) {
 
 	member, err := m.GetMember(id)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -276,14 +334,14 @@ func (m *MembersType) UpdateMemberNotification(id primitive.ObjectID, notifs []p
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"notifications" : notifications,
+			"notifications": notifications,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(member); err != nil{
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(member); err != nil {
 		return nil, err
 	}
 
@@ -291,20 +349,20 @@ func (m *MembersType) UpdateMemberNotification(id primitive.ObjectID, notifs []p
 }
 
 // DeleteMemberNotification deletes a notification from a member.
-func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, notif DeleteMemberNotificationData) (*models.Member, error){
+func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, notif DeleteMemberNotificationData) (*models.Member, error) {
 	member, err := m.GetMember(memberID)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
 	var notifications []primitive.ObjectID
 	var found = false
-	for i, s := range member.Notifications{
-		if s == notif.Notification{
+	for i, s := range member.Notifications {
+		if s == notif.Notification {
 			notifications = append(member.Notifications[:i], member.Notifications[i+1:]...)
 			found = true
 		}
-	} 
+	}
 
 	if !found {
 		return nil, errors.New("Notification not found")
@@ -318,10 +376,10 @@ func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, noti
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
-	
+
 	var result models.Member
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&result); err != nil{
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&result); err != nil {
 		return nil, err
 	}
 

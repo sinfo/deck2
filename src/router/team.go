@@ -124,7 +124,7 @@ func updateTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedTeam)
 }
 
-func addTeamMembers(w http.ResponseWriter, r *http.Request){
+func addTeamMember(w http.ResponseWriter, r *http.Request){
 	defer r.Body.Close()
 
 	var utmd = &mongodb.UpdateTeamMemberData{}
@@ -136,7 +136,7 @@ func addTeamMembers(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	team, err := mongodb.Teams.AddTeamMembers(id, *utmd)
+	team, err := mongodb.Teams.AddTeamMember(id, *utmd)
 	if err != nil{
 		if err.Error() == "Duplicate member"{
 			http.Error(w, err.Error(), http.StatusBadRequest)	

@@ -13,6 +13,9 @@
 		"istid": {
             "type": "string"
         },
+		"sinfoid": {
+            "type": "string"
+        },
         "contact": {
 			"type": "string"
 		},

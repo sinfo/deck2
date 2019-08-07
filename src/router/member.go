@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func getMembers(w http.ResponseWriter, r *http.Request){
+func getMembers(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
 	options := mongodb.GetMemberOptions{}
@@ -20,7 +20,7 @@ func getMembers(w http.ResponseWriter, r *http.Request){
 	event := urlQuery.Get("event")
 	var eventID int
 
-	if len(name) >0 {
+	if len(name) > 0 {
 		options.Name = &name
 	}
 	if len(event) > 0{
@@ -37,7 +37,7 @@ func getMembers(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(members)
 }
 
-func createMember(w http.ResponseWriter, r *http.Request){
+func createMember(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
@@ -58,11 +58,11 @@ func createMember(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(newMember)
 }
 
-func getMember(w http.ResponseWriter, r *http.Request){
+func getMember(w http.ResponseWriter, r *http.Request) {
 
-	params :=mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
-	
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
 	member, err := mongodb.Members.GetMember(id)
 
 	if err != nil {
@@ -73,7 +73,7 @@ func getMember(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(member)
 }
 
-func updateMember(w http.ResponseWriter, r *http.Request){
+func updateMember(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var cmd = &mongodb.CreateMemberData{}
@@ -116,12 +116,12 @@ func createContactMember(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func deleteMemberNotification(w http.ResponseWriter, r *http.Request){
+func deleteMemberNotification(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	memberID, _ := primitive.ObjectIDFromHex(params["id"])
 	var dmnd = &mongodb.DeleteMemberNotificationData{}
 
-	if err := json.NewDecoder(r.Body).Decode(dmnd); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(dmnd); err != nil {
 		http.Error(w, "Could not parse body.", http.StatusBadRequest)
 		return
 	}

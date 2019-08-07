@@ -33,8 +33,9 @@
                         "member": {
                             "type": "string"
                         },
-                        "role":{
-                            "type": "string"
+                        "role": {
+                            "type": "string",
+                            "enum": ["MEMBER", "TEAMLEADER", "COORDINATOR", "ADMIN"]
                         }
                     }
                 }

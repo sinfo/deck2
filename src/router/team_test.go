@@ -1,13 +1,13 @@
 package router
 
 import (
+	"bytes"
 	"encoding/json"
 	"log"
-	"bytes"
 	"net/http"
 	"net/url"
-	"testing"
 	"strconv"
+	"testing"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
@@ -17,10 +17,10 @@ import (
 )
 
 var (
-	Team1		*models.Team
-	Team2		*models.Team
-	TeamEvent2	*models.Event
-	TeamsArr	= make([]primitive.ObjectID, 0)
+	Team1      *models.Team
+	Team2      *models.Team
+	TeamEvent2 *models.Event
+	TeamsArr   = make([]primitive.ObjectID, 0)
 )
 
 func containsTeam(teams []models.Team, team *models.Team) bool {
@@ -66,12 +66,12 @@ func TestGetTeams(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -95,12 +95,12 @@ func TestGetTeamsByName(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -117,13 +117,13 @@ func TestGetTeamsByName(t *testing.T) {
 	assert.Equal(t, containsTeam(teams, Team1), true)
 	assert.Equal(t, containsTeam(teams, Team2), false)
 
-	res, err = executeRequest("GET", "/teams?name=wrong",nil)
+	res, err = executeRequest("GET", "/teams?name=wrong", nil)
 	assert.NilError(t, err)
-	assert.Equal(t, res.Code,http.StatusOK)
+	assert.Equal(t, res.Code, http.StatusOK)
 
 	json.NewDecoder(res.Body).Decode(&teams)
 
-	assert.Equal(t, len(teams),0)
+	assert.Equal(t, len(teams), 0)
 }
 
 func TestGetTeamsByEvent(t *testing.T) {
@@ -133,7 +133,7 @@ func TestGetTeamsByEvent(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -142,11 +142,10 @@ func TestGetTeamsByEvent(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
-
 
 	var teams []models.Team
 	id := strconv.Itoa(TeamEvent2.ID)
@@ -183,20 +182,20 @@ func TestGetTeam(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var team1, team2 models.Team
 
-	res1, err1 := executeRequest("GET", "/teams/"+ Team1.ID.Hex(), nil)
-	res2, err2 := executeRequest("GET", "/teams/"+ Team2.ID.Hex(), nil)
+	res1, err1 := executeRequest("GET", "/teams/"+Team1.ID.Hex(), nil)
+	res2, err2 := executeRequest("GET", "/teams/"+Team2.ID.Hex(), nil)
 
 	assert.NilError(t, err1)
 	assert.NilError(t, err2)
@@ -225,20 +224,20 @@ func TestDeleteTeam(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var team1, team2 models.Team
 
-	res1, err1 := executeRequest("DELETE", "/teams/"+ Team1.ID.Hex(), nil)
-	res2, err2 := executeRequest("DELETE", "/teams/"+ Team2.ID.Hex(), nil)
+	res1, err1 := executeRequest("DELETE", "/teams/"+Team1.ID.Hex(), nil)
+	res2, err2 := executeRequest("DELETE", "/teams/"+Team2.ID.Hex(), nil)
 
 	assert.NilError(t, err1)
 	assert.NilError(t, err2)
@@ -251,8 +250,8 @@ func TestDeleteTeam(t *testing.T) {
 	assert.Equal(t, team1.ID, team1.ID)
 	assert.Equal(t, team2.ID, team2.ID)
 
-	res1, err1 = executeRequest("GET", "/teams/"+ Team1.ID.Hex(), nil)
-	res2, err2 = executeRequest("GET", "/teams/"+ Team2.ID.Hex(), nil)
+	res1, err1 = executeRequest("GET", "/teams/"+Team1.ID.Hex(), nil)
+	res2, err2 = executeRequest("GET", "/teams/"+Team2.ID.Hex(), nil)
 
 	assert.NilError(t, err1)
 	assert.NilError(t, err2)
@@ -275,7 +274,7 @@ func TestCreateTeam(t *testing.T) {
 
 	setupTest()
 
-	Team1 = &models.Team{ Name: "TEAM1"}
+	Team1 = &models.Team{Name: "TEAM1"}
 
 	var newTeam models.Team
 	var team2 models.Team
@@ -303,14 +302,14 @@ func TestCreateTeam(t *testing.T) {
 	assert.Equal(t, team2.ID, newTeam.ID)
 }
 
-func TestUpdateTeam(t *testing.T){
+func TestUpdateTeam(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 
 	setupTest()
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -333,13 +332,13 @@ func TestUpdateTeam(t *testing.T){
 	assert.Equal(t, updatedTeam.Name, name)
 }
 
-func TestUpdateTeamBadPayload (t *testing.T){
+func TestUpdateTeamBadPayload(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 
 	setupTest()
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -355,13 +354,13 @@ func TestUpdateTeamBadPayload (t *testing.T){
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
 
-func TestUpdateTeamBadID (t *testing.T){
+func TestUpdateTeamBadID(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 
 	setupTest()
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -382,7 +381,7 @@ func TestUpdateTeamBadID (t *testing.T){
 
 }
 
-func TestAddTeamMember(t *testing.T){
+func TestAddTeamMember(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
@@ -391,22 +390,24 @@ func TestAddTeamMember(t *testing.T){
 
 	var team models.Team
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	var role = models.RoleMember
+
 	cmd := mongodb.CreateMemberData{
-		Name: "Member",
+		Name:  "Member",
 		Image: "IMG",
-		Istid:"ist123456",
+		Istid: "ist123456",
 	}
 
 	member, err := mongodb.Members.CreateMember(cmd)
 
 	utmd := &mongodb.UpdateTeamMemberData{
 		Member: &member.ID,
-		Role: &cmd.Name,
+		Role:   &role,
 	}
 
 	b, errMarshal := json.Marshal(utmd)
@@ -420,17 +421,16 @@ func TestAddTeamMember(t *testing.T){
 	assert.Equal(t, len(team.Members), 1)
 	assert.Equal(t, team.Members[0].Member, member.ID)
 
-
 	// Test Duplicate member on team
 
 	utmd = &mongodb.UpdateTeamMemberData{
 		Member: &member.ID,
-		Role: &cmd.Name,
+		Role:   &role,
 	}
 
 	b, errMarshal = json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
-	
+
 	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
@@ -441,7 +441,7 @@ func TestAddTeamMember(t *testing.T){
 
 	utmd = &mongodb.UpdateTeamMemberData{
 		Member: &randID,
-		Role: &cmd.Name,
+		Role:   &role,
 	}
 
 	b, errMarshal = json.Marshal(utmd)
@@ -453,7 +453,7 @@ func TestAddTeamMember(t *testing.T){
 
 }
 
-func TestUpdateTeamMemberRole(t *testing.T){
+func TestUpdateTeamMemberRole(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
@@ -462,22 +462,24 @@ func TestUpdateTeamMemberRole(t *testing.T){
 
 	var team models.Team
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	cmd := mongodb.CreateMemberData{
-		Name: "Member",
+		Name:  "Member",
 		Image: "IMG",
-		Istid:"ist123456",
+		Istid: "ist123456",
 	}
 
 	member, err := mongodb.Members.CreateMember(cmd)
 
+	var role = models.RoleMember
+
 	utmd := &mongodb.UpdateTeamMemberData{
 		Member: &member.ID,
-		Role: &cmd.Name,
+		Role:   &role,
 	}
 
 	b, errMarshal := json.Marshal(utmd)
@@ -491,25 +493,24 @@ func TestUpdateTeamMemberRole(t *testing.T){
 	assert.Equal(t, len(team.Members), 1)
 	assert.Equal(t, team.Members[0].Member, member.ID)
 
-	var role = "UPDATED ROLE"
+	var updatedRole = models.RoleTeamLeader
 
 	utmd = &mongodb.UpdateTeamMemberData{
 		Member: &member.ID,
-		Role: &role,
+		Role:   &updatedRole,
 	}
 
 	b, errMarshal = json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
-	
+
 	res, err = executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
-	
+
 	json.NewDecoder(res.Body).Decode(&team)
 	assert.Equal(t, len(team.Members), 1)
 	assert.Equal(t, team.Members[0].Member, member.ID)
-	assert.Equal(t, team.Members[0].Role, role)
-
+	assert.Equal(t, team.Members[0].Role, updatedRole)
 
 	// Test wrong member id
 
@@ -517,7 +518,7 @@ func TestUpdateTeamMemberRole(t *testing.T){
 
 	utmd = &mongodb.UpdateTeamMemberData{
 		Member: &randID,
-		Role: &cmd.Name,
+		Role:   &updatedRole,
 	}
 
 	b, errMarshal = json.Marshal(utmd)
@@ -528,13 +529,13 @@ func TestUpdateTeamMemberRole(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusNotFound)
 
 	// Test not found team
-	
+
 	res, err = executeRequest("PUT", "/teams/wrong/member", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestDeleteTeamMember(t *testing.T){
+func TestDeleteTeamMember(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
@@ -543,22 +544,24 @@ func TestDeleteTeamMember(t *testing.T){
 
 	var team models.Team
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	cmd := mongodb.CreateMemberData{
-		Name: "Member",
+		Name:  "Member",
 		Image: "IMG",
-		Istid:"ist123456",
+		Istid: "ist123456",
 	}
 
 	member, err := mongodb.Members.CreateMember(cmd)
 
+	var role = models.RoleMember
+
 	utmd := &mongodb.UpdateTeamMemberData{
 		Member: &member.ID,
-		Role: &cmd.Name,
+		Role:   &role,
 	}
 
 	b, errMarshal := json.Marshal(utmd)
@@ -580,21 +583,20 @@ func TestDeleteTeamMember(t *testing.T){
 
 	b, errMarshal = json.Marshal(dtmd)
 	assert.NilError(t, errMarshal)
-	
+
 	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
-	
+
 	json.NewDecoder(res.Body).Decode(&deletedTeam)
 	assert.Equal(t, deletedTeam.ID, team.ID)
 	assert.Equal(t, len(deletedTeam.Members), 0)
-
 
 	// Test wrong member id
 
 	utmd = &mongodb.UpdateTeamMemberData{
 		Member: &member.ID,
-		Role: &cmd.Name,
+		Role:   &role,
 	}
 
 	b, errMarshal = json.Marshal(utmd)
@@ -622,7 +624,7 @@ func TestDeleteTeamMember(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusNotFound)
 
 	// Test not found team
-	
+
 	res, err = executeRequest("DELETE", "/teams/wrong/member", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)

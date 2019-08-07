@@ -72,6 +72,9 @@
                         },
                         "istid":{
                             "type": "string"
+                        },
+                        "sinfoid":{
+                            "type": "string"
                         }
                     }
                 }
