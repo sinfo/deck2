@@ -88,6 +88,21 @@ func filterDuplicates(orig []*models.Member) (res []*models.Member){
 	return
 }
 
+func filterDuplicatesPublic(orig []*models.MemberPublic) (res []*models.MemberPublic){
+	for _, s := range orig{
+		dup := false
+		for _, t := range res{
+			if t.ID == s.ID{
+				dup = true
+			}
+		}
+		if !dup{
+			res = append(res, s)
+		}
+	}
+	return
+}
+
 // GetMember finds a member with specified id.
 func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error){
 
@@ -292,4 +307,99 @@ func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, noti
 	}
 
 	return &result, nil
+}
+
+// GetMemberPublic finds a member with specified id.
+func (m *MembersType) GetMemberPublic(id primitive.ObjectID) (*models.MemberPublic, error){
+
+	var member models.Member
+
+	if err := m.Collection.FindOne(m.Context, bson.M{"_id": id}).Decode(&member); err != nil{
+		return nil, err
+	}
+
+	return &models.MemberPublic{
+		ID: member.ID,
+		Name: member.Name,
+		Image: member.Image,
+	}, nil
+}
+
+// GetMembersPublic retrieves all members if no name is given or all members 
+// with a case insensitive partial match to given name
+// or all members in event if event is given
+func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.MemberPublic, error) {
+
+	var members []*models.MemberPublic
+
+	if options.Event == nil{
+
+		cur, err := m.Collection.Find(m.Context, bson.M{})
+		if err != nil{
+			return nil, err
+		}
+
+		for cur.Next(m.Context) {
+			
+			var member models.Member
+
+			if err := cur.Decode(&member); err != nil{
+				return nil, err
+			}
+
+			if options.Name == nil{
+				members = append(members, &models.MemberPublic{
+					ID: member.ID,
+					Name: member.Name,
+					Image: member.Image,
+				})
+			}else if strings.Contains(strings.ToLower(member.Name),strings.ToLower(*options.Name)){
+				members = append(members, &models.MemberPublic{
+					ID: member.ID,
+					Name: member.Name,
+					Image: member.Image,
+				})
+			}
+		}
+
+		if err := cur.Err(); err != nil {
+
+			return nil, err
+		}
+
+		cur.Close(m.Context)
+
+	}else{
+		event, err := Events.GetEvent(*options.Event)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, s := range event.Teams{
+			team, err := Teams.GetTeam(s)
+			if err != nil{
+				return nil, err
+			}
+			for _, t := range team.Members{
+				member, err := m.GetMember(t.Member)
+				if err != nil {
+					return nil, err
+				}
+				if options.Name == nil{
+					members = append(members, &models.MemberPublic{
+						ID: member.ID,
+						Name: member.Name,
+						Image: member.Image,
+					})
+				}else if strings.Contains(strings.ToLower(member.Name),strings.ToLower(*options.Name)){
+					members = append(members, &models.MemberPublic{
+						ID: member.ID,
+						Name: member.Name,
+						Image: member.Image,
+					})
+				}
+			}
+		}
+	}
+	return filterDuplicatesPublic(members), nil
 }

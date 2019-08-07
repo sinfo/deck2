@@ -134,3 +134,46 @@ func deleteMemberNotification(w http.ResponseWriter, r *http.Request){
 
 	json.NewEncoder(w).Encode(updatedMember)
 }
+
+// PUBLIC ENDPOINTS
+
+func getMembersPublic(w http.ResponseWriter, r *http.Request){
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetMemberOptions{}
+
+	name := urlQuery.Get("name")
+	event := urlQuery.Get("event")
+	var eventID int
+
+	if len(name) >0 {
+		options.Name = &name
+	}
+	if len(event) > 0{
+		eventID, _ = strconv.Atoi(event)
+		options.Event = &eventID
+	}
+
+	members, err := mongodb.Members.GetMembersPublic(options)
+
+	if err != nil {
+		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+	}
+
+	json.NewEncoder(w).Encode(members)
+}
+
+func getMemberPublic(w http.ResponseWriter, r *http.Request){
+
+	params :=mux.Vars(r)
+	id,_ := primitive.ObjectIDFromHex(params["id"])
+	
+	member, err := mongodb.Members.GetMemberPublic(id)
+
+	if err != nil {
+		http.Error(w, "Could not find member", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(member)
+}

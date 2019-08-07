@@ -43,6 +43,16 @@ func containsMember(members []models.Member, member *models.Member) bool{
 	return false
 }
 
+func containsMemberPublic(members []models.MemberPublic, member *models.Member) bool{
+	for _, s := range members {
+		if s.ID == member.ID && s.Name == member.Name {
+			return true
+		}
+	}
+
+	return false
+}
+
 func TestGetMembers(t *testing.T){
 	
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
@@ -503,6 +513,178 @@ func TestDeleteMemberNotificationWrongIDS(t *testing.T){
 	assert.NilError(t, errMarshal)
 
 	res, err = executeRequest("DELETE", "/members/wrong"+"/notification/", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestGetMembersPublic(t *testing.T){
+	
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	
+
+	Member1, err := mongodb.Members.CreateMember(Member1Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Member2, err := mongodb.Members.CreateMember(Member2Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var members []models.MemberPublic
+
+	res, err := executeRequest("GET", "/public/members", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&members)
+
+	assert.Equal(t, len(members), 2)
+	assert.Equal(t, containsMemberPublic(members, Member1), true)
+	assert.Equal(t, containsMemberPublic(members, Member2), true)
+
+}
+
+func TestGetMembersPublicName(t *testing.T){
+	
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	Member1, err := mongodb.Members.CreateMember(Member1Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Member2, err := mongodb.Members.CreateMember(Member2Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var members []models.MemberPublic
+	var query = "?name=" + url.QueryEscape("member")
+
+	res, err := executeRequest("GET", "/public/members"+query, nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&members)
+
+	assert.Equal(t, len(members), 2)
+	assert.Equal(t, containsMemberPublic(members, Member1), true)
+	assert.Equal(t, containsMemberPublic(members, Member2), true)
+	
+	query = "?name=" + url.QueryEscape("1")
+
+	res, err = executeRequest("GET", "/public/members"+query, nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&members)
+
+	assert.Equal(t, len(members), 1)
+	assert.Equal(t, containsMemberPublic(members, Member1), true)
+	assert.Equal(t, containsMemberPublic(members, Member2), false)
+
+	query = "?name=" + url.QueryEscape("a")
+
+	res, err = executeRequest("GET", "/public/members" + query, nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&members)
+
+	assert.Equal(t, len(members), 0)
+	assert.Equal(t, containsMemberPublic(members, Member1), false)
+	assert.Equal(t, containsMemberPublic(members, Member2), false)
+
+}
+
+func TestGetMembersPublicEvent(t *testing.T){
+
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	 _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name":"SINFO1"})
+	 assert.NilError(t, err)
+
+	event1, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: "SINFO2"})
+	assert.NilError(t, err)
+
+	team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	Member1, err = mongodb.Members.CreateMember(Member1Data)
+	assert.NilError(t, err)
+
+	var role = "MEMBER"
+
+	team1, err = mongodb.Teams.AddTeamMembers(team1.ID, mongodb.UpdateTeamMemberData{
+		Member: &Member1.ID,
+		Role:	&role,
+	})
+	assert.NilError(t, err)
+	assert.Equal(t, len(team1.Members), 1)
+	assert.Equal(t, team1.Members[0].Member, Member1.ID)
+
+	var members []models.MemberPublic
+	var query = "?event=" + url.QueryEscape(strconv.Itoa(event1.ID))
+
+	res, err := executeRequest("GET", "/public/members"+query,nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+	
+	json.NewDecoder(res.Body).Decode(&members)
+
+	assert.Equal(t, len(members), 1)
+	assert.Equal(t, members[0].ID, Member1.ID)
+
+	// Test Duplicate member
+
+	team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	team2, err = mongodb.Teams.AddTeamMembers(team2.ID, mongodb.UpdateTeamMemberData{
+		Member: &Member1.ID,
+		Role:	&role,
+	})
+	assert.NilError(t, err)
+	assert.Equal(t, len(team2.Members), 1)
+	assert.Equal(t, team2.Members[0].Member, Member1.ID)
+
+	res, err = executeRequest("GET", "/public/members"+query,nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+	
+	json.NewDecoder(res.Body).Decode(&members)
+
+	assert.Equal(t, len(members), 1)
+	assert.Equal(t, members[0].ID, Member1.ID)
+}
+
+func TestGetMemberPublic(t *testing.T){
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	Member1, err := mongodb.Members.CreateMember(Member1Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	res, err := executeRequest("GET", "/public/members/"+Member1.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var member models.MemberPublic
+
+	json.NewDecoder(res.Body).Decode(&member)
+
+	assert.Equal(t, Member1.Name, member.Name)
+	assert.Equal(t, Member1.ID, member.ID)
+}
+
+func TestGetMemberPublicBadID(t *testing.T){
+	res, err := executeRequest("GET", "/public/members/wrong", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }

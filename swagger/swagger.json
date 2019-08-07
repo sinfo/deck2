@@ -138,6 +138,12 @@
 		"/items": {
 			"$ref": "./endpoints/items.json"
 		},
+		"/public/members":{
+			"$ref": "./endpoints/public-members.json"
+		},
+		"/public/members/{id}":{
+			"$ref": "./endpoints/public-members-id.json"
+		},
 		"/members":{
 			"$ref": "./endpoints/members.json"
 		},

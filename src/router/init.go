@@ -53,6 +53,8 @@ func InitializeRouter() {
 	publicRouter.HandleFunc("/events", getEventsPublic).Methods("GET")
 	publicRouter.HandleFunc("/teams", getTeamsPublic).Methods("GET")
 	publicRouter.HandleFunc("/teams/{id}", getTeamPublic).Methods("GET")
+	publicRouter.HandleFunc("/members", getMembersPublic).Methods("GET")
+	publicRouter.HandleFunc("/members/{id}", getMemberPublic).Methods("GET")
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
