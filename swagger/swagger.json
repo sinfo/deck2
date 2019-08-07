@@ -21,6 +21,10 @@
 			"description": "Public endpoints (don't need authentication)"
 		},
 		{
+			"name": "auth",
+			"description": "Authentication endpoints"
+		},
+		{
 			"name": "billings",
 			"description": "Saved bills"
 		},
@@ -89,6 +93,12 @@
 		"http"
 	],
 	"paths": {
+		"/auth/login": {
+			"$ref": "./endpoints/auth-login.json"
+		},
+		"/auth/callback": {
+			"$ref": "./endpoints/auth-callback.json"
+		},
 		"/public/events": {
 			"$ref": "./endpoints/public-events.json"
 		},

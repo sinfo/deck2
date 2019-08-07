@@ -23,22 +23,22 @@ type TeamsType struct {
 }
 
 type CreateTeamData struct {
-	Name        string `json:"name"`
+	Name string `json:"name"`
 }
 
 type GetTeamsOptions struct {
-	Name		*string 
-	Event		*int
-	Member		*primitive.ObjectID
+	Name   *string
+	Event  *int
+	Member *primitive.ObjectID
 }
 
 type UpdateTeamMemberData struct {
-	Member	*primitive.ObjectID `json:"member"`
-	Role	*string				`json:"role"`
+	Member *primitive.ObjectID `json:"member"`
+	Role   *models.TeamRole    `json:"role"`
 }
 
 type DeleteTeamMemberData struct {
-	Member *primitive.ObjectID	`json:"member"`
+	Member *primitive.ObjectID `json:"member"`
 }
 
 // ParseBody fills the CreateTeamData from a body
@@ -67,6 +67,10 @@ func (utmd *UpdateTeamMemberData) ParseBody(body io.Reader) error {
 		return errors.New("invalid body")
 	}
 
+	if !(*utmd.Role).IsValidRole() {
+		return errors.New("invalid role")
+	}
+
 	return nil
 }
 
@@ -78,7 +82,7 @@ func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
 	var updatedEvent models.Event
 
 	insertResult, err := t.Collection.InsertOne(t.Context, bson.M{
-		"name":        data.Name,
+		"name": data.Name,
 	})
 	if err != nil {
 		return nil, err
@@ -88,22 +92,22 @@ func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	event, err := Events.GetCurrentEvent()
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
-	
-	teams:= append(event.Teams,newTeam.ID )
+
+	teams := append(event.Teams, newTeam.ID)
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"teams":  teams,
+			"teams": teams,
 		},
 	}
 
 	if err = Events.Collection.FindOneAndUpdate(Events.Context, bson.M{"_id": event.ID}, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
-		log.Println("Error updating events teams",err)
+		log.Println("Error updating events teams", err)
 		return nil, err
 	}
 
@@ -133,32 +137,32 @@ func (t *TeamsType) GetTeams(options GetTeamsOptions) ([]*models.Team, error) {
 	var err error
 
 	if options.Event != nil {
-		event, err  = Events.GetEvent(*options.Event)
-		if err != nil{
+		event, err = Events.GetEvent(*options.Event)
+		if err != nil {
 			return nil, err
 		}
-	} else{
-		event, err = Events.GetCurrentEvent(); 
+	} else {
+		event, err = Events.GetCurrentEvent()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	for _,s := range event.Teams {
-		team, err := t.GetTeam(s);
+	for _, s := range event.Teams {
+		team, err := t.GetTeam(s)
 		if err != nil {
 			return nil, err
 		}
-		if options.Name == nil{
-			if options.Member == nil{
+		if options.Name == nil {
+			if options.Member == nil {
 				teams = append(teams, team)
-			}else if team.HasMember(*options.Member){
+			} else if team.HasMember(*options.Member) {
 				teams = append(teams, team)
 			}
-		} else if strings.Contains(strings.ToLower(team.Name),strings.ToLower(*options.Name)){
-			if options.Member == nil{
+		} else if strings.Contains(strings.ToLower(team.Name), strings.ToLower(*options.Name)) {
+			if options.Member == nil {
 				teams = append(teams, team)
-			}else if team.HasMember(*options.Member){
+			} else if team.HasMember(*options.Member) {
 				teams = append(teams, team)
 			}
 		}
@@ -167,9 +171,8 @@ func (t *TeamsType) GetTeams(options GetTeamsOptions) ([]*models.Team, error) {
 	return teams, nil
 }
 
-
 // DeleteTeam deletes a team by its ID.
-func (t* TeamsType) DeleteTeam(teamID primitive.ObjectID) (*models.Team, error) {
+func (t *TeamsType) DeleteTeam(teamID primitive.ObjectID) (*models.Team, error) {
 
 	var team models.Team
 
@@ -182,37 +185,36 @@ func (t* TeamsType) DeleteTeam(teamID primitive.ObjectID) (*models.Team, error) 
 }
 
 // UpdateTeam updates the team name.
-func (t* TeamsType) UpdateTeam(teamID primitive.ObjectID, data CreateTeamData) (*models.Team, error){
+func (t *TeamsType) UpdateTeam(teamID primitive.ObjectID, data CreateTeamData) (*models.Team, error) {
 
 	var team models.Team
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"name":  data.Name,
+			"name": data.Name,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": teamID}, updateQuery, optionsQuery).Decode(&team); err != nil{
+	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": teamID}, updateQuery, optionsQuery).Decode(&team); err != nil {
 		return nil, err
 	}
 
 	return &team, nil
 }
 
-// AddTeamMembers adds a member to a team.
-func (t *TeamsType) AddTeamMembers(id primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error){
+// AddTeamMember adds a member to a team.
+func (t *TeamsType) AddTeamMember(id primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error) {
 
 	var team models.Team
-	var members []models.TeamMembers
+	var members []models.TeamMember
 
 	// Check if member exists
-	if _, err := Members.GetMember(*data.Member); err != nil{
+	if _, err := Members.GetMember(*data.Member); err != nil {
 		return nil, err
 	}
-
 
 	team1, err := t.GetTeam(id)
 	if err != nil {
@@ -220,25 +222,25 @@ func (t *TeamsType) AddTeamMembers(id primitive.ObjectID, data UpdateTeamMemberD
 	}
 
 	// Check for duplicate member
-	if team1.HasMember(*data.Member){
+	if team1.HasMember(*data.Member) {
 		return nil, errors.New("Duplicate member")
 	}
 
-	members = append(team1.Members, models.TeamMembers{
+	members = append(team1.Members, models.TeamMember{
 		Member: *data.Member,
-		Role:	*data.Role,
+		Role:   *data.Role,
 	})
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"members":  members,
+			"members": members,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil{
+	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil {
 		return nil, err
 	}
 
@@ -246,16 +248,15 @@ func (t *TeamsType) AddTeamMembers(id primitive.ObjectID, data UpdateTeamMemberD
 }
 
 // UpdateTeamMemberRole changes the role of a team member
-func (t *TeamsType) UpdateTeamMemberRole (id primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error){
+func (t *TeamsType) UpdateTeamMemberRole(id primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error) {
 
 	var team models.Team
-	var members []models.TeamMembers
+	var members []models.TeamMember
 
 	// Check if member exists
-	if _, err := Members.GetMember(*data.Member); err != nil{
+	if _, err := Members.GetMember(*data.Member); err != nil {
 		return nil, err
 	}
-
 
 	team1, err := t.GetTeam(id)
 	if err != nil {
@@ -263,27 +264,27 @@ func (t *TeamsType) UpdateTeamMemberRole (id primitive.ObjectID, data UpdateTeam
 	}
 
 	// Check for existent member
-	if !team1.HasMember(*data.Member){
+	if !team1.HasMember(*data.Member) {
 		return nil, errors.New("Member not found")
 	}
 
 	members = team1.Members
-	for i, s := range members{
-		if s.Member == *data.Member{
+	for i, s := range members {
+		if s.Member == *data.Member {
 			members[i].Role = *data.Role
 		}
 	}
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"members":  members,
+			"members": members,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil{
+	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil {
 		return nil, err
 	}
 
@@ -291,16 +292,15 @@ func (t *TeamsType) UpdateTeamMemberRole (id primitive.ObjectID, data UpdateTeam
 }
 
 // DeleteTeamMember removes a member from a team.
-func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMemberData) (*models.Team, error){
+func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMemberData) (*models.Team, error) {
 
 	var team models.Team
-	var members []models.TeamMembers
+	var members []models.TeamMember
 
 	// Check if member exists
-	if _, err := Members.GetMember(*data.Member); err != nil{
+	if _, err := Members.GetMember(*data.Member); err != nil {
 		return nil, err
 	}
-
 
 	team1, err := t.GetTeam(id)
 	if err != nil {
@@ -308,12 +308,12 @@ func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMembe
 	}
 
 	// Check for non-existent member
-	if !team1.HasMember(*data.Member){
+	if !team1.HasMember(*data.Member) {
 		return nil, errors.New("Member not found")
 	}
 
-	for i,s := range team1.Members{
-		if s.Member == *data.Member{
+	for i, s := range team1.Members {
+		if s.Member == *data.Member {
 			members = append(team1.Members[:i], team1.Members[i+1:]...)
 			break
 		}
@@ -321,14 +321,14 @@ func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMembe
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"members":  members,
+			"members": members,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil{
+	if err := t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil {
 		return nil, err
 	}
 

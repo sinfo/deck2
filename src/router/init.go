@@ -52,6 +52,11 @@ func InitializeRouter() {
 	publicRouter := r.PathPrefix("/public").Subrouter()
 	publicRouter.HandleFunc("/events", getEventsPublic).Methods("GET")
 
+	// auth handlers
+	authRouter := r.PathPrefix("/auth").Subrouter()
+	authRouter.HandleFunc("/login", oauthGoogleLogin).Methods("GET")
+	authRouter.HandleFunc("/callback", oauthGoogleCallback).Methods("GET")
+
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
 	companyRouter.HandleFunc("", getCompanies).Methods("GET")
@@ -80,7 +85,7 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
 	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
 	teamRouter.HandleFunc("/{id}", updateTeam).Methods("PUT")
-	teamRouter.HandleFunc("/{id}/member", addTeamMembers).Methods("POST")
+	teamRouter.HandleFunc("/{id}/member", addTeamMember).Methods("POST")
 	teamRouter.HandleFunc("/{id}/member", updateTeamMemberRole).Methods("PUT")
 	teamRouter.HandleFunc("/{id}/member", deleteTeamMember).Methods("DELETE")
 

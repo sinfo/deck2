@@ -17,9 +17,25 @@ type Member struct {
 	// Can be left blank if non-applicable.
 	ISTID string `json:"istid" bson:"istid"`
 
+	// SINFOID is the member's identifier ID under the SINFO organization
+	// Example: if the member's SINFO email is john.doe@sinfo.org, his sinfo ID would be john.doe
+	SINFOID string `json:"sinfoid" bson:"sinfoid"`
+
 	// Contact is an _id of Contact (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
 
 	// Notifications is an array of _id of Notification (see models.Notification).
 	Notifications []primitive.ObjectID `json:"notifications" bson:"notifications"`
+}
+
+type AuthorizationCredentials struct {
+
+	// Member's ID
+	ID primitive.ObjectID
+
+	// SINFO's email ID (example: if your email is john.doe@sinfo.org, your emailID would be john.doe)
+	SINFOID string
+
+	// Role on SINFO
+	Role TeamRole
 }

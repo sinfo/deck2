@@ -10,14 +10,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func getMembers (w http.ResponseWriter, r *http.Request){
+func getMembers(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
 	options := mongodb.GetMemberOptions{}
 
 	name := urlQuery.Get("name")
 
-	if len(name) >0 {
+	if len(name) > 0 {
 		options.Name = &name
 	}
 
@@ -30,7 +30,7 @@ func getMembers (w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(members)
 }
 
-func createMember(w http.ResponseWriter, r *http.Request){
+func createMember(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
@@ -51,11 +51,11 @@ func createMember(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(newMember)
 }
 
-func getMember(w http.ResponseWriter, r *http.Request){
+func getMember(w http.ResponseWriter, r *http.Request) {
 
-	params :=mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
-	
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
 	member, err := mongodb.Members.GetMember(id)
 
 	if err != nil {
@@ -66,7 +66,7 @@ func getMember(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(member)
 }
 
-func updateMember(w http.ResponseWriter, r *http.Request){
+func updateMember(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var cmd = &mongodb.CreateMemberData{}
@@ -88,20 +88,20 @@ func updateMember(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func updateMemberContact(w http.ResponseWriter, r *http.Request){
+func updateMemberContact(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	var umcd = &mongodb.UpdateMemberContactData{}
 
-	if err := json.NewDecoder(r.Body).Decode(umcd); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(umcd); err != nil {
 		http.Error(w, "Could not parse body.", http.StatusBadRequest)
 		return
 	}
 
 	updatedMember, err := mongodb.Members.UpdateMemberContact(id, *umcd)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Could not update member", http.StatusNotFound)
 		return
 	}
@@ -109,12 +109,12 @@ func updateMemberContact(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func deleteMemberNotification(w http.ResponseWriter, r *http.Request){
+func deleteMemberNotification(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	memberID, _ := primitive.ObjectIDFromHex(params["id"])
 	var dmnd = &mongodb.DeleteMemberNotificationData{}
 
-	if err := json.NewDecoder(r.Body).Decode(dmnd); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(dmnd); err != nil {
 		http.Error(w, "Could not parse body.", http.StatusBadRequest)
 		return
 	}
