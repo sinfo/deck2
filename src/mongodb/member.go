@@ -200,23 +200,42 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member,error)
 	return newMember,nil
 }
 
-// UpdateMemberContact updates a member's contact 
-func (m *MembersType) UpdateMemberContact(id primitive.ObjectID, data UpdateMemberContactData) (*models.Member, error){
-
-	// TODO: Verify that contact exists
+// CreateMemberContact updates a member's contact 
+func (m *MembersType) CreateMemberContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
 
 	var member models.Member
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"contact":  data.Contact,
+			"contact":  contactID,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil{
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil{
+		return nil, err
+	}
+
+	return &member, nil
+}
+
+// CreateMemberContact updates a member's contact 
+func (m *MembersType) UpdateMemberContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
+
+	var member models.Member
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"contact":  contactID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil{
 		return nil, err
 	}
 

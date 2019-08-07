@@ -393,23 +393,49 @@ func TestUpdateMemberBadPayload(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
 
-func TestUpdateMemberContact(t *testing.T){
-	defer  mongodb.Members.Collection.Drop(mongodb.Members.Context)
+func TestCreateContactMember(t *testing.T){
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
 		log.Fatal(err)
 	}
-	
-	updateData := mongodb.UpdateMemberContactData{
-		Contact: primitive.NewObjectID(),
+
+	phone := models.ContactPhone{
+		Phone: "123456789",
+		Valid: true,
+	}
+	socials := models.ContactSocials{
+		Facebook: "facebook",
+		Skype: "skype",
+		Github: "github",
+		Twitter: "twitter",
+		LinkedIn: "linkedin",
+	}
+	mail := models.ContactMail{
+		Mail: "email@email.com",
+		Valid: true,
+		Personal: true,
 	}
 
-	b, errMarshal := json.Marshal(updateData)
+	phonelist := make([]models.ContactPhone, 0)
+	phonelist = append(phonelist, phone)
+
+	maillist := make([]models.ContactMail, 0)
+	maillist = append(maillist, mail)
+	
+	data := mongodb.CreateContactData{
+		Phones: phonelist,
+		Socials: socials,
+		Mails: maillist,
+	}
+
+	b, errMarshal := json.Marshal(data)
 	assert.NilError(t, errMarshal)
 
 
-	res, err := executeRequest("PUT", "/members/"+Member1.ID.Hex()+"/contact", bytes.NewBuffer(b))
+	res, err := executeRequest("POST", "/members/"+Member1.ID.Hex()+"/contact", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -417,21 +443,36 @@ func TestUpdateMemberContact(t *testing.T){
 
 	json.NewDecoder(res.Body).Decode(&member)
 
-	assert.Equal(t, updateData.Contact, member.Contact)
-	assert.Equal(t, Member1.ID, member.ID)
+	contact, err := mongodb.Contacts.GetContact(member.Contact)
+	assert.NilError(t, err)
+
+	assert.Equal(t, contact.ID, member.Contact)
+	assert.Equal(t, contact.Phones[0].Phone, phone.Phone)
+	assert.Equal(t, contact.Mails[0].Mail, mail.Mail)
+	assert.Equal(t, contact.Socials.Facebook, socials.Facebook)
+	assert.Equal(t, contact.Socials.Skype, socials.Skype)
+	assert.Equal(t, contact.Socials.Github, socials.Github)
+	assert.Equal(t, contact.Socials.Twitter, socials.Twitter)
+	assert.Equal(t, contact.Socials.LinkedIn, socials.LinkedIn)
+
 }
 
 func TestUpdateMemberContactBadID(t *testing.T){
 	
-	updateData := mongodb.UpdateMemberContactData{
-		Contact: primitive.NewObjectID(),
+	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
+
+
+	data := mongodb.CreateContactData{
+		Phones : append(make([]models.ContactPhone, 0), models.ContactPhone{Phone:"a", Valid:true}),
+		Socials : models.ContactSocials{},
+		Mails: append(make([]models.ContactMail, 0), models.ContactMail{Mail:"a", Valid:true, Personal: true}),
 	}
 
-	b, errMarshal := json.Marshal(updateData)
+	b, errMarshal := json.Marshal(data)
 	assert.NilError(t, errMarshal)
 
 
-	res, err := executeRequest("PUT", "/members/wrong/contact", bytes.NewBuffer(b))
+	res, err := executeRequest("POST", "/members/wrong/contact", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }

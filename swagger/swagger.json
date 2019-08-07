@@ -159,6 +159,12 @@
 		},
 		"/packages": {
 			"$ref": "./endpoints/packages.json"
+		},
+		"/contacts": {
+			"$ref": "./endpoints/contacts.json"
+		},
+		"/contacts/{id}":{
+			"$ref": "./endpoints/contacts-id.json"
 		}
 	},
 	"externalDocs": {

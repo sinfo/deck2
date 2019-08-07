@@ -1,0 +1,59 @@
+{
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string"
+		},
+		"phones": {
+            "type": "array",
+            "items":{
+                "type":"object",
+                "properties":{
+                    "phone":{
+                        "type":"string"
+                    },
+                    "valid":{
+                        "type":"boolean"
+                    }
+                }
+            }
+        },
+        "socials":{
+            "type":"object",
+            "properties":{
+                "facebook":{
+                    "type":"string"
+                },
+                "skype":{
+                    "type":"string"
+                },
+                "github":{
+                    "type":"string"
+                },
+                "twitter":{
+                    "type":"string"
+                },
+                "linkedin":{
+                    "type":"string"
+                }
+            }
+        },
+        "mails": {
+            "type": "array",
+            "items":{
+                "type":"object",
+                "properties":{
+                    "mail":{
+                        "type":"string"
+                    },
+                    "valid":{
+                        "type":"boolean"
+                    },
+                    "personal":{
+                        "type":"boolean"
+                    }
+                }
+            }
+        }
+	}
+}

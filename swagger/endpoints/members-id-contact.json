@@ -1,10 +1,10 @@
 {
-    "put": {
+    "post": {
         "tags": [
             "members", "contacts"
         ],
-        "summary": "Updates the member's contact",
-        "operationId": "updateMemberContact",
+        "summary": "Creates a member's contact",
+        "operationId": "createContactMember",
         "consumes": [
             "application/json"
         ],
@@ -27,11 +27,68 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "id"
+                        "phones", "socials", "mails"
                     ],
                     "properties": {
-                        "id": {
-                            "type": "string"
+                        "phones": {
+                            "type": "array",
+                            "items":{
+                                "type":"object",
+                                "required":[
+                                    "phone", "valid"
+                                ],
+                                "properties":{
+                                    "phone":{
+                                        "type":"string"
+                                    },
+                                    "valid":{
+                                        "type":"boolean"
+                                    }
+                                }
+                            }
+                        },
+                        "socials":{
+                            "type":"object",
+                            "required":[
+                                "facebook", "skype", "github", "twitter", "linkedin"
+                            ],
+                            "properties":{
+                                "facebook":{
+                                    "type":"string"
+                                },
+                                "skype":{
+                                    "type":"string"
+                                },
+                                "github":{
+                                    "type":"string"
+                                },
+                                "twitter":{
+                                    "type":"string"
+                                },
+                                "linkedin":{
+                                    "type":"string"
+                                }
+                            }
+                        },
+                        "mails": {
+                            "type": "array",
+                            "items":{
+                                "type":"object",
+                                "required":[
+                                    "mail", "valid", "personal"
+                                ],
+                                "properties":{
+                                    "phone":{
+                                        "type":"string"
+                                    },
+                                    "valid":{
+                                        "type":"boolean"
+                                    },
+                                    "personal":{
+                                        "type":"boolean"
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -48,7 +105,7 @@
                 "description": "Invalid payload, or couldn't update member"
             },
             "404": {
-                "description": "Couldn't find member or contact"
+                "description": "Couldn't find member"
             }
         }
     }

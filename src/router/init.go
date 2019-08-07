@@ -94,7 +94,7 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("", createMember).Methods("POST")
 	memberRouter.HandleFunc("/{id}", getMember).Methods("GET")
 	memberRouter.HandleFunc("/{id}", updateMember).Methods("PUT")
-	memberRouter.HandleFunc("/{id}/contact", updateMemberContact).Methods("PUT")
+	memberRouter.HandleFunc("/{id}/contact", createContactMember).Methods("POST")
 	memberRouter.HandleFunc("/{id}/notification", deleteMemberNotification).Methods("DELETE")
 
 	// item handlers
@@ -104,6 +104,12 @@ func InitializeRouter() {
 	// package handlers
 	packageRouter := r.PathPrefix("/packages").Subrouter()
 	packageRouter.HandleFunc("", createPackage).Methods("POST")
+
+	// contact handlers
+	contactRouter := r.PathPrefix("/contacts").Subrouter()
+	contactRouter.HandleFunc("", getContacts).Methods("GET")
+	contactRouter.HandleFunc("/{id}", getContact).Methods("GET")
+	contactRouter.HandleFunc("/{id}", updateContact).Methods("PUT")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
