@@ -12,7 +12,7 @@ import (
 	"github.com/sinfo/deck2/src/mongodb"
 )
 
-type AuthResponse struct {
+type authResponse struct {
 	JWT string `json:"access_token"`
 }
 
@@ -75,7 +75,7 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response = AuthResponse{JWT: *token}
+	var response = authResponse{JWT: *token}
 
 	json.NewEncoder(w).Encode(response)
 }

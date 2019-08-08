@@ -3,7 +3,7 @@
         "tags": [
             "events", "packages"
         ],
-        "summary": "Removes template to packages from the current event",
+        "summary": "Removes template to packages from the current event (must have coordinator credentials)",
         "operationId": "removeEventPackage",
         "consumes": [
             "application/json"
@@ -11,6 +11,11 @@
         "produces": [
             "application/json"
         ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
         "parameters": [
             {
                 "in": "path",
@@ -27,6 +32,9 @@
                     "$ref": "./models/event.json"
                 }
             },
+            "401": {
+                "description": "Unauthorized"
+            },
             "404": {
                 "description": "Event not found"
             },
@@ -39,7 +47,7 @@
         "tags": [
             "events", "packages"
         ],
-        "summary": "Modifies template to packages on the current event",
+        "summary": "Modifies template to packages on the current event (must have coordinator credentials)",
         "operationId": "updateEventPackage",
         "consumes": [
             "application/json"
@@ -47,6 +55,11 @@
         "produces": [
             "application/json"
         ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
         "parameters": [
             {
                 "in": "path",
@@ -81,6 +94,9 @@
                 "schema": {
                     "$ref": "./models/event.json"
                 }
+            },
+            "401": {
+                "description": "Unauthorized"
             },
             "404": {
                 "description": "Event not found or template not found"

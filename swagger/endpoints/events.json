@@ -11,6 +11,11 @@
         "produces": [
             "application/json"
         ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
         "parameters": [
             {
                 "in": "query",
@@ -53,6 +58,9 @@
             "400": {
                 "description": "Invalid date format on query"
             },
+            "401": {
+                "description": "Unauthorized"
+            },
             "417": {
                 "description": "Unable to get events"
             }
@@ -62,7 +70,7 @@
         "tags": [
             "events"
         ],
-        "summary": "Create a new event",
+        "summary": "Create a new event (must have admin credentials)",
         "operationId": "createEvent",
         "consumes": [
             "application/json"
@@ -70,6 +78,11 @@
         "produces": [
             "application/json"
         ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
         "parameters": [
             {
                 "in": "body",
@@ -98,6 +111,9 @@
             },
             "400": {
                 "description": "Invalid input or couldn't create the new event"
+            },
+            "401": {
+                "description": "Unauthorized"
             }
         }
     },
@@ -105,7 +121,7 @@
         "tags": [
             "events"
         ],
-        "summary": "Update the current event",
+        "summary": "Update the current event (must have coordinator credentials)",
         "operationId": "updateEvent",
         "consumes": [
             "application/json"
@@ -113,6 +129,11 @@
         "produces": [
             "application/json"
         ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
         "parameters": [
             {
                 "in": "body",
@@ -149,6 +170,9 @@
             },
             "400": {
                 "description": "Invalid payload, or couldn't update event"
+            },
+            "401": {
+                "description": "Unauthorized"
             },
             "417": {
                 "description": "Unable to update event"
