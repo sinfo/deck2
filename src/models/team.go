@@ -1,9 +1,9 @@
 package models
 
 import (
-	"errors"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"errors"
 )
 
 type TeamRole string
@@ -81,8 +81,25 @@ type Team struct {
 	Meetings []primitive.ObjectID `json:"meetings" bson:"meetings"`
 }
 
+// TeamPublic info
+type TeamPublic struct {
+	ID		primitive.ObjectID		`json:"id" bson:"_id"` 
+	Name	string 					`json:"name" bson:"name"`
+	Members	[]TeamMember	`json:"members" bson:"members"`
+}
+
+
 // HasMember returns true if member is in the team and false otherwise.
 func (t *Team) HasMember(member primitive.ObjectID) bool {
+	for _, s := range t.Members {
+		if s.Member == member {
+			return true
+		}
+	}
+	return false
+}
+
+func (t *TeamPublic) HasMember(member primitive.ObjectID) bool {
 	for _, s := range t.Members {
 		if s.Member == member {
 			return true

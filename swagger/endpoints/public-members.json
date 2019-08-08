@@ -1,0 +1,44 @@
+{
+    "get": {
+        "tags": [
+            "members"
+        ],
+        "summary": "Get all members, based on query",
+        "operationId": "getMembersPublic",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the member",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Member from this event",
+                "type": "integer",
+                "format": "int64"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Members filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/public-member.json"
+                    }
+                }
+            },
+            "417": {
+                "description": "Unable to get members"
+            }
+        }
+    }
+}

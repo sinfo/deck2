@@ -1,6 +1,9 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"strings"
+)
 
 type ContactPhone struct {
 	Phone string `json:"phone" bson:"phone"`
@@ -31,4 +34,26 @@ type Contact struct {
 	Phones  []ContactPhone `json:"phones" bson:"phones"`
 	Socials ContactSocials `json:"socials" bson:"socials"`
 	Mails   []ContactMail  `json:"mails" bson:"mails"`
+}
+
+// HasPhone (phone) returns true if contact has a valid phone
+// number that is a case insensitive partial match to `phone`
+func (c *Contact) HasPhone(p string)bool{
+	for _, s := range c.Phones{
+		if strings.Contains(strings.ToLower(s.Phone), strings.ToLower(p)) && s.Valid{
+			return true
+		}
+	}
+	return false
+}
+
+// HasMail (mail) returns true if contact has a valid mail
+// that is a case insensitive partial match to `mail`
+func (c *Contact) HasMail(m string)bool{
+	for _, s := range c.Mails{
+		if strings.Contains(strings.ToLower(s.Mail), strings.ToLower(m)) && s.Valid{
+			return true
+		}
+	}
+	return false
 }

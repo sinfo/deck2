@@ -24,7 +24,8 @@ type MembersType struct {
 
 // GetMemberOptions is a filter for GetMembers
 type GetMemberOptions struct {
-	Name *string
+	Name	*string
+	Event	*int
 }
 
 // CreateMemberData contains all info needed to create a new member
@@ -43,6 +44,13 @@ type UpdateMemberContactData struct {
 // DeleteMemberNotificationData contains info needed to delete a member's notification
 type DeleteMemberNotificationData struct {
 	Notification primitive.ObjectID `json:"notification"`
+}
+
+// PublicMemberData contains public information about a member
+type PublicMemberData struct {
+	ID		primitive.ObjectID	`json:"id"`
+	Name	string				`json:"name"`
+	Image	string				`json:"img"`
 }
 
 // ParseBody fills the CreateTeamData from a body
@@ -68,40 +76,34 @@ func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-// GetMembers retrieves all members if no name is given or all members
-// with a case insensitive partial match to given name
-func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, error) {
-
-	var members []*models.Member
-
-	cur, err := m.Collection.Find(m.Context, bson.M{})
-	if err != nil {
-		return nil, err
-	}
-
-	for cur.Next(m.Context) {
-
-		var x models.Member
-
-		if err := cur.Decode(&x); err != nil {
-			return nil, err
+func filterDuplicates(orig []*models.Member) (res []*models.Member){
+	for _, s := range orig{
+		dup := false
+		for _, t := range res{
+			if t.ID == s.ID{
+				dup = true
+			}
 		}
-
-		if options.Name == nil {
-			members = append(members, &x)
-		} else if strings.Contains(strings.ToLower(x.Name), strings.ToLower(*options.Name)) {
-			members = append(members, &x)
+		if !dup{
+			res = append(res, s)
 		}
 	}
+	return
+}
 
-	if err := cur.Err(); err != nil {
-
-		return nil, err
+func filterDuplicatesPublic(orig []*models.MemberPublic) (res []*models.MemberPublic){
+	for _, s := range orig{
+		dup := false
+		for _, t := range res{
+			if t.ID == s.ID{
+				dup = true
+			}
+		}
+		if !dup{
+			res = append(res, s)
+		}
 	}
-
-	cur.Close(m.Context)
-
-	return members, nil
+	return
 }
 
 // GetMember finds a member with specified id.
@@ -114,6 +116,69 @@ func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
 	}
 
 	return &member, nil
+}
+
+// GetMembers retrieves all members if no name is given or all members 
+// with a case insensitive partial match to given name
+// or all members in event if event is given
+func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, error) {
+
+	var members []*models.Member
+
+	if options.Event == nil{
+
+		cur, err := m.Collection.Find(m.Context, bson.M{})
+		if err != nil{
+			return nil, err
+		}
+
+		for cur.Next(m.Context) {
+			
+			var x models.Member
+
+			if err := cur.Decode(&x); err != nil{
+				return nil, err
+			}
+
+			if options.Name == nil{
+				members = append(members, &x)
+			}else if strings.Contains(strings.ToLower(x.Name),strings.ToLower(*options.Name)){
+				members = append(members, &x)
+			}
+		}
+
+		if err := cur.Err(); err != nil {
+
+			return nil, err
+		}
+
+		cur.Close(m.Context)
+
+	}else{
+		event, err := Events.GetEvent(*options.Event)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, s := range event.Teams{
+			team, err := Teams.GetTeam(s)
+			if err != nil{
+				return nil, err
+			}
+			for _, t := range team.Members{
+				member, err := m.GetMember(t.Member)
+				if err != nil {
+					return nil, err
+				}
+				if options.Name == nil{
+					members = append(members, member)
+				}else if strings.Contains(strings.ToLower(member.Name),strings.ToLower(*options.Name)){
+					members = append(members, member)
+				}
+			}
+		}
+	}
+	return filterDuplicates(members), nil
 }
 
 // GetMemberAuthCredentials finds a member and returns his/her information for auth purposes.
@@ -193,23 +258,42 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 	return newMember, nil
 }
 
-// UpdateMemberContact updates a member's contact
-func (m *MembersType) UpdateMemberContact(id primitive.ObjectID, data UpdateMemberContactData) (*models.Member, error) {
-
-	// TODO: Verify that contact exists
+// CreateMemberContact updates a member's contact 
+func (m *MembersType) CreateMemberContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
 
 	var member models.Member
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"contact": data.Contact,
+			"contact":  contactID,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil {
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil{
+		return nil, err
+	}
+
+	return &member, nil
+}
+
+// CreateMemberContact updates a member's contact 
+func (m *MembersType) UpdateMemberContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
+
+	var member models.Member
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"contact":  contactID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil{
 		return nil, err
 	}
 
@@ -300,4 +384,99 @@ func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, noti
 	}
 
 	return &result, nil
+}
+
+// GetMemberPublic finds a member with specified id.
+func (m *MembersType) GetMemberPublic(id primitive.ObjectID) (*models.MemberPublic, error){
+
+	var member models.Member
+
+	if err := m.Collection.FindOne(m.Context, bson.M{"_id": id}).Decode(&member); err != nil{
+		return nil, err
+	}
+
+	return &models.MemberPublic{
+		ID: member.ID,
+		Name: member.Name,
+		Image: member.Image,
+	}, nil
+}
+
+// GetMembersPublic retrieves all members if no name is given or all members 
+// with a case insensitive partial match to given name
+// or all members in event if event is given
+func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.MemberPublic, error) {
+
+	var members []*models.MemberPublic
+
+	if options.Event == nil{
+
+		cur, err := m.Collection.Find(m.Context, bson.M{})
+		if err != nil{
+			return nil, err
+		}
+
+		for cur.Next(m.Context) {
+			
+			var member models.Member
+
+			if err := cur.Decode(&member); err != nil{
+				return nil, err
+			}
+
+			if options.Name == nil{
+				members = append(members, &models.MemberPublic{
+					ID: member.ID,
+					Name: member.Name,
+					Image: member.Image,
+				})
+			}else if strings.Contains(strings.ToLower(member.Name),strings.ToLower(*options.Name)){
+				members = append(members, &models.MemberPublic{
+					ID: member.ID,
+					Name: member.Name,
+					Image: member.Image,
+				})
+			}
+		}
+
+		if err := cur.Err(); err != nil {
+
+			return nil, err
+		}
+
+		cur.Close(m.Context)
+
+	}else{
+		event, err := Events.GetEvent(*options.Event)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, s := range event.Teams{
+			team, err := Teams.GetTeam(s)
+			if err != nil{
+				return nil, err
+			}
+			for _, t := range team.Members{
+				member, err := m.GetMember(t.Member)
+				if err != nil {
+					return nil, err
+				}
+				if options.Name == nil{
+					members = append(members, &models.MemberPublic{
+						ID: member.ID,
+						Name: member.Name,
+						Image: member.Image,
+					})
+				}else if strings.Contains(strings.ToLower(member.Name),strings.ToLower(*options.Name)){
+					members = append(members, &models.MemberPublic{
+						ID: member.ID,
+						Name: member.Name,
+						Image: member.Image,
+					})
+				}
+			}
+		}
+	}
+	return filterDuplicatesPublic(members), nil
 }

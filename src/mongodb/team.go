@@ -17,26 +17,31 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// TeamsType contains database information on teams 
 type TeamsType struct {
 	Collection *mongo.Collection
 	Context    context.Context
 }
 
+// CreateTeamData contains the data needed to create a team
 type CreateTeamData struct {
 	Name string `json:"name"`
 }
 
+// GetTeamsOptions contains filters for the GetTeams method
 type GetTeamsOptions struct {
 	Name   *string
 	Event  *int
 	Member *primitive.ObjectID
 }
 
+// UpdateTeamMemberData contains data needed to update or create a team member
 type UpdateTeamMemberData struct {
 	Member *primitive.ObjectID `json:"member"`
 	Role   *models.TeamRole    `json:"role"`
 }
 
+// DeleteTeamMemberData contains data needed to delete a team member
 type DeleteTeamMemberData struct {
 	Member *primitive.ObjectID `json:"member"`
 }
@@ -334,3 +339,64 @@ func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMembe
 
 	return &team, nil
 }
+
+// PUBLIC METHODS
+
+// GetTeamPublic gets a team by it's id.
+func (t *TeamsType) GetTeamPublic(teamID primitive.ObjectID) (*models.TeamPublic, error) {
+	var team models.Team
+
+	err := t.Collection.FindOne(t.Context, bson.M{"_id": teamID}).Decode(&team)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.TeamPublic{
+		ID: team.ID,
+		Name: team.Name,
+		Members: team.Members,
+	}, nil
+}
+
+
+// GetTeamsPublic gets all teams from an event and returns only public information
+func (t *TeamsType) GetTeamsPublic(options GetTeamsOptions) ([]*models.TeamPublic, error) {
+	var teams = make([]*models.TeamPublic, 0)
+	var event *models.Event
+	var err error
+
+	if options.Event != nil {
+		event, err  = Events.GetEvent(*options.Event)
+		if err != nil{
+			return nil, err
+		}
+	} else{
+		event, err = Events.GetCurrentEvent(); 
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	for _,s := range event.Teams {
+		team, err := t.GetTeamPublic(s);
+		if err != nil {
+			return nil, err
+		}
+		if options.Name == nil{
+			if options.Member == nil{
+				teams = append(teams, team)
+			}else if team.HasMember(*options.Member){
+				teams = append(teams, team)
+			}
+		} else if strings.Contains(strings.ToLower(team.Name),strings.ToLower(*options.Name)){
+			if options.Member == nil{
+				teams = append(teams, team)
+			}else if team.HasMember(*options.Member){
+				teams = append(teams, team)
+			}
+		}
+	}
+
+	return teams, nil
+}
+

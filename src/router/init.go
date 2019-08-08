@@ -113,6 +113,10 @@ func InitializeRouter(skipAuthentication bool) {
 	// public handlers
 	publicRouter := r.PathPrefix("/public").Subrouter()
 	publicRouter.HandleFunc("/events", getEventsPublic).Methods("GET")
+	publicRouter.HandleFunc("/teams", getTeamsPublic).Methods("GET")
+	publicRouter.HandleFunc("/teams/{id}", getTeamPublic).Methods("GET")
+	publicRouter.HandleFunc("/members", getMembersPublic).Methods("GET")
+	publicRouter.HandleFunc("/members/{id}", getMemberPublic).Methods("GET")
 
 	// auth handlers
 	authRouter := r.PathPrefix("/auth").Subrouter()
@@ -167,6 +171,14 @@ func InitializeRouter(skipAuthentication bool) {
 	// package handlers
 	packageRouter := r.PathPrefix("/packages").Subrouter()
 	packageRouter.HandleFunc("", authCoordinator(createPackage)).Methods("POST")
+
+	// contact handlers
+	contactRouter := r.PathPrefix("/contacts").Subrouter()
+	contactRouter.HandleFunc("", getContacts).Methods("GET")
+	contactRouter.HandleFunc("/{id}", getContact).Methods("GET")
+	contactRouter.HandleFunc("/{id}", updateContact).Methods("PUT")
+	contactRouter.HandleFunc("/{id}/phone", addPhone).Methods("POST")
+	contactRouter.HandleFunc("/{id}/mail", addMail).Methods("POST")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
