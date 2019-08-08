@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	mongodb.InitializeDatabase()
 
 	// Router setup
-	InitializeRouter()
+	InitializeRouter(true)
 
 	retCode := m.Run()
 	os.Exit(retCode)

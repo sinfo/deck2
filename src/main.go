@@ -25,7 +25,7 @@ func main() {
 	}
 
 	mongodb.InitializeDatabase()
-	router.InitializeRouter()
+	router.InitializeRouter(false)
 
 	log.Println("Serving at localhost:8080")
 	http.ListenAndServe(":8080", router.Router)

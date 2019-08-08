@@ -46,12 +46,37 @@ func main() {
 
 	fmt.Print("****** Development script ******\n")
 	fmt.Print("****** On error, drops events, teams and members collections ******\n\n")
+
 	fmt.Print("Member name: ")
 	text, _ = reader.ReadString('\n')
 	memberName = text[:len(text)-1]
+
 	fmt.Print("Member sinfo ID (example: john.doe@sinfo.org has john.doe as sinfo ID): ")
 	text, _ = reader.ReadString('\n')
 	memberSINFOID = text[:len(text)-1]
+
+	var level = 0
+	for level < 1 || level > 4 {
+		fmt.Println("Credentials level:")
+		fmt.Println("1. Member")
+		fmt.Println("2. Team Leader")
+		fmt.Println("3. Coordinator")
+		fmt.Println("4. Admin")
+		fmt.Print("Level: ")
+		fmt.Scanf("%d", &level)
+	}
+
+	var role models.TeamRole
+	switch level {
+	case 1:
+		role = models.RoleMember
+	case 2:
+		role = models.RoleTeamLeader
+	case 3:
+		role = models.RoleCoordinator
+	case 4:
+		role = models.RoleAdmin
+	}
 
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
 		"_id":   event.ID,
@@ -80,8 +105,6 @@ func main() {
 	}
 
 	team = *newTeam
-
-	var role = models.RoleAdmin
 
 	utmd := mongodb.UpdateTeamMemberData{
 		Member: &member.ID,

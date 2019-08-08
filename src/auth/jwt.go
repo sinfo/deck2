@@ -53,3 +53,28 @@ func SignJWT(credentials models.AuthorizationCredentials) (*string, error) {
 
 	return &tokenString, nil
 }
+
+func ParseJWT(tokenString string) (*models.AuthorizationCredentials, error) {
+
+	var claims Claims
+
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	result := models.AuthorizationCredentials{
+		ID:      claims.ID,
+		SINFOID: claims.SINFOID,
+		Role:    claims.Role,
+	}
+
+	return &result, nil
+}

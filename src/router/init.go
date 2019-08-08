@@ -1,11 +1,20 @@
 package router
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/sinfo/deck2/src/auth"
+	"github.com/sinfo/deck2/src/models"
+)
+
+type ContextKey int
+
+const (
+	CredentialsKey ContextKey = iota
 )
 
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -24,6 +33,54 @@ func headersMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+type authWrapper func(func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request)
+
+func checkAccessLevelWrapper(required models.TeamRole, skip bool) authWrapper {
+	return func(handler func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+
+		return func(w http.ResponseWriter, r *http.Request) {
+
+			if skip {
+				handler(w, r)
+				return
+			}
+
+			token := r.Header.Get("Authorization")
+
+			if len(token) == 0 {
+				http.Error(w, "invalid token", http.StatusUnauthorized)
+				return
+			}
+
+			credentials, err := auth.ParseJWT(token)
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+
+			authorized := auth.CheckAccessLevel(required, *credentials)
+
+			if !authorized {
+				http.Error(w, "not enough credentials", http.StatusUnauthorized)
+				return
+			}
+
+			ctx := context.WithValue(r.Context(), CredentialsKey, *credentials)
+
+			handler(w, r.WithContext(ctx))
+		}
+
+	}
+}
+
+var (
+	authMember      authWrapper
+	authTeamLeader  authWrapper
+	authCoordinator authWrapper
+	authAdmin       authWrapper
+)
+
 func healthCheck(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("OK"))
@@ -32,7 +89,7 @@ func healthCheck(w http.ResponseWriter, req *http.Request) {
 // Router is the exported router.
 var Router http.Handler
 
-func InitializeRouter() {
+func InitializeRouter(skipAuthentication bool) {
 	r := mux.NewRouter()
 
 	r.Use(loggingMiddleware)
@@ -41,6 +98,11 @@ func InitializeRouter() {
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+
+	authMember = checkAccessLevelWrapper(models.RoleMember, skipAuthentication)
+	authTeamLeader = checkAccessLevelWrapper(models.RoleTeamLeader, skipAuthentication)
+	authCoordinator = checkAccessLevelWrapper(models.RoleCoordinator, skipAuthentication)
+	authAdmin = checkAccessLevelWrapper(models.RoleAdmin, skipAuthentication)
 
 	// healthcheck endpoint
 	r.HandleFunc("/health", healthCheck)
@@ -63,52 +125,52 @@ func InitializeRouter() {
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
-	companyRouter.HandleFunc("", getCompanies).Methods("GET")
-	companyRouter.HandleFunc("", createCompany).Methods("POST")
+	companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
+	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
 
 	// event handlers
 	eventRouter := r.PathPrefix("/events").Subrouter()
-	eventRouter.HandleFunc("", getEvents).Methods("GET")
-	eventRouter.HandleFunc("", createEvent).Methods("POST")
-	eventRouter.HandleFunc("", updateEvent).Methods("PUT")
-	eventRouter.HandleFunc("/{id:[0-9]+}", getEvent).Methods("GET")
-	eventRouter.HandleFunc("/{id:[0-9]+}", deleteEvent).Methods("DELETE")
-	eventRouter.HandleFunc("/themes", updateEventThemes).Methods("PUT")
-	eventRouter.HandleFunc("/packages", addPackageToEvent).Methods("POST")
-	eventRouter.HandleFunc("/packages/{id}", removePackageFromEvent).Methods("DELETE")
-	eventRouter.HandleFunc("/packages/{id}", updatePackageFromEvent).Methods("PUT")
-	eventRouter.HandleFunc("/items", addItemToEvent).Methods("POST")
-	eventRouter.HandleFunc("/items/{id}", removeItemToEvent).Methods("DELETE")
-	eventRouter.HandleFunc("/meetings", addMeetingToEvent).Methods("POST")
-	eventRouter.HandleFunc("/meetings/{id}", removeMeetingFromEvent).Methods("DELETE")
+	eventRouter.HandleFunc("", authMember(getEvents)).Methods("GET")
+	eventRouter.HandleFunc("", authAdmin(createEvent)).Methods("POST")
+	eventRouter.HandleFunc("", authCoordinator(updateEvent)).Methods("PUT")
+	eventRouter.HandleFunc("/{id:[0-9]+}", authMember(getEvent)).Methods("GET")
+	eventRouter.HandleFunc("/{id:[0-9]+}", authAdmin(deleteEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/themes", authCoordinator(updateEventThemes)).Methods("PUT")
+	eventRouter.HandleFunc("/packages", authCoordinator(addPackageToEvent)).Methods("POST")
+	eventRouter.HandleFunc("/packages/{id}", authCoordinator(removePackageFromEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/packages/{id}", authCoordinator(updatePackageFromEvent)).Methods("PUT")
+	eventRouter.HandleFunc("/items", authCoordinator(addItemToEvent)).Methods("POST")
+	eventRouter.HandleFunc("/items/{id}", authCoordinator(removeItemToEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/meetings", authCoordinator(addMeetingToEvent)).Methods("POST")
+	eventRouter.HandleFunc("/meetings/{id}", authCoordinator(removeMeetingFromEvent)).Methods("DELETE")
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
-	teamRouter.HandleFunc("", getTeams).Methods("GET")
-	teamRouter.HandleFunc("", createTeam).Methods("POST")
-	teamRouter.HandleFunc("/{id}", getTeam).Methods("GET")
-	teamRouter.HandleFunc("/{id}", deleteTeam).Methods("DELETE")
-	teamRouter.HandleFunc("/{id}", updateTeam).Methods("PUT")
-	teamRouter.HandleFunc("/{id}/member", addTeamMember).Methods("POST")
-	teamRouter.HandleFunc("/{id}/member", updateTeamMemberRole).Methods("PUT")
-	teamRouter.HandleFunc("/{id}/member", deleteTeamMember).Methods("DELETE")
+	teamRouter.HandleFunc("", authMember(getTeams)).Methods("GET")
+	teamRouter.HandleFunc("", authCoordinator(createTeam)).Methods("POST")
+	teamRouter.HandleFunc("/{id}", authMember(getTeam)).Methods("GET")
+	teamRouter.HandleFunc("/{id}", authAdmin(deleteTeam)).Methods("DELETE")
+	teamRouter.HandleFunc("/{id}", authCoordinator(updateTeam)).Methods("PUT")
+	teamRouter.HandleFunc("/{id}/member", authCoordinator(addTeamMember)).Methods("POST")
+	teamRouter.HandleFunc("/{id}/member", authCoordinator(updateTeamMemberRole)).Methods("PUT")
+	teamRouter.HandleFunc("/{id}/member", authCoordinator(deleteTeamMember)).Methods("DELETE")
 
 	// member handlers
 	memberRouter := r.PathPrefix("/members").Subrouter()
-	memberRouter.HandleFunc("", getMembers).Methods("GET")
-	memberRouter.HandleFunc("", createMember).Methods("POST")
-	memberRouter.HandleFunc("/{id}", getMember).Methods("GET")
-	memberRouter.HandleFunc("/{id}", updateMember).Methods("PUT")
-	memberRouter.HandleFunc("/{id}/contact", createContactMember).Methods("POST")
-	memberRouter.HandleFunc("/{id}/notification", deleteMemberNotification).Methods("DELETE")
+	memberRouter.HandleFunc("", authMember(getMembers)).Methods("GET")
+	memberRouter.HandleFunc("", authCoordinator(createMember)).Methods("POST")
+	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
+	memberRouter.HandleFunc("/{id}", authCoordinator(updateMember)).Methods("PUT")
+	memberRouter.HandleFunc("/{id}/contact", authCoordinator(updateMemberContact)).Methods("PUT")
+	memberRouter.HandleFunc("/{id}/notification", authAdmin(deleteMemberNotification)).Methods("DELETE")
 
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
-	itemRouter.HandleFunc("", createItem).Methods("POST")
+	itemRouter.HandleFunc("", authCoordinator(createItem)).Methods("POST")
 
 	// package handlers
 	packageRouter := r.PathPrefix("/packages").Subrouter()
-	packageRouter.HandleFunc("", createPackage).Methods("POST")
+	packageRouter.HandleFunc("", authCoordinator(createPackage)).Methods("POST")
 
 	// contact handlers
 	contactRouter := r.PathPrefix("/contacts").Subrouter()
