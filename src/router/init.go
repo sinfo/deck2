@@ -161,7 +161,7 @@ func InitializeRouter(skipAuthentication bool) {
 	memberRouter.HandleFunc("", authCoordinator(createMember)).Methods("POST")
 	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
 	memberRouter.HandleFunc("/{id}", authCoordinator(updateMember)).Methods("PUT")
-	memberRouter.HandleFunc("/{id}/contact", authCoordinator(createContactMember)).Methods("POST")
+	memberRouter.HandleFunc("/{id}/contact", authMember(createContactMember)).Methods("POST")
 	memberRouter.HandleFunc("/{id}/notification", authAdmin(deleteMemberNotification)).Methods("DELETE")
 
 	// item handlers
@@ -174,11 +174,11 @@ func InitializeRouter(skipAuthentication bool) {
 
 	// contact handlers
 	contactRouter := r.PathPrefix("/contacts").Subrouter()
-	contactRouter.HandleFunc("", getContacts).Methods("GET")
-	contactRouter.HandleFunc("/{id}", getContact).Methods("GET")
-	contactRouter.HandleFunc("/{id}", updateContact).Methods("PUT")
-	contactRouter.HandleFunc("/{id}/phone", addPhone).Methods("POST")
-	contactRouter.HandleFunc("/{id}/mail", addMail).Methods("POST")
+	contactRouter.HandleFunc("", authMember(getContacts)).Methods("GET")
+	contactRouter.HandleFunc("/{id}", authMember(getContact)).Methods("GET")
+	contactRouter.HandleFunc("/{id}", authMember(updateContact)).Methods("PUT")
+	contactRouter.HandleFunc("/{id}/phone", authMember(addPhone)).Methods("POST")
+	contactRouter.HandleFunc("/{id}/mail", authMember(addMail)).Methods("POST")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

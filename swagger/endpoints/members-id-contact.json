@@ -3,7 +3,7 @@
         "tags": [
             "members", "contacts"
         ],
-        "summary": "Creates a member's contact (must have coordinator credentials)",
+        "summary": "Creates a member's contact",
         "operationId": "createContactMember",
         "consumes": [
             "application/json"
