@@ -161,7 +161,7 @@ func InitializeRouter(skipAuthentication bool) {
 	memberRouter.HandleFunc("", authCoordinator(createMember)).Methods("POST")
 	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
 	memberRouter.HandleFunc("/{id}", authCoordinator(updateMember)).Methods("PUT")
-	memberRouter.HandleFunc("/{id}/contact", authCoordinator(updateMemberContact)).Methods("PUT")
+	memberRouter.HandleFunc("/{id}/contact", authCoordinator(createContactMember)).Methods("POST")
 	memberRouter.HandleFunc("/{id}/notification", authAdmin(deleteMemberNotification)).Methods("DELETE")
 
 	// item handlers
