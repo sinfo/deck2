@@ -33,10 +33,17 @@ func headersMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func checkAccessLevelWrapper(required models.TeamRole) func(func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+type authWrapper func(func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request)
+
+func checkAccessLevelWrapper(required models.TeamRole, skip bool) authWrapper {
 	return func(handler func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 
 		return func(w http.ResponseWriter, r *http.Request) {
+
+			if skip {
+				handler(w, r)
+				return
+			}
 
 			token := r.Header.Get("Authorization")
 
@@ -68,10 +75,10 @@ func checkAccessLevelWrapper(required models.TeamRole) func(func(w http.Response
 }
 
 var (
-	authMember      = checkAccessLevelWrapper(models.RoleMember)
-	authTeamLeader  = checkAccessLevelWrapper(models.RoleTeamLeader)
-	authCoordinator = checkAccessLevelWrapper(models.RoleCoordinator)
-	authAdmin       = checkAccessLevelWrapper(models.RoleAdmin)
+	authMember      authWrapper
+	authTeamLeader  authWrapper
+	authCoordinator authWrapper
+	authAdmin       authWrapper
 )
 
 func healthCheck(w http.ResponseWriter, req *http.Request) {
@@ -82,7 +89,7 @@ func healthCheck(w http.ResponseWriter, req *http.Request) {
 // Router is the exported router.
 var Router http.Handler
 
-func InitializeRouter() {
+func InitializeRouter(skipAuthentication bool) {
 	r := mux.NewRouter()
 
 	r.Use(loggingMiddleware)
@@ -91,6 +98,11 @@ func InitializeRouter() {
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+
+	authMember = checkAccessLevelWrapper(models.RoleMember, skipAuthentication)
+	authTeamLeader = checkAccessLevelWrapper(models.RoleTeamLeader, skipAuthentication)
+	authCoordinator = checkAccessLevelWrapper(models.RoleCoordinator, skipAuthentication)
+	authAdmin = checkAccessLevelWrapper(models.RoleAdmin, skipAuthentication)
 
 	// healthcheck endpoint
 	r.HandleFunc("/health", healthCheck)
