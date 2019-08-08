@@ -78,3 +78,39 @@ func TestCreateItemInvalidPayload(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
+
+func TestGetItem(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	cid := &mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Image:       Item.Image,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	createdItem, err := mongodb.Items.CreateItem(*cid)
+	assert.NilError(t, err)
+
+	var newItem models.Item
+
+	res, err := executeRequest("GET", "/items/"+createdItem.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&newItem)
+
+	assert.Equal(t, newItem.Name, Item.Name)
+	assert.Equal(t, newItem.Description, Item.Description)
+	assert.Equal(t, newItem.Image, Item.Image)
+	assert.Equal(t, newItem.Price, Item.Price)
+	assert.Equal(t, newItem.VAT, Item.VAT)
+}

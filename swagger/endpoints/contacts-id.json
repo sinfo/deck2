@@ -27,6 +27,9 @@
                     "$ref": "./models/contact.json"
                 }
             },
+            "401": {
+                "description": "Unauthorized"
+            },
             "404": {
                 "description": "contact not found"
             }
@@ -142,6 +145,9 @@
                 "schema": {
                     "$ref": "./models/contact.json"
                 }
+            },
+            "401": {
+                "description": "Unauthorized"
             },
             "400": {
                 "description": "Invalid input or couldn't updated the contact."

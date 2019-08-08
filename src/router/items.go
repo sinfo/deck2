@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/sinfo/deck2/src/mongodb"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func createItem(w http.ResponseWriter, r *http.Request) {
@@ -26,4 +28,19 @@ func createItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(newItem)
+}
+
+func getItem(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	item, err := mongodb.Items.GetItem(id)
+
+	if err != nil {
+		http.Error(w, "Could not find item", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(item)
 }

@@ -123,8 +123,7 @@
 		},
 		"/events/items": {
 			"$ref": "./endpoints/events-items.json"
-		},
-		
+		},		
 		"/events/packages/{id}": {
 			"$ref": "./endpoints/events-packages-id.json"
 		},
@@ -154,6 +153,9 @@
 		},
 		"/items": {
 			"$ref": "./endpoints/items.json"
+		},
+		"/items/{id}": {
+			"$ref": "./endpoints/items-id.json"
 		},
 		"/public/members":{
 			"$ref": "./endpoints/public-members.json"

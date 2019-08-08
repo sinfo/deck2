@@ -89,20 +89,23 @@ func healthCheck(w http.ResponseWriter, req *http.Request) {
 // Router is the exported router.
 var Router http.Handler
 
-func InitializeRouter(skipAuthentication bool) {
+func InitializeRouter(testEnv bool) {
 	r := mux.NewRouter()
 
-	r.Use(loggingMiddleware)
+	if !testEnv {
+		r.Use(loggingMiddleware)
+	}
+
 	r.Use(headersMiddleware)
 
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 
-	authMember = checkAccessLevelWrapper(models.RoleMember, skipAuthentication)
-	authTeamLeader = checkAccessLevelWrapper(models.RoleTeamLeader, skipAuthentication)
-	authCoordinator = checkAccessLevelWrapper(models.RoleCoordinator, skipAuthentication)
-	authAdmin = checkAccessLevelWrapper(models.RoleAdmin, skipAuthentication)
+	authMember = checkAccessLevelWrapper(models.RoleMember, testEnv)
+	authTeamLeader = checkAccessLevelWrapper(models.RoleTeamLeader, testEnv)
+	authCoordinator = checkAccessLevelWrapper(models.RoleCoordinator, testEnv)
+	authAdmin = checkAccessLevelWrapper(models.RoleAdmin, testEnv)
 
 	// healthcheck endpoint
 	r.HandleFunc("/health", healthCheck)
@@ -167,6 +170,7 @@ func InitializeRouter(skipAuthentication bool) {
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
 	itemRouter.HandleFunc("", authCoordinator(createItem)).Methods("POST")
+	itemRouter.HandleFunc("/{id}", authMember(getItem)).Methods("GET")
 
 	// package handlers
 	packageRouter := r.PathPrefix("/packages").Subrouter()

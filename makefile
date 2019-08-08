@@ -9,26 +9,36 @@ BINARY_FILENAME=deck2
 all: build-src build-scripts
 
 build-src:
-	@echo "building src"
+	@echo "[*] building src"
 	@mkdir -p $(BINDIR)
 	@go build -o $(BINDIR)/$(BINARY_FILENAME) $(SRCDIR)/*.go
 
-	@echo "generating and validating swagger"
+	@echo "[*] generating swagger"
 	@swagger flatten $(SWAGGER)/swagger.json --compact -o $(STATIC)/swagger.json
-	@swagger validate $(STATIC)/swagger.json
+
+	@echo "[*] validating swagger"
+	@swagger validate $(STATIC)/swagger.json -q
+
+	@echo "DONE"
 
 build-scripts: $(SCRIPTSDIR)/*.go
-	@echo "building scripts"
+	@echo "[*] building scripts"
 	@go build -o $(BINDIR)/$(notdir $(basename $^)) $^
 
+	@echo "DONE"
+
 test:
-	@echo "testing"
-	@go test ./... -v
+	@echo "[*] testing"
+	@go test ./...
+
+	@echo "DONE"
 
 run: build-src
 	@$(BINDIR)/$(BINARY_FILENAME)
 
 clean:
-	@echo "cleaning"
+	@echo "[*] cleaning"
 	@go clean
 	@rm -rf data $(BINDIR)
+
+	@echo "DONE"
