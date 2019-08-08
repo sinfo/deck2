@@ -95,7 +95,7 @@ func InitializeRouter(skipAuthentication bool) {
 	r.Use(loggingMiddleware)
 	r.Use(headersMiddleware)
 
-	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 
