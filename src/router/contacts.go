@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sinfo/deck2/src/mongodb"
+	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gorilla/mux"
@@ -70,5 +71,57 @@ func getContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	json.NewEncoder(w).Encode(contact)
+}
+
+func addPhone(w http.ResponseWriter, r *http.Request){
+
+	defer r.Body.Close()
+
+	var phone models.ContactPhone
+
+	params := mux.Vars(r)
+	id,_ := primitive.ObjectIDFromHex(params["id"])
+
+	if err := json.NewDecoder(r.Body).Decode(&phone); err != nil{
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+	if len(phone.Phone) == 0{
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	contact, err := mongodb.Contacts.AddPhone(id, phone)
+	if err != nil{
+		http.Error(w, "Could not find contact", http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(contact)
+}
+
+func addMail(w http.ResponseWriter, r *http.Request){
+
+	defer r.Body.Close()
+
+	var mail models.ContactMail
+
+	params := mux.Vars(r)
+	id,_ := primitive.ObjectIDFromHex(params["id"])
+
+	if err := json.NewDecoder(r.Body).Decode(&mail); err != nil{
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+	if len(mail.Mail) == 0{
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	contact, err := mongodb.Contacts.AddMail(id, mail)
+	if err != nil{
+		http.Error(w, "Could not find contact", http.StatusNotFound)
+		return
+	}
 	json.NewEncoder(w).Encode(contact)
 }

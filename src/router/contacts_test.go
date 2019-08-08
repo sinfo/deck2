@@ -206,4 +206,74 @@ func TestUpdateContact(t *testing.T){
 	assert.Equal(t, contact.ID, Member1.Contact)
 	assert.Equal(t, contact.Phones[0].Phone, Contact2Phone.Phone)
 
+	// Wrong id
+	res, err = executeRequest("PUT", "/contacts/wrong", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestAddPhone(t *testing.T){
+	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	//Setup
+
+	Member1, err := mongodb.Members.CreateMember(Member1Data)
+	assert.NilError(t, err)
+
+	Member1, err  = mongodb.Contacts.CreateContactMember(Member1.ID, Contact1Data)
+	assert.NilError(t, err)
+
+	b, errMarshal := json.Marshal(Contact2Phone)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/contacts/"+Member1.Contact.Hex()+"/phone", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var contact models.Contact
+
+	json.NewDecoder(res.Body).Decode(&contact)
+
+	assert.Equal(t, len(contact.Phones), 2)
+	assert.Equal(t, contact.Phones[1].Phone, Contact2Phone.Phone)
+
+	//Wrong id
+
+	res, err = executeRequest("POST", "/contacts/wrong/phone", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestAddMail(t *testing.T){
+	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	//Setup
+
+	Member1, err := mongodb.Members.CreateMember(Member1Data)
+	assert.NilError(t, err)
+
+	Member1, err  = mongodb.Contacts.CreateContactMember(Member1.ID, Contact1Data)
+	assert.NilError(t, err)
+
+	b, errMarshal := json.Marshal(Contact2Mail)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/contacts/"+Member1.Contact.Hex()+"/mail", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var contact models.Contact
+
+	json.NewDecoder(res.Body).Decode(&contact)
+
+	assert.Equal(t, len(contact.Mails), 2)
+	assert.Equal(t, contact.Mails[1].Mail, Contact2Mail.Mail)
+
+	//Wrong id
+
+	res, err = executeRequest("POST", "/contacts/wrong/mail", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
 }

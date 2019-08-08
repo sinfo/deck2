@@ -115,6 +115,8 @@ func InitializeRouter() {
 	contactRouter.HandleFunc("", getContacts).Methods("GET")
 	contactRouter.HandleFunc("/{id}", getContact).Methods("GET")
 	contactRouter.HandleFunc("/{id}", updateContact).Methods("PUT")
+	contactRouter.HandleFunc("/{id}/phone", addPhone).Methods("POST")
+	contactRouter.HandleFunc("/{id}/mail", addMail).Methods("POST")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

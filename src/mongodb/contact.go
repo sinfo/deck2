@@ -157,3 +157,61 @@ func (c *ContactsType) UpdateContact(contactID primitive.ObjectID, data CreateCo
 
 	return &contact, nil
 }
+
+// AddPhone adds a new phone number to a contact
+func (c *ContactsType) AddPhone(id primitive.ObjectID, data models.ContactPhone) (*models.Contact, error){
+	var contact *models.Contact
+
+	contact, err := c.GetContact(id)
+	if err != nil{
+		return nil, err
+	}
+
+	phones := append(contact.Phones, data)
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"phones": phones,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedContact models.Contact
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil{
+		return nil, err
+	}
+
+	return &updatedContact, nil 
+}
+
+// AddMail adds a new phone number to a contact
+func (c *ContactsType) AddMail(id primitive.ObjectID, data models.ContactMail) (*models.Contact, error){
+	var contact *models.Contact
+
+	contact, err := c.GetContact(id)
+	if err != nil{
+		return nil, err
+	}
+
+	mails := append(contact.Mails, data)
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"mails": mails,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedContact models.Contact
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil{
+		return nil, err
+	}
+
+	return &updatedContact, nil 
+}
