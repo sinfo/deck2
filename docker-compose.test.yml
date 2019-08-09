@@ -1,6 +1,6 @@
 version: '3.3'
 services:
-    api:
+    sut:
         build: 
             context: '.'
             dockerfile: './Dockerfile_test'
@@ -11,9 +11,9 @@ services:
         container_name: 'deck2_testing'
         environment:
             - 'DECK2_DB_URL=mongodb://db:27017'
-            - 'DECK2_GOOGLE_OAUTH_CLIENT_SECRET=gytpJdHCu1on-EiKBeQjY7oT'
-            - 'DECK2_GOOGLE_OAUTH_CLIENT_ID=936462102746-fumunq371c3ecogk977gi7e63oq825mi.apps.googleusercontent.com'
-            - 'DECK2_JWT_SECRET=hello_there'
+            - 'DECK2_GOOGLE_OAUTH_CLIENT_SECRET=THIS_IS_A_SECRET'
+            - 'DECK2_GOOGLE_OAUTH_CLIENT_ID=THIS_IS_A_SECRET'
+            - 'DECK2_JWT_SECRET=THIS_IS_A_SECRET'
     mongodb:
         image: mongo:4.0.4
         container_name: "deck2_testing_mongodb"
