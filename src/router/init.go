@@ -183,6 +183,9 @@ func InitializeRouter(testEnv bool) {
 	contactRouter.HandleFunc("/{id}", authMember(updateContact)).Methods("PUT")
 	contactRouter.HandleFunc("/{id}/phone", authMember(addPhone)).Methods("POST")
 	contactRouter.HandleFunc("/{id}/mail", authMember(addMail)).Methods("POST")
+	contactRouter.HandleFunc("/{id}/phone", authMember(updatePhone)).Methods("PUT")
+	contactRouter.HandleFunc("/{id}/mail", authMember(updateMail)).Methods("PUT")
+	contactRouter.HandleFunc("/{id}/socials", authMember(updateSocials)).Methods("PUT")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

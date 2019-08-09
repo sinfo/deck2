@@ -184,6 +184,15 @@
 		},
 		"/contacts/{id}":{
 			"$ref": "./endpoints/contacts-id.json"
+		},
+		"/contacts/{id}/phone":{
+			"$ref": "./endpoints/contacts-id-phone.json"
+		},
+		"/contacts/{id}/mail":{
+			"$ref": "./endpoints/contacts-id-mail.json"
+		},
+		"/contacts/{id}/socials":{
+			"$ref": "./endpoints/contacts-id-socials.json"
 		}
 	},
 	"externalDocs": {
