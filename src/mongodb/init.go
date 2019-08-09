@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 
+	"github.com/sinfo/deck2/src/config"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -25,7 +27,7 @@ var (
 // InitializeDatabase initializes the database connection
 func InitializeDatabase() {
 
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI(config.DatabaseURI))
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -46,7 +48,7 @@ func InitializeDatabase() {
 		log.Fatal(err)
 	}
 
-	db = client.Database("deck2_testing")
+	db = client.Database(config.DatabaseName)
 
 	Events = &EventsType{
 		Collection: db.Collection("events"),

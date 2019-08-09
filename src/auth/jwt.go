@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/models"
-	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -17,18 +17,12 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-var jwtKey []byte
+var jwtSecret []byte
 
 const jwtLifeTime = time.Duration(time.Hour * 24 * 7 * 2) // 2 weeks
 
-func InitializeJWT() error {
-	if !viper.IsSet("JWT_KEY") {
-		return errors.New("JWT_KEY not set")
-	}
-
-	jwtKey = []byte(viper.GetString("JWT_KEY"))
-
-	return nil
+func InitializeJWT() {
+	jwtSecret = []byte(config.JWTSecret)
 }
 
 func SignJWT(credentials models.AuthorizationCredentials) (*string, error) {
@@ -46,7 +40,7 @@ func SignJWT(credentials models.AuthorizationCredentials) (*string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +53,7 @@ func ParseJWT(tokenString string) (*models.AuthorizationCredentials, error) {
 	var claims Claims
 
 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
+		return jwtSecret, nil
 	})
 
 	if err != nil {
