@@ -1,0 +1,15 @@
+version: '3.3'
+services:
+    api:
+        build: 
+            context: '.'
+            dockerfile: './Dockerfile'
+        ports:
+            - '8080:8080'
+        container_name: 'deck2'
+        environment:
+            - 'DECK2_DB_URL=mongodb://host.docker.internal:27017'
+            - 'DECK2_HOST=0.0.0.0'
+            - 'DECK2_GOOGLE_OAUTH_CLIENT_SECRET=gytpJdHCu1on-EiKBeQjY7oT'
+            - 'DECK2_GOOGLE_OAUTH_CLIENT_ID=936462102746-fumunq371c3ecogk977gi7e63oq825mi.apps.googleusercontent.com'
+            - 'DECK2_JWT_SECRET=hello_there'

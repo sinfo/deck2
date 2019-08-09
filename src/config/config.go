@@ -10,7 +10,7 @@ import (
 var (
 	Testing bool = false
 
-	URL  string = "localhost"
+	Host string = "localhost"
 	Port string = "8080"
 
 	DatabaseURI  string = "mongodb://localhost:27017"
@@ -25,7 +25,7 @@ var (
 const (
 	keyPrefix string = "DECK2"
 
-	keyURL  string = "URL"
+	keyHost string = "HOST"
 	keyPort string = "PORT"
 
 	keyDatabaseURI  string = "DB_URL"
@@ -41,8 +41,8 @@ func InitializeConfig() {
 	viper.SetEnvPrefix(keyPrefix)
 	viper.AutomaticEnv()
 
-	if viper.IsSet(keyURL) {
-		URL = viper.GetString(keyURL)
+	if viper.IsSet(keyHost) {
+		Host = viper.GetString(keyHost)
 	}
 
 	if viper.IsSet(keyPort) {

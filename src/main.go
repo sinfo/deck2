@@ -23,6 +23,6 @@ func main() {
 	mongodb.InitializeDatabase()
 	router.InitializeRouter()
 
-	fmt.Printf("Serving at %s:%s\n", config.URL, config.Port)
-	http.ListenAndServe(fmt.Sprintf("%s:%s", config.URL, config.Port), router.Router)
+	fmt.Printf("Serving at %s:%s\n", config.Host, config.Port)
+	http.ListenAndServe(fmt.Sprintf("%s:%s", config.Host, config.Port), router.Router)
 }
