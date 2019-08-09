@@ -7,7 +7,7 @@ WORKDIR $GOPATH/src/github.com/sinfo/deck2
 COPY . .
 
 RUN swagger flatten ./swagger/swagger.json --compact -o /go/bin/swagger.json
-RUN swagger validate ./static/swagger.json -q
+RUN swagger validate /go/bin/swagger.json -q
 
 
 ############################
