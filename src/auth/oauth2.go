@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 
+	"github.com/sinfo/deck2/src/config"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -24,8 +25,8 @@ func InitializeOAuth2() error {
 
 	OauthConfig = &oauth2.Config{
 		RedirectURL:  "http://localhost:8080/auth/callback",
-		ClientID:     viper.GetString("GOOGLE_OAUTH_CLIENT_ID"),
-		ClientSecret: viper.GetString("GOOGLE_OAUTH_CLIENT_SECRET"),
+		ClientID:     config.GoogleOAuthClientID,
+		ClientSecret: config.GoogleOAuthClientSecret,
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}

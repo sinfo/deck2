@@ -1,32 +1,28 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/sinfo/deck2/src/auth"
+	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/router"
-	"github.com/spf13/viper"
 )
 
 func main() {
 
-	// setup environment
-	viper.SetEnvPrefix("DECK2")
-	viper.AutomaticEnv()
+	config.InitializeConfig()
 
 	if err := auth.InitializeOAuth2(); err != nil {
 		log.Fatal(err.Error())
 	}
 
-	if err := auth.InitializeJWT(); err != nil {
-		log.Fatal(err.Error())
-	}
-
+	auth.InitializeJWT()
 	mongodb.InitializeDatabase()
-	router.InitializeRouter(false)
+	router.InitializeRouter()
 
-	log.Println("Serving at localhost:8080")
-	http.ListenAndServe(":8080", router.Router)
+	fmt.Printf("Serving at %s:%s\n", config.Host, config.Port)
+	http.ListenAndServe(fmt.Sprintf("%s:%s", config.Host, config.Port), router.Router)
 }

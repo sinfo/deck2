@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sinfo/deck2/src/auth"
+	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/models"
 )
 
@@ -35,12 +36,12 @@ func headersMiddleware(next http.Handler) http.Handler {
 
 type authWrapper func(func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request)
 
-func checkAccessLevelWrapper(required models.TeamRole, skip bool) authWrapper {
+func checkAccessLevelWrapper(required models.TeamRole) authWrapper {
 	return func(handler func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
 
 		return func(w http.ResponseWriter, r *http.Request) {
 
-			if skip {
+			if config.Testing {
 				handler(w, r)
 				return
 			}
@@ -89,10 +90,10 @@ func healthCheck(w http.ResponseWriter, req *http.Request) {
 // Router is the exported router.
 var Router http.Handler
 
-func InitializeRouter(testEnv bool) {
+func InitializeRouter() {
 	r := mux.NewRouter()
 
-	if !testEnv {
+	if !config.Testing {
 		r.Use(loggingMiddleware)
 	}
 
@@ -102,10 +103,10 @@ func InitializeRouter(testEnv bool) {
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 
-	authMember = checkAccessLevelWrapper(models.RoleMember, testEnv)
-	authTeamLeader = checkAccessLevelWrapper(models.RoleTeamLeader, testEnv)
-	authCoordinator = checkAccessLevelWrapper(models.RoleCoordinator, testEnv)
-	authAdmin = checkAccessLevelWrapper(models.RoleAdmin, testEnv)
+	authMember = checkAccessLevelWrapper(models.RoleMember)
+	authTeamLeader = checkAccessLevelWrapper(models.RoleTeamLeader)
+	authCoordinator = checkAccessLevelWrapper(models.RoleCoordinator)
+	authAdmin = checkAccessLevelWrapper(models.RoleAdmin)
 
 	// healthcheck endpoint
 	r.HandleFunc("/health", healthCheck)
