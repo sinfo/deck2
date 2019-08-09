@@ -17,7 +17,7 @@ var (
 	timeNow    = time.Now()
 	timeAfter  = time.Now().Add(time.Hour * 24 * 3)
 	event      = models.Event{
-		ID:    1,
+		ID:    2,
 		Name:  "dummy event",
 		Begin: &timeBefore,
 		End:   &timeAfter,
@@ -79,11 +79,26 @@ func main() {
 	}
 
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
-		"_id":   event.ID,
+		"_id":   1,
 		"name":  event.Name,
 		"begin": *event.Begin,
 		"end":   *event.End,
 	}); err != nil {
+		onError(err)
+	}
+
+	ced := mongodb.CreateEventData{Name: event.Name}
+	createdEvent, err := mongodb.Events.CreateEvent(ced)
+	if err != nil {
+		onError(err)
+	}
+
+	ued := mongodb.UpdateEventData{
+		Name:  event.Name,
+		Begin: *event.Begin,
+		End:   *event.End,
+	}
+	if _, err := mongodb.Events.UpdateEvent(createdEvent.ID, ued); err != nil {
 		onError(err)
 	}
 

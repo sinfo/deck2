@@ -7,9 +7,21 @@ services:
         ports:
             - '8080:8080'
         container_name: 'deck2'
+        links:
+            - mongodb:db
+        depends_on:
+            - mongodb
         environment:
-            - 'DECK2_DB_URL=mongodb://host.docker.internal:27017'
+            - 'DECK2_DB_URL=mongodb://db:27017'
             - 'DECK2_HOST=0.0.0.0'
             - 'DECK2_GOOGLE_OAUTH_CLIENT_SECRET=THIS_IS_A_SECRET'
             - 'DECK2_GOOGLE_OAUTH_CLIENT_ID=THIS_IS_A_SECRET'
             - 'DECK2_JWT_SECRET=THIS_IS_A_SECRET'
+    mongodb:
+        image: mongo:latest
+        container_name: "deck2-mongodb"
+        command: mongod --smallfiles --logpath=/dev/null
+        volumes:
+            - './data:/data/db'
+        ports:
+            - 27017:27017
