@@ -8,7 +8,6 @@ services:
             - mongodb:db
         depends_on:
             - mongodb
-        container_name: 'deck2_testing'
         environment:
             - 'DECK2_DB_URL=mongodb://db:27017'
             - 'DECK2_GOOGLE_OAUTH_CLIENT_SECRET=THIS_IS_A_SECRET'
