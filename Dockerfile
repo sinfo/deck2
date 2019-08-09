@@ -21,7 +21,7 @@ FROM quay.io/goswagger/swagger AS swagger-builder
 WORKDIR $GOPATH/src/github.com/sinfo/deck2
 COPY . .
 
-RUN swagger flatten ./swagger.json --compact -o /go/bin/swagger.json
+RUN swagger flatten ./swagger/swagger.json --compact -o /go/bin/swagger.json
 
 
 ############################
