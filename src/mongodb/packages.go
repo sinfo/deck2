@@ -10,6 +10,7 @@ import (
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -80,6 +81,51 @@ func (p *PackagesType) GetPackage(packageID primitive.ObjectID) (*models.Package
 
 	err := p.Collection.FindOne(p.Context, bson.M{"_id": packageID}).Decode(&result)
 	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// UpdatePackageItemsData is the structure used to updated a package's items
+type UpdatePackageItemsData struct {
+	Items *[]models.PackageItem `json:"items"`
+}
+
+// ParseBody fills the CreatePackageData from a body
+func (upid *UpdatePackageItemsData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(upid); err != nil {
+		return err
+	}
+
+	if upid.Items == nil {
+		return errors.New("invalid items")
+	}
+
+	for _, packageItem := range *upid.Items {
+		if packageItem.Quantity < 0 {
+			return errors.New("invalid value for quantity: must be positive integer")
+		}
+	}
+
+	return nil
+}
+
+// UpdatePackageItems updates the items of a package by id
+func (p *PackagesType) UpdatePackageItems(packageID primitive.ObjectID, data UpdatePackageItemsData) (*models.Package, error) {
+	var result models.Package
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"items": data.Items,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := p.Collection.FindOneAndUpdate(p.Context, bson.M{"_id": packageID}, updateQuery, optionsQuery).Decode(&result); err != nil {
 		return nil, err
 	}
 

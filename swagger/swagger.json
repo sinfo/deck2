@@ -179,6 +179,9 @@
 		"/packages": {
 			"$ref": "./endpoints/packages.json"
 		},
+		"/packages/{id}/items": {
+			"$ref": "./endpoints/packages-id-items.json"
+		},
 		"/contacts": {
 			"$ref": "./endpoints/contacts.json"
 		},
