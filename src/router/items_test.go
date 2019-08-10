@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"testing"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
@@ -33,7 +35,6 @@ func TestCreateItem(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
@@ -49,7 +50,6 @@ func TestCreateItem(t *testing.T) {
 
 	assert.Equal(t, newItem.Name, Item.Name)
 	assert.Equal(t, newItem.Description, Item.Description)
-	assert.Equal(t, newItem.Image, Item.Image)
 	assert.Equal(t, newItem.Price, Item.Price)
 	assert.Equal(t, newItem.VAT, Item.VAT)
 }
@@ -92,7 +92,6 @@ func TestGetItem(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
@@ -110,7 +109,77 @@ func TestGetItem(t *testing.T) {
 
 	assert.Equal(t, newItem.Name, Item.Name)
 	assert.Equal(t, newItem.Description, Item.Description)
-	assert.Equal(t, newItem.Image, Item.Image)
 	assert.Equal(t, newItem.Price, Item.Price)
 	assert.Equal(t, newItem.VAT, Item.VAT)
+}
+
+func TestUpdateItem(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	cid := &mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	createdItem, err := mongodb.Items.CreateItem(*cid)
+	assert.NilError(t, err)
+
+	uid := mongodb.UpdateItemData{
+		Name:        "new name",
+		Type:        "new type",
+		Description: "new description",
+		Price:       3,
+		VAT:         46,
+	}
+
+	b, errMarshal := json.Marshal(uid)
+	assert.NilError(t, errMarshal)
+
+	var updatedItem models.Item
+
+	res, err := executeRequest("PUT", "/items/"+createdItem.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedItem)
+
+	assert.Equal(t, updatedItem.ID, createdItem.ID)
+	assert.Equal(t, updatedItem.Name, uid.Name)
+	assert.Equal(t, updatedItem.Description, uid.Description)
+	assert.Equal(t, updatedItem.Price, uid.Price)
+	assert.Equal(t, updatedItem.VAT, uid.VAT)
+}
+
+func TestUpdateItemNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	uid := mongodb.UpdateItemData{
+		Name:        "new name",
+		Type:        "new type",
+		Description: "new description",
+		Price:       3,
+		VAT:         46,
+	}
+
+	b, errMarshal := json.Marshal(uid)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/items/"+primitive.NewObjectID().Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
 }

@@ -44,3 +44,27 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(item)
 }
+
+func updateItem(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	var uid = &mongodb.UpdateItemData{}
+
+	if err := uid.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedItem, err := mongodb.Items.UpdateItem(id, *uid)
+
+	if err != nil {
+		http.Error(w, "Could not update item", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedItem)
+}

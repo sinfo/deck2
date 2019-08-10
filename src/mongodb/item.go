@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,7 +26,6 @@ type CreateItemData struct {
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 	Description string `json:"description"`
-	Image       string `json:"img"`
 	Price       int    `json:"price"`
 	VAT         int    `json:"vat"`
 }
@@ -69,7 +69,6 @@ func (i *ItemsType) CreateItem(data CreateItemData) (*models.Item, error) {
 		"name":        data.Name,
 		"type":        data.Type,
 		"description": data.Description,
-		"img":         data.Image,
 		"price":       data.Price,
 		"vat":         data.VAT,
 	}
@@ -94,6 +93,70 @@ func (i *ItemsType) GetItem(itemID primitive.ObjectID) (*models.Item, error) {
 
 	err := i.Collection.FindOne(i.Context, bson.M{"_id": itemID}).Decode(&item)
 	if err != nil {
+		return nil, err
+	}
+
+	return &item, nil
+}
+
+// UpdateItemData is the structure used in UpdateItem
+type UpdateItemData struct {
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	Price       int    `json:"price"`
+	VAT         int    `json:"vat"`
+}
+
+// ParseBody fills the CreateItemData from a body
+func (uid *UpdateItemData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(uid); err != nil {
+		return err
+	}
+
+	if len(uid.Name) == 0 {
+		return errors.New("invalid name")
+	}
+
+	if len(uid.Type) == 0 {
+		return errors.New("invalid type")
+	}
+
+	if len(uid.Description) == 0 {
+		return errors.New("invalid description")
+	}
+
+	if uid.Price < 0 {
+		return errors.New("invalid price")
+	}
+
+	if uid.VAT < 0 || uid.VAT > 100 {
+		return errors.New("invalid vat")
+	}
+
+	return nil
+}
+
+// UpdateItem updates an item by its ID
+func (i *ItemsType) UpdateItem(itemID primitive.ObjectID, data UpdateItemData) (*models.Item, error) {
+
+	var item models.Item
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"name":        data.Name,
+			"type":        data.Type,
+			"description": data.Description,
+			"price":       data.Price,
+			"vat":         data.VAT,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := i.Collection.FindOneAndUpdate(i.Context, bson.M{"_id": itemID}, updateQuery, optionsQuery).Decode(&item); err != nil {
 		return nil, err
 	}
 

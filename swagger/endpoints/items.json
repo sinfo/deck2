@@ -37,9 +37,6 @@
                         "description": {
                             "type": "string"
                         },
-                        "img": {
-                            "type": "string"
-                        },
                         "price": {
                             "type": "integer"
                             },

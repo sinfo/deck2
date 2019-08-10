@@ -38,7 +38,6 @@ func TestCreatePackage(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}

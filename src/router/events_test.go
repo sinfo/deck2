@@ -535,7 +535,6 @@ func TestAddPackageToEvent(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
@@ -603,7 +602,6 @@ func TestAddPackageToEventPackageNotFound(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
@@ -681,7 +679,6 @@ func TestRemovePackageFromEvent(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
@@ -747,7 +744,6 @@ func TestUpdatePackageFromEvent(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
@@ -826,7 +822,6 @@ func TestAddItemToEvent(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
@@ -872,7 +867,6 @@ func TestAddItemToEventInvalidPayload(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
@@ -937,7 +931,6 @@ func TestRemoveItemFromEvent(t *testing.T) {
 		Name:        Item.Name,
 		Type:        Item.Type,
 		Description: Item.Description,
-		Image:       Item.Image,
 		Price:       Item.Price,
 		VAT:         Item.VAT,
 	}
