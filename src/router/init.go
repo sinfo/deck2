@@ -170,6 +170,7 @@ func InitializeRouter() {
 
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
+	itemRouter.HandleFunc("", authMember(getItems)).Methods("GET")
 	itemRouter.HandleFunc("", authCoordinator(createItem)).Methods("POST")
 	itemRouter.HandleFunc("/{id}", authMember(getItem)).Methods("GET")
 	itemRouter.HandleFunc("/{id}", authCoordinator(updateItem)).Methods("PUT")

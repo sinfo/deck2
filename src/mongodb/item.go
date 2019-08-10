@@ -162,3 +162,54 @@ func (i *ItemsType) UpdateItem(itemID primitive.ObjectID, data UpdateItemData) (
 
 	return &item, nil
 }
+
+// GetItemsOptions is the options to give to GetItems.
+// All the fields are optional, and as such we use pointers as a "hack" to deal
+// with non-existent fields.
+// The field is non-existent if it has a nil value.
+// This filter will behave like a logical *and*.
+type GetItemsOptions struct {
+	Name *string
+	Type *string
+}
+
+// GetItems gets an array of events using a filter.
+func (i *ItemsType) GetItems(options GetItemsOptions) ([]*models.Item, error) {
+
+	var items = make([]*models.Item, 0)
+
+	filter := bson.M{}
+
+	if options.Name != nil {
+		filter["name"] = options.Name
+	}
+
+	if options.Type != nil {
+		filter["type"] = options.Type
+	}
+
+	cur, err := i.Collection.Find(i.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(i.Context) {
+
+		// create a value into which the single document can be decoded
+		var i models.Item
+		err := cur.Decode(&i)
+		if err != nil {
+			return nil, err
+		}
+
+		items = append(items, &i)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(i.Context)
+
+	return items, nil
+}

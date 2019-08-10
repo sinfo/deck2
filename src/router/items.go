@@ -30,6 +30,32 @@ func createItem(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newItem)
 }
 
+func getItems(w http.ResponseWriter, r *http.Request) {
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetItemsOptions{}
+
+	name := urlQuery.Get("name")
+	_type := urlQuery.Get("type")
+
+	if len(name) > 0 {
+		options.Name = &name
+	}
+
+	if len(_type) > 0 {
+		options.Type = &_type
+	}
+
+	items, err := mongodb.Items.GetItems(options)
+
+	if err != nil {
+		http.Error(w, "Could not get items", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(items)
+}
+
 func getItem(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)

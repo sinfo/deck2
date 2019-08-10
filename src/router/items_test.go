@@ -114,6 +114,41 @@ func TestGetItem(t *testing.T) {
 	assert.Equal(t, newItem.VAT, Item.VAT)
 }
 
+func TestGetItems(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	cid := &mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	_, err := mongodb.Items.CreateItem(*cid)
+	assert.NilError(t, err)
+
+	var items []models.Item
+
+	res, err := executeRequest("GET", "/items", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&items)
+
+	assert.Equal(t, len(items) == 1, true)
+	assert.Equal(t, items[0].Name, Item.Name)
+	assert.Equal(t, items[0].Description, Item.Description)
+	assert.Equal(t, items[0].Price, Item.Price)
+	assert.Equal(t, items[0].VAT, Item.VAT)
+}
+
 func TestUpdateItem(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)

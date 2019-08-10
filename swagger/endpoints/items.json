@@ -1,4 +1,53 @@
 {
+    "get": {
+        "tags": [
+            "items"
+        ],
+        "summary": "Get all items",
+        "operationId": "getItems",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the item",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "type",
+                "description": "Type of the item",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Items filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/item.json"
+                    }
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to get items"
+            }
+        }
+    },
     "post": {
         "tags": [
             "items"
