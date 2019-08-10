@@ -36,6 +36,16 @@ type CreateContactData struct {
 	Mails   []models.ContactMail  `json:"mails" bson:"mails"`
 }
 
+// UpdatePhonesData contains data needed to update a contact's phone list
+type UpdatePhonesData struct {
+	Phones	[]models.ContactPhone `json:"phones"`
+}
+
+// UpdateMailsData contains data needed to update a contact's mail list
+type UpdateMailsData struct {
+	Mails []models.ContactMail	`json:"mails"`
+}
+
 
 // ParseBody fills a CreateContactData struct from a body
 func (ccd *CreateContactData) ParseBody(body io.Reader) error {
@@ -201,6 +211,68 @@ func (c *ContactsType) AddMail(id primitive.ObjectID, data models.ContactMail) (
 	var updateQuery = bson.M{
 		"$set": bson.M{
 			"mails": mails,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedContact models.Contact
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil{
+		return nil, err
+	}
+
+	return &updatedContact, nil 
+}
+
+// UpdatePhoneNumbers updates a contact's phone list
+func (c *ContactsType) UpdatePhoneNumbers(id primitive.ObjectID, data UpdatePhonesData ) (*models.Contact, error){
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"phones": data.Phones,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedContact models.Contact
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil{
+		return nil, err
+	}
+
+	return &updatedContact, nil 
+}
+
+// UpdateMailList updates a contact's phone list
+func (c *ContactsType) UpdateMailList(id primitive.ObjectID, data UpdateMailsData ) (*models.Contact, error){
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"mails": data.Mails,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedContact models.Contact
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil{
+		return nil, err
+	}
+
+	return &updatedContact, nil 
+}
+
+// UpdateSocials updates the socials of a contact
+func (c *ContactsType) UpdateSocials(id primitive.ObjectID, data models.ContactSocials) (*models.Contact, error){
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"socials": data,
 		},
 	}
 
