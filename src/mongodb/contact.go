@@ -121,8 +121,8 @@ func (c *ContactsType) GetContacts(options GetContactsOptions) ([]*models.Contac
 	return contacts, nil
 }
 
-// CreateContactMember creates a contact and associates it with a member. Use only to create new contacts
-func (c *ContactsType) CreateContactMember(memberID primitive.ObjectID, data CreateContactData ) (*models.Member, error){
+// CreateContact addas a contact
+func (c *ContactsType) CreateContact( data CreateContactData) (*models.Contact, error){
 	var insertData = bson.M{}
 	insertData["phones"] = data.Phones
 	insertData["socials"] = data.Socials
@@ -138,13 +138,9 @@ func (c *ContactsType) CreateContactMember(memberID primitive.ObjectID, data Cre
 		return nil, err
 	}
 
-	member, err := Members.CreateMemberContact(memberID, newContact.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return member, nil
+	return newContact, nil
 }
+
 
 // UpdateContact updates a contact
 func (c *ContactsType) UpdateContact(contactID primitive.ObjectID, data CreateContactData) (*models.Contact, error){

@@ -1,0 +1,63 @@
+{
+    "post": {
+        "tags": [
+            "meetings"
+        ],
+        "summary": "Creates a meeting",
+        "operationId": "createMeeting",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "New meeting data",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "begin",
+                        "end",
+                        "local"
+                    ],
+                    "properties": {
+                        "begin": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "end": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "local":{
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created meeting",
+                "schema": {
+                    "$ref": "./models/meeting.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload, or couldn't create meeting"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    }
+}

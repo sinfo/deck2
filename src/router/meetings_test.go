@@ -46,10 +46,11 @@ func TestCreateMeeting(t *testing.T){
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
+	json.NewDecoder(res.Body).Decode(&meeting)
+
 	Meeting1, err = mongodb.Meetings.GetMeeting(meeting.ID)
 	assert.NilError(t, err)
 
-	json.NewDecoder(res.Body).Decode(&meeting)
 	assert.Equal(t, meeting.ID, Meeting1.ID)
 	assert.Equal(t, meeting.Place, Meeting1.Place)
 }
@@ -73,14 +74,63 @@ func TestCreateMeetingWithParticipants(t *testing.T){
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
+	json.NewDecoder(res.Body).Decode(&meeting)
+
 	Meeting1, err = mongodb.Meetings.GetMeeting(meeting.ID)
 	assert.NilError(t, err)
 
-	json.NewDecoder(res.Body).Decode(&meeting)
 	assert.Equal(t, meeting.ID, Meeting1.ID)
 	assert.Equal(t, meeting.Place, Meeting1.Place)
 	assert.Equal(t, len(meeting.Participants.Members), 1)
 	assert.Equal(t, meeting.Participants.Members[0], member)	
+}
+
+func TestCreateMeetingBadPayload(t *testing.T){
+	var BadData1 = mongodb.CreateMeetingData{
+		End: &TimeAfter,
+		Place: &Place1,
+	}
+	var BadData2 = mongodb.CreateMeetingData{
+		Begin: &TimeBefore,
+		Place: &Place1,
+	}
+	var BadData3 = mongodb.CreateMeetingData{
+		Begin: &TimeBefore,
+		End: &TimeAfter,
+	}
+	var BadData4 = mongodb.CreateMeetingData{
+		Begin: &TimeAfter,
+		End: &TimeBefore,
+		Place: &Place1,
+	}
+
+	b, errMarshal := json.Marshal(BadData1)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	b, errMarshal = json.Marshal(BadData2)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("POST", "/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	b, errMarshal = json.Marshal(BadData3)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("POST", "/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	b, errMarshal = json.Marshal(BadData4)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("POST", "/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
 
 func TestGetMeeting(t *testing.T){
@@ -107,6 +157,27 @@ func TestGetMeetingWrongID(t *testing.T){
 	assert.NilError(t, err)
 
 	res, err := executeRequest("GET", "/meetings/wrong", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestDeleteMeeting(t *testing.T){
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+
+	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
+	assert.NilError(t, err)
+
+	var meeting models.Meeting
+
+	res, err := executeRequest("DELETE", "/meetings/"+Meeting1.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&meeting)
+
+	assert.Equal(t, meeting.ID, Meeting1.ID)
+
+	res, err = executeRequest("GET", "/meetings/"+Meeting1.ID.Hex(), nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }

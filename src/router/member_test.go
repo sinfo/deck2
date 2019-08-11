@@ -392,7 +392,7 @@ func TestUpdateMemberBadPayload(t *testing.T) {
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
 
-func TestCreateContactMember(t *testing.T){
+func TestCreateMemberContact(t *testing.T){
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 
@@ -457,9 +457,6 @@ func TestCreateContactMember(t *testing.T){
 }
 
 func TestUpdateMemberContactBadID(t *testing.T){
-	
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-
 
 	data := mongodb.CreateContactData{
 		Phones : append(make([]models.ContactPhone, 0), models.ContactPhone{Phone:"a", Valid:true}),
