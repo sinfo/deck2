@@ -227,7 +227,7 @@ func TestAddPhone(t *testing.T){
 	b, errMarshal := json.Marshal(Contact2Phone)
 	assert.NilError(t, errMarshal)
 
-	res, err := executeRequest("POST", "/contacts/"+Member1.Contact.Hex()+"/phone", bytes.NewBuffer(b))
+	res, err := executeRequest("POST", "/contacts/"+Member1.Contact.Hex()+"/phones", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -240,7 +240,7 @@ func TestAddPhone(t *testing.T){
 
 	//Wrong id
 
-	res, err = executeRequest("POST", "/contacts/wrong/phone", bytes.NewBuffer(b))
+	res, err = executeRequest("POST", "/contacts/wrong/phones", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
@@ -260,7 +260,7 @@ func TestAddMail(t *testing.T){
 	b, errMarshal := json.Marshal(Contact2Mail)
 	assert.NilError(t, errMarshal)
 
-	res, err := executeRequest("POST", "/contacts/"+Member1.Contact.Hex()+"/mail", bytes.NewBuffer(b))
+	res, err := executeRequest("POST", "/contacts/"+Member1.Contact.Hex()+"/mails", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -273,7 +273,7 @@ func TestAddMail(t *testing.T){
 
 	//Wrong id
 
-	res, err = executeRequest("POST", "/contacts/wrong/mail", bytes.NewBuffer(b))
+	res, err = executeRequest("POST", "/contacts/wrong/mails", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
@@ -295,7 +295,7 @@ func TestUpdatePhone(t *testing.T){
 	b, errMarshal := json.Marshal(mongodb.UpdatePhonesData{Phones : phones})
 	assert.NilError(t, errMarshal)
 
-	res, err := executeRequest("PUT", "/contacts/"+Member1.Contact.Hex()+"/phone", bytes.NewBuffer(b))
+	res, err := executeRequest("PUT", "/contacts/"+Member1.Contact.Hex()+"/phones", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -308,7 +308,7 @@ func TestUpdatePhone(t *testing.T){
 
 	//Wrong id
 
-	res, err = executeRequest("PUT", "/contacts/wrong/mail", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", "/contacts/wrong/phones", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
@@ -330,7 +330,7 @@ func TestUpdateMail(t *testing.T){
 	b, errMarshal := json.Marshal(mongodb.UpdateMailsData{Mails: mails})
 	assert.NilError(t, errMarshal)
 
-	res, err := executeRequest("PUT", "/contacts/"+Member1.Contact.Hex()+"/mail", bytes.NewBuffer(b))
+	res, err := executeRequest("PUT", "/contacts/"+Member1.Contact.Hex()+"/mails", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -343,7 +343,7 @@ func TestUpdateMail(t *testing.T){
 
 	//Wrong id
 
-	res, err = executeRequest("PUT", "/contacts/wrong/mail", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", "/contacts/wrong/mails", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
@@ -379,7 +379,7 @@ func TestUpdateSocials(t *testing.T){
 
 	//Wrong id
 
-	res, err = executeRequest("PUT", "/contacts/wrong/mail", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", "/contacts/wrong/socials", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }

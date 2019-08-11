@@ -115,3 +115,4 @@ func (m *MeetingsType) DeleteMeeting(meetingID primitive.ObjectID) (*models.Meet
 
 	return &meeting, nil
 }
+

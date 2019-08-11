@@ -155,9 +155,9 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}", authMember(getTeam)).Methods("GET")
 	teamRouter.HandleFunc("/{id}", authAdmin(deleteTeam)).Methods("DELETE")
 	teamRouter.HandleFunc("/{id}", authCoordinator(updateTeam)).Methods("PUT")
-	teamRouter.HandleFunc("/{id}/member", authCoordinator(addTeamMember)).Methods("POST")
-	teamRouter.HandleFunc("/{id}/member", authCoordinator(updateTeamMemberRole)).Methods("PUT")
-	teamRouter.HandleFunc("/{id}/member", authCoordinator(deleteTeamMember)).Methods("DELETE")
+	teamRouter.HandleFunc("/{id}/members", authCoordinator(addTeamMember)).Methods("POST")
+	teamRouter.HandleFunc("/{id}/members", authCoordinator(updateTeamMemberRole)).Methods("PUT")
+	teamRouter.HandleFunc("/{id}/members/{memberID}", authCoordinator(deleteTeamMember)).Methods("DELETE")
 
 	// member handlers
 	memberRouter := r.PathPrefix("/members").Subrouter()
@@ -185,11 +185,17 @@ func InitializeRouter() {
 	contactRouter.HandleFunc("", authMember(getContacts)).Methods("GET")
 	contactRouter.HandleFunc("/{id}", authMember(getContact)).Methods("GET")
 	contactRouter.HandleFunc("/{id}", authMember(updateContact)).Methods("PUT")
-	contactRouter.HandleFunc("/{id}/phone", authMember(addPhone)).Methods("POST")
-	contactRouter.HandleFunc("/{id}/mail", authMember(addMail)).Methods("POST")
-	contactRouter.HandleFunc("/{id}/phone", authMember(updatePhone)).Methods("PUT")
-	contactRouter.HandleFunc("/{id}/mail", authMember(updateMail)).Methods("PUT")
+	contactRouter.HandleFunc("/{id}/phones", authMember(addPhone)).Methods("POST")
+	contactRouter.HandleFunc("/{id}/mails", authMember(addMail)).Methods("POST")
+	contactRouter.HandleFunc("/{id}/phones", authMember(updatePhone)).Methods("PUT")
+	contactRouter.HandleFunc("/{id}/mails", authMember(updateMail)).Methods("PUT")
 	contactRouter.HandleFunc("/{id}/socials", authMember(updateSocials)).Methods("PUT")
+
+	// meetings handlers
+	meetingRouter:= r.PathPrefix("/meetings").Subrouter()
+	meetingRouter.HandleFunc("", authMember(createMeeting)).Methods("POST")
+	meetingRouter.HandleFunc("/{id}", authMember(getMeeting)).Methods("GET")
+	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

@@ -171,18 +171,12 @@ func updateTeamMemberRole(w http.ResponseWriter, r *http.Request){
 }
 
 func deleteTeamMember(w http.ResponseWriter, r *http.Request){
-	defer r.Body.Close()
-
-	var dtmd = &mongodb.DeleteTeamMemberData{}
+	
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
+	memberID,_ := primitive.ObjectIDFromHex(params["memberID"])
 
-	if err := json.NewDecoder(r.Body).Decode(dtmd); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
-		return
-	}
-
-	team, err := mongodb.Teams.DeleteTeamMember(id, *dtmd)
+	team, err := mongodb.Teams.DeleteTeamMember(id, memberID)
 	if err != nil{
 		http.Error(w, "Team or member not found", http.StatusNotFound)
 		return

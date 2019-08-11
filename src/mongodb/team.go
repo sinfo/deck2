@@ -41,11 +41,6 @@ type UpdateTeamMemberData struct {
 	Role   *models.TeamRole    `json:"role"`
 }
 
-// DeleteTeamMemberData contains data needed to delete a team member
-type DeleteTeamMemberData struct {
-	Member *primitive.ObjectID `json:"member"`
-}
-
 // ParseBody fills the CreateTeamData from a body
 func (ctd *CreateTeamData) ParseBody(body io.Reader) error {
 
@@ -297,13 +292,13 @@ func (t *TeamsType) UpdateTeamMemberRole(id primitive.ObjectID, data UpdateTeamM
 }
 
 // DeleteTeamMember removes a member from a team.
-func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMemberData) (*models.Team, error) {
+func (t *TeamsType) DeleteTeamMember(id, memberID primitive.ObjectID) (*models.Team, error) {
 
 	var team models.Team
 	var members []models.TeamMember
 
 	// Check if member exists
-	if _, err := Members.GetMember(*data.Member); err != nil {
+	if _, err := Members.GetMember(memberID); err != nil {
 		return nil, err
 	}
 
@@ -313,12 +308,12 @@ func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMembe
 	}
 
 	// Check for non-existent member
-	if !team1.HasMember(*data.Member) {
+	if !team1.HasMember(memberID) {
 		return nil, errors.New("Member not found")
 	}
 
 	for i, s := range team1.Members {
-		if s.Member == *data.Member {
+		if s.Member == memberID {
 			members = append(team1.Members[:i], team1.Members[i+1:]...)
 			break
 		}
