@@ -36,13 +36,13 @@ type CreateMemberData struct {
 	SinfoID string `json:"sinfoEmail"`
 }
 
-// UpdateMemberContactData contains info needed to update a member's contact
-type UpdateMemberContactData struct {
+// UpdateContactData contains info needed to update a member's contact
+type UpdateContactData struct {
 	Contact primitive.ObjectID `json:"contact"`
 }
 
-// DeleteMemberNotificationData contains info needed to delete a member's notification
-type DeleteMemberNotificationData struct {
+// DeleteNotificationData contains info needed to delete a member's notification
+type DeleteNotificationData struct {
 	Notification primitive.ObjectID `json:"notification"`
 }
 
@@ -259,8 +259,8 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 }
 
 
-// UpdateMemberContact updates a member's contact 
-func (m *MembersType) UpdateMemberContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
+// UpdateContact updates a member's contact 
+func (m *MembersType) UpdateContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
 
 	var member models.Member
 
@@ -302,8 +302,8 @@ func (m *MembersType) UpdateMember(id primitive.ObjectID, data CreateMemberData)
 	return &member, nil
 }
 
-// UpdateMemberNotification adds notifications.
-func (m *MembersType) UpdateMemberNotification(id primitive.ObjectID, notifs []primitive.ObjectID) (*models.Member, error) {
+// UpdateNotification adds notifications.
+func (m *MembersType) UpdateNotification(id primitive.ObjectID, notifs []primitive.ObjectID) (*models.Member, error) {
 
 	member, err := m.GetMember(id)
 	if err != nil {
@@ -328,8 +328,8 @@ func (m *MembersType) UpdateMemberNotification(id primitive.ObjectID, notifs []p
 	return member, nil
 }
 
-// DeleteMemberNotification deletes a notification from a member.
-func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, notif DeleteMemberNotificationData) (*models.Member, error) {
+// DeleteNotification deletes a notification from a member.
+func (m *MembersType) DeleteNotification(memberID primitive.ObjectID, notif DeleteNotificationData) (*models.Member, error) {
 	member, err := m.GetMember(memberID)
 	if err != nil {
 		return nil, err
@@ -364,37 +364,6 @@ func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, noti
 	}
 
 	return &result, nil
-}
-
-// CreateMemberContact creates and adds a new contact to a member
-func (m *MembersType) CreateMemberContact(id primitive.ObjectID, data CreateContactData) (*models.Member, error){
-	_, err := m.GetMember(id)
-	if err != nil{
-		return nil, err
-	}
-
-	contact, err := Contacts.CreateContact(data)
-	if err != nil{
-		return nil, err
-	}
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"contact": contact.ID,
-		},
-	}
-
-	var result models.Member
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err = m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&result); err != nil {
-		return nil, err
-	}
-
-	return &result, nil
-
 }
 
 // GetMemberPublic finds a member with specified id.

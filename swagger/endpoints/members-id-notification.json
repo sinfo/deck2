@@ -4,7 +4,7 @@
             "members", "notifications"
         ],
         "summary": "Deletes a member's notification (must have admin credentials)",
-        "operationId": "deleteMemberNotification",
+        "operationId": "DeleteNotification",
         "consumes": [
             "application/json"
         ],

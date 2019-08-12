@@ -618,7 +618,7 @@ func TestDeleteTeamMember(t *testing.T) {
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestAddTeamMeeting(t *testing.T){
+func TestAddMeeting(t *testing.T){
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
@@ -657,7 +657,7 @@ func TestAddTeamMeeting(t *testing.T){
 
 }
 
-func TestAddTeamMeetingBadPayload(t *testing.T){
+func TestAddMeetingBadPayload(t *testing.T){
 
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
@@ -729,7 +729,12 @@ func TestDeleteTeamMeeting(t *testing.T){
 		log.Fatal(err)
 	}
 
-	Team1, err = mongodb.Teams.AddTeamMeeting(Team1.ID, Meeting1Data)
+	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	Team1, err = mongodb.Teams.AddMeeting(Team1.ID, Meeting1.ID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -763,7 +768,12 @@ func TestDeleteTeamMeetingBad(t *testing.T){
 		log.Fatal(err)
 	}
 
-	Team1, err = mongodb.Teams.AddTeamMeeting(Team1.ID, Meeting1Data)
+	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	Team1, err = mongodb.Teams.AddMeeting(Team1.ID, Meeting1.ID)
 	if err != nil {
 		log.Fatal(err)
 	}

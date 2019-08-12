@@ -141,16 +141,14 @@ func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, 
 		if err != nil{
 			return nil, err
 		}
-		meetingID = append(meetingID,team.Meetings...)
-	}
-
-	if data.Company != nil {
+		meetingID = append(meetingID, team.Meetings...)
+	}else if data.Company != nil {
 		company, err := Companies.GetCompany(*data.Company)
 		if err != nil{
 			return nil, err
 		}
-		for _, s := range company.Participations{
-			if data.Event != nil{
+		if data.Event != nil{
+			for _, s := range company.Participations{
 				if s.Event == *data.Event{
 					for _, t := range s.Communications{
 						thread, err := Threads.GetThread(t)
@@ -162,7 +160,9 @@ func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, 
 						}
 					}
 				}
-			} else {
+			} 
+		}else {
+			for _, s := range company.Participations{
 				for _, t := range s.Communications{
 					thread, err := Threads.GetThread(t)
 					if err != nil{
@@ -174,34 +174,31 @@ func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, 
 				}
 			}
 		}
+	}else if data.Event != nil{
+		event, err := Events.GetEvent(*data.Event)
+		if err != nil{
+			return nil, err
+		}
+		meetingID =append(meetingID, event.Meetings...)
 	}else{
-		if data.Event != nil{
-			event, err := Events.GetEvent(*data.Event)
+		cur, err := m.Collection.Find(m.Context, bson.M{})
+		if err != nil{
+			return nil, err
+		}
+		for cur.Next(m.Context){
+			var e models.Meeting
+			err := cur.Decode(&e)
 			if err != nil{
 				return nil, err
 			}
-			meetingID =append(meetingID, event.Meetings...)
-		}else{
-			cur, err := m.Collection.Find(m.Context, bson.M{})
-			if err != nil{
-				return nil, err
-			}
-			for cur.Next(m.Context){
-				var e models.Meeting
-				err := cur.Decode(&e)
-				if err != nil{
-					return nil, err
-				}
-				meetings = append(meetings, &e)
-			}
-
-			if err := cur.Err(); err != nil {
-				return nil, err
-			}
-		
-			cur.Close(m.Context)
+			meetings = append(meetings, &e)
 		}
 
+		if err := cur.Err(); err != nil {
+			return nil, err
+		}
+	
+		cur.Close(m.Context)
 		return meetings, nil
 	}
 

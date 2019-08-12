@@ -335,8 +335,8 @@ func (t *TeamsType) DeleteTeamMember(id, memberID primitive.ObjectID) (*models.T
 	return &team, nil
 }
 
-// AddTeamMeeting creates and adds a meeting to a team
-func (t *TeamsType) AddTeamMeeting(id primitive.ObjectID, data CreateMeetingData) (*models.Team, error){
+// AddMeeting creates and adds a meeting to a team
+func (t *TeamsType) AddMeeting(id, meeting primitive.ObjectID) (*models.Team, error){
 	
 	team, err := t.GetTeam(id)
 	if err != nil{
@@ -345,12 +345,7 @@ func (t *TeamsType) AddTeamMeeting(id primitive.ObjectID, data CreateMeetingData
 
 	var result models.Team
 
-	createdMeeting, err := Meetings.CreateMeeting(data)
-	if err != nil{
-		return nil, err
-	}
-
-	var meets = append(team.Meetings, createdMeeting.ID)
+	var meets = append(team.Meetings, meeting)
 
 	var updateQuery = bson.M{
 		"$set": bson.M{

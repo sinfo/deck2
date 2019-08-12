@@ -107,7 +107,13 @@ func createMemberContact(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	updatedMember, err := mongodb.Members.CreateMemberContact(id, *ccd)
+	contact, err := mongodb.Contacts.CreateContact(*ccd)
+	if err != nil{
+		http.Error(w, "Could not create contact", http.StatusExpectationFailed)
+		return
+	}
+
+	updatedMember, err := mongodb.Members.UpdateContact(id, contact.ID)
 	if err != nil{
 		http.Error(w, "Could not update member", http.StatusNotFound)
 		return
@@ -116,17 +122,17 @@ func createMemberContact(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func deleteMemberNotification(w http.ResponseWriter, r *http.Request) {
+func deleteNotification(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	memberID, _ := primitive.ObjectIDFromHex(params["id"])
-	var dmnd = &mongodb.DeleteMemberNotificationData{}
+	var dmnd = &mongodb.DeleteNotificationData{}
 
 	if err := json.NewDecoder(r.Body).Decode(dmnd); err != nil {
 		http.Error(w, "Could not parse body.", http.StatusBadRequest)
 		return
 	}
 
-	updatedMember, err := mongodb.Members.DeleteMemberNotification(memberID, *dmnd)
+	updatedMember, err := mongodb.Members.DeleteNotification(memberID, *dmnd)
 	if err != nil {
 		http.Error(w, "Could not delete notification", http.StatusNotFound)
 		return
