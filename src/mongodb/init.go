@@ -22,6 +22,7 @@ var (
 	Packages  *PackagesType
 	Meetings  *MeetingsType
 	Contacts  *ContactsType
+	Threads   *ThreadsType
 )
 
 // InitializeDatabase initializes the database connection
@@ -88,6 +89,11 @@ func InitializeDatabase() {
 	Contacts = &ContactsType{
 		Collection: db.Collection("contacts"),
 		Context:    ctx,
+	}
+
+	Threads = &ThreadsType{
+		Collection: db.Collection("threads"),
+		Context:	ctx,
 	}
 
 	log.Println("Connected to the database successfully")

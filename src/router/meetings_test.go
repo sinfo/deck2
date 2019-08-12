@@ -181,3 +181,21 @@ func TestDeleteMeeting(t *testing.T){
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
+
+func TestGetMeetings(t *testing.T){
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+
+	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
+	assert.NilError(t, err)
+
+	var meetings []*models.Meeting
+
+	res, err := executeRequest("GET", "/meetings", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&meetings)
+
+	assert.Equal(t, len(meetings), 1)
+	assert.Equal(t, meetings[0].ID, Meeting1.ID)
+}
