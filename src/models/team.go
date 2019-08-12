@@ -119,3 +119,13 @@ func (t *Team) GetMember(memberID primitive.ObjectID) (*TeamMember, error) {
 
 	return nil, errors.New("member not found")
 }
+
+// HasMeeting returns true if a team contains specified meeting
+func (t *Team) HasMeeting(id primitive.ObjectID) bool {
+	for _,s := range t.Meetings{
+		if s == id{
+			return true
+		}
+	}
+	return false
+}

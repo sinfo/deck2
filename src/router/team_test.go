@@ -413,7 +413,7 @@ func TestAddTeamMember(t *testing.T) {
 	b, errMarshal := json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -431,7 +431,7 @@ func TestAddTeamMember(t *testing.T) {
 	b, errMarshal = json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 
@@ -447,7 +447,7 @@ func TestAddTeamMember(t *testing.T) {
 	b, errMarshal = json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 
@@ -485,7 +485,7 @@ func TestUpdateTeamMemberRole(t *testing.T) {
 	b, errMarshal := json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -503,7 +503,7 @@ func TestUpdateTeamMemberRole(t *testing.T) {
 	b, errMarshal = json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err = executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -524,13 +524,13 @@ func TestUpdateTeamMemberRole(t *testing.T) {
 	b, errMarshal = json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err = executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 
 	// Test not found team
 
-	res, err = executeRequest("PUT", "/teams/wrong/member", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", "/teams/wrong/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
@@ -567,7 +567,7 @@ func TestDeleteTeamMember(t *testing.T) {
 	b, errMarshal := json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -577,14 +577,8 @@ func TestDeleteTeamMember(t *testing.T) {
 
 	var deletedTeam models.Team
 
-	dtmd := &mongodb.DeleteTeamMemberData{
-		Member: &member.ID,
-	}
 
-	b, errMarshal = json.Marshal(dtmd)
-	assert.NilError(t, errMarshal)
-
-	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/members/"+member.ID.Hex(), nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -602,7 +596,7 @@ func TestDeleteTeamMember(t *testing.T) {
 	b, errMarshal = json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -612,22 +606,190 @@ func TestDeleteTeamMember(t *testing.T) {
 
 	randID := primitive.NewObjectID()
 
-	dtmd = &mongodb.DeleteTeamMemberData{
-		Member: &randID,
-	}
 
-	b, errMarshal = json.Marshal(dtmd)
-	assert.NilError(t, errMarshal)
-
-	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/member", bytes.NewBuffer(b))
+	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/members/"+randID.Hex(), nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 
 	// Test not found team
 
-	res, err = executeRequest("DELETE", "/teams/wrong/member", bytes.NewBuffer(b))
+	res, err = executeRequest("DELETE", "/teams/wrong/members/"+randID.Hex(), nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestAddTeamMeeting(t *testing.T){
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	setupTest()
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var team models.Team
+
+	b, errMarshall := json.Marshal(Meeting1Data)
+	assert.NilError(t, errMarshall)
+
+	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&team)
+
+	assert.Equal(t, team.ID, Team1.ID)
+	assert.Equal(t, len(team.Meetings), 1)
+
+	meeting, err := mongodb.Meetings.GetMeeting(team.Meetings[0])
+	assert.NilError(t, err)
+
+	assert.Equal(t, meeting.Place, *Meeting1Data.Place)
+
+	// Bad ID
+
+	res, err = executeRequest("POST", "/teams/wrong/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
+}
+
+func TestAddTeamMeetingBadPayload(t *testing.T){
+
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	setupTest()
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var BadData1 = mongodb.CreateMeetingData{
+		End: &TimeAfter,
+		Place: &Place1,
+	}
+	var BadData2 = mongodb.CreateMeetingData{
+		Begin: &TimeBefore,
+		Place: &Place1,
+	}
+	var BadData3 = mongodb.CreateMeetingData{
+		Begin: &TimeBefore,
+		End: &TimeAfter,
+	}
+	var BadData4 = mongodb.CreateMeetingData{
+		Begin: &TimeAfter,
+		End: &TimeBefore,
+		Place: &Place1,
+	}
+
+	b, errMarshal := json.Marshal(BadData1)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	b, errMarshal = json.Marshal(BadData2)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	b, errMarshal = json.Marshal(BadData3)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	b, errMarshal = json.Marshal(BadData4)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/meetings", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestDeleteTeamMeeting(t *testing.T){
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	setupTest()
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Team1, err = mongodb.Teams.AddTeamMeeting(Team1.ID, Meeting1Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Meeting1, err = mongodb.Meetings.GetMeeting(Team1.Meetings[0])
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	var meeting models.Meeting
+
+	res, err := executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/meetings/"+Meeting1.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&meeting)
+
+	assert.Equal(t, meeting.ID, Meeting1.ID)
+	assert.Equal(t, meeting.Place, Meeting1.Place)
+}
+
+func TestDeleteTeamMeetingBad(t *testing.T){
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	setupTest()
+
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Team1, err = mongodb.Teams.AddTeamMeeting(Team1.ID, Meeting1Data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Meeting1, err = mongodb.Meetings.GetMeeting(Team1.Meetings[0])
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	Meeting2, err = mongodb.Meetings.CreateMeeting(Meeting2Data)
+	if err != nil{
+		log.Fatal(err)
+	}
+
+	res, err := executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/meetings/"+Meeting2.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
+	res, err = executeRequest("DELETE", "/teams/wrong/meetings/"+Meeting1.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
+	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/meetings/wrong", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
 }
 
 func TestGetTeamsPublic(t *testing.T) {

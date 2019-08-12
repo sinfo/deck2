@@ -171,24 +171,55 @@ func updateTeamMemberRole(w http.ResponseWriter, r *http.Request){
 }
 
 func deleteTeamMember(w http.ResponseWriter, r *http.Request){
-	defer r.Body.Close()
-
-	var dtmd = &mongodb.DeleteTeamMemberData{}
+	
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
+	memberID,_ := primitive.ObjectIDFromHex(params["memberID"])
 
-	if err := json.NewDecoder(r.Body).Decode(dtmd); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
-		return
-	}
-
-	team, err := mongodb.Teams.DeleteTeamMember(id, *dtmd)
+	team, err := mongodb.Teams.DeleteTeamMember(id, memberID)
 	if err != nil{
 		http.Error(w, "Team or member not found", http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(team)
+}
+
+func addTeamMeeting(w http.ResponseWriter, r *http.Request){
+	
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	var cmd mongodb.CreateMeetingData
+
+	if err := cmd.ParseBody(r.Body); err != nil{
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	team, err := mongodb.Teams.AddTeamMeeting(id, cmd)
+	if err != nil{
+		http.Error(w, "Could not find team", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(team)
+}
+
+func deleteTeamMeeting(w http.ResponseWriter, r *http.Request){
+	
+	params := mux.Vars(r)
+	teamID, _ := primitive.ObjectIDFromHex(params["id"])
+	memberID, _ := primitive.ObjectIDFromHex(params["meetingID"])
+
+	meeting, err := mongodb.Teams.DeleteTeamMeeting(teamID, memberID)
+	if err != nil{
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(meeting)
+
 }
 
 // PUBLIC ENDPOINTS

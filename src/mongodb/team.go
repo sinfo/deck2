@@ -41,11 +41,6 @@ type UpdateTeamMemberData struct {
 	Role   *models.TeamRole    `json:"role"`
 }
 
-// DeleteTeamMemberData contains data needed to delete a team member
-type DeleteTeamMemberData struct {
-	Member *primitive.ObjectID `json:"member"`
-}
-
 // ParseBody fills the CreateTeamData from a body
 func (ctd *CreateTeamData) ParseBody(body io.Reader) error {
 
@@ -297,13 +292,13 @@ func (t *TeamsType) UpdateTeamMemberRole(id primitive.ObjectID, data UpdateTeamM
 }
 
 // DeleteTeamMember removes a member from a team.
-func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMemberData) (*models.Team, error) {
+func (t *TeamsType) DeleteTeamMember(id, memberID primitive.ObjectID) (*models.Team, error) {
 
 	var team models.Team
 	var members []models.TeamMember
 
 	// Check if member exists
-	if _, err := Members.GetMember(*data.Member); err != nil {
+	if _, err := Members.GetMember(memberID); err != nil {
 		return nil, err
 	}
 
@@ -313,12 +308,12 @@ func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMembe
 	}
 
 	// Check for non-existent member
-	if !team1.HasMember(*data.Member) {
+	if !team1.HasMember(memberID) {
 		return nil, errors.New("Member not found")
 	}
 
 	for i, s := range team1.Members {
-		if s.Member == *data.Member {
+		if s.Member == memberID {
 			members = append(team1.Members[:i], team1.Members[i+1:]...)
 			break
 		}
@@ -338,6 +333,82 @@ func (t *TeamsType) DeleteTeamMember(id primitive.ObjectID, data DeleteTeamMembe
 	}
 
 	return &team, nil
+}
+
+// AddTeamMeeting creates and adds a meeting to a team
+func (t *TeamsType) AddTeamMeeting(id primitive.ObjectID, data CreateMeetingData) (*models.Team, error){
+	
+	team, err := t.GetTeam(id)
+	if err != nil{
+		return nil, err
+	}
+
+	var result models.Team
+
+	createdMeeting, err := Meetings.CreateMeeting(data)
+	if err != nil{
+		return nil, err
+	}
+
+	var meets = append(team.Meetings, createdMeeting.ID)
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"meetings": meets,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err = t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id":id}, updateQuery, optionsQuery).Decode(&result); err != nil{
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// DeleteTeamMeeting removes a meeting from a team
+func (t *TeamsType) DeleteTeamMeeting(teamID, meetingID primitive.ObjectID) (*models.Meeting, error){
+
+	team, err := t.GetTeam(teamID)
+	if err != nil {
+		return nil, errors.New("Team not found")
+	}
+
+	if !team.HasMeeting(meetingID){
+		return nil, errors.New("Meeting not in team")
+	}
+
+	meeting, err := Meetings.GetMeeting(meetingID)
+	if err != nil {
+		return nil, errors.New("Meeting not found")
+	}
+
+	var meetings []primitive.ObjectID
+	var updatedTeam models.Team
+
+	for i, s := range team.Meetings {
+		if s == meetingID {
+			meetings = append(team.Meetings[:i], team.Meetings[i+1:]...)
+			break
+		}
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"meetings": meetings,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err = t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": teamID}, updateQuery, optionsQuery).Decode(&updatedTeam); err != nil {
+		return nil, err
+	}
+
+	return meeting, nil
 }
 
 // PUBLIC METHODS

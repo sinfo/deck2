@@ -95,7 +95,7 @@ func updateMember(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func createContactMember(w http.ResponseWriter, r *http.Request){
+func createMemberContact(w http.ResponseWriter, r *http.Request){
 	defer r.Body.Close()
 
 	params := mux.Vars(r)
@@ -107,7 +107,7 @@ func createContactMember(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	updatedMember, err := mongodb.Contacts.CreateContactMember(id, *ccd)
+	updatedMember, err := mongodb.Members.CreateMemberContact(id, *ccd)
 	if err != nil{
 		http.Error(w, "Could not update member", http.StatusNotFound)
 		return

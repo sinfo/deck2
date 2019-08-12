@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
+	"fmt"
 	"log"
 	"time"
 
@@ -115,3 +115,4 @@ func (m *MeetingsType) DeleteMeeting(meetingID primitive.ObjectID) (*models.Meet
 
 	return &meeting, nil
 }
+

@@ -258,28 +258,8 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 	return newMember, nil
 }
 
-// CreateMemberContact updates a member's contact 
-func (m *MembersType) CreateMemberContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
 
-	var member models.Member
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"contact":  contactID,
-		},
-	}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil{
-		return nil, err
-	}
-
-	return &member, nil
-}
-
-// CreateMemberContact updates a member's contact 
+// UpdateMemberContact updates a member's contact 
 func (m *MembersType) UpdateMemberContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
 
 	var member models.Member
@@ -384,6 +364,37 @@ func (m *MembersType) DeleteMemberNotification(memberID primitive.ObjectID, noti
 	}
 
 	return &result, nil
+}
+
+// CreateMemberContact creates and adds a new contact to a member
+func (m *MembersType) CreateMemberContact(id primitive.ObjectID, data CreateContactData) (*models.Member, error){
+	_, err := m.GetMember(id)
+	if err != nil{
+		return nil, err
+	}
+
+	contact, err := Contacts.CreateContact(data)
+	if err != nil{
+		return nil, err
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"contact": contact.ID,
+		},
+	}
+
+	var result models.Member
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err = m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+
 }
 
 // GetMemberPublic finds a member with specified id.

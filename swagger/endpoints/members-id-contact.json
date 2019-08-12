@@ -4,7 +4,7 @@
             "members", "contacts"
         ],
         "summary": "Creates a member's contact",
-        "operationId": "createContactMember",
+        "operationId": "createMemberContact",
         "consumes": [
             "application/json"
         ],
