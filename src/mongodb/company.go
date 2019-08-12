@@ -23,9 +23,9 @@ type CompaniesType struct {
 }
 
 type CreateCompanyData struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Site        string `json:"site"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Site        *string `json:"site"`
 }
 
 // ParseBody fills the CreateCompanyData from a body
@@ -35,8 +35,16 @@ func (ccd *CreateCompanyData) ParseBody(body io.Reader) error {
 		return err
 	}
 
-	if len(ccd.Name) == 0 {
+	if ccd.Name == nil || len(*ccd.Name) == 0 {
 		return errors.New("invalid name")
+	}
+
+	if ccd.Description == nil {
+		return errors.New("invalid description")
+	}
+
+	if ccd.Site == nil {
+		return errors.New("invalid site")
 	}
 
 	return nil
@@ -46,9 +54,11 @@ func (ccd *CreateCompanyData) ParseBody(body io.Reader) error {
 func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, error) {
 
 	insertResult, err := c.Collection.InsertOne(c.Context, bson.M{
-		"name":        data.Name,
-		"description": data.Description,
-		"site":        data.Site,
+		"name":           data.Name,
+		"description":    data.Description,
+		"site":           data.Site,
+		"employers":      []primitive.ObjectID{},
+		"participations": []models.CompanyParticipation{},
 	})
 
 	if err != nil {
@@ -65,11 +75,41 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 	return newCompany, nil
 }
 
+// GetCompaniesOptions is the options to give to GetCompanies.
+// All the fields are optional, and as such we use pointers as a "hack" to deal
+// with non-existent fields.
+// The field is non-existent if it has a nil value.
+// This filter will behave like a logical *and*.
+type GetCompaniesOptions struct {
+	EventID   *int
+	IsPartner *bool
+	MemberID  *primitive.ObjectID
+	Name      *string
+}
+
 // GetCompanies gets all companies specified with a query
-func (c *CompaniesType) GetCompanies(query bson.M) ([]*models.Company, error) {
+func (c *CompaniesType) GetCompanies(options GetCompaniesOptions) ([]*models.Company, error) {
 	var companies = make([]*models.Company, 0)
 
-	cur, err := c.Collection.Find(c.Context, query)
+	filter := bson.M{}
+
+	if options.EventID != nil {
+		filter["participations.event"] = options.EventID
+	}
+
+	if options.IsPartner != nil {
+		filter["participations.partner"] = options.IsPartner
+	}
+
+	if options.MemberID != nil {
+		filter["participations.member"] = options.MemberID
+	}
+
+	if options.Name != nil {
+		filter["name"] = options.Name
+	}
+
+	cur, err := c.Collection.Find(c.Context, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -110,12 +150,21 @@ func (c *CompaniesType) GetCompany(companyID primitive.ObjectID) (*models.Compan
 // AddParticipationData is used on AddParticipation. Is the data to be given in order to add a new participation
 // to a company, related to the current event.
 type AddParticipationData struct {
-	MemberID primitive.ObjectID
-	Partner  bool
+	Partner bool `json:"partner"`
+}
+
+// ParseBody fills the CreateCompanyData from a body
+func (apd *AddParticipationData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(apd); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // AddParticipation adds a participation on the current event to the company with the indicated id.
-func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, data AddParticipationData) (*models.Company, error) {
+func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, memberID primitive.ObjectID, data AddParticipationData) (*models.Company, error) {
 
 	currentEvent, err := Events.GetCurrentEvent()
 
@@ -129,7 +178,7 @@ func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, data AddP
 		"$addToSet": bson.M{
 			"participations": bson.M{
 				"event":   currentEvent.ID,
-				"member":  data.MemberID,
+				"member":  memberID,
 				"partner": data.Partner,
 				"status":  models.Suggested,
 			},

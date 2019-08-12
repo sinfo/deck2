@@ -32,7 +32,12 @@ func oauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	// Read oauthState from Cookie
-	oauthState, _ := r.Cookie(cookieName)
+	oauthState, err := r.Cookie(cookieName)
+
+	if err != nil {
+		http.Error(w, "Invalid cookie on oauth google callback", http.StatusUnauthorized)
+		return
+	}
 
 	if r.FormValue("state") != oauthState.Value {
 		log.Println("invalid oauth google state")

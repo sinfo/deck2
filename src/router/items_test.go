@@ -16,7 +16,6 @@ import (
 )
 
 var (
-	Event = models.Event{ID: 1, Name: "SINFO1"}
 	Item  = models.Item{Name: "item1", Type: "item_type", Description: "item_description", Image: "", Price: 50, VAT: 24}
 	Item2 = models.Item{Name: "item2", Type: "item_type_2", Description: "item_description_2", Image: "", Price: 55, VAT: 25}
 )

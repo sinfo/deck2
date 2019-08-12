@@ -28,6 +28,7 @@ build-swagger:
 	@echo "[*] validating swagger"
 	@swagger validate $(STATIC)/swagger.json -q
 
+## build-scripts             : Compile dev script.
 .PHONY: build-scripts
 build-scripts: $(SCRIPTSDIR)/*.go
 	@echo "[*] building scripts"

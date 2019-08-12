@@ -1,0 +1,120 @@
+{
+    "get": {
+        "tags": [
+            "companies"
+        ],
+        "summary": "Get all companies",
+        "operationId": "getCompanies",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the company",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Has a participation entry for this event",
+                "type": "integer"
+            },
+            {
+                "in": "query",
+                "name": "member",
+                "description": "Was contacted by this member",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "partner",
+                "description": "Participated as a partner",
+                "type": "boolean"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Companies filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/company.json"
+                    }
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to get companies"
+            }
+        }
+    },
+    "post": {
+        "tags": [
+            "companies"
+        ],
+        "summary": "Create a new company",
+        "operationId": "createCompany",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "Information needed to create the new company.",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name", "description", "site"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "description": {
+                            "type": "string"
+                        },
+                        "site": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created company.",
+                "schema": {
+                    "$ref": "./models/company.json"
+                }
+            },
+            "400": {
+                "description": "Invalid input or couldn't create the new company"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    }
+}

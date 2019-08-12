@@ -142,6 +142,12 @@
 		"/public/teams/{id}":{
 			"$ref": "./endpoints/public-teams-id.json"
 		},
+		"/companies": {
+			"$ref": "./endpoints/companies.json"
+		},
+		"/companies/{id}/participation": {
+			"$ref": "./endpoints/companies-id-participation.json"
+		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"
 		},
@@ -175,7 +181,6 @@
 		"/members/{id}":{
 			"$ref":"./endpoints/members-id.json"
 		},
-		
 		"/members/{id}/contact":{
 			"$ref": "./endpoints/members-id-contact.json"
 		},

@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	Testing bool = false
+	Testing        bool = false
+	Authentication bool = true
 
 	Host string = "localhost"
 	Port string = "8080"
@@ -78,5 +79,6 @@ func InitializeConfig() {
 
 func SetTestingEnv() {
 	Testing = true
+	Authentication = false
 	DatabaseName = "deck2_testing"
 }

@@ -24,6 +24,21 @@ func executeRequest(method string, path string, payload io.Reader) (*httptest.Re
 	return rr, nil
 }
 
+func executeAuthenticatedRequest(method string, path string, payload io.Reader, token string) (*httptest.ResponseRecorder, error) {
+	req, errReq := http.NewRequest(method, path, payload)
+
+	req.Header.Set("Authorization", token)
+
+	if errReq != nil {
+		return nil, errReq
+	}
+
+	rr := httptest.NewRecorder()
+	Router.ServeHTTP(rr, req)
+
+	return rr, nil
+}
+
 func TestMain(m *testing.M) {
 
 	config.InitializeConfig()

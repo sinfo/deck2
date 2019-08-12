@@ -7,6 +7,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/models"
+	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -62,6 +63,10 @@ func ParseJWT(tokenString string) (*models.AuthorizationCredentials, error) {
 
 	if !token.Valid {
 		return nil, errors.New("invalid token")
+	}
+
+	if _, err := mongodb.Members.GetMember(claims.ID); err != nil {
+		return nil, errors.New("invalid member on token")
 	}
 
 	result := models.AuthorizationCredentials{

@@ -12,10 +12,10 @@ import (
 	"github.com/sinfo/deck2/src/models"
 )
 
-type ContextKey int
+type contextKey int
 
 const (
-	CredentialsKey ContextKey = iota
+	credentialsKey contextKey = iota
 )
 
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -41,7 +41,7 @@ func checkAccessLevelWrapper(required models.TeamRole) authWrapper {
 
 		return func(w http.ResponseWriter, r *http.Request) {
 
-			if config.Testing {
+			if !config.Authentication {
 				handler(w, r)
 				return
 			}
@@ -67,7 +67,7 @@ func checkAccessLevelWrapper(required models.TeamRole) authWrapper {
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), CredentialsKey, *credentials)
+			ctx := context.WithValue(r.Context(), credentialsKey, *credentials)
 
 			handler(w, r.WithContext(ctx))
 		}
@@ -131,6 +131,7 @@ func InitializeRouter() {
 	companyRouter := r.PathPrefix("/companies").Subrouter()
 	companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
 	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
 
 	// event handlers
 	eventRouter := r.PathPrefix("/events").Subrouter()
@@ -194,7 +195,7 @@ func InitializeRouter() {
 	contactRouter.HandleFunc("/{id}/socials", authMember(updateSocials)).Methods("PUT")
 
 	// meetings handlers
-	meetingRouter:= r.PathPrefix("/meetings").Subrouter()
+	meetingRouter := r.PathPrefix("/meetings").Subrouter()
 	meetingRouter.HandleFunc("", authMember(createMeeting)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}", authMember(getMeeting)).Methods("GET")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")

@@ -130,4 +130,19 @@ func main() {
 	if err != nil {
 		onError(err)
 	}
+
+	var companyName = "Company Inc."
+	var companyDescription = "Some description"
+	var companySite = "company.com"
+
+	ccd := mongodb.CreateCompanyData{
+		Name:        &companyName,
+		Description: &companyDescription,
+		Site:        &companySite,
+	}
+
+	_, err = mongodb.Companies.CreateCompany(ccd)
+	if err != nil {
+		onError(err)
+	}
 }
