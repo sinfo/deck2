@@ -25,6 +25,10 @@ type EventsType struct {
 // Cached version of the latest event.
 var currentEvent *models.Event
 
+func ResetCurrentEvent() {
+	currentEvent = nil
+}
+
 // GetCurrentEvent returns the latest event or an error.
 // The error is only returned if there is no cached version of the
 // latest event, and it is impossible to make a connection to the database, or
@@ -327,7 +331,7 @@ func (e *EventsType) DeleteEvent(eventID int) (*models.Event, error) {
 		return nil, fmt.Errorf("should have deleted 1 event, deleted %v", deleteResult.DeletedCount)
 	}
 
-	currentEvent = nil
+	ResetCurrentEvent()
 
 	return event, nil
 }

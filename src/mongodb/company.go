@@ -463,8 +463,8 @@ func (c *CompaniesType) RemoveEmployer(companyID primitive.ObjectID, companyRep 
 	return &updatedCompany, nil
 }
 
-// AddCommunication adds a models.Thread to a company's participation's list of communications (related to the current event).
-func (c *CompaniesType) AddCommunication(companyID primitive.ObjectID, threadID primitive.ObjectID) (*models.Company, error) {
+// AddThread adds a models.Thread to a company's participation's list of communications (related to the current event).
+func (c *CompaniesType) AddThread(companyID primitive.ObjectID, threadID primitive.ObjectID) (*models.Company, error) {
 
 	currentEvent, err := Events.GetCurrentEvent()
 

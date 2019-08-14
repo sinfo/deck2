@@ -17,43 +17,63 @@ type ThreadsType struct {
 	Context    context.Context
 }
 
-// CreateThreadsData contains data needed to create a thread
-type CreateThreadsData struct {
-	Meeting		*primitive.ObjectID
-	Kind 		models.ThreadKind
+type CreateThreadData struct {
+	Entry       primitive.ObjectID
+	Meeting     *primitive.ObjectID
+	Kind        models.ThreadKind
+	Subscribers []primitive.ObjectID
 }
 
-// GetThread finds a thread based on id
-func (t *ThreadsType) GetThread(id primitive.ObjectID) (*models.Thread, error){
+// CreateThread creates a new thread and saves it to the database
+func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error) {
+
+	query := bson.M{
+		"entry":       data.Entry,
+		"comments":    []primitive.ObjectID{},
+		"status":      models.ThreadStatusPending,
+		"kind":        data.Kind,
+		"subscribers": data.Subscribers,
+	}
+
+	if data.Meeting != nil {
+		query["meeting"] = *data.Meeting
+	}
+
+	insertResult, err := t.Collection.InsertOne(t.Context, query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	newThread, err := t.GetThread(insertResult.InsertedID.(primitive.ObjectID))
+
+	if err != nil {
+		log.Println("Error finding created thread", err)
+		return nil, err
+	}
+
+	return newThread, nil
+}
+
+// GetThread gets a thread by its ID.
+func (t *ThreadsType) GetThread(threadID primitive.ObjectID) (*models.Thread, error) {
 	var thread models.Thread
 
-	if err := t.Collection.FindOne(t.Context, bson.M{"_id": id}).Decode(&thread); err != nil{
+	err := t.Collection.FindOne(t.Context, bson.M{"_id": threadID}).Decode(&thread)
+	if err != nil {
 		return nil, err
 	}
 
 	return &thread, nil
 }
 
-// CreateThread creates a thread
-func (t *ThreadsType) CreateThread( data CreateThreadsData) (*models.Thread, error){
+// DeleteThread deletes a thread by its ID.
+func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread, error) {
+
 	var thread models.Thread
 
-	var c = bson.M{
-		"kind": data.Kind,
-	}
-
-	if data.Meeting != nil{
-		c["meeting"] = data.Meeting
-	}
-
-	insertResult, err := t.Collection.InsertOne(t.Context, c)
-
+	err := t.Collection.FindOneAndDelete(t.Context, bson.M{"_id": threadID}).Decode(&thread)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := t.Collection.FindOne(t.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&thread); err != nil {
-		log.Println("Error creating a meeting:", err)
 		return nil, err
 	}
 

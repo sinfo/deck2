@@ -23,13 +23,13 @@ var (
 		Name:    "Member1",
 		Image:   "Image1.png",
 		Istid:   "ist123456",
-		SinfoID: "john.doe",
+		SINFOID: "john.doe",
 	}
 	Member2Data = mongodb.CreateMemberData{
 		Name:    "Member2",
 		Image:   "Image2.png",
 		Istid:   "ist654321",
-		SinfoID: "mary.jane",
+		SINFOID: "mary.jane",
 	}
 	Member1 *models.Member
 	Member2 *models.Member

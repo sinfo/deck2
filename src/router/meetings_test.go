@@ -347,7 +347,7 @@ func TestGetMeetingsCompany(t *testing.T){
 	_, err = mongodb.Meetings.CreateMeeting(Meeting2Data)
 	assert.NilError(t, err)
 
-	var ctd = mongodb.CreateThreadsData{
+	var ctd = mongodb.CreateThreadData{
 		Meeting: &Meeting1.ID,
 		Kind:	models.ThreadKindMeeting,
 	}
@@ -355,7 +355,7 @@ func TestGetMeetingsCompany(t *testing.T){
 	thread, err := mongodb.Threads.CreateThread(ctd)
 	assert.NilError(t, err)
 
-	company, err = mongodb.Companies.AddCommunication(company.ID, thread.ID)
+	company, err = mongodb.Companies.AddThread(company.ID, thread.ID)
 	assert.NilError(t, err)
 
 	// End setup
@@ -424,7 +424,7 @@ func TestGetMeetingsEventCompany(t *testing.T){
 	_, err = mongodb.Meetings.CreateMeeting(Meeting2Data)
 	assert.NilError(t, err)
 
-	var ctd = mongodb.CreateThreadsData{
+	var ctd = mongodb.CreateThreadData{
 		Meeting: &Meeting1.ID,
 		Kind:	models.ThreadKindMeeting,
 	}
@@ -432,7 +432,7 @@ func TestGetMeetingsEventCompany(t *testing.T){
 	thread, err := mongodb.Threads.CreateThread(ctd)
 	assert.NilError(t, err)
 
-	company, err = mongodb.Companies.AddCommunication(company.ID, thread.ID)
+	company, err = mongodb.Companies.AddThread(company.ID, thread.ID)
 	assert.NilError(t, err)
 
 	ced = mongodb.CreateEventData{

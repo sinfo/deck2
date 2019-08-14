@@ -148,6 +148,9 @@
 		"/companies/{id}/participation": {
 			"$ref": "./endpoints/companies-id-participation.json"
 		},
+		"/companies/{id}/thread": {
+			"$ref": "./endpoints/companies-id-thread.json"
+		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"
 		},
@@ -168,6 +171,12 @@
 		},
 		"/items/{id}": {
 			"$ref": "./endpoints/items-id.json"
+		},
+		"/threads/{id}": {
+			"$ref": "./endpoints/threads-id.json"
+		},
+		"/posts/{id}": {
+			"$ref": "./endpoints/posts-id.json"
 		},
 		"/public/members":{
 			"$ref": "./endpoints/public-members.json"

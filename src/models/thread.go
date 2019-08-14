@@ -6,11 +6,21 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 type ThreadKind string
 
 const (
+	ThreadKindTemplate  ThreadKind = "TEMPLATE"
 	ThreadKindTo        ThreadKind = "TO"
 	ThreadKindFrom      ThreadKind = "FROM"
 	ThreadKindPhoneCall ThreadKind = "PHONE_CALL"
 	ThreadKindMeeting   ThreadKind = "MEETING"
 )
+
+// IsValid check the validity the thread kind
+func (tk ThreadKind) IsValid() bool {
+	return tk != ThreadKindTemplate &&
+		tk != ThreadKindTo &&
+		tk != ThreadKindFrom &&
+		tk != ThreadKindPhoneCall &&
+		tk != ThreadKindMeeting
+}
 
 // ThreadStatus is the status of the thread
 type ThreadStatus string
@@ -20,6 +30,11 @@ const (
 	ThreadStatusReviewed ThreadStatus = "REVIEWED"
 	ThreadStatusPending  ThreadStatus = "PENDING"
 )
+
+// IsValid check the validity the thread status
+func (ts ThreadStatus) IsValid() bool {
+	return ts != ThreadStatusApproved && ts != ThreadStatusReviewed && ts != ThreadStatusPending
+}
 
 type Thread struct {
 

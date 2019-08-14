@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// TeamsType contains database information on teams 
+// TeamsType contains database information on teams
 type TeamsType struct {
 	Collection *mongo.Collection
 	Context    context.Context
@@ -339,7 +339,7 @@ func (t *TeamsType) DeleteTeamMember(id, memberID primitive.ObjectID) (*models.T
 func (t *TeamsType) AddMeeting(id, meeting primitive.ObjectID) (*models.Team, error){
 	
 	team, err := t.GetTeam(id)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -356,7 +356,7 @@ func (t *TeamsType) AddMeeting(id, meeting primitive.ObjectID) (*models.Team, er
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err = t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id":id}, updateQuery, optionsQuery).Decode(&result); err != nil{
+	if err = t.Collection.FindOneAndUpdate(t.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&result); err != nil {
 		return nil, err
 	}
 
@@ -364,14 +364,14 @@ func (t *TeamsType) AddMeeting(id, meeting primitive.ObjectID) (*models.Team, er
 }
 
 // DeleteTeamMeeting removes a meeting from a team
-func (t *TeamsType) DeleteTeamMeeting(teamID, meetingID primitive.ObjectID) (*models.Meeting, error){
+func (t *TeamsType) DeleteTeamMeeting(teamID, meetingID primitive.ObjectID) (*models.Meeting, error) {
 
 	team, err := t.GetTeam(teamID)
 	if err != nil {
 		return nil, errors.New("Team not found")
 	}
 
-	if !team.HasMeeting(meetingID){
+	if !team.HasMeeting(meetingID) {
 		return nil, errors.New("Meeting not in team")
 	}
 
@@ -418,12 +418,11 @@ func (t *TeamsType) GetTeamPublic(teamID primitive.ObjectID) (*models.TeamPublic
 	}
 
 	return &models.TeamPublic{
-		ID: team.ID,
-		Name: team.Name,
+		ID:      team.ID,
+		Name:    team.Name,
 		Members: team.Members,
 	}, nil
 }
-
 
 // GetTeamsPublic gets all teams from an event and returns only public information
 func (t *TeamsType) GetTeamsPublic(options GetTeamsOptions) ([]*models.TeamPublic, error) {
@@ -432,32 +431,32 @@ func (t *TeamsType) GetTeamsPublic(options GetTeamsOptions) ([]*models.TeamPubli
 	var err error
 
 	if options.Event != nil {
-		event, err  = Events.GetEvent(*options.Event)
-		if err != nil{
+		event, err = Events.GetEvent(*options.Event)
+		if err != nil {
 			return nil, err
 		}
-	} else{
-		event, err = Events.GetCurrentEvent(); 
+	} else {
+		event, err = Events.GetCurrentEvent()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	for _,s := range event.Teams {
-		team, err := t.GetTeamPublic(s);
+	for _, s := range event.Teams {
+		team, err := t.GetTeamPublic(s)
 		if err != nil {
 			return nil, err
 		}
-		if options.Name == nil{
-			if options.Member == nil{
+		if options.Name == nil {
+			if options.Member == nil {
 				teams = append(teams, team)
-			}else if team.HasMember(*options.Member){
+			} else if team.HasMember(*options.Member) {
 				teams = append(teams, team)
 			}
-		} else if strings.Contains(strings.ToLower(team.Name),strings.ToLower(*options.Name)){
-			if options.Member == nil{
+		} else if strings.Contains(strings.ToLower(team.Name), strings.ToLower(*options.Name)) {
+			if options.Member == nil {
 				teams = append(teams, team)
-			}else if team.HasMember(*options.Member){
+			} else if team.HasMember(*options.Member) {
 				teams = append(teams, team)
 			}
 		}
@@ -465,4 +464,3 @@ func (t *TeamsType) GetTeamsPublic(options GetTeamsOptions) ([]*models.TeamPubli
 
 	return teams, nil
 }
-
