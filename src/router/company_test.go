@@ -12,6 +12,7 @@ import (
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gotest.tools/assert"
 )
 
@@ -112,6 +113,8 @@ func TestAddCompanyParticipation(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
+	mongodb.ResetCurrentEvent()
+
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
@@ -134,10 +137,11 @@ func TestAddCompanyParticipation(t *testing.T) {
 		Name:    "Member",
 		Image:   "IMG",
 		Istid:   "ist123456",
-		SinfoID: "sinfoID",
+		SINFOID: "sinfoID",
 	}
 
 	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
 
 	utmd := mongodb.UpdateTeamMemberData{
 		Member: &newMember.ID,
@@ -176,4 +180,481 @@ func TestAddCompanyParticipation(t *testing.T) {
 	assert.Equal(t, updatedCompany.Participations[0].Event, Event1.ID)
 	assert.Equal(t, updatedCompany.Participations[0].Member, newMember.ID)
 
+}
+
+func TestAddCompanyThread(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
+	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleMember
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	updatedCompany, err := mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	var text = "some text"
+	var meeting *mongodb.CreateMeetingData
+	var kind = models.ThreadKindTo
+
+	atd := &addThreadData{
+		Text:    &text,
+		Meeting: meeting,
+		Kind:    &kind,
+	}
+
+	b, errMarshal := json.Marshal(atd)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/thread", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedCompany)
+
+	assert.Equal(t, updatedCompany.ID, newCompany.ID)
+	assert.Equal(t, len(updatedCompany.Participations), 1)
+	assert.Equal(t, updatedCompany.Participations[0].Event, Event1.ID)
+	assert.Equal(t, len(updatedCompany.Participations[0].Communications), 1)
+
+	threadID := updatedCompany.Participations[0].Communications[0]
+
+	thread, err := mongodb.Threads.GetThread(threadID)
+	assert.NilError(t, err)
+
+	thread.Kind = kind
+	thread.Status = models.ThreadStatusPending
+
+	post, err := mongodb.Posts.GetPost(thread.Entry)
+	assert.NilError(t, err)
+
+	assert.Equal(t, post.Member, credentials.ID)
+	assert.Equal(t, post.Text, text)
+}
+
+func TestAddCompanyThreadInvalidPayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
+	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleMember
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	_, err = mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	type InvalidPayload struct {
+		Text string
+	}
+
+	invalidPayload := &InvalidPayload{Text: "some text"}
+
+	b, errMarshal := json.Marshal(invalidPayload)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/thread", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestAddCompanyThreadCompanyNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
+	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	res, err := executeRequest("POST", "/companies/"+primitive.NewObjectID().Hex()+"/thread", bytes.NewBuffer([]byte{}))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestAddCompanyThreadNoParticipation(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
+	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleMember
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	var text = "some text"
+	var meeting *mongodb.CreateMeetingData
+	var kind = models.ThreadKindTo
+
+	atd := &addThreadData{
+		Text:    &text,
+		Meeting: meeting,
+		Kind:    &kind,
+	}
+
+	b, errMarshal := json.Marshal(atd)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/thread", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusExpectationFailed)
+}
+
+func TestAddCompanyThreadMeeting(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
+	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleMember
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	updatedCompany, err := mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	var text = "some text"
+	var place = "some place"
+	var participants = models.MeetingParticipants{
+		Members:     []primitive.ObjectID{},
+		CompanyReps: []primitive.ObjectID{},
+	}
+	var meetingData = mongodb.CreateMeetingData{
+		Begin:        &TimeBefore,
+		End:          &TimeNow,
+		Place:        &place,
+		Participants: &participants,
+	}
+	var kind = models.ThreadKindMeeting
+
+	atd := &addThreadData{
+		Text:    &text,
+		Meeting: &meetingData,
+		Kind:    &kind,
+	}
+
+	b, errMarshal := json.Marshal(atd)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/thread", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedCompany)
+
+	assert.Equal(t, updatedCompany.ID, newCompany.ID)
+	assert.Equal(t, len(updatedCompany.Participations), 1)
+	assert.Equal(t, updatedCompany.Participations[0].Event, Event1.ID)
+	assert.Equal(t, len(updatedCompany.Participations[0].Communications), 1)
+
+	threadID := updatedCompany.Participations[0].Communications[0]
+
+	thread, err := mongodb.Threads.GetThread(threadID)
+	assert.NilError(t, err)
+
+	thread.Kind = kind
+	thread.Status = models.ThreadStatusPending
+
+	meeting, err := mongodb.Meetings.GetMeeting(*thread.Meeting)
+	assert.NilError(t, err)
+
+	assert.Equal(t, meeting.Place, place)
+	assert.Equal(t, len(meeting.Participants.Members), 0)
+	assert.Equal(t, len(meeting.Participants.CompanyReps), 0)
+	assert.Equal(t, meeting.Begin.Sub(TimeBefore).Seconds() < 10e-3, true) // millisecond precision
+	assert.Equal(t, meeting.End.Sub(TimeNow).Seconds() < 10e-3, true)      // millisecond precision
+
+	post, err := mongodb.Posts.GetPost(thread.Entry)
+	assert.NilError(t, err)
+
+	assert.Equal(t, post.Member, credentials.ID)
+	assert.Equal(t, post.Text, text)
+}
+
+func TestAddCompanyThreadMeetingDataMissing(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
+	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleMember
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	_, err = mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	var text = "some text"
+	var meetingData = mongodb.CreateMeetingData{}
+	var kind = models.ThreadKindMeeting
+
+	atd := &addThreadData{
+		Text:    &text,
+		Meeting: &meetingData,
+		Kind:    &kind,
+	}
+
+	b, errMarshal := json.Marshal(atd)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/thread", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
 }

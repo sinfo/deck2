@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"io"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -28,13 +28,8 @@ type CreateMeetingData struct {
 	Participants *models.MeetingParticipants `json:"participants"` // optional
 }
 
-// ParseBody fills the CreateItemData from a body
-func (cmd *CreateMeetingData) ParseBody(body io.Reader) error {
-
-	if err := json.NewDecoder(body).Decode(cmd); err != nil {
-		return err
-	}
-
+// Validate the data for meeting creation
+func (cmd *CreateMeetingData) Validate() error {
 	if cmd.Begin == nil {
 		return errors.New("no begin date given")
 	}
@@ -49,6 +44,20 @@ func (cmd *CreateMeetingData) ParseBody(body io.Reader) error {
 
 	if cmd.Place == nil {
 		return errors.New("no place given")
+	}
+
+	return nil
+}
+
+// ParseBody fills the CreateItemData from a body
+func (cmd *CreateMeetingData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(cmd); err != nil {
+		return err
+	}
+
+	if err := cmd.Validate(); err != nil {
+		return err
 	}
 
 	return nil
@@ -115,4 +124,3 @@ func (m *MeetingsType) DeleteMeeting(meetingID primitive.ObjectID) (*models.Meet
 
 	return &meeting, nil
 }
-

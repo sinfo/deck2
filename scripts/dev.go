@@ -31,6 +31,7 @@ func onError(err error) {
 	mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	mongodb.Members.Collection.Drop(mongodb.Members.Context)
 	mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
 
 	log.Fatal(err)
 }
@@ -45,7 +46,7 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Print("****** Development script ******\n")
-	fmt.Print("****** On error, drops events, teams and members collections ******\n\n")
+	fmt.Print("****** On error, drops events, teams, companies and members collections ******\n\n")
 
 	fmt.Print("Member name: ")
 	text, _ = reader.ReadString('\n')
@@ -105,7 +106,7 @@ func main() {
 	cmd := mongodb.CreateMemberData{
 		Name:    memberName,
 		Istid:   "ist12345",
-		SinfoID: memberSINFOID,
+		SINFOID: memberSINFOID,
 	}
 
 	member, err := mongodb.Members.CreateMember(cmd)

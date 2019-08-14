@@ -132,6 +132,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
 	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 
 	// event handlers
 	eventRouter := r.PathPrefix("/events").Subrouter()
@@ -199,6 +200,14 @@ func InitializeRouter() {
 	meetingRouter.HandleFunc("", authMember(createMeeting)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}", authMember(getMeeting)).Methods("GET")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
+
+	// threads handlers
+	threadRouter := r.PathPrefix("/threads").Subrouter()
+	threadRouter.HandleFunc("/{id}", authMember(getThread)).Methods("GET")
+
+	// posts handlers
+	postRouter := r.PathPrefix("/posts").Subrouter()
+	postRouter.HandleFunc("/{id}", authMember(getPost)).Methods("GET")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
