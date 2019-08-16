@@ -16,16 +16,25 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// MeetingsType contains important database information on Meetings
 type MeetingsType struct {
 	Collection *mongo.Collection
 	Context    context.Context
 }
 
+// CreateMeetingData contains data needed to create a new meeting
 type CreateMeetingData struct {
 	Begin        *time.Time                  `json:"begin"`
 	End          *time.Time                  `json:"end"`
 	Place        *string                     `json:"place"`
 	Participants *models.MeetingParticipants `json:"participants"` // optional
+}
+
+// GetMeetingsOptions contains data that will be used as filters to get meetings
+type GetMeetingsOptions struct {
+	Event	*int
+	Team	*primitive.ObjectID
+	Company	*primitive.ObjectID
 }
 
 // Validate the data for meeting creation
@@ -50,7 +59,7 @@ func (cmd *CreateMeetingData) Validate() error {
 }
 
 // ParseBody fills the CreateItemData from a body
-func (cmd *CreateMeetingData) ParseBody(body io.Reader) error {
+func (cmd *CreateMeetingData)ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(cmd); err != nil {
 		return err
@@ -124,3 +133,92 @@ func (m *MeetingsType) DeleteMeeting(meetingID primitive.ObjectID) (*models.Meet
 
 	return &meeting, nil
 }
+
+// GetMeetings gets teams by event, company, company and event, or team.
+func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, error){
+	var meetings = make([]*models.Meeting, 0)
+	var meetingID = make([]primitive.ObjectID, 0)
+
+	// Query functions as an AND. Companies have different participations in diferent events,
+	// but not teams
+	if data.Team != nil {
+		if data.Event != nil || data.Company != nil{
+			return meetings, nil
+		}
+		
+		team, err := Teams.GetTeam(*data.Team)
+		if err != nil{
+			return nil, err
+		}
+		meetingID = append(meetingID, team.Meetings...)
+	}else if data.Company != nil {
+		company, err := Companies.GetCompany(*data.Company)
+		if err != nil{
+			return nil, err
+		}
+		if data.Event != nil{
+			for _, s := range company.Participations{
+				if s.Event == *data.Event{
+					for _, t := range s.Communications{
+						thread, err := Threads.GetThread(t)
+						if err != nil{
+							return nil, err
+						}
+						if thread.Kind == models.ThreadKindMeeting{
+							meetingID = append(meetingID, *thread.Meeting)
+						}
+					}
+				}
+			} 
+		}else {
+			for _, s := range company.Participations{
+				for _, t := range s.Communications{
+					thread, err := Threads.GetThread(t)
+					if err != nil{
+						return nil, err
+					}
+					if thread.Kind == models.ThreadKindMeeting{
+						meetingID = append(meetingID, *thread.Meeting)
+					}
+				}
+			}
+		}
+	}else if data.Event != nil{
+		event, err := Events.GetEvent(*data.Event)
+		if err != nil{
+			return nil, err
+		}
+		meetingID =append(meetingID, event.Meetings...)
+	}else{
+		cur, err := m.Collection.Find(m.Context, bson.M{})
+		if err != nil{
+			return nil, err
+		}
+		for cur.Next(m.Context){
+			var e models.Meeting
+			err := cur.Decode(&e)
+			if err != nil{
+				return nil, err
+			}
+			meetings = append(meetings, &e)
+		}
+
+		if err := cur.Err(); err != nil {
+			return nil, err
+		}
+	
+		cur.Close(m.Context)
+		return meetings, nil
+	}
+
+	for _, s := range meetingID{
+		meeting, err := m.GetMeeting(s)
+		if err != nil {
+			return nil, err
+		}
+		meetings = append(meetings, meeting)
+	}
+
+	return meetings, nil
+}
+

@@ -94,7 +94,7 @@ func InitializeDatabase() {
 
 	Threads = &ThreadsType{
 		Collection: db.Collection("threads"),
-		Context:    ctx,
+		Context:	ctx,
 	}
 
 	Posts = &PostsType{

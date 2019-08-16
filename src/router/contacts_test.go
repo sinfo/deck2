@@ -80,10 +80,16 @@ func TestGetContacts(t *testing.T){
 	Member2, err := mongodb.Members.CreateMember(Member2Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.CreateMemberContact(Member1.ID, Contact1Data)
+	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
 	assert.NilError(t, err)
 
-	Member2, err  = mongodb.Members.CreateMemberContact(Member2.ID, Contact2Data)
+	Contact2, err := mongodb.Contacts.CreateContact(Contact2Data)
+	assert.NilError(t, err)
+
+	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	assert.NilError(t, err)
+
+	Member2, err  = mongodb.Members.UpdateContact(Member2.ID, Contact2.ID)
 	assert.NilError(t, err)
 
 	Contact1, err = mongodb.Contacts.GetContact(Member1.Contact)
@@ -157,7 +163,10 @@ func TestGetContact(t *testing.T){
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.CreateMemberContact(Member1.ID, Contact1Data)
+	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
+	assert.NilError(t, err)
+
+	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	var contact models.Contact
@@ -189,7 +198,10 @@ func TestUpdateContact(t *testing.T){
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.CreateMemberContact(Member1.ID, Contact1Data)
+	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
+	assert.NilError(t, err)
+
+	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	var contact models.Contact
@@ -221,7 +233,10 @@ func TestAddPhone(t *testing.T){
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.CreateMemberContact(Member1.ID, Contact1Data)
+	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
+	assert.NilError(t, err)
+
+	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	b, errMarshal := json.Marshal(Contact2Phone)
@@ -254,7 +269,10 @@ func TestAddMail(t *testing.T){
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.CreateMemberContact(Member1.ID, Contact1Data)
+	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
+	assert.NilError(t, err)
+
+	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	b, errMarshal := json.Marshal(Contact2Mail)
@@ -287,7 +305,10 @@ func TestUpdatePhone(t *testing.T){
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.CreateMemberContact(Member1.ID, Contact1Data)
+	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
+	assert.NilError(t,err)
+
+	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	phones := append(make([]models.ContactPhone, 0), Contact2Phone)
@@ -322,7 +343,10 @@ func TestUpdateMail(t *testing.T){
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.CreateMemberContact(Member1.ID, Contact1Data)
+	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
+	assert.NilError(t,err)
+
+	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	mails := append(make([]models.ContactMail, 0), Contact2Mail)
@@ -357,7 +381,10 @@ func TestUpdateSocials(t *testing.T){
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.CreateMemberContact(Member1.ID, Contact1Data)
+	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
+	assert.NilError(t,err)
+
+	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	b, errMarshal := json.Marshal(Contact2Socials)

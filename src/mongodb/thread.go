@@ -4,14 +4,14 @@ import (
 	"context"
 	"log"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/sinfo/deck2/src/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// ThreadsType contains important database information on Meetings
 type ThreadsType struct {
 	Collection *mongo.Collection
 	Context    context.Context

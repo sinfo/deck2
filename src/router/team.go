@@ -197,7 +197,13 @@ func addTeamMeeting(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	team, err := mongodb.Teams.AddTeamMeeting(id, cmd)
+	meeting, err := mongodb.Meetings.CreateMeeting(cmd)
+	if err != nil {
+		http.Error(w, "Could not create team", http.StatusExpectationFailed)
+		return
+	}
+
+	team, err := mongodb.Teams.AddMeeting(id, meeting.ID)
 	if err != nil{
 		http.Error(w, "Could not find team", http.StatusNotFound)
 		return

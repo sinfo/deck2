@@ -59,5 +59,60 @@
                 "description": "Unauthorized"
             }
         }
+    },"get": {
+        "tags": [
+            "meetings"
+        ],
+        "summary": "Gets all meetings",
+        "operationId": "getMeetings",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Meeting from this event",
+                "type": "integer",
+                "format": "int64"
+            },
+            {
+                "in": "query",
+                "name": "team",
+                "description": "Meeting from this team",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "company",
+                "description": "Meeting from this company",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Meetings filtered by query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/meeting.json"
+                    }
+                }
+            },
+            "400": {
+                "description": "Bad query"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
     }
 }

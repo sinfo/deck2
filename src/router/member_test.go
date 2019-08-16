@@ -456,7 +456,8 @@ func TestCreateMemberContact(t *testing.T){
 
 }
 
-func TestUpdateMemberContactBadID(t *testing.T){
+func TestUpdateContactBadID(t *testing.T){
+	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 
 	data := mongodb.CreateContactData{
 		Phones : append(make([]models.ContactPhone, 0), models.ContactPhone{Phone:"a", Valid:true}),
@@ -473,7 +474,7 @@ func TestUpdateMemberContactBadID(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestDeleteMemberNotification(t *testing.T) {
+func TestDeleteNotification(t *testing.T) {
 
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -486,14 +487,14 @@ func TestDeleteMemberNotification(t *testing.T) {
 	notifarr := make([]primitive.ObjectID, 0)
 	notifarr = append(notifarr, notifID)
 
-	dmnd := mongodb.DeleteMemberNotificationData{
+	dmnd := mongodb.DeleteNotificationData{
 		Notification: notifID,
 	}
 
 	b, errMarshal := json.Marshal(dmnd)
 	assert.NilError(t, errMarshal)
 
-	Member2, err := mongodb.Members.UpdateMemberNotification(Member1.ID, notifarr)
+	Member2, err := mongodb.Members.UpdateNotification(Member1.ID, notifarr)
 	assert.NilError(t, err)
 	assert.Equal(t, Member1.ID, Member2.ID)
 	assert.Equal(t, len(Member2.Notifications), 1)
@@ -512,7 +513,7 @@ func TestDeleteMemberNotification(t *testing.T) {
 
 }
 
-func TestDeleteMemberNotificationWrongIDS(t *testing.T) {
+func TestDeleteNotificationWrongIDS(t *testing.T) {
 
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -525,14 +526,14 @@ func TestDeleteMemberNotificationWrongIDS(t *testing.T) {
 	notifarr := make([]primitive.ObjectID, 0)
 	notifarr = append(notifarr, notifID)
 
-	dmnd := mongodb.DeleteMemberNotificationData{
+	dmnd := mongodb.DeleteNotificationData{
 		Notification: primitive.NewObjectID(),
 	}
 
 	b, errMarshal := json.Marshal(dmnd)
 	assert.NilError(t, errMarshal)
 
-	Member2, err := mongodb.Members.UpdateMemberNotification(Member1.ID, notifarr)
+	Member2, err := mongodb.Members.UpdateNotification(Member1.ID, notifarr)
 	assert.NilError(t, err)
 	assert.Equal(t, Member1.ID, Member2.ID)
 	assert.Equal(t, len(Member2.Notifications), 1)
@@ -542,7 +543,7 @@ func TestDeleteMemberNotificationWrongIDS(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 
-	dmnd = mongodb.DeleteMemberNotificationData{
+	dmnd = mongodb.DeleteNotificationData{
 		Notification: notifID,
 	}
 
