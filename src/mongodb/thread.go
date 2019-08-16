@@ -104,3 +104,27 @@ func (t *ThreadsType) AddCommentToThread(threadID primitive.ObjectID, postID pri
 
 	return &updatedThread, nil
 }
+
+// RemoveCommentFromThread removes a comment Post from a thread
+func (t *ThreadsType) RemoveCommentFromThread(threadID primitive.ObjectID, postID primitive.ObjectID) (*models.Thread, error) {
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"comments": postID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": threadID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedThread models.Thread
+
+	if err := t.Collection.FindOneAndUpdate(t.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedThread); err != nil {
+		log.Println("error removing comment from thread:", err)
+		return nil, err
+	}
+
+	return &updatedThread, nil
+}

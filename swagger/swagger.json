@@ -178,6 +178,9 @@
 		"/threads/{id}/comments": {
 			"$ref": "./endpoints/threads-id-comments.json"
 		},
+		"/threads/{threadID}/comments/{postID}": {
+			"$ref": "./endpoints/threads-id-comments-id.json"
+		},
 		"/posts/{id}": {
 			"$ref": "./endpoints/posts-id.json"
 		},

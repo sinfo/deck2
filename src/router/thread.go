@@ -92,3 +92,36 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedThread)
 }
+
+func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
+	postID, _ := primitive.ObjectIDFromHex(params["postID"])
+
+	if _, err := mongodb.Threads.GetThread(threadID); err != nil {
+		http.Error(w, "Thread not found", http.StatusNotFound)
+		return
+	}
+
+	if _, err := mongodb.Posts.GetPost(postID); err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
+	updatedThread, err := mongodb.Threads.RemoveCommentFromThread(threadID, postID)
+	if err != nil {
+		http.Error(w, "Could not remove post from thread", http.StatusExpectationFailed)
+	}
+
+	if _, err := mongodb.Posts.DeletePost(postID); err != nil {
+		http.Error(w, "Could not delete post", http.StatusExpectationFailed)
+
+		// add the not deleted post to the thread again
+		if _, err := mongodb.Threads.AddCommentToThread(threadID, postID); err != nil {
+			log.Printf("error re-adding post to thread: %s\n", err.Error())
+		}
+	}
+
+	json.NewEncoder(w).Encode(updatedThread)
+}
