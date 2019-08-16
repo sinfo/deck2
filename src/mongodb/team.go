@@ -336,8 +336,8 @@ func (t *TeamsType) DeleteTeamMember(id, memberID primitive.ObjectID) (*models.T
 }
 
 // AddMeeting creates and adds a meeting to a team
-func (t *TeamsType) AddMeeting(id, meeting primitive.ObjectID) (*models.Team, error){
-	
+func (t *TeamsType) AddMeeting(id, meeting primitive.ObjectID) (*models.Team, error) {
+
 	team, err := t.GetTeam(id)
 	if err != nil {
 		return nil, err

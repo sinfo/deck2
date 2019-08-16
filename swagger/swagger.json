@@ -175,6 +175,9 @@
 		"/threads/{id}": {
 			"$ref": "./endpoints/threads-id.json"
 		},
+		"/threads/{id}/comments": {
+			"$ref": "./endpoints/threads-id-comments.json"
+		},
 		"/posts/{id}": {
 			"$ref": "./endpoints/posts-id.json"
 		},

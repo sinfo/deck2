@@ -25,6 +25,8 @@ func TestCreateCompany(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
 
+	mongodb.ResetCurrentEvent()
+
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
@@ -56,6 +58,8 @@ func TestCreateCompanyInvalidPayload(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
 
+	mongodb.ResetCurrentEvent()
+
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
@@ -80,6 +84,8 @@ func TestGetCompanies(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+
+	mongodb.ResetCurrentEvent()
 
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)

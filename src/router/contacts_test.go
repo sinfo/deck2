@@ -1,8 +1,8 @@
 package router
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
@@ -12,63 +12,63 @@ import (
 	"gotest.tools/assert"
 )
 
-var(
-	Contact1		*models.Contact
+var (
+	Contact1      *models.Contact
 	Contact1Phone = models.ContactPhone{
 		Phone: "1",
-		Valid:true,
+		Valid: true,
 	}
 	Contact1Socials = models.ContactSocials{
 		Facebook: "facebook",
-		Skype: "skype",
-		Github: "github",
-		Twitter: "twitter",
+		Skype:    "skype",
+		Github:   "github",
+		Twitter:  "twitter",
 		LinkedIn: "linkedin",
 	}
 	Contact1Mail = models.ContactMail{
-		Mail: "2",
+		Mail:     "2",
 		Personal: true,
-		Valid: true,
+		Valid:    true,
 	}
 	Contact1Data = mongodb.CreateContactData{
-		Phones: append(make([]models.ContactPhone, 0), Contact1Phone),
+		Phones:  append(make([]models.ContactPhone, 0), Contact1Phone),
 		Socials: Contact1Socials,
-		Mails: append(make([]models.ContactMail, 0), Contact1Mail),
+		Mails:   append(make([]models.ContactMail, 0), Contact1Mail),
 	}
-	Contact2		*models.Contact
+	Contact2      *models.Contact
 	Contact2Phone = models.ContactPhone{
 		Phone: "3",
-		Valid:true,
+		Valid: true,
 	}
 	Contact2Socials = models.ContactSocials{
 		Facebook: "facebook2",
-		Skype: "skype2",
-		Github: "github2",
-		Twitter: "twitter2",
+		Skype:    "skype2",
+		Github:   "github2",
+		Twitter:  "twitter2",
 		LinkedIn: "linkedin2",
 	}
 	Contact2Mail = models.ContactMail{
-		Mail: "4",
+		Mail:     "4",
 		Personal: true,
-		Valid: true,
+		Valid:    true,
 	}
 	Contact2Data = mongodb.CreateContactData{
-		Phones: append(make([]models.ContactPhone, 0), Contact2Phone),
+		Phones:  append(make([]models.ContactPhone, 0), Contact2Phone),
 		Socials: Contact2Socials,
-		Mails: append(make([]models.ContactMail, 0), Contact2Mail),
+		Mails:   append(make([]models.ContactMail, 0), Contact2Mail),
 	}
 )
 
-func containsContact(l []models.Contact, c *models.Contact) bool{
-	for _,s := range l{
-		if s.ID == c.ID{
+func containsContact(l []models.Contact, c *models.Contact) bool {
+	for _, s := range l {
+		if s.ID == c.ID {
 			return true
 		}
 	}
 	return false
 }
 
-func TestGetContacts(t *testing.T){
+func TestGetContacts(t *testing.T) {
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -86,10 +86,10 @@ func TestGetContacts(t *testing.T){
 	Contact2, err := mongodb.Contacts.CreateContact(Contact2Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
-	Member2, err  = mongodb.Members.UpdateContact(Member2.ID, Contact2.ID)
+	Member2, err = mongodb.Members.UpdateContact(Member2.ID, Contact2.ID)
 	assert.NilError(t, err)
 
 	Contact1, err = mongodb.Contacts.GetContact(Member1.Contact)
@@ -114,7 +114,7 @@ func TestGetContacts(t *testing.T){
 
 	//Phone on query
 
-	var query1 = "?phone="+url.QueryEscape(Contact1.Phones[0].Phone)
+	var query1 = "?phone=" + url.QueryEscape(Contact1.Phones[0].Phone)
 
 	res, err = executeRequest("GET", "/contacts"+query1, nil)
 	assert.NilError(t, err)
@@ -128,7 +128,7 @@ func TestGetContacts(t *testing.T){
 
 	//Mail on query
 
-	var query2 = "?mail="+url.QueryEscape(Contact2.Mails[0].Mail)
+	var query2 = "?mail=" + url.QueryEscape(Contact2.Mails[0].Mail)
 
 	res, err = executeRequest("GET", "/contacts"+query2, nil)
 	assert.NilError(t, err)
@@ -153,7 +153,7 @@ func TestGetContacts(t *testing.T){
 	assert.Equal(t, containsContact(contacts, Contact2), false)
 }
 
-func TestGetContact(t *testing.T){
+func TestGetContact(t *testing.T) {
 
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
@@ -166,7 +166,7 @@ func TestGetContact(t *testing.T){
 	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	var contact models.Contact
@@ -183,13 +183,13 @@ func TestGetContact(t *testing.T){
 
 }
 
-func TestGetContactBadId(t *testing.T){
+func TestGetContactBadId(t *testing.T) {
 	res, err := executeRequest("GET", "/contacts/wrong", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestUpdateContact(t *testing.T){
+func TestUpdateContact(t *testing.T) {
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -201,7 +201,7 @@ func TestUpdateContact(t *testing.T){
 	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	var contact models.Contact
@@ -224,7 +224,7 @@ func TestUpdateContact(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestAddPhone(t *testing.T){
+func TestAddPhone(t *testing.T) {
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -236,7 +236,7 @@ func TestAddPhone(t *testing.T){
 	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	b, errMarshal := json.Marshal(Contact2Phone)
@@ -260,7 +260,7 @@ func TestAddPhone(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestAddMail(t *testing.T){
+func TestAddMail(t *testing.T) {
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -272,7 +272,7 @@ func TestAddMail(t *testing.T){
 	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
 	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	b, errMarshal := json.Marshal(Contact2Mail)
@@ -296,7 +296,7 @@ func TestAddMail(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestUpdatePhone(t *testing.T){
+func TestUpdatePhone(t *testing.T) {
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -306,14 +306,14 @@ func TestUpdatePhone(t *testing.T){
 	assert.NilError(t, err)
 
 	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t,err)
+	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	phones := append(make([]models.ContactPhone, 0), Contact2Phone)
 
-	b, errMarshal := json.Marshal(mongodb.UpdatePhonesData{Phones : phones})
+	b, errMarshal := json.Marshal(mongodb.UpdatePhonesData{Phones: phones})
 	assert.NilError(t, errMarshal)
 
 	res, err := executeRequest("PUT", "/contacts/"+Member1.Contact.Hex()+"/phones", bytes.NewBuffer(b))
@@ -334,7 +334,7 @@ func TestUpdatePhone(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestUpdateMail(t *testing.T){
+func TestUpdateMail(t *testing.T) {
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -344,9 +344,9 @@ func TestUpdateMail(t *testing.T){
 	assert.NilError(t, err)
 
 	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t,err)
+	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	mails := append(make([]models.ContactMail, 0), Contact2Mail)
@@ -372,7 +372,7 @@ func TestUpdateMail(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestUpdateSocials(t *testing.T){
+func TestUpdateSocials(t *testing.T) {
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
@@ -382,9 +382,9 @@ func TestUpdateSocials(t *testing.T){
 	assert.NilError(t, err)
 
 	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t,err)
+	assert.NilError(t, err)
 
-	Member1, err  = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
 	assert.NilError(t, err)
 
 	b, errMarshal := json.Marshal(Contact2Socials)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -188,8 +187,6 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 	var member models.Member
 	var result models.AuthorizationCredentials
 
-	log.Println("sinfoID", sinfoID)
-
 	if err := m.Collection.FindOne(m.Context, bson.M{"sinfoid": sinfoID}).Decode(&member); err != nil {
 		return nil, err
 	}
@@ -207,8 +204,6 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 	if err != nil {
 		return nil, err
 	}
-
-	log.Println("passed")
 
 	var level = -1
 	var role models.TeamRole
@@ -263,9 +258,8 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 	return newMember, nil
 }
 
-
-// UpdateContact updates a member's contact 
-func (m *MembersType) UpdateContact(memberID, contactID primitive.ObjectID, ) (*models.Member, error){
+// UpdateContact updates a member's contact
+func (m *MembersType) UpdateContact(memberID, contactID primitive.ObjectID) (*models.Member, error) {
 
 	var member models.Member
 
