@@ -1,10 +1,10 @@
 {
-    "put": {
+    "post": {
         "tags": [
-            "packages", "items"
+            "companies", "packages"
         ],
-        "summary": "Updates a specific package's items (must have coordinator credentials)",
-        "operationId": "updatePackageItems",
+        "summary": "Adds a package on the current event to a company",
+        "operationId": "addCompanyPackage",
         "consumes": [
             "application/json"
         ],
@@ -20,21 +20,24 @@
             {
                 "in": "path",
                 "name": "id",
-                "description": "ID of the package",
+                "description": "ID of the company",
                 "required": true,
 				"type": "string"
             },
             {
                 "in": "body",
-                "name": "package",
-                "description": "New package data",
+                "name": "payload",
+                "description": "New participation information",
                 "required": true,
                 "schema": {
                     "type": "object",
                     "required": [
-                        "items"
+                        "name", "items", "price", "vat"
                     ],
                     "properties": {
+                        "name": {
+                            "type": "string"
+                        },
                         "items": {
                             "type": "array",
                             "items": {
@@ -45,9 +48,18 @@
                                     },
                                     "quantity": {
                                         "type": "integer"
+                                    },
+                                    "public": {
+                                        "type": "boolean"
                                     }
                                 }
                             }
+                        },
+                        "price": {
+                            "type": "integer"
+                        },
+                        "vat": {
+                            "type": "integer"
                         }
                     }
                 }
@@ -55,22 +67,22 @@
         ],
         "responses": {
             "200": {
-                "description": "Updated package",
+                "description": "Updated company",
                 "schema": {
-                    "$ref": "./models/package.json"
+                    "$ref": "./models/company.json"
                 }
             },
             "400": {
                 "description": "Invalid payload"
             },
+            "404": {
+                "description": "Company not found"
+            },
             "401": {
                 "description": "Unauthorized"
             },
-            "404": {
-                "description": "Invalid package ID"
-            },
             "417": {
-                "description": "Unable to update the package"
+                "description": "Couldn't add package to company"
             }
         }
     }

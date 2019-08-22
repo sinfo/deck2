@@ -1,0 +1,49 @@
+{
+    "get": {
+        "tags": [
+            "companies", "public"
+        ],
+        "summary": "Public endpoint for getting all companies",
+        "operationId": "getCompaniesPublic",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the company",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "event",
+                "description": "ID of the event",
+                "type": "integer"
+            },
+            {
+                "in": "query",
+                "name": "partenr",
+                "description": "Companies participating as partner",
+                "type": "boolean"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Companies filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/public-company.json"
+                    }
+                }
+            },
+            "417": {
+                "description": "Unable to get companies"
+            }
+        }
+    }
+}

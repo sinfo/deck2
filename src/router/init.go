@@ -116,6 +116,7 @@ func InitializeRouter() {
 
 	// public handlers
 	publicRouter := r.PathPrefix("/public").Subrouter()
+	publicRouter.HandleFunc("/companies", getCompaniesPublic).Methods("GET")
 	publicRouter.HandleFunc("/events", getEventsPublic).Methods("GET")
 	publicRouter.HandleFunc("/teams", getTeamsPublic).Methods("GET")
 	publicRouter.HandleFunc("/teams/{id}", getTeamPublic).Methods("GET")
@@ -132,6 +133,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
 	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 
 	// event handlers

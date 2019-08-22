@@ -1,0 +1,47 @@
+{
+	"type": "object",
+	"properties": {
+		"name": {
+			"type": "string"
+		},
+		"img": {
+			"type": "string"
+		},
+		"site": {
+			"type": "string"
+		},
+		"participation": {
+			"type": "object",
+			"properties": {
+				"event": {
+					"type": "integer"
+				},
+				"partner": {
+					"type": "boolean"
+				},
+				"package": {
+					"type": "object",
+					"properties": {
+						"name": {
+							"type": "string"
+						},
+						"items": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"item": {
+										"type": "string"
+									},
+									"quantity": {
+										"type": "integer"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

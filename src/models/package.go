@@ -12,6 +12,9 @@ type PackageItem struct {
 	// Quantity of the item, if applicable. For example, 2 posts on social networks, or
 	// 3 stand days on the event week.
 	Quantity int `json:"quantity" bson:"quantity"`
+
+	// Public: should this item be available publicly
+	Public bool `json:"public" bson:"public"`
 }
 
 // Package represents a bundle of items associated with a price to be presented to the companies.
@@ -31,4 +34,20 @@ type Package struct {
 
 	// Value of taxes in percentage (%). The total value will be value = Price * (1 + VAT).
 	VAT int `json:"vat" bson:"vat"`
+}
+
+type PackageItemPublic struct {
+
+	// Item is an _id of Item (see models.Item).
+	Item primitive.ObjectID `json:"item" bson:"item"`
+
+	// Quantity of the item, if applicable. For example, 2 posts on social networks, or
+	// 3 stand days on the event week.
+	Quantity int `json:"quantity" bson:"quantity"`
+}
+
+// PackagePublic is the public version of Package
+type PackagePublic struct {
+	Name  string              `json:"name" bson:"name"`
+	Items []PackageItemPublic `json:"items" bson:"items"`
 }

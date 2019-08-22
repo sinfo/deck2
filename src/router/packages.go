@@ -20,14 +20,6 @@ func createPackage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if the IDs are valid
-	for _, packageItem := range *cpd.Items {
-		if _, err := mongodb.Items.GetItem(packageItem.Item); err != nil {
-			http.Error(w, "Item ID not valid in list of items given", http.StatusNotFound)
-			return
-		}
-	}
-
 	newPackage, err := mongodb.Packages.CreatePackage(*cpd)
 
 	if err != nil {
@@ -55,14 +47,6 @@ func updatePackageItems(w http.ResponseWriter, r *http.Request) {
 	if err := upid.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
-	}
-
-	// check if the IDs are valid
-	for _, packageItem := range *upid.Items {
-		if _, err := mongodb.Items.GetItem(packageItem.Item); err != nil {
-			http.Error(w, "Item ID not valid in list of items given", http.StatusNotFound)
-			return
-		}
 	}
 
 	updatedPackage, err := mongodb.Packages.UpdatePackageItems(id, *upid)

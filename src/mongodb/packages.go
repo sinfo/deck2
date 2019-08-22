@@ -46,6 +46,12 @@ func (cpd *CreatePackageData) ParseBody(body io.Reader) error {
 		return errors.New("invalid vat")
 	}
 
+	for _, item := range *cpd.Items {
+		if _, err := Items.GetItem(item.Item); err != nil {
+			return errors.New("invalid item")
+		}
+	}
+
 	return nil
 }
 
@@ -107,6 +113,10 @@ func (upid *UpdatePackageItemsData) ParseBody(body io.Reader) error {
 		if packageItem.Quantity < 0 {
 			return errors.New("invalid value for quantity: must be positive integer")
 		}
+
+		if _, err := Items.GetItem(packageItem.Item); err != nil {
+			return errors.New("invalid item")
+		}
 	}
 
 	return nil
@@ -130,4 +140,49 @@ func (p *PackagesType) UpdatePackageItems(packageID primitive.ObjectID, data Upd
 	}
 
 	return &result, nil
+}
+
+// DeletePackage deletes a package by its ID
+func (p *PackagesType) DeletePackage(packageID primitive.ObjectID) (*models.Package, error) {
+	var result models.Package
+
+	err := p.Collection.FindOneAndDelete(p.Context, bson.M{"_id": packageID}).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// GetPackages gets an array of packages
+func (p *PackagesType) GetPackages() ([]*models.Package, error) {
+
+	var packages = make([]*models.Package, 0)
+
+	filter := bson.M{}
+
+	cur, err := p.Collection.Find(p.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(p.Context) {
+
+		// create a value into which the single document can be decoded
+		var p models.Package
+		err := cur.Decode(&p)
+		if err != nil {
+			return nil, err
+		}
+
+		packages = append(packages, &p)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(p.Context)
+
+	return packages, nil
 }

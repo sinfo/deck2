@@ -22,6 +22,13 @@ type CompaniesType struct {
 	Context    context.Context
 }
 
+// Cached version of the public companies for the current event
+var currentPublicCompanies *[]*models.CompanyPublic
+
+func ResetCurrentPublicCompanies() {
+	currentPublicCompanies = nil
+}
+
 type CreateCompanyData struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
@@ -71,6 +78,8 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 		log.Println("Error finding created company", err)
 		return nil, err
 	}
+
+	ResetCurrentPublicCompanies()
 
 	return newCompany, nil
 }
@@ -135,6 +144,146 @@ func (c *CompaniesType) GetCompanies(options GetCompaniesOptions) ([]*models.Com
 	return companies, nil
 }
 
+func companyToPublic(company models.Company, eventID int) (*models.CompanyPublic, error) {
+
+	public := models.CompanyPublic{
+		Name:  company.Name,
+		Image: company.Images.Public,
+		Site:  company.Site,
+	}
+
+	var participation *models.CompanyParticipation
+
+	for _, p := range company.Participations {
+		if p.Event == eventID {
+
+			if p.Status != models.Announced {
+				return nil, fmt.Errorf("company not announced on event %d", eventID)
+			}
+
+			participation = &p
+			break
+		}
+	}
+
+	if participation == nil {
+		return nil, fmt.Errorf("company not announced on event %d", eventID)
+	}
+
+	public.Participation = models.CompanyParticipationPublic{
+		Event:   eventID,
+		Partner: participation.Partner,
+		Package: models.PackagePublic{},
+	}
+
+	pack, err := Packages.GetPackage(participation.Package)
+	if err == nil {
+		public.Participation.Package = models.PackagePublic{
+			Name:  pack.Name,
+			Items: make([]models.PackageItemPublic, 0),
+		}
+
+		// add only public items
+		for _, item := range pack.Items {
+			if item.Public {
+				public.Participation.Package.Items = append(
+					public.Participation.Package.Items,
+					models.PackageItemPublic{
+						Item:     item.Item,
+						Quantity: item.Quantity,
+					})
+			}
+		}
+	}
+
+	return &public, nil
+}
+
+// GetCompaniesPublicOptions is the options to give to GetCompanies.
+// All the fields are optional, and as such we use pointers as a "hack" to deal
+// with non-existent fields.
+// The field is non-existent if it has a nil value.
+// This filter will behave like a logical *and*.
+type GetCompaniesPublicOptions struct {
+	EventID   *int
+	IsPartner *bool
+	Name      *string
+}
+
+// GetPublicCompanies gets all companies specified with a query to be shown publicly
+func (c *CompaniesType) GetPublicCompanies(options GetCompaniesPublicOptions) ([]*models.CompanyPublic, error) {
+
+	var public = make([]*models.CompanyPublic, 0)
+	var eventID int
+	var usingCurrentEvent = false
+
+	filter := bson.M{}
+
+	if options.EventID != nil {
+
+		filter["participations.event"] = options.EventID
+		eventID = *options.EventID
+
+	} else if currentPublicCompanies != nil {
+
+		// return cached value
+		return *currentPublicCompanies, nil
+
+	} else {
+
+		usingCurrentEvent = true
+		currentEvent, err := Events.GetCurrentEvent()
+		if err != nil {
+			return public, errors.New("error getting the current event")
+		}
+
+		filter["participations.event"] = currentEvent.ID
+		eventID = currentEvent.ID
+	}
+
+	if options.IsPartner != nil {
+		filter["participations.partner"] = options.IsPartner
+	}
+
+	if options.Name != nil {
+		filter["name"] = options.Name
+	}
+
+	cur, err := c.Collection.Find(c.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(c.Context) {
+
+		// create a value into which the single document can be decoded
+		var c models.Company
+		err := cur.Decode(&c)
+		if err != nil {
+			return nil, err
+		}
+
+		p, err := companyToPublic(c, eventID)
+		if err == nil {
+			public = append(public, p)
+		}
+
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(c.Context)
+
+	// update cached value
+	if usingCurrentEvent {
+		currentPublicCompanies = &public
+	}
+
+	return public, nil
+}
+
 // GetCompany gets a company by its ID.
 func (c *CompaniesType) GetCompany(companyID primitive.ObjectID) (*models.Company, error) {
 	var company models.Company
@@ -195,6 +344,8 @@ func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, memberID 
 		return nil, err
 	}
 
+	ResetCurrentPublicCompanies()
+
 	return &updatedCompany, nil
 }
 
@@ -226,6 +377,8 @@ func (c *CompaniesType) RemoveParticipation(companyID primitive.ObjectID) (*mode
 		log.Println("Error removing participation:", err)
 		return nil, err
 	}
+
+	ResetCurrentPublicCompanies()
 
 	return &updatedCompany, nil
 }
@@ -273,6 +426,8 @@ func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, step int) (*mod
 			return nil, err
 		}
 
+		ResetCurrentPublicCompanies()
+
 		return &updatedCompany, nil
 	}
 
@@ -306,6 +461,8 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 		log.Println("Error updating company's status:", err)
 		return nil, err
 	}
+
+	ResetCurrentPublicCompanies()
 
 	return &updatedCompany, nil
 }
@@ -344,6 +501,8 @@ func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateC
 		return nil, err
 	}
 
+	ResetCurrentPublicCompanies()
+
 	return &updatedCompany, nil
 }
 
@@ -367,6 +526,8 @@ func (c *CompaniesType) UpdateCompanyInternalImage(companyID primitive.ObjectID,
 		log.Println("error updating company:", err)
 		return nil, err
 	}
+
+	ResetCurrentPublicCompanies()
 
 	return &updatedCompany, nil
 }
@@ -392,6 +553,8 @@ func (c *CompaniesType) UpdateCompanyPublicImage(companyID primitive.ObjectID, u
 		return nil, err
 	}
 
+	ResetCurrentPublicCompanies()
+
 	return &updatedCompany, nil
 }
 
@@ -411,6 +574,8 @@ func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Com
 	if deleteResult.DeletedCount != 1 {
 		return nil, fmt.Errorf("should have deleted 1 company, deleted %v", deleteResult.DeletedCount)
 	}
+
+	ResetCurrentPublicCompanies()
 
 	return company, nil
 }
@@ -641,6 +806,8 @@ func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID pr
 		log.Println("Error updating company's participation's package:", err)
 		return nil, err
 	}
+
+	ResetCurrentPublicCompanies()
 
 	return &updatedCompany, nil
 }

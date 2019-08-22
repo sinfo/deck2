@@ -142,11 +142,17 @@
 		"/public/teams/{id}":{
 			"$ref": "./endpoints/public-teams-id.json"
 		},
+		"/public/companies": {
+			"$ref": "./endpoints/public-companies.json"
+		},
 		"/companies": {
 			"$ref": "./endpoints/companies.json"
 		},
 		"/companies/{id}/participation": {
 			"$ref": "./endpoints/companies-id-participation.json"
+		},
+		"/companies/{id}/participation/package": {
+			"$ref": "./endpoints/companies-id-participation-package.json"
 		},
 		"/companies/{id}/thread": {
 			"$ref": "./endpoints/companies-id-thread.json"

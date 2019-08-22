@@ -64,6 +64,47 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(companies)
 }
 
+func getCompaniesPublic(w http.ResponseWriter, r *http.Request) {
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetCompaniesPublicOptions{}
+
+	name := urlQuery.Get("name")
+	event := urlQuery.Get("event")
+	partner := urlQuery.Get("partner")
+
+	if len(event) > 0 {
+		eventID, err := strconv.Atoi(event)
+		if err != nil {
+			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+			return
+		}
+		options.EventID = &eventID
+	}
+
+	if len(partner) > 0 {
+		isPartner, err := strconv.ParseBool(partner)
+		if err != nil {
+			http.Error(w, "Invalid partner format", http.StatusBadRequest)
+			return
+		}
+		options.IsPartner = &isPartner
+	}
+
+	if len(name) > 0 {
+		options.Name = &name
+	}
+
+	publicCompanies, err := mongodb.Companies.GetPublicCompanies(options)
+
+	if err != nil {
+		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(publicCompanies)
+}
+
 func createCompany(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
@@ -254,6 +295,46 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 
 		if _, err := mongodb.Threads.DeleteThread(newThread.ID); err != nil {
 			log.Printf("error deleting thread: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+}
+
+func addCompanyPackage(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	var cpd = &mongodb.CreatePackageData{}
+
+	if err := cpd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	newPackage, err := mongodb.Packages.CreatePackage(*cpd)
+	if err != nil {
+		http.Error(w, "Could not create new package", http.StatusExpectationFailed)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdatePackage(companyID, newPackage.ID)
+	if err != nil {
+		http.Error(w, "Could not update company's package", http.StatusExpectationFailed)
+
+		// delete created package
+		if _, err := mongodb.Packages.DeletePackage(newPackage.ID); err != nil {
+			log.Printf("error deleting package: %s\n", err.Error())
 		}
 
 		return

@@ -17,6 +17,9 @@
 					},
 					"quantity": {
 						"type": "integer"
+					},
+					"public": {
+						"type": "boolean"
 					}
 				}
 			}

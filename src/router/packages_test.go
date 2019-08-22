@@ -122,7 +122,7 @@ func TestCreatePackageInvalidItemID(t *testing.T) {
 
 	res, err := executeRequest("POST", "/packages", bytes.NewBuffer(b))
 	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
 
 func TestUpdatePackageItems(t *testing.T) {
@@ -276,5 +276,5 @@ func TestUpdatePackageItemsInvalidItemID(t *testing.T) {
 
 	res, err := executeRequest("PUT", "/packages/"+newPackage.ID.Hex()+"/items", bytes.NewBuffer(b))
 	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
 }

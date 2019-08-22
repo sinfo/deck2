@@ -95,3 +95,29 @@ func (c *Company) ToBson() bson.M {
 		"site":        c.Site,
 	}
 }
+
+// CompanyParticipationPublic stores a company's participation info to be shown to everyone publicly.
+type CompanyParticipationPublic struct {
+
+	// Participation's event (ID of Event).
+	Event int `json:"event" bson:"event"`
+
+	// Is this company participating as a partner.
+	Partner bool `json:"partner" bson:"partner"`
+
+	// Participation's package is a Package _id (see models.Package).
+	Package PackagePublic `json:"package" bson:"package"`
+}
+
+// CompanyPublic represents a company to be contacted by the team, that will hopefully participate
+// on the event, and to be shown to everyone publicly.
+type CompanyPublic struct {
+	Name string `json:"name"`
+
+	// Company's image (public).
+	Image string `json:"img,omitempty"`
+
+	Site string `json:"site"`
+
+	Participation CompanyParticipationPublic `json:"participations,omitempty"`
+}

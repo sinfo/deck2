@@ -39,6 +39,9 @@
                                 },
                                 "quantity": {
                                     "type": "integer"
+                                },
+                                "public": {
+                                    "type": "boolean"
                                 }
                             }
                         },
@@ -64,9 +67,6 @@
             },
             "401": {
                 "description": "Unauthorized"
-            },
-            "404": {
-                "description": "Invalid item ID"
             },
             "417": {
                 "description": "Unable to create the package"

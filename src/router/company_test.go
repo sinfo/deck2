@@ -664,3 +664,302 @@ func TestAddCompanyThreadMeetingDataMissing(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
+
+func TestAddCompanyPackage(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleCoordinator
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	updatedCompany, err := mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	cid := mongodb.CreateItemData{Name: Item.Name, Type: Item.Type, Description: Item.Description, Price: Item.Price, VAT: Item.VAT}
+	item, err := mongodb.Items.CreateItem(cid)
+	assert.NilError(t, err)
+
+	var name = "some name"
+	var vat = 23
+	var price = 1400
+
+	var quantity = 1
+	var public = true
+
+	cpd := &mongodb.CreatePackageData{
+		Name: &name,
+		Items: &([]models.PackageItem{
+			models.PackageItem{
+				Item:     item.ID,
+				Quantity: quantity,
+				Public:   public,
+			},
+		}),
+		Price: &price,
+		VAT:   &vat,
+	}
+
+	b, errMarshal := json.Marshal(cpd)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/participation/package", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedCompany)
+
+	assert.Equal(t, updatedCompany.ID, newCompany.ID)
+	assert.Equal(t, len(updatedCompany.Participations), 1)
+
+	var packageID = updatedCompany.Participations[0].Package
+
+	createdPackage, err := mongodb.Packages.GetPackage(packageID)
+	assert.NilError(t, err)
+
+	assert.Equal(t, createdPackage.Name, name)
+	assert.Equal(t, createdPackage.Price, price)
+	assert.Equal(t, createdPackage.VAT, vat)
+	assert.Equal(t, len(createdPackage.Items), 1)
+	assert.Equal(t, createdPackage.Items[0].Item, item.ID)
+	assert.Equal(t, createdPackage.Items[0].Public, public)
+	assert.Equal(t, createdPackage.Items[0].Quantity, quantity)
+}
+
+func TestAddCompanyPackageItemNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleCoordinator
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	_, err = mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	var name = "some name"
+	var vat = 23
+	var price = 1400
+
+	var quantity = 1
+	var public = true
+
+	cpd := &mongodb.CreatePackageData{
+		Name: &name,
+		Items: &([]models.PackageItem{
+			models.PackageItem{
+				Item:     primitive.NewObjectID(),
+				Quantity: quantity,
+				Public:   public,
+			},
+		}),
+		Price: &price,
+		VAT:   &vat,
+	}
+
+	b, errMarshal := json.Marshal(cpd)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/participation/package", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	packages, err := mongodb.Packages.GetPackages()
+	assert.NilError(t, err)
+	assert.Equal(t, len(packages), 0)
+}
+func TestAddCompanyPackageNoParticipation(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleCoordinator
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	cid := mongodb.CreateItemData{Name: Item.Name, Type: Item.Type, Description: Item.Description, Price: Item.Price, VAT: Item.VAT}
+	item, err := mongodb.Items.CreateItem(cid)
+	assert.NilError(t, err)
+
+	var name = "some name"
+	var vat = 23
+	var price = 1400
+
+	var quantity = 1
+	var public = true
+
+	cpd := &mongodb.CreatePackageData{
+		Name: &name,
+		Items: &([]models.PackageItem{
+			models.PackageItem{
+				Item:     item.ID,
+				Quantity: quantity,
+				Public:   public,
+			},
+		}),
+		Price: &price,
+		VAT:   &vat,
+	}
+
+	b, errMarshal := json.Marshal(cpd)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/participation/package", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusExpectationFailed)
+
+	packages, err := mongodb.Packages.GetPackages()
+	assert.NilError(t, err)
+	assert.Equal(t, len(packages), 0)
+}
