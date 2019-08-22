@@ -112,6 +112,53 @@ func TestGetCompanies(t *testing.T) {
 	assert.Equal(t, companies[0].ID, newCompany.ID)
 }
 
+func TestGetCompany(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	var company models.Company
+
+	res, err := executeRequest("GET", "/companies/"+newCompany.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&company)
+
+	assert.Equal(t, company.ID, newCompany.ID)
+}
+
+func TestGetCompanyNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	res, err := executeRequest("GET", "/companies/"+primitive.NewObjectID().Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
 func TestAddCompanyParticipation(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)

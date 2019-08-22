@@ -14,6 +14,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func getCompany(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	company, err := mongodb.Companies.GetCompany(companyID)
+
+	if err != nil {
+		http.Error(w, "Unable to get company", http.StatusNotFound)
+	}
+
+	json.NewEncoder(w).Encode(company)
+}
+
 func getCompanies(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
