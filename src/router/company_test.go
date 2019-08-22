@@ -919,6 +919,7 @@ func TestAddCompanyPackageItemNotFound(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, len(packages), 0)
 }
+
 func TestAddCompanyPackageNoParticipation(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
@@ -1009,4 +1010,126 @@ func TestAddCompanyPackageNoParticipation(t *testing.T) {
 	packages, err := mongodb.Packages.GetPackages()
 	assert.NilError(t, err)
 	assert.Equal(t, len(packages), 0)
+}
+
+func TestUpdateCompany(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	ucd := &mongodb.UpdateCompanyData{
+		Name:        "some other name",
+		Description: "some other description",
+		Site:        "some site",
+		BillingInfo: models.CompanyBillingInfo{
+			Name:    "some billing name",
+			Address: "some billing address",
+			TIN:     "some billing tin",
+		},
+	}
+
+	b, errMarshal := json.Marshal(ucd)
+	assert.NilError(t, errMarshal)
+
+	var updatedCompany models.Company
+
+	res, err := executeRequest("PUT", "/companies/"+newCompany.ID.Hex(), bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedCompany)
+
+	assert.Equal(t, updatedCompany.ID, newCompany.ID)
+	assert.Equal(t, updatedCompany.Name, ucd.Name)
+	assert.Equal(t, updatedCompany.Description, ucd.Description)
+	assert.Equal(t, updatedCompany.Site, ucd.Site)
+	assert.Equal(t, updatedCompany.BillingInfo.Name, ucd.BillingInfo.Name)
+	assert.Equal(t, updatedCompany.BillingInfo.Address, ucd.BillingInfo.Address)
+	assert.Equal(t, updatedCompany.BillingInfo.TIN, ucd.BillingInfo.TIN)
+}
+
+func TestUpdateCompanyInvalidPayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	ucd := &mongodb.UpdateCompanyData{
+		Description: "some other description",
+		Site:        "some site",
+		BillingInfo: models.CompanyBillingInfo{
+			Name:    "some billing name",
+			Address: "some billing address",
+			TIN:     "some billing tin",
+		},
+	}
+
+	b, errMarshal := json.Marshal(ucd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/companies/"+newCompany.ID.Hex(), bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestUpdateCompanyNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	ucd := &mongodb.UpdateCompanyData{
+		Name:        "some other name",
+		Description: "some other description",
+		Site:        "some site",
+		BillingInfo: models.CompanyBillingInfo{
+			Name:    "some billing name",
+			Address: "some billing address",
+			TIN:     "some billing tin",
+		},
+	}
+
+	b, errMarshal := json.Marshal(ucd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/companies/"+primitive.NewObjectID().Hex(), bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
 }

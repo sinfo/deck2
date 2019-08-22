@@ -140,6 +140,35 @@ func createCompany(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newCompany)
 }
 
+func updateCompany(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	var ucd = &mongodb.UpdateCompanyData{}
+
+	if err := ucd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateCompany(companyID, *ucd)
+
+	if err != nil {
+		http.Error(w, "Could not update company data", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+}
+
 func addCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()

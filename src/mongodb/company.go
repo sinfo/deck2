@@ -475,6 +475,20 @@ type UpdateCompanyData struct {
 	BillingInfo models.CompanyBillingInfo
 }
 
+// ParseBody fills the UpdateCompanyData from a body
+func (ucd *UpdateCompanyData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ucd); err != nil {
+		return err
+	}
+
+	if len(ucd.Name) == 0 {
+		return errors.New("Invalid name")
+	}
+
+	return nil
+}
+
 // UpdateCompany updates the general information about a company, unrelated to other data types stored in de database.
 func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateCompanyData) (*models.Company, error) {
 
