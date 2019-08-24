@@ -110,6 +110,60 @@ func (s *ParticipationStatus) Next(step int) error {
 	return nil
 }
 
+// ValidStep is the structure used on the function ValidSteps to display the valid steps to be taken given a certain status
+type ValidStep struct {
+
+	// A valid step
+	Step int `json:"step"`
+
+	// The status set after the above step is taken
+	Next ParticipationStatus `json:"next"`
+}
+
+// ValidSteps displays the valid steps given a certain status
+func (s *ParticipationStatus) ValidSteps() []ValidStep {
+
+	switch *s {
+	case Suggested:
+		return []ValidStep{
+			ValidStep{Step: 1, Next: Selected},
+			ValidStep{Step: 2, Next: OnHold},
+		}
+
+	case Selected:
+		return []ValidStep{
+			ValidStep{Step: 1, Next: Contacted},
+		}
+
+	case OnHold:
+		return []ValidStep{
+			ValidStep{Step: 1, Next: Selected},
+		}
+
+	case Contacted:
+		return []ValidStep{
+			ValidStep{Step: 1, Next: InConversations},
+			ValidStep{Step: 2, Next: Rejected},
+			ValidStep{Step: 3, Next: GivenUp},
+		}
+
+	case InConversations:
+		return []ValidStep{
+			ValidStep{Step: 1, Next: Accepted},
+			ValidStep{Step: 2, Next: Rejected},
+			ValidStep{Step: 3, Next: GivenUp},
+		}
+
+	case Accepted:
+		return []ValidStep{
+			ValidStep{Step: 1, Next: Announced},
+		}
+
+	default:
+		return []ValidStep{}
+	}
+}
+
 func (s *ParticipationStatus) Parse(status string) error {
 
 	if s == nil {

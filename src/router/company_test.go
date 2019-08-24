@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/sinfo/deck2/src/auth"
@@ -1436,4 +1437,152 @@ func TestSetCompanyStatusInvalidStatus(t *testing.T) {
 
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestListCompanyValidSteps(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleAdmin
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	updatedCompany, err := mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	assert.Equal(t, updatedCompany.Participations[0].Status, models.Suggested)
+
+	res, err := executeRequest("GET", "/companies/"+newCompany.ID.Hex()+"/participation/status/next", nil)
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var validSteps validStepsResponse
+
+	json.NewDecoder(res.Body).Decode(&validSteps)
+
+	assert.Equal(t, updatedCompany.ID, newCompany.ID)
+	assert.Equal(t, len(validSteps.Steps) > 0, true)
+}
+
+func TestStepCompanyStatus(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleAdmin
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	updatedCompany, err := mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	assert.Equal(t, updatedCompany.Participations[0].Status, models.Suggested)
+
+	validSteps, err := mongodb.Companies.GetCompanyParticipationStatusValidSteps(newCompany.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, validSteps != nil, true)
+	assert.Equal(t, len(*validSteps) > 0, true)
+
+	var step = (*validSteps)[0].Step
+	var status = (*validSteps)[0].Next
+
+	res, err := executeRequest("POST", "/companies/"+newCompany.ID.Hex()+"/participation/status/"+strconv.Itoa(step), nil)
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedCompany)
+
+	assert.Equal(t, updatedCompany.ID, newCompany.ID)
+	assert.Equal(t, len(updatedCompany.Participations), 1)
+	assert.Equal(t, updatedCompany.Participations[0].Event, Event1.ID)
+	assert.Equal(t, updatedCompany.Participations[0].Status, status)
 }

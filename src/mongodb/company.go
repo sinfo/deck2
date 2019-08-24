@@ -434,6 +434,35 @@ func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, step int) (*mod
 	return nil, errors.New("company without participation on the current event")
 }
 
+// GetCompanyParticipationStatusValidSteps gets the valid steps to be taken on company's participation status
+func (c *CompaniesType) GetCompanyParticipationStatusValidSteps(companyID primitive.ObjectID) (*[]models.ValidStep, error) {
+
+	var steps []models.ValidStep
+
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	for i, p := range company.Participations {
+
+		if p.Event != currentEvent.ID {
+			continue
+		}
+
+		steps = company.Participations[i].Status.ValidSteps()
+
+		return &steps, nil
+	}
+
+	return nil, errors.New("No participation found")
+}
+
 // UpdateCompanyParticipationStatus updates a company's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.

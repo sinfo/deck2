@@ -1,10 +1,10 @@
 {
-    "put": {
+    "post": {
         "tags": [
             "companies"
         ],
-        "summary": "Updated a company's participation status on the current event (admin credentials)",
-        "operationId": "updateCompanyParticipationStatus",
+        "summary": "Step a company's participation status on the current event",
+        "operationId": "stepCompanyParticipationStatus",
         "consumes": [
             "application/json"
         ],
@@ -26,11 +26,10 @@
             },
             {
                 "in": "path",
-                "name": "status",
-                "description": "New status",
+                "name": "step",
+                "description": "Step to the next status",
                 "required": true,
-                "type": "string",
-                "enum": ["SUGGESTED", "SELECTED", "ON_HOLD", "CONTACTED", "IN_CONVERSATIONS", "ACCEPTED", "REJECTED", "GIVEN_UP", "ANNOUNCED"]
+                "type": "integer"
             }
         ],
         "responses": {

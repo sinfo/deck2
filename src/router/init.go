@@ -101,7 +101,7 @@ func InitializeRouter() {
 
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
-	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
 
 	authMember = checkAccessLevelWrapper(models.RoleMember)
 	authTeamLeader = checkAccessLevelWrapper(models.RoleTeamLeader)
@@ -136,7 +136,9 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
 	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/status/next", authMember(getCompanyValidSteps)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setCompanyStatus)).Methods("PUT")
+	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 
