@@ -437,7 +437,7 @@ func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, step int) (*mod
 // UpdateCompanyParticipationStatus updates a company's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
-func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.ObjectID, eventID int, status models.ParticipationStatus) (*models.Company, error) {
+func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.ObjectID, status models.ParticipationStatus) (*models.Company, error) {
 
 	var updatedCompany models.Company
 

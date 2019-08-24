@@ -1,0 +1,54 @@
+{
+    "put": {
+        "tags": [
+            "companies"
+        ],
+        "summary": "Updated a company's participation status on the current event",
+        "operationId": "updateCompanyParticipationStatus",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the company",
+                "required": true,
+				"type": "string"
+            },
+            {
+                "in": "path",
+                "name": "status",
+                "description": "New status",
+                "required": true,
+                "type": "string",
+                "enum": ["SUGGESTED", "SELECTED", "ON_HOLD", "CONTACTED", "IN_CONVERSATIONS", "ACCEPTED", "REJECTED", "GIVEN_UP", "ANNOUNCED"]
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated company",
+                "schema": {
+                    "$ref": "./models/company.json"
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Company not found"
+            },
+            "417": {
+                "description": "Unable to update company's participation status"
+            }
+        }
+    }
+}

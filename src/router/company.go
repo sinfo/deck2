@@ -400,3 +400,31 @@ func deleteCompany(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(deletedCompany)
 }
+
+func setCompanyStatus(w http.ResponseWriter, r *http.Request) {
+
+	status := new(models.ParticipationStatus)
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+	err := status.Parse(params["status"])
+
+	if err != nil {
+		http.Error(w, "Invalid status", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateCompanyParticipationStatus(companyID, *status)
+
+	if err != nil {
+		http.Error(w, "Could not update company status", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+}

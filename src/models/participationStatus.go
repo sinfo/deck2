@@ -1,6 +1,8 @@
 package models
 
-import "errors"
+import (
+	"errors"
+)
 
 type ParticipationStatus string
 
@@ -104,6 +106,62 @@ func (s *ParticipationStatus) Next(step int) error {
 	default:
 		return errors.New("No steps available")
 	}
+
+	return nil
+}
+
+func (s *ParticipationStatus) Parse(status string) error {
+
+	if s == nil {
+		return errors.New("allocation needed before parsing")
+	}
+
+	var newStatus ParticipationStatus
+
+	switch status {
+
+	case string(Suggested):
+		newStatus = Suggested
+		break
+
+	case string(Selected):
+		newStatus = Selected
+		break
+
+	case string(OnHold):
+		newStatus = OnHold
+		break
+
+	case string(Contacted):
+		newStatus = Contacted
+		break
+
+	case string(InConversations):
+		newStatus = InConversations
+		break
+
+	case string(Accepted):
+		newStatus = Accepted
+		break
+
+	case string(Rejected):
+		newStatus = Rejected
+		break
+
+	case string(GivenUp):
+		newStatus = GivenUp
+		break
+
+	case string(Announced):
+		newStatus = Announced
+		break
+
+	default:
+		return errors.New("Invalid status")
+
+	}
+
+	*s = newStatus
 
 	return nil
 }

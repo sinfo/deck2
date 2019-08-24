@@ -154,6 +154,9 @@
 		"/companies/{id}/participation": {
 			"$ref": "./endpoints/companies-id-participation.json"
 		},
+		"/companies/{id}/participation/status/{status}": {
+			"$ref": "./endpoints/companies-id-participation-status-status.json"
+		},
 		"/companies/{id}/participation/package": {
 			"$ref": "./endpoints/companies-id-participation-package.json"
 		},
