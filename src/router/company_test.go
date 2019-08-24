@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/sinfo/deck2/src/auth"
 	"github.com/sinfo/deck2/src/config"
@@ -1585,4 +1586,89 @@ func TestStepCompanyStatus(t *testing.T) {
 	assert.Equal(t, len(updatedCompany.Participations), 1)
 	assert.Equal(t, updatedCompany.Participations[0].Event, Event1.ID)
 	assert.Equal(t, updatedCompany.Participations[0].Status, status)
+}
+
+func TestUpdateCompanyParticipation(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleAdmin
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	apd := mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	updatedCompany, err := mongodb.Companies.AddParticipation(newCompany.ID, credentials.ID, apd)
+	assert.NilError(t, err)
+
+	var newPartner = true
+	var confirmed = time.Now()
+	var notes = "some random notes about this specific company"
+
+	ucpd := mongodb.UpdateCompanyParticipationData{
+		Member:    &newMember.ID,
+		Partner:   &newPartner,
+		Confirmed: &confirmed,
+		Notes:     &notes,
+	}
+
+	b, errMarshal := json.Marshal(ucpd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/companies/"+newCompany.ID.Hex()+"/participation", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedCompany)
+
+	assert.Equal(t, updatedCompany.ID, newCompany.ID)
+	assert.Equal(t, len(updatedCompany.Participations), 1)
+	assert.Equal(t, updatedCompany.Participations[0].Event, Event1.ID)
+	assert.Equal(t, updatedCompany.Participations[0].Member, newMember.ID)
+	assert.Equal(t, updatedCompany.Participations[0].Partner, newPartner)
+	assert.Equal(t, updatedCompany.Participations[0].Notes, notes)
+	assert.Equal(t, updatedCompany.Participations[0].Confirmed.Sub(confirmed).Seconds() < 10e-3, true) // millisecond precision
 }

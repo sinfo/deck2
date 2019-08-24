@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -461,6 +462,79 @@ func (c *CompaniesType) GetCompanyParticipationStatusValidSteps(companyID primit
 	}
 
 	return nil, errors.New("No participation found")
+}
+
+type UpdateCompanyParticipationData struct {
+	Member    *primitive.ObjectID `json:"member"`
+	Partner   *bool               `json:"partner"`
+	Confirmed *time.Time          `json:"confirmed"`
+	Notes     *string             `json:"notes"`
+}
+
+// ParseBody fills the CreateCompanyData from a body
+func (ucpd *UpdateCompanyParticipationData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ucpd); err != nil {
+		return err
+	}
+
+	if ucpd.Member == nil {
+		return errors.New("invalid member ID")
+	}
+
+	if ucpd.Partner == nil {
+		return errors.New("invalid partner value")
+	}
+
+	if ucpd.Confirmed == nil {
+		return errors.New("invalid confirmation date")
+	}
+
+	if ucpd.Notes == nil {
+		return errors.New("missing notes field")
+	}
+
+	_, err := Members.GetMember(*ucpd.Member)
+	if err != nil {
+		return errors.New("invalid member ID")
+	}
+
+	return nil
+}
+
+// UpdateCompanyParticipation updates a company's participation data
+// related to the current event.
+func (c *CompaniesType) UpdateCompanyParticipation(companyID primitive.ObjectID, data UpdateCompanyParticipationData) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.member":    *data.Member,
+			"participations.$.partner":   *data.Partner,
+			"participations.$.confirmed": data.Confirmed.UTC(),
+			"participations.$.notes":     *data.Notes,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating company's status:", err)
+		return nil, err
+	}
+
+	ResetCurrentPublicCompanies()
+
+	return &updatedCompany, nil
 }
 
 // UpdateCompanyParticipationStatus updates a company's participation status
