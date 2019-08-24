@@ -132,6 +132,7 @@ func InitializeRouter() {
 	companyRouter := r.PathPrefix("/companies").Subrouter()
 	companyRouter.HandleFunc("/{id}", authMember(getCompany)).Methods("GET")
 	companyRouter.HandleFunc("/{id}", authMember(updateCompany)).Methods("PUT")
+	companyRouter.HandleFunc("/{id}", authCoordinator(deleteCompany)).Methods("DELETE")
 	companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
 	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")

@@ -385,3 +385,18 @@ func addCompanyPackage(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedCompany)
 }
+
+func deleteCompany(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	deletedCompany, err := mongodb.Companies.DeleteCompany(companyID)
+
+	if err != nil {
+		http.Error(w, "Could not delete company", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(deletedCompany)
+}
