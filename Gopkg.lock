@@ -6,8 +6,8 @@
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
   pruneopts = "UT"
-  revision = "cdaaf98f9226c39dc162b8e55083b2fbc67b4674"
-  version = "v0.43.0"
+  revision = "ceeb313ad77b789a7fa5287b36a1d127b69b7093"
+  version = "v0.44.3"
 
 [[projects]]
   digest = "1:a2682518d905d662d984ef9959984ef87cecb777d379bfa9d9fe40e78069b3e4"
@@ -40,6 +40,14 @@
   pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
+
+[[projects]]
+  digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
+  name = "github.com/dustin/go-humanize"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "9f541cc9db5d55bce703bd99987c9d5cb8eea45e"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:abeb38ade3f32a92943e5be54f55ed6d6e3b6602761d74b4aab4c9dd45c18abd"
@@ -115,7 +123,7 @@
   version = "v0.19.2"
 
 [[projects]]
-  digest = "1:0fe6cb8578ea5c2b679389e54956028c504d5ad4d8600534e183fc94444be482"
+  digest = "1:682dbe344317c516753e6886be322a7d4e6c936ee87d2f512e46c7417c6f1a89"
   name = "github.com/go-openapi/runtime"
   packages = [
     ".",
@@ -127,8 +135,8 @@
     "security",
   ]
   pruneopts = "UT"
-  revision = "58872d9a7ca5f28beff9effa19ac4c17d3e42cd3"
-  version = "v0.19.3"
+  revision = "882fa18ad52bee24eb77d2312d1929580e894013"
+  version = "v0.19.4"
 
 [[projects]]
   digest = "1:b1f97d0d316f90c2059f7bfee14855c314d65834a3b93f02856e01c1fb8fbebe"
@@ -147,12 +155,12 @@
   version = "v0.19.2"
 
 [[projects]]
-  digest = "1:2de91ae845491f7158c1644a1183d2bbcc5a7bd668768b60a91519f848603dad"
+  digest = "1:43d0f99f53acce97119181dcd592321084690c2d462c57680ccb4472ae084949"
   name = "github.com/go-openapi/swag"
   packages = ["."]
   pruneopts = "UT"
-  revision = "de649ffb9e02183a414820c5b1b4582f7b009792"
-  version = "v0.19.4"
+  revision = "c3d0f7896d589f3babb99eea24bbc7de98108e72"
+  version = "v0.19.5"
 
 [[projects]]
   digest = "1:9d2bd059a75e4ac3983cc93fe013dbc7f789fccb996171094279458b15329842"
@@ -231,6 +239,19 @@
   version = "v1.7.3"
 
 [[projects]]
+  digest = "1:34562dc588cc0987a3b4ddf7ba3d09ee2213e6a3a752c8065601e298cbf0de7b"
+  name = "github.com/h2non/filetype"
+  packages = [
+    ".",
+    "matchers",
+    "matchers/isobmff",
+    "types",
+  ]
+  pruneopts = "UT"
+  revision = "add8f680eeb7b6baeee288a89bd54574de25b406"
+  version = "v1.0.10"
+
+[[projects]]
   digest = "1:c0d19ab64b32ce9fe5cf4ddceba78d5bc9807f0016db6b1183599da3dcc24d10"
   name = "github.com/hashicorp/hcl"
   packages = [
@@ -256,6 +277,14 @@
   pruneopts = "UT"
   revision = "c6ca198ec95c841fdb89fc0de7496fed11ab854e"
   version = "v1.4.0"
+
+[[projects]]
+  digest = "1:31e761d97c76151dde79e9d28964a812c46efc5baee4085b86f68f0c654450de"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
+  version = "v1.0.2"
 
 [[projects]]
   digest = "1:ca955a9cd5b50b0f43d2cc3aeb35c951473eeca41b34eb67507f1dbcc0542394"
@@ -294,6 +323,29 @@
   revision = "b2ccc519800e761ac8000b95e5d57c80a897ff9e"
 
 [[projects]]
+  digest = "1:88e7456f46448df99fd934c3b90621afbaa14d29172923e36c47f42de386be56"
+  name = "github.com/minio/minio-go"
+  packages = [
+    ".",
+    "pkg/credentials",
+    "pkg/encrypt",
+    "pkg/s3signer",
+    "pkg/s3utils",
+    "pkg/set",
+  ]
+  pruneopts = "UT"
+  revision = "c6c2912aa5522e5f5a505e6cba30e95f0d8456fa"
+  version = "v6.0.25"
+
+[[projects]]
+  digest = "1:5d231480e1c64a726869bc4142d270184c419749d34f167646baa21008eb0a79"
+  name = "github.com/mitchellh/go-homedir"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:53bc4cd4914cd7cd52139990d5170d6dc99067ae31c56530621b18b35fc30318"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
@@ -316,6 +368,14 @@
   pruneopts = "UT"
   revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
   version = "v0.8.1"
+
+[[projects]]
+  digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "839c75faf7f98a33d445d181f3018b5c3409a45e"
+  version = "v1.4.2"
 
 [[projects]]
   digest = "1:bb495ec276ab82d3dd08504bbc0594a65de8c3b22c6f2aaa92d05b73fbf3a82e"
@@ -433,23 +493,31 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f92f6956e4059f6a3efc14924d2dd58ba90da25cc57fe07ae3779ef2f5e0c5f2"
+  digest = "1:6320abd837e7fdebdb5f4db09fec883c567943ae12052a7aa35c1dd49ca35d60"
   name = "golang.org/x/crypto"
-  packages = ["pbkdf2"]
+  packages = [
+    "argon2",
+    "blake2b",
+    "pbkdf2",
+  ]
   pruneopts = "UT"
-  revision = "4def268fd1a49955bfb3dda92fe3db4f924f2285"
+  revision = "60c769a6c58655dab1b9adac0d58967dd517cfba"
 
 [[projects]]
   branch = "master"
-  digest = "1:ea553e44f44f438b5c1d3de7563218d20fa9a45ac6b36ea3a9f918a32b67161f"
+  digest = "1:0bf852d785af0f39fcb577f90f714fee1b1b9d0e06ac371a47cc972b281b1d4a"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
+    "http/httpguts",
+    "http2",
+    "http2/hpack",
     "idna",
+    "publicsuffix",
   ]
   pruneopts = "UT"
-  revision = "ca1201d0de80cfde86cb01aea620983605dfe99b"
+  revision = "74dc4d7220e7acc4e100824340f3e66577424772"
 
 [[projects]]
   branch = "master"
@@ -475,11 +543,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fdfd985fe7956d77128572032636b5c1b7b58a81acd7089e96923e2f9539c573"
+  digest = "1:70c738070461e5aec64d6384461b42318589b860a5bef3cd6a45d86e154cbb3a"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = [
+    "cpu",
+    "unix",
+  ]
   pruneopts = "UT"
-  revision = "51ab0e2deafac1f46c46ad59cf0921be2f180c3d"
+  revision = "fde4db37ae7ad8191b03d30d27f258b5291ae4e3"
 
 [[projects]]
   digest = "1:66a2f252a58b4fbbad0e4e180e1d85a83c222b6bce09c3dcdef3dc87c72eda7c"
@@ -509,7 +580,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d280522e09653ef911865ab89fe075ddd5e33f40d4b7753653b88848017bb325"
+  digest = "1:7d94aec2ccacecfe1c4a488380d4cd4c7429f6187504e567a282bdc3e409b562"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -529,7 +600,7 @@
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "6d4652c779c4add9e1a69db058dabafddba21c37"
+  revision = "d72b05d2b1b6a1e6d58527b2e45e597b662af52e"
 
 [[projects]]
   digest = "1:498b722d33dde4471e7d6e5d88a5e7132d2a8306fea5ff5ee82d1f418b4f41ed"
@@ -549,6 +620,14 @@
   pruneopts = "UT"
   revision = "b2f4a3cf3c67576a2ee09e1fe62656a5086ce880"
   version = "v1.6.1"
+
+[[projects]]
+  digest = "1:6c56c50b13fd3cb33b692b264727c1c89198274f5dcabaa077e3b2472037e0f9"
+  name = "gopkg.in/ini.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d4cae42d398bc0095297fc3315669590d29166ea"
+  version = "v1.46.0"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -581,6 +660,8 @@
     "github.com/go-swagger/go-swagger/cmd/swagger",
     "github.com/gorilla/handlers",
     "github.com/gorilla/mux",
+    "github.com/h2non/filetype",
+    "github.com/minio/minio-go",
     "github.com/spf13/viper",
     "go.mongodb.org/mongo-driver/bson",
     "go.mongodb.org/mongo-driver/bson/primitive",

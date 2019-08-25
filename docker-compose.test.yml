@@ -13,6 +13,10 @@ services:
             - 'DECK2_GOOGLE_OAUTH_CLIENT_SECRET=THIS_IS_A_SECRET'
             - 'DECK2_GOOGLE_OAUTH_CLIENT_ID=THIS_IS_A_SECRET'
             - 'DECK2_JWT_SECRET=THIS_IS_A_SECRET'
+            - 'DECK2_DO_SPACES_KEY=SOME_KEY'
+            - 'DECK2_DO_SPACES_SECRET=SOME_SECRET'
+            - 'DECK2_DO_SPACES_REGION=SOME_REGION'
+            - 'DECK2_DO_SPACES_NAME=SOME_NAME'
     mongodb:
         image: mongo:4.0.4
         container_name: "deck2_testing_mongodb"

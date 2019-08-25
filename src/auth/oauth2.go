@@ -3,10 +3,8 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 
 	"github.com/sinfo/deck2/src/config"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -14,14 +12,6 @@ import (
 var OauthConfig *oauth2.Config
 
 func InitializeOAuth2() error {
-
-	if !viper.IsSet("GOOGLE_OAUTH_CLIENT_ID") {
-		return errors.New("GOOGLE_OAUTH_CLIENT_ID not set")
-	}
-
-	if !viper.IsSet("GOOGLE_OAUTH_CLIENT_SECRET") {
-		return errors.New("GOOGLE_OAUTH_CLIENT_ID not set")
-	}
 
 	OauthConfig = &oauth2.Config{
 		RedirectURL:  "http://localhost:8080/auth/callback",

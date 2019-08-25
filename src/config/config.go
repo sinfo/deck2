@@ -21,6 +21,11 @@ var (
 	GoogleOAuthClientSecret string
 
 	JWTSecret string
+
+	SpacesRegion string
+	SpacesName   string
+	SpacesSecret string
+	SpacesKey    string
 )
 
 const (
@@ -36,45 +41,40 @@ const (
 	keyGoogleOAuthClientSecret string = "GOOGLE_OAUTH_CLIENT_SECRET"
 
 	keyJWTSecret string = "JWT_SECRET"
+
+	keySpacesRegion string = "DO_SPACES_REGION"
+	keySpacesName   string = "DO_SPACES_NAME"
+	keySpacesSecret string = "DO_SPACES_SECRET"
+	keySpacesKey    string = "DO_SPACES_KEY"
 )
+
+func set(variable *string, key string, mandatory bool) {
+	if viper.IsSet(key) {
+		*variable = viper.GetString(key)
+	} else if mandatory {
+		log.Fatal(fmt.Sprintf("%s_%s", keyPrefix, key) + " not set")
+	}
+}
 
 func InitializeConfig() {
 	viper.SetEnvPrefix(keyPrefix)
 	viper.AutomaticEnv()
 
-	if viper.IsSet(keyHost) {
-		Host = viper.GetString(keyHost)
-	}
+	set(&Host, keyHost, false)
+	set(&Port, keyPort, false)
 
-	if viper.IsSet(keyPort) {
-		Port = viper.GetString(keyPort)
-	}
+	set(&DatabaseURI, keyDatabaseURI, false)
+	set(&DatabaseName, keyDatabaseName, false)
 
-	if viper.IsSet(keyDatabaseURI) {
-		DatabaseURI = viper.GetString(keyDatabaseURI)
-	}
+	set(&GoogleOAuthClientID, keyGoogleOAuthClientID, true)
+	set(&GoogleOAuthClientSecret, keyGoogleOAuthClientSecret, true)
 
-	if viper.IsSet(keyDatabaseName) {
-		DatabaseName = viper.GetString(keyDatabaseName)
-	}
+	set(&JWTSecret, keyJWTSecret, true)
 
-	if viper.IsSet(keyGoogleOAuthClientID) {
-		GoogleOAuthClientID = viper.GetString(keyGoogleOAuthClientID)
-	} else {
-		log.Fatal(fmt.Sprintf("%s_%s", keyPrefix, keyGoogleOAuthClientID) + " not set")
-	}
-
-	if viper.IsSet(keyGoogleOAuthClientSecret) {
-		GoogleOAuthClientSecret = viper.GetString(keyGoogleOAuthClientSecret)
-	} else {
-		log.Fatal(fmt.Sprintf("%s_%s", keyPrefix, keyGoogleOAuthClientSecret), " not set")
-	}
-
-	if viper.IsSet(keyJWTSecret) {
-		JWTSecret = viper.GetString(keyJWTSecret)
-	} else {
-		log.Fatal(fmt.Sprintf("%s_%s", keyPrefix, keyJWTSecret), " not set")
-	}
+	set(&SpacesRegion, keySpacesRegion, true)
+	set(&SpacesName, keySpacesName, true)
+	set(&SpacesKey, keySpacesKey, true)
+	set(&SpacesSecret, keySpacesSecret, true)
 }
 
 func SetTestingEnv() {

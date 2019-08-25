@@ -12,16 +12,6 @@ import (
 
 const oauthGoogleURLAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
-/*
-{
-  "id": "109786996233577123212",
-  "email": "francisco.pereira@sinfo.org",
-  "verified_email": true,
-  "picture": "https://lh4.googleusercontent.com/-egCPeGwGXOg/AAAAAAAAAAI/AAAAAAAAAEk/NwlA-mzDY-w/photo.jpg",
-  "hd": "sinfo.org"
-}
-*/
-
 type UserData struct {
 	ID       string `json:"id"`
 	Email    string `json:"email"`

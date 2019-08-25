@@ -130,11 +130,12 @@ func InitializeRouter() {
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
+	companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
+	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
 	companyRouter.HandleFunc("/{id}", authMember(getCompany)).Methods("GET")
 	companyRouter.HandleFunc("/{id}", authMember(updateCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}", authAdmin(deleteCompany)).Methods("DELETE")
-	companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
-	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/image/internal", authMember(setCompanyPrivateImage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(updateCompanyParticipation)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/status/next", authMember(getCompanyValidSteps)).Methods("GET")

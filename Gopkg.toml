@@ -36,3 +36,7 @@
 [[constraint]]
   name = "github.com/go-swagger/go-swagger"
   version = "0.10.0"
+
+[[constraint]]
+  name = "github.com/h2non/filetype"
+  version = "1.0.10"

@@ -151,6 +151,9 @@
 		"/companies/{id}": {
 			"$ref": "./endpoints/companies-id.json"
 		},
+		"/companies/{id}/image/internal": {
+			"$ref": "./endpoints/companies-id-image-internal.json"
+		},
 		"/companies/{id}/participation": {
 			"$ref": "./endpoints/companies-id-participation.json"
 		},

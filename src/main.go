@@ -9,6 +9,7 @@ import (
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/router"
+	"github.com/sinfo/deck2/src/spaces"
 )
 
 func main() {
@@ -21,6 +22,7 @@ func main() {
 
 	auth.InitializeJWT()
 	mongodb.InitializeDatabase()
+	spaces.InitializeSpaces()
 	router.InitializeRouter()
 
 	fmt.Printf("Serving at %s:%s\n", config.Host, config.Port)
