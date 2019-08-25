@@ -17,9 +17,9 @@ func uploadCompanyImage(public bool, event int, company primitive.ObjectID, read
 	var path string
 
 	if public {
-		path = fmt.Sprintf("%s/%s/public/%s", basePath, companyPath, company.Hex())
+		path = fmt.Sprintf("%s/sinfo-%d/%s/public/%s", basePath, event, companyPath, company.Hex())
 	} else {
-		path = fmt.Sprintf("%s/%s/internal/%s", basePath, companyPath, company.Hex())
+		path = fmt.Sprintf("%s/sinfo-%d/%s/internal/%s", basePath, event, companyPath, company.Hex())
 	}
 
 	url := fmt.Sprintf("%s/%s", baseURL, path)
