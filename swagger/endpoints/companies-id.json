@@ -128,7 +128,7 @@
         "tags": [
             "companies"
         ],
-        "summary": "Delete company by ID",
+        "summary": "Delete company by ID (must have admin credentials)",
         "operationId": "deleteCompany",
         "consumes": [
             "application/json"

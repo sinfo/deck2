@@ -10,9 +10,14 @@ services:
             - mongodb
         environment:
             - 'DECK2_DB_URL=mongodb://db:27017'
+
             - 'DECK2_GOOGLE_OAUTH_CLIENT_SECRET=THIS_IS_A_SECRET'
             - 'DECK2_GOOGLE_OAUTH_CLIENT_ID=THIS_IS_A_SECRET'
+
             - 'DECK2_JWT_SECRET=THIS_IS_A_SECRET'
+
+            - 'DECK2_DO_PAT=SOME_PAT'
+
             - 'DECK2_DO_SPACES_KEY=SOME_KEY'
             - 'DECK2_DO_SPACES_SECRET=SOME_SECRET'
             - 'DECK2_DO_SPACES_REGION=SOME_REGION'

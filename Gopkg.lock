@@ -42,6 +42,14 @@
   version = "v3.2.0"
 
 [[projects]]
+  digest = "1:adfc05f2fa24c72ad3c30f436946e98a6f1b59af7fdf3698f2c25a54ea31e2ad"
+  name = "github.com/digitalocean/godo"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2f819072fe121a1233aa8f312abd57e366855f7c"
+  version = "v1.19.0"
+
+[[projects]]
   digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
   name = "github.com/dustin/go-humanize"
   packages = ["."]
@@ -221,6 +229,14 @@
   pruneopts = "UT"
   revision = "3af367b6b30c263d47e8895973edcca9a49cf029"
   version = "v0.2.0"
+
+[[projects]]
+  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "UT"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
 
 [[projects]]
   digest = "1:b117faf01abdbdadd7b8ceeae74cd1369c1b073fef41aee8b674c9d704a54c16"
@@ -600,7 +616,7 @@
     "internal/semver",
   ]
   pruneopts = "UT"
-  revision = "d72b05d2b1b6a1e6d58527b2e45e597b662af52e"
+  revision = "95c3470cfb70bba4d4d578afaf29e0b4b307e3b3"
 
 [[projects]]
   digest = "1:498b722d33dde4471e7d6e5d88a5e7132d2a8306fea5ff5ee82d1f418b4f41ed"
@@ -656,6 +672,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/dgrijalva/jwt-go",
+    "github.com/digitalocean/godo",
     "github.com/globalsign/mgo/bson",
     "github.com/go-swagger/go-swagger/cmd/swagger",
     "github.com/gorilla/handlers",

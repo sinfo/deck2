@@ -22,7 +22,9 @@ var (
 
 	JWTSecret string
 
-	SpacesRegion string
+	// Digitalocean Personal Access Token
+	DOPAT string
+
 	SpacesName   string
 	SpacesSecret string
 	SpacesKey    string
@@ -42,7 +44,8 @@ const (
 
 	keyJWTSecret string = "JWT_SECRET"
 
-	keySpacesRegion string = "DO_SPACES_REGION"
+	keyDOPAT string = "DO_PAT"
+
 	keySpacesName   string = "DO_SPACES_NAME"
 	keySpacesSecret string = "DO_SPACES_SECRET"
 	keySpacesKey    string = "DO_SPACES_KEY"
@@ -71,7 +74,8 @@ func InitializeConfig() {
 
 	set(&JWTSecret, keyJWTSecret, true)
 
-	set(&SpacesRegion, keySpacesRegion, true)
+	set(&DOPAT, keyDOPAT, true)
+
 	set(&SpacesName, keySpacesName, true)
 	set(&SpacesKey, keySpacesKey, true)
 	set(&SpacesSecret, keySpacesSecret, true)

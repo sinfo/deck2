@@ -136,6 +136,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}", authMember(updateCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}", authAdmin(deleteCompany)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/image/internal", authMember(setCompanyPrivateImage)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/image/public", authCoordinator(setCompanyPublicImage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(updateCompanyParticipation)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/status/next", authMember(getCompanyValidSteps)).Methods("GET")

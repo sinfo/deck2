@@ -594,3 +594,78 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedCompany)
 }
+
+func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	// 10 KB
+	var maxSize int64 = 10 << 10
+
+	if err := r.ParseMultipartForm(maxSize); err != nil {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", maxSize), http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("image")
+	if err != nil {
+		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	// check again for file size
+	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
+	if handler.Size > maxSize {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", maxSize), http.StatusBadRequest)
+		return
+	}
+
+	defer file.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		return
+	}
+
+	// must duplicate the reader so that we can get some information first, and then pass it to the spaces package
+	var buf bytes.Buffer
+	checker := io.TeeReader(file, &buf)
+
+	bytes, err := ioutil.ReadAll(checker)
+	if err != nil {
+		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+		return
+	}
+
+	if !filetype.IsImage(bytes) {
+		http.Error(w, "Not an image", http.StatusBadRequest)
+		return
+	}
+
+	kind, err := filetype.Match(bytes)
+	if err != nil {
+		http.Error(w, "Unable to get file type", http.StatusExpectationFailed)
+		return
+	}
+
+	url, err := spaces.UploadCompanyPublicImage(currentEvent.ID, companyID, &buf, handler.Size, kind.MIME.Value)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateCompanyPublicImage(companyID, *url)
+	if err != nil {
+		http.Error(w, "Couldn't update company internal image", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+}

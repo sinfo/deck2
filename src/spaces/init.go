@@ -1,10 +1,15 @@
 package spaces
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"log"
+	"strings"
 
+	"github.com/digitalocean/godo"
 	"github.com/minio/minio-go"
+	"golang.org/x/oauth2"
 
 	"github.com/sinfo/deck2/src/config"
 )
@@ -12,30 +17,68 @@ import (
 var accessKey string
 var secret string
 var name string
-var region string
 
 var endpoint string
+var cdnBaseURL string
 
 var client *minio.Client
 
+// digitalocean personal access token
+var pat string
+var godoClient *godo.Client
+
+type TokenSource struct {
+	AccessToken string
+}
+
+func (t *TokenSource) Token() (*oauth2.Token, error) {
+	token := &oauth2.Token{
+		AccessToken: t.AccessToken,
+	}
+	return token, nil
+}
+
 const (
-	baseURL  = "https://static.sinfo.org"
 	basePath = "deck2"
 	ssl      = true
 )
 
 func InitializeSpaces() {
 
-	var err error
-
 	accessKey = config.SpacesKey
 	secret = config.SpacesSecret
 	name = config.SpacesName
-	region = config.SpacesRegion
 
-	endpoint = fmt.Sprintf("%s.digitaloceanspaces.com", region)
+	// Initialize digitalocean client
 
-	// Initiate a client using DigitalOcean Spaces.
+	pat = config.DOPAT
+
+	tokenSource := &TokenSource{
+		AccessToken: pat,
+	}
+
+	oauthClient := oauth2.NewClient(context.Background(), tokenSource)
+	godoClient = godo.NewClient(oauthClient)
+
+	opt := &godo.ListOptions{}
+	cdns, _, err := godoClient.CDNs.List(context.Background(), opt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if len(cdns) == 0 {
+		log.Fatal("no CDNs")
+	}
+
+	for _, cdn := range cdns {
+		if strings.Contains(cdn.Origin, name) {
+			cdnBaseURL = cdn.CustomDomain
+			endpoint = cdn.Origin[len(name)+1:]
+		}
+	}
+
+	// Initialize a client using DigitalOcean Spaces.
+
 	client, err = minio.New(endpoint, accessKey, secret, ssl)
 	if err != nil {
 		log.Fatal(err)
@@ -71,4 +114,23 @@ func List(prefix string) {
 		fmt.Println(object)
 	}
 
+}
+
+func uploadImage(path string, reader io.Reader, objectSize int64, MIME string) (*string, error) {
+
+	path = fmt.Sprintf("%s/%s", basePath, path)
+	url := fmt.Sprintf("https://%s/%s", cdnBaseURL, path)
+
+	_, err := client.PutObject(name, path, reader, objectSize, minio.PutObjectOptions{
+		ContentType: MIME,
+		UserMetadata: map[string]string{
+			"x-amz-acl": "public-read",
+		},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &url, nil
 }
