@@ -326,3 +326,65 @@ func TestGetPackages(t *testing.T) {
 	assert.Equal(t, packages[0].Price, newPackage.Price)
 	assert.Equal(t, packages[0].VAT, newPackage.VAT)
 }
+
+func TestGetPackage(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createItemData := &mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	newItem, err := mongodb.Items.CreateItem(*createItemData)
+	assert.NilError(t, err)
+
+	Package.Items[0].Item = newItem.ID
+
+	cpd := mongodb.CreatePackageData{
+		Name:  &Package.Name,
+		Items: &Package.Items,
+		Price: &Package.Price,
+		VAT:   &Package.VAT,
+	}
+
+	newPackage, err := mongodb.Packages.CreatePackage(cpd)
+	assert.NilError(t, err)
+
+	var p models.Package
+
+	res, err := executeRequest("GET", "/packages/"+newPackage.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&p)
+
+	assert.Equal(t, p.ID, newPackage.ID)
+	assert.Equal(t, p.Name, newPackage.Name)
+	assert.Equal(t, p.Price, newPackage.Price)
+	assert.Equal(t, p.VAT, newPackage.VAT)
+}
+
+func TestGetPackageNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	res, err := executeRequest("GET", "/package/"+primitive.NewObjectID().Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}

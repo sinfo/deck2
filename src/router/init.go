@@ -194,6 +194,7 @@ func InitializeRouter() {
 	packageRouter := r.PathPrefix("/packages").Subrouter()
 	packageRouter.HandleFunc("", authCoordinator(createPackage)).Methods("POST")
 	packageRouter.HandleFunc("", authMember(getPackages)).Methods("GET")
+	packageRouter.HandleFunc("/{id}", authMember(getPackage)).Methods("GET")
 	packageRouter.HandleFunc("/{id}/items", authCoordinator(updatePackageItems)).Methods("PUT")
 
 	// contact handlers

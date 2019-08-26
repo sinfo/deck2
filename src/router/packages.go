@@ -104,3 +104,17 @@ func getPackages(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(packages)
 }
+
+func getPackage(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	packageID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	p, err := mongodb.Packages.GetPackage(packageID)
+
+	if err != nil {
+		http.Error(w, "Unable to get package", http.StatusNotFound)
+	}
+
+	json.NewEncoder(w).Encode(p)
+}

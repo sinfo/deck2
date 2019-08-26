@@ -1,0 +1,43 @@
+{
+    "get": {
+        "tags": [
+            "packages"
+        ],
+        "summary": "Get package by ID",
+        "operationId": "getPackage",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the package",
+                "required": true,
+				"type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Package with the specific ID",
+                "schema": {
+                    "$ref": "./models/package.json"
+                }
+            },
+            "404": {
+                "description": "Package not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    }
+}
