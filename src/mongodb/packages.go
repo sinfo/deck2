@@ -98,7 +98,7 @@ type UpdatePackageItemsData struct {
 	Items *[]models.PackageItem `json:"items"`
 }
 
-// ParseBody fills the CreatePackageData from a body
+// ParseBody fills the UpdatePackageItemsData from a body
 func (upid *UpdatePackageItemsData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(upid); err != nil {
@@ -129,6 +129,57 @@ func (p *PackagesType) UpdatePackageItems(packageID primitive.ObjectID, data Upd
 	var updateQuery = bson.M{
 		"$set": bson.M{
 			"items": data.Items,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := p.Collection.FindOneAndUpdate(p.Context, bson.M{"_id": packageID}, updateQuery, optionsQuery).Decode(&result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// UpdatePackageData is the structure used to updated a package's items
+type UpdatePackageData struct {
+	Name  *string `json:"name"`
+	Price *int    `json:"price"`
+	VAT   *int    `json:"vat"`
+}
+
+// ParseBody fills the UpdatePackageData from a body
+func (upd *UpdatePackageData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(upd); err != nil {
+		return err
+	}
+
+	if upd.Name == nil {
+		return errors.New("invalid name")
+	}
+
+	if upd.Price == nil || *upd.Price < 0 {
+		return errors.New("invalid price")
+	}
+
+	if upd.VAT == nil || *upd.VAT < 0 || *upd.VAT > 100 {
+		return errors.New("invalid vat")
+	}
+
+	return nil
+}
+
+// UpdatePackage updates the items of a package by id
+func (p *PackagesType) UpdatePackage(packageID primitive.ObjectID, data UpdatePackageData) (*models.Package, error) {
+	var result models.Package
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"name":  *data.Name,
+			"price": *data.Price,
+			"vat":   *data.VAT,
 		},
 	}
 

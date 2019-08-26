@@ -60,6 +60,35 @@ func updatePackageItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedPackage)
 }
 
+func updatePackage(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Packages.GetPackage(id); err != nil {
+		http.Error(w, "Package not found", http.StatusNotFound)
+		return
+	}
+
+	var upd = &mongodb.UpdatePackageData{}
+
+	if err := upd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedPackage, err := mongodb.Packages.UpdatePackage(id, *upd)
+
+	if err != nil {
+		http.Error(w, "Could not update package", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedPackage)
+}
+
 func getPackages(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()

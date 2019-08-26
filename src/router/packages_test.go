@@ -388,3 +388,140 @@ func TestGetPackageNotFound(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
+
+func TestUpdatePackage(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createItemData := &mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	newItem, err := mongodb.Items.CreateItem(*createItemData)
+	assert.NilError(t, err)
+
+	Package.Items[0].Item = newItem.ID
+
+	cpd := mongodb.CreatePackageData{
+		Name:  &Package.Name,
+		Items: &Package.Items,
+		Price: &Package.Price,
+		VAT:   &Package.VAT,
+	}
+
+	newPackage, err := mongodb.Packages.CreatePackage(cpd)
+	assert.NilError(t, err)
+
+	var newName = "new name"
+	var newPrice = 800
+	var newVAT = 71
+
+	upd := mongodb.UpdatePackageData{
+		Name:  &newName,
+		Price: &newPrice,
+		VAT:   &newVAT,
+	}
+
+	var updatedPackage models.Package
+
+	b, errMarshal := json.Marshal(upd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/packages/"+newPackage.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedPackage)
+
+	assert.Equal(t, updatedPackage.ID, newPackage.ID)
+	assert.Equal(t, updatedPackage.Name, newName)
+	assert.Equal(t, updatedPackage.Price, newPrice)
+	assert.Equal(t, updatedPackage.VAT, newVAT)
+}
+
+func TestUpdatePackageInvalidPayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createItemData := &mongodb.CreateItemData{
+		Name:        Item.Name,
+		Type:        Item.Type,
+		Description: Item.Description,
+		Price:       Item.Price,
+		VAT:         Item.VAT,
+	}
+
+	newItem, err := mongodb.Items.CreateItem(*createItemData)
+	assert.NilError(t, err)
+
+	Package.Items[0].Item = newItem.ID
+
+	cpd := mongodb.CreatePackageData{
+		Name:  &Package.Name,
+		Items: &Package.Items,
+		Price: &Package.Price,
+		VAT:   &Package.VAT,
+	}
+
+	newPackage, err := mongodb.Packages.CreatePackage(cpd)
+	assert.NilError(t, err)
+
+	type InvalidPayload struct {
+		OtherField string
+	}
+
+	upd := InvalidPayload{
+		OtherField: "some random stuff",
+	}
+
+	b, errMarshal := json.Marshal(upd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/packages/"+newPackage.ID.Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestUpdatePackageNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var newName = "new name"
+	var newPrice = 800
+	var newVAT = 71
+
+	upd := mongodb.UpdatePackageData{
+		Name:  &newName,
+		Price: &newPrice,
+		VAT:   &newVAT,
+	}
+
+	b, errMarshal := json.Marshal(upd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/packages/"+primitive.NewObjectID().Hex(), bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
