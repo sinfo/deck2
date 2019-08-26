@@ -116,7 +116,10 @@ func (c *CompaniesType) GetCompanies(options GetCompaniesOptions) ([]*models.Com
 	}
 
 	if options.Name != nil {
-		filter["name"] = options.Name
+		filter["name"] = bson.M{
+			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$options": "i",
+		}
 	}
 
 	cur, err := c.Collection.Find(c.Context, filter)
@@ -247,7 +250,10 @@ func (c *CompaniesType) GetPublicCompanies(options GetCompaniesPublicOptions) ([
 	}
 
 	if options.Name != nil {
-		filter["name"] = options.Name
+		filter["name"] = bson.M{
+			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$options": "i",
+		}
 	}
 
 	cur, err := c.Collection.Find(c.Context, filter)

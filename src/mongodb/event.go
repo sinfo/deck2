@@ -154,7 +154,10 @@ func (e *EventsType) GetEvents(options GetEventsOptions) ([]*models.Event, error
 	filter := bson.M{}
 
 	if options.Name != nil {
-		filter["name"] = options.Name
+		filter["name"] = bson.M{
+			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$options": "i",
+		}
 	}
 
 	if options.Before != nil {
@@ -204,7 +207,10 @@ func (e *EventsType) GetPublicEvents(options GetEventsOptions) ([]*models.EventP
 	filter := bson.M{}
 
 	if options.Name != nil {
-		filter["name"] = options.Name
+		filter["name"] = bson.M{
+			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$options": "i",
+		}
 	}
 
 	if options.Before != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 
@@ -224,7 +225,10 @@ func (p *PackagesType) GetPackages(options GetPackagesOptions) ([]*models.Packag
 	filter := bson.M{}
 
 	if options.Name != nil {
-		filter["name"] = options.Name
+		filter["name"] = bson.M{
+			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$options": "i",
+		}
 	}
 
 	if options.Price != nil {
