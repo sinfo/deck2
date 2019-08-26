@@ -1,4 +1,62 @@
 {
+    "get": {
+        "tags": [
+            "packages"
+        ],
+        "summary": "Get packages",
+        "operationId": "getPackages",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the package",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "price",
+                "description": "Price of the package",
+                "type": "integer"
+            },
+            {
+                "in": "query",
+                "name": "vat",
+                "description": "VAT of the package",
+                "type": "integer"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Packages filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/package.json"
+                    }
+                }
+            },
+            "400": {
+                "description": "Invalid price or vat on query"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to get packages"
+            }
+        }
+    },
     "post": {
         "tags": [
             "packages"

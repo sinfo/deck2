@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/sinfo/deck2/src/mongodb"
@@ -57,4 +58,49 @@ func updatePackageItems(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedPackage)
+}
+
+func getPackages(w http.ResponseWriter, r *http.Request) {
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetPackagesOptions{}
+
+	name := urlQuery.Get("name")
+	price := urlQuery.Get("price")
+	vat := urlQuery.Get("vat")
+
+	if len(name) > 0 {
+		options.Name = &name
+	}
+
+	if len(price) > 0 {
+
+		if p, err := strconv.Atoi(price); err == nil {
+			options.Price = &p
+		} else {
+			http.Error(w, "Invalid query (bad price)", http.StatusBadRequest)
+			return
+		}
+
+	}
+
+	if len(vat) > 0 {
+
+		if v, err := strconv.Atoi(vat); err == nil {
+			options.VAT = &v
+		} else {
+			http.Error(w, "Invalid query (bad VAT)", http.StatusBadRequest)
+			return
+		}
+
+	}
+
+	packages, err := mongodb.Packages.GetPackages(options)
+
+	if err != nil {
+		http.Error(w, "Could not get packages", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(packages)
 }

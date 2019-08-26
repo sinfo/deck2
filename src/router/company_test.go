@@ -917,7 +917,7 @@ func TestAddCompanyPackageItemNotFound(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 
-	packages, err := mongodb.Packages.GetPackages()
+	packages, err := mongodb.Packages.GetPackages(mongodb.GetPackagesOptions{})
 	assert.NilError(t, err)
 	assert.Equal(t, len(packages), 0)
 }
@@ -1009,7 +1009,7 @@ func TestAddCompanyPackageNoParticipation(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusExpectationFailed)
 
-	packages, err := mongodb.Packages.GetPackages()
+	packages, err := mongodb.Packages.GetPackages(mongodb.GetPackagesOptions{})
 	assert.NilError(t, err)
 	assert.Equal(t, len(packages), 0)
 }

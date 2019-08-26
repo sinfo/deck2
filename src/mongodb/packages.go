@@ -154,12 +154,35 @@ func (p *PackagesType) DeletePackage(packageID primitive.ObjectID) (*models.Pack
 	return &result, nil
 }
 
+// GetPackagesOptions is the options to give to GetPackages.
+// All the fields are optional, and as such we use pointers as a "hack" to deal
+// with non-existent fields.
+// The field is non-existent if it has a nil value.
+// This filter will behave like a logical *and*.
+type GetPackagesOptions struct {
+	Name  *string
+	Price *int
+	VAT   *int
+}
+
 // GetPackages gets an array of packages
-func (p *PackagesType) GetPackages() ([]*models.Package, error) {
+func (p *PackagesType) GetPackages(options GetPackagesOptions) ([]*models.Package, error) {
 
 	var packages = make([]*models.Package, 0)
 
 	filter := bson.M{}
+
+	if options.Name != nil {
+		filter["name"] = options.Name
+	}
+
+	if options.Price != nil {
+		filter["price"] = options.Price
+	}
+
+	if options.VAT != nil {
+		filter["vat"] = options.VAT
+	}
 
 	cur, err := p.Collection.Find(p.Context, filter)
 	if err != nil {
