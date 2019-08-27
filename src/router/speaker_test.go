@@ -156,3 +156,123 @@ func TestGetSpeakerNotFound(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
+
+func TestUpdateSpeaker(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	var newName = "some other name"
+	var newBio = "some other bio"
+	var newTitle = "some other title"
+	var newNotes = "some other notes"
+
+	usd := &mongodb.UpdateSpeakerData{
+		Name:  &newName,
+		Bio:   &newBio,
+		Title: &newTitle,
+		Notes: &newNotes,
+	}
+
+	b, errMarshal := json.Marshal(usd)
+	assert.NilError(t, errMarshal)
+
+	var updatedSpeaker models.Speaker
+
+	res, err := executeRequest("PUT", "/speakers/"+newSpeaker.ID.Hex(), bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedSpeaker)
+
+	assert.Equal(t, updatedSpeaker.ID, newSpeaker.ID)
+	assert.Equal(t, updatedSpeaker.Name, *usd.Name)
+	assert.Equal(t, updatedSpeaker.Bio, *usd.Bio)
+	assert.Equal(t, updatedSpeaker.Title, *usd.Title)
+	assert.Equal(t, updatedSpeaker.Notes, *usd.Notes)
+}
+
+func TestUpdateSpeakerInvalidPayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	type InvalidPayload struct {
+		Name string
+	}
+
+	usd := &InvalidPayload{
+		Name: "some name",
+	}
+
+	b, errMarshal := json.Marshal(usd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/speakers/"+newSpeaker.ID.Hex(), bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestUpdateSpeakerNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var newName = "some other name"
+	var newBio = "some other bio"
+	var newTitle = "some other title"
+	var newNotes = "some other notes"
+
+	usd := &mongodb.UpdateSpeakerData{
+		Name:  &newName,
+		Bio:   &newBio,
+		Title: &newTitle,
+		Notes: &newNotes,
+	}
+
+	b, errMarshal := json.Marshal(usd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/companies/"+primitive.NewObjectID().Hex(), bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}

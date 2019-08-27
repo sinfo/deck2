@@ -150,6 +150,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("", authMember(getSpeakers)).Methods("GET")
 	speakerRouter.HandleFunc("", authMember(createSpeaker)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}", authMember(getSpeaker)).Methods("GET")
+	speakerRouter.HandleFunc("/{id}", authMember(updateSpeaker)).Methods("PUT")
 
 	// event handlers
 	eventRouter := r.PathPrefix("/events").Subrouter()

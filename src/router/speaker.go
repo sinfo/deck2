@@ -84,3 +84,32 @@ func createSpeaker(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(newSpeaker)
 }
+
+func updateSpeaker(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+		http.Error(w, "Invalid speaker ID", http.StatusNotFound)
+		return
+	}
+
+	var usd = &mongodb.UpdateSpeakerData{}
+
+	if err := usd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedSpeaker, err := mongodb.Speakers.UpdateSpeaker(speakerID, *usd)
+
+	if err != nil {
+		http.Error(w, "Could not update company data", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedSpeaker)
+}

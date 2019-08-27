@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/sinfo/deck2/src/models"
 
@@ -141,4 +142,65 @@ func (s *SpeakersType) GetSpeaker(speakerID primitive.ObjectID) (*models.Speaker
 	}
 
 	return &speaker, nil
+}
+
+// UpdateSpeakerData is the data used to update a speaker, using the method UpdateSpeaker.
+type UpdateSpeakerData struct {
+	Name  *string
+	Bio   *string
+	Title *string
+	Notes *string
+}
+
+// ParseBody fills the UpdateSpeakerData from a body
+func (usd *UpdateSpeakerData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(usd); err != nil {
+		return err
+	}
+
+	if usd.Name == nil || len(*usd.Name) == 0 {
+		return errors.New("Invalid name")
+	}
+
+	if usd.Bio == nil {
+		return errors.New("Invalid bio")
+	}
+
+	if usd.Title == nil {
+		return errors.New("Invalid title")
+	}
+
+	if usd.Notes == nil {
+		return errors.New("Invalid notes")
+	}
+
+	return nil
+}
+
+// UpdateSpeaker updates the general information about a speaker, unrelated to other data types stored in de database.
+func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSpeakerData) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"name":  data.Name,
+			"bio":   data.Bio,
+			"title": data.Title,
+			"notes": data.Notes,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("error updating speaker:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
 }
