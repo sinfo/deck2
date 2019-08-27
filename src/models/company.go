@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 
-	"github.com/globalsign/mgo/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -84,16 +83,6 @@ type Company struct {
 
 	BillingInfo    CompanyBillingInfo     `json:"billingInfo,omitempty" bson:"billingInfo,omitempty"`
 	Participations []CompanyParticipation `json:"participations,omitempty" bson:"participations,omitempty"`
-}
-
-// ToBson converts a company to a bson format.
-// Really usefull to create a company and adding it to the database without compromising the id.
-func (c *Company) ToBson() bson.M {
-	return bson.M{
-		"name":        c.Name,
-		"description": c.Description,
-		"site":        c.Site,
-	}
 }
 
 // CompanyParticipationPublic stores a company's participation info to be shown to everyone publicly.

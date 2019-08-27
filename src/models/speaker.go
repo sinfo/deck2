@@ -21,7 +21,7 @@ type SpeakerParticipationGuests struct {
 	Flight primitive.ObjectID `json:"flight" bson:"flight"`
 }
 
-type SpeakerParticipations struct {
+type SpeakerParticipation struct {
 
 	// Event is an _id of Event (see models.Event).
 	Event int `json:"event" bson:"event"`
@@ -84,7 +84,7 @@ type Speaker struct {
 	Bio string `json:"bio" bson:"bio"`
 
 	// This is only visible by the team. Praise and trash talk at will.
-	Notes          string                  `json:"notes" bson:"notes"`
-	Images         SpeakerImages           `json:"img" bson:"img"`
-	Participations []SpeakerParticipations `json:"participations" bson:"participations"`
+	Notes          string                 `json:"notes" bson:"notes"`
+	Images         SpeakerImages          `json:"imgs" bson:"imgs"`
+	Participations []SpeakerParticipation `json:"participations" bson:"participations"`
 }

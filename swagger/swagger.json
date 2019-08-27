@@ -175,6 +175,12 @@
 		"/companies/{id}/thread": {
 			"$ref": "./endpoints/companies-id-thread.json"
 		},
+		"/speakers": {
+			"$ref": "./endpoints/speakers.json"
+		},
+		"/speakers/{id}": {
+			"$ref": "./endpoints/speakers-id.json"
+		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"
 		},

@@ -145,6 +145,12 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 
+	// speaker handlers
+	speakerRouter := r.PathPrefix("/speakers").Subrouter()
+	speakerRouter.HandleFunc("", authMember(getSpeakers)).Methods("GET")
+	speakerRouter.HandleFunc("", authMember(createSpeaker)).Methods("POST")
+	speakerRouter.HandleFunc("/{id}", authMember(getSpeaker)).Methods("GET")
+
 	// event handlers
 	eventRouter := r.PathPrefix("/events").Subrouter()
 	eventRouter.HandleFunc("", authMember(getEvents)).Methods("GET")

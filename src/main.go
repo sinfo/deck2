@@ -25,6 +25,6 @@ func main() {
 	spaces.InitializeSpaces()
 	router.InitializeRouter()
 
-	fmt.Printf("Serving at %s:%s\n", config.Host, config.Port)
+	log.Printf("Serving at %s:%s\n", config.Host, config.Port)
 	http.ListenAndServe(fmt.Sprintf("%s:%s", config.Host, config.Port), router.Router)
 }

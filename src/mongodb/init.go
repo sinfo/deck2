@@ -16,6 +16,7 @@ var db *mongo.Database
 var (
 	Events    *EventsType
 	Companies *CompaniesType
+	Speakers  *SpeakersType
 	Teams     *TeamsType
 	Members   *MembersType
 	Items     *ItemsType
@@ -62,6 +63,11 @@ func InitializeDatabase() {
 		Context:    ctx,
 	}
 
+	Speakers = &SpeakersType{
+		Collection: db.Collection("speakers"),
+		Context:    ctx,
+	}
+
 	Teams = &TeamsType{
 		Collection: db.Collection("teams"),
 		Context:    ctx,
@@ -94,7 +100,7 @@ func InitializeDatabase() {
 
 	Threads = &ThreadsType{
 		Collection: db.Collection("threads"),
-		Context:	ctx,
+		Context:    ctx,
 	}
 
 	Posts = &PostsType{

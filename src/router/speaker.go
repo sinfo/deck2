@@ -1,0 +1,86 @@
+package router
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+	"github.com/sinfo/deck2/src/mongodb"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func getSpeaker(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	speaker, err := mongodb.Speakers.GetSpeaker(speakerID)
+
+	if err != nil {
+		http.Error(w, "Unable to get speaker", http.StatusNotFound)
+	}
+
+	json.NewEncoder(w).Encode(speaker)
+}
+
+func getSpeakers(w http.ResponseWriter, r *http.Request) {
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetSpeakersOptions{}
+
+	event := urlQuery.Get("event")
+	member := urlQuery.Get("member")
+	name := urlQuery.Get("name")
+
+	if len(event) > 0 {
+		eventID, err := strconv.Atoi(event)
+		if err != nil {
+			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+			return
+		}
+		options.EventID = &eventID
+	}
+
+	if len(member) > 0 {
+		memberID, err := primitive.ObjectIDFromHex(member)
+		if err != nil {
+			http.Error(w, "Invalid member ID format", http.StatusBadRequest)
+			return
+		}
+		options.MemberID = &memberID
+	}
+
+	if len(name) > 0 {
+		options.Name = &name
+	}
+
+	speakers, err := mongodb.Speakers.GetSpeakers(options)
+
+	if err != nil {
+		http.Error(w, "Unable to get speakers", http.StatusExpectationFailed)
+	}
+
+	json.NewEncoder(w).Encode(speakers)
+}
+
+func createSpeaker(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	var cpd = &mongodb.CreateSpeakerData{}
+
+	if err := cpd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(*cpd)
+
+	if err != nil {
+		http.Error(w, "Could not create speaker", http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newSpeaker)
+}
