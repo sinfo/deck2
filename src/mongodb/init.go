@@ -27,6 +27,10 @@ var (
 	Posts     *PostsType
 )
 
+var (
+	indexUnique = true
+)
+
 // InitializeDatabase initializes the database connection
 func InitializeDatabase() {
 

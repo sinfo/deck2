@@ -181,6 +181,9 @@
 		"/speakers/{id}": {
 			"$ref": "./endpoints/speakers-id.json"
 		},
+		"/speakers/{id}/participation": {
+			"$ref": "./endpoints/speakers-id-participation.json"
+		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"
 		},

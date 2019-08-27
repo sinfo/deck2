@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -108,6 +109,28 @@ func updateSpeaker(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "Could not update company data", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedSpeaker)
+}
+
+func addSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	updatedSpeaker, err := mongodb.Speakers.AddParticipation(speakerID, credentials.ID)
+
+	if err != nil {
+		http.Error(w, "Could not add participation to speaker", http.StatusBadRequest)
 		return
 	}
 

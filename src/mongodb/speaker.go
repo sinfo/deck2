@@ -204,3 +204,37 @@ func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSp
 
 	return &updatedSpeaker, nil
 }
+
+// AddParticipation adds a participation on the current event to the speaker with the indicated id.
+func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID primitive.ObjectID) (*models.Speaker, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"participations": bson.M{
+				"event":  currentEvent.ID,
+				"member": memberID,
+				"status": models.Suggested,
+			},
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": bson.M{"$ne": currentEvent.ID}}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error finding created speaker:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}

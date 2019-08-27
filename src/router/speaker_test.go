@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/sinfo/deck2/src/auth"
+	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson"
@@ -275,4 +277,134 @@ func TestUpdateSpeakerNotFound(t *testing.T) {
 
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestAddSpeakerParticipation(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleMember
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	var updatedSpeaker models.Speaker
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/speakers/"+newSpeaker.ID.Hex()+"/participation", nil, *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedSpeaker)
+
+	assert.Equal(t, updatedSpeaker.ID, newSpeaker.ID)
+	assert.Equal(t, len(updatedSpeaker.Participations), 1)
+	assert.Equal(t, updatedSpeaker.Participations[0].Event, Event1.ID)
+	assert.Equal(t, updatedSpeaker.Participations[0].Member, newMember.ID)
+}
+
+func TestAddSpeakerParticipationAlreadyIsParticipating(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleMember
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	_, err = mongodb.Speakers.AddParticipation(newSpeaker.ID, newMember.ID)
+	assert.NilError(t, err)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/speakers/"+newSpeaker.ID.Hex()+"/participation", nil, *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
 }

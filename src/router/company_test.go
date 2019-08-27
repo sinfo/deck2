@@ -237,6 +237,77 @@ func TestAddCompanyParticipation(t *testing.T) {
 
 }
 
+func TestAddCompanyParticipationAlreadyIsParticipating(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role = models.RoleMember
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	utmd := mongodb.UpdateTeamMemberData{
+		Member: &newMember.ID,
+		Role:   &role,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
+	assert.NilError(t, err)
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(newMember.SINFOID)
+	assert.NilError(t, err)
+
+	token, err := auth.SignJWT(*credentials)
+	assert.NilError(t, err)
+
+	_, err = mongodb.Companies.AddParticipation(newCompany.ID, newMember.ID, mongodb.AddParticipationData{
+		Partner: true,
+	})
+	assert.NilError(t, err)
+
+	apd := &mongodb.AddParticipationData{
+		Partner: false,
+	}
+
+	b, errMarshal := json.Marshal(apd)
+	assert.NilError(t, errMarshal)
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("POST", "/companies/"+newCompany.ID.Hex()+"/participation", bytes.NewBuffer(b), *token)
+	config.Authentication = false
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
 func TestAddCompanyThread(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)

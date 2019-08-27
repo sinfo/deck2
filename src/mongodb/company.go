@@ -341,7 +341,7 @@ func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, memberID 
 		},
 	}
 
-	var filterQuery = bson.M{"_id": companyID}
+	var filterQuery = bson.M{"_id": companyID, "participations.event": bson.M{"$ne": currentEvent.ID}}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)

@@ -117,6 +117,9 @@
                     "$ref": "./models/company.json"
                 }
             },
+            "400": {
+                "description": "Unable to add participation for the current event to this company"
+            },
             "404": {
                 "description": "Company not found"
             },
