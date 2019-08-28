@@ -64,17 +64,9 @@
 						"type": "string"
 					},
 					"flights": {
-						"type": "string"
-					},
-					"guests": {
-						"type": "object",
-						"properties": {
-							"name": {
-								"type": "string"
-							},
-							"flight": {
-								"type": "string"
-							}
+						"type": "array",
+						"items": {
+							"type": "string"
 						}
 					},
 					"room": {

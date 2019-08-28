@@ -14,13 +14,6 @@ type SpeakerParticipationRoom struct {
 	Notes string `json:"notes" bson:"notes"`
 }
 
-type SpeakerParticipationGuests struct {
-	Name string `json:"name" bson:"name"`
-
-	// Flights is an _id of FlightInfo (see models.FlighInfo).
-	Flight primitive.ObjectID `json:"flight" bson:"flight"`
-}
-
 type SpeakerParticipation struct {
 
 	// Event is an _id of Event (see models.Event).
@@ -43,11 +36,7 @@ type SpeakerParticipation struct {
 	Feedback string `json:"feedback" bson:"feedback"`
 
 	// Flights is an array of _id of FlightInfo (see models.FlightInfo).
-	Flights primitive.ObjectID `json:"flights" bson:"flights"`
-
-	// Speaker's family members, girlfriend/boyfriend, etc. Only relevant if they
-	// will also be attending the event.
-	Guests SpeakerParticipationGuests `json:"guests" bson:"guests"`
+	Flights []primitive.ObjectID `json:"flights" bson:"flights"`
 
 	// Hotel information regarding this speaker.
 	Room SpeakerParticipationRoom `json:"room" bson:"room"`
