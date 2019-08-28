@@ -736,3 +736,143 @@ func TestStepSpeakerStatus(t *testing.T) {
 	assert.Equal(t, updatedSpeaker.Participations[0].Event, Event1.ID)
 	assert.Equal(t, updatedSpeaker.Participations[0].Status, status)
 }
+
+func TestSetSpeakerStatus(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	updatedSpeaker, err := mongodb.Speakers.AddParticipation(newSpeaker.ID, newMember.ID)
+	assert.NilError(t, err)
+
+	assert.Equal(t, updatedSpeaker.Participations[0].Status, models.Suggested)
+
+	res, err := executeRequest("PUT", "/speakers/"+newSpeaker.ID.Hex()+"/participation/status/"+string(models.Announced), nil)
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedSpeaker)
+
+	assert.Equal(t, updatedSpeaker.ID, newSpeaker.ID)
+	assert.Equal(t, len(updatedSpeaker.Participations), 1)
+	assert.Equal(t, updatedSpeaker.Participations[0].Event, Event1.ID)
+	assert.Equal(t, updatedSpeaker.Participations[0].Status, models.Announced)
+}
+
+func TestSetSpeakerStatusNoParticipation(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	res, err := executeRequest("PUT", "/speakers/"+newSpeaker.ID.Hex()+"/participation/status/"+string(models.Announced), nil)
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusExpectationFailed)
+}
+
+func TestSetSpeakerStatusInvalidCompany(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	res, err := executeRequest("PUT", "/speakers/"+primitive.NewObjectID().Hex()+"/participation/status/"+string(models.Announced), nil)
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestSetSpeakerStatusInvalidStatus(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	updatedSpeaker, err := mongodb.Speakers.AddParticipation(newSpeaker.ID, newMember.ID)
+	assert.NilError(t, err)
+
+	assert.Equal(t, updatedSpeaker.Participations[0].Status, models.Suggested)
+
+	res, err := executeRequest("PUT", "/companies/"+newSpeaker.ID.Hex()+"/participation/status/someinvalidstatus", nil)
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}

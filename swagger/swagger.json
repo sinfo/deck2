@@ -190,6 +190,9 @@
 		"/speakers/{id}/participation/status/{step}": {
 			"$ref": "./endpoints/speakers-id-participation-status-step.json"
 		},
+		"/speakers/{id}/participation/status/{status}": {
+			"$ref": "./endpoints/speakers-id-participation-status-status.json"
+		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"
 		},

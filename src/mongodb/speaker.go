@@ -389,3 +389,34 @@ func (s *SpeakersType) GetSpeakerParticipationStatusValidSteps(speakerID primiti
 
 	return nil, errors.New("No participation found")
 }
+
+// UpdateSpeakerParticipationStatus updates a speaker's participation status
+// related to the current event. This is the method used when one does not want necessarily to follow
+// the state machine described on models.ParticipationStatus.
+func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.ObjectID, status models.ParticipationStatus) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.status": status,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error updating speaker's status:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}

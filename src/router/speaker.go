@@ -217,3 +217,31 @@ func getSpeakerValidSteps(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(validSteps)
 }
+
+func setSpeakerStatus(w http.ResponseWriter, r *http.Request) {
+
+	status := new(models.ParticipationStatus)
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+	err := status.Parse(params["status"])
+
+	if err != nil {
+		http.Error(w, "Invalid status", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+		http.Error(w, "Invalid speaker ID", http.StatusNotFound)
+		return
+	}
+
+	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerParticipationStatus(speakerID, *status)
+
+	if err != nil {
+		http.Error(w, "Could not update speaker status", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedSpeaker)
+}
