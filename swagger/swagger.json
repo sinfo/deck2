@@ -193,6 +193,15 @@
 		"/speakers/{id}/participation/status/{status}": {
 			"$ref": "./endpoints/speakers-id-participation-status-status.json"
 		},
+		"/speakers/{id}/image/internal": {
+			"$ref": "./endpoints/speakers-id-image-internal.json"
+		},
+		"/speakers/{id}/image/public/speaker": {
+			"$ref": "./endpoints/speakers-id-image-public-speaker.json"
+		},
+		"/speakers/{id}/image/public/company": {
+			"$ref": "./endpoints/speakers-id-image-public-company.json"
+		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"
 		},

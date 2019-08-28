@@ -420,3 +420,75 @@ func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.Obje
 
 	return &updatedSpeaker, nil
 }
+
+// UpdateSpeakerInternalImage updates the speaker's internal image.
+func (s *SpeakersType) UpdateSpeakerInternalImage(speakerID primitive.ObjectID, url string) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"imgs.internal": url,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("error updating speaker:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
+
+// UpdateSpeakerCompanyImage updates the speaker's company image.
+func (s *SpeakersType) UpdateSpeakerCompanyImage(speakerID primitive.ObjectID, url string) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"imgs.company": url,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("error updating speaker:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
+
+// UpdateSpeakerPublicImage updates the speaker's public image.
+func (s *SpeakersType) UpdateSpeakerPublicImage(speakerID primitive.ObjectID, url string) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"imgs.speaker": url,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("error updating speaker:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}

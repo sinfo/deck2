@@ -32,6 +32,7 @@ func onError(err error) {
 	mongodb.Members.Collection.Drop(mongodb.Members.Context)
 	mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
 
 	log.Fatal(err)
 }
@@ -143,6 +144,26 @@ func main() {
 	}
 
 	_, err = mongodb.Companies.CreateCompany(ccd)
+	if err != nil {
+		onError(err)
+	}
+
+	var speakerName = "Nice Speaker"
+	var speakerBio = "Some bio"
+	var speakerTitle = "CTO @ Paio Inc."
+
+	csd := mongodb.CreateSpeakerData{
+		Name:  &speakerName,
+		Bio:   &speakerBio,
+		Title: &speakerTitle,
+	}
+
+	speaker, err := mongodb.Speakers.CreateSpeaker(csd)
+	if err != nil {
+		onError(err)
+	}
+
+	_, err = mongodb.Speakers.AddParticipation(speaker.ID, member.ID)
 	if err != nil {
 		onError(err)
 	}

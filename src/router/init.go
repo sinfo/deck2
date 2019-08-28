@@ -156,6 +156,9 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/participation/status/next", authMember(getSpeakerValidSteps)).Methods("GET")
 	speakerRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepSpeakerStatus)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setSpeakerStatus)).Methods("PUT")
+	speakerRouter.HandleFunc("/{id}/image/internal", authMember(setSpeakerPrivateImage)).Methods("POST")
+	speakerRouter.HandleFunc("/{id}/image/public/speaker", authCoordinator(setSpeakerPublicImage)).Methods("POST")
+	speakerRouter.HandleFunc("/{id}/image/public/company", authCoordinator(setSpeakerCompanyImage)).Methods("POST")
 
 	// event handlers
 	eventRouter := r.PathPrefix("/events").Subrouter()
