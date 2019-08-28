@@ -311,3 +311,81 @@ func (s *SpeakersType) UpdateSpeakerParticipation(speakerID primitive.ObjectID, 
 
 	return &updatedSpeaker, nil
 }
+
+// StepStatus advances the status of a speaker's participation in the current event,
+// according to the given step (see models.Speaker).
+func (s *SpeakersType) StepStatus(speakerID primitive.ObjectID, step int) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	speaker, err := s.GetSpeaker(speakerID)
+	if err != nil {
+		return nil, err
+	}
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	for i, p := range speaker.Participations {
+		if p.Event != currentEvent.ID {
+			continue
+		}
+
+		err := speaker.Participations[i].Status.Next(step)
+
+		if err != nil {
+			return nil, err
+		}
+
+		var updateQuery = bson.M{
+			"$set": bson.M{
+				"participations.$.status": speaker.Participations[i].Status,
+			},
+		}
+
+		var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+
+		var optionsQuery = options.FindOneAndUpdate()
+		optionsQuery.SetReturnDocument(options.After)
+
+		if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+			log.Println("Error updating speaker's status:", err)
+			return nil, err
+		}
+
+		return &updatedSpeaker, nil
+	}
+
+	return nil, errors.New("speaker without participation on the current event")
+}
+
+// GetSpeakerParticipationStatusValidSteps gets the valid steps to be taken on speaker's participation status
+func (s *SpeakersType) GetSpeakerParticipationStatusValidSteps(speakerID primitive.ObjectID) (*[]models.ValidStep, error) {
+
+	var steps []models.ValidStep
+
+	speaker, err := s.GetSpeaker(speakerID)
+	if err != nil {
+		return nil, err
+	}
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	for i, p := range speaker.Participations {
+
+		if p.Event != currentEvent.ID {
+			continue
+		}
+
+		steps = speaker.Participations[i].Status.ValidSteps()
+
+		return &steps, nil
+	}
+
+	return nil, errors.New("No participation found")
+}

@@ -165,3 +165,55 @@ func updateSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
 }
+
+func stepSpeakerStatus(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+	step, err := strconv.Atoi(params["step"])
+
+	if err != nil {
+		http.Error(w, "Invalid step", http.StatusBadRequest)
+		return
+	}
+
+	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+		http.Error(w, "Invalid speaker ID", http.StatusNotFound)
+		return
+	}
+
+	updatedSpeaker, err := mongodb.Speakers.StepStatus(speakerID, step)
+
+	if err != nil {
+		http.Error(w, "Could not update speaker status", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedSpeaker)
+}
+
+func getSpeakerValidSteps(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+		http.Error(w, "Invalid speaker ID", http.StatusNotFound)
+		return
+	}
+
+	validSteps := validStepsResponse{}
+
+	steps, err := mongodb.Speakers.GetSpeakerParticipationStatusValidSteps(speakerID)
+
+	if err != nil {
+		http.Error(w, "Speaker without participation on the current event", http.StatusBadRequest)
+		return
+	}
+
+	if steps != nil {
+		validSteps.Steps = *steps
+	}
+
+	json.NewEncoder(w).Encode(validSteps)
+}
