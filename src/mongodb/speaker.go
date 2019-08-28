@@ -238,3 +238,76 @@ func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID p
 
 	return &updatedSpeaker, nil
 }
+
+type UpdateSpeakerParticipationData struct {
+	Member   *primitive.ObjectID              `json:"member"`
+	Feedback *string                          `json:"feedback"`
+	Room     *models.SpeakerParticipationRoom `json:"room"`
+}
+
+// ParseBody fills the UpdateSpeakerParticipationData from a body
+func (uspd *UpdateSpeakerParticipationData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(uspd); err != nil {
+		return err
+	}
+
+	if uspd.Member == nil {
+		return errors.New("invalid member ID")
+	}
+
+	if uspd.Feedback == nil {
+		return errors.New("missing feedback")
+	}
+
+	if uspd.Room == nil {
+		return errors.New("missing room data")
+	}
+
+	if uspd.Room.Cost < 0 {
+		return errors.New("invalid room cost value")
+	}
+
+	_, err := Members.GetMember(*uspd.Member)
+	if err != nil {
+		return errors.New("invalid member ID")
+	}
+
+	return nil
+}
+
+// UpdateSpeakerParticipation updates a company's participation data
+// related to the current event.
+func (s *SpeakersType) UpdateSpeakerParticipation(speakerID primitive.ObjectID, data UpdateSpeakerParticipationData) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.member":   *data.Member,
+			"participations.$.feedback": *data.Feedback,
+			"participations.$.room": bson.M{
+				"type":  data.Room.Type,
+				"cost":  data.Room.Cost,
+				"notes": data.Room.Notes,
+			},
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error updating speaker's status:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}

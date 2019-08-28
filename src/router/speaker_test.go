@@ -408,3 +408,222 @@ func TestAddSpeakerParticipationAlreadyIsParticipating(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
+
+func TestUpdateSpeakerParticipation(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	updatedSpeaker, err := mongodb.Speakers.AddParticipation(newSpeaker.ID, newMember.ID)
+	assert.NilError(t, err)
+
+	var feedback = "some feedback"
+	var room = models.SpeakerParticipationRoom{
+		Type:  "some type",
+		Cost:  20,
+		Notes: "some notes",
+	}
+
+	uspd := &mongodb.UpdateSpeakerParticipationData{
+		Member:   &newMember.ID,
+		Feedback: &feedback,
+		Room:     &room,
+	}
+
+	b, errMarshal := json.Marshal(uspd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/speakers/"+newSpeaker.ID.Hex()+"/participation", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedSpeaker)
+
+	assert.Equal(t, updatedSpeaker.ID, newSpeaker.ID)
+	assert.Equal(t, len(updatedSpeaker.Participations), 1)
+	assert.Equal(t, updatedSpeaker.Participations[0].Event, Event1.ID)
+	assert.Equal(t, updatedSpeaker.Participations[0].Member, newMember.ID)
+	assert.Equal(t, updatedSpeaker.Participations[0].Feedback, feedback)
+	assert.Equal(t, updatedSpeaker.Participations[0].Room.Cost, room.Cost)
+	assert.Equal(t, updatedSpeaker.Participations[0].Room.Type, room.Type)
+	assert.Equal(t, updatedSpeaker.Participations[0].Room.Notes, room.Notes)
+}
+
+func TestUpdateSpeakerParticipationInvalidPayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	_, err = mongodb.Speakers.AddParticipation(newSpeaker.ID, newMember.ID)
+	assert.NilError(t, err)
+
+	type InvalidPayload struct {
+		Member *primitive.ObjectID `json:"member"`
+	}
+
+	uspd := &InvalidPayload{
+		Member: &newMember.ID,
+	}
+
+	b, errMarshal := json.Marshal(uspd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/speakers/"+newSpeaker.ID.Hex()+"/participation", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestUpdateSpeakerParticipationNoParticipation(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	var feedback = "some feedback"
+	var room = models.SpeakerParticipationRoom{
+		Type:  "some type",
+		Cost:  20,
+		Notes: "some notes",
+	}
+
+	uspd := &mongodb.UpdateSpeakerParticipationData{
+		Member:   &newMember.ID,
+		Feedback: &feedback,
+		Room:     &room,
+	}
+
+	b, errMarshal := json.Marshal(uspd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/speakers/"+newSpeaker.ID.Hex()+"/participation", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusExpectationFailed)
+}
+
+func TestUpdateSpeakerParticipationSpeakerNotFound(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	var feedback = "some feedback"
+	var room = models.SpeakerParticipationRoom{
+		Type:  "some type",
+		Cost:  20,
+		Notes: "some notes",
+	}
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	uspd := &mongodb.UpdateSpeakerParticipationData{
+		Member:   &newMember.ID,
+		Feedback: &feedback,
+		Room:     &room,
+	}
+
+	b, errMarshal := json.Marshal(uspd)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/speakers/"+primitive.NewObjectID().Hex()+"/participation", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}

@@ -477,7 +477,7 @@ type UpdateCompanyParticipationData struct {
 	Notes     *string             `json:"notes"`
 }
 
-// ParseBody fills the CreateCompanyData from a body
+// ParseBody fills the UpdateCompanyParticipationData from a body
 func (ucpd *UpdateCompanyParticipationData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(ucpd); err != nil {
