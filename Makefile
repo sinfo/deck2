@@ -7,6 +7,11 @@ BINARY_FILENAME=deck2
 
 export GO111MODULE=on
 
+ifdef $(GOPATH)
+    GOPATH=""
+    export GOPATH
+endif
+
 all: help
 
 ## build                     : Compile source code and generate swagger specifications.
@@ -25,6 +30,7 @@ build-src:
 .PHONY: build-swagger
 build-swagger:
 	@echo "[*] generating swagger"
+	@mkdir -p $(STATIC)
 	@swagger flatten $(SWAGGER)/swagger.json --compact -o $(STATIC)/swagger.json
 
 	@echo "[*] validating swagger"
