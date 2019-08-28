@@ -7,11 +7,6 @@ BINARY_FILENAME=deck2
 
 export GO111MODULE=on
 
-ifdef $(GOPATH)
-    GOPATH=""
-    export GOPATH
-endif
-
 all: help
 
 ## build                     : Compile source code and generate swagger specifications.
