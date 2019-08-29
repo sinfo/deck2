@@ -108,5 +108,5 @@ type CompanyPublic struct {
 
 	Site string `json:"site"`
 
-	Participation CompanyParticipationPublic `json:"participations,omitempty"`
+	Participation CompanyParticipationPublic `json:"participation,omitempty"`
 }

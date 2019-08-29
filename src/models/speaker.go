@@ -77,3 +77,36 @@ type Speaker struct {
 	Images         SpeakerImages          `json:"imgs" bson:"imgs"`
 	Participations []SpeakerParticipation `json:"participations" bson:"participations"`
 }
+
+type SpeakerImagesPublic struct {
+
+	// Speaker photo. This is a URL pointing to the photo, stored somewhere. It will
+	// be visible on our website.
+	Speaker string `json:"speaker" bson:"speaker"`
+
+	// Speaker's company photo. This is a URL pointing to the photo, stored somewhere. It will
+	// be visible on our website.
+	Company string `json:"company" bson:"company"`
+}
+
+type SpeakerParticipationPublic struct {
+
+	// Event is an _id of Event (see models.Event).
+	Event int `json:"event" bson:"event"`
+
+	// Feedback given by the speaker regarding the conference. This will be visible on
+	// our website.
+	Feedback string `json:"feedback" bson:"feedback"`
+}
+
+// SpeakerPublic represents a speaker to be contacted by the team, that will hopefully participate
+// on the event, and to be shown to everyone publicly.
+type SpeakerPublic struct {
+	Name string `json:"name" bson:"name"`
+
+	// Title of the speaker (CEO @ HugeCorportation, for example).
+	Title string `json:"title" bson:"title"`
+
+	Images        SpeakerImagesPublic        `json:"imgs" bson:"imgs"`
+	Participation SpeakerParticipationPublic `json:"participation" bson:"participations"`
+}

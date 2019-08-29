@@ -22,6 +22,50 @@ type SpeakersType struct {
 	Context    context.Context
 }
 
+// Cached version of the public speakers for the current event
+var currentPublicSpeakers *[]*models.SpeakerPublic
+
+func ResetCurrentPublicSpeakers() {
+	currentPublicSpeakers = nil
+}
+
+func speakerToPublic(speaker models.Speaker, eventID int) (*models.SpeakerPublic, error) {
+
+	public := models.SpeakerPublic{
+		Name:  speaker.Name,
+		Title: speaker.Title,
+		Images: models.SpeakerImagesPublic{
+			Speaker: speaker.Images.Speaker,
+			Company: speaker.Images.Company,
+		},
+	}
+
+	var participation *models.SpeakerParticipation
+
+	for _, p := range speaker.Participations {
+		if p.Event == eventID {
+
+			if p.Status != models.Announced {
+				return nil, fmt.Errorf("speaker not announced on event %d", eventID)
+			}
+
+			participation = &p
+			break
+		}
+	}
+
+	if participation == nil {
+		return nil, fmt.Errorf("speaker not announced on event %d", eventID)
+	}
+
+	public.Participation = models.SpeakerParticipationPublic{
+		Event:    eventID,
+		Feedback: participation.Feedback,
+	}
+
+	return &public, nil
+}
+
 type CreateSpeakerData struct {
 	Name  *string `json:"name"`
 	Title *string `json:"title"`
@@ -70,6 +114,8 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 		log.Println("Error finding created speaker", err)
 		return nil, err
 	}
+
+	ResetCurrentPublicSpeakers()
 
 	return newSpeaker, nil
 }
@@ -130,6 +176,89 @@ func (s *SpeakersType) GetSpeakers(options GetSpeakersOptions) ([]*models.Speake
 	cur.Close(s.Context)
 
 	return speakers, nil
+}
+
+// GetSpeakersPublicOptions is the options to give to GetCompanies.
+// All the fields are optional, and as such we use pointers as a "hack" to deal
+// with non-existent fields.
+// The field is non-existent if it has a nil value.
+// This filter will behave like a logical *and*.
+type GetSpeakersPublicOptions struct {
+	EventID *int
+	Name    *string
+}
+
+// GetPublicSpeakers gets all companies specified with a query to be shown publicly
+func (s *SpeakersType) GetPublicSpeakers(options GetSpeakersPublicOptions) ([]*models.SpeakerPublic, error) {
+
+	var public = make([]*models.SpeakerPublic, 0)
+	var eventID int
+	var usingCurrentEvent = false
+
+	filter := bson.M{}
+
+	if options.EventID != nil {
+
+		filter["participations.event"] = options.EventID
+		eventID = *options.EventID
+
+	} else if currentPublicSpeakers != nil {
+
+		// return cached value
+		return *currentPublicSpeakers, nil
+
+	} else {
+
+		usingCurrentEvent = true
+		currentEvent, err := Events.GetCurrentEvent()
+		if err != nil {
+			return public, errors.New("error getting the current event")
+		}
+
+		filter["participations.event"] = currentEvent.ID
+		eventID = currentEvent.ID
+	}
+
+	if options.Name != nil {
+		filter["name"] = bson.M{
+			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$options": "i",
+		}
+	}
+
+	cur, err := s.Collection.Find(s.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(s.Context) {
+
+		// create a value into which the single document can be decoded
+		var c models.Speaker
+		err := cur.Decode(&c)
+		if err != nil {
+			return nil, err
+		}
+
+		p, err := speakerToPublic(c, eventID)
+		if err == nil {
+			public = append(public, p)
+		}
+
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(s.Context)
+
+	// update cached value
+	if usingCurrentEvent {
+		currentPublicSpeakers = &public
+	}
+
+	return public, nil
 }
 
 // GetSpeaker gets a speaker by its ID.
@@ -202,6 +331,8 @@ func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSp
 		return nil, err
 	}
 
+	ResetCurrentPublicSpeakers()
+
 	return &updatedSpeaker, nil
 }
 
@@ -235,6 +366,8 @@ func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID p
 		log.Println("Error finding created speaker:", err)
 		return nil, err
 	}
+
+	ResetCurrentPublicSpeakers()
 
 	return &updatedSpeaker, nil
 }
@@ -309,6 +442,8 @@ func (s *SpeakersType) UpdateSpeakerParticipation(speakerID primitive.ObjectID, 
 		return nil, err
 	}
 
+	ResetCurrentPublicSpeakers()
+
 	return &updatedSpeaker, nil
 }
 
@@ -357,6 +492,8 @@ func (s *SpeakersType) StepStatus(speakerID primitive.ObjectID, step int) (*mode
 
 		return &updatedSpeaker, nil
 	}
+
+	ResetCurrentPublicSpeakers()
 
 	return nil, errors.New("speaker without participation on the current event")
 }
@@ -418,6 +555,8 @@ func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.Obje
 		return nil, err
 	}
 
+	ResetCurrentPublicSpeakers()
+
 	return &updatedSpeaker, nil
 }
 
@@ -466,6 +605,8 @@ func (s *SpeakersType) UpdateSpeakerCompanyImage(speakerID primitive.ObjectID, u
 		return nil, err
 	}
 
+	ResetCurrentPublicSpeakers()
+
 	return &updatedSpeaker, nil
 }
 
@@ -489,6 +630,8 @@ func (s *SpeakersType) UpdateSpeakerPublicImage(speakerID primitive.ObjectID, ur
 		log.Println("error updating speaker:", err)
 		return nil, err
 	}
+
+	ResetCurrentPublicSpeakers()
 
 	return &updatedSpeaker, nil
 }

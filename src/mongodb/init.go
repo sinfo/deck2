@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/sinfo/deck2/src/config"
 
@@ -31,6 +32,27 @@ var (
 var (
 	indexUnique = true
 )
+
+const (
+	cacheCleanupPeriod = 1 * time.Hour
+)
+
+// In case you decide to run many instances of this program at the same time (for example
+// using a load balancer), the cached versions between these instances will not coincide.
+// A workaround is to just clean up the cached content every X time.
+func CleanupCache() {
+	ticker := time.NewTicker(cacheCleanupPeriod)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		ResetCurrentEvent()
+		ResetCurrentPublicCompanies()
+		ResetCurrentPublicSpeakers()
+
+		log.Println("Cleaned up cache")
+	}
+
+}
 
 // InitializeDatabase initializes the database connection
 func InitializeDatabase() {
@@ -119,4 +141,6 @@ func InitializeDatabase() {
 	}
 
 	log.Println("Connected to the database successfully")
+
+	go CleanupCache()
 }

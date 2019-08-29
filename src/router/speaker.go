@@ -72,6 +72,37 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(speakers)
 }
 
+func getSpeakersPublic(w http.ResponseWriter, r *http.Request) {
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetSpeakersPublicOptions{}
+
+	name := urlQuery.Get("name")
+	event := urlQuery.Get("event")
+
+	if len(event) > 0 {
+		eventID, err := strconv.Atoi(event)
+		if err != nil {
+			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+			return
+		}
+		options.EventID = &eventID
+	}
+
+	if len(name) > 0 {
+		options.Name = &name
+	}
+
+	publicSpeakers, err := mongodb.Speakers.GetPublicSpeakers(options)
+
+	if err != nil {
+		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(publicSpeakers)
+}
+
 func createSpeaker(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
