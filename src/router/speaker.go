@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/h2non/filetype"
+	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/spaces"
@@ -294,11 +295,8 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 10 KB
-	var maxSize int64 = 10 << 10
-
-	if err := r.ParseMultipartForm(maxSize); err != nil {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", maxSize), http.StatusBadRequest)
+	if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
 		return
 	}
 
@@ -310,8 +308,8 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	// check again for file size
 	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
-	if handler.Size > maxSize {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", maxSize), http.StatusBadRequest)
+	if handler.Size > config.ImageMaxSize {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
 		return
 	}
 
@@ -369,11 +367,8 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 10 KB
-	var maxSize int64 = 10 << 10
-
-	if err := r.ParseMultipartForm(maxSize); err != nil {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", maxSize), http.StatusBadRequest)
+	if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
 		return
 	}
 
@@ -385,8 +380,8 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	// check again for file size
 	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
-	if handler.Size > maxSize {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", maxSize), http.StatusBadRequest)
+	if handler.Size > config.ImageMaxSize {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
 		return
 	}
 
@@ -444,11 +439,8 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 10 KB
-	var maxSize int64 = 10 << 10
-
-	if err := r.ParseMultipartForm(maxSize); err != nil {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", maxSize), http.StatusBadRequest)
+	if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
 		return
 	}
 
@@ -460,8 +452,8 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 
 	// check again for file size
 	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
-	if handler.Size > maxSize {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", maxSize), http.StatusBadRequest)
+	if handler.Size > config.ImageMaxSize {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
 		return
 	}
 

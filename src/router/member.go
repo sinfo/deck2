@@ -23,7 +23,7 @@ func getMembers(w http.ResponseWriter, r *http.Request) {
 	if len(name) > 0 {
 		options.Name = &name
 	}
-	if len(event) > 0{
+	if len(event) > 0 {
 		eventID, _ = strconv.Atoi(event)
 		options.Event = &eventID
 	}
@@ -95,26 +95,26 @@ func updateMember(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func createMemberContact(w http.ResponseWriter, r *http.Request){
+func createMemberContact(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	var ccd = &mongodb.CreateContactData{}
 
-	if err := ccd.ParseBody(r.Body); err != nil{
+	if err := ccd.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	contact, err := mongodb.Contacts.CreateContact(*ccd)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Could not create contact", http.StatusExpectationFailed)
 		return
 	}
 
 	updatedMember, err := mongodb.Members.UpdateContact(id, contact.ID)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Could not update member", http.StatusNotFound)
 		return
 	}
@@ -143,7 +143,7 @@ func deleteNotification(w http.ResponseWriter, r *http.Request) {
 
 // PUBLIC ENDPOINTS
 
-func getMembersPublic(w http.ResponseWriter, r *http.Request){
+func getMembersPublic(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
 	options := mongodb.GetMemberOptions{}
@@ -152,10 +152,10 @@ func getMembersPublic(w http.ResponseWriter, r *http.Request){
 	event := urlQuery.Get("event")
 	var eventID int
 
-	if len(name) >0 {
+	if len(name) > 0 {
 		options.Name = &name
 	}
-	if len(event) > 0{
+	if len(event) > 0 {
 		eventID, _ = strconv.Atoi(event)
 		options.Event = &eventID
 	}
@@ -169,11 +169,11 @@ func getMembersPublic(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(members)
 }
 
-func getMemberPublic(w http.ResponseWriter, r *http.Request){
+func getMemberPublic(w http.ResponseWriter, r *http.Request) {
 
-	params :=mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
-	
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
 	member, err := mongodb.Members.GetMemberPublic(id)
 
 	if err != nil {

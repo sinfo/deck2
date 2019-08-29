@@ -57,6 +57,10 @@
 			"description": "Saved meetings' information"
 		},
 		{
+			"name": "me",
+			"description": "Member's personal endpoints"
+		},
+		{
 			"name": "members",
 			"description": "Information related to each SINFO's member"
 		},
@@ -294,6 +298,12 @@
 		},
 		"/meetings/{id}":{
 			"$ref":"./endpoints/meetings-id.json"
+		},
+		"/me": {
+			"$ref":"./endpoints/me.json"
+		},
+		"/me/image": {
+			"$ref":"./endpoints/me-image.json"
 		}
 	},
 	"externalDocs": {

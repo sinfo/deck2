@@ -1,0 +1,35 @@
+{
+    "get": {
+        "tags": [
+            "me"
+        ],
+        "summary": "Get my information",
+        "operationId": "getMe",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [ ],
+        "responses": {
+            "200": {
+                "description": "My information",
+                "schema": {
+                    "$ref": "./models/member.json"
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Information not found"
+            }
+        }
+    }
+}

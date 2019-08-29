@@ -28,6 +28,11 @@ var (
 	SpacesName   string
 	SpacesSecret string
 	SpacesKey    string
+
+	// Max size of the images to be uploaded by deck2 (Companies public and private images,
+	// speakers public and private images, etc)
+	// 10 KB
+	ImageMaxSize int64 = 10 << 10
 )
 
 const (

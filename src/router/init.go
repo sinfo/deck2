@@ -193,6 +193,11 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}/meetings", authMember(addTeamMeeting)).Methods("POST")
 	teamRouter.HandleFunc("/{id}/meetings/{meetingID}", authTeamLeader(deleteTeamMeeting)).Methods("DELETE")
 
+	// me handlers
+	meRouter := r.PathPrefix("/me").Subrouter()
+	meRouter.HandleFunc("", authMember(getMe)).Methods("GET")
+	meRouter.HandleFunc("/image", authMember(setMyImage)).Methods("POST")
+
 	// member handlers
 	memberRouter := r.PathPrefix("/members").Subrouter()
 	memberRouter.HandleFunc("", authMember(getMembers)).Methods("GET")

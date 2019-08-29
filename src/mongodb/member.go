@@ -279,6 +279,27 @@ func (m *MembersType) UpdateContact(memberID, contactID primitive.ObjectID) (*mo
 	return &member, nil
 }
 
+// UpdateImage updates a member's image
+func (m *MembersType) UpdateImage(memberID primitive.ObjectID, url string) (*models.Member, error) {
+
+	var member models.Member
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"img": url,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil {
+		return nil, err
+	}
+
+	return &member, nil
+}
+
 // UpdateMember updates a member's name, image and istid
 func (m *MembersType) UpdateMember(id primitive.ObjectID, data CreateMemberData) (*models.Member, error) {
 	var member models.Member
