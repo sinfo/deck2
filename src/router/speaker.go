@@ -519,3 +519,41 @@ func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
 }
+
+func deleteSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+	flightInfoID, _ := primitive.ObjectIDFromHex(params["flightInfoID"])
+
+	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+		http.Error(w, "Invalid speaker ID", http.StatusNotFound)
+		return
+	}
+
+	backupFlightInfo, _ := mongodb.FlightInfo.GetFlightInfo(flightInfoID)
+
+	updatedSpeaker, err := mongodb.Speakers.RemoveSpeakerFlightInfo(speakerID, flightInfoID)
+	if err != nil {
+		http.Error(w, "Could not remove flight info from speaker", http.StatusExpectationFailed)
+		return
+	}
+
+	_, err = mongodb.FlightInfo.DeleteFlightInfo(flightInfoID)
+	if err != nil {
+		http.Error(w, "Could not delete flight info", http.StatusExpectationFailed)
+
+		if backupFlightInfo == nil {
+			log.Printf("no backup flight info to compensate the failed deletion of the flight info: %s\n", err.Error())
+		}
+
+		// create deleted flight info
+		if _, err := mongodb.Speakers.AddSpeakerFlightInfo(speakerID, flightInfoID); err != nil {
+			log.Printf("error adding flight info to speaker: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedSpeaker)
+}

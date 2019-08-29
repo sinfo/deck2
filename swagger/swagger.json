@@ -196,6 +196,9 @@
 		"/speakers/{id}/participation/flightInfo": {
 			"$ref": "./endpoints/speakers-id-participation-flightinfo.json"
 		},
+		"/speakers/{id}/participation/flightInfo/{flightInfoID}": {
+			"$ref": "./endpoints/speakers-id-participation-flightinfo-flightinfoid.json"
+		},
 		"/speakers/{id}/image/internal": {
 			"$ref": "./endpoints/speakers-id-image-internal.json"
 		},

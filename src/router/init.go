@@ -157,6 +157,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepSpeakerStatus)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setSpeakerStatus)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/participation/flightInfo", authMember(addSpeakerFlightInfo)).Methods("POST")
+	speakerRouter.HandleFunc("/{id}/participation/flightInfo/{flightInfoID}", authCoordinator(deleteSpeakerFlightInfo)).Methods("DELETE")
 	speakerRouter.HandleFunc("/{id}/image/internal", authMember(setSpeakerPrivateImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/image/public/speaker", authCoordinator(setSpeakerPublicImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/image/public/company", authCoordinator(setSpeakerCompanyImage)).Methods("POST")

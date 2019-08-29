@@ -521,3 +521,32 @@ func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, flight
 
 	return &updatedSpeaker, nil
 }
+
+// RemoveSpeakerFlightInfo removes a flightInfo on the speaker's participation.
+func (s *SpeakersType) RemoveSpeakerFlightInfo(speakerID primitive.ObjectID, flightInfo primitive.ObjectID) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.flights": flightInfo,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("error updating speaker's flight info:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
