@@ -193,6 +193,9 @@
 		"/speakers/{id}/participation/status/{status}": {
 			"$ref": "./endpoints/speakers-id-participation-status-status.json"
 		},
+		"/speakers/{id}/participation/flightInfo": {
+			"$ref": "./endpoints/speakers-id-participation-flightinfo.json"
+		},
 		"/speakers/{id}/image/internal": {
 			"$ref": "./endpoints/speakers-id-image-internal.json"
 		},

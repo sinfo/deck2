@@ -876,3 +876,209 @@ func TestSetSpeakerStatusInvalidStatus(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
+
+func TestAddSpeakerFlightInfo(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.FlightInfo.Collection.Drop(mongodb.FlightInfo.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	updatedSpeaker, err := mongodb.Speakers.AddParticipation(newSpeaker.ID, newMember.ID)
+	assert.NilError(t, err)
+
+	cfid := &mongodb.CreateFlightInfoData{
+		Inbound:  &FlightInfo.Inbound,
+		Outbound: &FlightInfo.Outbound,
+		From:     &FlightInfo.From,
+		To:       &FlightInfo.To,
+		Link:     FlightInfo.Link,
+		Bought:   &FlightInfo.Bought,
+		Cost:     &FlightInfo.Cost,
+		Notes:    &FlightInfo.Notes,
+	}
+
+	b, errMarshal := json.Marshal(cfid)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/speakers/"+newSpeaker.ID.Hex()+"/participation/flightInfo", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedSpeaker)
+
+	assert.Equal(t, updatedSpeaker.ID, newSpeaker.ID)
+	assert.Equal(t, len(updatedSpeaker.Participations), 1)
+	assert.Equal(t, updatedSpeaker.Participations[0].Event, Event1.ID)
+	assert.Equal(t, updatedSpeaker.Participations[0].Member, newMember.ID)
+	assert.Equal(t, len(updatedSpeaker.Participations[0].Flights), 1)
+
+	createdFlightInfo, err := mongodb.FlightInfo.GetFlightInfo(updatedSpeaker.Participations[0].Flights[0])
+	assert.NilError(t, err)
+
+	assert.Equal(t, createdFlightInfo.Inbound.Sub(FlightInfo.Inbound).Seconds() < 10e-3, true)   // millisecond precision
+	assert.Equal(t, createdFlightInfo.Outbound.Sub(FlightInfo.Outbound).Seconds() < 10e-3, true) // millisecond precision
+	assert.Equal(t, createdFlightInfo.From, FlightInfo.From)
+	assert.Equal(t, createdFlightInfo.To, FlightInfo.To)
+	assert.Equal(t, createdFlightInfo.Link, FlightInfo.Link)
+	assert.Equal(t, createdFlightInfo.Bought, FlightInfo.Bought)
+	assert.Equal(t, createdFlightInfo.Cost, FlightInfo.Cost)
+	assert.Equal(t, createdFlightInfo.Notes, FlightInfo.Notes)
+}
+
+func TestAddSpeakerFlightInfoNoParticipation(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.FlightInfo.Collection.Drop(mongodb.FlightInfo.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cfid := &mongodb.CreateFlightInfoData{
+		Inbound:  &FlightInfo.Inbound,
+		Outbound: &FlightInfo.Outbound,
+		From:     &FlightInfo.From,
+		To:       &FlightInfo.To,
+		Link:     FlightInfo.Link,
+		Bought:   &FlightInfo.Bought,
+		Cost:     &FlightInfo.Cost,
+		Notes:    &FlightInfo.Notes,
+	}
+
+	b, errMarshal := json.Marshal(cfid)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/speakers/"+newSpeaker.ID.Hex()+"/participation/flightInfo", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusExpectationFailed)
+}
+
+func TestAddSpeakerFlightInfoInvalidPayload(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.FlightInfo.Collection.Drop(mongodb.FlightInfo.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cmd := mongodb.CreateMemberData{
+		Name:    "Member",
+		Image:   "IMG",
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	_, err = mongodb.Speakers.AddParticipation(newSpeaker.ID, newMember.ID)
+	assert.NilError(t, err)
+
+	type InvalidPayload struct {
+		Notes string `json:"notes"`
+	}
+
+	cfid := &InvalidPayload{
+		Notes: FlightInfo.Notes,
+	}
+
+	b, errMarshal := json.Marshal(cfid)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/speakers/"+newSpeaker.ID.Hex()+"/participation/flightInfo", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestAddSpeakerFlightInfoNoSpeaker(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.FlightInfo.Collection.Drop(mongodb.FlightInfo.Context)
+
+	mongodb.ResetCurrentEvent()
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	cfid := &mongodb.CreateFlightInfoData{
+		Inbound:  &FlightInfo.Inbound,
+		Outbound: &FlightInfo.Outbound,
+		From:     &FlightInfo.From,
+		To:       &FlightInfo.To,
+		Link:     FlightInfo.Link,
+		Bought:   &FlightInfo.Bought,
+		Cost:     &FlightInfo.Cost,
+		Notes:    &FlightInfo.Notes,
+	}
+
+	b, errMarshal := json.Marshal(cfid)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/speakers/"+primitive.NewObjectID().Hex()+"/participation/flightInfo", bytes.NewBuffer(b))
+
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}

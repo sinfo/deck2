@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -471,6 +472,48 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerCompanyImage(speakerID, *url)
 	if err != nil {
 		http.Error(w, "Couldn't update speaker internal image", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedSpeaker)
+}
+
+func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+		http.Error(w, "Invalid speaker ID", http.StatusNotFound)
+		return
+	}
+
+	var cfid = &mongodb.CreateFlightInfoData{}
+
+	if err := cfid.ParseBody(r.Body); err != nil {
+		http.Error(w, fmt.Sprintf("Could not parse body: %s", err.Error()), http.StatusBadRequest)
+		return
+	}
+
+	newFlightInfo, err := mongodb.FlightInfo.CreateFlightInfo(*cfid)
+
+	if err != nil {
+		http.Error(w, "Could not create flight info", http.StatusExpectationFailed)
+		return
+	}
+
+	updatedSpeaker, err := mongodb.Speakers.AddSpeakerFlightInfo(speakerID, newFlightInfo.ID)
+
+	if err != nil {
+		http.Error(w, "Could not add flight info to speaker", http.StatusExpectationFailed)
+
+		// delete created flight info
+		if _, err := mongodb.FlightInfo.DeleteFlightInfo(newFlightInfo.ID); err != nil {
+			log.Printf("error deleting flight info: %s\n", err.Error())
+		}
+
 		return
 	}
 
