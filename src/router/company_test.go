@@ -190,7 +190,6 @@ func TestAddCompanyParticipation(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -266,7 +265,6 @@ func TestAddCompanyParticipationAlreadyIsParticipating(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -339,7 +337,6 @@ func TestAddCompanyThread(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -441,7 +438,6 @@ func TestAddCompanyThreadInvalidPayload(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -538,7 +534,6 @@ func TestAddCompanyThreadNoParticipation(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -613,7 +608,6 @@ func TestAddCompanyThreadMeeting(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -735,7 +729,6 @@ func TestAddCompanyThreadMeetingDataMissing(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -816,7 +809,6 @@ func TestAddCompanyPackage(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -929,7 +921,6 @@ func TestAddCompanyPackageItemNotFound(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1024,7 +1015,6 @@ func TestAddCompanyPackageNoParticipation(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1288,7 +1278,6 @@ func TestSetCompanyStatus(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1363,7 +1352,6 @@ func TestSetCompanyStatusNoParticipation(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1413,7 +1401,6 @@ func TestSetCompanyStatusInvalidCompany(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1472,7 +1459,6 @@ func TestSetCompanyStatusInvalidStatus(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1540,7 +1526,6 @@ func TestListCompanyValidSteps(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1610,7 +1595,6 @@ func TestStepCompanyStatus(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1688,7 +1672,6 @@ func TestUpdateCompanyParticipation(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}

@@ -113,3 +113,33 @@ func setMyImage(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedMember)
 }
+
+func updateMe(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	var umd = &mongodb.UpdateMemberData{}
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	memberID := credentials.ID
+
+	if err := umd.ParseBody(r.Body); err != nil {
+		http.Error(w, fmt.Sprintf("Could not parse body: %v", err.Error()), http.StatusBadRequest)
+		return
+	}
+
+	updatedMember, err := mongodb.Members.UpdateMember(memberID, *umd)
+
+	if err != nil {
+		http.Error(w, "Could not update me", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedMember)
+}

@@ -74,13 +74,10 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "img", "istid"
+                        "name", "istid"
                     ],
                     "properties": {
                         "name": {
-                            "type": "string"
-                        },
-                        "img":{
                             "type": "string"
                         },
                         "istid":{

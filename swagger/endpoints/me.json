@@ -31,5 +31,59 @@
                 "description": "Information not found"
             }
         }
+    },
+    "put": {
+        "tags": [
+            "me"
+        ],
+        "summary": "Updates my information",
+        "operationId": "updateMe",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "Information needed to update my information.",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name", "istid"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "istid": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated information",
+                "schema": {
+                    "$ref": "./models/member.json"
+                }
+            },
+            "400": {
+                "description": "Invalid input or couldn't updated my information."
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
     }
 }

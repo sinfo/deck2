@@ -44,7 +44,7 @@
         "tags": [
             "members"
         ],
-        "summary": "Updates a member (must have coordinator credentials)",
+        "summary": "Updates a member (must have admin credentials)",
         "operationId": "updateMember",
         "consumes": [
             "application/json"
@@ -66,13 +66,10 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "img", "istid"
+                        "name", "istid"
                     ],
                     "properties": {
                         "name": {
-                            "type": "string"
-                        },
-                        "img": {
                             "type": "string"
                         },
                         "istid": {
@@ -91,13 +88,13 @@
         ],
         "responses": {
             "200": {
-                "description": "Updated team.",
+                "description": "Updated member.",
                 "schema": {
                     "$ref": "./models/member.json"
                 }
             },
             "400": {
-                "description": "Invalid input or couldn't updated the  team."
+                "description": "Invalid input or couldn't updated the member."
             },
             "401": {
                 "description": "Unauthorized"

@@ -309,7 +309,6 @@ func TestAddSpeakerParticipation(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -377,7 +376,6 @@ func TestAddSpeakerParticipationAlreadyIsParticipating(t *testing.T) {
 
 	cmd := mongodb.CreateMemberData{
 		Name:    "Member",
-		Image:   "IMG",
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -433,8 +431,8 @@ func TestUpdateSpeakerParticipation(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -501,8 +499,8 @@ func TestUpdateSpeakerParticipationInvalidPayload(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -553,8 +551,8 @@ func TestUpdateSpeakerParticipationNoParticipation(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -605,8 +603,8 @@ func TestUpdateSpeakerParticipationSpeakerNotFound(t *testing.T) {
 	}
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -652,8 +650,8 @@ func TestListSpeakerValidSteps(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -702,8 +700,8 @@ func TestStepSpeakerStatus(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -760,8 +758,8 @@ func TestSetSpeakerStatus(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -857,8 +855,8 @@ func TestSetSpeakerStatusInvalidStatus(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -901,8 +899,8 @@ func TestAddSpeakerFlightInfo(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1020,8 +1018,8 @@ func TestAddSpeakerFlightInfoInvalidPayload(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1107,8 +1105,8 @@ func TestRemoveSpeakerFlightInfo(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1177,8 +1175,8 @@ func TestRemoveSpeakerFlightInfoInvalidFlightInfo(t *testing.T) {
 	assert.NilError(t, err)
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1287,8 +1285,8 @@ func TestAddSpeakerThread(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1385,8 +1383,8 @@ func TestAddSpeakerThreadInvalidPayload(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1478,8 +1476,8 @@ func TestAddSpeakerThreadNoParticipation(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1552,8 +1550,8 @@ func TestAddSpeakerThreadMeeting(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -1669,8 +1667,8 @@ func TestAddSpeakerThreadMeetingDataMissing(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}

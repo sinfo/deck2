@@ -6,11 +6,11 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"testing"
 	"strconv"
+	"testing"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
@@ -21,13 +21,11 @@ import (
 var (
 	Member1Data = mongodb.CreateMemberData{
 		Name:    "Member1",
-		Image:   "Image1.png",
 		Istid:   "ist123456",
 		SINFOID: "john.doe",
 	}
 	Member2Data = mongodb.CreateMemberData{
 		Name:    "Member2",
-		Image:   "Image2.png",
 		Istid:   "ist654321",
 		SINFOID: "mary.jane",
 	}
@@ -45,7 +43,7 @@ func containsMember(members []models.Member, member *models.Member) bool {
 	return false
 }
 
-func containsMemberPublic(members []models.MemberPublic, member *models.Member) bool{
+func containsMemberPublic(members []models.MemberPublic, member *models.Member) bool {
 	for _, s := range members {
 		if s.ID == member.ID && s.Name == member.Name {
 			return true
@@ -136,14 +134,14 @@ func TestGetMembersName(t *testing.T) {
 
 }
 
-func TestGetMembersEvent(t *testing.T){
+func TestGetMembersEvent(t *testing.T) {
 
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	 _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name":"SINFO1"})
-	 assert.NilError(t, err)
+	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	assert.NilError(t, err)
 
 	event1, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: "SINFO2"})
 	assert.NilError(t, err)
@@ -154,11 +152,11 @@ func TestGetMembersEvent(t *testing.T){
 	Member1, err = mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	var role  models.TeamRole = "MEMBER"
+	var role models.TeamRole = "MEMBER"
 
 	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.UpdateTeamMemberData{
 		Member: &Member1.ID,
-		Role:	&role,
+		Role:   &role,
 	})
 	assert.NilError(t, err)
 	assert.Equal(t, len(team1.Members), 1)
@@ -167,10 +165,10 @@ func TestGetMembersEvent(t *testing.T){
 	var members []models.Member
 	var query = "?event=" + url.QueryEscape(strconv.Itoa(event1.ID))
 
-	res, err := executeRequest("GET", "/members"+query,nil)
+	res, err := executeRequest("GET", "/members"+query, nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
-	
+
 	json.NewDecoder(res.Body).Decode(&members)
 
 	assert.Equal(t, len(members), 1)
@@ -183,23 +181,23 @@ func TestGetMembersEvent(t *testing.T){
 
 	team2, err = mongodb.Teams.AddTeamMember(team2.ID, mongodb.UpdateTeamMemberData{
 		Member: &Member1.ID,
-		Role:	&role,
+		Role:   &role,
 	})
 	assert.NilError(t, err)
 	assert.Equal(t, len(team2.Members), 1)
 	assert.Equal(t, team2.Members[0].Member, Member1.ID)
 
-	res, err = executeRequest("GET", "/members"+query,nil)
+	res, err = executeRequest("GET", "/members"+query, nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
-	
+
 	json.NewDecoder(res.Body).Decode(&members)
 
 	assert.Equal(t, len(members), 1)
 	assert.Equal(t, members[0].ID, Member1.ID)
 }
 
-func TestGetMember(t *testing.T){
+func TestGetMember(t *testing.T) {
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
@@ -257,7 +255,6 @@ func TestCreateMemberBadPayload(t *testing.T) {
 
 	cmdName := mongodb.CreateMemberData{
 		Name:  "",
-		Image: "Image.png",
 		Istid: "ist111111",
 	}
 
@@ -270,7 +267,6 @@ func TestCreateMemberBadPayload(t *testing.T) {
 
 	cmdImage := mongodb.CreateMemberData{
 		Name:  "Name",
-		Image: "",
 		Istid: "ist111111",
 	}
 
@@ -283,7 +279,6 @@ func TestCreateMemberBadPayload(t *testing.T) {
 
 	cmdIstid0 := mongodb.CreateMemberData{
 		Name:  "Name",
-		Image: "Image.png",
 		Istid: "",
 	}
 
@@ -296,7 +291,6 @@ func TestCreateMemberBadPayload(t *testing.T) {
 
 	cmdIstidIst := mongodb.CreateMemberData{
 		Name:  "Name",
-		Image: "Image.png",
 		Istid: "123456",
 	}
 
@@ -341,7 +335,6 @@ func TestUpdateMemberBadPayload(t *testing.T) {
 
 	cmdName := mongodb.CreateMemberData{
 		Name:  "",
-		Image: "Image.png",
 		Istid: "ist111111",
 	}
 
@@ -352,22 +345,8 @@ func TestUpdateMemberBadPayload(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 
-	cmdImage := mongodb.CreateMemberData{
-		Name:  "Name",
-		Image: "",
-		Istid: "ist111111",
-	}
-
-	b, errMarshal = json.Marshal(cmdImage)
-	assert.NilError(t, errMarshal)
-
-	res, err = executeRequest("PUT", "/members/"+Member1.ID.Hex(), bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusBadRequest)
-
 	cmdIstid0 := mongodb.CreateMemberData{
 		Name:  "Name",
-		Image: "Image.png",
 		Istid: "",
 	}
 
@@ -380,7 +359,6 @@ func TestUpdateMemberBadPayload(t *testing.T) {
 
 	cmdIstidIst := mongodb.CreateMemberData{
 		Name:  "Name",
-		Image: "Image.png",
 		Istid: "123456",
 	}
 
@@ -392,7 +370,7 @@ func TestUpdateMemberBadPayload(t *testing.T) {
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
 
-func TestCreateMemberContact(t *testing.T){
+func TestCreateMemberContact(t *testing.T) {
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 
@@ -407,14 +385,14 @@ func TestCreateMemberContact(t *testing.T){
 	}
 	socials := models.ContactSocials{
 		Facebook: "facebook",
-		Skype: "skype",
-		Github: "github",
-		Twitter: "twitter",
+		Skype:    "skype",
+		Github:   "github",
+		Twitter:  "twitter",
 		LinkedIn: "linkedin",
 	}
 	mail := models.ContactMail{
-		Mail: "email@email.com",
-		Valid: true,
+		Mail:     "email@email.com",
+		Valid:    true,
 		Personal: true,
 	}
 
@@ -423,16 +401,15 @@ func TestCreateMemberContact(t *testing.T){
 
 	maillist := make([]models.ContactMail, 0)
 	maillist = append(maillist, mail)
-	
+
 	data := mongodb.CreateContactData{
-		Phones: phonelist,
+		Phones:  phonelist,
 		Socials: socials,
-		Mails: maillist,
+		Mails:   maillist,
 	}
 
 	b, errMarshal := json.Marshal(data)
 	assert.NilError(t, errMarshal)
-
 
 	res, err := executeRequest("POST", "/members/"+Member1.ID.Hex()+"/contact", bytes.NewBuffer(b))
 	assert.NilError(t, err)
@@ -456,18 +433,17 @@ func TestCreateMemberContact(t *testing.T){
 
 }
 
-func TestUpdateContactBadID(t *testing.T){
+func TestUpdateContactBadID(t *testing.T) {
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
 
 	data := mongodb.CreateContactData{
-		Phones : append(make([]models.ContactPhone, 0), models.ContactPhone{Phone:"a", Valid:true}),
-		Socials : models.ContactSocials{},
-		Mails: append(make([]models.ContactMail, 0), models.ContactMail{Mail:"a", Valid:true, Personal: true}),
+		Phones:  append(make([]models.ContactPhone, 0), models.ContactPhone{Phone: "a", Valid: true}),
+		Socials: models.ContactSocials{},
+		Mails:   append(make([]models.ContactMail, 0), models.ContactMail{Mail: "a", Valid: true, Personal: true}),
 	}
 
 	b, errMarshal := json.Marshal(data)
 	assert.NilError(t, errMarshal)
-
 
 	res, err := executeRequest("POST", "/members/wrong/contact", bytes.NewBuffer(b))
 	assert.NilError(t, err)
@@ -555,11 +531,9 @@ func TestDeleteNotificationWrongIDS(t *testing.T) {
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestGetMembersPublic(t *testing.T){
-	
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+func TestGetMembersPublic(t *testing.T) {
 
-	
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
@@ -585,8 +559,8 @@ func TestGetMembersPublic(t *testing.T){
 
 }
 
-func TestGetMembersPublicName(t *testing.T){
-	
+func TestGetMembersPublicName(t *testing.T) {
+
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
@@ -611,7 +585,7 @@ func TestGetMembersPublicName(t *testing.T){
 	assert.Equal(t, len(members), 2)
 	assert.Equal(t, containsMemberPublic(members, Member1), true)
 	assert.Equal(t, containsMemberPublic(members, Member2), true)
-	
+
 	query = "?name=" + url.QueryEscape("1")
 
 	res, err = executeRequest("GET", "/public/members"+query, nil)
@@ -626,7 +600,7 @@ func TestGetMembersPublicName(t *testing.T){
 
 	query = "?name=" + url.QueryEscape("a")
 
-	res, err = executeRequest("GET", "/public/members" + query, nil)
+	res, err = executeRequest("GET", "/public/members"+query, nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -638,14 +612,14 @@ func TestGetMembersPublicName(t *testing.T){
 
 }
 
-func TestGetMembersPublicEvent(t *testing.T){
+func TestGetMembersPublicEvent(t *testing.T) {
 
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	 _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name":"SINFO1"})
-	 assert.NilError(t, err)
+	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	assert.NilError(t, err)
 
 	event1, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: "SINFO2"})
 	assert.NilError(t, err)
@@ -660,7 +634,7 @@ func TestGetMembersPublicEvent(t *testing.T){
 
 	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.UpdateTeamMemberData{
 		Member: &Member1.ID,
-		Role:	&role,
+		Role:   &role,
 	})
 	assert.NilError(t, err)
 	assert.Equal(t, len(team1.Members), 1)
@@ -669,10 +643,10 @@ func TestGetMembersPublicEvent(t *testing.T){
 	var members []models.MemberPublic
 	var query = "?event=" + url.QueryEscape(strconv.Itoa(event1.ID))
 
-	res, err := executeRequest("GET", "/public/members"+query,nil)
+	res, err := executeRequest("GET", "/public/members"+query, nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
-	
+
 	json.NewDecoder(res.Body).Decode(&members)
 
 	assert.Equal(t, len(members), 1)
@@ -685,23 +659,23 @@ func TestGetMembersPublicEvent(t *testing.T){
 
 	team2, err = mongodb.Teams.AddTeamMember(team2.ID, mongodb.UpdateTeamMemberData{
 		Member: &Member1.ID,
-		Role:	&role,
+		Role:   &role,
 	})
 	assert.NilError(t, err)
 	assert.Equal(t, len(team2.Members), 1)
 	assert.Equal(t, team2.Members[0].Member, Member1.ID)
 
-	res, err = executeRequest("GET", "/public/members"+query,nil)
+	res, err = executeRequest("GET", "/public/members"+query, nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
-	
+
 	json.NewDecoder(res.Body).Decode(&members)
 
 	assert.Equal(t, len(members), 1)
 	assert.Equal(t, members[0].ID, Member1.ID)
 }
 
-func TestGetMemberPublic(t *testing.T){
+func TestGetMemberPublic(t *testing.T) {
 	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
@@ -721,7 +695,7 @@ func TestGetMemberPublic(t *testing.T){
 	assert.Equal(t, Member1.ID, member.ID)
 }
 
-func TestGetMemberPublicBadID(t *testing.T){
+func TestGetMemberPublicBadID(t *testing.T) {
 	res, err := executeRequest("GET", "/public/members/wrong", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)

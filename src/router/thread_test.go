@@ -98,8 +98,8 @@ func TestAddCommentToThread(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -180,8 +180,8 @@ func TestAddCommentToThreadInvalidPayload(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -243,8 +243,8 @@ func TestAddCommentToThreadInvalidThreadID(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -312,8 +312,8 @@ func TestRemoveCommentFromThread(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -380,8 +380,8 @@ func TestRemoveCommentFromThreadInvalidThread(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}
@@ -453,8 +453,8 @@ func TestRemoveCommentFromThreadInvalidPost(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:    "Member",
-		Image:   "IMG",
+		Name: "Member",
+
 		Istid:   "ist123456",
 		SINFOID: "sinfoID",
 	}

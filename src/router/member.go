@@ -76,16 +76,16 @@ func getMember(w http.ResponseWriter, r *http.Request) {
 func updateMember(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var cmd = &mongodb.CreateMemberData{}
+	var umd = &mongodb.UpdateMemberData{}
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
-	if err := cmd.ParseBody(r.Body); err != nil {
+	if err := umd.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
 
-	updatedMember, err := mongodb.Members.UpdateMember(id, *cmd)
+	updatedMember, err := mongodb.Members.UpdateMember(id, *umd)
 
 	if err != nil {
 		http.Error(w, "Could not update member", http.StatusNotFound)

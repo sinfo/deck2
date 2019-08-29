@@ -31,9 +31,14 @@ type GetMemberOptions struct {
 // CreateMemberData contains all info needed to create a new member
 type CreateMemberData struct {
 	Name    string `json:"name"`
-	Image   string `json:"img"`
 	Istid   string `json:"istid"`
 	SINFOID string `json:"sinfoid"`
+}
+
+// UpdateMemberData contains all info needed to update a member
+type UpdateMemberData struct {
+	Name  string `json:"name"`
+	Istid string `json:"istid"`
 }
 
 // UpdateContactData contains info needed to update a member's contact
@@ -63,14 +68,31 @@ func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
 	if len(cmd.Name) == 0 {
 		return errors.New("invalid name")
 	}
-	if len(cmd.Image) == 0 {
-		return errors.New("invalid image")
-	}
+
 	if len(cmd.Istid) < 3 || cmd.Istid[:3] != "ist" {
 		return errors.New("invalid name")
 	}
+
 	if len(cmd.SINFOID) == 0 {
 		return errors.New("invalid sinfo ID")
+	}
+
+	return nil
+}
+
+// ParseBody fills the UpdateMemberData from a body
+func (umd *UpdateMemberData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(umd); err != nil {
+		return err
+	}
+
+	if len(umd.Name) == 0 {
+		return errors.New("invalid name")
+	}
+
+	if len(umd.Istid) < 3 || umd.Istid[:3] != "ist" {
+		return errors.New("invalid name")
 	}
 
 	return nil
@@ -241,7 +263,6 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 	insertData := bson.M{}
 
 	insertData["name"] = data.Name
-	insertData["img"] = data.Image
 	insertData["istid"] = data.Istid
 	insertData["sinfoid"] = data.SINFOID
 
@@ -301,13 +322,12 @@ func (m *MembersType) UpdateImage(memberID primitive.ObjectID, url string) (*mod
 }
 
 // UpdateMember updates a member's name, image and istid
-func (m *MembersType) UpdateMember(id primitive.ObjectID, data CreateMemberData) (*models.Member, error) {
+func (m *MembersType) UpdateMember(id primitive.ObjectID, data UpdateMemberData) (*models.Member, error) {
 	var member models.Member
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
 			"name":  data.Name,
-			"img":   data.Image,
 			"istid": data.Istid,
 		},
 	}

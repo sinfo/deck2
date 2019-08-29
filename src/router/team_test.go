@@ -43,7 +43,7 @@ func containsTeamPublic(teams []models.TeamPublic, team *models.Team) bool {
 	return false
 }
 
-func setupTest(){
+func setupTest() {
 
 	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
 
@@ -398,8 +398,8 @@ func TestAddTeamMember(t *testing.T) {
 	var role = models.RoleMember
 
 	cmd := mongodb.CreateMemberData{
-		Name:  "Member",
-		Image: "IMG",
+		Name: "Member",
+
 		Istid: "ist123456",
 	}
 
@@ -468,8 +468,8 @@ func TestUpdateTeamMemberRole(t *testing.T) {
 	}
 
 	cmd := mongodb.CreateMemberData{
-		Name:  "Member",
-		Image: "IMG",
+		Name: "Member",
+
 		Istid: "ist123456",
 	}
 
@@ -550,8 +550,8 @@ func TestDeleteTeamMember(t *testing.T) {
 	}
 
 	cmd := mongodb.CreateMemberData{
-		Name:  "Member",
-		Image: "IMG",
+		Name: "Member",
+
 		Istid: "ist123456",
 	}
 
@@ -576,7 +576,6 @@ func TestDeleteTeamMember(t *testing.T) {
 	assert.Equal(t, team.Members[0].Member, member.ID)
 
 	var deletedTeam models.Team
-
 
 	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/members/"+member.ID.Hex(), nil)
 	assert.NilError(t, err)
@@ -606,7 +605,6 @@ func TestDeleteTeamMember(t *testing.T) {
 
 	randID := primitive.NewObjectID()
 
-
 	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/members/"+randID.Hex(), nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
@@ -618,7 +616,7 @@ func TestDeleteTeamMember(t *testing.T) {
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestAddMeeting(t *testing.T){
+func TestAddMeeting(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
@@ -657,7 +655,7 @@ func TestAddMeeting(t *testing.T){
 
 }
 
-func TestAddMeetingBadPayload(t *testing.T){
+func TestAddMeetingBadPayload(t *testing.T) {
 
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
@@ -671,7 +669,7 @@ func TestAddMeetingBadPayload(t *testing.T){
 	}
 
 	var BadData1 = mongodb.CreateMeetingData{
-		End: &TimeAfter,
+		End:   &TimeAfter,
 		Place: &Place1,
 	}
 	var BadData2 = mongodb.CreateMeetingData{
@@ -680,11 +678,11 @@ func TestAddMeetingBadPayload(t *testing.T){
 	}
 	var BadData3 = mongodb.CreateMeetingData{
 		Begin: &TimeBefore,
-		End: &TimeAfter,
+		End:   &TimeAfter,
 	}
 	var BadData4 = mongodb.CreateMeetingData{
 		Begin: &TimeAfter,
-		End: &TimeBefore,
+		End:   &TimeBefore,
 		Place: &Place1,
 	}
 
@@ -717,7 +715,7 @@ func TestAddMeetingBadPayload(t *testing.T){
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }
 
-func TestDeleteTeamMeeting(t *testing.T){
+func TestDeleteTeamMeeting(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
@@ -730,7 +728,7 @@ func TestDeleteTeamMeeting(t *testing.T){
 	}
 
 	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -740,7 +738,7 @@ func TestDeleteTeamMeeting(t *testing.T){
 	}
 
 	Meeting1, err = mongodb.Meetings.GetMeeting(Team1.Meetings[0])
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -756,7 +754,7 @@ func TestDeleteTeamMeeting(t *testing.T){
 	assert.Equal(t, meeting.Place, Meeting1.Place)
 }
 
-func TestDeleteTeamMeetingBad(t *testing.T){
+func TestDeleteTeamMeetingBad(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
@@ -769,7 +767,7 @@ func TestDeleteTeamMeetingBad(t *testing.T){
 	}
 
 	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -779,12 +777,12 @@ func TestDeleteTeamMeetingBad(t *testing.T){
 	}
 
 	Meeting1, err = mongodb.Meetings.GetMeeting(Team1.Meetings[0])
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	Meeting2, err = mongodb.Meetings.CreateMeeting(Meeting2Data)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -809,12 +807,12 @@ func TestGetTeamsPublic(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -838,12 +836,12 @@ func TestGetTeamsPublicByName(t *testing.T) {
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -860,13 +858,13 @@ func TestGetTeamsPublicByName(t *testing.T) {
 	assert.Equal(t, containsTeamPublic(teams, Team1), true)
 	assert.Equal(t, containsTeamPublic(teams, Team2), false)
 
-	res, err = executeRequest("GET", "/teams?name=wrong",nil)
+	res, err = executeRequest("GET", "/teams?name=wrong", nil)
 	assert.NilError(t, err)
-	assert.Equal(t, res.Code,http.StatusOK)
+	assert.Equal(t, res.Code, http.StatusOK)
 
 	json.NewDecoder(res.Body).Decode(&teams)
 
-	assert.Equal(t, len(teams),0)
+	assert.Equal(t, len(teams), 0)
 }
 
 func TestGetTeamsPublicByEvent(t *testing.T) {
@@ -876,7 +874,7 @@ func TestGetTeamsPublicByEvent(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -885,11 +883,10 @@ func TestGetTeamsPublicByEvent(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
-
 
 	var teams []models.TeamPublic
 	id := strconv.Itoa(TeamEvent2.ID)
@@ -926,20 +923,20 @@ func TestGetTeamPublic(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM1"})
+	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name:"TEAM2"})
+	Team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM2"})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var team1, team2 models.TeamPublic
 
-	res1, err1 := executeRequest("GET", "/teams/"+ Team1.ID.Hex(), nil)
-	res2, err2 := executeRequest("GET", "/teams/"+ Team2.ID.Hex(), nil)
+	res1, err1 := executeRequest("GET", "/teams/"+Team1.ID.Hex(), nil)
+	res2, err2 := executeRequest("GET", "/teams/"+Team2.ID.Hex(), nil)
 
 	assert.NilError(t, err1)
 	assert.NilError(t, err2)
