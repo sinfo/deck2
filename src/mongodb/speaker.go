@@ -693,3 +693,63 @@ func (s *SpeakersType) RemoveSpeakerFlightInfo(speakerID primitive.ObjectID, fli
 
 	return &updatedSpeaker, nil
 }
+
+// AddThread adds a models.Thread to a company's participation's list of communications (related to the current event).
+func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitive.ObjectID) (*models.Speaker, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"participations.$.communications": threadID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error adding communication to speaker's participation:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
+
+// RemoveCommunication removes a models.Thread from a speaker's participation's list of communications (related to the current event).
+func (s *SpeakersType) RemoveCommunication(speakerID primitive.ObjectID, threadID primitive.ObjectID) (*models.Speaker, error) {
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.communications": threadID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error removing communication to speaker's participation:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}

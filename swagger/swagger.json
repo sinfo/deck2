@@ -211,6 +211,9 @@
 		"/speakers/{id}/image/public/company": {
 			"$ref": "./endpoints/speakers-id-image-public-company.json"
 		},
+		"/speakers/{id}/thread": {
+			"$ref": "./endpoints/speakers-id-thread.json"
+		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"
 		},

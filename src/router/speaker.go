@@ -588,3 +588,122 @@ func deleteSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
 }
+
+func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+		http.Error(w, "Invalid speaker ID", http.StatusNotFound)
+		return
+	}
+
+	var atd = &addThreadData{}
+
+	if err := atd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	// create the post first
+	var cpd = mongodb.CreatePostData{
+		Member: credentials.ID,
+		Text:   *atd.Text,
+	}
+
+	newPost, err := mongodb.Posts.CreatePost(cpd)
+
+	if err != nil {
+		http.Error(w, "Could not create post", http.StatusExpectationFailed)
+		return
+	}
+
+	// if applied, create the meeting
+	var meetingIDPointer *primitive.ObjectID
+	if *atd.Kind == models.ThreadKindMeeting {
+
+		if err := atd.Meeting.Validate(); err != nil {
+			http.Error(w, "Invalid meeting data", http.StatusBadRequest)
+			return
+		}
+
+		meeting, err := mongodb.Meetings.CreateMeeting(*atd.Meeting)
+
+		if err != nil {
+			http.Error(w, "Could not create meeting", http.StatusExpectationFailed)
+
+			// clean up the created post
+			if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
+				log.Printf("error deleting post: %s\n", err.Error())
+			}
+
+			return
+		}
+
+		meetingIDPointer = &meeting.ID
+	}
+
+	// only then create the thread
+	// TODO: fill subscribers' list and notify them
+	var ctd = mongodb.CreateThreadData{
+		Entry:       newPost.ID,
+		Meeting:     meetingIDPointer,
+		Kind:        *atd.Kind,
+		Subscribers: []primitive.ObjectID{},
+	}
+
+	newThread, err := mongodb.Threads.CreateThread(ctd)
+
+	if err != nil {
+		http.Error(w, "Could not create thread", http.StatusExpectationFailed)
+
+		// clean up the created post and possibly meeting
+		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
+			log.Printf("error deleting post: %s\n", err.Error())
+		}
+
+		if meetingIDPointer != nil {
+			if _, err := mongodb.Meetings.DeleteMeeting(*meetingIDPointer); err != nil {
+				log.Printf("error deleting meeting: %s\n", err.Error())
+			}
+		}
+
+		return
+	}
+
+	// and finally update the speaker participation with the created thread
+	updatedSpeaker, err := mongodb.Speakers.AddThread(speakerID, newThread.ID)
+
+	if err != nil {
+		http.Error(w, "Could not add thread to speaker", http.StatusExpectationFailed)
+
+		// clean up the created post, thread and possibly meeting
+		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
+			log.Printf("error deleting post: %s\n", err.Error())
+		}
+
+		if meetingIDPointer != nil {
+			if _, err := mongodb.Meetings.DeleteMeeting(*meetingIDPointer); err != nil {
+				log.Printf("error deleting meeting: %s\n", err.Error())
+			}
+		}
+
+		if _, err := mongodb.Threads.DeleteThread(newThread.ID); err != nil {
+			log.Printf("error deleting thread: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedSpeaker)
+}
