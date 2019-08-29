@@ -14,30 +14,15 @@
         "parameters": [
             {
                 "in": "query",
-                "name": "name",
-                "description": "Name of the event",
-                "type": "string"
+                "name": "current",
+                "description": "Get current event\nOn empty query (both current and pastEvents), returns all the events",
+                "type": "boolean"
             },
             {
                 "in": "query",
-                "name": "before",
-                "description": "Event happened before this date",
-                "type": "string",
-                "format": "date-time"
-            },
-            {
-                "in": "query",
-                "name": "after",
-                "description": "Event happened after this date",
-                "type": "string",
-                "format": "date-time"
-            },
-            {
-                "in": "query",
-                "name": "during",
-                "description": "Event happened during this date",
-                "type": "string",
-                "format": "date-time"
+                "name": "pastEvents",
+                "description": "Get all the events except the current one\nOn empty query (both current and pastEvents), returns all the events",
+                "type": "boolean"
             }
         ],
         "responses": {
@@ -51,7 +36,7 @@
                 }
             },
             "400": {
-                "description": "Invalid date format on query"
+                "description": "Unable to make query"
             },
             "417": {
                 "description": "Unable to get events"

@@ -72,48 +72,17 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 func getEventsPublic(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
-	options := mongodb.GetEventsOptions{}
+	options := mongodb.GetPublicEventsOptions{}
 
-	name := urlQuery.Get("name")
-	before := urlQuery.Get("before")
-	after := urlQuery.Get("after")
-	during := urlQuery.Get("during")
+	current := urlQuery.Get("current")
+	pastEvents := urlQuery.Get("pastEvents")
 
-	if len(name) > 0 {
-		options.Name = &name
+	if currentValue, err := strconv.ParseBool(current); err == nil {
+		options.Current = &currentValue
 	}
 
-	if len(before) > 0 {
-		beforeDate, err := time.Parse(time.RFC3339, before)
-
-		if err != nil {
-			http.Error(w, "Invalid date format (before)", http.StatusBadRequest)
-			return
-		}
-
-		options.Before = &beforeDate
-	}
-
-	if len(after) > 0 {
-		afterDate, err := time.Parse(time.RFC3339, after)
-
-		if err != nil {
-			http.Error(w, "Invalid date format (after)", http.StatusBadRequest)
-			return
-		}
-
-		options.After = &afterDate
-	}
-
-	if len(during) > 0 {
-		duringDate, err := time.Parse(time.RFC3339, during)
-
-		if err != nil {
-			http.Error(w, "Invalid date format (during)", http.StatusBadRequest)
-			return
-		}
-
-		options.During = &duringDate
+	if pastEventsValue, err := strconv.ParseBool(pastEvents); err == nil {
+		options.PastEvents = &pastEventsValue
 	}
 
 	events, err := mongodb.Events.GetPublicEvents(options)

@@ -80,6 +80,18 @@ func (e *EventsType) GetCurrentEvent() (*models.Event, error) {
 	return event, nil
 }
 
+func eventToPublic(event models.Event) *models.EventPublic {
+
+	public := models.EventPublic{
+		ID:     event.ID,
+		Begin:  event.Begin,
+		End:    event.End,
+		Themes: event.Themes,
+	}
+
+	return &public
+}
+
 type CreateEventData struct {
 	Name string `json:"name"`
 }
@@ -199,55 +211,97 @@ func (e *EventsType) GetEvents(options GetEventsOptions) ([]*models.Event, error
 	return events, nil
 }
 
+// GetPublicEventsOptions is the options to give to GetEvents.
+// All the fields are optional, and as such we use pointers as a "hack" to deal
+// with non-existent fields.
+// The field is non-existent if it has a nil value.
+// This filter will behave like a logical *and*.
+type GetPublicEventsOptions struct {
+	Current    *bool
+	PastEvents *bool
+}
+
 // GetPublicEvents gets an array of events using a filter, for public usage.
-func (e *EventsType) GetPublicEvents(options GetEventsOptions) ([]*models.EventPublic, error) {
+func (e *EventsType) GetPublicEvents(options GetPublicEventsOptions) ([]*models.EventPublic, error) {
 
 	var events = make([]*models.EventPublic, 0)
 
 	filter := bson.M{}
 
-	if options.Name != nil {
-		filter["name"] = bson.M{
-			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
-			"$options": "i",
-		}
-	}
+	// nothing on the options, or past events and current event are both true, get all of them
+	if (options.Current == nil && options.PastEvents == nil) ||
+		(options.Current != nil && *options.Current && options.PastEvents != nil && *options.PastEvents) {
 
-	if options.Before != nil {
-		filter["begin"] = bson.M{"$lt": options.Before}
-	}
-
-	if options.After != nil {
-		filter["begin"] = bson.M{"$gt": options.After}
-	}
-
-	if options.During != nil {
-		filter["begin"] = bson.M{"$lte": options.During}
-		filter["end"] = bson.M{"$gte": options.During}
-	}
-
-	cur, err := e.Collection.Find(e.Context, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	for cur.Next(e.Context) {
-
-		// create a value into which the single document can be decoded
-		var e models.EventPublic
-		err := cur.Decode(&e)
+		cur, err := e.Collection.Find(e.Context, filter)
 		if err != nil {
 			return nil, err
 		}
 
-		events = append(events, &e)
+		for cur.Next(e.Context) {
+
+			// create a value into which the single document can be decoded
+			var e models.EventPublic
+			err := cur.Decode(&e)
+			if err != nil {
+				return nil, err
+			}
+
+			events = append(events, &e)
+		}
+
+		if err := cur.Err(); err != nil {
+			return nil, err
+		}
+
+		cur.Close(e.Context)
+
+		return events, nil
 	}
 
-	if err := cur.Err(); err != nil {
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
 		return nil, err
 	}
 
-	cur.Close(e.Context)
+	// if current is true and past events not defined or false, then give current event
+	if options.Current != nil && *options.Current && (options.PastEvents == nil || !*options.PastEvents) {
+
+		e := eventToPublic(*currentEvent)
+		events = append(events, e)
+
+		return events, nil
+	}
+
+	// if past events is true and current not defined or false, then give past events
+	if options.PastEvents != nil && *options.PastEvents && (options.Current == nil || !*options.Current) {
+		cur, err := e.Collection.Find(e.Context, filter)
+		if err != nil {
+			return nil, err
+		}
+
+		for cur.Next(e.Context) {
+
+			// create a value into which the single document can be decoded
+			var e models.EventPublic
+			err := cur.Decode(&e)
+			if err != nil {
+				return nil, err
+			}
+
+			if e.ID != currentEvent.ID {
+				events = append(events, &e)
+			}
+
+		}
+
+		if err := cur.Err(); err != nil {
+			return nil, err
+		}
+
+		cur.Close(e.Context)
+
+		return events, nil
+	}
 
 	return events, nil
 }
