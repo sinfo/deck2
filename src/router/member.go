@@ -168,18 +168,3 @@ func getMembersPublic(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(members)
 }
-
-func getMemberPublic(w http.ResponseWriter, r *http.Request) {
-
-	params := mux.Vars(r)
-	id, _ := primitive.ObjectIDFromHex(params["id"])
-
-	member, err := mongodb.Members.GetMemberPublic(id)
-
-	if err != nil {
-		http.Error(w, "Could not find member", http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(member)
-}

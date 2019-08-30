@@ -140,12 +140,6 @@
 		"/events/meetings/{id}": {
 			"$ref": "./endpoints/events-meetings-id.json"
 		},
-		"/public/teams":{
-			"$ref": "./endpoints/public-teams.json"
-		},
-		"/public/teams/{id}":{
-			"$ref": "./endpoints/public-teams-id.json"
-		},
 		"/public/companies": {
 			"$ref": "./endpoints/public-companies.json"
 		},
@@ -253,9 +247,6 @@
 		},
 		"/public/members":{
 			"$ref": "./endpoints/public-members.json"
-		},
-		"/public/members/{id}":{
-			"$ref": "./endpoints/public-members-id.json"
 		},
 		"/members":{
 			"$ref": "./endpoints/members.json"

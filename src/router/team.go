@@ -20,12 +20,12 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 	member := urlQuery.Get("member")
 	event := urlQuery.Get("event")
 
-	if len(name) >0 {
+	if len(name) > 0 {
 		options.Name = &name
 	}
 
-	if len(member) >0 {
-		memberID, err :=primitive.ObjectIDFromHex(member)
+	if len(member) > 0 {
+		memberID, err := primitive.ObjectIDFromHex(member)
 		if err != nil {
 			http.Error(w, "Invalid member ID format", http.StatusBadRequest)
 			return
@@ -34,8 +34,8 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(event) > 0 {
-		eventID, err :=strconv.Atoi(event)
-		if err !=nil {
+		eventID, err := strconv.Atoi(event)
+		if err != nil {
 			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
 			return
 		}
@@ -73,9 +73,9 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTeam(w http.ResponseWriter, r *http.Request) {
-	params :=mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
-	
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
 	team, err := mongodb.Teams.GetTeam(id)
 
 	if err != nil {
@@ -100,7 +100,6 @@ func deleteTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(team)
 }
 
-
 func updateTeam(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
@@ -124,7 +123,7 @@ func updateTeam(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedTeam)
 }
 
-func addTeamMember(w http.ResponseWriter, r *http.Request){
+func addTeamMember(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var utmd = &mongodb.UpdateTeamMemberData{}
@@ -137,10 +136,10 @@ func addTeamMember(w http.ResponseWriter, r *http.Request){
 	}
 
 	team, err := mongodb.Teams.AddTeamMember(id, *utmd)
-	if err != nil{
-		if err.Error() == "Duplicate member"{
-			http.Error(w, err.Error(), http.StatusBadRequest)	
-		}else{
+	if err != nil {
+		if err.Error() == "Duplicate member" {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		} else {
 			http.Error(w, "Team or member not found", http.StatusNotFound)
 		}
 		return
@@ -149,7 +148,7 @@ func addTeamMember(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(team)
 }
 
-func updateTeamMemberRole(w http.ResponseWriter, r *http.Request){
+func updateTeamMemberRole(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var utmd = &mongodb.UpdateTeamMemberData{}
@@ -162,7 +161,7 @@ func updateTeamMemberRole(w http.ResponseWriter, r *http.Request){
 	}
 
 	team, err := mongodb.Teams.UpdateTeamMemberRole(id, *utmd)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Team or member not found", http.StatusNotFound)
 		return
 	}
@@ -170,14 +169,14 @@ func updateTeamMemberRole(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(team)
 }
 
-func deleteTeamMember(w http.ResponseWriter, r *http.Request){
-	
+func deleteTeamMember(w http.ResponseWriter, r *http.Request) {
+
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
-	memberID,_ := primitive.ObjectIDFromHex(params["memberID"])
+	memberID, _ := primitive.ObjectIDFromHex(params["memberID"])
 
 	team, err := mongodb.Teams.DeleteTeamMember(id, memberID)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Team or member not found", http.StatusNotFound)
 		return
 	}
@@ -185,14 +184,14 @@ func deleteTeamMember(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(team)
 }
 
-func addTeamMeeting(w http.ResponseWriter, r *http.Request){
-	
+func addTeamMeeting(w http.ResponseWriter, r *http.Request) {
+
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	var cmd mongodb.CreateMeetingData
 
-	if err := cmd.ParseBody(r.Body); err != nil{
+	if err := cmd.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
@@ -204,7 +203,7 @@ func addTeamMeeting(w http.ResponseWriter, r *http.Request){
 	}
 
 	team, err := mongodb.Teams.AddMeeting(id, meeting.ID)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Could not find team", http.StatusNotFound)
 		return
 	}
@@ -212,74 +211,18 @@ func addTeamMeeting(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(team)
 }
 
-func deleteTeamMeeting(w http.ResponseWriter, r *http.Request){
-	
+func deleteTeamMeeting(w http.ResponseWriter, r *http.Request) {
+
 	params := mux.Vars(r)
 	teamID, _ := primitive.ObjectIDFromHex(params["id"])
 	memberID, _ := primitive.ObjectIDFromHex(params["meetingID"])
 
 	meeting, err := mongodb.Teams.DeleteTeamMeeting(teamID, memberID)
-	if err != nil{
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(meeting)
 
-}
-
-// PUBLIC ENDPOINTS
-
-func getTeamPublic(w http.ResponseWriter, r *http.Request) {
-	params :=mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
-	
-	team, err := mongodb.Teams.GetTeamPublic(id)
-
-	if err != nil {
-		http.Error(w, "Could not find team", http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(team)
-}
-
-func getTeamsPublic(w http.ResponseWriter, r *http.Request) {
-
-	urlQuery := r.URL.Query()
-	options := mongodb.GetTeamsOptions{}
-
-	name := urlQuery.Get("name")
-	member := urlQuery.Get("member")
-	event := urlQuery.Get("event")
-
-	if len(name) >0 {
-		options.Name = &name
-	}
-
-	if len(member) >0 {
-		memberID, err :=primitive.ObjectIDFromHex(member)
-		if err != nil {
-			http.Error(w, "Invalid member ID format", http.StatusBadRequest)
-			return
-		}
-		options.Member = &memberID
-	}
-
-	if len(event) > 0 {
-		eventID, err :=strconv.Atoi(event)
-		if err !=nil {
-			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
-			return
-		}
-		options.Event = &eventID
-	}
-
-	teams, err := mongodb.Teams.GetTeamsPublic(options)
-
-	if err != nil {
-		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
-	}
-
-	json.NewEncoder(w).Encode(teams)
 }

@@ -47,6 +47,7 @@ func CleanupCache() {
 	for range ticker.C {
 		ResetCurrentEvent()
 		ResetCurrentPublicCompanies()
+		ResetCurrentPublicMembers()
 		ResetCurrentPublicSpeakers()
 
 		log.Println("Cleaned up cache")

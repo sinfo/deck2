@@ -1,7 +1,7 @@
 {
     "get": {
         "tags": [
-            "members"
+            "members", "public"
         ],
         "summary": "Get all members, based on query",
         "operationId": "getMembersPublic",

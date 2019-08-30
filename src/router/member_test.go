@@ -45,7 +45,7 @@ func containsMember(members []models.Member, member *models.Member) bool {
 
 func containsMemberPublic(members []models.MemberPublic, member *models.Member) bool {
 	for _, s := range members {
-		if s.ID == member.ID && s.Name == member.Name {
+		if s.Name == member.Name {
 			return true
 		}
 	}
@@ -650,7 +650,7 @@ func TestGetMembersPublicEvent(t *testing.T) {
 	json.NewDecoder(res.Body).Decode(&members)
 
 	assert.Equal(t, len(members), 1)
-	assert.Equal(t, members[0].ID, Member1.ID)
+	assert.Equal(t, members[0].Name, Member1.Name)
 
 	// Test Duplicate member
 
@@ -672,31 +672,5 @@ func TestGetMembersPublicEvent(t *testing.T) {
 	json.NewDecoder(res.Body).Decode(&members)
 
 	assert.Equal(t, len(members), 1)
-	assert.Equal(t, members[0].ID, Member1.ID)
-}
-
-func TestGetMemberPublic(t *testing.T) {
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-
-	Member1, err := mongodb.Members.CreateMember(Member1Data)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	res, err := executeRequest("GET", "/public/members/"+Member1.ID.Hex(), nil)
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	var member models.MemberPublic
-
-	json.NewDecoder(res.Body).Decode(&member)
-
-	assert.Equal(t, Member1.Name, member.Name)
-	assert.Equal(t, Member1.ID, member.ID)
-}
-
-func TestGetMemberPublicBadID(t *testing.T) {
-	res, err := executeRequest("GET", "/public/members/wrong", nil)
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
+	assert.Equal(t, members[0].Name, Member1.Name)
 }

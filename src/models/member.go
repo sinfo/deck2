@@ -2,7 +2,6 @@ package models
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-
 // Member represents a member of the SINFO organization
 type Member struct {
 
@@ -31,10 +30,7 @@ type Member struct {
 }
 
 // MemberPublic is the public information about a member
-type MemberPublic struct{
-	// Member's ID (_id of mongodb).
-	ID primitive.ObjectID `json:"id" bson:"_id"`
-
+type MemberPublic struct {
 	Name string `json:"name" bson:"name"`
 
 	// Photo of the member. This is a URL pointing to the image, that is
