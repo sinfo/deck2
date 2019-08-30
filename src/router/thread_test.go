@@ -26,8 +26,6 @@ func TestGetThread(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
 
-	mongodb.ResetCurrentEvent()
-
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
@@ -57,8 +55,6 @@ func TestGetThreadNotFound(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 
-	mongodb.ResetCurrentEvent()
-
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
@@ -79,8 +75,6 @@ func TestAddCommentToThread(t *testing.T) {
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
-
-	mongodb.ResetCurrentEvent()
 
 	ctd := mongodb.CreateThreadData{
 		Entry:       Thread.Entry,
@@ -162,8 +156,6 @@ func TestAddCommentToThreadInvalidPayload(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	mongodb.ResetCurrentEvent()
-
 	ctd := mongodb.CreateThreadData{
 		Entry:       Thread.Entry,
 		Meeting:     Thread.Meeting,
@@ -235,8 +227,6 @@ func TestAddCommentToThreadInvalidThreadID(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	mongodb.ResetCurrentEvent()
-
 	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	assert.NilError(t, err)
 
@@ -293,8 +283,6 @@ func TestRemoveCommentFromThread(t *testing.T) {
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
-
-	mongodb.ResetCurrentEvent()
 
 	ctd := mongodb.CreateThreadData{
 		Entry:       Thread.Entry,
@@ -372,8 +360,6 @@ func TestRemoveCommentFromThreadInvalidThread(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	mongodb.ResetCurrentEvent()
-
 	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	assert.NilError(t, err)
 
@@ -434,8 +420,6 @@ func TestRemoveCommentFromThreadInvalidPost(t *testing.T) {
 	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
-
-	mongodb.ResetCurrentEvent()
 
 	ctd := mongodb.CreateThreadData{
 		Entry:       Thread.Entry,

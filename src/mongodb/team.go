@@ -111,8 +111,6 @@ func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
 		return nil, err
 	}
 
-	currentEvent = &updatedEvent
-
 	return newTeam, nil
 }
 

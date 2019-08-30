@@ -1,0 +1,49 @@
+{
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string"
+		},
+		"begin": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"end": {
+			"type": "string",
+			"format": "date-time"
+		},
+		"title": {
+			"type": "string"
+		},
+		"description": {
+			"type": "string"
+		},
+		"space": {
+			"type": "string"
+		},
+		"kind": {
+			"type": "string",
+			"enum": ["TALK", "PRESENTATION", "WORKSHOP"]
+		},
+		"company": {
+			"type": "string"
+		},
+		"dinamizers": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"position": {
+					"type": "string"
+				}
+			}
+		},
+		"speaker": {
+			"type": "string"
+		},
+		"videoURL": {
+			"type": "string"
+		}
+	}
+}

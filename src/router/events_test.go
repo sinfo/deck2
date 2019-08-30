@@ -277,6 +277,7 @@ func TestCreateEvent(t *testing.T) {
 	assert.NilError(t, errMarshal)
 
 	res, err := executeRequest("POST", "/events", bytes.NewBuffer(b))
+
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 

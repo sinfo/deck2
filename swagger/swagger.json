@@ -140,6 +140,9 @@
 		"/events/meetings/{id}": {
 			"$ref": "./endpoints/events-meetings-id.json"
 		},
+		"/events/sessions": {
+			"$ref": "./endpoints/events-sessions.json"
+		},
 		"/public/companies": {
 			"$ref": "./endpoints/public-companies.json"
 		},
@@ -211,6 +214,15 @@
 		},
 		"/speakers/{id}/thread": {
 			"$ref": "./endpoints/speakers-id-thread.json"
+		},
+		"/sessions": {
+			"$ref": "./endpoints/sessions.json"
+		},
+		"/sessions/{id}": {
+			"$ref": "./endpoints/sessions-id.json"
+		},
+		"/public/sessions":{
+			"$ref": "./endpoints/public-sessions.json"
 		},
 		"/teams": {
 			"$ref": "./endpoints/teams.json"

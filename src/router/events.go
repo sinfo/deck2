@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -358,6 +359,47 @@ func removeItemToEvent(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "Could not remove item from event", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedEvent)
+}
+
+func addSessionToEvent(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusNotFound)
+		return
+	}
+
+	var csd = &mongodb.CreateSessionData{}
+
+	if err := csd.ParseBody(r.Body); err != nil {
+		http.Error(w, fmt.Sprintf("Could not parse body: %v", err.Error()), http.StatusBadRequest)
+		return
+	}
+
+	createdSession, err := mongodb.Sessions.CreateSession(*csd)
+
+	if err != nil {
+		http.Error(w, "Could not create session", http.StatusExpectationFailed)
+		return
+	}
+
+	updatedEvent, err := mongodb.Events.AddSession(currentEvent.ID, createdSession.ID)
+
+	if err != nil {
+		http.Error(w, "Could not save session on event", http.StatusExpectationFailed)
+
+		// delete created session
+		if _, err = mongodb.Sessions.DeleteSession(createdSession.ID); err != nil {
+			log.Println("Error removing session")
+		}
+
 		return
 	}
 

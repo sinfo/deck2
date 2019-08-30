@@ -1,0 +1,45 @@
+{
+    "get": {
+        "tags": [
+            "sessions", "public"
+        ],
+        "summary": "Get all sessions, based on query",
+        "operationId": "getSessionsPublic",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Session from this event",
+                "type": "integer",
+                "format": "int64"
+            },
+            {
+                "in": "query",
+                "name": "kind",
+                "description": "Kind of session",
+                "type": "string",
+                "enum": ["TALK", "PRESENTATION", "WORKSHOP"]
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Sessions filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/public-session.json"
+                    }
+                }
+            },
+            "417": {
+                "description": "Unable to get sessions"
+            }
+        }
+    }
+}

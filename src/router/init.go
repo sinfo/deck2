@@ -120,6 +120,7 @@ func InitializeRouter() {
 	publicRouter.HandleFunc("/speakers", getSpeakersPublic).Methods("GET")
 	publicRouter.HandleFunc("/events", getEventsPublic).Methods("GET")
 	publicRouter.HandleFunc("/members", getMembersPublic).Methods("GET")
+	publicRouter.HandleFunc("/sessions", getPublicSessions).Methods("GET")
 
 	// auth handlers
 	authRouter := r.PathPrefix("/auth").Subrouter()
@@ -176,6 +177,7 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/items/{id}", authCoordinator(removeItemToEvent)).Methods("DELETE")
 	eventRouter.HandleFunc("/meetings", authCoordinator(addMeetingToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/meetings/{id}", authCoordinator(removeMeetingFromEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/sessions", authCoordinator(addSessionToEvent)).Methods("POST")
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
@@ -247,6 +249,12 @@ func InitializeRouter() {
 	// posts handlers
 	postRouter := r.PathPrefix("/posts").Subrouter()
 	postRouter.HandleFunc("/{id}", authMember(getPost)).Methods("GET")
+
+	// sessions handlers
+	sessionsRouter := r.PathPrefix("/sessions").Subrouter()
+	sessionsRouter.HandleFunc("", authMember(getSessions)).Methods("GET")
+	sessionsRouter.HandleFunc("/{id}", authMember(getSession)).Methods("GET")
+	sessionsRouter.HandleFunc("/{id}", authCoordinator(updateSession)).Methods("PUT")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

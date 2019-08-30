@@ -27,6 +27,7 @@ var (
 	Threads    *ThreadsType
 	Posts      *PostsType
 	FlightInfo *FlightInfoType
+	Sessions   *SessionsType
 )
 
 var (
@@ -45,10 +46,11 @@ func CleanupCache() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		ResetCurrentEvent()
+		ResetCurrentPublicEvent()
 		ResetCurrentPublicCompanies()
 		ResetCurrentPublicMembers()
 		ResetCurrentPublicSpeakers()
+		ResetCurrentPublicSessions()
 
 		log.Println("Cleaned up cache")
 	}
@@ -138,6 +140,11 @@ func InitializeDatabase() {
 
 	FlightInfo = &FlightInfoType{
 		Collection: db.Collection("flightInfo"),
+		Context:    ctx,
+	}
+
+	Sessions = &SessionsType{
+		Collection: db.Collection("sessions"),
 		Context:    ctx,
 	}
 

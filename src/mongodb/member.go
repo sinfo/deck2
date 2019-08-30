@@ -105,7 +105,7 @@ func (umd *UpdateMemberData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-func filterDuplicates(orig []*models.Member) (res []*models.Member) {
+func filterDuplicatesMembers(orig []*models.Member) (res []*models.Member) {
 	for _, s := range orig {
 		dup := false
 		for _, t := range res {
@@ -120,7 +120,7 @@ func filterDuplicates(orig []*models.Member) (res []*models.Member) {
 	return
 }
 
-func convertToPublic(orig []*models.Member) (res []*models.MemberPublic) {
+func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) {
 
 	var public = make([]*models.MemberPublic, 0)
 
@@ -206,7 +206,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 			}
 		}
 	}
-	return filterDuplicates(members), nil
+	return filterDuplicatesMembers(members), nil
 }
 
 // GetMemberAuthCredentials finds a member and returns his/her information for auth purposes.
@@ -459,6 +459,8 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 					filtered = append(filtered, m)
 				}
 			}
+		} else {
+			filtered = *currentPublicMembers
 		}
 
 		// return cached and filtered
@@ -489,11 +491,11 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 		cur.Close(m.Context)
 	}
 
-	filtered := filterDuplicates(members)
+	filtered := filterDuplicatesMembers(members)
 
 	// update cached value
 	if currentPublicMembers == nil && options.Event == nil {
-		p := convertToPublic(filtered)
+		p := convertToPublicMembers(filtered)
 		currentPublicMembers = &p
 	}
 
@@ -509,7 +511,7 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 		filtered = filteredByName
 	}
 
-	public := convertToPublic(filtered)
+	public := convertToPublicMembers(filtered)
 
 	return public, nil
 }
