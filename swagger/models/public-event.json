@@ -15,6 +15,12 @@
 		"end": {
 			"type": "string",
 			"format": "date-time"
+		},
+		"themes": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			}
 		}
 	}
 }
