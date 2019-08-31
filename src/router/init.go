@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -56,7 +57,7 @@ func checkAccessLevelWrapper(required models.TeamRole) authWrapper {
 			credentials, err := auth.ParseJWT(token)
 
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnauthorized)
+				http.Error(w, fmt.Sprintf("Error parsing token: %v", err.Error()), http.StatusUnauthorized)
 				return
 			}
 

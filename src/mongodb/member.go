@@ -176,7 +176,6 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 		}
 
 		if err := cur.Err(); err != nil {
-
 			return nil, err
 		}
 
