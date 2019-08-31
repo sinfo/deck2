@@ -219,23 +219,23 @@ func (c *CompaniesType) GetPublicCompanies(options GetCompaniesPublicOptions) ([
 
 	var public = make([]*models.CompanyPublic, 0)
 	var eventID int
-	var usingCurrentEvent = false
 
 	filter := bson.M{}
+
+	if options.EventID == nil && options.IsPartner == nil &&
+		options.Name == nil && currentPublicCompanies != nil {
+
+		// return cached value
+		return *currentPublicCompanies, nil
+	}
 
 	if options.EventID != nil {
 
 		filter["participations.event"] = options.EventID
 		eventID = *options.EventID
 
-	} else if currentPublicCompanies != nil {
-
-		// return cached value
-		return *currentPublicCompanies, nil
-
 	} else {
 
-		usingCurrentEvent = true
 		currentEvent, err := Events.GetCurrentEvent()
 		if err != nil {
 			return public, errors.New("error getting the current event")
@@ -284,7 +284,9 @@ func (c *CompaniesType) GetPublicCompanies(options GetCompaniesPublicOptions) ([
 	cur.Close(c.Context)
 
 	// update cached value
-	if usingCurrentEvent {
+	if options.EventID == nil && options.IsPartner == nil &&
+		options.Name == nil && currentPublicCompanies == nil {
+
 		currentPublicCompanies = &public
 	}
 

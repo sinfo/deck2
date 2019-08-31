@@ -89,13 +89,13 @@ type Company struct {
 type CompanyParticipationPublic struct {
 
 	// Participation's event (ID of Event).
-	Event int `json:"event" bson:"event"`
+	Event int `json:"event"`
 
 	// Is this company participating as a partner.
-	Partner bool `json:"partner" bson:"partner"`
+	Partner bool `json:"partner"`
 
 	// Participation's package is a Package _id (see models.Package).
-	Package PackagePublic `json:"package" bson:"package"`
+	Package PackagePublic `json:"package,omitempty"`
 }
 
 // CompanyPublic represents a company to be contacted by the team, that will hopefully participate
@@ -106,7 +106,7 @@ type CompanyPublic struct {
 	// Company's image (public).
 	Image string `json:"img,omitempty"`
 
-	Site string `json:"site"`
+	Site string `json:"site,omitempty"`
 
 	Participation CompanyParticipationPublic `json:"participation,omitempty"`
 }

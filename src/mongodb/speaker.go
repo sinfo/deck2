@@ -193,23 +193,22 @@ func (s *SpeakersType) GetPublicSpeakers(options GetSpeakersPublicOptions) ([]*m
 
 	var public = make([]*models.SpeakerPublic, 0)
 	var eventID int
-	var usingCurrentEvent = false
 
 	filter := bson.M{}
+
+	if options.EventID == nil && options.Name == nil && currentPublicSpeakers != nil {
+
+		// return cached value
+		return *currentPublicSpeakers, nil
+	}
 
 	if options.EventID != nil {
 
 		filter["participations.event"] = options.EventID
 		eventID = *options.EventID
 
-	} else if currentPublicSpeakers != nil {
-
-		// return cached value
-		return *currentPublicSpeakers, nil
-
 	} else {
 
-		usingCurrentEvent = true
 		currentEvent, err := Events.GetCurrentEvent()
 		if err != nil {
 			return public, errors.New("error getting the current event")
@@ -254,7 +253,7 @@ func (s *SpeakersType) GetPublicSpeakers(options GetSpeakersPublicOptions) ([]*m
 	cur.Close(s.Context)
 
 	// update cached value
-	if usingCurrentEvent {
+	if options.EventID == nil && options.Name == nil && currentPublicSpeakers == nil {
 		currentPublicSpeakers = &public
 	}
 

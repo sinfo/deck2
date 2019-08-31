@@ -119,6 +119,7 @@ func getCompaniesPublic(w http.ResponseWriter, r *http.Request) {
 	publicCompanies, err := mongodb.Companies.GetPublicCompanies(options)
 
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
 		return
 	}
