@@ -163,6 +163,10 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/image/public/company", authCoordinator(setSpeakerCompanyImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/thread", authMember(addSpeakerThread)).Methods("POST")
 
+	// flightInfo handlers
+	flightInfoRouter := r.PathPrefix("/flightInfo").Subrouter()
+	flightInfoRouter.HandleFunc("/{id}", authMember(getFlightInfo)).Methods("GET")
+
 	// event handlers
 	eventRouter := r.PathPrefix("/events").Subrouter()
 	eventRouter.HandleFunc("", authMember(getEvents)).Methods("GET")
