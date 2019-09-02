@@ -216,7 +216,7 @@
 			"$ref": "./endpoints/speakers-id-thread.json"
 		},
 		"/flightInfo/{id}": {
-			"$ref": "./endpoints/flightInfo-id-.json"
+			"$ref": "./endpoints/flightInfo-id.json"
 		},
 		"/sessions": {
 			"$ref": "./endpoints/sessions.json"

@@ -6,11 +6,11 @@
 		},
 		"inbound": {
 			"type": "string",
-			"formtat": "date-time"
+			"format": "date-time"
 		},
 		"outbound": {
 			"type": "string",
-			"formtat": "date-time"
+			"format": "date-time"
 		},
 		"from": {
 			"type": "string"
