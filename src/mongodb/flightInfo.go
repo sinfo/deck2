@@ -12,6 +12,7 @@ import (
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -137,6 +138,34 @@ func (f *FlightInfoType) GetFlightInfo(flightInfoID primitive.ObjectID) (*models
 
 	err := f.Collection.FindOne(f.Context, bson.M{"_id": flightInfoID}).Decode(&flightInfo)
 	if err != nil {
+		return nil, err
+	}
+
+	return &flightInfo, nil
+}
+
+// UpdateFlightInfo updates a new FlightInfo.
+func (f *FlightInfoType) UpdateFlightInfo(flightInfoID primitive.ObjectID, data CreateFlightInfoData) (*models.FlightInfo, error) {
+
+	var flightInfo models.FlightInfo
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"inbound":  data.Inbound.UTC(),
+			"outbound": data.Outbound.UTC(),
+			"from":     data.From,
+			"to":       data.To,
+			"link":     data.Link,
+			"bought":   data.Bought,
+			"cost":     data.Cost,
+			"notes":    data.Notes,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := f.Collection.FindOneAndUpdate(f.Context, bson.M{"_id": flightInfoID}, updateQuery, optionsQuery).Decode(&flightInfo); err != nil {
 		return nil, err
 	}
 
