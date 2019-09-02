@@ -143,3 +143,31 @@ func updateMe(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedMember)
 }
+
+func getMyNotifications(w http.ResponseWriter, r *http.Request) {
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	memberID := credentials.ID
+
+	member, err := mongodb.Members.GetMember(memberID)
+
+	if err != nil {
+		http.Error(w, "Could not find member", http.StatusNotFound)
+		return
+	}
+
+	notifications, err := mongodb.Notifications.GetMultipleNotifications(member.Notifications)
+	if err != nil {
+		http.Error(w, "Could not find get notifications", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(notifications)
+
+}

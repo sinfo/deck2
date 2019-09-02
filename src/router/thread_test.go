@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	Thread = models.Thread{Entry: primitive.NewObjectID(), Meeting: nil, Kind: models.ThreadKindTo, Subscribers: []primitive.ObjectID{}}
+	Thread = models.Thread{Entry: primitive.NewObjectID(), Meeting: nil, Kind: models.ThreadKindTo}
 )
 
 func TestGetThread(t *testing.T) {
@@ -31,10 +31,9 @@ func TestGetThread(t *testing.T) {
 	}
 
 	ctd := &mongodb.CreateThreadData{
-		Entry:       Thread.Entry,
-		Meeting:     Thread.Meeting,
-		Kind:        Thread.Kind,
-		Subscribers: Thread.Subscribers,
+		Entry:   Thread.Entry,
+		Meeting: Thread.Meeting,
+		Kind:    Thread.Kind,
 	}
 
 	createdThread, err := mongodb.Threads.CreateThread(*ctd)
@@ -77,10 +76,9 @@ func TestAddCommentToThread(t *testing.T) {
 	}
 
 	ctd := mongodb.CreateThreadData{
-		Entry:       Thread.Entry,
-		Meeting:     Thread.Meeting,
-		Kind:        Thread.Kind,
-		Subscribers: Thread.Subscribers,
+		Entry:   Thread.Entry,
+		Meeting: Thread.Meeting,
+		Kind:    Thread.Kind,
 	}
 
 	thread, err := mongodb.Threads.CreateThread(ctd)
@@ -157,10 +155,9 @@ func TestAddCommentToThreadInvalidPayload(t *testing.T) {
 	}
 
 	ctd := mongodb.CreateThreadData{
-		Entry:       Thread.Entry,
-		Meeting:     Thread.Meeting,
-		Kind:        Thread.Kind,
-		Subscribers: Thread.Subscribers,
+		Entry:   Thread.Entry,
+		Meeting: Thread.Meeting,
+		Kind:    Thread.Kind,
 	}
 
 	thread, err := mongodb.Threads.CreateThread(ctd)
@@ -285,10 +282,9 @@ func TestRemoveCommentFromThread(t *testing.T) {
 	}
 
 	ctd := mongodb.CreateThreadData{
-		Entry:       Thread.Entry,
-		Meeting:     Thread.Meeting,
-		Kind:        Thread.Kind,
-		Subscribers: Thread.Subscribers,
+		Entry:   Thread.Entry,
+		Meeting: Thread.Meeting,
+		Kind:    Thread.Kind,
 	}
 
 	thread, err := mongodb.Threads.CreateThread(ctd)
@@ -422,10 +418,9 @@ func TestRemoveCommentFromThreadInvalidPost(t *testing.T) {
 	}
 
 	ctd := mongodb.CreateThreadData{
-		Entry:       Thread.Entry,
-		Meeting:     Thread.Meeting,
-		Kind:        Thread.Kind,
-		Subscribers: Thread.Subscribers,
+		Entry:   Thread.Entry,
+		Meeting: Thread.Meeting,
+		Kind:    Thread.Kind,
 	}
 
 	thread, err := mongodb.Threads.CreateThread(ctd)

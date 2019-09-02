@@ -15,19 +15,20 @@ var ctx context.Context
 var db *mongo.Database
 
 var (
-	Events     *EventsType
-	Companies  *CompaniesType
-	Speakers   *SpeakersType
-	Teams      *TeamsType
-	Members    *MembersType
-	Items      *ItemsType
-	Packages   *PackagesType
-	Meetings   *MeetingsType
-	Contacts   *ContactsType
-	Threads    *ThreadsType
-	Posts      *PostsType
-	FlightInfo *FlightInfoType
-	Sessions   *SessionsType
+	Events        *EventsType
+	Companies     *CompaniesType
+	Speakers      *SpeakersType
+	Teams         *TeamsType
+	Members       *MembersType
+	Items         *ItemsType
+	Packages      *PackagesType
+	Meetings      *MeetingsType
+	Contacts      *ContactsType
+	Threads       *ThreadsType
+	Posts         *PostsType
+	FlightInfo    *FlightInfoType
+	Sessions      *SessionsType
+	Notifications *NotificationsType
 )
 
 var (
@@ -145,6 +146,11 @@ func InitializeDatabase() {
 
 	Sessions = &SessionsType{
 		Collection: db.Collection("sessions"),
+		Context:    ctx,
+	}
+
+	Notifications = &NotificationsType{
+		Collection: db.Collection("notifications"),
 		Context:    ctx,
 	}
 

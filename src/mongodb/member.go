@@ -353,6 +353,27 @@ func (m *MembersType) UpdateMember(id primitive.ObjectID, data UpdateMemberData)
 	return &member, nil
 }
 
+// AddNotification adds notification.
+func (m *MembersType) AddNotification(id primitive.ObjectID, notificationID primitive.ObjectID) (*models.Member, error) {
+
+	var member models.Member
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"notifications": notificationID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil {
+		return nil, err
+	}
+
+	return &member, nil
+}
+
 // UpdateNotification adds notifications.
 func (m *MembersType) UpdateNotification(id primitive.ObjectID, notifs []primitive.ObjectID) (*models.Member, error) {
 

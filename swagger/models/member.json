@@ -18,12 +18,12 @@
         },
         "contact": {
 			"type": "string"
-		},
+        },
         "notifications": {
 			"type": "array",
 			"items": {
 				"type": "string"
-            }
+			}
         }
 	}
 }

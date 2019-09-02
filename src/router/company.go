@@ -329,12 +329,10 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// only then create the thread
-	// TODO: fill subscribers' list and notify them
 	var ctd = mongodb.CreateThreadData{
-		Entry:       newPost.ID,
-		Meeting:     meetingIDPointer,
-		Kind:        *atd.Kind,
-		Subscribers: []primitive.ObjectID{},
+		Entry:   newPost.ID,
+		Meeting: meetingIDPointer,
+		Kind:    *atd.Kind,
 	}
 
 	newThread, err := mongodb.Threads.CreateThread(ctd)
