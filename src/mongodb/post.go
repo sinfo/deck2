@@ -2,10 +2,14 @@ package mongodb
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"io"
 	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/sinfo/deck2/src/models"
 
@@ -71,4 +75,45 @@ func (p *PostsType) DeletePost(postID primitive.ObjectID) (*models.Post, error) 
 	}
 
 	return &post, nil
+}
+
+type UpdatePostData struct {
+	Text string `json:"text"`
+}
+
+// ParseBody fills the CreateSessionData from a body
+func (upd *UpdatePostData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(upd); err != nil {
+		return err
+	}
+
+	if len(upd.Text) == 0 {
+		return errors.New("invalid text")
+	}
+
+	return nil
+}
+
+// UpdatePost updates a post by its ID
+func (p *PostsType) UpdatePost(postID primitive.ObjectID, data UpdatePostData) (*models.Post, error) {
+
+	var post models.Post
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"text":    data.Text,
+			"updated": time.Now().UTC(),
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := p.Collection.FindOneAndUpdate(p.Context, bson.M{"_id": postID}, updateQuery, optionsQuery).Decode(&post); err != nil {
+		return nil, err
+	}
+
+	return &post, nil
+
 }

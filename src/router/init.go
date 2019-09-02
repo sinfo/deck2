@@ -250,6 +250,7 @@ func InitializeRouter() {
 	// posts handlers
 	postRouter := r.PathPrefix("/posts").Subrouter()
 	postRouter.HandleFunc("/{id}", authMember(getPost)).Methods("GET")
+	postRouter.HandleFunc("/{id}", authMember(updatePost)).Methods("PUT")
 
 	// sessions handlers
 	sessionsRouter := r.PathPrefix("/sessions").Subrouter()
