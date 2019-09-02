@@ -11,6 +11,11 @@
         "produces": [
             "application/json"
         ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
         "parameters": [
             {
                 "in": "path",
@@ -47,6 +52,11 @@
         "produces": [
             "application/json"
         ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
         "parameters": [
             {
                 "in": "path",
