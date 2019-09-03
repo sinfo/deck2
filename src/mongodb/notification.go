@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/sinfo/deck2/src/models"
@@ -16,6 +17,8 @@ type NotificationsType struct {
 	Collection *mongo.Collection
 	Context    context.Context
 }
+
+var tagRegexCompiler, _ = regexp.Compile(`@[a-zA-Z0-9\.]+`)
 
 func (n *NotificationsType) Notify(author primitive.ObjectID, subscribers []primitive.ObjectID, data CreateNotificationData) {
 
@@ -48,6 +51,38 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, subscribers []prim
 			}
 
 			n.NotifyMember(coordinator.Member, data)
+		}
+	}
+
+	// notified tagged member
+	var post *models.Post
+
+	if data.Thread != nil && data.Post == nil {
+		thread, err := Threads.GetThread(*data.Thread)
+		if err != nil {
+			return
+		}
+
+		post, err = Posts.GetPost(thread.Entry)
+		if err != nil {
+			return
+		}
+	} else if data.Post != nil {
+		post, err = Posts.GetPost(*data.Post)
+		if err != nil {
+			return
+		}
+	}
+
+	if post == nil {
+		return
+	}
+
+	for _, tag := range tagRegexCompiler.FindAll([]byte(post.Text), -1) {
+		if taggedMember, err := Members.GetMemberBySinfoID(string(tag)[1:]); err == nil {
+			data.Kind = models.NotificationKindTagged
+			data.Post = &post.ID
+			n.NotifyMember(taggedMember.ID, data)
 		}
 	}
 }

@@ -135,6 +135,18 @@ func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) 
 }
 
 // GetMember finds a member with specified id.
+func (m *MembersType) GetMemberBySinfoID(sinfoid string) (*models.Member, error) {
+
+	var member models.Member
+
+	if err := m.Collection.FindOne(m.Context, bson.M{"sinfoid": sinfoid}).Decode(&member); err != nil {
+		return nil, err
+	}
+
+	return &member, nil
+}
+
+// GetMember finds a member with specified id.
 func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
 
 	var member models.Member
