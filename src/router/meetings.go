@@ -41,7 +41,7 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 
 	// notify
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 			Kind:    models.NotificationKindDeleted,
 			Meeting: &meeting.ID,
 		})
@@ -68,7 +68,7 @@ func createMeeting(w http.ResponseWriter, r *http.Request) {
 
 	// notify
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 			Kind:    models.NotificationKindCreated,
 			Meeting: &meeting.ID,
 		})

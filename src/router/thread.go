@@ -93,7 +93,7 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedThread)
 
 	// notify
-	mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+	mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 		Kind:   models.NotificationKindCreated,
 		Thread: &updatedThread.ID,
 		Post:   &newPost.ID,
@@ -135,7 +135,7 @@ func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
 
 	// notify
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 			Kind:   models.NotificationKindDeleted,
 			Thread: &updatedThread.ID,
 			Post:   &postID,

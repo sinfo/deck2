@@ -205,7 +205,7 @@ func updateSession(w http.ResponseWriter, r *http.Request) {
 
 	// notify
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 			Kind:    models.NotificationKindUpdated,
 			Session: &updatedSession.ID,
 		})

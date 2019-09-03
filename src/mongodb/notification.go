@@ -20,23 +20,55 @@ type NotificationsType struct {
 
 var tagRegexCompiler, _ = regexp.Compile(`@[a-zA-Z0-9\.]+`)
 
-func (n *NotificationsType) Notify(author primitive.ObjectID, subscribers []primitive.ObjectID, data CreateNotificationData) {
+func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotificationData) {
 
-	// notify subscribers
-	for _, subscriber := range subscribers {
-		if subscriber == author {
-			continue
-		}
-
-		n.NotifyMember(subscriber, data)
-	}
-
-	// notify coordination on the author's team
 	event, err := Events.GetCurrentEvent()
 	if err != nil {
 		return
 	}
 
+	// notify subscribers
+	if data.Company != nil {
+		company, err := Companies.GetCompany(*data.Company)
+		if err != nil {
+			return
+		}
+
+		for _, participation := range company.Participations {
+			if participation.Event == event.ID {
+				for _, subscriber := range participation.Subscribers {
+					if subscriber == author {
+						continue
+					}
+
+					n.NotifyMember(subscriber, data)
+				}
+				break
+			}
+		}
+	}
+
+	if data.Speaker != nil {
+		speaker, err := Speakers.GetSpeaker(*data.Speaker)
+		if err != nil {
+			return
+		}
+
+		for _, participation := range speaker.Participations {
+			if participation.Event == event.ID {
+				for _, subscriber := range participation.Subscribers {
+					if subscriber == author {
+						continue
+					}
+
+					n.NotifyMember(subscriber, data)
+				}
+				break
+			}
+		}
+	}
+
+	// notify coordination on the author's team
 	for _, teamID := range event.Teams {
 		team, err := Teams.GetTeam(teamID)
 		if err != nil || !team.HasMember(author) {
