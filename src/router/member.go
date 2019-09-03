@@ -123,25 +123,6 @@ func createMemberContact(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func deleteNotification(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	memberID, _ := primitive.ObjectIDFromHex(params["id"])
-	var dmnd = &mongodb.DeleteNotificationData{}
-
-	if err := json.NewDecoder(r.Body).Decode(dmnd); err != nil {
-		http.Error(w, "Could not parse body.", http.StatusBadRequest)
-		return
-	}
-
-	updatedMember, err := mongodb.Members.DeleteNotification(memberID, *dmnd)
-	if err != nil {
-		http.Error(w, "Could not delete notification", http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(updatedMember)
-}
-
 // PUBLIC ENDPOINTS
 
 func getMembersPublic(w http.ResponseWriter, r *http.Request) {

@@ -8,6 +8,9 @@
 			"type": "string",
 			"enum": ["CREATED", "UPDATED", "TAGGED", "DELETED"]
         },
+        "member": {
+			"type": "string"
+		},
         "post": {
 			"type": "string"
 		},

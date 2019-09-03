@@ -28,20 +28,26 @@ type Notification struct {
 
 	Kind NotificationKind `json:"kind" bson:"kind"`
 
+	// Member to be notified
+	Member primitive.ObjectID `json:"member" bson:"member"`
+
 	// Post is an _id of Post (see models.Post).
-	Post *primitive.ObjectID `json:"post,omitempty" bson:"post,omitempty"`
+	Post *primitive.ObjectID `json:"post,omitempty" bson:"post"`
+
+	// Thread is an _id of Thread (see models.Thread).
+	Thread *primitive.ObjectID `json:"thread,omitempty" bson:"thread"`
 
 	// Speaker is an _id of Speaker (see models.Speaker).
-	Speaker *primitive.ObjectID `json:"speaker,omitempty" bson:"speaker,omitempty"`
+	Speaker *primitive.ObjectID `json:"speaker,omitempty" bson:"speaker"`
 
 	// Company is an _id of Company (see models.Company).
-	Company *primitive.ObjectID `json:"company,omitempty" bson:"company,omitempty"`
+	Company *primitive.ObjectID `json:"company,omitempty" bson:"company"`
 
 	// Meeting is an _id of Meeting (see models.Meeting).
-	Meeting *primitive.ObjectID `json:"meeting,omitempty" bson:"meeting,omitempty"`
+	Meeting *primitive.ObjectID `json:"meeting,omitempty" bson:"meeting"`
 
 	// Session is an _id of Session (see models.Session).
-	Session *primitive.ObjectID `json:"session,omitempty" bson:"session,omitempty"`
+	Session *primitive.ObjectID `json:"session,omitempty" bson:"session"`
 
 	Date time.Time `json:"date" bson:"date"`
 
@@ -64,6 +70,7 @@ func (n *Notification) Validate() error {
 		// at least one must exist
 		valid = false
 		valid = valid || n.Post != nil
+		valid = valid || n.Thread != nil
 		valid = valid || n.Speaker != nil
 		valid = valid || n.Company != nil
 		valid = valid || n.Meeting != nil
@@ -79,15 +86,19 @@ func (n *Notification) Validate() error {
 
 // Hash gets the signature of this notification, given that will be used to notifiy some user
 // This will avoid multiple identical notifications to the same user
-func (n *Notification) Hash(memberID primitive.ObjectID) string {
+func (n *Notification) Hash() string {
 
 	digester := sha256.New()
 
 	digester.Write([]byte(n.Kind))
-	digester.Write([]byte(memberID.Hex()))
+	digester.Write([]byte(n.Member.Hex()))
 
 	if n.Post != nil {
 		digester.Write([]byte(n.Post.Hex()))
+	}
+
+	if n.Thread != nil {
+		digester.Write([]byte(n.Thread.Hex()))
 	}
 
 	if n.Speaker != nil {

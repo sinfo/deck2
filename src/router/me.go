@@ -155,14 +155,12 @@ func getMyNotifications(w http.ResponseWriter, r *http.Request) {
 
 	memberID := credentials.ID
 
-	member, err := mongodb.Members.GetMember(memberID)
-
-	if err != nil {
+	if _, err := mongodb.Members.GetMember(memberID); err != nil {
 		http.Error(w, "Could not find member", http.StatusNotFound)
 		return
 	}
 
-	notifications, err := mongodb.Notifications.GetMultipleNotifications(member.Notifications)
+	notifications, err := mongodb.Notifications.GetMemberNotifications(memberID)
 	if err != nil {
 		http.Error(w, "Could not find get notifications", http.StatusExpectationFailed)
 		return

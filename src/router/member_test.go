@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
@@ -446,87 +445,6 @@ func TestUpdateContactBadID(t *testing.T) {
 	assert.NilError(t, errMarshal)
 
 	res, err := executeRequest("POST", "/members/wrong/contact", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
-}
-
-func TestDeleteNotification(t *testing.T) {
-
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-
-	Member1, err := mongodb.Members.CreateMember(Member1Data)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var notifID = primitive.NewObjectID()
-	notifarr := make([]primitive.ObjectID, 0)
-	notifarr = append(notifarr, notifID)
-
-	dmnd := mongodb.DeleteNotificationData{
-		Notification: notifID,
-	}
-
-	b, errMarshal := json.Marshal(dmnd)
-	assert.NilError(t, errMarshal)
-
-	Member2, err := mongodb.Members.UpdateNotification(Member1.ID, notifarr)
-	assert.NilError(t, err)
-	assert.Equal(t, Member1.ID, Member2.ID)
-	assert.Equal(t, len(Member2.Notifications), 1)
-	assert.Equal(t, Member2.Notifications[0], notifID)
-
-	res, err := executeRequest("DELETE", "/members/"+Member1.ID.Hex()+"/notification", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	var member models.Member
-
-	json.NewDecoder(res.Body).Decode(&member)
-
-	assert.Equal(t, Member2.ID, member.ID)
-	assert.Equal(t, len(member.Notifications), 0)
-
-}
-
-func TestDeleteNotificationWrongIDS(t *testing.T) {
-
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-
-	Member1, err := mongodb.Members.CreateMember(Member1Data)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var notifID = primitive.NewObjectID()
-	notifarr := make([]primitive.ObjectID, 0)
-	notifarr = append(notifarr, notifID)
-
-	dmnd := mongodb.DeleteNotificationData{
-		Notification: primitive.NewObjectID(),
-	}
-
-	b, errMarshal := json.Marshal(dmnd)
-	assert.NilError(t, errMarshal)
-
-	Member2, err := mongodb.Members.UpdateNotification(Member1.ID, notifarr)
-	assert.NilError(t, err)
-	assert.Equal(t, Member1.ID, Member2.ID)
-	assert.Equal(t, len(Member2.Notifications), 1)
-	assert.Equal(t, Member2.Notifications[0], notifID)
-
-	res, err := executeRequest("DELETE", "/members/"+Member1.ID.Hex()+"/notification", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
-
-	dmnd = mongodb.DeleteNotificationData{
-		Notification: notifID,
-	}
-
-	b, errMarshal = json.Marshal(dmnd)
-	assert.NilError(t, errMarshal)
-
-	res, err = executeRequest("DELETE", "/members/wrong"+"/notification/", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
