@@ -104,39 +104,15 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 	return notifications, nil
 }
 
-// GetMultipleNotifications gets notification by a list of IDs
-func (n *NotificationsType) GetMultipleNotifications(ids []primitive.ObjectID) ([]*models.Notification, error) {
+// DeleteNotification deletes a notification by its ID.
+func (n *NotificationsType) DeleteNotification(notificationID primitive.ObjectID) (*models.Notification, error) {
 
-	var notifications = make([]*models.Notification, 0)
+	var notification models.Notification
 
-	filter := bson.M{
-		"_id": bson.M{
-			"$in": ids,
-		},
-	}
-
-	cur, err := n.Collection.Find(n.Context, filter)
+	err := n.Collection.FindOneAndDelete(n.Context, bson.M{"_id": notificationID}).Decode(&notification)
 	if err != nil {
 		return nil, err
 	}
 
-	for cur.Next(n.Context) {
-
-		// create a value into which the single document can be decoded
-		var notification models.Notification
-		err := cur.Decode(&notification)
-		if err != nil {
-			return nil, err
-		}
-
-		notifications = append(notifications, &notification)
-	}
-
-	if err := cur.Err(); err != nil {
-		return nil, err
-	}
-
-	cur.Close(n.Context)
-
-	return notifications, nil
+	return &notification, nil
 }
