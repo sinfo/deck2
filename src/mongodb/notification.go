@@ -17,36 +17,78 @@ type NotificationsType struct {
 	Context    context.Context
 }
 
-// GetNotification finds a notification with specified id.
-func (n *NotificationsType) GetNotification(id primitive.ObjectID) (*models.Notification, error) {
+func (n *NotificationsType) Notify(author primitive.ObjectID, subscribers []primitive.ObjectID, data CreateNotificationData) {
 
-	var notification models.Notification
+	// notify subscribers
+	for _, subscriber := range subscribers {
+		if subscriber == author {
+			continue
+		}
 
-	if err := n.Collection.FindOne(n.Context, bson.M{"_id": id}).Decode(&notification); err != nil {
-		return nil, err
+		n.NotifyMember(subscriber, data)
 	}
 
-	return &notification, nil
+	// notify coordination on the author's team
+	event, err := Events.GetCurrentEvent()
+	if err != nil {
+		return
+	}
+
+	for _, teamID := range event.Teams {
+		team, err := Teams.GetTeam(teamID)
+		if err != nil || !team.HasMember(author) {
+			continue
+		}
+
+		coordinators := team.GetMembersByRole(models.RoleCoordinator)
+
+		for _, coordinator := range coordinators {
+			if coordinator.Member == author {
+				continue
+			}
+
+			n.NotifyMember(coordinator.Member, data)
+		}
+	}
 }
 
-func (n *NotificationsType) Notify(data models.Notification) {
+type CreateNotificationData struct {
+	Kind    models.NotificationKind
+	Post    *primitive.ObjectID
+	Thread  *primitive.ObjectID
+	Speaker *primitive.ObjectID
+	Company *primitive.ObjectID
+	Meeting *primitive.ObjectID
+	Session *primitive.ObjectID
+}
 
-	var notification *models.Notification
+func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data CreateNotificationData) {
 
-	if err := data.Validate(); err != nil {
+	notification := &models.Notification{
+		Kind:    data.Kind,
+		Member:  memberID,
+		Post:    data.Post,
+		Thread:  data.Thread,
+		Speaker: data.Speaker,
+		Company: data.Company,
+		Meeting: data.Meeting,
+		Session: data.Session,
+	}
+
+	if err := notification.Validate(); err != nil {
 		log.Println("invalid notification: ", err.Error())
 		return
 	}
 
-	signature := data.Hash()
+	signature := notification.Hash()
 
 	// check if there is already a notification with this signature
-	if err := n.Collection.FindOne(n.Context, bson.M{"signature": signature}).Decode(&notification); err == nil {
+	if err := n.Collection.FindOne(n.Context, bson.M{"signature": signature}).Decode(notification); err == nil {
 		return
 	}
 
 	insertData := bson.M{
-		"member":    data.Member,
+		"member":    memberID,
 		"kind":      data.Kind,
 		"post":      data.Post,
 		"speaker":   data.Speaker,
@@ -70,6 +112,18 @@ func (n *NotificationsType) Notify(data models.Notification) {
 	}
 }
 
+// GetNotification finds a notification with specified id.
+func (n *NotificationsType) GetNotification(id primitive.ObjectID) (*models.Notification, error) {
+
+	var notification models.Notification
+
+	if err := n.Collection.FindOne(n.Context, bson.M{"_id": id}).Decode(&notification); err != nil {
+		return nil, err
+	}
+
+	return &notification, nil
+}
+
 func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) ([]*models.Notification, error) {
 
 	var notifications = make([]*models.Notification, 0)
@@ -87,6 +141,7 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 
 		// create a value into which the single document can be decoded
 		var notification models.Notification
+
 		err := cur.Decode(&notification)
 		if err != nil {
 			return nil, err

@@ -83,11 +83,10 @@ type Team struct {
 
 // TeamPublic info
 type TeamPublic struct {
-	ID		primitive.ObjectID		`json:"id" bson:"_id"` 
-	Name	string 					`json:"name" bson:"name"`
-	Members	[]TeamMember	`json:"members" bson:"members"`
+	ID      primitive.ObjectID `json:"id" bson:"_id"`
+	Name    string             `json:"name" bson:"name"`
+	Members []TeamMember       `json:"members" bson:"members"`
 }
-
 
 // HasMember returns true if member is in the team and false otherwise.
 func (t *Team) HasMember(member primitive.ObjectID) bool {
@@ -120,10 +119,25 @@ func (t *Team) GetMember(memberID primitive.ObjectID) (*TeamMember, error) {
 	return nil, errors.New("member not found")
 }
 
+func (t *Team) GetMembersByRole(role TeamRole) []TeamMember {
+
+	members := make([]TeamMember, 0)
+	appended := map[primitive.ObjectID]bool{}
+
+	for _, member := range t.Members {
+		if member.Role == role && !appended[member.Member] {
+			members = append(members, member)
+			appended[member.Member] = true
+		}
+	}
+
+	return members
+}
+
 // HasMeeting returns true if a team contains specified meeting
 func (t *Team) HasMeeting(id primitive.ObjectID) bool {
-	for _,s := range t.Meetings{
-		if s == id{
+	for _, s := range t.Meetings {
+		if s == id {
 			return true
 		}
 	}

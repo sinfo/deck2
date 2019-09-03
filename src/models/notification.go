@@ -14,8 +14,22 @@ type NotificationKind string
 const (
 	NotificationKindCreated NotificationKind = "CREATED"
 	NotificationKindUpdated NotificationKind = "UPDATED"
-	NotificationKindTagged  NotificationKind = "TAGGED"
 	NotificationKindDeleted NotificationKind = "DELETED"
+
+	NotificationKindUpdatedPrivateImage NotificationKind = "UPDATED_PRIVATE_IMAGE"
+	NotificationKindUpdatedPublicImage  NotificationKind = "UPDATED_PUBLIC_IMAGE"
+
+	NotificationKindCreatedParticipation NotificationKind = "CREATED_PARTICIPATION"
+	NotificationKindUpdatedParticipation NotificationKind = "UPDATED_PARTICIPATION"
+	NotificationKindDeletedParticipation NotificationKind = "DELETED_PARTICIPATION"
+
+	NotificationKindCreatedParticipationPackage NotificationKind = "CREATED_PARTICIPATION_PACKAGE"
+	NotificationKindUpdatedParticipationPackage NotificationKind = "UPDATED_PARTICIPATION_PACKAGE"
+	NotificationKindDeletedParticipationPackage NotificationKind = "DELETED_PARTICIPATION_PACKAGE"
+
+	NotificationKindUpdatedParticipationStatus NotificationKind = "UPDATED_PARTICIPATION_STATUS"
+
+	NotificationKindTagged NotificationKind = "TAGGED"
 )
 
 // Notification is created to warn a Member about a change to a certain entity
@@ -52,7 +66,7 @@ type Notification struct {
 	Date time.Time `json:"date" bson:"date"`
 
 	// Signature is used to verify if 2 notifications are equal
-	Signature string `bson:"signature"`
+	Signature string `json:"signature" bson:"signature"`
 }
 
 func (n *Notification) Validate() error {
@@ -77,7 +91,25 @@ func (n *Notification) Validate() error {
 		valid = valid || n.Session != nil
 
 		if !valid {
-			return errors.New("missing created data")
+			return errors.New("missing data")
+		}
+	} else if n.Kind == NotificationKindUpdatedPrivateImage ||
+		n.Kind == NotificationKindUpdatedPublicImage ||
+		n.Kind == NotificationKindCreatedParticipation ||
+		n.Kind == NotificationKindUpdatedParticipation ||
+		n.Kind == NotificationKindDeletedParticipation ||
+		n.Kind == NotificationKindCreatedParticipationPackage ||
+		n.Kind == NotificationKindUpdatedParticipationPackage ||
+		n.Kind == NotificationKindDeletedParticipationPackage ||
+		n.Kind == NotificationKindUpdatedParticipationStatus {
+
+		// at least one must exist
+		valid = false
+		valid = valid || n.Speaker != nil
+		valid = valid || n.Company != nil
+
+		if !valid {
+			return errors.New("missing data")
 		}
 	}
 
@@ -102,19 +134,19 @@ func (n *Notification) Hash() string {
 	}
 
 	if n.Speaker != nil {
-		digester.Write([]byte(n.Post.Hex()))
+		digester.Write([]byte(n.Speaker.Hex()))
 	}
 
 	if n.Company != nil {
-		digester.Write([]byte(n.Post.Hex()))
+		digester.Write([]byte(n.Company.Hex()))
 	}
 
 	if n.Meeting != nil {
-		digester.Write([]byte(n.Post.Hex()))
+		digester.Write([]byte(n.Meeting.Hex()))
 	}
 
 	if n.Session != nil {
-		digester.Write([]byte(n.Post.Hex()))
+		digester.Write([]byte(n.Session.Hex()))
 	}
 
 	return hex.EncodeToString(digester.Sum(nil))

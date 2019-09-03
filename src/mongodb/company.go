@@ -335,10 +335,11 @@ func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, memberID 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
 			"participations": bson.M{
-				"event":   currentEvent.ID,
-				"member":  memberID,
-				"partner": data.Partner,
-				"status":  models.Suggested,
+				"event":       currentEvent.ID,
+				"member":      memberID,
+				"partner":     data.Partner,
+				"status":      models.Suggested,
+				"subscribers": []primitive.ObjectID{memberID},
 			},
 		},
 	}

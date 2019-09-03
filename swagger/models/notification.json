@@ -29,6 +29,9 @@
         "date": {
 			"type": "string",
 			"format": "date-time"
+		},
+		"signature": {
+			"type": "string"
         }
 	}
 }
