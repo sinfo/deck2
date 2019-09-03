@@ -123,6 +123,14 @@ func createSpeaker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(newSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreated,
+			Speaker: &newSpeaker.ID,
+		})
+	}
 }
 
 func updateSpeaker(w http.ResponseWriter, r *http.Request) {
@@ -152,6 +160,14 @@ func updateSpeaker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdated,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func addSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
@@ -174,6 +190,12 @@ func addSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+		Kind:    models.NotificationKindUpdatedParticipation,
+		Speaker: &updatedSpeaker.ID,
+	})
 }
 
 func updateSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
@@ -203,6 +225,14 @@ func updateSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipation,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func stepSpeakerStatus(w http.ResponseWriter, r *http.Request) {
@@ -229,6 +259,14 @@ func stepSpeakerStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func getSpeakerValidSteps(w http.ResponseWriter, r *http.Request) {
@@ -283,6 +321,14 @@ func setSpeakerStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
@@ -355,6 +401,14 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedPrivateImage,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
@@ -427,6 +481,14 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedPublicImage,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
@@ -499,6 +561,14 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedCompanyImage,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
@@ -541,6 +611,14 @@ func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipation,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func deleteSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
@@ -579,6 +657,14 @@ func deleteSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipation,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
 }
 
 func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
@@ -696,4 +782,13 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreated,
+			Speaker: &updatedSpeaker.ID,
+			Thread:  &newThread.ID,
+		})
+	}
 }

@@ -19,6 +19,9 @@ const (
 	NotificationKindUpdatedPrivateImage NotificationKind = "UPDATED_PRIVATE_IMAGE"
 	NotificationKindUpdatedPublicImage  NotificationKind = "UPDATED_PUBLIC_IMAGE"
 
+	// Speaker's company image
+	NotificationKindUpdatedCompanyImage NotificationKind = "UPDATED_COMPANY_IMAGE"
+
 	NotificationKindCreatedParticipation NotificationKind = "CREATED_PARTICIPATION"
 	NotificationKindUpdatedParticipation NotificationKind = "UPDATED_PARTICIPATION"
 	NotificationKindDeletedParticipation NotificationKind = "DELETED_PARTICIPATION"
@@ -109,6 +112,10 @@ func (n *Notification) Validate() error {
 		valid = valid || n.Company != nil
 
 		if !valid {
+			return errors.New("missing data")
+		}
+	} else if n.Kind == NotificationKindUpdatedCompanyImage {
+		if n.Speaker == nil {
 			return errors.New("missing data")
 		}
 	}

@@ -66,4 +66,10 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedPost)
+
+	// notify
+	mongodb.Notifications.Notify(credentials.ID, []primitive.ObjectID{}, mongodb.CreateNotificationData{
+		Kind: models.NotificationKindUpdated,
+		Post: &updatedPost.ID,
+	})
 }
