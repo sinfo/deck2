@@ -33,6 +33,10 @@ var (
 	// speakers public and private images, etc)
 	// 10 KB
 	ImageMaxSize int64 = 10 << 10
+
+	// Where to send the authentication token after successeful authentication
+	// We will be using deck website (https://deck.sinfo.org)
+	AuthRedirectionURL string
 )
 
 const (
@@ -54,6 +58,8 @@ const (
 	keySpacesName   string = "DO_SPACES_NAME"
 	keySpacesSecret string = "DO_SPACES_SECRET"
 	keySpacesKey    string = "DO_SPACES_KEY"
+
+	keyAuthRedirectionURL string = "AUTH_REDIRECTION_URL"
 )
 
 func set(variable *string, key string, mandatory bool) {
@@ -84,6 +90,8 @@ func InitializeConfig() {
 	set(&SpacesName, keySpacesName, true)
 	set(&SpacesKey, keySpacesKey, true)
 	set(&SpacesSecret, keySpacesSecret, true)
+
+	set(&AuthRedirectionURL, keyAuthRedirectionURL, true)
 }
 
 func SetTestingEnv() {

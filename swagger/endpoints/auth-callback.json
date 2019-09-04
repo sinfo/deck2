@@ -13,11 +13,8 @@
         ],
         "parameters": [],
         "responses": {
-            "200": {
-                "description": "Authentication code",
-                "schema": {
-                    "$ref": "./models/auth.json"
-                }
+            "317": {
+                "description": "Redirects to deck2 website with authentication code"
             },
             "401": {
                 "description": "Unauthorized (reason in the body of the response)"

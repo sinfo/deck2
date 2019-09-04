@@ -22,6 +22,8 @@ services:
             - 'DECK2_DO_SPACES_SECRET=SOME_SECRET'
             - 'DECK2_DO_SPACES_REGION=SOME_REGION'
             - 'DECK2_DO_SPACES_NAME=SOME_NAME'
+
+            - 'DECK2_AUTH_REDIRECTION_URL=http://localhost:4200'
     mongodb:
         image: mongo:4.0.4
         container_name: "deck2_testing_mongodb"

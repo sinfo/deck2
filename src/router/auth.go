@@ -1,13 +1,14 @@
 package router
 
 import (
-	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/sinfo/deck2/src/auth"
+	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/google"
 	"github.com/sinfo/deck2/src/mongodb"
 )
@@ -54,7 +55,7 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	//w.WriteHeader(http.StatusOK)
 
 	var emailParts = strings.Split(data.Email, "@")
 	if len(emailParts) != 2 {
@@ -80,7 +81,5 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response = authResponse{JWT: *token}
-
-	json.NewEncoder(w).Encode(response)
+	http.Redirect(w, r, fmt.Sprintf("%s/login/%s", config.AuthRedirectionURL, *token), http.StatusPermanentRedirect)
 }
