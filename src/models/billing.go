@@ -11,13 +11,15 @@ type BillingStatus struct {
 	ProForma bool `json:"proForma" bson:"proForma"`
 	Invoice  bool `json:"invoice" bson:"invoice"`
 	Receipt  bool `json:"receipt" bson:"receipt"`
-	Payed    bool `json:"payed" bson:"payed"`
+	Paid    bool `json:"paid" bson:"paid"`
 }
 
 // Billing (used on company participations).
 type Billing struct {
 	ID     primitive.ObjectID `json:"id" bson:"_id"`
 	Status BillingStatus      `json:"status" bson:"status"`
+
+	Event  int	`json:"event" bson:"event"`
 
 	// Employer is a CompanyRep _id (see models.CompanyRep).
 	Employer primitive.ObjectID `json:"employer" bson:"employer"`

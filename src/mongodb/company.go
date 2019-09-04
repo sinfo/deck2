@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"time"
+	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -873,31 +874,42 @@ func (c *CompaniesType) RemoveSubscriber(companyID primitive.ObjectID, memberID 
 	return &updatedCompany, nil
 }
 
-// UpdateBilling updates the billing information on a company's participation related to the current event.
+// AddBilling updates the billing information on a company's participation related to the current event.
 // Uses a models.Billing ID to store this information.
-func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID primitive.ObjectID) (*models.Company, error) {
+func (c *CompaniesType) AddBilling(companyID primitive.ObjectID, data CreateBillingData) (*models.Company, error) {
 
-	currentEvent, err := Events.GetCurrentEvent()
-
+	log.Printf(strconv.Itoa(*data.Event))
+	company, err := c.GetCompany(companyID)
 	if err != nil {
 		return nil, err
 	}
 
-	var updatedCompany models.Company
+	for i, s := range company.Participations{
+		if s.Event != *data.Event{
+			continue
+		}
+
+		billing, err := Billings.CreateBilling(data)
+		if err != nil {
+			return nil, err
+		}
+
+		company.Participations[i].Billing = billing.ID
+	}
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"participations.$.billing": billingID,
+			"participations": company.Participations,
 		},
 	}
-
-	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		log.Println("Error updating company's participation's billing:", err)
+	var updatedCompany models.Company
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": companyID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating company:", err)
 		return nil, err
 	}
 
