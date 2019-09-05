@@ -135,6 +135,18 @@ func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) 
 }
 
 // GetMember finds a member with specified id.
+func (m *MembersType) GetMemberBySinfoID(sinfoid string) (*models.Member, error) {
+
+	var member models.Member
+
+	if err := m.Collection.FindOne(m.Context, bson.M{"sinfoid": sinfoid}).Decode(&member); err != nil {
+		return nil, err
+	}
+
+	return &member, nil
+}
+
+// GetMember finds a member with specified id.
 func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
 
 	var member models.Member
@@ -353,68 +365,25 @@ func (m *MembersType) UpdateMember(id primitive.ObjectID, data UpdateMemberData)
 	return &member, nil
 }
 
-// UpdateNotification adds notifications.
-func (m *MembersType) UpdateNotification(id primitive.ObjectID, notifs []primitive.ObjectID) (*models.Member, error) {
+// AddNotification adds notification.
+func (m *MembersType) AddNotification(id primitive.ObjectID, notificationID primitive.ObjectID) (*models.Member, error) {
 
-	member, err := m.GetMember(id)
-	if err != nil {
-		return nil, err
-	}
-
-	notifications := append(member.Notifications, notifs...)
+	var member models.Member
 
 	var updateQuery = bson.M{
-		"$set": bson.M{
-			"notifications": notifications,
+		"$addToSet": bson.M{
+			"notifications": notificationID,
 		},
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(member); err != nil {
+	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil {
 		return nil, err
 	}
 
-	return member, nil
-}
-
-// DeleteNotification deletes a notification from a member.
-func (m *MembersType) DeleteNotification(memberID primitive.ObjectID, notif DeleteNotificationData) (*models.Member, error) {
-	member, err := m.GetMember(memberID)
-	if err != nil {
-		return nil, err
-	}
-
-	var notifications []primitive.ObjectID
-	var found = false
-	for i, s := range member.Notifications {
-		if s == notif.Notification {
-			notifications = append(member.Notifications[:i], member.Notifications[i+1:]...)
-			found = true
-		}
-	}
-
-	if !found {
-		return nil, errors.New("Notification not found")
-	}
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"notifications": notifications,
-		},
-	}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	var result models.Member
-
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&result); err != nil {
-		return nil, err
-	}
-
-	return &result, nil
+	return &member, nil
 }
 
 // GetMembersPublic retrieves all members if no name is given or all members

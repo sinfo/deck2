@@ -91,6 +91,13 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedThread)
+
+	// notify
+	mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+		Kind:   models.NotificationKindCreated,
+		Thread: &updatedThread.ID,
+		Post:   &newPost.ID,
+	})
 }
 
 func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
@@ -112,6 +119,7 @@ func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
 	updatedThread, err := mongodb.Threads.RemoveCommentFromThread(threadID, postID)
 	if err != nil {
 		http.Error(w, "Could not remove post from thread", http.StatusExpectationFailed)
+		return
 	}
 
 	if _, err := mongodb.Posts.DeletePost(postID); err != nil {
@@ -124,4 +132,13 @@ func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedThread)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:   models.NotificationKindDeleted,
+			Thread: &updatedThread.ID,
+			Post:   &postID,
+		})
+	}
 }

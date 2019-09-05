@@ -3,7 +3,7 @@
         "tags": [
             "teams", "meetings"
         ],
-        "summary": "Removes a  meeting from a team",
+        "summary": "Removes a  meeting from a team (must have at least Team Leader credentials)",
         "operationId": "deleteTeamMeeting",
         "consumes": [
             "application/json"
@@ -47,6 +47,9 @@
             },
             "417": {
                 "description": "Couldn't find team"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

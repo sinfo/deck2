@@ -23,12 +23,6 @@
 		"status": {
 			"type": "string",
 			"enum": ["APPROVED", "REVIEWED", "PENDING"]
-		},
-		"subscribers": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
 		}
 	}
 }

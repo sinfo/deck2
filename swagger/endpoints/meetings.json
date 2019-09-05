@@ -3,7 +3,7 @@
         "tags": [
             "meetings"
         ],
-        "summary": "Creates a meeting",
+        "summary": "Creates a meeting (must have at least coordinator credentials)",
         "operationId": "createMeeting",
         "consumes": [
             "application/json"
@@ -57,9 +57,13 @@
             },
             "401": {
                 "description": "Unauthorized"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
-    },"get": {
+    },
+    "get": {
         "tags": [
             "meetings"
         ],

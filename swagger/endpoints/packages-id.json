@@ -107,6 +107,9 @@
             },
             "417": {
                 "description": "Unable to update the package"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

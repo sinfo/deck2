@@ -349,9 +349,10 @@ func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID p
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
 			"participations": bson.M{
-				"event":  currentEvent.ID,
-				"member": memberID,
-				"status": models.Suggested,
+				"event":       currentEvent.ID,
+				"member":      memberID,
+				"status":      models.Suggested,
+				"subscribers": []primitive.ObjectID{memberID},
 			},
 		},
 	}

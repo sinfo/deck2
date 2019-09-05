@@ -43,6 +43,9 @@
             },
             "417": {
                 "description": "Unable to remove or delete meeting"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

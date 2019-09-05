@@ -272,9 +272,6 @@
 		"/members/{id}/contact":{
 			"$ref": "./endpoints/members-id-contact.json"
 		},
-		"/members/{id}/notification":{
-			"$ref": "./endpoints/members-id-notification.json"
-		},
 		"/packages": {
 			"$ref": "./endpoints/packages.json"
 		},
@@ -310,6 +307,9 @@
 		},
 		"/me/image": {
 			"$ref":"./endpoints/me-image.json"
+		},
+		"/me/notifications": {
+			"$ref":"./endpoints/me-notifications.json"
 		}
 	},
 	"externalDocs": {

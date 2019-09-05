@@ -146,6 +146,14 @@ func createCompany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(newCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreated,
+			Company: &newCompany.ID,
+		})
+	}
 }
 
 func updateCompany(w http.ResponseWriter, r *http.Request) {
@@ -175,6 +183,14 @@ func updateCompany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdated,
+			Company: &updatedCompany.ID,
+		})
+	}
 }
 
 func updateCompanyParticipation(w http.ResponseWriter, r *http.Request) {
@@ -204,6 +220,14 @@ func updateCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipation,
+			Company: &updatedCompany.ID,
+		})
+	}
 }
 
 func addCompanyParticipation(w http.ResponseWriter, r *http.Request) {
@@ -235,6 +259,14 @@ func addCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreatedParticipation,
+			Company: &updatedCompany.ID,
+		})
+	}
 }
 
 type addThreadData struct {
@@ -329,12 +361,10 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// only then create the thread
-	// TODO: fill subscribers' list and notify them
 	var ctd = mongodb.CreateThreadData{
-		Entry:       newPost.ID,
-		Meeting:     meetingIDPointer,
-		Kind:        *atd.Kind,
-		Subscribers: []primitive.ObjectID{},
+		Entry:   newPost.ID,
+		Meeting: meetingIDPointer,
+		Kind:    *atd.Kind,
 	}
 
 	newThread, err := mongodb.Threads.CreateThread(ctd)
@@ -381,6 +411,15 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreated,
+			Company: &updatedCompany.ID,
+			Thread:  &newThread.ID,
+		})
+	}
 }
 
 func addCompanyPackage(w http.ResponseWriter, r *http.Request) {
@@ -421,6 +460,14 @@ func addCompanyPackage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationPackage,
+			Company: &updatedCompany.ID,
+		})
+	}
 }
 
 func deleteCompany(w http.ResponseWriter, r *http.Request) {
@@ -436,6 +483,14 @@ func deleteCompany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(deletedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindDeleted,
+			Company: &deletedCompany.ID,
+		})
+	}
 }
 
 func setCompanyStatus(w http.ResponseWriter, r *http.Request) {
@@ -464,6 +519,14 @@ func setCompanyStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Company: &updatedCompany.ID,
+		})
+	}
 }
 
 func stepCompanyStatus(w http.ResponseWriter, r *http.Request) {
@@ -490,6 +553,14 @@ func stepCompanyStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Company: &updatedCompany.ID,
+		})
+	}
 }
 
 type validStepsResponse struct {
@@ -592,6 +663,14 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedPrivateImage,
+			Company: &updatedCompany.ID,
+		})
+	}
 }
 
 func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
@@ -664,4 +743,12 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedPublicImage,
+			Company: &updatedCompany.ID,
+		})
+	}
 }

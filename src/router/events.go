@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -404,6 +405,14 @@ func addSessionToEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedEvent)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreated,
+			Session: &createdSession.ID,
+		})
+	}
 }
 
 func addMeetingToEvent(w http.ResponseWriter, r *http.Request) {

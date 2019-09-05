@@ -78,6 +78,9 @@
             },
             "404": {
                 "description": "Event not found"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

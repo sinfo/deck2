@@ -56,6 +56,9 @@
             },
             "417": {
                 "description": "Unable to update event's themes"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

@@ -24,9 +24,6 @@ type Member struct {
 
 	// Contact is an _id of Contact (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
-
-	// Notifications is an array of _id of Notification (see models.Notification).
-	Notifications []primitive.ObjectID `json:"notifications" bson:"notifications"`
 }
 
 // MemberPublic is the public information about a member

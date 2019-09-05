@@ -44,7 +44,7 @@
         "tags": [
             "meetings"
         ],
-        "summary": "Deletes a meeting",
+        "summary": "Deletes a meeting (must have at least coordinator credentials)",
         "operationId": "deleteMeeting",
         "consumes": [
             "application/json"
@@ -78,6 +78,9 @@
             },
             "404": {
                 "description": "Meeting not found"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

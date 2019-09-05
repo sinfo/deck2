@@ -111,6 +111,9 @@
             },
             "417": {
                 "description": "Unable to create the item"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

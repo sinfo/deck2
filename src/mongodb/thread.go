@@ -19,21 +19,19 @@ type ThreadsType struct {
 }
 
 type CreateThreadData struct {
-	Entry       primitive.ObjectID
-	Meeting     *primitive.ObjectID
-	Kind        models.ThreadKind
-	Subscribers []primitive.ObjectID
+	Entry   primitive.ObjectID
+	Meeting *primitive.ObjectID
+	Kind    models.ThreadKind
 }
 
 // CreateThread creates a new thread and saves it to the database
 func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error) {
 
 	query := bson.M{
-		"entry":       data.Entry,
-		"comments":    []primitive.ObjectID{},
-		"status":      models.ThreadStatusPending,
-		"kind":        data.Kind,
-		"subscribers": data.Subscribers,
+		"entry":    data.Entry,
+		"comments": []primitive.ObjectID{},
+		"status":   models.ThreadStatusPending,
+		"kind":     data.Kind,
 	}
 
 	if data.Meeting != nil {

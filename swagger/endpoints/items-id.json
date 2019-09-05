@@ -110,6 +110,9 @@
             },
             "404": {
                 "description": "Item not found"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

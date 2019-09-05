@@ -3,7 +3,7 @@
         "tags": [
             "companies", "packages"
         ],
-        "summary": "Adds a package on the current event to a company",
+        "summary": "Adds a package on the current event to a company (must have at least coordination credentails)",
         "operationId": "addCompanyPackage",
         "consumes": [
             "application/json"
@@ -83,6 +83,9 @@
             },
             "417": {
                 "description": "Couldn't add package to company"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

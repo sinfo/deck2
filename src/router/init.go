@@ -64,7 +64,7 @@ func checkAccessLevelWrapper(required models.TeamRole) authWrapper {
 			authorized := auth.CheckAccessLevel(required, *credentials)
 
 			if !authorized {
-				http.Error(w, "not enough credentials", http.StatusUnauthorized)
+				http.Error(w, "not enough credentials", http.StatusForbidden)
 				return
 			}
 
@@ -203,6 +203,7 @@ func InitializeRouter() {
 	meRouter.HandleFunc("", authMember(getMe)).Methods("GET")
 	meRouter.HandleFunc("", authMember(updateMe)).Methods("PUT")
 	meRouter.HandleFunc("/image", authMember(setMyImage)).Methods("POST")
+	meRouter.HandleFunc("/notifications", authMember(getMyNotifications)).Methods("GET")
 
 	// member handlers
 	memberRouter := r.PathPrefix("/members").Subrouter()
@@ -211,7 +212,6 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
 	memberRouter.HandleFunc("/{id}", authAdmin(updateMember)).Methods("PUT")
 	memberRouter.HandleFunc("/{id}/contact", authMember(createMemberContact)).Methods("POST")
-	memberRouter.HandleFunc("/{id}/notification", authAdmin(deleteNotification)).Methods("DELETE")
 
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
@@ -242,7 +242,7 @@ func InitializeRouter() {
 	// meetings handlers
 	meetingRouter := r.PathPrefix("/meetings").Subrouter()
 	meetingRouter.HandleFunc("", authMember(getMeetings)).Methods("GET")
-	meetingRouter.HandleFunc("", authMember(createMeeting)).Methods("POST")
+	meetingRouter.HandleFunc("", authCoordinator(createMeeting)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}", authMember(getMeeting)).Methods("GET")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
 

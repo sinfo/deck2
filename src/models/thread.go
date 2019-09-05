@@ -59,7 +59,4 @@ type Thread struct {
 	// REVIEWED => thread is posted, but some changed must be made before it's ready to be approved.
 	// PENDING => thread is posted and is waiting for the coordination's approval/review.
 	Status ThreadStatus `json:"status" bson:"status"`
-
-	// Subscribers is an array of _id of Member (see models.Member).
-	Subscribers []primitive.ObjectID `json:"subscribers" bson:"subscribers"`
 }

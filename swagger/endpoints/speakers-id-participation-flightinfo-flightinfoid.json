@@ -3,7 +3,7 @@
         "tags": [
             "speakers", "flightInfo"
         ],
-        "summary": "Removes flightInfo from a speaker's participation, and deletes it from the database",
+        "summary": "Removes flightInfo from a speaker's participation, and deletes it from the database (must have at least coordinator credentials)",
         "operationId": "removeSpeakerFlightInfo",
         "consumes": [
             "application/json"
@@ -47,6 +47,9 @@
             },
             "417": {
                 "description": "Unable to remove or delete flight info"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }
