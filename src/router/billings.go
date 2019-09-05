@@ -8,6 +8,7 @@ import (
 
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/sinfo/deck2/src/models"
 
 	"github.com/gorilla/mux"
 )
@@ -23,6 +24,15 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 	valueLessThan := urlQuery.Get("valueLessThan")
 	event := urlQuery.Get("event")
 	company:= urlQuery.Get("company")
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	options.Role = &credentials.Role
 
 	if len(after) > 0 {
 		afterDate, err := time.Parse(time.RFC3339, after)

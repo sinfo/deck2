@@ -9,18 +9,21 @@ import (
 	"net/url"
 	"testing"
 	"time"
-	//"log"
+	"log"
+	"github.com/sinfo/deck2/src/auth"
+	"github.com/sinfo/deck2/src/config"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"gotest.tools/assert"
-	//"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 var (
 	Billing1	*models.Billing
 	Billing2	*models.Billing
 	FALSE = false
+	TRUE = true
 	BillingStatus = mongodb.CreateStatusData{
 		Invoice: &FALSE,
 		Receipt: &FALSE,
@@ -56,8 +59,15 @@ var (
 )
 
 func TestGetBillings(t *testing.T){
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Billings.Collection.Drop(mongodb.Billings.Context)
 	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
 
 	company, err := mongodb.Companies.CreateCompany(mongodb.CreateCompanyData{
 		Name: &Company.Name,
@@ -67,21 +77,78 @@ func TestGetBillings(t *testing.T){
 	})
 	assert.NilError(t, err)
 
+	newTeam, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	var role1 = models.RoleAdmin
+	var role2 = models.RoleMember
+
+	cmd1 := mongodb.CreateMemberData{
+		Name: "Member",
+
+		Istid:   "ist123456",
+		SINFOID: "sinfoID1",
+	}
+
+	cmd2 := mongodb.CreateMemberData{
+		Name: "Member",
+
+		Istid:   "ist123456",
+		SINFOID: "sinfoID2",
+	}
+
+	newMember1, err := mongodb.Members.CreateMember(cmd1)
+	assert.NilError(t, err)
+
+	newMember2, err := mongodb.Members.CreateMember(cmd2)
+	assert.NilError(t, err)
+
+	utmd1 := mongodb.UpdateTeamMemberData{
+		Member: &newMember1.ID,
+		Role:   &role1,
+	}
+
+	utmd2 := mongodb.UpdateTeamMemberData{
+		Member: &newMember2.ID,
+		Role:   &role2,
+	}
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd1)
+	assert.NilError(t, err)
+
+	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd2)
+	assert.NilError(t, err)
+
 	Billing1Data.Company = &company.ID
+	Billing1Data.Visible = &TRUE
 
 	Billing1, err := mongodb.Billings.CreateBilling(Billing1Data)
 	assert.NilError(t, err)
 
-	Billing1Data.Company = nil
-
 	Billing2, err = mongodb.Billings.CreateBilling(Billing2Data)
 	assert.NilError(t, err)
 
+	Billing1Data.Company = nil
+
 	var billings []*models.Billing
 
-	// No Query
+	credentialsAdmin, err := mongodb.Members.GetMemberAuthCredentials(newMember1.SINFOID)
+	assert.NilError(t, err)
 
-	res, err := executeRequest("GET", "/billings", nil)
+	tokenAdmin, err := auth.SignJWT(*credentialsAdmin)
+	assert.NilError(t, err)
+
+	credentialsMember, err := mongodb.Members.GetMemberAuthCredentials(newMember2.SINFOID)
+	assert.NilError(t, err)
+
+	tokenMember, err := auth.SignJWT(*credentialsMember)
+	assert.NilError(t, err)
+
+	// No Query, admin
+
+	config.Authentication = true
+	res, err := executeAuthenticatedRequest("GET", "/billings", nil, *tokenAdmin)
+	config.Authentication = false
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -89,11 +156,26 @@ func TestGetBillings(t *testing.T){
 
 	assert.Equal(t, len(billings), 2)
 
+	// No Query, member
+
+	config.Authentication = true
+	res, err = executeAuthenticatedRequest("GET", "/billings", nil, *tokenMember)
+	config.Authentication = false
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&billings)
+
+	assert.Equal(t, len(billings), 1)
+	assert.Equal(t, billings[0].ID, Billing1.ID)
+
 	// After on query
 
 	var query = "?after="+ url.QueryEscape(TimeAfter.Format(time.RFC3339))
 
-	res, err = executeRequest("GET", "/billings"+query, nil)
+	config.Authentication = true
+	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
+	config.Authentication = false
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -106,7 +188,9 @@ func TestGetBillings(t *testing.T){
 
 	query = "?before="+url.QueryEscape(TimeAfter.Format(time.RFC3339))
 
-	res, err = executeRequest("GET", "/billings"+query, nil)
+	config.Authentication = true
+	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
+	config.Authentication = false
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -119,7 +203,9 @@ func TestGetBillings(t *testing.T){
 
 	query = "?valueGreaterThan="+url.QueryEscape(strconv.Itoa(600))
 
-	res, err = executeRequest("GET", "/billings"+query, nil)
+	config.Authentication = true
+	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
+	config.Authentication = false
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -132,7 +218,9 @@ func TestGetBillings(t *testing.T){
 
 	query = "?valueLessThan="+url.QueryEscape(strconv.Itoa(600))
 
-	res, err = executeRequest("GET", "/billings"+query, nil)
+	config.Authentication = true
+	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
+	config.Authentication = false
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -145,7 +233,9 @@ func TestGetBillings(t *testing.T){
 
 	query = "?event="+url.QueryEscape(strconv.Itoa(Event1.ID))
 
-	res, err = executeRequest("GET", "/billings"+query, nil)
+	config.Authentication = true
+	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
+	config.Authentication = false
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -157,8 +247,9 @@ func TestGetBillings(t *testing.T){
 	// Company on query
 
 	query = "?company="+url.QueryEscape(company.ID.Hex())
-
-	res, err = executeRequest("GET", "/billings"+query, nil)
+	config.Authentication = true
+	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
+	config.Authentication = false
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 

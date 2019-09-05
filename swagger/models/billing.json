@@ -1,0 +1,46 @@
+{
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string"
+		},
+		"status": {
+            "type": "object",
+            "properties":{
+                "proForma":{
+                    "type":"bool"
+                },
+                "receipt":{
+                    "type":"bool"
+                },
+                "paid":{
+                    "type":"bool"
+                },"invoice":{
+                    "type":"bool"
+                }
+            }
+		},
+		"event": {
+			"type": "integer"
+		},
+		"company": {
+			"type": "string"
+		},
+		"value": {
+			"type": "integer"
+		},
+		"invoiceNumber": {
+			"type": "integer"
+			},
+		"emission": {
+            "type": "string",
+            "format":"date-time"
+        },
+        "notes":{
+            "type":"string"
+        },
+        "visible":{
+            "type":"bool"
+        }
+	}
+}

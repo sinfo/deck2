@@ -30,4 +30,5 @@ type Billing struct {
 	InvoiceNumber string    `json:"invoiceNumber" bson:"invoiceNumber"`
 	Emission      time.Time `json:"emission" bson:"emission"`
 	Notes         string    `json:"notes" bson:"notes"`
+	Visible		  bool		`json:"visible" bson:"visible"`
 }

@@ -28,10 +28,11 @@ type BillingsType struct {
 type GetBillingsOptions struct {
 	After 				*time.Time			`json:"after" bson:"after"`
 	Before				*time.Time			`json:"before" bson:"before"`
-	ValueGreaterThan	*int				`json:"value-greater-than" bson:"value-greater-than"`
-	ValueLessThan		*int				`json:"value-less-than" bson:"value-less-than"`
+	ValueGreaterThan	*int				`json:"valueGreaterThan" bson:"valueGreaterThan"`
+	ValueLessThan		*int				`json:"valueLessThan" bson:"valueLessThan"`
 	Event				*int				`json:"event" bson:"event"`
 	Company				*primitive.ObjectID	`json:"company" bson:"company"`
+	Role				*models.TeamRole	
 
 }
 
@@ -52,6 +53,7 @@ type CreateBillingData struct{
 	InvoiceNumber	*string					`json:"invoiceNumber" bson:"invoiceNumber"`
 	Emission		*time.Time				`json:"emission" bson:"emission"`
 	Notes			*string					`json:"notes" bson:"notes"`
+	Visible			*bool					`json:"visible" bson:"visible"`
 }
 
 // ParseBody fills a CreateBillingData struct with data
@@ -112,6 +114,13 @@ func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billin
 	var err error
 
 	filter := bson.M{}
+
+	if options.Role !=nil {
+		log.Println(*options.Role)
+		if options.Role.AccessLevel() >1 {
+			filter["visible"] = true
+		}
+	}
 
 	if options.Before != nil {
 		filter["emission"] = bson.M{"$lt": *options.Before}
@@ -194,6 +203,10 @@ func (b *BillingsType) CreateBilling(data CreateBillingData)(*models.Billing, er
 		insertData["company"] = *data.Company
 	}
 
+	if data.Visible!= nil {
+		insertData["visible"] = *data.Visible
+	}
+
 	insertResult, err := b.Collection.InsertOne(b.Context, insertData)
 
 	if err != nil {
@@ -233,6 +246,10 @@ func (b *BillingsType) UpdateBilling(id primitive.ObjectID, data CreateBillingDa
 
 	if data.Company != nil{
 		updateQuery["company"] = *data.Company
+	}
+
+	if data.Visible!= nil {
+		updateQuery["visible"] = *data.Visible
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
