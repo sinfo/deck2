@@ -3,7 +3,7 @@
         "tags": [
             "speakers"
         ],
-        "summary": "Update speaker's company public image by ID",
+        "summary": "Update speaker's company public image by ID (must have at least coordinator credentials)",
         "operationId": "updateSpeakerCompanyImage",
         "consumes": [
             "multipart/form-data"
@@ -49,6 +49,9 @@
             },
             "400": {
                 "description": "Invalid image data"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

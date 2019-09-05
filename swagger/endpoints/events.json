@@ -114,6 +114,9 @@
             },
             "401": {
                 "description": "Unauthorized"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     },
@@ -176,6 +179,9 @@
             },
             "417": {
                 "description": "Unable to update event"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

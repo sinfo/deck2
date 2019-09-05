@@ -56,6 +56,9 @@
             },
             "417": {
                 "description": "Unable to save package on event"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

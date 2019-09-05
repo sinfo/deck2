@@ -40,6 +40,9 @@
             },
             "417": {
                 "description": "Unable to remove package from event"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     },
@@ -103,6 +106,9 @@
             },
             "417": {
                 "description": "Unable to update template on event"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

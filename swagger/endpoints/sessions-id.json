@@ -142,6 +142,9 @@
             },
             "417": {
                 "description": "Unable to update session"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

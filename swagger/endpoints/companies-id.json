@@ -162,6 +162,9 @@
             },
             "404": {
                 "description": "Unable to delete company"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

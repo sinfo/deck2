@@ -78,6 +78,9 @@
             },
             "404": {
                 "description": "Team not found"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     },
@@ -140,6 +143,9 @@
             },
             "417": {
                 "description": "Couldn't find team"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

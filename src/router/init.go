@@ -64,7 +64,7 @@ func checkAccessLevelWrapper(required models.TeamRole) authWrapper {
 			authorized := auth.CheckAccessLevel(required, *credentials)
 
 			if !authorized {
-				http.Error(w, "not enough credentials", http.StatusUnauthorized)
+				http.Error(w, "not enough credentials", http.StatusForbidden)
 				return
 			}
 
@@ -242,7 +242,7 @@ func InitializeRouter() {
 	// meetings handlers
 	meetingRouter := r.PathPrefix("/meetings").Subrouter()
 	meetingRouter.HandleFunc("", authMember(getMeetings)).Methods("GET")
-	meetingRouter.HandleFunc("", authMember(createMeeting)).Methods("POST")
+	meetingRouter.HandleFunc("", authCoordinator(createMeeting)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}", authMember(getMeeting)).Methods("GET")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
 

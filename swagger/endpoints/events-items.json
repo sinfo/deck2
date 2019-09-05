@@ -53,6 +53,9 @@
             },
             "417": {
                 "description": "Unable to add item"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

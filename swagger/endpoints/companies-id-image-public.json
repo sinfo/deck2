@@ -49,6 +49,9 @@
             },
             "400": {
                 "description": "Invalid image data"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }

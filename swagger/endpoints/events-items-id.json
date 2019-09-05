@@ -40,6 +40,9 @@
             },
             "417": {
                 "description": "Unable to remove item from event"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
             }
         }
     }
