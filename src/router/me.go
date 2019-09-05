@@ -8,11 +8,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/h2non/filetype"
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/spaces"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func getMe(w http.ResponseWriter, r *http.Request) {
@@ -167,5 +169,37 @@ func getMyNotifications(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(notifications)
+}
 
+func deleteMyNotification(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	memberID := credentials.ID
+
+	if _, err := mongodb.Members.GetMember(memberID); err != nil {
+		http.Error(w, "Could not find member", http.StatusNotFound)
+		return
+	}
+
+	if _, err := mongodb.Notifications.GetNotification(id); err != nil {
+		http.Error(w, "Notification not found", http.StatusNotFound)
+		return
+	}
+
+	notification, err := mongodb.Notifications.DeleteNotification(id)
+	if err != nil {
+		http.Error(w, "Could not delete notification", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(notification)
 }

@@ -310,6 +310,9 @@
 		},
 		"/me/notifications": {
 			"$ref":"./endpoints/me-notifications.json"
+		},
+		"/me/notification/{id}": {
+			"$ref":"./endpoints/me-notification-id.json"
 		}
 	},
 	"externalDocs": {
