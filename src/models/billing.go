@@ -21,8 +21,8 @@ type Billing struct {
 
 	Event  int	`json:"event" bson:"event"`
 
-	// Employer is a CompanyRep _id (see models.CompanyRep).
-	Employer primitive.ObjectID `json:"employer" bson:"employer"`
+	///Company is optional
+	Company *primitive.ObjectID	`json:"company,omitempty" bson:"company,omitempty"`
 
 	// Value is the billing value in cents (€).
 	Value int `json:"value" bson:"value"`

@@ -3,6 +3,10 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"log"
+	"encoding/json"
+	"io"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -20,6 +24,19 @@ type CompanyRepsType struct {
 
 type GetCompanyRepOptions struct {
 	Name	*string	`json:"name"`
+}
+
+type CreateCompanyRepData struct {
+	Name *string `json:"name" bson:"name"`
+}
+
+func (ccrp *CreateCompanyRepData) ParseBody(body io.Reader) error{
+	json.NewDecoder(body).Decode(ccrp)
+
+	if ccrp.Name == nil {
+		return errors.New("Invalid name")
+	}
+	return nil
 }
 
 // GetCompanyRep returns a CompanyRep based on id
@@ -64,4 +81,21 @@ func (c *CompanyRepsType) GetCompanyReps(options GetCompanyRepOptions) ([]*model
 	curr.Close(c.Context)
 
 	return reps, nil
+}
+
+func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.CompanyRep, error){
+	insertResult, err := c.Collection.InsertOne(c.Context, bson.M{"name": data.Name})
+
+	if err != nil {
+		return nil, err
+	}
+
+	newRep, err := c.GetCompanyRep(insertResult.InsertedID.(primitive.ObjectID))
+
+	if err != nil {
+		log.Println("Error finding created companyRep", err)
+		return nil, err
+	}
+
+	return newRep, nil
 }

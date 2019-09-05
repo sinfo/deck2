@@ -665,24 +665,3 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedCompany)
 }
-
-func addCompanyBilling(w http.ResponseWriter, r *http.Request){
-
-	defer r.Body.Close()
-
-	params := mux.Vars(r)
-	companyID, _ := primitive.ObjectIDFromHex(params["id"])
-	var cbd = &mongodb.CreateBillingData{}
-
-	if err := cbd.ParseBody(r.Body); err != nil{
-		http.Error(w, "error parsing body: " + err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	company, err := mongodb.Companies.AddBilling(companyID, *cbd)
-	if err != nil{
-		http.Error(w, "company not found", http.StatusNotFound)
-	}
-
-	json.NewEncoder(w).Encode(company)
-}

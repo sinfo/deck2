@@ -21,7 +21,6 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 	before := urlQuery.Get("before")
 	valueGreaterThan := urlQuery.Get("valueGreaterThan")
 	valueLessThan := urlQuery.Get("valueLessThan")
-	employer := urlQuery.Get("employer")
 	event := urlQuery.Get("event")
 	company:= urlQuery.Get("company")
 
@@ -67,10 +66,6 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 		}
 
 		options.ValueLessThan = &vlt
-	}
-
-	if len(employer) > 0 {
-		options.Employer = &employer
 	}
 
 	if len(event) > 0{
@@ -130,7 +125,7 @@ func createBilling(w http.ResponseWriter, r *http.Request){
 
 	newBilling, err := mongodb.Billings.CreateBilling(*cbd)
 	if err != nil {
-		http.Error(w, "Error finding created company: "+err.Error(), http.StatusNotFound)
+		http.Error(w, "Error finding created billing: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -152,9 +147,23 @@ func updateBilling(w http.ResponseWriter, r *http.Request){
 
 	newBilling, err := mongodb.Billings.UpdateBilling(billingID, *cbd)
 	if err != nil {
-		http.Error(w, "Error finding created company: "+err.Error(), http.StatusNotFound)
+		http.Error(w, "Billing not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(newBilling)
+}
+
+func deleteBilling(w http.ResponseWriter, r *http.Request){
+
+	params := mux.Vars(r)
+	billingID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	billing, err := mongodb.Billings.DeleteBilling(billingID)
+	if err != nil {
+		http.Error(w, "Billing not found"+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(billing)
 }

@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"time"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -29,7 +30,6 @@ type GetBillingsOptions struct {
 	Before				*time.Time			`json:"before" bson:"before"`
 	ValueGreaterThan	*int				`json:"value-greater-than" bson:"value-greater-than"`
 	ValueLessThan		*int				`json:"value-less-than" bson:"value-less-than"`
-	Employer			*string				`json:"employer" bson:"employer"`
 	Event				*int				`json:"event" bson:"event"`
 	Company				*primitive.ObjectID	`json:"company" bson:"company"`
 
@@ -47,7 +47,7 @@ type CreateStatusData struct {
 type CreateBillingData struct{
 	Status 			*CreateStatusData		`json:"status" bson:"status"`
 	Event			*int					`json:"event" bson:"event"`
-	Employer		*primitive.ObjectID		`json:"employer" bson:"employer"`		
+	Company			*primitive.ObjectID		`json:"company" bson:"company"`		
 	Value			*int					`json:"value" bson:"value"`
 	InvoiceNumber	*string					`json:"invoiceNumber" bson:"invoiceNumber"`
 	Emission		*time.Time				`json:"emission" bson:"emission"`
@@ -81,10 +81,6 @@ func (cbd *CreateBillingData) ParseBody(body io.Reader) error {
 		return errors.New("invalid receipt")
 	}
 
-	if cbd.Employer == nil || len(*cbd.Employer) == 0{
-		return errors.New("Invalid employer")
-	}
-
 	if cbd.Value == nil || *cbd.Value < 0 {
 		return errors.New("invalid value")
 	}
@@ -108,29 +104,12 @@ func (cbd *CreateBillingData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-func foundBilling( arr []models.CompanyParticipation, bill models.Billing) bool{
-	for _, s := range arr{
-		if s.Billing == bill.ID{
-			return true
-		}
-	}
-	return false
-}
-
 // GetBillings gets all billings based on a filter
 func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billing, error){
 
 	var billings = make([]*models.Billing, 0)
 
-	var company *models.Company
 	var err error
-
-	if options.Company != nil {
-		company, err = Companies.GetCompany(*options.Company)
-		if err != nil{
-			return nil, err
-		}
-	}
 
 	filter := bson.M{}
 
@@ -150,15 +129,16 @@ func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billin
 		filter["value"] = bson.M{"$lt": *options.ValueLessThan}
 	}
 
-	if options.Employer != nil {
-		employers, err := CompanyReps.GetCompanyReps(GetCompanyRepOptions{Name: options.Employer})
-		if err != nil {
-			filter["employer"] = employers[0].ID
-		}
+	if options.Company != nil {
+		filter["company"] = *options.Company
 	}
 
 	if options.Event != nil{
 		filter["event"] = *options.Event
+	}
+
+	if options.Company != nil{
+		filter["company"] = *options.Company
 	}
 
 	curr, err := b.Collection.Find(b.Context, filter)
@@ -172,13 +152,8 @@ func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billin
 		if err := curr.Decode(&billing); err != nil{
 			return nil, err
 		}
-		if options.Company != nil{
-			if foundBilling(company.Participations, billing){
-				billings = append(billings, &billing)
-			}
-		}else{
-			billings = append(billings, &billing)	
-		}
+		
+		billings = append(billings, &billing)
 	}
 
 	curr.Close(b.Context)
@@ -201,7 +176,7 @@ func (b *BillingsType) GetBilling(id primitive.ObjectID) (*models.Billing, error
 // CreateBilling creates a new billing
 func (b *BillingsType) CreateBilling(data CreateBillingData)(*models.Billing, error){
 
-	insertResult, err := b.Collection.InsertOne(b.Context, bson.M{
+	var insertData = bson.M{
 		"status":			bson.M{
 			"invoice":	*data.Status.Invoice,
 			"paid":		*data.Status.Paid,
@@ -209,12 +184,17 @@ func (b *BillingsType) CreateBilling(data CreateBillingData)(*models.Billing, er
 			"receipt":	*data.Status.Receipt,
 		},
 		"event":			*data.Event,
-		"employer":			*data.Employer,
 		"value":			*data.Value,
 		"invoiceNumber":	*data.InvoiceNumber,
 		"emission":			*data.Emission,
 		"notes":			*data.Notes,
-	})
+	}
+
+	if data.Company != nil {
+		insertData["company"] = *data.Company
+	}
+
+	insertResult, err := b.Collection.InsertOne(b.Context, insertData)
 
 	if err != nil {
 		return nil, err
@@ -244,12 +224,15 @@ func (b *BillingsType) UpdateBilling(id primitive.ObjectID, data CreateBillingDa
 				"receipt":	data.Status.Receipt,
 			},
 			"event":			data.Event,
-			"employer":			data.Employer,
 			"value":			data.Value,
 			"invoiceNumber":	data.InvoiceNumber,
 			"emission":			data.Emission,
 			"notes":			data.Notes,
 		},
+	}
+
+	if data.Company != nil{
+		updateQuery["company"] = *data.Company
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
@@ -260,4 +243,25 @@ func (b *BillingsType) UpdateBilling(id primitive.ObjectID, data CreateBillingDa
 	}
 
 	return &billing, nil
+}
+
+
+//DeleteBilling deletes a billing and removes it from a company if associated with it
+func (b *BillingsType) DeleteBilling(id primitive.ObjectID) (*models.Billing, error){
+
+	billing, err := b.GetBilling(id)
+	if err != nil{
+		return nil, err
+	}
+
+	deleteResult, err := b.Collection.DeleteOne(b.Context, bson.M{"_id": id})
+	if err != nil {
+		return nil, err
+	}
+
+	if deleteResult.DeletedCount != 1 {
+		return nil, fmt.Errorf("should have deleted 1 billing, deleted %v", deleteResult.DeletedCount)
+	}
+
+	return billing, nil
 }
