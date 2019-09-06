@@ -109,16 +109,16 @@
                             "required":["proForma","paid", "receipt", "invoice"],
                             "properties":{
                                 "proForma":{
-                                    "type":"bool"
+                                    "type":"boolean"
                                 },
                                 "paid":{
-                                    "type":"bool"
+                                    "type":"boolean"
                                 },
                                 "receipt":{
-                                    "type":"bool"
+                                    "type":"boolean"
                                 },
                                 "invoice":{
-                                    "type":"bool"
+                                    "type":"boolean"
                                 }
                             }
                         },
@@ -129,7 +129,7 @@
                             "type": "integer"
                         },
                         "invoiceNumber":{
-                            "type":"string"
+                            "type": "string"
                         },
                         "emission":{
                             "type":"string",
