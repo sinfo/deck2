@@ -592,3 +592,50 @@ func TestGetMembersPublicEvent(t *testing.T) {
 	assert.Equal(t, len(members), 1)
 	assert.Equal(t, members[0].Name, Member1.Name)
 }
+
+func TestDeleteMember(t *testing.T){
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+
+	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	assert.NilError(t, err)
+
+	team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
+	assert.NilError(t, err)
+
+	Member1, err = mongodb.Members.CreateMember(Member1Data)
+	assert.NilError(t, err)
+
+	Member2, err = mongodb.Members.CreateMember(Member2Data)
+	assert.NilError(t, err)
+
+	var role models.TeamRole = "MEMBER"
+
+	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.UpdateTeamMemberData{
+		Member: &Member1.ID,
+		Role:   &role,
+	})
+	assert.NilError(t, err)
+
+	//Sucess
+	res, err := executeRequest("DELETE", "/members/"+Member2.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var m models.Member
+
+	json.NewDecoder(res.Body).Decode(&m)
+
+	assert.Equal(t, m.ID, Member2.ID)
+
+	//Not acceptable
+	res, err = executeRequest("DELETE", "/members/"+Member1.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotAcceptable)
+
+	//Bad id
+	res, err = executeRequest("DELETE", "/members/wrong", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
