@@ -119,6 +119,22 @@
                         },
                         "videoURL": {
                             "type": "string"
+                        },
+                        "tickets": {
+                            "type": "object",
+                            "properties": {
+                                "start": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "end": {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                "max": {
+                                    "type": "integer"
+                                }
+                            }
                         }
                     }
                 }

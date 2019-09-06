@@ -49,6 +49,15 @@ type SessionDinamizers struct {
 	Position string `json:"position" bson:"position"`
 }
 
+// SessionTickets are the session's reservation tickets' details.
+// For example, if a workshop is ment to be given for 20 people, then
+// there should be a maximum of 20 tickets available.
+type SessionTickets struct {
+	Start time.Time `json:"start"`
+	End   time.Time `json:"end"`
+	Max   int       `json:"max"`
+}
+
 // Session is a scheduled talk, presentation or workshop. This will be used to generate
 // the event's week schedule.
 type Session struct {
@@ -77,6 +86,8 @@ type Session struct {
 
 	// Video of the session, if applicable. Typically a youtube URL.
 	VideoURL string `json:"videoURL" bson:"videoURL"`
+
+	Tickets *SessionTickets `json:"tickets,omitempty" bson:"tickets"`
 }
 
 // SessionPublic represents a session to be shown to everyone publicly.
@@ -101,4 +112,6 @@ type SessionPublic struct {
 
 	// Video of the session, if applicable. Typically a youtube URL.
 	VideoURL string `json:"videoURL,omitempty"`
+
+	Tickets *SessionTickets `json:"tickets,omitempty" bson:"tickets"`
 }
