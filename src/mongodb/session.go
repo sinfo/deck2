@@ -58,6 +58,10 @@ func sessionToPublic(session models.Session, eventID int) (*models.SessionPublic
 		}
 	}
 
+	if session.Tickets != nil {
+		public.Tickets = session.Tickets
+	}
+
 	return &public, nil
 }
 
@@ -72,6 +76,7 @@ type CreateSessionData struct {
 	Company           *primitive.ObjectID         `json:"company"`
 	SessionDinamizers *[]models.SessionDinamizers `json:"dinamizers" bson:"dinamizers"`
 	Speaker           *primitive.ObjectID         `json:"speaker"`
+	Tickets           *models.SessionTickets      `json:"tickets"`
 }
 
 // ParseBody fills the CreateSessionData from a body
@@ -144,6 +149,20 @@ func (csd *CreateSessionData) ParseBody(body io.Reader) error {
 
 	}
 
+	if csd.Tickets != nil {
+		if csd.Tickets.Start.After(csd.Tickets.End) {
+			return errors.New("tickets: start must be before end")
+		}
+
+		if csd.Tickets.Start.Before(now) || csd.Tickets.End.Before(now) {
+			return errors.New("tickets: start and end must be in the future")
+		}
+
+		if csd.Tickets.Max <= 0 {
+			return errors.New("maximum number of tickets must be a positive integer")
+		}
+	}
+
 	return nil
 }
 
@@ -176,6 +195,14 @@ func (s *SessionsType) CreateSession(data CreateSessionData) (*models.Session, e
 
 	if data.Speaker != nil {
 		c["speaker"] = data.Speaker
+	}
+
+	if data.Tickets != nil {
+		c["tickets"] = bson.M{
+			"start": data.Tickets.Start.UTC(),
+			"end":   data.Tickets.End.UTC(),
+			"max":   data.Tickets.Max,
+		}
 	}
 
 	insertResult, err := s.Collection.InsertOne(s.Context, c)
@@ -218,6 +245,7 @@ type UpdateSessionData struct {
 	SessionDinamizers *[]models.SessionDinamizers `json:"dinamizers" bson:"dinamizers"`
 	Speaker           *primitive.ObjectID         `json:"speaker"`
 	VideoURL          *string                     `json:"videoURL"`
+	Tickets           *models.SessionTickets      `json:"tickets"`
 }
 
 // ParseBody fills the CreateItemData from a body
@@ -268,6 +296,22 @@ func (usd *UpdateSessionData) ParseBody(body io.Reader) error {
 		return errors.New("invalid company")
 	}
 
+	var now = time.Now()
+
+	if usd.Tickets != nil {
+		if usd.Tickets.Start.After(usd.Tickets.End) {
+			return errors.New("tickets: start must be before end")
+		}
+
+		if usd.Tickets.Start.Before(now) || usd.Tickets.End.Before(now) {
+			return errors.New("tickets: start and end must be in the future")
+		}
+
+		if usd.Tickets.Max <= 0 {
+			return errors.New("maximum number of tickets must be a positive integer")
+		}
+	}
+
 	return nil
 }
 
@@ -304,6 +348,14 @@ func (s *SessionsType) UpdateSession(sessionID primitive.ObjectID, data UpdateSe
 
 	if data.VideoURL != nil {
 		c["videoURL"] = data.VideoURL
+	}
+
+	if data.Tickets != nil {
+		c["tickets"] = bson.M{
+			"start": data.Tickets.Start.UTC(),
+			"end":   data.Tickets.End.UTC(),
+			"max":   data.Tickets.Max,
+		}
 	}
 
 	var updateQuery = bson.M{"$set": c}
