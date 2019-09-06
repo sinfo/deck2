@@ -25,9 +25,6 @@ type CompanyParticipation struct {
 	// All members in here will be notified on this participation's modification.
 	Subscribers []primitive.ObjectID `json:"subscribers" bson:"subscribers"`
 
-	// Participation's billing is a Billing _id (see models.Billing).
-	Billing primitive.ObjectID `json:"billing" bson:"billing"`
-
 	// Participation's package is a Package _id (see models.Package).
 	Package primitive.ObjectID `json:"package" bson:"package"`
 

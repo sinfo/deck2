@@ -311,6 +311,12 @@
 		"/me/notifications": {
 			"$ref":"./endpoints/me-notifications.json"
 		},
+		"/billings":{
+			"$ref":"./endpoints/billings.json"
+		},
+		"/billings/{id}":{
+			"$ref":"./endpoints/billings-id.json"
+		},
 		"/me/notification/{id}": {
 			"$ref":"./endpoints/me-notification-id.json"
 		}

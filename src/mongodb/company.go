@@ -874,37 +874,6 @@ func (c *CompaniesType) RemoveSubscriber(companyID primitive.ObjectID, memberID 
 	return &updatedCompany, nil
 }
 
-// UpdateBilling updates the billing information on a company's participation related to the current event.
-// Uses a models.Billing ID to store this information.
-func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID primitive.ObjectID) (*models.Company, error) {
-
-	currentEvent, err := Events.GetCurrentEvent()
-
-	if err != nil {
-		return nil, err
-	}
-
-	var updatedCompany models.Company
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"participations.$.billing": billingID,
-		},
-	}
-
-	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		log.Println("Error updating company's participation's billing:", err)
-		return nil, err
-	}
-
-	return &updatedCompany, nil
-}
-
 // UpdatePackage updates the package of a company's participation related to the current event.
 // Uses a models.Package ID to store this information.
 func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID primitive.ObjectID) (*models.Company, error) {

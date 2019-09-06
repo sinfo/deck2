@@ -264,6 +264,14 @@ func InitializeRouter() {
 	sessionsRouter.HandleFunc("/{id}", authMember(getSession)).Methods("GET")
 	sessionsRouter.HandleFunc("/{id}", authCoordinator(updateSession)).Methods("PUT")
 
+	// billings handlers
+	billingsRouter := r.PathPrefix("/billings").Subrouter()
+	billingsRouter.HandleFunc("", authMember(getBillings)).Methods("GET")
+	billingsRouter.HandleFunc("/{id}", authCoordinator(getBilling)).Methods("GET")
+	billingsRouter.HandleFunc("", authCoordinator(createBilling)).Methods("POST")
+	billingsRouter.HandleFunc("/{id}", authCoordinator(updateBilling)).Methods("PUT")
+	billingsRouter.HandleFunc("/{id}", authCoordinator(deleteBilling)).Methods("DELETE")
+
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
 }

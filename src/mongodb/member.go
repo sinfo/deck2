@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"strings"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -14,6 +15,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+var (
+	MemberAssociated = "Member associated"
 )
 
 // MembersType contains database information on Members
@@ -482,4 +487,92 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 	public := convertToPublicMembers(filtered)
 
 	return public, nil
+}
+
+func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error){
+	curr, err := Companies.Collection.Find(Companies.Context, bson.M{
+		"participations.member.$": id,
+	})
+	if err != nil{
+		return nil, err
+	}
+
+	var c models.Company
+	if err := curr.Decode(&c); err != nil{
+		return nil, errors.New(MemberAssociated)
+	}
+
+	curr.Close(Companies.Context)
+
+	curr, err = Meetings.Collection.Find(Meetings.Context, bson.M{
+		"participants.members.$": id,
+	})
+	if err != nil{
+		return nil, err
+	}
+
+	var meeting models.Meeting
+	if err := curr.Decode(&meeting); err !=nil{
+		return nil, errors.New(MemberAssociated)
+	}
+
+	curr.Close(Meetings.Context)
+
+	curr, err = Notifications.Collection.Find(Notifications.Context, bson.M{"member": id})
+	if err != nil{
+		return nil, err
+	}
+
+	var n models.Notification
+	if err = curr.Decode(&n); err != nil{
+		return nil, errors.New(MemberAssociated)
+	}
+
+	curr.Close(Notifications.Context)
+
+	curr, err = Posts.Collection.Find(Posts.Context, bson.M{"member": id})
+
+	var p models.Post
+	if err = curr.Decode(&p); err != nil{
+		return nil, errors.New(MemberAssociated)
+	}
+
+	curr.Close(Posts.Context)
+
+	curr, err = Speakers.Collection.Find(Speakers.Context, bson.M{"participations.member.$": id})
+
+	var s models.Speaker
+	if err = curr.Decode(&s); err != nil{
+		return nil, errors.New(MemberAssociated)
+	}
+
+	curr.Close(Speakers.Context)
+
+	curr, err = Teams.Collection.Find(Teams.Context, bson.M{
+		"teams.members.member.$": id,
+	})
+	if err != nil{
+		return nil, err
+	}
+
+	var t models.Team
+	if err = curr.Decode(&t); err != nil{
+		return nil, errors.New(MemberAssociated)
+	}
+
+	member, err := m.GetMember(id)
+	if err != nil{
+		return nil, err
+	}
+
+	deleteResult, err := m.Collection.DeleteOne(m.Context, bson.M{"_id": id})
+	if err != nil {
+		return nil, err
+	}
+
+	if deleteResult.DeletedCount != 1 {
+		return nil, fmt.Errorf("should have deleted 1 member, deleted %v", deleteResult.DeletedCount)
+	}
+
+	return member, nil
 }
