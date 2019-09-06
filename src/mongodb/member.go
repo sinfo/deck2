@@ -7,7 +7,6 @@ import (
 	"io"
 	"strings"
 	"fmt"
-	"log"
 
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -536,8 +535,6 @@ func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error
 	var t models.Team
 	if err := Teams.Collection.FindOne(Teams.Context, bson.M{"members.member": id}).Decode(&t); err == nil{
 		return nil, errors.New(MemberAssociated)
-	} else{
-		log.Println(err.Error())
 	}
 
 	member, err := m.GetMember(id)
