@@ -8,15 +8,16 @@
             "type": "object",
             "properties":{
                 "proForma":{
-                    "type":"bool"
+                    "type":"boolean"
                 },
                 "receipt":{
-                    "type":"bool"
+                    "type":"boolean"
                 },
                 "paid":{
-                    "type":"bool"
-                },"invoice":{
-                    "type":"bool"
+                    "type":"boolean"
+                },
+                "invoice":{
+                    "type":"boolean"
                 }
             }
 		},
@@ -40,7 +41,7 @@
             "type":"string"
         },
         "visible":{
-            "type":"bool"
+            "type":"boolean"
         }
 	}
 }

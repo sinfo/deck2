@@ -116,7 +116,6 @@ func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billin
 	filter := bson.M{}
 
 	if options.Role !=nil {
-		log.Println(*options.Role)
 		if options.Role.AccessLevel() >1 {
 			filter["visible"] = true
 		}
