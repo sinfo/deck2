@@ -752,3 +752,40 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 }
+
+func addEmployer(w http.ResponseWriter, r *http.Request){
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	var ccrp = &mongodb.CreateCompanyRepData{}
+
+	if err := ccrp.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	company, err := mongodb.Companies.AddEmployer(companyID, *ccrp)
+	if err != nil {
+		http.Error(w, "Could not parse body", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(company)
+}
+
+func removeEmployer(w http.ResponseWriter, r *http.Request){
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+	repID, _ := primitive.ObjectIDFromHex(params["rep"])
+
+	company, err := mongodb.Companies.RemoveEmployer(companyID, repID)
+	if err != nil{
+		http.Error(w, "Could not remove employer: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(company)
+
+}
