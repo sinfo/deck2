@@ -123,6 +123,24 @@ func createMemberContact(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
+func deleteMember(w http.ResponseWriter, r *http.Request){
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	deletedMember, err := mongodb.Members.DeleteMember(id)
+	if err != nil{
+		if err.Error() == mongodb.MemberAssociated{
+			http.Error(w, "Error deleting member: "+err.Error(), http.StatusNotAcceptable)
+		} else{
+			http.Error(w, "Error deleting member: "+err.Error(), http.StatusNotFound)
+		}
+		return
+	}
+
+	json.NewEncoder(w).Encode(deletedMember)
+}
+
 // PUBLIC ENDPOINTS
 
 func getMembersPublic(w http.ResponseWriter, r *http.Request) {
