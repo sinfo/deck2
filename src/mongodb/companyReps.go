@@ -12,6 +12,7 @@ import (
 
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -22,14 +23,17 @@ type CompanyRepsType struct {
 	Context    context.Context
 }
 
+// GetCompanyRepOptions is a filter for GetCompanyReps
 type GetCompanyRepOptions struct {
 	Name	*string	`json:"name"`
 }
 
+// CreateCompanyRepData contains data needed to create a rep
 type CreateCompanyRepData struct {
 	Name *string `json:"name" bson:"name"`
 }
 
+// ParseBody fills a CreateCompanyRepData 
 func (ccrp *CreateCompanyRepData) ParseBody(body io.Reader) error{
 	json.NewDecoder(body).Decode(ccrp)
 
@@ -51,6 +55,7 @@ func (c *CompanyRepsType) GetCompanyRep(id primitive.ObjectID) (*models.CompanyR
 	return &companyRep, nil
 }
 
+//GetCompanyReps gets all reps based on a filter
 func (c *CompanyRepsType) GetCompanyReps(options GetCompanyRepOptions) ([]*models.CompanyRep, error){
 	reps := make([]*models.CompanyRep, 0)
 
@@ -83,6 +88,7 @@ func (c *CompanyRepsType) GetCompanyReps(options GetCompanyRepOptions) ([]*model
 	return reps, nil
 }
 
+//CreateCompanyRep creates a company rep
 func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.CompanyRep, error){
 	insertResult, err := c.Collection.InsertOne(c.Context, bson.M{"name": data.Name})
 
@@ -98,4 +104,34 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 	}
 
 	return newRep, nil
+}
+
+
+// AddCompanyRepContact creates a contact and adds it to a companyRep
+func (c *CompanyRepsType) AddCompanyRepContact(id primitive.ObjectID, data CreateContactData) (*models.CompanyRep, error){
+
+	contact, err := Contacts.CreateContact(data)
+	if err != nil{
+		return nil, err
+	}
+
+
+
+	var rep models.CompanyRep
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"contact": contact.ID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&rep); err != nil {
+		return nil, err
+	}
+
+
+	return &rep, nil
 }

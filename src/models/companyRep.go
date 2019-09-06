@@ -10,5 +10,5 @@ type CompanyRep struct {
 	Name string
 
 	// Contact is a Contact _id (see models.Contact).
-	Contact primitive.ObjectID
+	Contact primitive.ObjectID `json:"contact" bson:"contact"`
 }
