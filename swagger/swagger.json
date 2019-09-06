@@ -319,6 +319,18 @@
 		},
 		"/me/notification/{id}": {
 			"$ref":"./endpoints/me-notification-id.json"
+		},
+		"/companies/{id}/employer":{
+			"$ref":"./endpoints/companies-id-employer.json"
+		},
+		"/companies/{id}/employer/{rep}":{
+			"$ref":"./endpoints/companies-id-employer-rep.json"
+		},
+		"/companyReps":{
+			"$ref":"./endpoints/companyReps.json"
+		},
+		"/companyReps/{id}":{
+			"$ref":"./endpoints/companyReps-id.json"
 		}
 	},
 	"externalDocs": {

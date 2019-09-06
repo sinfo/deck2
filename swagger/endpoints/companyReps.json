@@ -1,0 +1,45 @@
+{
+    "get": {
+        "tags": [
+            "companyReps"
+        ],
+        "summary": "Get all companyReps, based on query",
+        "operationId": "getCompanyReps",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+              "Bearer": []
+            }
+          ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the companyRep",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "CompanyReps filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/companyRep.json"
+                    }
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to get companyReps"
+            }
+        }
+    }
+}

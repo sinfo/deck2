@@ -1670,3 +1670,98 @@ func TestUpdateCompanyParticipation(t *testing.T) {
 	assert.Equal(t, updatedCompany.Participations[0].Notes, notes)
 	assert.Equal(t, updatedCompany.Participations[0].Confirmed.Sub(confirmed).Seconds() < 10e-3, true) // millisecond precision
 }
+
+func TestAddEmployer(t *testing.T){
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
+	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	var name1 = "NAME1"
+	var name2 = "NAME2"
+	var company models.Company
+
+	ccrd1 := mongodb.CreateCompanyRepData{
+		Name: &name1,
+	}
+
+	ccrd2 := mongodb.CreateCompanyRepData{
+		Name: &name2,
+		Contact: &Contact1Data,
+	}
+
+	b, errMarshal := json.Marshal(ccrd1)
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/companies/"+newCompany.ID.Hex()+"/employer", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&company)
+
+	assert.Equal(t, company.ID, newCompany.ID)
+	assert.Equal(t, len(company.Employers), 1)
+
+	b, errMarshal = json.Marshal(ccrd2)
+	assert.NilError(t, errMarshal)
+
+	res, err = executeRequest("POST", "/companies/"+newCompany.ID.Hex()+"/employer", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&company)
+
+	assert.Equal(t, company.ID, newCompany.ID)
+	assert.Equal(t, len(company.Employers), 2)
+}
+
+func TestRemoveEmployer(t *testing.T){
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
+	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	var name1 = "NAME1"
+	var name2 = "NAME2"
+	var company models.Company
+
+	ccrd1 := mongodb.CreateCompanyRepData{
+		Name: &name1,
+	}
+
+	ccrd2 := mongodb.CreateCompanyRepData{
+		Name: &name2,
+		Contact: &Contact1Data,
+	}
+
+	newCompany, err = mongodb.Companies.AddEmployer(newCompany.ID, ccrd1)
+	assert.NilError(t, err)
+
+	newCompany, err = mongodb.Companies.AddEmployer(newCompany.ID, ccrd2)
+	assert.NilError(t, err)
+
+	res, err := executeRequest("DELETE", "/companies/"+newCompany.ID.Hex()+"/employer/"+newCompany.Employers[0].Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&company)
+
+	assert.Equal(t, company.ID, newCompany.ID)
+	assert.Equal(t, len(company.Employers), 1)
+}

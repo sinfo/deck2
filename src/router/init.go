@@ -144,6 +144,8 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
 
 	// speaker handlers
 	speakerRouter := r.PathPrefix("/speakers").Subrouter()
@@ -272,6 +274,12 @@ func InitializeRouter() {
 	billingsRouter.HandleFunc("", authCoordinator(createBilling)).Methods("POST")
 	billingsRouter.HandleFunc("/{id}", authCoordinator(updateBilling)).Methods("PUT")
 	billingsRouter.HandleFunc("/{id}", authCoordinator(deleteBilling)).Methods("DELETE")
+
+	// companyReps handlers
+	repsRouter := r.PathPrefix("/companyReps").Subrouter()
+	repsRouter.HandleFunc("", authMember(getCompanyReps)).Methods("GET")
+	repsRouter.HandleFunc("/{id}", authMember(getCompanyRep)).Methods("GET")
+	repsRouter.HandleFunc("/{id}", authMember(updateCompanyRep)).Methods("PUT")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
