@@ -707,13 +707,18 @@ func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Com
 }
 
 // AddEmployer adds a models.CompanyRep to a company.
-func (c *CompaniesType) AddEmployer(companyID primitive.ObjectID, companyRepID primitive.ObjectID) (*models.Company, error) {
+func (c *CompaniesType) AddEmployer(companyID primitive.ObjectID, data CreateCompanyRepData) (*models.Company, error) {
+
+	rep, err := CompanyReps.CreateCompanyRep(data)
+	if err != nil {
+		return nil, err
+	}
 
 	var updatedCompany models.Company
 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
-			"employers": companyRepID,
+			"employers": rep.ID,
 		},
 	}
 
@@ -734,6 +739,10 @@ func (c *CompaniesType) AddEmployer(companyID primitive.ObjectID, companyRepID p
 func (c *CompaniesType) RemoveEmployer(companyID primitive.ObjectID, companyRep primitive.ObjectID) (*models.Company, error) {
 
 	var updatedCompany models.Company
+
+	if _, err := CompanyReps.DeleteCompanyRep(companyRep); err != nil{
+		return nil, err
+	}
 
 	var updateQuery = bson.M{
 		"$pull": bson.M{

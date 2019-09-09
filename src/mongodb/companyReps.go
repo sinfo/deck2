@@ -31,6 +31,7 @@ type GetCompanyRepOptions struct {
 // CreateCompanyRepData contains data needed to create a rep
 type CreateCompanyRepData struct {
 	Name *string `json:"name" bson:"name"`
+	Contact *CreateContactData `json:"contact" bson:"contact"`
 }
 
 // ParseBody fills a CreateCompanyRepData 
@@ -90,7 +91,19 @@ func (c *CompanyRepsType) GetCompanyReps(options GetCompanyRepOptions) ([]*model
 
 //CreateCompanyRep creates a company rep
 func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.CompanyRep, error){
-	insertResult, err := c.Collection.InsertOne(c.Context, bson.M{"name": data.Name})
+
+	dataQuery := bson.M{"name": data.Name}
+
+	if data.Contact != nil {
+		contact, err := Contacts.CreateContact(*data.Contact)
+		if err != nil {
+			return nil, err
+		}
+
+		dataQuery["contact"] = contact.ID
+	}
+	
+	insertResult, err := c.Collection.InsertOne(c.Context, dataQuery)
 
 	if err != nil {
 		return nil, err
@@ -107,31 +120,54 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 }
 
 
-// AddCompanyRepContact creates a contact and adds it to a companyRep
-func (c *CompanyRepsType) AddCompanyRepContact(id primitive.ObjectID, data CreateContactData) (*models.CompanyRep, error){
+// UpdateCompanyRep creates a contact and adds it to a companyRep
+func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCompanyRepData) (*models.CompanyRep, error){
 
-	contact, err := Contacts.CreateContact(data)
-	if err != nil{
-		return nil, err
-	}
-
-
-
-	var rep models.CompanyRep
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"contact": contact.ID,
+			"name": data.Name,
 		},
+	}
+
+	if data.Contact != nil {
+		contact, err := Contacts.CreateContact(*data.Contact)
+		if err != nil {
+			return nil, err
+		}
+
+		updateQuery["$Set.contact"] = contact.ID
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&rep); err != nil {
+	var filterQuery = bson.M{"_id": id}
+	
+	var updatedRep models.CompanyRep
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedRep);err != nil {
 		return nil, err
 	}
 
+	return &updatedRep, nil
+}
 
-	return &rep, nil
+// DeleteCompanyRep deletes a companyRep
+func (c *CompanyRepsType) DeleteCompanyRep(id primitive.ObjectID) (*models.CompanyRep, error){
+
+	rep, err := c.GetCompanyRep(id)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResult, err := c.Collection.DeleteOne(c.Context, bson.M{"_id": id})
+	if err != nil {
+		return nil, err
+	}
+
+	if deleteResult.DeletedCount != 1 {
+		return nil, fmt.Errorf("should have deleted 1 rep, deleted %v", deleteResult.DeletedCount)
+	}
+
+	return rep, nil
 }
