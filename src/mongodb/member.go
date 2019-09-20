@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
-	"fmt"
-
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -490,55 +489,48 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 	return public, nil
 }
 
-func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error){
-
+func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error) {
 
 	// Check companies
 	var c models.Company
-	if err := Companies.Collection.FindOne(Companies.Context, bson.M{"participations.member": id}).Decode(&c); err == nil{
+	if err := Companies.Collection.FindOne(Companies.Context, bson.M{"participations.member": id}).Decode(&c); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
-
 
 	// Check meetings
 	var meeting models.Meeting
-	if err :=  Meetings.Collection.FindOne(Meetings.Context, bson.M{
+	if err := Meetings.Collection.FindOne(Meetings.Context, bson.M{
 		"participants.members": id,
-	}).Decode(&meeting); err ==nil{
+	}).Decode(&meeting); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
-	
 	// Check notifications
 	var n models.Notification
-	if err :=  Notifications.Collection.FindOne(Notifications.Context, bson.M{"member": id}).Decode(&n); err == nil{
+	if err := Notifications.Collection.FindOne(Notifications.Context, bson.M{"member": id}).Decode(&n); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
-
-	
 	// Check posts
 	var p models.Post
-	if err := Posts.Collection.FindOne(Posts.Context, bson.M{"member": id}).Decode(&p); err == nil{
+	if err := Posts.Collection.FindOne(Posts.Context, bson.M{"member": id}).Decode(&p); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
-
 
 	// Check speakers
 	var s models.Speaker
-	if err := Speakers.Collection.FindOne(Speakers.Context, bson.M{"participations.member": id}).Decode(&s); err == nil{
+	if err := Speakers.Collection.FindOne(Speakers.Context, bson.M{"participations.member": id}).Decode(&s); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
-
 	// Check teams
 	var t models.Team
-	if err := Teams.Collection.FindOne(Teams.Context, bson.M{"members.member": id}).Decode(&t); err == nil{
+	if err := Teams.Collection.FindOne(Teams.Context, bson.M{"members.member": id}).Decode(&t); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
 	member, err := m.GetMember(id)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 

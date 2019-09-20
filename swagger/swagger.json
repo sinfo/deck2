@@ -1,340 +1,343 @@
 ﻿{
-	"swagger": "2.0",
-	"info": {
-		"description": "SINFO's internal management application\n",
-		"version": "1.0.0",
-		"title": "Swagger Deck2",
-		"termsOfService": "http://swagger.io/terms/",
-		"contact": {
-			"email": "devteam@sinfo.org"
-		},
-		"license": {
-			"name": "Apache 2.0",
-			"url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-		}
-	},
-	"host": "localhost:8080",
-	"basePath": "/",
-	"tags": [
-		{
-			"name": "public",
-			"description": "Public endpoints (don't need authentication)"
-		},
-		{
-			"name": "auth",
-			"description": "Authentication endpoints"
-		},
-		{
-			"name": "billings",
-			"description": "Saved bills"
-		},
-		{
-			"name": "companies",
-			"description": "Contacted companies"
-		},
-		{
-			"name": "companyRep",
-			"description": "Person representing a certain company"
-		},
-		{
-			"name": "contacts",
-			"description": "All of our saved contacts"
-		},
-		{
-			"name": "events",
-			"description": "Information relative to each event"
-		},
-		{
-			"name": "flightInfo",
-			"description": "Saved flight information"
-		},
-		{
-			"name": "items",
-			"description": "Items in packages sold by SINFO"
-		},
-		{
-			"name": "meetings",
-			"description": "Saved meetings' information"
-		},
-		{
-			"name": "me",
-			"description": "Member's personal endpoints"
-		},
-		{
-			"name": "members",
-			"description": "Information related to each SINFO's member"
-		},
-		{
-			"name": "notifications",
-			"description": "Notifications for our members to keep up with updated information"
-		},
-		{
-			"name": "packages",
-			"description": "Packages sold/traded by SINFO to companies"
-		},
-		{
-			"name": "posts",
-			"description": "Messages shared by SINFO's members"
-		},
-		{
-			"name": "sessions",
-			"description": "Scheduled sessions for the event's week, such as keynotes, presentations, etc"
-		},
-		{
-			"name": "speakers",
-			"description": "Speakers for the event's keynotes"
-		},
-		{
-			"name": "teams",
-			"description": "SINFO's teams"
-		},
-		{
-			"name": "threads",
-			"description": "Additional communication taken inside the posts"
-		}
-	],
-	"schemes": [
-		"http"
-	],
-	"securityDefinitions": {
-		"Bearer": {
-			"type": "apiKey",
-			"name": "Authorization",
-			"in":"header"
-		}
-	},
-	"paths": {
-		"/auth/login": {
-			"$ref": "./endpoints/auth-login.json"
-		},
-		"/auth/callback": {
-			"$ref": "./endpoints/auth-callback.json"
-		},
-		"/public/events": {
-			"$ref": "./endpoints/public-events.json"
-		},
-		"/events": {
-			"$ref": "./endpoints/events.json"
-		},
-		"/events/{id}": {
-			"$ref": "./endpoints/events-id.json"
-		},
-		"/events/themes": {
-			"$ref": "./endpoints/events-themes.json"
-		},
-		"/events/packages": {
-			"$ref": "./endpoints/events-packages.json"
-		},
-		"/events/items": {
-			"$ref": "./endpoints/events-items.json"
-		},		
-		"/events/packages/{id}": {
-			"$ref": "./endpoints/events-packages-id.json"
-		},
-		"/events/items/{id}": {
-			"$ref": "./endpoints/events-items-id.json"
-		},
-		"/events/meetings": {
-			"$ref": "./endpoints/events-meetings.json"
-		},
-		"/events/meetings/{id}": {
-			"$ref": "./endpoints/events-meetings-id.json"
-		},
-		"/events/sessions": {
-			"$ref": "./endpoints/events-sessions.json"
-		},
-		"/public/companies": {
-			"$ref": "./endpoints/public-companies.json"
-		},
-		"/public/speakers": {
-			"$ref": "./endpoints/public-speakers.json"
-		},
-		"/companies": {
-			"$ref": "./endpoints/companies.json"
-		},
-		"/companies/{id}": {
-			"$ref": "./endpoints/companies-id.json"
-		},
-		"/companies/{id}/image/internal": {
-			"$ref": "./endpoints/companies-id-image-internal.json"
-		},
-		"/companies/{id}/image/public": {
-			"$ref": "./endpoints/companies-id-image-public.json"
-		},
-		"/companies/{id}/participation": {
-			"$ref": "./endpoints/companies-id-participation.json"
-		},
-		"/companies/{id}/participation/status/next": {
-			"$ref": "./endpoints/companies-id-participation-status-next.json"
-		},
-		"/companies/{id}/participation/status/{status}": {
-			"$ref": "./endpoints/companies-id-participation-status-status.json"
-		},
-		"/companies/{id}/participation/status/{step}": {
-			"$ref": "./endpoints/companies-id-participation-status-step.json"
-		},
-		"/companies/{id}/participation/package": {
-			"$ref": "./endpoints/companies-id-participation-package.json"
-		},
-		"/companies/{id}/thread": {
-			"$ref": "./endpoints/companies-id-thread.json"
-		},
-		"/speakers": {
-			"$ref": "./endpoints/speakers.json"
-		},
-		"/speakers/{id}": {
-			"$ref": "./endpoints/speakers-id.json"
-		},
-		"/speakers/{id}/participation": {
-			"$ref": "./endpoints/speakers-id-participation.json"
-		},
-		"/speakers/{id}/participation/status/next": {
-			"$ref": "./endpoints/speakers-id-participation-status-next.json"
-		},
-		"/speakers/{id}/participation/status/{step}": {
-			"$ref": "./endpoints/speakers-id-participation-status-step.json"
-		},
-		"/speakers/{id}/participation/status/{status}": {
-			"$ref": "./endpoints/speakers-id-participation-status-status.json"
-		},
-		"/speakers/{id}/participation/flightInfo": {
-			"$ref": "./endpoints/speakers-id-participation-flightinfo.json"
-		},
-		"/speakers/{id}/participation/flightInfo/{flightInfoID}": {
-			"$ref": "./endpoints/speakers-id-participation-flightinfo-flightinfoid.json"
-		},
-		"/speakers/{id}/image/internal": {
-			"$ref": "./endpoints/speakers-id-image-internal.json"
-		},
-		"/speakers/{id}/image/public/speaker": {
-			"$ref": "./endpoints/speakers-id-image-public-speaker.json"
-		},
-		"/speakers/{id}/image/public/company": {
-			"$ref": "./endpoints/speakers-id-image-public-company.json"
-		},
-		"/speakers/{id}/thread": {
-			"$ref": "./endpoints/speakers-id-thread.json"
-		},
-		"/flightInfo/{id}": {
-			"$ref": "./endpoints/flightInfo-id.json"
-		},
-		"/sessions": {
-			"$ref": "./endpoints/sessions.json"
-		},
-		"/sessions/{id}": {
-			"$ref": "./endpoints/sessions-id.json"
-		},
-		"/public/sessions":{
-			"$ref": "./endpoints/public-sessions.json"
-		},
-		"/teams": {
-			"$ref": "./endpoints/teams.json"
-		},
-		"/teams/{id}": {
-			"$ref": "./endpoints/teams-id.json"
-		},
-		"/teams/{id}/members":{
-			"$ref": "./endpoints/teams-id-members.json"
-		},
-		"/teams/{id}/meetings":{
-			"$ref": "./endpoints/teams-id-meetings.json"
-		},
-		"/teams/{id}/meetings/{meetingID}":{
-			"$ref": "./endpoints/teams-id-meetings-meetingid.json"
-		},
-		"/items": {
-			"$ref": "./endpoints/items.json"
-		},
-		"/items/{id}": {
-			"$ref": "./endpoints/items-id.json"
-		},
-		"/threads/{id}": {
-			"$ref": "./endpoints/threads-id.json"
-		},
-		"/threads/{id}/comments": {
-			"$ref": "./endpoints/threads-id-comments.json"
-		},
-		"/threads/{threadID}/comments/{postID}": {
-			"$ref": "./endpoints/threads-id-comments-id.json"
-		},
-		"/posts/{id}": {
-			"$ref": "./endpoints/posts-id.json"
-		},
-		"/public/members":{
-			"$ref": "./endpoints/public-members.json"
-		},
-		"/members":{
-			"$ref": "./endpoints/members.json"
-		},
-		"/members/{id}":{
-			"$ref":"./endpoints/members-id.json"
-		},
-		"/members/{id}/contact":{
-			"$ref": "./endpoints/members-id-contact.json"
-		},
-		"/packages": {
-			"$ref": "./endpoints/packages.json"
-		},
-		"/packages/{id}": {
-			"$ref": "./endpoints/packages-id.json"
-		},
-		"/packages/{id}/items": {
-			"$ref": "./endpoints/packages-id-items.json"
-		},
-		"/contacts": {
-			"$ref": "./endpoints/contacts.json"
-		},
-		"/contacts/{id}":{
-			"$ref": "./endpoints/contacts-id.json"
-		},
-		"/contacts/{id}/phone":{
-			"$ref": "./endpoints/contacts-id-phone.json"
-		},
-		"/contacts/{id}/mail":{
-			"$ref": "./endpoints/contacts-id-mail.json"
-		},
-		"/contacts/{id}/socials":{
-			"$ref": "./endpoints/contacts-id-socials.json"
-		},
-		"/meetings":{
-			"$ref":"./endpoints/meetings.json"
-		},
-		"/meetings/{id}":{
-			"$ref":"./endpoints/meetings-id.json"
-		},
-		"/me": {
-			"$ref":"./endpoints/me.json"
-		},
-		"/me/image": {
-			"$ref":"./endpoints/me-image.json"
-		},
-		"/me/notifications": {
-			"$ref":"./endpoints/me-notifications.json"
-		},
-		"/billings":{
-			"$ref":"./endpoints/billings.json"
-		},
-		"/billings/{id}":{
-			"$ref":"./endpoints/billings-id.json"
-		},
-		"/me/notification/{id}": {
-			"$ref":"./endpoints/me-notification-id.json"
-		},
-		"/companies/{id}/employer":{
-			"$ref":"./endpoints/companies-id-employer.json"
-		},
-		"/companies/{id}/employer/{rep}":{
-			"$ref":"./endpoints/companies-id-employer-rep.json"
-		},
-		"/companyReps":{
-			"$ref":"./endpoints/companyReps.json"
-		},
-		"/companyReps/{id}":{
-			"$ref":"./endpoints/companyReps-id.json"
-		}
-	},
-	"externalDocs": {
-		"description": "Find out more about Swagger",
-		"url": "http://swagger.io"
-	}
+  "swagger": "2.0",
+  "info": {
+    "description": "SINFO's internal management application\n",
+    "version": "1.0.0",
+    "title": "Swagger Deck2",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "devteam@sinfo.org"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "localhost:8080",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "public",
+      "description": "Public endpoints (don't need authentication)"
+    },
+    {
+      "name": "auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "billings",
+      "description": "Saved bills"
+    },
+    {
+      "name": "companies",
+      "description": "Contacted companies"
+    },
+    {
+      "name": "companyRep",
+      "description": "Person representing a certain company"
+    },
+    {
+      "name": "contacts",
+      "description": "All of our saved contacts"
+    },
+    {
+      "name": "events",
+      "description": "Information relative to each event"
+    },
+    {
+      "name": "flightInfo",
+      "description": "Saved flight information"
+    },
+    {
+      "name": "items",
+      "description": "Items in packages sold by SINFO"
+    },
+    {
+      "name": "meetings",
+      "description": "Saved meetings' information"
+    },
+    {
+      "name": "me",
+      "description": "Member's personal endpoints"
+    },
+    {
+      "name": "members",
+      "description": "Information related to each SINFO's member"
+    },
+    {
+      "name": "notifications",
+      "description": "Notifications for our members to keep up with updated information"
+    },
+    {
+      "name": "packages",
+      "description": "Packages sold/traded by SINFO to companies"
+    },
+    {
+      "name": "posts",
+      "description": "Messages shared by SINFO's members"
+    },
+    {
+      "name": "sessions",
+      "description": "Scheduled sessions for the event's week, such as keynotes, presentations, etc"
+    },
+    {
+      "name": "speakers",
+      "description": "Speakers for the event's keynotes"
+    },
+    {
+      "name": "teams",
+      "description": "SINFO's teams"
+    },
+    {
+      "name": "threads",
+      "description": "Additional communication taken inside the posts"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "paths": {
+    "/auth/login": {
+      "$ref": "./endpoints/auth-login.json"
+    },
+    "/auth/callback": {
+      "$ref": "./endpoints/auth-callback.json"
+    },
+    "/public/events": {
+      "$ref": "./endpoints/public-events.json"
+    },
+    "/events": {
+      "$ref": "./endpoints/events.json"
+    },
+    "/events/{id}": {
+      "$ref": "./endpoints/events-id.json"
+    },
+    "/events/themes": {
+      "$ref": "./endpoints/events-themes.json"
+    },
+    "/events/packages": {
+      "$ref": "./endpoints/events-packages.json"
+    },
+    "/events/items": {
+      "$ref": "./endpoints/events-items.json"
+    },
+    "/events/packages/{id}": {
+      "$ref": "./endpoints/events-packages-id.json"
+    },
+    "/events/items/{id}": {
+      "$ref": "./endpoints/events-items-id.json"
+    },
+    "/events/meetings": {
+      "$ref": "./endpoints/events-meetings.json"
+    },
+    "/events/meetings/{id}": {
+      "$ref": "./endpoints/events-meetings-id.json"
+    },
+    "/events/sessions": {
+      "$ref": "./endpoints/events-sessions.json"
+    },
+    "/public/companies": {
+      "$ref": "./endpoints/public-companies.json"
+    },
+    "/public/speakers": {
+      "$ref": "./endpoints/public-speakers.json"
+    },
+    "/companies": {
+      "$ref": "./endpoints/companies.json"
+    },
+    "/companies/{id}": {
+      "$ref": "./endpoints/companies-id.json"
+    },
+    "/companies/{id}/image/internal": {
+      "$ref": "./endpoints/companies-id-image-internal.json"
+    },
+    "/companies/{id}/image/public": {
+      "$ref": "./endpoints/companies-id-image-public.json"
+    },
+    "/companies/{id}/participation": {
+      "$ref": "./endpoints/companies-id-participation.json"
+    },
+    "/companies/{id}/participation/status/next": {
+      "$ref": "./endpoints/companies-id-participation-status-next.json"
+    },
+    "/companies/{id}/participation/status/{status}": {
+      "$ref": "./endpoints/companies-id-participation-status-status.json"
+    },
+    "/companies/{id}/participation/status/{step}": {
+      "$ref": "./endpoints/companies-id-participation-status-step.json"
+    },
+    "/companies/{id}/participation/package": {
+      "$ref": "./endpoints/companies-id-participation-package.json"
+    },
+    "/companies/{id}/thread": {
+      "$ref": "./endpoints/companies-id-thread.json"
+    },
+    "/speakers": {
+      "$ref": "./endpoints/speakers.json"
+    },
+    "/speakers/{id}": {
+      "$ref": "./endpoints/speakers-id.json"
+    },
+    "/speakers/{id}/participation": {
+      "$ref": "./endpoints/speakers-id-participation.json"
+    },
+    "/speakers/{id}/participation/status/next": {
+      "$ref": "./endpoints/speakers-id-participation-status-next.json"
+    },
+    "/speakers/{id}/participation/status/{step}": {
+      "$ref": "./endpoints/speakers-id-participation-status-step.json"
+    },
+    "/speakers/{id}/participation/status/{status}": {
+      "$ref": "./endpoints/speakers-id-participation-status-status.json"
+    },
+    "/speakers/{id}/participation/flightInfo": {
+      "$ref": "./endpoints/speakers-id-participation-flightinfo.json"
+    },
+    "/speakers/{id}/participation/flightInfo/{flightInfoID}": {
+      "$ref": "./endpoints/speakers-id-participation-flightinfo-flightinfoid.json"
+    },
+    "/speakers/{id}/image/internal": {
+      "$ref": "./endpoints/speakers-id-image-internal.json"
+    },
+    "/speakers/{id}/image/public/speaker": {
+      "$ref": "./endpoints/speakers-id-image-public-speaker.json"
+    },
+    "/speakers/{id}/image/public/company": {
+      "$ref": "./endpoints/speakers-id-image-public-company.json"
+    },
+    "/speakers/{id}/thread": {
+      "$ref": "./endpoints/speakers-id-thread.json"
+    },
+    "/flightInfo/{id}": {
+      "$ref": "./endpoints/flightInfo-id.json"
+    },
+    "/sessions": {
+      "$ref": "./endpoints/sessions.json"
+    },
+    "/sessions/{id}": {
+      "$ref": "./endpoints/sessions-id.json"
+    },
+    "/public/sessions": {
+      "$ref": "./endpoints/public-sessions.json"
+    },
+    "/teams": {
+      "$ref": "./endpoints/teams.json"
+    },
+    "/teams/{id}": {
+      "$ref": "./endpoints/teams-id.json"
+    },
+    "/teams/{id}/members": {
+      "$ref": "./endpoints/teams-id-members.json"
+    },
+    "/teams/{id}/meetings": {
+      "$ref": "./endpoints/teams-id-meetings.json"
+    },
+    "/teams/{id}/meetings/{meetingID}": {
+      "$ref": "./endpoints/teams-id-meetings-meetingid.json"
+    },
+    "/items": {
+      "$ref": "./endpoints/items.json"
+    },
+    "/items/{id}": {
+      "$ref": "./endpoints/items-id.json"
+    },
+    "/threads/{id}": {
+      "$ref": "./endpoints/threads-id.json"
+    },
+    "/threads/{id}/comments": {
+      "$ref": "./endpoints/threads-id-comments.json"
+    },
+    "/threads/{threadID}/comments/{postID}": {
+      "$ref": "./endpoints/threads-id-comments-id.json"
+    },
+    "/posts/{id}": {
+      "$ref": "./endpoints/posts-id.json"
+    },
+    "/public/members": {
+      "$ref": "./endpoints/public-members.json"
+    },
+    "/members": {
+      "$ref": "./endpoints/members.json"
+    },
+    "/members/{id}": {
+      "$ref": "./endpoints/members-id.json"
+    },
+    "/members/{id}/role": {
+      "$ref": "./endpoints/members-id-role.json"
+    },
+    "/members/{id}/contact": {
+      "$ref": "./endpoints/members-id-contact.json"
+    },
+    "/packages": {
+      "$ref": "./endpoints/packages.json"
+    },
+    "/packages/{id}": {
+      "$ref": "./endpoints/packages-id.json"
+    },
+    "/packages/{id}/items": {
+      "$ref": "./endpoints/packages-id-items.json"
+    },
+    "/contacts": {
+      "$ref": "./endpoints/contacts.json"
+    },
+    "/contacts/{id}": {
+      "$ref": "./endpoints/contacts-id.json"
+    },
+    "/contacts/{id}/phone": {
+      "$ref": "./endpoints/contacts-id-phone.json"
+    },
+    "/contacts/{id}/mail": {
+      "$ref": "./endpoints/contacts-id-mail.json"
+    },
+    "/contacts/{id}/socials": {
+      "$ref": "./endpoints/contacts-id-socials.json"
+    },
+    "/meetings": {
+      "$ref": "./endpoints/meetings.json"
+    },
+    "/meetings/{id}": {
+      "$ref": "./endpoints/meetings-id.json"
+    },
+    "/me": {
+      "$ref": "./endpoints/me.json"
+    },
+    "/me/image": {
+      "$ref": "./endpoints/me-image.json"
+    },
+    "/me/notifications": {
+      "$ref": "./endpoints/me-notifications.json"
+    },
+    "/billings": {
+      "$ref": "./endpoints/billings.json"
+    },
+    "/billings/{id}": {
+      "$ref": "./endpoints/billings-id.json"
+    },
+    "/me/notification/{id}": {
+      "$ref": "./endpoints/me-notification-id.json"
+    },
+    "/companies/{id}/employer": {
+      "$ref": "./endpoints/companies-id-employer.json"
+    },
+    "/companies/{id}/employer/{rep}": {
+      "$ref": "./endpoints/companies-id-employer-rep.json"
+    },
+    "/companyReps": {
+      "$ref": "./endpoints/companyReps.json"
+    },
+    "/companyReps/{id}": {
+      "$ref": "./endpoints/companyReps-id.json"
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  }
 }

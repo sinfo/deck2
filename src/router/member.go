@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"github.com/sinfo/deck2/src/models"
 	"net/http"
 	"strconv"
 
@@ -123,22 +124,49 @@ func createMemberContact(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func deleteMember(w http.ResponseWriter, r *http.Request){
+func deleteMember(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	deletedMember, err := mongodb.Members.DeleteMember(id)
-	if err != nil{
-		if err.Error() == mongodb.MemberAssociated{
+	if err != nil {
+		if err.Error() == mongodb.MemberAssociated {
 			http.Error(w, "Error deleting member: "+err.Error(), http.StatusNotAcceptable)
-		} else{
+		} else {
 			http.Error(w, "Error deleting member: "+err.Error(), http.StatusNotFound)
 		}
 		return
 	}
 
 	json.NewEncoder(w).Encode(deletedMember)
+}
+
+type roleData struct {
+	Role models.TeamRole `json:"role"`
+}
+
+func getMemberRole(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	member, err := mongodb.Members.GetMember(id)
+	if err != nil {
+		http.Error(w, "Member not found: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(member.SINFOID)
+	if err != nil {
+		http.Error(w, "Error getting member credentials: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	roleData := roleData{}
+	roleData.Role = credentials.Role
+
+	json.NewEncoder(w).Encode(roleData)
 }
 
 // PUBLIC ENDPOINTS
