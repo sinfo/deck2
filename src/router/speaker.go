@@ -68,6 +68,7 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "Unable to get speakers", http.StatusExpectationFailed)
+		return
 	}
 
 	json.NewEncoder(w).Encode(speakers)

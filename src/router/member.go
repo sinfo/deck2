@@ -24,6 +24,7 @@ func getMembers(w http.ResponseWriter, r *http.Request) {
 	if len(name) > 0 {
 		options.Name = &name
 	}
+
 	if len(event) > 0 {
 		eventID, _ = strconv.Atoi(event)
 		options.Event = &eventID

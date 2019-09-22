@@ -111,18 +111,22 @@ func (umd *UpdateMemberData) ParseBody(body io.Reader) error {
 }
 
 func filterDuplicatesMembers(orig []*models.Member) (res []*models.Member) {
+	res = make([]*models.Member, 0)
+
 	for _, s := range orig {
 		dup := false
 		for _, t := range res {
 			if t.ID == s.ID {
 				dup = true
+				break
 			}
 		}
 		if !dup {
 			res = append(res, s)
 		}
 	}
-	return
+
+	return res
 }
 
 func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) {
@@ -169,10 +173,18 @@ func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
 func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, error) {
 
 	var members []*models.Member
+	filter := bson.M{}
+
+	if options.Name != nil {
+		filter["name"] = bson.M{
+			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$options": "i",
+		}
+	}
 
 	if options.Event == nil {
 
-		cur, err := m.Collection.Find(m.Context, bson.M{})
+		cur, err := m.Collection.Find(m.Context, filter)
 		if err != nil {
 			return nil, err
 		}
@@ -185,11 +197,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 				return nil, err
 			}
 
-			if options.Name == nil {
-				members = append(members, &x)
-			} else if strings.Contains(strings.ToLower(x.Name), strings.ToLower(*options.Name)) {
-				members = append(members, &x)
-			}
+			members = append(members, &x)
 		}
 
 		if err := cur.Err(); err != nil {
@@ -209,19 +217,25 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 			if err != nil {
 				return nil, err
 			}
+
 			for _, t := range team.Members {
-				member, err := m.GetMember(t.Member)
-				if err != nil {
-					return nil, err
+				var member models.Member
+
+				findQuery := bson.M{"_id": t.Member,}
+
+				if options.Name != nil {
+					findQuery["name"] = filter["name"]
 				}
-				if options.Name == nil {
-					members = append(members, member)
-				} else if strings.Contains(strings.ToLower(member.Name), strings.ToLower(*options.Name)) {
-					members = append(members, member)
+
+				if err := m.Collection.FindOne(m.Context, findQuery).Decode(&member); err != nil {
+					continue
 				}
+
+				members = append(members, &member)
 			}
 		}
 	}
+
 	return filterDuplicatesMembers(members), nil
 }
 
