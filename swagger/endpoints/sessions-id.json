@@ -68,7 +68,7 @@
       {
         "in": "body",
         "name": "session",
-        "description": "New session data\n - kind: TALK, PRESENTATION or WORKSHOP\n - if kind=TALK, then speaker must be specified\n - if kind=PRESENTATION or kind=WORKSHOP, then company must be specified\n - space is optional\n - videoURL is optional",
+        "description": "New session data\n - kind: TALK, PRESENTATION or WORKSHOP\n - if kind=TALK, then speaker must be specified\n - if kind=PRESENTATION or kind=WORKSHOP, then company must be specified\n - place is optional\n - videoURL is optional",
         "required": true,
         "schema": {
           "type": "object",
@@ -94,7 +94,7 @@
             "description": {
               "type": "string"
             },
-            "space": {
+            "place": {
               "type": "string"
             },
             "kind": {

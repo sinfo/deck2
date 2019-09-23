@@ -36,7 +36,7 @@ func getSessions(w http.ResponseWriter, r *http.Request) {
 	event := urlQuery.Get("event")
 	before := urlQuery.Get("before")
 	after := urlQuery.Get("after")
-	space := urlQuery.Get("space")
+	place := urlQuery.Get("place")
 	kind := urlQuery.Get("kind")
 	company := urlQuery.Get("company")
 	speaker := urlQuery.Get("speaker")
@@ -80,8 +80,8 @@ func getSessions(w http.ResponseWriter, r *http.Request) {
 		options.After = &afterDate
 	}
 
-	if len(space) > 0 {
-		options.Space = &space
+	if len(place) > 0 {
+		options.Place = &place
 	}
 
 	if len(kind) > 0 {

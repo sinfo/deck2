@@ -63,7 +63,7 @@ type Session struct {
 	Description string    `json:"description" bson:"description"`
 
 	// Where the session is being held. Typically a room on the venue.
-	Space string `json:"space" bson:"space"`
+	Place string `json:"place" bson:"place"`
 
 	// Kind of session can be "TALK", "PRESENTATION" or "WORKSHOP".
 	Kind SessionKind `json:"kind" bson:"kind"`
@@ -88,7 +88,7 @@ type SessionPublic struct {
 	Description string    `json:"description"`
 
 	// Where the session is being held. Typically a room on the venue.
-	Space string `json:"space"`
+	Place string `json:"place"`
 
 	// Kind of session can be "TALK", "PRESENTATION" or "WORKSHOP".
 	Kind SessionKind `json:"kind"`

@@ -21,7 +21,7 @@ var (
 		End:         TimeFuture,
 		Title:       "talk title",
 		Description: "talk description",
-		Space:       "talk space",
+		Place:       "talk place",
 		Kind:        models.SessionKindTalk,
 	}
 
@@ -30,7 +30,7 @@ var (
 		End:         TimeFuture,
 		Title:       "presentation title",
 		Description: "presentation description",
-		Space:       "presentation space",
+		Place:       "presentation place",
 		Kind:        models.SessionKindPresentation,
 	}
 )
@@ -40,7 +40,7 @@ type createSessionPayload struct {
 	End         time.Time          `json:"end"`
 	Title       string             `json:"title"`
 	Description string             `json:"description"`
-	Space       string             `json:"space"`
+	Place       string             `json:"place"`
 	Kind        string             `json:"kind"`
 	Company     primitive.ObjectID `json:"company"`
 	Speaker     primitive.ObjectID `json:"speaker"`
@@ -89,7 +89,7 @@ func TestCreateSession(t *testing.T) {
 		End:         Talk.End,
 		Title:       Talk.Title,
 		Description: Talk.Description,
-		Space:       Talk.Space,
+		Place:       Talk.Place,
 		Kind:        kind,
 		Speaker:     updatedSpeaker.ID,
 	}
@@ -114,7 +114,7 @@ func TestCreateSession(t *testing.T) {
 	assert.Equal(t, newSession.End.Sub(Talk.End).Seconds() < 10e-3, true)     // millisecond precision
 	assert.Equal(t, newSession.Title, Talk.Title)
 	assert.Equal(t, newSession.Description, Talk.Description)
-	assert.Equal(t, newSession.Space, Talk.Space)
+	assert.Equal(t, newSession.Place, Talk.Place)
 	assert.Equal(t, newSession.Kind, Talk.Kind)
 	assert.Equal(t, *newSession.Speaker, newSpeaker.ID)
 }
@@ -209,7 +209,7 @@ func TestGetSession(t *testing.T) {
 		End:         &Talk.End,
 		Title:       &Talk.Title,
 		Description: &Talk.Description,
-		Space:       &Talk.Space,
+		Place:       &Talk.Place,
 		Kind:        &kind,
 		Speaker:     &updatedSpeaker.ID,
 	}
@@ -285,7 +285,7 @@ func TestGetSessions(t *testing.T) {
 		End:         &Talk.End,
 		Title:       &Talk.Title,
 		Description: &Talk.Description,
-		Space:       &Talk.Space,
+		Place:       &Talk.Place,
 		Kind:        &kind,
 		Speaker:     &updatedSpeaker.ID,
 	}
@@ -371,7 +371,7 @@ func TestUpdateSession(t *testing.T) {
 		End:         &Talk.End,
 		Title:       &Talk.Title,
 		Description: &Talk.Description,
-		Space:       &Talk.Space,
+		Place:       &Talk.Place,
 		Kind:        &kind,
 		Speaker:     &updatedSpeaker.ID,
 	}
@@ -390,7 +390,7 @@ func TestUpdateSession(t *testing.T) {
 		End:         Presentation.End,
 		Title:       Presentation.Title,
 		Description: Presentation.Description,
-		Space:       Presentation.Space,
+		Place:       Presentation.Place,
 		Kind:        string(Presentation.Kind),
 		Company:     updatedCompany.ID,
 	}
@@ -411,7 +411,7 @@ func TestUpdateSession(t *testing.T) {
 	assert.Equal(t, updatedSession.End.Sub(Presentation.End).Seconds() < 10e-3, true)     // millisecond precision
 	assert.Equal(t, updatedSession.Title, Presentation.Title)
 	assert.Equal(t, updatedSession.Description, Presentation.Description)
-	assert.Equal(t, updatedSession.Space, Presentation.Space)
+	assert.Equal(t, updatedSession.Place, Presentation.Place)
 	assert.Equal(t, updatedSession.Kind, Presentation.Kind)
 	assert.Equal(t, *updatedSession.Company, newCompany.ID)
 }

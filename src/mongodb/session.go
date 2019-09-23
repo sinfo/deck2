@@ -36,7 +36,7 @@ func sessionToPublic(session models.Session, eventID int) (*models.SessionPublic
 		End:         session.End,
 		Title:       session.Title,
 		Description: session.Description,
-		Space:       session.Space,
+		Place:       session.Place,
 		Kind:        session.Kind,
 		VideoURL:    session.VideoURL,
 	}
@@ -70,7 +70,7 @@ type CreateSessionData struct {
 	End         *time.Time             `json:"end"`
 	Title       *string                `json:"title"`
 	Description *string                `json:"description"`
-	Space       *string                `json:"space"`
+	Place       *string                `json:"place"`
 	Kind        *string                `json:"kind"`
 	Company     *primitive.ObjectID    `json:"company"`
 	Speaker     *primitive.ObjectID    `json:"speaker"`
@@ -177,8 +177,8 @@ func (s *SessionsType) CreateSession(data CreateSessionData) (*models.Session, e
 		"kind":        data.Kind,
 	}
 
-	if data.Space != nil {
-		c["space"] = data.Space
+	if data.Place != nil {
+		c["place"] = data.Place
 	}
 
 	if data.Company != nil {
@@ -231,7 +231,7 @@ type UpdateSessionData struct {
 	End         *time.Time             `json:"end"`
 	Title       *string                `json:"title"`
 	Description *string                `json:"description"`
-	Space       *string                `json:"space"`
+	Place       *string                `json:"place"`
 	Kind        *string                `json:"kind"`
 	Company     *primitive.ObjectID    `json:"company"`
 	Speaker     *primitive.ObjectID    `json:"speaker"`
@@ -319,8 +319,8 @@ func (s *SessionsType) UpdateSession(sessionID primitive.ObjectID, data UpdateSe
 		"kind":        data.Kind,
 	}
 
-	if data.Space != nil {
-		c["space"] = data.Space
+	if data.Place != nil {
+		c["place"] = data.Place
 	}
 
 	if data.Company != nil {
@@ -375,7 +375,7 @@ type GetSessionsOptions struct {
 	Event   *int
 	Before  *time.Time
 	After   *time.Time
-	Space   *string
+	Place   *string
 	Kind    *models.SessionKind
 	Company *primitive.ObjectID
 	Speaker *primitive.ObjectID
@@ -424,8 +424,8 @@ func (s *SessionsType) GetSessions(options GetSessionsOptions) ([]*models.Sessio
 			keep = session.End.After(*options.After)
 		}
 
-		if options.Space != nil {
-			keep = session.Space == *options.Space
+		if options.Place != nil {
+			keep = session.Place == *options.Place
 		}
 
 		if options.Kind != nil {
