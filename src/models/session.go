@@ -42,13 +42,6 @@ func (sk *SessionKind) Parse(kind string) error {
 	return nil
 }
 
-// SessionDinamizers are company's employers that will give the presentation.
-// Only applicable if the session is associated with a company.
-type SessionDinamizers struct {
-	Name     string `json:"name" bson:"name"`
-	Position string `json:"position" bson:"position"`
-}
-
 // SessionTickets are the session's reservation tickets' details.
 // For example, if a workshop is ment to be given for 20 people, then
 // there should be a maximum of 20 tickets available.
@@ -61,7 +54,6 @@ type SessionTickets struct {
 // Session is a scheduled talk, presentation or workshop. This will be used to generate
 // the event's week schedule.
 type Session struct {
-
 	// Session's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
@@ -78,8 +70,6 @@ type Session struct {
 
 	// Company is an _id of Company (see models.Company).
 	Company *primitive.ObjectID `json:"company" bson:"company"`
-
-	SessionDinamizers []SessionDinamizers `json:"dinamizers" bson:"dinamizers"`
 
 	// Speaker is an _id of Speaker (see models.Speaker).
 	Speaker *primitive.ObjectID `json:"speaker" bson:"speaker"`
@@ -104,8 +94,6 @@ type SessionPublic struct {
 	Kind SessionKind `json:"kind"`
 
 	CompanyPublic *CompanyPublic `json:"company,omitempty"`
-
-	SessionDinamizers []SessionDinamizers `json:"dinamizers"`
 
 	// Speaker is an _id of Speaker (see models.Speaker).
 	SpeakerPublic *SpeakerPublic `json:"speaker,omitempty"`

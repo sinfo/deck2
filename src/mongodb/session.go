@@ -32,14 +32,13 @@ func ResetCurrentPublicSessions() {
 func sessionToPublic(session models.Session, eventID int) (*models.SessionPublic, error) {
 
 	public := models.SessionPublic{
-		Begin:             session.Begin,
-		End:               session.End,
-		Title:             session.Title,
-		Description:       session.Description,
-		Space:             session.Space,
-		Kind:              session.Kind,
-		SessionDinamizers: session.SessionDinamizers,
-		VideoURL:          session.VideoURL,
+		Begin:       session.Begin,
+		End:         session.End,
+		Title:       session.Title,
+		Description: session.Description,
+		Space:       session.Space,
+		Kind:        session.Kind,
+		VideoURL:    session.VideoURL,
 	}
 
 	if session.Company != nil {
@@ -67,16 +66,15 @@ func sessionToPublic(session models.Session, eventID int) (*models.SessionPublic
 
 // CreateSessionData is the structure used on CreateSession
 type CreateSessionData struct {
-	Begin             *time.Time                  `json:"begin"`
-	End               *time.Time                  `json:"end"`
-	Title             *string                     `json:"title"`
-	Description       *string                     `json:"description"`
-	Space             *string                     `json:"space"`
-	Kind              *string                     `json:"kind"`
-	Company           *primitive.ObjectID         `json:"company"`
-	SessionDinamizers *[]models.SessionDinamizers `json:"dinamizers" bson:"dinamizers"`
-	Speaker           *primitive.ObjectID         `json:"speaker"`
-	Tickets           *models.SessionTickets      `json:"tickets"`
+	Begin       *time.Time             `json:"begin"`
+	End         *time.Time             `json:"end"`
+	Title       *string                `json:"title"`
+	Description *string                `json:"description"`
+	Space       *string                `json:"space"`
+	Kind        *string                `json:"kind"`
+	Company     *primitive.ObjectID    `json:"company"`
+	Speaker     *primitive.ObjectID    `json:"speaker"`
+	Tickets     *models.SessionTickets `json:"tickets"`
 }
 
 // ParseBody fills the CreateSessionData from a body
@@ -187,12 +185,6 @@ func (s *SessionsType) CreateSession(data CreateSessionData) (*models.Session, e
 		c["company"] = data.Company
 	}
 
-	if data.SessionDinamizers != nil {
-		c["dinamizers"] = data.SessionDinamizers
-	} else {
-		c["dinamizers"] = make([]models.SessionDinamizers, 0)
-	}
-
 	if data.Speaker != nil {
 		c["speaker"] = data.Speaker
 	}
@@ -235,17 +227,16 @@ func (s *SessionsType) GetSession(sessionID primitive.ObjectID) (*models.Session
 
 // UpdateSessionData is the structure used in UpdateItem
 type UpdateSessionData struct {
-	Begin             *time.Time                  `json:"begin"`
-	End               *time.Time                  `json:"end"`
-	Title             *string                     `json:"title"`
-	Description       *string                     `json:"description"`
-	Space             *string                     `json:"space"`
-	Kind              *string                     `json:"kind"`
-	Company           *primitive.ObjectID         `json:"company"`
-	SessionDinamizers *[]models.SessionDinamizers `json:"dinamizers" bson:"dinamizers"`
-	Speaker           *primitive.ObjectID         `json:"speaker"`
-	VideoURL          *string                     `json:"videoURL"`
-	Tickets           *models.SessionTickets      `json:"tickets"`
+	Begin       *time.Time             `json:"begin"`
+	End         *time.Time             `json:"end"`
+	Title       *string                `json:"title"`
+	Description *string                `json:"description"`
+	Space       *string                `json:"space"`
+	Kind        *string                `json:"kind"`
+	Company     *primitive.ObjectID    `json:"company"`
+	Speaker     *primitive.ObjectID    `json:"speaker"`
+	VideoURL    *string                `json:"videoURL"`
+	Tickets     *models.SessionTickets `json:"tickets"`
 }
 
 // ParseBody fills the CreateItemData from a body
@@ -334,12 +325,6 @@ func (s *SessionsType) UpdateSession(sessionID primitive.ObjectID, data UpdateSe
 
 	if data.Company != nil {
 		c["company"] = data.Company
-	}
-
-	if data.SessionDinamizers != nil {
-		c["dinamizers"] = data.SessionDinamizers
-	} else {
-		c["dinamizers"] = make([]models.SessionDinamizers, 0)
 	}
 
 	if data.Speaker != nil {
