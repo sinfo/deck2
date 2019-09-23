@@ -53,11 +53,6 @@ type UpdateMemberData struct {
 	Istid string `json:"istid"`
 }
 
-// UpdateContactData contains info needed to update a member's contact
-type UpdateContactData struct {
-	Contact primitive.ObjectID `json:"contact"`
-}
-
 // DeleteNotificationData contains info needed to delete a member's notification
 type DeleteNotificationData struct {
 	Notification primitive.ObjectID `json:"notification"`
@@ -296,11 +291,28 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 // CreateMember creates a new member
 func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error) {
 
-	insertData := bson.M{}
+	createdContact, err := Contacts.Collection.InsertOne(Contacts.Context, bson.M{
+		"phones": []models.ContactPhone{},
+		"socials": bson.M{
+			"facebook": "",
+			"skype":    "",
+			"github":   "",
+			"twitter":  "",
+			"linkedin": "",
+		},
+		"mails": []models.ContactMail{},
+	})
 
-	insertData["name"] = data.Name
-	insertData["istid"] = data.Istid
-	insertData["sinfoid"] = data.SINFOID
+	if err != nil {
+		return nil, err
+	}
+
+	insertData := bson.M{
+		"name":    data.Name,
+		"istid":   data.Istid,
+		"sinfoid": data.SINFOID,
+		"contact": createdContact.InsertedID.(primitive.ObjectID),
+	}
 
 	insertResult, err := m.Collection.InsertOne(m.Context, insertData)
 	if err != nil {
@@ -315,27 +327,6 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 	ResetCurrentPublicMembers()
 
 	return newMember, nil
-}
-
-// UpdateContact updates a member's contact
-func (m *MembersType) UpdateContact(memberID, contactID primitive.ObjectID) (*models.Member, error) {
-
-	var member models.Member
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"contact": contactID,
-		},
-	}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil {
-		return nil, err
-	}
-
-	return &member, nil
 }
 
 // UpdateImage updates a member's image

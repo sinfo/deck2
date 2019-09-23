@@ -98,33 +98,6 @@ func updateMember(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedMember)
 }
 
-func createMemberContact(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	params := mux.Vars(r)
-	id, _ := primitive.ObjectIDFromHex(params["id"])
-	var ccd = &mongodb.CreateContactData{}
-
-	if err := ccd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	contact, err := mongodb.Contacts.CreateContact(*ccd)
-	if err != nil {
-		http.Error(w, "Could not create contact", http.StatusExpectationFailed)
-		return
-	}
-
-	updatedMember, err := mongodb.Members.UpdateContact(id, contact.ID)
-	if err != nil {
-		http.Error(w, "Could not update member", http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(updatedMember)
-}
-
 func deleteMember(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)

@@ -80,16 +80,10 @@ func TestGetContacts(t *testing.T) {
 	Member2, err := mongodb.Members.CreateMember(Member2Data)
 	assert.NilError(t, err)
 
-	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
+	Contact1, err := mongodb.Contacts.UpdateContact(Member1.Contact, Contact1Data)
 	assert.NilError(t, err)
 
-	Contact2, err := mongodb.Contacts.CreateContact(Contact2Data)
-	assert.NilError(t, err)
-
-	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
-	assert.NilError(t, err)
-
-	Member2, err = mongodb.Members.UpdateContact(Member2.ID, Contact2.ID)
+	Contact2, err := mongodb.Contacts.UpdateContact(Member2.Contact, Contact2Data)
 	assert.NilError(t, err)
 
 	Contact1, err = mongodb.Contacts.GetContact(Member1.Contact)
@@ -163,10 +157,7 @@ func TestGetContact(t *testing.T) {
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t, err)
-
-	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	Contact1, err := mongodb.Contacts.UpdateContact(Member1.Contact, Contact1Data)
 	assert.NilError(t, err)
 
 	var contact models.Contact
@@ -178,8 +169,8 @@ func TestGetContact(t *testing.T) {
 	json.NewDecoder(res.Body).Decode(&contact)
 
 	assert.Equal(t, contact.ID, Member1.Contact)
-	assert.Equal(t, contact.Phones[0].Phone, Contact1Phone.Phone)
-	assert.Equal(t, contact.Mails[0].Mail, Contact1Mail.Mail)
+	assert.Equal(t, contact.Phones[0].Phone, Contact1.Phones[0].Phone)
+	assert.Equal(t, contact.Mails[0].Mail, Contact1.Mails[0].Mail)
 
 }
 
@@ -198,10 +189,7 @@ func TestUpdateContact(t *testing.T) {
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
-	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t, err)
-
-	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
+	_, err = mongodb.Contacts.UpdateContact(Member1.Contact, Contact1Data)
 	assert.NilError(t, err)
 
 	var contact models.Contact
@@ -216,197 +204,10 @@ func TestUpdateContact(t *testing.T) {
 	json.NewDecoder(res.Body).Decode(&contact)
 
 	assert.Equal(t, contact.ID, Member1.Contact)
-	assert.Equal(t, contact.Phones[0].Phone, Contact2Phone.Phone)
+	assert.Equal(t, contact.Phones[0].Phone, Contact2Data.Phones[0].Phone)
 
 	// Wrong id
 	res, err = executeRequest("PUT", "/contacts/wrong", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
-}
-
-func TestAddPhone(t *testing.T) {
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-
-	//Setup
-
-	Member1, err := mongodb.Members.CreateMember(Member1Data)
-	assert.NilError(t, err)
-
-	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t, err)
-
-	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
-	assert.NilError(t, err)
-
-	b, errMarshal := json.Marshal(Contact2Phone)
-	assert.NilError(t, errMarshal)
-
-	res, err := executeRequest("POST", "/contacts/"+Member1.Contact.Hex()+"/phones", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	var contact models.Contact
-
-	json.NewDecoder(res.Body).Decode(&contact)
-
-	assert.Equal(t, len(contact.Phones), 2)
-	assert.Equal(t, contact.Phones[1].Phone, Contact2Phone.Phone)
-
-	//Wrong id
-
-	res, err = executeRequest("POST", "/contacts/wrong/phones", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
-}
-
-func TestAddMail(t *testing.T) {
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-
-	//Setup
-
-	Member1, err := mongodb.Members.CreateMember(Member1Data)
-	assert.NilError(t, err)
-
-	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t, err)
-
-	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
-	assert.NilError(t, err)
-
-	b, errMarshal := json.Marshal(Contact2Mail)
-	assert.NilError(t, errMarshal)
-
-	res, err := executeRequest("POST", "/contacts/"+Member1.Contact.Hex()+"/mails", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	var contact models.Contact
-
-	json.NewDecoder(res.Body).Decode(&contact)
-
-	assert.Equal(t, len(contact.Mails), 2)
-	assert.Equal(t, contact.Mails[1].Mail, Contact2Mail.Mail)
-
-	//Wrong id
-
-	res, err = executeRequest("POST", "/contacts/wrong/mails", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
-}
-
-func TestUpdatePhone(t *testing.T) {
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-
-	//Setup
-
-	Member1, err := mongodb.Members.CreateMember(Member1Data)
-	assert.NilError(t, err)
-
-	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t, err)
-
-	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
-	assert.NilError(t, err)
-
-	phones := append(make([]models.ContactPhone, 0), Contact2Phone)
-
-	b, errMarshal := json.Marshal(mongodb.UpdatePhonesData{Phones: phones})
-	assert.NilError(t, errMarshal)
-
-	res, err := executeRequest("PUT", "/contacts/"+Member1.Contact.Hex()+"/phones", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	var contact models.Contact
-
-	json.NewDecoder(res.Body).Decode(&contact)
-
-	assert.Equal(t, len(contact.Phones), 1)
-	assert.Equal(t, contact.Phones[0].Phone, Contact2Phone.Phone)
-
-	//Wrong id
-
-	res, err = executeRequest("PUT", "/contacts/wrong/phones", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
-}
-
-func TestUpdateMail(t *testing.T) {
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-
-	//Setup
-
-	Member1, err := mongodb.Members.CreateMember(Member1Data)
-	assert.NilError(t, err)
-
-	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t, err)
-
-	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
-	assert.NilError(t, err)
-
-	mails := append(make([]models.ContactMail, 0), Contact2Mail)
-
-	b, errMarshal := json.Marshal(mongodb.UpdateMailsData{Mails: mails})
-	assert.NilError(t, errMarshal)
-
-	res, err := executeRequest("PUT", "/contacts/"+Member1.Contact.Hex()+"/mails", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	var contact models.Contact
-
-	json.NewDecoder(res.Body).Decode(&contact)
-
-	assert.Equal(t, len(contact.Phones), 1)
-	assert.Equal(t, contact.Mails[0].Mail, Contact2Mail.Mail)
-
-	//Wrong id
-
-	res, err = executeRequest("PUT", "/contacts/wrong/mails", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusNotFound)
-}
-
-func TestUpdateSocials(t *testing.T) {
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-
-	//Setup
-
-	Member1, err := mongodb.Members.CreateMember(Member1Data)
-	assert.NilError(t, err)
-
-	Contact1, err := mongodb.Contacts.CreateContact(Contact1Data)
-	assert.NilError(t, err)
-
-	Member1, err = mongodb.Members.UpdateContact(Member1.ID, Contact1.ID)
-	assert.NilError(t, err)
-
-	b, errMarshal := json.Marshal(Contact2Socials)
-	assert.NilError(t, errMarshal)
-
-	res, err := executeRequest("PUT", "/contacts/"+Member1.Contact.Hex()+"/socials", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	var contact models.Contact
-
-	json.NewDecoder(res.Body).Decode(&contact)
-
-	assert.Equal(t, contact.Socials.Facebook, Contact2Socials.Facebook)
-	assert.Equal(t, contact.Socials.Skype, Contact2Socials.Skype)
-	assert.Equal(t, contact.Socials.Github, Contact2Socials.Github)
-	assert.Equal(t, contact.Socials.Twitter, Contact2Socials.Twitter)
-	assert.Equal(t, contact.Socials.LinkedIn, Contact2Socials.LinkedIn)
-
-	//Wrong id
-
-	res, err = executeRequest("PUT", "/contacts/wrong/socials", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }

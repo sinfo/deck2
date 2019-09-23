@@ -97,11 +97,28 @@ func (cpd *CreateSpeakerData) ParseBody(body io.Reader) error {
 // CreateSpeaker creates a new speaker and saves it to the database
 func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, error) {
 
+	createdContact, err := Contacts.Collection.InsertOne(Contacts.Context, bson.M{
+		"phones": []models.ContactPhone{},
+		"socials": bson.M{
+			"facebook": "",
+			"skype":    "",
+			"github":   "",
+			"twitter":  "",
+			"linkedin": "",
+		},
+		"mails": []models.ContactMail{},
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
 	insertResult, err := s.Collection.InsertOne(s.Context, bson.M{
 		"name":           data.Name,
 		"title":          data.Title,
 		"bio":            data.Bio,
 		"participations": []models.SpeakerParticipation{},
+		"contact":        createdContact.InsertedID.(primitive.ObjectID),
 	})
 
 	if err != nil {
