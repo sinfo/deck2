@@ -58,13 +58,6 @@ type DeleteNotificationData struct {
 	Notification primitive.ObjectID `json:"notification"`
 }
 
-// PublicMemberData contains public information about a member
-type PublicMemberData struct {
-	ID    primitive.ObjectID `json:"id"`
-	Name  string             `json:"name"`
-	Image string             `json:"img"`
-}
-
 // ParseBody fills the CreateTeamData from a body
 func (cmd *CreateMemberData) ParseBody(body io.Reader) error {
 
@@ -129,10 +122,18 @@ func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) 
 	var public = make([]*models.MemberPublic, 0)
 
 	for _, s := range orig {
-		public = append(public, &models.MemberPublic{
+
+		publicMember := models.MemberPublic{
 			Name:  s.Name,
 			Image: s.Image,
-		})
+		}
+
+		contact, err := Contacts.GetContact(s.Contact)
+		if err == nil {
+			publicMember.Socials = contact.Socials
+		}
+
+		public = append(public, &publicMember)
 	}
 
 	return public
