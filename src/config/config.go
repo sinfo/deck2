@@ -10,6 +10,7 @@ import (
 var (
 	Testing        bool = false
 	Authentication bool = true
+	Production     bool = false
 
 	Host string = "localhost"
 	Port string = "8080"
@@ -37,6 +38,8 @@ var (
 	// Where to send the authentication token after successeful authentication
 	// We will be using deck website (https://deck.sinfo.org)
 	AuthRedirectionURL string
+
+	SinfoCalendarName string
 )
 
 const (
@@ -60,6 +63,8 @@ const (
 	keySpacesKey    string = "DO_SPACES_KEY"
 
 	keyAuthRedirectionURL string = "AUTH_REDIRECTION_URL"
+
+	keySinfoCalendarName string = "SINFO_CALENDAR_NAME"
 )
 
 func set(variable *string, key string, mandatory bool) {
@@ -92,6 +97,9 @@ func InitializeConfig() {
 	set(&SpacesSecret, keySpacesSecret, true)
 
 	set(&AuthRedirectionURL, keyAuthRedirectionURL, true)
+
+	// If you want to modify or test with the GoogleAPI in DevMode, you must set the env
+	set(&SinfoCalendarName, keySinfoCalendarName, Production)
 }
 
 func SetTestingEnv() {

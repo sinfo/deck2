@@ -21,7 +21,14 @@ const cookieName = "oauthstate"
 
 func oauthGoogleLogin(w http.ResponseWriter, r *http.Request) {
 
-	information := auth.Login()
+	urlQuery := r.URL.Query()
+	url := urlQuery.Get("redirect")
+
+	if len(url) == 0 {
+		url = config.AuthRedirectionURL + "/login"
+	}
+
+	information := auth.Login(url)
 
 	var expiration = time.Now().Add(365 * 24 * time.Hour)
 	cookie := http.Cookie{Name: cookieName, Value: information.State, Expires: expiration}
@@ -79,7 +86,7 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	token, err := auth.SignJWT(*credentials)
 	if err != nil {
-		http.Error(w, "unable to create jwt" + err.Error(), http.StatusUnauthorized)
+		http.Error(w, "unable to create jwt"+err.Error(), http.StatusUnauthorized)
 		return
 	}
 

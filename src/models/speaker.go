@@ -102,6 +102,8 @@ type SpeakerParticipationPublic struct {
 // SpeakerPublic represents a speaker to be contacted by the team, that will hopefully participate
 // on the event, and to be shown to everyone publicly.
 type SpeakerPublic struct {
+	ID primitive.ObjectID `json:"id" bson:"_id"`
+
 	Name string `json:"name" bson:"name"`
 
 	// Title of the speaker (CEO @ HugeCorportation, for example).

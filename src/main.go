@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/gookit/color"
 
 	"github.com/sinfo/deck2/src/auth"
 	"github.com/sinfo/deck2/src/config"
@@ -15,6 +18,12 @@ import (
 func main() {
 
 	config.InitializeConfig()
+
+	if os.Args[1] == "--production" {
+		color.New(color.FgWhite, color.BgRed).Println("*** WARNING: RUNNING IN PRODUCTION ***")
+		fmt.Println("")
+		config.Production = true
+	}
 
 	if err := auth.InitializeOAuth2(); err != nil {
 		log.Fatal(err.Error())

@@ -13,6 +13,7 @@ require (
 	github.com/go-swagger/go-swagger v0.20.1 // indirect
 	github.com/gogo/protobuf v1.3.0 // indirect
 	github.com/google/pprof v0.0.0-20190908185732-236ed259b199 // indirect
+	github.com/gookit/color v1.2.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1 // indirect

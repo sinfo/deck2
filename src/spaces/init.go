@@ -14,18 +14,20 @@ import (
 	"github.com/sinfo/deck2/src/config"
 )
 
-var accessKey string
-var secret string
-var name string
-
-var endpoint string
-var cdnBaseURL string
-
-var client *minio.Client
-
 // digitalocean personal access token
-var pat string
-var godoClient *godo.Client
+var (
+	accessKey string
+	secret    string
+	name      string
+
+	endpoint   string
+	cdnBaseURL string
+
+	client     *minio.Client
+	pat        string
+	godoClient *godo.Client
+	basePath   = "deck2"
+)
 
 type TokenSource struct {
 	AccessToken string
@@ -39,8 +41,7 @@ func (t *TokenSource) Token() (*oauth2.Token, error) {
 }
 
 const (
-	basePath = "deck2"
-	ssl      = true
+	ssl = true
 )
 
 func InitializeSpaces() {
