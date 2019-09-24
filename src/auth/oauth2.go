@@ -31,7 +31,7 @@ func generateStateOauthCookie(url string) string {
 
 	rand := base64.URLEncoding.EncodeToString(b)
 
-	return url + "\n" + rand
+	return url + "|" + rand
 }
 
 type LoginInformation struct {

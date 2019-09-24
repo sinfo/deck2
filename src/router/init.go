@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -90,6 +91,7 @@ func healthCheck(w http.ResponseWriter, req *http.Request) {
 
 // Router is the exported router.
 var Router http.Handler
+var UrlRegexCompiler *regexp.Regexp
 
 func InitializeRouter() {
 	r := mux.NewRouter()
@@ -99,6 +101,12 @@ func InitializeRouter() {
 	}
 
 	r.Use(headersMiddleware)
+
+	if config.Production {
+		UrlRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(https:\/\/)?(.*sinfo\.org)(\/.*)?)\/?\|.*`)
+	} else {
+		UrlRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(.*))(\/)?\|.*`)
+	}
 
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	var allowedOrigins handlers.CORSOption

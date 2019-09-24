@@ -49,16 +49,21 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	if r.FormValue("state") != oauthState.Value {
 		log.Println("invalid oauth google state")
-		http.Error(w, "Invalid oauth google state", http.StatusUnauthorized)
 		return
 	}
+	matches := UrlRegexCompiler.FindStringSubmatch(oauthState.Value)
+	if len(matches) <= 1 {
+		log.Println("Invalid RedirectUrl")
+		return
+	}
+
+	log.Println(matches[1])
 
 	var code = r.FormValue("code")
 
 	data, err := google.GetUserData(code)
 	if err != nil {
 		log.Println(err.Error())
-		http.Error(w, "error getting user information from google", http.StatusUnauthorized)
 		return
 	}
 
@@ -66,19 +71,19 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	var emailParts = strings.Split(data.Email, "@")
 	if len(emailParts) != 2 {
-		http.Error(w, "error parsing user email", http.StatusUnauthorized)
+		log.Println("error parsing user email")
 		return
 	}
 
 	if (emailParts[1]) != "sinfo.org" {
-		http.Error(w, "not valid sinfo email", http.StatusUnauthorized)
+		log.Println("not valid sinfo email")
 		return
 	}
 
 	var sinfoid = emailParts[0]
 	credentials, err := mongodb.Members.GetMemberAuthCredentials(sinfoid)
 	if err != nil {
-		http.Error(w, "member not found, or without team", http.StatusUnauthorized)
+		log.Println("member not found, or without team")
 		return
 	}
 
@@ -86,9 +91,9 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	token, err := auth.SignJWT(*credentials)
 	if err != nil {
-		http.Error(w, "unable to create jwt"+err.Error(), http.StatusUnauthorized)
+		log.Println("unable to create jwt" + err.Error())
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/login/%s", config.AuthRedirectionURL, *token), http.StatusPermanentRedirect)
+	http.Redirect(w, r, fmt.Sprintf("%s/login/%s", matches[1], *token), http.StatusPermanentRedirect)
 }

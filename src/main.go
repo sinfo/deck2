@@ -19,10 +19,12 @@ func main() {
 
 	config.InitializeConfig()
 
-	if os.Args[1] == "--production" {
-		color.New(color.FgWhite, color.BgRed).Println("*** WARNING: RUNNING IN PRODUCTION ***")
-		fmt.Println("")
-		config.Production = true
+	if len(os.Args) == 2 {
+		if os.Args[1] == "--production" {
+			color.New(color.FgWhite, color.BgRed).Println("*** WARNING: RUNNING IN PRODUCTION ***")
+			fmt.Println("")
+			config.Production = true
+		}
 	}
 
 	if err := auth.InitializeOAuth2(); err != nil {
