@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
-	"fmt"
-
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -54,21 +53,9 @@ type UpdateMemberData struct {
 	Istid string `json:"istid"`
 }
 
-// UpdateContactData contains info needed to update a member's contact
-type UpdateContactData struct {
-	Contact primitive.ObjectID `json:"contact"`
-}
-
 // DeleteNotificationData contains info needed to delete a member's notification
 type DeleteNotificationData struct {
 	Notification primitive.ObjectID `json:"notification"`
-}
-
-// PublicMemberData contains public information about a member
-type PublicMemberData struct {
-	ID    primitive.ObjectID `json:"id"`
-	Name  string             `json:"name"`
-	Image string             `json:"img"`
 }
 
 // ParseBody fills the CreateTeamData from a body
@@ -112,18 +99,22 @@ func (umd *UpdateMemberData) ParseBody(body io.Reader) error {
 }
 
 func filterDuplicatesMembers(orig []*models.Member) (res []*models.Member) {
+	res = make([]*models.Member, 0)
+
 	for _, s := range orig {
 		dup := false
 		for _, t := range res {
 			if t.ID == s.ID {
 				dup = true
+				break
 			}
 		}
 		if !dup {
 			res = append(res, s)
 		}
 	}
-	return
+
+	return res
 }
 
 func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) {
@@ -131,10 +122,18 @@ func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) 
 	var public = make([]*models.MemberPublic, 0)
 
 	for _, s := range orig {
-		public = append(public, &models.MemberPublic{
+
+		publicMember := models.MemberPublic{
 			Name:  s.Name,
 			Image: s.Image,
-		})
+		}
+
+		contact, err := Contacts.GetContact(s.Contact)
+		if err == nil {
+			publicMember.Socials = contact.Socials
+		}
+
+		public = append(public, &publicMember)
 	}
 
 	return public
@@ -170,10 +169,18 @@ func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
 func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, error) {
 
 	var members []*models.Member
+	filter := bson.M{}
+
+	if options.Name != nil {
+		filter["name"] = bson.M{
+			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$options": "i",
+		}
+	}
 
 	if options.Event == nil {
 
-		cur, err := m.Collection.Find(m.Context, bson.M{})
+		cur, err := m.Collection.Find(m.Context, filter)
 		if err != nil {
 			return nil, err
 		}
@@ -186,11 +193,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 				return nil, err
 			}
 
-			if options.Name == nil {
-				members = append(members, &x)
-			} else if strings.Contains(strings.ToLower(x.Name), strings.ToLower(*options.Name)) {
-				members = append(members, &x)
-			}
+			members = append(members, &x)
 		}
 
 		if err := cur.Err(); err != nil {
@@ -210,19 +213,25 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 			if err != nil {
 				return nil, err
 			}
+
 			for _, t := range team.Members {
-				member, err := m.GetMember(t.Member)
-				if err != nil {
-					return nil, err
+				var member models.Member
+
+				findQuery := bson.M{"_id": t.Member,}
+
+				if options.Name != nil {
+					findQuery["name"] = filter["name"]
 				}
-				if options.Name == nil {
-					members = append(members, member)
-				} else if strings.Contains(strings.ToLower(member.Name), strings.ToLower(*options.Name)) {
-					members = append(members, member)
+
+				if err := m.Collection.FindOne(m.Context, findQuery).Decode(&member); err != nil {
+					continue
 				}
+
+				members = append(members, &member)
 			}
 		}
 	}
+
 	return filterDuplicatesMembers(members), nil
 }
 
@@ -283,11 +292,28 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 // CreateMember creates a new member
 func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error) {
 
-	insertData := bson.M{}
+	createdContact, err := Contacts.Collection.InsertOne(Contacts.Context, bson.M{
+		"phones": []models.ContactPhone{},
+		"socials": bson.M{
+			"facebook": "",
+			"skype":    "",
+			"github":   "",
+			"twitter":  "",
+			"linkedin": "",
+		},
+		"mails": []models.ContactMail{},
+	})
 
-	insertData["name"] = data.Name
-	insertData["istid"] = data.Istid
-	insertData["sinfoid"] = data.SINFOID
+	if err != nil {
+		return nil, err
+	}
+
+	insertData := bson.M{
+		"name":    data.Name,
+		"istid":   data.Istid,
+		"sinfoid": data.SINFOID,
+		"contact": createdContact.InsertedID.(primitive.ObjectID),
+	}
 
 	insertResult, err := m.Collection.InsertOne(m.Context, insertData)
 	if err != nil {
@@ -302,27 +328,6 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 	ResetCurrentPublicMembers()
 
 	return newMember, nil
-}
-
-// UpdateContact updates a member's contact
-func (m *MembersType) UpdateContact(memberID, contactID primitive.ObjectID) (*models.Member, error) {
-
-	var member models.Member
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"contact": contactID,
-		},
-	}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil {
-		return nil, err
-	}
-
-	return &member, nil
 }
 
 // UpdateImage updates a member's image
@@ -490,55 +495,48 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 	return public, nil
 }
 
-func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error){
-
+func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error) {
 
 	// Check companies
 	var c models.Company
-	if err := Companies.Collection.FindOne(Companies.Context, bson.M{"participations.member": id}).Decode(&c); err == nil{
+	if err := Companies.Collection.FindOne(Companies.Context, bson.M{"participations.member": id}).Decode(&c); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
-
 
 	// Check meetings
 	var meeting models.Meeting
-	if err :=  Meetings.Collection.FindOne(Meetings.Context, bson.M{
+	if err := Meetings.Collection.FindOne(Meetings.Context, bson.M{
 		"participants.members": id,
-	}).Decode(&meeting); err ==nil{
+	}).Decode(&meeting); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
-	
 	// Check notifications
 	var n models.Notification
-	if err :=  Notifications.Collection.FindOne(Notifications.Context, bson.M{"member": id}).Decode(&n); err == nil{
+	if err := Notifications.Collection.FindOne(Notifications.Context, bson.M{"member": id}).Decode(&n); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
-
-	
 	// Check posts
 	var p models.Post
-	if err := Posts.Collection.FindOne(Posts.Context, bson.M{"member": id}).Decode(&p); err == nil{
+	if err := Posts.Collection.FindOne(Posts.Context, bson.M{"member": id}).Decode(&p); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
-
 
 	// Check speakers
 	var s models.Speaker
-	if err := Speakers.Collection.FindOne(Speakers.Context, bson.M{"participations.member": id}).Decode(&s); err == nil{
+	if err := Speakers.Collection.FindOne(Speakers.Context, bson.M{"participations.member": id}).Decode(&s); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
-
 	// Check teams
 	var t models.Team
-	if err := Teams.Collection.FindOne(Teams.Context, bson.M{"members.member": id}).Decode(&t); err == nil{
+	if err := Teams.Collection.FindOne(Teams.Context, bson.M{"members.member": id}).Decode(&t); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
 	member, err := m.GetMember(id)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 

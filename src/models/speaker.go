@@ -64,7 +64,7 @@ type Speaker struct {
 	Name string `json:"name" bson:"name"`
 
 	// Contact is an _id of Contact (see models.Contact).
-	Contact primitive.ObjectID `json:"contact" bson:"contact"`
+	Contact *primitive.ObjectID `json:"contact,omitempty" bson:"contact"`
 
 	// Title of the speaker (CEO @ HugeCorportation, for example).
 	Title string `json:"title" bson:"title"`

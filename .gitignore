@@ -67,3 +67,4 @@ keys
 bin
 static/swagger.json
 data
+.idea

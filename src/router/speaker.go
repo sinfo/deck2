@@ -68,6 +68,7 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "Unable to get speakers", http.StatusExpectationFailed)
+		return
 	}
 
 	json.NewEncoder(w).Encode(speakers)
@@ -342,7 +343,7 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Error parsing form: %v", err.Error()), http.StatusBadRequest)
 		return
 	}
 
@@ -351,6 +352,8 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid payload", http.StatusBadRequest)
 		return
 	}
+
+	log.Println("File size", handler.Size)
 
 	// check again for file size
 	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file

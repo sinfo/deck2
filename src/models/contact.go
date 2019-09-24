@@ -11,11 +11,11 @@ type ContactPhone struct {
 }
 
 type ContactSocials struct {
-	Facebook string `json:"facebook" bson:"facebook"`
-	Skype    string `json:"skype" bson:"skype"`
-	Github   string `json:"github" bson:"github"`
-	Twitter  string `json:"twitter" bson:"twitter"`
-	LinkedIn string `json:"linkedin" bson:"linkedin"`
+	Facebook string `json:"facebook,omitempty" bson:"facebook"`
+	Skype    string `json:"skype,omitempty" bson:"skype"`
+	Github   string `json:"github,omitempty" bson:"github"`
+	Twitter  string `json:"twitter,omitempty" bson:"twitter"`
+	LinkedIn string `json:"linkedin,omitempty" bson:"linkedin"`
 }
 
 type ContactMail struct {
@@ -27,7 +27,6 @@ type ContactMail struct {
 // Contact stores contacts' information. It doesn't hold a name, because it's used on models.CompanyRep,
 // models.Member and models.Speaker. All of them already hold a name.
 type Contact struct {
-
 	// Contact's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
@@ -38,9 +37,9 @@ type Contact struct {
 
 // HasPhone (phone) returns true if contact has a valid phone
 // number that is a case insensitive partial match to `phone`
-func (c *Contact) HasPhone(p string)bool{
-	for _, s := range c.Phones{
-		if strings.Contains(strings.ToLower(s.Phone), strings.ToLower(p)) && s.Valid{
+func (c *Contact) HasPhone(p string) bool {
+	for _, s := range c.Phones {
+		if strings.Contains(strings.ToLower(s.Phone), strings.ToLower(p)) && s.Valid {
 			return true
 		}
 	}
@@ -49,9 +48,9 @@ func (c *Contact) HasPhone(p string)bool{
 
 // HasMail (mail) returns true if contact has a valid mail
 // that is a case insensitive partial match to `mail`
-func (c *Contact) HasMail(m string)bool{
-	for _, s := range c.Mails{
-		if strings.Contains(strings.ToLower(s.Mail), strings.ToLower(m)) && s.Valid{
+func (c *Contact) HasMail(m string) bool {
+	for _, s := range c.Mails {
+		if strings.Contains(strings.ToLower(s.Mail), strings.ToLower(m)) && s.Valid {
 			return true
 		}
 	}

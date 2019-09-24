@@ -6,7 +6,6 @@ import (
 
 // Member represents a member of the SINFO organization
 type Member struct {
-
 	// Member's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
@@ -35,10 +34,11 @@ type MemberPublic struct {
 	// Photo of the member. This is a URL pointing to the image, that is
 	// being stored somewhere else.
 	Image string `json:"img" bson:"img"`
+
+	Socials ContactSocials `json:"socials"`
 }
 
 type AuthorizationCredentials struct {
-
 	// Member's ID
 	ID primitive.ObjectID
 

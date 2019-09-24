@@ -213,8 +213,8 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("", authMember(getMembers)).Methods("GET")
 	memberRouter.HandleFunc("", authCoordinator(createMember)).Methods("POST")
 	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
+	memberRouter.HandleFunc("/{id}/role", authMember(getMemberRole)).Methods("GET")
 	memberRouter.HandleFunc("/{id}", authAdmin(updateMember)).Methods("PUT")
-	memberRouter.HandleFunc("/{id}/contact", authMember(createMemberContact)).Methods("POST")
 	memberRouter.HandleFunc("/{id}", authAdmin(deleteMember)).Methods("DELETE")
 
 	// item handlers
@@ -237,11 +237,6 @@ func InitializeRouter() {
 	contactRouter.HandleFunc("", authMember(getContacts)).Methods("GET")
 	contactRouter.HandleFunc("/{id}", authMember(getContact)).Methods("GET")
 	contactRouter.HandleFunc("/{id}", authMember(updateContact)).Methods("PUT")
-	contactRouter.HandleFunc("/{id}/phones", authMember(addPhone)).Methods("POST")
-	contactRouter.HandleFunc("/{id}/mails", authMember(addMail)).Methods("POST")
-	contactRouter.HandleFunc("/{id}/phones", authMember(updatePhone)).Methods("PUT")
-	contactRouter.HandleFunc("/{id}/mails", authMember(updateMail)).Methods("PUT")
-	contactRouter.HandleFunc("/{id}/socials", authMember(updateSocials)).Methods("PUT")
 
 	// meetings handlers
 	meetingRouter := r.PathPrefix("/meetings").Subrouter()

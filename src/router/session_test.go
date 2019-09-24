@@ -21,14 +21,8 @@ var (
 		End:         TimeFuture,
 		Title:       "talk title",
 		Description: "talk description",
-		Space:       "talk space",
+		Place:       "talk place",
 		Kind:        models.SessionKindTalk,
-		SessionDinamizers: []models.SessionDinamizers{
-			models.SessionDinamizers{
-				Name:     "dinamizer name",
-				Position: "dinamizer position",
-			},
-		},
 	}
 
 	Presentation = models.Session{
@@ -36,27 +30,20 @@ var (
 		End:         TimeFuture,
 		Title:       "presentation title",
 		Description: "presentation description",
-		Space:       "presentation space",
+		Place:       "presentation place",
 		Kind:        models.SessionKindPresentation,
-		SessionDinamizers: []models.SessionDinamizers{
-			models.SessionDinamizers{
-				Name:     "dinamizer name",
-				Position: "dinamizer position",
-			},
-		},
 	}
 )
 
 type createSessionPayload struct {
-	Begin             time.Time                  `json:"begin"`
-	End               time.Time                  `json:"end"`
-	Title             string                     `json:"title"`
-	Description       string                     `json:"description"`
-	Space             string                     `json:"space"`
-	Kind              string                     `json:"kind"`
-	Company           primitive.ObjectID         `json:"company"`
-	SessionDinamizers []models.SessionDinamizers `json:"dinamizers" bson:"dinamizers"`
-	Speaker           primitive.ObjectID         `json:"speaker"`
+	Begin       time.Time          `json:"begin"`
+	End         time.Time          `json:"end"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	Place       string             `json:"place"`
+	Kind        string             `json:"kind"`
+	Company     primitive.ObjectID `json:"company"`
+	Speaker     primitive.ObjectID `json:"speaker"`
 }
 
 func TestCreateSession(t *testing.T) {
@@ -98,14 +85,13 @@ func TestCreateSession(t *testing.T) {
 	assert.NilError(t, err)
 
 	csd := createSessionPayload{
-		Begin:             Talk.Begin,
-		End:               Talk.End,
-		Title:             Talk.Title,
-		Description:       Talk.Description,
-		Space:             Talk.Space,
-		Kind:              kind,
-		Speaker:           updatedSpeaker.ID,
-		SessionDinamizers: Talk.SessionDinamizers,
+		Begin:       Talk.Begin,
+		End:         Talk.End,
+		Title:       Talk.Title,
+		Description: Talk.Description,
+		Place:       Talk.Place,
+		Kind:        kind,
+		Speaker:     updatedSpeaker.ID,
 	}
 
 	b, errMarshal := json.Marshal(csd)
@@ -128,12 +114,9 @@ func TestCreateSession(t *testing.T) {
 	assert.Equal(t, newSession.End.Sub(Talk.End).Seconds() < 10e-3, true)     // millisecond precision
 	assert.Equal(t, newSession.Title, Talk.Title)
 	assert.Equal(t, newSession.Description, Talk.Description)
-	assert.Equal(t, newSession.Space, Talk.Space)
+	assert.Equal(t, newSession.Place, Talk.Place)
 	assert.Equal(t, newSession.Kind, Talk.Kind)
 	assert.Equal(t, *newSession.Speaker, newSpeaker.ID)
-	assert.Equal(t, len(newSession.SessionDinamizers) == 1, true)
-	assert.Equal(t, newSession.SessionDinamizers[0].Name, Talk.SessionDinamizers[0].Name)
-	assert.Equal(t, newSession.SessionDinamizers[0].Position, Talk.SessionDinamizers[0].Position)
 }
 
 func TestCreateSessionBadPayload(t *testing.T) {
@@ -222,14 +205,13 @@ func TestGetSession(t *testing.T) {
 	assert.NilError(t, err)
 
 	csd := mongodb.CreateSessionData{
-		Begin:             &Talk.Begin,
-		End:               &Talk.End,
-		Title:             &Talk.Title,
-		Description:       &Talk.Description,
-		Space:             &Talk.Space,
-		Kind:              &kind,
-		Speaker:           &updatedSpeaker.ID,
-		SessionDinamizers: &Talk.SessionDinamizers,
+		Begin:       &Talk.Begin,
+		End:         &Talk.End,
+		Title:       &Talk.Title,
+		Description: &Talk.Description,
+		Place:       &Talk.Place,
+		Kind:        &kind,
+		Speaker:     &updatedSpeaker.ID,
 	}
 
 	newSession, err := mongodb.Sessions.CreateSession(csd)
@@ -299,14 +281,13 @@ func TestGetSessions(t *testing.T) {
 	assert.NilError(t, err)
 
 	csd := mongodb.CreateSessionData{
-		Begin:             &Talk.Begin,
-		End:               &Talk.End,
-		Title:             &Talk.Title,
-		Description:       &Talk.Description,
-		Space:             &Talk.Space,
-		Kind:              &kind,
-		Speaker:           &updatedSpeaker.ID,
-		SessionDinamizers: &Talk.SessionDinamizers,
+		Begin:       &Talk.Begin,
+		End:         &Talk.End,
+		Title:       &Talk.Title,
+		Description: &Talk.Description,
+		Place:       &Talk.Place,
+		Kind:        &kind,
+		Speaker:     &updatedSpeaker.ID,
 	}
 
 	newSession, err := mongodb.Sessions.CreateSession(csd)
@@ -386,14 +367,13 @@ func TestUpdateSession(t *testing.T) {
 	assert.NilError(t, err)
 
 	csd := mongodb.CreateSessionData{
-		Begin:             &Talk.Begin,
-		End:               &Talk.End,
-		Title:             &Talk.Title,
-		Description:       &Talk.Description,
-		Space:             &Talk.Space,
-		Kind:              &kind,
-		Speaker:           &updatedSpeaker.ID,
-		SessionDinamizers: &Talk.SessionDinamizers,
+		Begin:       &Talk.Begin,
+		End:         &Talk.End,
+		Title:       &Talk.Title,
+		Description: &Talk.Description,
+		Place:       &Talk.Place,
+		Kind:        &kind,
+		Speaker:     &updatedSpeaker.ID,
 	}
 
 	newSession, err := mongodb.Sessions.CreateSession(csd)
@@ -406,14 +386,13 @@ func TestUpdateSession(t *testing.T) {
 	assert.NilError(t, err)
 
 	usd := &createSessionPayload{
-		Begin:             Presentation.Begin,
-		End:               Presentation.End,
-		Title:             Presentation.Title,
-		Description:       Presentation.Description,
-		Space:             Presentation.Space,
-		Kind:              string(Presentation.Kind),
-		Company:           updatedCompany.ID,
-		SessionDinamizers: Presentation.SessionDinamizers,
+		Begin:       Presentation.Begin,
+		End:         Presentation.End,
+		Title:       Presentation.Title,
+		Description: Presentation.Description,
+		Place:       Presentation.Place,
+		Kind:        string(Presentation.Kind),
+		Company:     updatedCompany.ID,
 	}
 
 	b, errMarshal := json.Marshal(usd)
@@ -432,10 +411,7 @@ func TestUpdateSession(t *testing.T) {
 	assert.Equal(t, updatedSession.End.Sub(Presentation.End).Seconds() < 10e-3, true)     // millisecond precision
 	assert.Equal(t, updatedSession.Title, Presentation.Title)
 	assert.Equal(t, updatedSession.Description, Presentation.Description)
-	assert.Equal(t, updatedSession.Space, Presentation.Space)
+	assert.Equal(t, updatedSession.Place, Presentation.Place)
 	assert.Equal(t, updatedSession.Kind, Presentation.Kind)
 	assert.Equal(t, *updatedSession.Company, newCompany.ID)
-	assert.Equal(t, len(newSession.SessionDinamizers) == 1, true)
-	assert.Equal(t, updatedSession.SessionDinamizers[0].Name, Presentation.SessionDinamizers[0].Name)
-	assert.Equal(t, updatedSession.SessionDinamizers[0].Position, Presentation.SessionDinamizers[0].Position)
 }
