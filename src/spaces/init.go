@@ -50,6 +50,9 @@ func InitializeSpaces() {
 	secret = config.SpacesSecret
 	name = config.SpacesName
 
+	if !config.Production {
+		basePath = "deck2-dev"
+	}
 	// Initialize digitalocean client
 
 	pat = config.DOPAT
