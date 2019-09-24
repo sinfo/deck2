@@ -75,9 +75,11 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	credentials.Token = data.Token
+
 	token, err := auth.SignJWT(*credentials)
 	if err != nil {
-		http.Error(w, "unable to create jwt", http.StatusUnauthorized)
+		http.Error(w, "unable to create jwt" + err.Error(), http.StatusUnauthorized)
 		return
 	}
 

@@ -1,12 +1,20 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/sinfo/deck2/src/auth"
+	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/oauth2"
+	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/option"
 
 	"github.com/gorilla/mux"
 )
@@ -208,6 +216,61 @@ func addTeamMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+
+		ctx := context.Background()
+
+		token, err := mongodb.Tokens.GetToken(credentials.Token)
+		if err != nil {
+			http.Error(w, "Could not find token in database", http.StatusNotFound)
+			return
+		}
+
+		newToken := new(oauth2.Token)
+		newToken.Expiry = token.Expiry
+		newToken.RefreshToken = token.Refresh
+		newToken.AccessToken = token.Access
+
+		client := auth.OauthConfig.Client(ctx, newToken)
+
+		calendarService, err := calendar.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			http.Error(w, "Could not start calendar: "+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		calendarList, err := calendarService.CalendarList.List().Do()
+		if err != nil {
+			http.Error(w, "Could not list calendars"+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		var calendarID string
+
+		for _, s := range calendarList.Items {
+			if s.Summary == "SINFO General Calendar" {
+				calendarID = s.Id
+			}
+		}
+
+		newEvent := &calendar.Event{
+			AnyoneCanAddSelf: true,
+			Id:               meeting.ID.Hex(),
+			Location:         meeting.Place,
+			Summary:          team.Name + " meeting",
+			Start:            &calendar.EventDateTime{DateTime: meeting.Begin.Format(time.RFC3339)},
+			End:              &calendar.EventDateTime{DateTime: meeting.End.Format(time.RFC3339)},
+		}
+
+		createdEvent, err := calendarService.Events.Insert(calendarID, newEvent).Do()
+		if err != nil {
+			http.Error(w, "Could not add event to calendar", http.StatusExpectationFailed)
+			return
+		}
+
+		log.Printf("Created meeting %s starting at %s", createdEvent.Summary, createdEvent.Start)
+	}
+
 	json.NewEncoder(w).Encode(team)
 }
 
@@ -215,12 +278,64 @@ func deleteTeamMeeting(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	teamID, _ := primitive.ObjectIDFromHex(params["id"])
-	memberID, _ := primitive.ObjectIDFromHex(params["meetingID"])
+	meetingID, _ := primitive.ObjectIDFromHex(params["meetingID"])
 
-	meeting, err := mongodb.Teams.DeleteTeamMeeting(teamID, memberID)
+	meeting, err := mongodb.Teams.DeleteTeamMeeting(teamID, meetingID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
+	}
+
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+
+		ctx := context.Background()
+
+		token, err := mongodb.Tokens.GetToken(credentials.Token)
+		if err != nil {
+			http.Error(w, "Could not find token in database", http.StatusNotFound)
+			return
+		}
+
+		newToken := new(oauth2.Token)
+		newToken.Expiry = token.Expiry
+		newToken.RefreshToken = token.Refresh
+		newToken.AccessToken = token.Access
+
+		client := auth.OauthConfig.Client(ctx, newToken)
+
+		calendarService, err := calendar.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			http.Error(w, "Could not start calendar: "+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		calendarList, err := calendarService.CalendarList.List().Do()
+		if err != nil {
+			http.Error(w, "Could not list calendars"+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		var calendarID string
+
+		for _, s := range calendarList.Items {
+			if s.Summary == "SINFO General Calendar" {
+				calendarID = s.Id
+			}
+		}
+
+		deletedEvent, err := calendarService.Events.Get(calendarID, meetingID.Hex()).Do()
+		if err != nil {
+			http.Error(w, "Could not find meeting in calendar", http.StatusExpectationFailed)
+			return
+		}
+
+		err = calendarService.Events.Delete(calendarID, meetingID.Hex()).Do()
+		if err != nil {
+			http.Error(w, "Could not delete event from calendar", http.StatusExpectationFailed)
+			return
+		}
+
+		log.Printf("Deleted event %s", deletedEvent.Summary)
 	}
 
 	json.NewEncoder(w).Encode(meeting)

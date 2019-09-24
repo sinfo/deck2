@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,9 +10,13 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/sinfo/deck2/src/auth"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/oauth2"
+	"google.golang.org/api/calendar/v3"
+	"google.golang.org/api/option"
 )
 
 func getEvents(w http.ResponseWriter, r *http.Request) {
@@ -446,6 +451,61 @@ func addMeetingToEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+
+		ctx := context.Background()
+
+		token, err := mongodb.Tokens.GetToken(credentials.Token)
+		if err != nil {
+			http.Error(w, "Could not find token in database", http.StatusNotFound)
+			return
+		}
+
+		newToken := new(oauth2.Token)
+		newToken.Expiry = token.Expiry
+		newToken.RefreshToken = token.Refresh
+		newToken.AccessToken = token.Access
+
+		client := auth.OauthConfig.Client(ctx, newToken)
+
+		calendarService, err := calendar.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			http.Error(w, "Could not start calendar: "+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		calendarList, err := calendarService.CalendarList.List().Do()
+		if err != nil {
+			http.Error(w, "Could not list calendars"+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		var calendarID string
+
+		for _, s := range calendarList.Items {
+			if s.Summary == "SINFO General Calendar" {
+				calendarID = s.Id
+			}
+		}
+
+		newEvent := &calendar.Event{
+			AnyoneCanAddSelf: true,
+			Id:               newMeeting.ID.Hex(),
+			Location:         newMeeting.Place,
+			Summary:          "Event meeting",
+			Start:            &calendar.EventDateTime{DateTime: newMeeting.Begin.Format(time.RFC3339)},
+			End:              &calendar.EventDateTime{DateTime: newMeeting.End.Format(time.RFC3339)},
+		}
+
+		createdEvent, err := calendarService.Events.Insert(calendarID, newEvent).Do()
+		if err != nil {
+			http.Error(w, "Could not add event to calendar", http.StatusExpectationFailed)
+			return
+		}
+
+		log.Printf("Created event %s starting at %s", createdEvent.Summary, createdEvent.Start)
+	}
+
 	json.NewEncoder(w).Encode(updatedEvent)
 }
 
@@ -476,6 +536,57 @@ func removeMeetingFromEvent(w http.ResponseWriter, r *http.Request) {
 	if _, err = mongodb.Meetings.DeleteMeeting(meetingID); err != nil {
 		http.Error(w, "Could not delete meeting", http.StatusExpectationFailed)
 		return
+	}
+
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+
+		ctx := context.Background()
+		token, err := mongodb.Tokens.GetToken(credentials.Token)
+		if err != nil {
+			http.Error(w, "Could not find token in database", http.StatusNotFound)
+			return
+		}
+
+		newToken := new(oauth2.Token)
+		newToken.Expiry = token.Expiry
+		newToken.RefreshToken = token.Refresh
+		newToken.AccessToken = token.Access
+
+		client := auth.OauthConfig.Client(ctx, newToken)
+
+		calendarService, err := calendar.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			http.Error(w, "Could not start calendar: "+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		calendarList, err := calendarService.CalendarList.List().Do()
+		if err != nil {
+			http.Error(w, "Could not list calendars"+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		var calendarID string
+
+		for _, s := range calendarList.Items {
+			if s.Summary == "SINFO General Calendar" {
+				calendarID = s.Id
+			}
+		}
+
+		deletedEvent, err := calendarService.Events.Get(calendarID, meetingID.Hex()).Do()
+		if err != nil {
+			http.Error(w, "Could not find event in calendar"+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		err = calendarService.Events.Delete(calendarID, meetingID.Hex()).Do()
+		if err != nil {
+			http.Error(w, "Could not delete event from calendar: "+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		log.Printf("Deleted event %s", deletedEvent.Summary)
 	}
 
 	json.NewEncoder(w).Encode(updatedEvent)

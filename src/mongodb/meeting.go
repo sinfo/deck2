@@ -12,6 +12,7 @@ import (
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -220,5 +221,27 @@ func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, 
 	}
 
 	return meetings, nil
+}
+
+// AddCalendarID associates a google calendar event id to a meeting
+func (m *MeetingsType) AddCalendarID(meetingID primitive.ObjectID, googleID string) (*models.Meeting, error){
+	var updatedMeeting models.Meeting
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"calendarID": googleID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": meetingID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(m.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil{
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
 }
 

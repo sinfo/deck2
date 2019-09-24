@@ -20,6 +20,9 @@ var (
 	GoogleOAuthClientID     string
 	GoogleOAuthClientSecret string
 
+	GoogleCalendarClientID     string
+	GoogleCalendarClientSecret string
+
 	JWTSecret string
 
 	// Digitalocean Personal Access Token
@@ -60,6 +63,9 @@ const (
 	keySpacesKey    string = "DO_SPACES_KEY"
 
 	keyAuthRedirectionURL string = "AUTH_REDIRECTION_URL"
+
+	keyGoogleCalendarClientID string =  "GOOGLE_CALENDAR_CLIENT_ID"
+	keyGoogleCalendarClientSecret string = "GOOGLE_CALENDAR_CLIENT_SECRET"
 )
 
 func set(variable *string, key string, mandatory bool) {
@@ -82,6 +88,9 @@ func InitializeConfig() {
 
 	set(&GoogleOAuthClientID, keyGoogleOAuthClientID, true)
 	set(&GoogleOAuthClientSecret, keyGoogleOAuthClientSecret, true)
+
+	set(&GoogleCalendarClientID, keyGoogleCalendarClientID, true)
+	set(&GoogleCalendarClientSecret, keyGoogleCalendarClientSecret, true)
 
 	set(&JWTSecret, keyJWTSecret, true)
 

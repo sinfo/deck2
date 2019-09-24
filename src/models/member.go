@@ -1,6 +1,8 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // Member represents a member of the SINFO organization
 type Member struct {
@@ -45,4 +47,8 @@ type AuthorizationCredentials struct {
 
 	// Role on SINFO
 	Role TeamRole
+
+	//Token Struct
+	Token primitive.ObjectID
+	
 }

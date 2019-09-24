@@ -31,6 +31,7 @@ var (
 	Billings   		*BillingsType
 	CompanyReps		*CompanyRepsType
 	Notifications	*NotificationsType
+	Tokens			*TokensType
 )
 
 var (
@@ -164,6 +165,11 @@ func InitializeDatabase() {
 	Notifications = &NotificationsType{
 		Collection: db.Collection("notifications"),
 		Context:    ctx,
+	}
+
+	Tokens = &TokensType{
+		Collection:	db.Collection("tokens"),
+		Context:	ctx,
 	}
 
 	log.Println("Connected to the database successfully")

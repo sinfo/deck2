@@ -3,7 +3,7 @@ module github.com/sinfo/deck2
 go 1.12
 
 require (
-	cloud.google.com/go v0.44.3
+	cloud.google.com/go v0.46.3
 	github.com/PuerkitoBio/purell v1.1.1
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
@@ -32,6 +32,7 @@ require (
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/h2non/filetype v1.0.10
+	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/hashicorp/hcl v1.0.0
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2
@@ -55,14 +56,18 @@ require (
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
 	github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc
 	go.mongodb.org/mongo-driver v1.0.4
+	go.opencensus.io v0.22.1 // indirect
 	golang.org/x/crypto v0.0.0-20190820162420-60c769a6c586
-	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7
+	golang.org/x/net v0.0.0-20190918130420-a8b05e9114ab
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
+	golang.org/x/sys v0.0.0-20190919044723-0c1ff786ef13
 	golang.org/x/text v0.3.2
-	golang.org/x/tools v0.0.0-20190826060629-95c3470cfb70
-	google.golang.org/appengine v1.6.1
+	golang.org/x/tools v0.0.0-20190911174233-4f2ddba30aff
+	google.golang.org/api v0.10.0
+	google.golang.org/appengine v1.6.2
+	google.golang.org/genproto v0.0.0-20190916214212-f660b8655731 // indirect
+	google.golang.org/grpc v1.23.1
 	gopkg.in/ini.v1 v1.46.0
 	gopkg.in/yaml.v2 v2.2.2
 	gotest.tools v0.0.0-20181223230014-1083505acf35
