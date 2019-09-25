@@ -136,6 +136,35 @@ func TestGetSpeaker(t *testing.T) {
 	assert.Equal(t, speaker.ID, newSpeaker.ID)
 }
 
+func TestGetSpeakerPublic(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	var speaker models.SpeakerPublic
+
+	res, err := executeRequest("GET", "/public/speakers/"+newSpeaker.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&speaker)
+
+	assert.Equal(t, speaker.ID, newSpeaker.ID)
+}
+
 func TestGetSpeakerNotFound(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)

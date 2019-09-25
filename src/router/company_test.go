@@ -137,6 +137,36 @@ func TestGetCompany(t *testing.T) {
 	assert.Equal(t, company.ID, newCompany.ID)
 }
 
+func TestGetCompanyPublic(t *testing.T) {
+
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createCompanyData := mongodb.CreateCompanyData{
+		Name:        &Company.Name,
+		Description: &Company.Description,
+		Site:        &Company.Site,
+	}
+
+	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
+	assert.NilError(t, err)
+
+	var company models.CompanyPublic
+
+	res, err := executeRequest("GET", "/public/companies/"+newCompany.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&company)
+
+	assert.Equal(t, company.ID, newCompany.ID)
+	assert.Equal(t, company.Image, newCompany.Images.Public)
+}
+
 func TestGetCompanyNotFound(t *testing.T) {
 
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
@@ -1671,7 +1701,7 @@ func TestUpdateCompanyParticipation(t *testing.T) {
 	assert.Equal(t, updatedCompany.Participations[0].Confirmed.Sub(confirmed).Seconds() < 10e-3, true) // millisecond precision
 }
 
-func TestAddEmployer(t *testing.T){
+func TestAddEmployer(t *testing.T) {
 	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
 	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
@@ -1694,7 +1724,7 @@ func TestAddEmployer(t *testing.T){
 	}
 
 	ccrd2 := mongodb.CreateCompanyRepData{
-		Name: &name2,
+		Name:    &name2,
 		Contact: &Contact1Data,
 	}
 
@@ -1723,7 +1753,7 @@ func TestAddEmployer(t *testing.T){
 	assert.Equal(t, len(company.Employers), 2)
 }
 
-func TestRemoveEmployer(t *testing.T){
+func TestRemoveEmployer(t *testing.T) {
 	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
 	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
 	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
@@ -1746,7 +1776,7 @@ func TestRemoveEmployer(t *testing.T){
 	}
 
 	ccrd2 := mongodb.CreateCompanyRepData{
-		Name: &name2,
+		Name:    &name2,
 		Contact: &Contact1Data,
 	}
 

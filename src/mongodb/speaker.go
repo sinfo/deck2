@@ -29,38 +29,42 @@ func ResetCurrentPublicSpeakers() {
 	currentPublicSpeakers = nil
 }
 
-func speakerToPublic(speaker models.Speaker, eventID int) (*models.SpeakerPublic, error) {
+func speakerToPublic(speaker models.Speaker, eventID *int) (*models.SpeakerPublic, error) {
 
 	public := models.SpeakerPublic{
+		ID:    speaker.ID,
 		Name:  speaker.Name,
 		Title: speaker.Title,
 		Images: models.SpeakerImagesPublic{
 			Speaker: speaker.Images.Speaker,
 			Company: speaker.Images.Company,
 		},
+		Participations: make([]models.SpeakerParticipationPublic, 0),
 	}
 
 	var participation *models.SpeakerParticipation
 
 	for _, p := range speaker.Participations {
-		if p.Event == eventID {
 
-			if p.Status != models.Announced {
-				return nil, fmt.Errorf("speaker not announced on event %d", eventID)
-			}
-
+		if eventID == nil && p.Status == models.Announced {
 			participation = &p
-			break
+		} else if eventID != nil {
+			if p.Event == *eventID {
+
+				if p.Status != models.Announced {
+					return nil, fmt.Errorf("speaker not announced on event %d", eventID)
+				}
+
+				participation = &p
+			}
 		}
-	}
 
-	if participation == nil {
-		return nil, fmt.Errorf("speaker not announced on event %d", eventID)
-	}
-
-	public.Participation = models.SpeakerParticipationPublic{
-		Event:    eventID,
-		Feedback: participation.Feedback,
+		if participation != nil {
+			public.Participations = append(public.Participations, models.SpeakerParticipationPublic{
+				Event:    participation.Event,
+				Feedback: participation.Feedback,
+			})
+		}
 	}
 
 	return &public, nil
@@ -256,7 +260,7 @@ func (s *SpeakersType) GetPublicSpeakers(options GetSpeakersPublicOptions) ([]*m
 			return nil, err
 		}
 
-		p, err := speakerToPublic(c, eventID)
+		p, err := speakerToPublic(c, &eventID)
 		if err == nil {
 			public = append(public, p)
 		}
@@ -287,6 +291,23 @@ func (s *SpeakersType) GetSpeaker(speakerID primitive.ObjectID) (*models.Speaker
 	}
 
 	return &speaker, nil
+}
+
+// GetSpeakerPublic gets a speaker (public) by its ID.
+func (s *SpeakersType) GetSpeakerPublic(speakerID primitive.ObjectID) (*models.SpeakerPublic, error) {
+	var speaker models.Speaker
+
+	err := s.Collection.FindOne(s.Context, bson.M{"_id": speakerID}).Decode(&speaker)
+	if err != nil {
+		return nil, err
+	}
+
+	public, err := speakerToPublic(speaker, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return public, nil
 }
 
 // UpdateSpeakerData is the data used to update a speaker, using the method UpdateSpeaker.

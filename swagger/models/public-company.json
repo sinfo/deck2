@@ -1,6 +1,9 @@
 {
 	"type": "object",
 	"properties": {
+		"id": {
+			"type": "string"
+		},
 		"name": {
 			"type": "string"
 		},
@@ -10,31 +13,34 @@
 		"site": {
 			"type": "string"
 		},
-		"participation": {
-			"type": "object",
-			"properties": {
-				"event": {
-					"type": "integer"
-				},
-				"partner": {
-					"type": "boolean"
-				},
-				"package": {
-					"type": "object",
-					"properties": {
-						"name": {
-							"type": "string"
-						},
-						"items": {
-							"type": "array",
+		"participations": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"event": {
+						"type": "integer"
+					},
+					"partner": {
+						"type": "boolean"
+					},
+					"package": {
+						"type": "object",
+						"properties": {
+							"name": {
+								"type": "string"
+							},
 							"items": {
-								"type": "object",
-								"properties": {
-									"item": {
-										"type": "string"
-									},
-									"quantity": {
-										"type": "integer"
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"item": {
+											"type": "string"
+										},
+										"quantity": {
+											"type": "integer"
+										}
 									}
 								}
 							}

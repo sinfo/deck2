@@ -148,7 +148,9 @@ func (c *CompaniesType) GetCompanies(options GetCompaniesOptions) ([]*models.Com
 	return companies, nil
 }
 
-func companyToPublic(company models.Company, eventID int) (*models.CompanyPublic, error) {
+// Transforms a models.Company into a models.CompanyPublic. If eventID != nil, returns only the participation for that event, if announced.
+// Otherwise, returns all participations in which they were announced
+func companyToPublic(company models.Company, eventID *int) (*models.CompanyPublic, error) {
 
 	public := models.CompanyPublic{
 		ID:    company.ID,
@@ -160,50 +162,51 @@ func companyToPublic(company models.Company, eventID int) (*models.CompanyPublic
 	var participation *models.CompanyParticipation
 
 	for _, p := range company.Participations {
-		if p.Event == eventID {
-
-			if p.Status != models.Announced {
-				return nil, fmt.Errorf("company not announced on event %d", eventID)
-			}
-
+		if eventID == nil && p.Status == models.Announced {
 			participation = &p
-			break
-		}
-	}
+		} else if eventID != nil {
+			if p.Event == *eventID {
 
-	if participation == nil {
-		return nil, fmt.Errorf("company not announced on event %d", eventID)
-	}
+				if p.Status != models.Announced {
+					return nil, fmt.Errorf("company not announced on event %d", eventID)
+				}
 
-	var participationObj models.CompanyParticipationPublic
-
-	participationObj = models.CompanyParticipationPublic{
-		Event:   eventID,
-		Partner: participation.Partner,
-		Package: models.PackagePublic{},
-	}
-
-	pack, err := Packages.GetPackage(participation.Package)
-	if err == nil {
-		participationObj.Package = models.PackagePublic{
-			Name:  pack.Name,
-			Items: make([]models.PackageItemPublic, 0),
-		}
-
-		// add only public items
-		for _, item := range pack.Items {
-			if item.Public {
-				participationObj.Package.Items = append(
-					participationObj.Package.Items,
-					models.PackageItemPublic{
-						Item:     item.Item,
-						Quantity: item.Quantity,
-					})
+				participation = &p
 			}
 		}
-	}
 
-	public.Participation = append(public.Participation, participationObj)
+		if participation != nil {
+			var participationObj models.CompanyParticipationPublic
+
+			participationObj = models.CompanyParticipationPublic{
+				Event:   p.Event,
+				Partner: participation.Partner,
+				Package: models.PackagePublic{},
+			}
+
+			pack, err := Packages.GetPackage(participation.Package)
+			if err == nil {
+				participationObj.Package = models.PackagePublic{
+					Name:  pack.Name,
+					Items: make([]models.PackageItemPublic, 0),
+				}
+
+				// add only public items
+				for _, item := range pack.Items {
+					if item.Public {
+						participationObj.Package.Items = append(
+							participationObj.Package.Items,
+							models.PackageItemPublic{
+								Item:     item.Item,
+								Quantity: item.Quantity,
+							})
+					}
+				}
+			}
+
+			public.Participations = append(public.Participations, participationObj)
+		}
+	}
 
 	return &public, nil
 }
@@ -275,7 +278,7 @@ func (c *CompaniesType) GetPublicCompanies(options GetCompaniesPublicOptions) ([
 			return nil, err
 		}
 
-		p, err := companyToPublic(c, eventID)
+		p, err := companyToPublic(c, &eventID)
 		if err == nil {
 			public = append(public, p)
 		}
@@ -310,28 +313,19 @@ func (c *CompaniesType) GetCompany(companyID primitive.ObjectID) (*models.Compan
 	return &company, nil
 }
 
-/*func (c *CompaniesType) GetCompanyPublic(companyID primitive.ObjectID) (*models.CompanyPublic, error) {
+func (c *CompaniesType) GetCompanyPublic(companyID primitive.ObjectID) (*models.CompanyPublic, error) {
 	company, err := c.GetCompany(companyID)
 	if err != nil {
 		return nil, err
 	}
 
-	public := &models.CompanyPublic{
-		ID:    company.ID,
-		Name:  company.Name,
-		Image: company.Images.Public,
-		Site:  company.Site,
+	public, err := companyToPublic(*company, nil)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, s := range company.Participations{
-		p := models.CompanyParticipationPublic{
-			Event:	s.Event,
-			Partner:	s.Partner,
-
-		}
-	}
-
-}*/
+	return public, nil
+}
 
 // AddParticipationData is used on AddParticipation. Is the data to be given in order to add a new participation
 // to a company, related to the current event.

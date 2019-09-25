@@ -127,6 +127,19 @@ func getCompaniesPublic(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(publicCompanies)
 }
 
+func getCompanyPublic(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	company, err := mongodb.Companies.GetCompanyPublic(companyID)
+	if err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(company)
+}
+
 func createCompany(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
@@ -753,7 +766,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func addEmployer(w http.ResponseWriter, r *http.Request){
+func addEmployer(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
@@ -774,15 +787,15 @@ func addEmployer(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(company)
 }
 
-func removeEmployer(w http.ResponseWriter, r *http.Request){
+func removeEmployer(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 	repID, _ := primitive.ObjectIDFromHex(params["rep"])
 
 	company, err := mongodb.Companies.RemoveEmployer(companyID, repID)
-	if err != nil{
-		http.Error(w, "Could not remove employer: " + err.Error(), http.StatusNotFound)
+	if err != nil {
+		http.Error(w, "Could not remove employer: "+err.Error(), http.StatusNotFound)
 		return
 	}
 

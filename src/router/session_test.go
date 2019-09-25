@@ -227,6 +227,66 @@ func TestGetSession(t *testing.T) {
 	assert.Equal(t, newSession.ID, session.ID)
 }
 
+func TestGetSessionPublic(t *testing.T) {
+	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)
+	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+
+	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	kind := string(Talk.Kind)
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	cmd := mongodb.CreateMemberData{
+		Name: "Member",
+
+		Istid:   "ist123456",
+		SINFOID: "sinfoID",
+	}
+
+	newMember, err := mongodb.Members.CreateMember(cmd)
+	assert.NilError(t, err)
+
+	updatedSpeaker, err := mongodb.Speakers.AddParticipation(newSpeaker.ID, newMember.ID)
+	assert.NilError(t, err)
+
+	updatedSpeaker, err = mongodb.Speakers.UpdateSpeakerParticipationStatus(updatedSpeaker.ID, models.Announced)
+	assert.NilError(t, err)
+
+	csd := mongodb.CreateSessionData{
+		Begin:       &Talk.Begin,
+		End:         &Talk.End,
+		Title:       &Talk.Title,
+		Description: &Talk.Description,
+		Place:       &Talk.Place,
+		Kind:        &kind,
+		Speaker:     &updatedSpeaker.ID,
+	}
+
+	newSession, err := mongodb.Sessions.CreateSession(csd)
+	assert.NilError(t, err)
+
+	res, err := executeRequest("GET", "/public/sessions/"+newSession.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var session models.SessionPublic
+	json.NewDecoder(res.Body).Decode(&session)
+
+	assert.Equal(t, newSession.ID, session.ID)
+}
+
 func TestGetSessionNotFound(t *testing.T) {
 	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
 	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)

@@ -128,6 +128,21 @@ func getSessions(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(sessions)
 }
 
+func getSessionPublic(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	sessionID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	session, err := mongodb.Sessions.GetSessionPublic(sessionID)
+
+	if err != nil {
+		http.Error(w, "Could not find session", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(session)
+}
+
 func getPublicSessions(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()

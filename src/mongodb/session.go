@@ -29,9 +29,10 @@ func ResetCurrentPublicSessions() {
 	currentPublicSessions = nil
 }
 
-func sessionToPublic(session models.Session, eventID int) (*models.SessionPublic, error) {
+func sessionToPublic(session models.Session, eventID *int) (*models.SessionPublic, error) {
 
 	public := models.SessionPublic{
+		ID:          session.ID,
 		Begin:       session.Begin,
 		End:         session.End,
 		Title:       session.Title,
@@ -223,6 +224,22 @@ func (s *SessionsType) GetSession(sessionID primitive.ObjectID) (*models.Session
 	}
 
 	return &session, nil
+}
+
+// GetSessionPublic gets a session (public) by its ID
+func (s *SessionsType) GetSessionPublic(sessionID primitive.ObjectID) (*models.SessionPublic, error) {
+	var session models.Session
+
+	err := s.Collection.FindOne(s.Context, bson.M{"_id": sessionID}).Decode(&session)
+	if err != nil {
+		return nil, err
+	}
+
+	public, err := sessionToPublic(session, nil)
+	if err != nil {
+		return nil, err
+	}
+	return public, nil
 }
 
 // UpdateSessionData is the structure used in UpdateItem
@@ -515,7 +532,7 @@ func (s *SessionsType) GetPublicSessions(options GetSessionsPublicOptions) ([]*m
 	}
 
 	for _, session := range filtered {
-		p, err := sessionToPublic(*session, event.ID)
+		p, err := sessionToPublic(*session, &event.ID)
 		if err != nil {
 			return nil, err
 		}

@@ -322,6 +322,15 @@
     },
     "/companyReps/{id}": {
       "$ref": "./endpoints/companyReps-id.json"
+    },
+    "/public/companies/{id}":{
+      "$ref":"./endpoints/public-companies-id.json"
+    },
+    "/public/sessions/{id}":{
+      "$ref":"./endpoints/public-sessions-id.json"
+    },
+    "/public/speakers/{id}":{
+      "$ref":"./endpoints/public-speakers-id.json"
     }
   },
   "externalDocs": {
