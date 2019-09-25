@@ -155,6 +155,12 @@
     "/companies/{id}": {
       "$ref": "./endpoints/companies-id.json"
     },
+    "/companies/{id}/subscribe": {
+      "$ref": "./endpoints/companies-id-subscribe.json"
+    },
+    "/companies/{id}/unsubscribe": {
+      "$ref": "./endpoints/companies-id-unsubscribe.json"
+    },
     "/companies/{id}/image/internal": {
       "$ref": "./endpoints/companies-id-image-internal.json"
     },
@@ -184,6 +190,12 @@
     },
     "/speakers/{id}": {
       "$ref": "./endpoints/speakers-id.json"
+    },
+    "/speakers/{id}/subscribe": {
+      "$ref": "./endpoints/speakers-id-subscribe.json"
+    },
+    "/speakers/{id}/unsubscribe": {
+      "$ref": "./endpoints/speakers-id-unsubscribe.json"
     },
     "/speakers/{id}/participation": {
       "$ref": "./endpoints/speakers-id-participation.json"

@@ -305,6 +305,72 @@ func (c *CompaniesType) GetCompany(companyID primitive.ObjectID) (*models.Compan
 	return &company, nil
 }
 
+// Subscribe a user to the current speaker's participation
+func (c *CompaniesType) Subscribe(companyID primitive.ObjectID, memberID primitive.ObjectID) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var filterQuery = bson.M{
+		"_id":                  companyID,
+		"participations.event": currentEvent.ID,
+	}
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"participations.$.subscribers": memberID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error finding updated company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// Unsubscribe a user to the current speaker's participation
+func (c *CompaniesType) Unsubscribe(companyID primitive.ObjectID, memberID primitive.ObjectID) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var filterQuery = bson.M{
+		"_id":                  companyID,
+		"participations.event": currentEvent.ID,
+	}
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.subscribers": memberID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error finding updated company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
 // AddParticipationData is used on AddParticipation. Is the data to be given in order to add a new participation
 // to a company, related to the current event.
 type AddParticipationData struct {
@@ -740,7 +806,7 @@ func (c *CompaniesType) RemoveEmployer(companyID primitive.ObjectID, companyRep 
 
 	var updatedCompany models.Company
 
-	if _, err := CompanyReps.DeleteCompanyRep(companyRep); err != nil{
+	if _, err := CompanyReps.DeleteCompanyRep(companyRep); err != nil {
 		return nil, err
 	}
 

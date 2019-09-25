@@ -753,7 +753,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func addEmployer(w http.ResponseWriter, r *http.Request){
+func addEmployer(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
@@ -774,18 +774,76 @@ func addEmployer(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(company)
 }
 
-func removeEmployer(w http.ResponseWriter, r *http.Request){
+func removeEmployer(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 	repID, _ := primitive.ObjectIDFromHex(params["rep"])
 
 	company, err := mongodb.Companies.RemoveEmployer(companyID, repID)
-	if err != nil{
-		http.Error(w, "Could not remove employer: " + err.Error(), http.StatusNotFound)
+	if err != nil {
+		http.Error(w, "Could not remove employer: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(company)
 
+}
+
+func subscribeToCompany(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.Subscribe(companyID, credentials.ID)
+
+	if err != nil {
+		http.Error(w, "Could not subscribe to company", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+}
+
+func unsubscribeToCompany(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.Unsubscribe(companyID, credentials.ID)
+
+	if err != nil {
+		http.Error(w, "Could not subscribe to company", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
 }
