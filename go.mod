@@ -13,6 +13,7 @@ require (
 	github.com/go-swagger/go-swagger v0.20.1 // indirect
 	github.com/gogo/protobuf v1.3.0 // indirect
 	github.com/google/pprof v0.0.0-20190908185732-236ed259b199 // indirect
+	github.com/gookit/color v1.2.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
 	github.com/gorilla/websocket v1.4.1 // indirect
@@ -40,7 +41,7 @@ require (
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20190919044723-0c1ff786ef13 // indirect
 	golang.org/x/tools v0.0.0-20190920023704-c426260dee6e // indirect
-	google.golang.org/api v0.10.0 // indirect
+	google.golang.org/api v0.10.0
 	google.golang.org/appengine v1.6.2 // indirect
 	google.golang.org/genproto v0.0.0-20190916214212-f660b8655731 // indirect
 	google.golang.org/grpc v1.23.1 // indirect

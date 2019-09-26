@@ -33,6 +33,20 @@ func getSpeaker(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(speaker)
 }
 
+func getSpeakerPublic(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	speaker, err := mongodb.Speakers.GetSpeakerPublic(speakerID)
+
+	if err != nil {
+		http.Error(w, "Unable to get speaker", http.StatusNotFound)
+	}
+
+	json.NewEncoder(w).Encode(speaker)
+}
+
 func getSpeakers(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()

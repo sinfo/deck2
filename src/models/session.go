@@ -82,6 +82,8 @@ type Session struct {
 
 // SessionPublic represents a session to be shown to everyone publicly.
 type SessionPublic struct {
+	ID primitive.ObjectID `json:"id" bson:"_id"`
+
 	Begin       time.Time `json:"begin"`
 	End         time.Time `json:"end"`
 	Title       string    `json:"title"`

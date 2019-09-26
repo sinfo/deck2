@@ -17,21 +17,21 @@ func InitializeOAuth2() error {
 		RedirectURL:  "http://localhost:8080/auth/callback",
 		ClientID:     config.GoogleOAuthClientID,
 		ClientSecret: config.GoogleOAuthClientSecret,
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/calendar.readonly", "https://www.googleapis.com/auth/calendar.events"},
 		Endpoint:     google.Endpoint,
 	}
 
 	return nil
 }
 
-func generateStateOauthCookie() string {
+func generateStateOauthCookie(url string) string {
 
 	b := make([]byte, 16)
 	rand.Read(b)
 
-	state := base64.URLEncoding.EncodeToString(b)
+	rand := base64.URLEncoding.EncodeToString(b)
 
-	return state
+	return url + "|" + rand
 }
 
 type LoginInformation struct {
@@ -39,10 +39,10 @@ type LoginInformation struct {
 	AuthURL string
 }
 
-func Login() LoginInformation {
+func Login(url string) LoginInformation {
 
 	// Create oauthState cookie for CSRF protection
-	var state = generateStateOauthCookie()
+	var state = generateStateOauthCookie(url)
 
 	hostDomainOption := oauth2.SetAuthURLParam("hd", "sinfo.org")
 	authURL := OauthConfig.AuthCodeURL(state, hostDomainOption)

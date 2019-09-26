@@ -98,6 +98,8 @@ type CompanyParticipationPublic struct {
 // CompanyPublic represents a company to be contacted by the team, that will hopefully participate
 // on the event, and to be shown to everyone publicly.
 type CompanyPublic struct {
+	ID primitive.ObjectID `json:"id" bson:"_id"`
+
 	Name string `json:"name"`
 
 	// Company's image (public).
@@ -105,5 +107,5 @@ type CompanyPublic struct {
 
 	Site string `json:"site,omitempty"`
 
-	Participation CompanyParticipationPublic `json:"participation,omitempty"`
+	Participations []CompanyParticipationPublic `json:"participation,omitempty"`
 }

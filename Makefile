@@ -68,3 +68,5 @@ clean:
 
 	@go clean
 	@rm -rf data $(BINDIR)
+
+## To run in production run the binary with --production

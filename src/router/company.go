@@ -127,6 +127,19 @@ func getCompaniesPublic(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(publicCompanies)
 }
 
+func getCompanyPublic(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	company, err := mongodb.Companies.GetCompanyPublic(companyID)
+	if err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(company)
+}
+
 func createCompany(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()

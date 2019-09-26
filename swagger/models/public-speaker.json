@@ -1,6 +1,9 @@
 {
 	"type": "object",
 	"properties": {
+		"id":{
+			"type":"string"
+		},
 		"name": {
 			"type": "string"
 		},
@@ -18,7 +21,7 @@
 				}
 			}
 		},
-		"participation": {
+		"participations": {
 			"type": "array",
 			"items": {
 				"type": "object",

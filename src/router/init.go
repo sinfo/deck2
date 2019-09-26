@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -90,6 +91,7 @@ func healthCheck(w http.ResponseWriter, req *http.Request) {
 
 // Router is the exported router.
 var Router http.Handler
+var UrlRegexCompiler *regexp.Regexp
 
 func InitializeRouter() {
 	r := mux.NewRouter()
@@ -100,9 +102,20 @@ func InitializeRouter() {
 
 	r.Use(headersMiddleware)
 
+	if config.Production {
+		UrlRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(https:\/\/)?(.*sinfo\.org)(\/.*)?)\/?\|.*`)
+	} else {
+		UrlRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(.*))(\/)?\|.*`)
+	}
+
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
-	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
+	var allowedOrigins handlers.CORSOption
+	if config.Production {
+		allowedOrigins = handlers.AllowedOrigins([]string{"*sinfo.org"})
+	} else {
+		allowedOrigins = handlers.AllowedOrigins([]string{"*"})
+	}
+	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 
 	authMember = checkAccessLevelWrapper(models.RoleMember)
 	authTeamLeader = checkAccessLevelWrapper(models.RoleTeamLeader)
@@ -122,6 +135,9 @@ func InitializeRouter() {
 	publicRouter.HandleFunc("/events", getEventsPublic).Methods("GET")
 	publicRouter.HandleFunc("/members", getMembersPublic).Methods("GET")
 	publicRouter.HandleFunc("/sessions", getPublicSessions).Methods("GET")
+	publicRouter.HandleFunc("/companies/{id}", getCompanyPublic).Methods("GET")
+	publicRouter.HandleFunc("/sessions/{id}", getSessionPublic).Methods("GET")
+	publicRouter.HandleFunc("/speakers/{id}", getSpeakerPublic).Methods("GET")
 
 	// auth handlers
 	authRouter := r.PathPrefix("/auth").Subrouter()
