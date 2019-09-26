@@ -68,3 +68,7 @@ bin
 static/swagger.json
 data
 .idea
+
+
+deck2_nginx.conf
+docker-compose.yml
