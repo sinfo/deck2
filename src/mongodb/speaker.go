@@ -373,6 +373,72 @@ func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSp
 	return &updatedSpeaker, nil
 }
 
+// Subscribe a user to the current speaker's participation
+func (s *SpeakersType) Subscribe(speakerID primitive.ObjectID, memberID primitive.ObjectID) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var filterQuery = bson.M{
+		"_id":                  speakerID,
+		"participations.event": currentEvent.ID,
+	}
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"participations.$.subscribers": memberID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error finding updated speaker:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
+
+// Unsubscribe a user to the current speaker's participation
+func (s *SpeakersType) Unsubscribe(speakerID primitive.ObjectID, memberID primitive.ObjectID) (*models.Speaker, error) {
+
+	var updatedSpeaker models.Speaker
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var filterQuery = bson.M{
+		"_id":                  speakerID,
+		"participations.event": currentEvent.ID,
+	}
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.subscribers": memberID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error finding updated speaker:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
+
 // AddParticipation adds a participation on the current event to the speaker with the indicated id.
 func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID primitive.ObjectID) (*models.Speaker, error) {
 

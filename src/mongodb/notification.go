@@ -158,6 +158,7 @@ func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data Creat
 		"member":    memberID,
 		"kind":      data.Kind,
 		"post":      data.Post,
+		"thread":    data.Thread,
 		"speaker":   data.Speaker,
 		"company":   data.Company,
 		"meeting":   data.Meeting,

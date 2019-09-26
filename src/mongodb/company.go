@@ -313,18 +313,86 @@ func (c *CompaniesType) GetCompany(companyID primitive.ObjectID) (*models.Compan
 	return &company, nil
 }
 
-func (c *CompaniesType) GetCompanyPublic(companyID primitive.ObjectID) (*models.CompanyPublic, error) {
-	company, err := c.GetCompany(companyID)
+// Subscribe a user to the current speaker's participation
+func (c *CompaniesType) Subscribe(companyID primitive.ObjectID, memberID primitive.ObjectID) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	currentEvent, err := Events.GetCurrentEvent()
+
 	if err != nil {
 		return nil, err
 	}
 
-	public, err := companyToPublic(*company, nil)
+	var filterQuery = bson.M{
+		"_id":                  companyID,
+		"participations.event": currentEvent.ID,
+	}
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"participations.$.subscribers": memberID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error finding updated company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+func (c *CompaniesType) GetCompanyPublic(id primitive.ObjectID) (*models.CompanyPublic, error) {
+	var company models.Company
+
+	err := c.Collection.FindOne(c.Context, bson.M{"_id": id}).Decode(&company)
+	if err != nil {
+		return nil, err
+	}
+
+	public, err := companyToPublic(company, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	return public, nil
+}
+
+// Unsubscribe a user to the current speaker's participation
+func (c *CompaniesType) Unsubscribe(companyID primitive.ObjectID, memberID primitive.ObjectID) (*models.Company, error) {
+
+	var updatedCompany models.Company
+
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var filterQuery = bson.M{
+		"_id":                  companyID,
+		"participations.event": currentEvent.ID,
+	}
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.subscribers": memberID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error finding updated company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
 }
 
 // AddParticipationData is used on AddParticipation. Is the data to be given in order to add a new participation
