@@ -26,6 +26,7 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 
 	name := urlQuery.Get("name")
 	member := urlQuery.Get("member")
+	memberName := urlQuery.Get("memberName")
 	event := urlQuery.Get("event")
 
 	if len(name) > 0 {
@@ -39,6 +40,10 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		options.Member = &memberID
+	}
+
+	if len(memberName) > 0 {
+		options.MemberName = &memberName
 	}
 
 	if len(event) > 0 {
