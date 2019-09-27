@@ -50,12 +50,17 @@ func sessionToPublic(session models.Session, eventID *int) (*models.SessionPubli
 		}
 	}
 
-	if session.Speaker != nil {
-		if speaker, err := Speakers.GetSpeaker(*session.Speaker); err == nil {
-			if publicSpeaker, err := speakerToPublic(*speaker, eventID); err == nil {
-				public.SpeakerPublic = publicSpeaker
+	if session.Speakers != nil {
+		speakers := make([]models.SpeakerPublic, 0)
+		for _, s := range *session.Speakers {
+			if speaker, err := Speakers.GetSpeaker(s); err == nil {
+				if publicSpeaker, err := speakerToPublic(*speaker, eventID); err == nil {
+					speakers = append(speakers, *publicSpeaker)
+				}
 			}
 		}
+
+		public.SpeakersPublic = &speakers
 	}
 
 	if session.Tickets != nil {
@@ -74,7 +79,7 @@ type CreateSessionData struct {
 	Place       *string                `json:"place"`
 	Kind        *string                `json:"kind"`
 	Company     *primitive.ObjectID    `json:"company"`
-	Speaker     *primitive.ObjectID    `json:"speaker"`
+	Speakers    *[]primitive.ObjectID  `json:"speaker"`
 	Tickets     *models.SessionTickets `json:"tickets"`
 }
 
@@ -120,18 +125,20 @@ func (csd *CreateSessionData) ParseBody(body io.Reader) error {
 		return errors.New("invalid kind")
 	}
 
-	if *sk == models.SessionKindTalk && csd.Speaker == nil {
+	if *sk == models.SessionKindTalk && csd.Speakers == nil {
 		return errors.New("invalid speaker")
 	}
 
 	if *sk == models.SessionKindTalk {
 
-		if csd.Speaker == nil {
+		if csd.Speakers == nil {
 			return errors.New("invalid speaker")
 		}
 
-		if _, err := Speakers.GetSpeaker(*csd.Speaker); err != nil {
-			return errors.New("speaker not found")
+		for _, s := range *csd.Speakers {
+			if _, err := Speakers.GetSpeaker(s); err != nil {
+				return errors.New("speaker not found")
+			}
 		}
 
 	}
@@ -186,8 +193,8 @@ func (s *SessionsType) CreateSession(data CreateSessionData) (*models.Session, e
 		c["company"] = data.Company
 	}
 
-	if data.Speaker != nil {
-		c["speaker"] = data.Speaker
+	if data.Speakers != nil {
+		c["speaker"] = data.Speakers
 	}
 
 	if data.Tickets != nil {
@@ -251,7 +258,7 @@ type UpdateSessionData struct {
 	Place       *string                `json:"place"`
 	Kind        *string                `json:"kind"`
 	Company     *primitive.ObjectID    `json:"company"`
-	Speaker     *primitive.ObjectID    `json:"speaker"`
+	Speakers    *[]primitive.ObjectID  `json:"speaker"`
 	VideoURL    *string                `json:"videoURL"`
 	Tickets     *models.SessionTickets `json:"tickets"`
 }
@@ -292,11 +299,7 @@ func (usd *UpdateSessionData) ParseBody(body io.Reader) error {
 		return errors.New("invalid kind")
 	}
 
-	if *sk == models.SessionKindTalk && usd.Speaker == nil {
-		return errors.New("invalid speaker")
-	}
-
-	if *sk == models.SessionKindWorkshop && usd.Company == nil {
+	if *sk == models.SessionKindTalk && usd.Speakers == nil {
 		return errors.New("invalid company")
 	}
 
@@ -344,8 +347,8 @@ func (s *SessionsType) UpdateSession(sessionID primitive.ObjectID, data UpdateSe
 		c["company"] = data.Company
 	}
 
-	if data.Speaker != nil {
-		c["speaker"] = data.Speaker
+	if data.Speakers != nil {
+		c["speaker"] = data.Speakers
 	}
 
 	if data.VideoURL != nil {
@@ -454,7 +457,14 @@ func (s *SessionsType) GetSessions(options GetSessionsOptions) ([]*models.Sessio
 		}
 
 		if options.Speaker != nil {
-			keep = *session.Speaker == *options.Speaker
+			found := false
+			for _, s := range *session.Speakers {
+				if s == *options.Speaker {
+					found = true
+				}
+			}
+
+			keep = found
 		}
 
 		if keep {
