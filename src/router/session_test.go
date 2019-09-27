@@ -36,14 +36,14 @@ var (
 )
 
 type createSessionPayload struct {
-	Begin       time.Time          `json:"begin"`
-	End         time.Time          `json:"end"`
-	Title       string             `json:"title"`
-	Description string             `json:"description"`
-	Place       string             `json:"place"`
-	Kind        string             `json:"kind"`
-	Company     primitive.ObjectID `json:"company"`
-	Speaker     primitive.ObjectID `json:"speaker"`
+	Begin       time.Time            `json:"begin"`
+	End         time.Time            `json:"end"`
+	Title       string               `json:"title"`
+	Description string               `json:"description"`
+	Place       string               `json:"place"`
+	Kind        string               `json:"kind"`
+	Company     primitive.ObjectID   `json:"company"`
+	Speakers    []primitive.ObjectID `json:"speaker"`
 }
 
 func TestCreateSession(t *testing.T) {
@@ -91,7 +91,7 @@ func TestCreateSession(t *testing.T) {
 		Description: Talk.Description,
 		Place:       Talk.Place,
 		Kind:        kind,
-		Speaker:     updatedSpeaker.ID,
+		Speakers:    append(make([]primitive.ObjectID, 0), updatedSpeaker.ID),
 	}
 
 	b, errMarshal := json.Marshal(csd)
@@ -116,7 +116,8 @@ func TestCreateSession(t *testing.T) {
 	assert.Equal(t, newSession.Description, Talk.Description)
 	assert.Equal(t, newSession.Place, Talk.Place)
 	assert.Equal(t, newSession.Kind, Talk.Kind)
-	assert.Equal(t, *newSession.Speaker, newSpeaker.ID)
+	assert.Equal(t, len(*newSession.Speakers), 1)
+	assert.Equal(t, (*newSession.Speakers)[0], updatedSpeaker.ID)
 }
 
 func TestCreateSessionBadPayload(t *testing.T) {
@@ -204,6 +205,8 @@ func TestGetSession(t *testing.T) {
 	updatedSpeaker, err = mongodb.Speakers.UpdateSpeakerParticipationStatus(updatedSpeaker.ID, models.Announced)
 	assert.NilError(t, err)
 
+	speakers := append(make([]primitive.ObjectID, 0), updatedSpeaker.ID)
+
 	csd := mongodb.CreateSessionData{
 		Begin:       &Talk.Begin,
 		End:         &Talk.End,
@@ -211,7 +214,7 @@ func TestGetSession(t *testing.T) {
 		Description: &Talk.Description,
 		Place:       &Talk.Place,
 		Kind:        &kind,
-		Speaker:     &updatedSpeaker.ID,
+		Speakers:    &speakers,
 	}
 
 	newSession, err := mongodb.Sessions.CreateSession(csd)
@@ -264,6 +267,8 @@ func TestGetSessionPublic(t *testing.T) {
 	updatedSpeaker, err = mongodb.Speakers.UpdateSpeakerParticipationStatus(updatedSpeaker.ID, models.Announced)
 	assert.NilError(t, err)
 
+	speakers := append(make([]primitive.ObjectID, 0), updatedSpeaker.ID)
+
 	csd := mongodb.CreateSessionData{
 		Begin:       &Talk.Begin,
 		End:         &Talk.End,
@@ -271,7 +276,7 @@ func TestGetSessionPublic(t *testing.T) {
 		Description: &Talk.Description,
 		Place:       &Talk.Place,
 		Kind:        &kind,
-		Speaker:     &updatedSpeaker.ID,
+		Speakers:    &speakers,
 	}
 
 	newSession, err := mongodb.Sessions.CreateSession(csd)
@@ -340,6 +345,8 @@ func TestGetSessions(t *testing.T) {
 	updatedSpeaker, err = mongodb.Speakers.UpdateSpeakerParticipationStatus(updatedSpeaker.ID, models.Announced)
 	assert.NilError(t, err)
 
+	speakers := append(make([]primitive.ObjectID, 0), updatedSpeaker.ID)
+
 	csd := mongodb.CreateSessionData{
 		Begin:       &Talk.Begin,
 		End:         &Talk.End,
@@ -347,7 +354,7 @@ func TestGetSessions(t *testing.T) {
 		Description: &Talk.Description,
 		Place:       &Talk.Place,
 		Kind:        &kind,
-		Speaker:     &updatedSpeaker.ID,
+		Speakers:    &speakers,
 	}
 
 	newSession, err := mongodb.Sessions.CreateSession(csd)
@@ -426,6 +433,8 @@ func TestUpdateSession(t *testing.T) {
 	updatedCompany, err = mongodb.Companies.UpdateCompanyParticipationStatus(updatedCompany.ID, models.Announced)
 	assert.NilError(t, err)
 
+	speakers := append(make([]primitive.ObjectID, 0), updatedSpeaker.ID)
+
 	csd := mongodb.CreateSessionData{
 		Begin:       &Talk.Begin,
 		End:         &Talk.End,
@@ -433,7 +442,7 @@ func TestUpdateSession(t *testing.T) {
 		Description: &Talk.Description,
 		Place:       &Talk.Place,
 		Kind:        &kind,
-		Speaker:     &updatedSpeaker.ID,
+		Speakers:    &speakers,
 	}
 
 	newSession, err := mongodb.Sessions.CreateSession(csd)

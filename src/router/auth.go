@@ -57,8 +57,6 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(matches[1])
-
 	var code = r.FormValue("code")
 
 	data, err := google.GetUserData(code)
@@ -95,5 +93,5 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/login/%s", matches[1], *token), http.StatusPermanentRedirect)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", matches[1], *token), http.StatusPermanentRedirect)
 }

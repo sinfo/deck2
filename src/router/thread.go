@@ -92,12 +92,33 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedThread)
 
-	// notify
-	mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+	//notify
+
+	cnd := mongodb.CreateNotificationData{
 		Kind:   models.NotificationKindCreated,
 		Thread: &updatedThread.ID,
 		Post:   &newPost.ID,
-	})
+	}
+
+	speaker, err := mongodb.Speakers.FindThread(threadID)
+	if err != nil {
+		log.Println("error finding thread: " + err.Error())
+		return
+	}
+
+	if speaker == nil {
+		company, err := mongodb.Companies.FindThread(threadID)
+		if err != nil {
+			log.Println("error finding thread: " + err.Error())
+			return
+		}
+		if company != nil {
+			cnd.Company = &company.ID
+		}
+	} else {
+		cnd.Speaker = &speaker.ID
+	}
+	mongodb.Notifications.Notify(credentials.ID, cnd)
 }
 
 func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {

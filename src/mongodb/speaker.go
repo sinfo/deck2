@@ -857,3 +857,25 @@ func (s *SpeakersType) RemoveCommunication(speakerID primitive.ObjectID, threadI
 
 	return &updatedSpeaker, nil
 }
+
+func (s *SpeakersType) FindThread(threadID primitive.ObjectID) (*models.Speaker, error) {
+	filter := bson.M{
+		"participations.communications": threadID,
+	}
+
+	cur, err := s.Collection.Find(s.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var speaker models.Speaker
+
+	if cur.Next(s.Context) {
+		if err := cur.Decode(&speaker); err != nil {
+			return nil, err
+		}
+		return &speaker, nil
+	}
+
+	return nil, nil
+}

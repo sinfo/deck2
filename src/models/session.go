@@ -72,7 +72,7 @@ type Session struct {
 	Company *primitive.ObjectID `json:"company" bson:"company"`
 
 	// Speaker is an _id of Speaker (see models.Speaker).
-	Speaker *primitive.ObjectID `json:"speaker" bson:"speaker"`
+	Speakers *[]primitive.ObjectID `json:"speaker" bson:"speaker"`
 
 	// Video of the session, if applicable. Typically a youtube URL.
 	VideoURL string `json:"videoURL" bson:"videoURL"`
@@ -98,7 +98,7 @@ type SessionPublic struct {
 	CompanyPublic *CompanyPublic `json:"company,omitempty"`
 
 	// Speaker is an _id of Speaker (see models.Speaker).
-	SpeakerPublic *SpeakerPublic `json:"speaker,omitempty"`
+	SpeakersPublic *[]SpeakerPublic `json:"speaker,omitempty"`
 
 	// Video of the session, if applicable. Typically a youtube URL.
 	VideoURL string `json:"videoURL,omitempty"`

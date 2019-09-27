@@ -1005,3 +1005,25 @@ func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID pr
 
 	return &updatedCompany, nil
 }
+
+func (c *CompaniesType) FindThread(threadID primitive.ObjectID) (*models.Company, error) {
+	filter := bson.M{
+		"participations.communications": threadID,
+	}
+
+	cur, err := c.Collection.Find(c.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var company models.Company
+
+	if cur.Next(c.Context) {
+		if err := cur.Decode(&company); err != nil {
+			return nil, err
+		}
+		return &company, nil
+	}
+
+	return nil, nil
+}
