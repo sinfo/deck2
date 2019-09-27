@@ -26,6 +26,7 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 
 	name := urlQuery.Get("name")
 	member := urlQuery.Get("member")
+	memberName := urlQuery.Get("memberName")
 	event := urlQuery.Get("event")
 
 	if len(name) > 0 {
@@ -41,6 +42,10 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 		options.Member = &memberID
 	}
 
+	if len(memberName) > 0 {
+		options.MemberName = &memberName
+	}
+
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
 		if err != nil {
@@ -54,6 +59,7 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		return
 	}
 
 	json.NewEncoder(w).Encode(teams)

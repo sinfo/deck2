@@ -13,9 +13,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "query",
@@ -27,6 +27,12 @@
                 "in": "query",
                 "name": "member",
                 "description": "Contains this member",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "memberName",
+                "description": "Contains all the members whose name match the given on this query",
                 "type": "string"
             },
             {
@@ -69,9 +75,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",

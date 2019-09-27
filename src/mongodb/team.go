@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
-	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -30,9 +30,10 @@ type CreateTeamData struct {
 
 // GetTeamsOptions contains filters for the GetTeams method
 type GetTeamsOptions struct {
-	Name   *string
-	Event  *int
-	Member *primitive.ObjectID
+	Name       *string
+	Event      *int
+	Member     *primitive.ObjectID
+	MemberName *string
 }
 
 // UpdateTeamMemberData contains data needed to update or create a team member
@@ -131,40 +132,67 @@ func (t *TeamsType) GetTeam(teamID primitive.ObjectID) (*models.Team, error) {
 // Event id defaults to currentEvent.
 func (t *TeamsType) GetTeams(options GetTeamsOptions) ([]*models.Team, error) {
 	var teams = make([]*models.Team, 0)
+	var membersID = make([]primitive.ObjectID, 0)
 	var event *models.Event
 	var err error
+	var filter = bson.M{}
 
 	if options.Event != nil {
 		event, err = Events.GetEvent(*options.Event)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		event, err = Events.GetCurrentEvent()
-		if err != nil {
-			return nil, err
+
+		filter["_id"] = bson.M{"$in": event.Teams}
+	}
+
+	if options.Name != nil {
+		filter["name"] = bson.M{
+			"$regex": fmt.Sprintf(".*%s.*", *options.Name),
 		}
 	}
 
-	for _, s := range event.Teams {
-		team, err := t.GetTeam(s)
+	if options.MemberName != nil {
+		members, err := Members.GetMembers(GetMemberOptions{Name: options.MemberName})
 		if err != nil {
 			return nil, err
 		}
-		if options.Name == nil {
-			if options.Member == nil {
-				teams = append(teams, team)
-			} else if team.HasMember(*options.Member) {
-				teams = append(teams, team)
-			}
-		} else if strings.Contains(strings.ToLower(team.Name), strings.ToLower(*options.Name)) {
-			if options.Member == nil {
-				teams = append(teams, team)
-			} else if team.HasMember(*options.Member) {
-				teams = append(teams, team)
-			}
+
+		for _, member := range members {
+			fmt.Println(member.Name)
+			membersID = append(membersID, member.ID)
 		}
 	}
+
+	if options.Member != nil && options.MemberName == nil {
+		filter["members.member"] = options.Member
+	} else if options.Member != nil && options.MemberName != nil {
+		filter["$or"] = []bson.M{
+			bson.M{"members.member": options.Member},
+			bson.M{"members.member": bson.M{"$in": membersID}},
+		}
+	} else if options.Member == nil && options.MemberName != nil {
+		filter["members.member"] = bson.M{
+			"$in": membersID,
+		}
+	}
+
+	curr, err := t.Collection.Find(t.Context, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for curr.Next(t.Context) {
+		var team models.Team
+
+		if err := curr.Decode(&team); err != nil {
+			return nil, err
+		}
+
+		teams = append(teams, &team)
+	}
+
+	curr.Close(t.Context)
 
 	return teams, nil
 }
