@@ -59,6 +59,7 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		return
 	}
 
 	json.NewEncoder(w).Encode(teams)

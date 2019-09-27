@@ -131,27 +131,19 @@ func (t *TeamsType) GetTeam(teamID primitive.ObjectID) (*models.Team, error) {
 // Options can be Event id, member id or team name
 // Event id defaults to currentEvent.
 func (t *TeamsType) GetTeams(options GetTeamsOptions) ([]*models.Team, error) {
-	var teams []*models.Team
+	var teams = make([]*models.Team, 0)
 	var membersID = make([]primitive.ObjectID, 0)
 	var event *models.Event
 	var err error
+	var filter = bson.M{}
 
 	if options.Event != nil {
 		event, err = Events.GetEvent(*options.Event)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		event, err = Events.GetCurrentEvent()
-		if err != nil {
-			return nil, err
-		}
-	}
 
-	var filter = bson.M{
-		"_id": bson.M{
-			"$in": event.Teams,
-		},
+		filter["_id"] = bson.M{"$in": event.Teams}
 	}
 
 	if options.Name != nil {
@@ -167,49 +159,23 @@ func (t *TeamsType) GetTeams(options GetTeamsOptions) ([]*models.Team, error) {
 		}
 
 		for _, member := range members {
+			fmt.Println(member.Name)
 			membersID = append(membersID, member.ID)
 		}
 	}
 
 	if options.Member != nil && options.MemberName == nil {
 		filter["members.member"] = options.Member
+	} else if options.Member != nil && options.MemberName != nil {
+		filter["$or"] = []bson.M{
+			bson.M{"members.member": options.Member},
+			bson.M{"members.member": bson.M{"$in": membersID}},
+		}
 	} else if options.Member == nil && options.MemberName != nil {
 		filter["members.member"] = bson.M{
-			"$or": []bson.M{
-				bson.M{"members.member": options.Member},
-				bson.M{"members.member": bson.M{"$all": membersID}},
-			},
-		}
-	} else if options.Member != nil && options.MemberName != nil {
-		filter["members.member"] = bson.M{
-			"members.member": bson.M{"$all": membersID},
+			"$in": membersID,
 		}
 	}
-
-	fmt.Println(options)
-	fmt.Println(filter)
-
-	/*
-		for _, s := range event.Teams {
-			team, err := t.GetTeam(s)
-			if err != nil {
-				return nil, err
-			}
-			if options.Name == nil {
-				if options.Member == nil {
-					teams = append(teams, team)
-				} else if team.HasMember(*options.Member) {
-					teams = append(teams, team)
-				}
-			} else if strings.Contains(strings.ToLower(team.Name), strings.ToLower(*options.Name)) {
-				if options.Member == nil {
-					teams = append(teams, team)
-				} else if team.HasMember(*options.Member) {
-					teams = append(teams, team)
-				}
-			}
-		}
-	*/
 
 	curr, err := t.Collection.Find(t.Context, filter)
 	if err != nil {
