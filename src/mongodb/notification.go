@@ -38,7 +38,7 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 			if participation.Event == event.ID {
 				for _, subscriber := range participation.Subscribers {
 					if subscriber == author {
-						//continue
+						continue
 					}
 
 					n.NotifyMember(subscriber, data)
@@ -58,7 +58,7 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 			if participation.Event == event.ID {
 				for _, subscriber := range participation.Subscribers {
 					if subscriber == author {
-						//continue
+						continue
 					}
 
 					n.NotifyMember(subscriber, data)
