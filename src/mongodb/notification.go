@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -37,7 +38,9 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 		for _, participation := range company.Participations {
 			if participation.Event == event.ID {
 				for _, subscriber := range participation.Subscribers {
-					if subscriber == author {
+
+					// notify authors only if not running on production mode
+					if config.Production && subscriber == author {
 						continue
 					}
 
@@ -57,7 +60,9 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 		for _, participation := range speaker.Participations {
 			if participation.Event == event.ID {
 				for _, subscriber := range participation.Subscribers {
-					if subscriber == author {
+
+					// notify authors only if not running on production mode
+					if config.Production && subscriber == author {
 						continue
 					}
 
@@ -78,7 +83,9 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 		coordinators := team.GetMembersByRole(models.RoleCoordinator)
 
 		for _, coordinator := range coordinators {
-			if coordinator.Member == author {
+
+			// notify authors only if not running on production mode
+			if config.Production && coordinator.Member == author {
 				continue
 			}
 
