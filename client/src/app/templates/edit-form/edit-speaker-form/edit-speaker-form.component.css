@@ -109,3 +109,59 @@ textarea {
 .add-participation {
     margin-top: 5%;
 }
+
+.speaker-event-option-status {
+    padding: 3%;
+    border-radius: 0.3rem;
+    display: inline-block;
+    font-size: small;
+    width: 17vw;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.suggested {
+    background-color: var(--suggested);
+    color: white;
+}
+
+.selected {
+    background-color: var(--selected);
+    color: white;
+}
+
+.on-hold {
+    background-color: var(--on-hold);
+    color: white;
+}
+
+.contacted {
+    background-color: var(--contacted);
+    color: white;
+}
+
+.in-conversations {
+    background-color: var(--in-conversations);
+    color: white;
+}
+
+.accepted {
+    background-color: var(--accepted);
+    color: white;
+}
+
+.rejected {
+    background-color: var(--rejected);
+    color: white;
+}
+
+.given-up {
+    background-color: var(--given-up);
+    color: white;
+}
+
+.announced {
+    background-color: var(--announced);
+    color: white;
+} 

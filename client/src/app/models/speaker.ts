@@ -142,3 +142,16 @@ export class EditSpeakerImageForm {
         this.file = file;
     }
 }
+
+export class EditSpeakerParticipationStatusForm {
+
+    form: FormGroup;
+
+    constructor() {
+        this.form = new FormGroup({});
+    }
+
+    valid() {
+        return this.form.valid;
+    }
+}

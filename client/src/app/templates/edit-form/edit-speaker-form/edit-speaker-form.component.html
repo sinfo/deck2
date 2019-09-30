@@ -131,6 +131,50 @@
 
         <ngb-tab title="Participation">
             <ng-template ngbTabContent>
+                <div class="operations-status" *ngIf="validSteps.steps.length > 0">
+                    <label>Status:</label>
+                    <form class="form" [formGroup]="forms.status.form">
+                        <app-dropdown [labelTemplate]="statusLabelTemplate" [optionsTemplate]="statusOptionsTemplate" [options]="validSteps">
+                        </app-dropdown>
+                        <ng-template #statusLabelTemplate>
+                            <div *ngIf="!nextStatus; else showCurrentStatus" class="speaker-event-option-status">Change status</div>
+                            <ng-template #showCurrentStatus>
+                                <div *ngIf="nextStatus" class="speaker-event-option-status" [ngClass]="{
+                                    'suggested': nextStatus == 'SUGGESTED',
+                                    'selected': nextStatus == 'SELECTED',
+                                    'on-hold': nextStatus == 'ON_HOLD',
+                                    'contacted': nextStatus == 'CONTACTED',
+                                    'in-conversations': nextStatus == 'IN_CONVERSATIONS',
+                                    'accepted': nextStatus == 'ACCEPTED',
+                                    'rejected': nextStatus == 'REJECTED',
+                                    'given-up': nextStatus == 'GIVEN_UP',
+                                    'announced': nextStatus == 'ANNOUNCED'
+                                }">{{ nextStatus | parseStatus }}</div>
+                            </ng-template>
+                        </ng-template>
+                        <ng-template #statusOptionsTemplate>
+                            <button *ngFor="let step of validSteps.steps" (click)="changeStatus(step.step, step.next)" ngbDropdownItem>
+                                <div class="speaker-event-option-status" [ngClass]="{
+                                    'suggested': step.next == 'SUGGESTED',
+                                    'selected': step.next == 'SELECTED',
+                                    'on-hold': step.next == 'ON_HOLD',
+                                    'contacted': step.next == 'CONTACTED',
+                                    'in-conversations': step.next == 'IN_CONVERSATIONS',
+                                    'accepted': step.next == 'ACCEPTED',
+                                    'rejected': step.next == 'REJECTED',
+                                    'given-up': step.next == 'GIVEN_UP',
+                                    'announced': step.next == 'ANNOUNCED'
+                                }">{{ step.next | parseStatus }}</div>
+                            </button>
+                        </ng-template>
+                    </form>
+                    <div class="buttons">
+                        <button class="save" type="submit" [disabled]="!forms.status.valid()"
+                            (click)="editParticipationStatus()">
+                            Save
+                        </button>
+                    </div>
+                </div>
                 <div class="add-participation" *ngIf="participation === null">
                     <button class="save" (click)="addParticipation()">
                         Add participation
