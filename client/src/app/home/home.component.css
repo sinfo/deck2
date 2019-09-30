@@ -1,0 +1,26 @@
+.home-wrapper {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.home-menu {
+    width: 15%;
+    height: 100%;
+    padding: 4%;
+    padding-right: 2%;
+    padding-left: 2%;
+    min-width: 150px;
+}
+
+.home-content {
+    width: 85%;
+    height: 100%;
+    padding: 4%;
+    padding-right: 2%;
+    padding-left: 0%;
+    padding-bottom: 0;
+}

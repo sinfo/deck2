@@ -1,0 +1,17 @@
+<div #wrapper class="wrapper">
+    <img [defaultImage]="default" [lazyLoad]="url" [errorImage]="default" (onLoad)="loaded()" [ngClass]="{
+        'suggested': _status == 'SUGGESTED',
+        'selected': _status == 'SELECTED',
+        'on-hold': _status == 'ON_HOLD',
+        'contacted': _status == 'CONTACTED',
+        'in-conversations': _status == 'IN_CONVERSATIONS',
+        'accepted': _status == 'ACCEPTED',
+        'rejected': _status == 'REJECTED',
+        'given-up': _status == 'GIVEN_UP',
+        'announced': _status == 'ANNOUNCED',
+        'status': _status
+    }">
+    <div class="label" *ngIf="_status">
+        <span><b>{{ _status | parseStatus }}</b></span>
+    </div>
+</div>

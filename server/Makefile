@@ -53,10 +53,10 @@ run: build-src build-swagger
 .PHONY: docker-test
 docker-test:
 	@echo "\n[*] building image\n"
-	@docker-compose -f docker-compose.test.yml -p deck2-testing build
+	@docker-compose -f ../docker-compose.test.yml -p deck2-testing build
 
 	@echo "\n[*] running image\n"
-	@docker-compose -f docker-compose.test.yml -p deck2-testing up --abort-on-container-exit
+	@docker-compose -f ../docker-compose.test.yml -p deck2-testing up --abort-on-container-exit
 
 .PHONY : help
 help : Makefile

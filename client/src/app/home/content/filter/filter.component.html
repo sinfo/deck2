@@ -1,0 +1,72 @@
+<div class="filter-wrapper">
+
+    <div class="filter-content" *ngIf="filters">
+
+        <div class="filters">
+            <div class="filter-title borders">
+                Filters
+            </div>
+
+            <div *ngIf="filters.speaker" class="form-group borders">
+                <select class="form-control" (change)="changeEvent($event.target.value)" name="event" required>
+                    <option value="">Events</option>
+                    <option *ngFor="let event of eventsOptions()" [value]="event">{{event}}
+                    </option>
+                </select>
+            </div>
+
+            <div *ngIf="filters.speaker" class="form-group borders">
+                <select class="form-control" (change)="changeStatus($event.target.value)" name="status" required>
+                    <option value="">Status</option>
+                    <option *ngFor="let status of statusOptions()" [value]="status">{{status}}
+                    </option>
+                </select>
+            </div>
+
+            <div *ngIf="filters.member" class="form-group borders">
+                <input type="text" class="form-control" (input)="changeMember($event.target.value)"
+                    placeholder="Member">
+            </div>
+
+            <div *ngIf="filters.speaker" class="form-group borders">
+                <input type="text" class="form-control" (input)="changeSpeaker($event.target.value)"
+                    placeholder="Speaker">
+            </div>
+
+            <div *ngIf="filters.team" class="form-group borders">
+                <select class="form-control" (change)="changeTeamEvent($event.target.value)" name="event" required>
+                    <option value="">Events</option>
+                    <option *ngFor="let event of eventsOptions()" [value]="event">{{event}}
+                    </option>
+                </select>
+            </div>
+
+            <div *ngIf="filters.team" class="form-group borders">
+                <input type="text" class="form-control" (input)="changeTeamName($event.target.value)"
+                    placeholder="Team">
+            </div>
+
+            <div *ngIf="filters.team" class="form-group borders">
+                <input type="text" class="form-control" (input)="changeTeamMember($event.target.value)"
+                    placeholder="Member">
+            </div>
+
+            <div *ngIf="filters.team" class="form-group borders">
+                <input type="text" class="form-control" (input)="changeTeamMember($event.target.value)"
+                    placeholder="Member">
+            </div>
+        </div>
+
+        <div class="operations">
+            <div class="filter-title borders">
+                Operations
+            </div>
+
+            <div class="createSpeaker form-group borders" *ngIf="filters.isPrimaryFilterSpeaker()">
+                <button class="form-control" (click)="addSpeaker()">Add speaker</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>

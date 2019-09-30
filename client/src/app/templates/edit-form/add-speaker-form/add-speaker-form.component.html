@@ -1,0 +1,19 @@
+<div class="header">
+    <h4 class="name">Create new speaker</h4>
+</div>
+
+<div *ngIf="form">
+    <form class="form" [formGroup]="form.form">
+
+        <label>Name:<input type="text" formControlName="name"></label>
+        <label>Title:<input type="text" formControlName="title"></label>
+        <label>Bio:<textarea type="text" formControlName="bio"></textarea></label>
+
+    </form>
+
+    <div class="buttons">
+        <button class="save" type="submit" [disabled]="!form.valid()" (click)="submitNewSpeaker()">
+            Save
+        </button>
+    </div>
+</div>

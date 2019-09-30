@@ -1,0 +1,16 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+
+    width: 100vw;
+    height: 100vh;
+
+    background-color: var(--background-default);
+}
+
+.wrapper img {
+    height: 50%;
+    width: auto;
+}

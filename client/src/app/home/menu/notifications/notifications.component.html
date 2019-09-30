@@ -1,0 +1,30 @@
+<div class="notifications" *ngIf="populatedNotifications">
+    <ng-container *ngFor="let notification of populatedNotifications; let i=index">
+        <div class="notification" (click)="visitNotification(notification)">
+
+            <div class="icon">
+                <ng-container *ngIf="notification.speaker">
+                    <app-photo setBy="width" [url]="notification.speaker.imgs.internal"></app-photo>
+                </ng-container>
+            </div>
+
+            <div class="details">
+
+                <div class="header">
+                    {{ notification.date | date:'dd MMMM yyyy HH:mm' : '+0100' }}
+                </div>
+
+                <div class="message">
+                    {{notification.message}}
+                </div>
+
+                <div class="preview" *ngIf="notification.preview">
+                    {{notification.preview}}
+                </div>
+            </div>
+
+        </div>
+
+        <hr class="separator" *ngIf="i < populatedNotifications.length - 1" />
+    </ng-container>
+</div>

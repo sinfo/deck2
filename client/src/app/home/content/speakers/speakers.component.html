@@ -1,0 +1,62 @@
+<div class="speakers-wrapper">
+    <div class="filter-wrapper">
+        <app-filter [filters]="filters"></app-filter>
+    </div>
+
+    <div class="speakers-list-wrapper">
+        <div class="speakers-list" *ngIf="speakersByMember && speakersByMember.length > 0">
+
+            <div class="member" *ngFor="let item of speakersByMember">
+
+                <div class="member-wrapper" *ngIf="item.member; else speakerWithoutCurrentParticipation">
+                    <div class="member-label" *ngIf="item.member">
+                        <div class="member-img">
+                            <app-photo setBy="height" [url]="item.member.img"></app-photo>
+                        </div>
+
+                        <div class="member-text">
+                            <span>{{item.member.name | uppercase}}</span>
+                        </div>
+                    </div>
+                    <div class="speakers">
+                        <div class="speaker" *ngFor="let subitem of item.speakers"
+                            [routerLink]="['/speakers/'+subitem.speaker.id]">
+
+                            <div class="speaker-image">
+                                <app-photo setBy="height" [url]="subitem.speaker.imgs.internal"
+                                    [status]="subitem.participation ? subitem.participation.status : ''">
+                                </app-photo>
+                            </div>
+
+                            <div class="speaker-text">
+                                <span class="speaker-name">{{subitem.speaker.name}}</span>
+                                <span class="speaker-title">{{subitem.speaker.title}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <ng-template class="member-wrapper" #speakerWithoutCurrentParticipation>
+                    <div class="speakers noParticipation">
+                        <div class="speaker" *ngFor="let subitem of item.speakers"
+                            [routerLink]="['/speakers/'+subitem.speaker.id]">
+
+                            <div class="speaker-image">
+                                <app-photo setBy="height" [url]="subitem.speaker.imgs.internal"
+                                    [status]="subitem.participation ? subitem.participation.status : ''">
+                                </app-photo>
+                            </div>
+
+                            <div class="speaker-text">
+                                <span class="speaker-name">{{subitem.speaker.name}}</span>
+                                <span class="speaker-title">{{subitem.speaker.title}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+
+            </div>
+
+        </div>
+    </div>
+</div>

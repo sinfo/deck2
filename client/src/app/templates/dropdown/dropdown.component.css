@@ -1,0 +1,36 @@
+.label {
+    background-color: var(--background-default) !important;
+    color: var(--font-primary) !important;
+    border: 1px solid var(--font-primary) !important;
+}
+
+:host /deep/ .label:active {
+    background-color: var(--background-default);
+    color: var(--font-primary);
+    border: 1px solid var(--font-primary);
+}
+
+:host /deep/ .label:focus {
+    box-shadow: none !important;
+}
+
+.dropdown-menu {
+    padding: 0;
+}
+
+:host /deep/ .dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8%;
+    background-color: var(--background-default);
+    color: var(--font-primary);
+    font-size: small;
+    width: 17vw;
+}
+
+:host /deep/ .dropdown-item:hover {
+    background-color: var(--background-default) !important;
+    color: var(--font-primary) !important;
+    border: 1px solid var(--font-primary) !important;
+}

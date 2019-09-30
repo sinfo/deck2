@@ -1,0 +1,72 @@
+<div class="menu-wrapper">
+    <div *ngIf="me" class="menu-wrapper-photo">
+        <div class="menu-photo">
+            <app-photo setBy="width" [url]="me.img"></app-photo>
+
+            <div class="menu-notifications-icon" *ngIf="notifications">
+                <img class="clickable" *ngIf="!darkMode && notifications.length"
+                    src="assets/icons/day/with_notifications.png" [ngbPopover]="notificationsTemplate"
+                    [popoverTitle]="notificationsTitleTemplate" popoverTitle="Notifications" placement="bottom-left"
+                    [autoClose]="'outside'" />
+                <img class="clickable" *ngIf="!darkMode && !notifications.length"
+                    src="assets/icons/day/no_notification.png" [ngbPopover]="notificationsTemplate"
+                    [popoverTitle]="notificationsTitleTemplate" popoverTitle="Notifications" placement="bottom-left"
+                    [autoClose]="'outside'" />
+                <img class="clickable" *ngIf="darkMode && notifications.length"
+                    src="assets/icons/night/with_notifications.png" [ngbPopover]="notificationsTemplate"
+                    [popoverTitle]="notificationsTitleTemplate" placement="bottom-left" [autoClose]="'outside'" />
+                <img class="clickable" *ngIf="darkMode && !notifications.length"
+                    src="assets/icons/night/no_notification.png" [ngbPopover]="notificationsTemplate"
+                    [popoverTitle]="notificationsTitleTemplate" placement="bottom-left" [autoClose]="'outside'" />
+
+                <ng-template #notificationsTitleTemplate>
+                    <div class="title">
+                        <h5><b>Notifications</b></h5>
+                    </div>
+                </ng-template>
+
+                <ng-template #notificationsTemplate>
+                    <app-notifications [notifications]="notifications"></app-notifications>
+                </ng-template>
+
+            </div>
+
+        </div>
+
+    </div>
+    <div class="menu-routes">
+        <a [routerLink]="['/speakers']">Speakers</a>
+        <a [routerLink]="['/companies']">Companies</a>
+        <a [routerLink]="['/packages']">Packages</a>
+        <a [routerLink]="['/teams']">Teams</a>
+        <a [routerLink]="['/members']">Members</a>
+        <a [routerLink]="['/sessions']">Sessions</a>
+    </div>
+    <div class="menu-options-wrapper">
+
+        <div class="menu-options">
+            <div class="logout" (click)="logout()">
+                <span class="icon color-3">
+                    <img [src]="darkMode ? 'assets/icons/night/logout.png' : 'assets/icons/day/logout.png'">
+                </span>
+                <span class="label">Logout</span>
+            </div>
+
+            <div class="toggleTheme">
+                <svg (click)='changemode()' width="62" height="36">
+                    <rect id="background_mode" data-name="Rounded Rectangle 1" width="88.9%" height="88.8%" rx="26%"
+                        ry="44%" fill="#0B2545" />
+                    <rect id="line_mode" data-name="Rounded Rectangle 2" x="5%" y="45%" class="cls-1" width="78%"
+                        height="2%" rx="0.65%" ry="1.11%" fill="#8DA9C4" />
+
+                    <image #nightIcon [ngClass]="{ show: darkMode }" href="assets/icons/night.png" x="3%" y="4%"
+                        height="80%" visibility="hidden" />
+                    <image #dayIcon [ngClass]="{ show: !darkMode }" href="assets/icons/day.png" x="3%" y="4%"
+                        height="80%" visibility="visible" />
+                </svg>
+
+            </div>
+        </div>
+
+    </div>
+</div>

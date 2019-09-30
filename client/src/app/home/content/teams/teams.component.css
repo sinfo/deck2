@@ -1,0 +1,102 @@
+.teams-wrapper {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+}
+
+.filter-wrapper {
+    height: 100%;
+    width: 15%;
+    margin-right: 2%;
+}
+
+.teams-list-wrapper {
+    width: 83%;
+    overflow: auto;
+}
+
+.teams-list {
+    display: inline-flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.team {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 250px;
+    margin-left: 0.5%;
+    overflow-y: hidden;
+    overflow-x: hidden;
+}
+
+.team-wrapper {
+    height: 100%;
+    width: 100%;
+    box-sizing: content-box;
+    overflow-y: auto;
+}
+
+.team-label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    height: 5vh;
+}
+
+.team-img {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    
+    width: 20%;
+    height: 100%;
+}
+
+.team-text {
+    margin-left: 5%;
+    font-size: small;
+}
+
+.member {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    align-items: center;
+    width: 100%;
+    min-width: 230px;
+    margin-top: 10%;
+    height: 10vh;
+}
+
+.member:hover {
+    cursor: pointer;
+}
+
+.member-image {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+
+    height: 100%;
+}
+
+.member-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+    margin-left: 10%;
+}
+
+.member-name {
+    font-size: small;
+}
+
+.member-title {
+    font-size: x-small;
+}

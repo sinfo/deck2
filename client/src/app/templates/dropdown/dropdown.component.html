@@ -1,0 +1,17 @@
+<div *ngIf="options">
+    <div class="row">
+        <div class="col">
+            <div ngbDropdown class="d-inline-block">
+
+                <button class="btn btn-outline-primary label" id="dropdownBasic1" ngbDropdownToggle>
+                    <ng-container #_labelTemplate></ng-container>
+                </button>
+
+                <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+                    <ng-container #_optionsTemplate></ng-container>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

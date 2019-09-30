@@ -26,7 +26,6 @@ COPY . .
 
 RUN swagger flatten ./swagger/swagger.json --compact -o /go/bin/swagger.json
 
-
 ############################
 # STEP 3 build a small image
 ############################

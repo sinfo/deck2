@@ -2,7 +2,7 @@ version: '3.3'
 services:
     sut:
         build: 
-            context: '.'
+            context: './server'
             dockerfile: './Dockerfile_test'
         links:
             - mongodb:db
