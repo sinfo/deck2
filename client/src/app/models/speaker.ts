@@ -1,4 +1,5 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { SpeakersService } from '../deck-api/speakers.service';
 
 export class Speaker {
     id: String;
@@ -34,11 +35,13 @@ export class SpeakerParticipationRoom {
     notes: String;
 }
 
+export class SpeakerParticipationValidStatusStep {
+    next: String;
+    step: Number;
+}
+
 export class SpeakerParticipationValidStatusSteps {
-    steps: {
-        next: String;
-        step: Number;
-    }[];
+    steps: SpeakerParticipationValidStatusStep[];
 }
 
 export function GetParticipation(speaker: Speaker, event: Number): SpeakerParticipation {
@@ -146,12 +149,37 @@ export class EditSpeakerImageForm {
 export class EditSpeakerParticipationStatusForm {
 
     form: FormGroup;
+    options: SpeakerParticipationValidStatusSteps;
+    speaker: Speaker;
+    label: String;
 
-    constructor() {
-        this.form = new FormGroup({});
+    constructor(private speakersService: SpeakersService, speaker: Speaker) {
+        this.form = new FormGroup({
+            step: new FormControl('', [Validators.required, Validators.minLength(1)]),
+        });
+
+        this.speaker = speaker;
+        this.updateOptions();
+    }
+
+    updateOptions() {
+        this.speakersService.getValidStatusSteps(`${this.speaker.id}`)
+            .subscribe((steps: SpeakerParticipationValidStatusSteps) => {
+                this.options = steps;
+            }
+            );
+    }
+
+    set(step: SpeakerParticipationValidStatusStep) {
+        this.form.controls['step'].setValue(step.step);
+        this.label = step.next;
     }
 
     valid() {
         return this.form.valid;
+    }
+
+    value() {
+        return this.form.get('step').value;
     }
 }

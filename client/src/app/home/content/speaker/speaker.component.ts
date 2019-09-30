@@ -219,7 +219,7 @@ export class SpeakerComponent implements OnInit {
                     this.contact = contact;
                 });
                 break;
-            case AppliedForm.stepStatus:
+            case AppliedForm.EditSpeakerParticipationStepStatus:
                 this.speakersService.getSpeaker(speakerID).subscribe((speaker: Speaker) => {
                     this.speaker = speaker;
                     this.getEventsOptions(speaker);

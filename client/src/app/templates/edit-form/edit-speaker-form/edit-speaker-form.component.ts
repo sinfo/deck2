@@ -11,7 +11,7 @@ import {
     Speaker,
     SpeakerParticipation,
     EditSpeakerParticipationStatusForm,
-    SpeakerParticipationValidStatusSteps
+    SpeakerParticipationValidStatusStep
 } from '../../../models/speaker';
 import { Event } from '../../../models/event';
 import { EditContactForm, Contact } from '../../../models/contact';
@@ -29,13 +29,11 @@ import { ContactsService } from '../../../deck-api/contacts.service';
 })
 export class EditSpeakerFormComponent {
 
+    event: Event;
     role: Role;
     speaker: Speaker;
     participation: SpeakerParticipation;
-    step: Number;
-    nextStatus: String;
-    event: Event;
-    validSteps: SpeakerParticipationValidStatusSteps;
+
     forms: {
         speaker: EditSpeakerForm,
         image: {
@@ -67,7 +65,7 @@ export class EditSpeakerFormComponent {
             },
             participation: new EditSpeakerParticipationForm(),
             contact: new EditContactForm(this.formBuilder),
-            status: new EditSpeakerParticipationStatusForm()
+            status: new EditSpeakerParticipationStatusForm(this.speakersService, this.speaker)
         };
 
         this.meService.getMyRole().subscribe((role: Role) => {
@@ -90,7 +88,7 @@ export class EditSpeakerFormComponent {
             }
         });
 
-        this.updateValidSteps();
+        this.forms.status.updateOptions();
     }
 
     coordinatorAccessLevel() {
@@ -190,29 +188,20 @@ export class EditSpeakerFormComponent {
         });
     }
 
-    changeStatus(step: Number, next: String) {
-        this.step = step;
-        this.nextStatus = next;
-    }
-
-    updateValidSteps() {
-        this.speakersService.getValidStatusSteps(`${this.speaker.id}`)
-            .subscribe((steps: SpeakerParticipationValidStatusSteps) => {
-                this.validSteps = steps;
-            }
-            );
+    changeStatus(step: SpeakerParticipationValidStatusStep) {
+        this.forms.status.set(step);
     }
 
     editParticipationStatus() {
-        if(!this.forms.status.valid()) {
+        if (!this.forms.status.valid()) {
             return;
         }
 
-        this.speakersService.stepStatus(`${this.speaker.id}`, +this.step).subscribe((speaker: Speaker) => {
+        this.speakersService.stepStatus(`${this.speaker.id}`, +this.forms.status.value()).subscribe((speaker: Speaker) => {
             this.speaker = speaker;
             this.participation = GetParticipation(this.speaker, this.event.id);
-            this.updateValidSteps();
-            this.editFormCommunicatorService.setAppliedForm(AppliedForm.stepStatus);
+            this.forms.status.updateOptions();
+            this.editFormCommunicatorService.setAppliedForm(AppliedForm.EditSpeakerParticipationStepStatus);
         });
 
         this.close();

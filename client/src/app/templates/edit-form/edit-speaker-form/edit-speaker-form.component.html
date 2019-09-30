@@ -131,29 +131,29 @@
 
         <ngb-tab title="Participation">
             <ng-template ngbTabContent>
-                <div class="operations-status" *ngIf="validSteps.steps.length > 0">
+                <div class="operations-status" *ngIf="forms.status.options.steps.length > 0">
                     <label>Status:</label>
                     <form class="form" [formGroup]="forms.status.form">
-                        <app-dropdown [labelTemplate]="statusLabelTemplate" [optionsTemplate]="statusOptionsTemplate" [options]="validSteps">
+                        <app-dropdown [labelTemplate]="statusLabelTemplate" [optionsTemplate]="statusOptionsTemplate" [options]="forms.status.options">
                         </app-dropdown>
                         <ng-template #statusLabelTemplate>
-                            <div *ngIf="!nextStatus; else showCurrentStatus" class="speaker-event-option-status">Change status</div>
+                            <div *ngIf="!forms.status.label; else showCurrentStatus" class="speaker-event-option-status">Change status</div>
                             <ng-template #showCurrentStatus>
-                                <div *ngIf="nextStatus" class="speaker-event-option-status" [ngClass]="{
-                                    'suggested': nextStatus == 'SUGGESTED',
-                                    'selected': nextStatus == 'SELECTED',
-                                    'on-hold': nextStatus == 'ON_HOLD',
-                                    'contacted': nextStatus == 'CONTACTED',
-                                    'in-conversations': nextStatus == 'IN_CONVERSATIONS',
-                                    'accepted': nextStatus == 'ACCEPTED',
-                                    'rejected': nextStatus == 'REJECTED',
-                                    'given-up': nextStatus == 'GIVEN_UP',
-                                    'announced': nextStatus == 'ANNOUNCED'
-                                }">{{ nextStatus | parseStatus }}</div>
+                                <div class="speaker-event-option-status" [ngClass]="{
+                                    'suggested': forms.status.label == 'SUGGESTED',
+                                    'selected': forms.status.label == 'SELECTED',
+                                    'on-hold': forms.status.label == 'ON_HOLD',
+                                    'contacted': forms.status.label == 'CONTACTED',
+                                    'in-conversations': forms.status.label == 'IN_CONVERSATIONS',
+                                    'accepted': forms.status.label == 'ACCEPTED',
+                                    'rejected': forms.status.label == 'REJECTED',
+                                    'given-up': forms.status.label == 'GIVEN_UP',
+                                    'announced': forms.status.label == 'ANNOUNCED'
+                                }">{{ forms.status.label | parseStatus }}</div>
                             </ng-template>
                         </ng-template>
                         <ng-template #statusOptionsTemplate>
-                            <button *ngFor="let step of validSteps.steps" (click)="changeStatus(step.step, step.next)" ngbDropdownItem>
+                            <button *ngFor="let step of forms.status.options.steps" (click)="changeStatus(step)" ngbDropdownItem>
                                 <div class="speaker-event-option-status" [ngClass]="{
                                     'suggested': step.next == 'SUGGESTED',
                                     'selected': step.next == 'SELECTED',

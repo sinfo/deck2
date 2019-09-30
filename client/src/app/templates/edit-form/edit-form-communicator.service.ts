@@ -10,7 +10,7 @@ export enum AppliedForm {
     EditSpeakerCompanyImage,
     EditSpeakerParticipation,
     EditSpeakerContact,
-    stepStatus,
+    EditSpeakerParticipationStepStatus,
     AddSpeaker,
 }
 

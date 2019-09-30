@@ -220,7 +220,7 @@ export class FilterSpeaker extends Filter {
                     }
                 }
 
-                callback(this);
+                if (callback) { callback(this); }
             });
         });
     }
@@ -256,7 +256,7 @@ export class FilterTeam extends Filter {
                     }
                 }
 
-                callback(this);
+                if (callback) { callback(this); }
             });
         });
     }
@@ -291,7 +291,7 @@ export class FilterMember extends Filter {
                     }
                 }
 
-                callback(this);
+                if (callback) { callback(this); }
             });
         });
     }
@@ -321,7 +321,7 @@ export class Filters {
     }
 
     initSecondaryFilters(types: FilterType[], callback?: FiltersInitCallback) {
-        if (!types.length) {
+        if (!types.length && callback) {
             return callback();
         }
 
@@ -334,23 +334,23 @@ export class Filters {
             case FilterType.Member:
                 return new FilterMember(this.eventsService, (instance: FilterMember) => {
                     this.member = instance;
-                    callback();
+                    if (callback) { callback(); }
                 });
 
             case FilterType.Speaker:
                 return new FilterSpeaker(this.eventsService, (instance: FilterSpeaker) => {
                     this.speaker = instance;
-                    callback();
+                    if (callback) { callback(); }
                 });
 
             case FilterType.Team:
                 return new FilterTeam(this.eventsService, (instance: FilterTeam) => {
                     this.team = instance;
-                    callback();
+                    if (callback) { callback(); }
                 });
 
             default:
-                callback();
+                if (callback) { callback(); }
         }
     }
 
