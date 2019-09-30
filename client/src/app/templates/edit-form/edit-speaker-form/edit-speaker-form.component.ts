@@ -9,7 +9,9 @@ import {
     EditSpeakerParticipationForm,
     GetParticipation,
     Speaker,
-    SpeakerParticipation
+    SpeakerParticipation,
+    EditSpeakerParticipationStatusForm,
+    SpeakerParticipationValidStatusSteps
 } from '../../../models/speaker';
 import { Event } from '../../../models/event';
 import { EditContactForm, Contact } from '../../../models/contact';
@@ -30,6 +32,10 @@ export class EditSpeakerFormComponent {
     role: Role;
     speaker: Speaker;
     participation: SpeakerParticipation;
+    step: Number;
+    nextStatus: String;
+    event: Event;
+    validSteps: SpeakerParticipationValidStatusSteps;
     forms: {
         speaker: EditSpeakerForm,
         image: {
@@ -38,7 +44,8 @@ export class EditSpeakerFormComponent {
             company: EditSpeakerImageForm
         },
         participation: EditSpeakerParticipationForm,
-        contact: EditContactForm
+        contact: EditContactForm,
+        status: EditSpeakerParticipationStatusForm
     };
 
     constructor(
@@ -60,6 +67,7 @@ export class EditSpeakerFormComponent {
             },
             participation: new EditSpeakerParticipationForm(),
             contact: new EditContactForm(this.formBuilder),
+            status: new EditSpeakerParticipationStatusForm()
         };
 
         this.meService.getMyRole().subscribe((role: Role) => {
@@ -76,10 +84,13 @@ export class EditSpeakerFormComponent {
     private updateParticipation() {
         this.eventsService.getCurrentEvent().subscribe((event: Event) => {
             this.participation = GetParticipation(this.speaker, event.id);
+            this.event = event;
             if (this.participation != null) {
                 this.forms.participation = new EditSpeakerParticipationForm(this.participation);
             }
         });
+
+        this.updateValidSteps();
     }
 
     coordinatorAccessLevel() {
@@ -177,6 +188,34 @@ export class EditSpeakerFormComponent {
             this.forms.contact.setContact(contact);
             this.editFormCommunicatorService.setAppliedForm(AppliedForm.EditSpeakerContact);
         });
+    }
+
+    changeStatus(step: Number, next: String) {
+        this.step = step;
+        this.nextStatus = next;
+    }
+
+    updateValidSteps() {
+        this.speakersService.getValidStatusSteps(`${this.speaker.id}`)
+            .subscribe((steps: SpeakerParticipationValidStatusSteps) => {
+                this.validSteps = steps;
+            }
+            );
+    }
+
+    editParticipationStatus() {
+        if(!this.forms.status.valid()) {
+            return;
+        }
+
+        this.speakersService.stepStatus(`${this.speaker.id}`, +this.step).subscribe((speaker: Speaker) => {
+            this.speaker = speaker;
+            this.participation = GetParticipation(this.speaker, this.event.id);
+            this.updateValidSteps();
+            this.editFormCommunicatorService.setAppliedForm(AppliedForm.stepStatus);
+        });
+
+        this.close();
     }
 
     close() {

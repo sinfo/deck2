@@ -113,7 +113,6 @@ export class SpeakerComponent implements OnInit {
 
                 this.updateParticipation(participation);
                 this.updateThreads(participation);
-                this.updateValidSteps();
             });
         });
     }
@@ -220,25 +219,15 @@ export class SpeakerComponent implements OnInit {
                     this.contact = contact;
                 });
                 break;
+            case AppliedForm.stepStatus:
+                this.speakersService.getSpeaker(speakerID).subscribe((speaker: Speaker) => {
+                    this.speaker = speaker;
+                    this.getEventsOptions(speaker);
+                    const participation = GetParticipation(this.speaker, this.event.id);
+                    this.updateParticipation(participation);
+                });
+            break;
         }
-    }
-
-    updateValidSteps() {
-        this.speakersService.getValidStatusSteps(`${this.speaker.id}`)
-            .subscribe((steps: SpeakerParticipationValidStatusSteps) => {
-                this.validSteps = steps;
-            }
-            );
-    }
-
-    changeStatus(step: Number) {
-        this.speakersService.stepStatus(`${this.speaker.id}`, +step).subscribe((speaker: Speaker) => {
-            this.speaker = speaker;
-            this.getEventsOptions(speaker);
-            const participation = GetParticipation(this.speaker, this.event.id);
-            this.updateParticipation(participation);
-            this.updateValidSteps();
-        });
     }
 
     toggleComment() {
