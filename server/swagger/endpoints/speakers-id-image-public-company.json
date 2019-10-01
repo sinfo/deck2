@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the speaker",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "formData",

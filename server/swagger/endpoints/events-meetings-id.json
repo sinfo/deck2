@@ -1,7 +1,8 @@
 {
     "delete": {
         "tags": [
-            "events", "meetings"
+            "events",
+            "meetings"
         ],
         "summary": "Removes and deletes a meeting from the current event (must have coordinator credentials)",
         "operationId": "removeEventMeeting",
@@ -13,9 +14,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",

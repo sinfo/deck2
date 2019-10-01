@@ -1,7 +1,8 @@
 {
     "post": {
         "tags": [
-            "events", "sessions"
+            "events",
+            "sessions"
         ],
         "summary": "Creates and adds a new session to the current event (must have coordinator credentials)",
         "operationId": "addEventSession",
@@ -13,9 +14,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -25,7 +26,11 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "begin", "end", "title", "description", "kind"
+                        "begin",
+                        "end",
+                        "title",
+                        "description",
+                        "kind"
                     ],
                     "properties": {
                         "begin": {
@@ -47,7 +52,11 @@
                         },
                         "kind": {
                             "type": "string",
-                            "enum": ["TALK", "PRESENTATION", "WORKSHOP"]
+                            "enum": [
+                                "TALK",
+                                "PRESENTATION",
+                                "WORKSHOP"
+                            ]
                         },
                         "company": {
                             "type": "string"

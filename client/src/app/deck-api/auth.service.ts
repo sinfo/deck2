@@ -8,42 +8,42 @@ import { Credentials } from '../models/credentials';
 import { StorageService } from '../storage.service';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class AuthService {
 
-  private deck2: String = environment.deck2;
+    private deck2: String = environment.deck2;
 
-  constructor(
-    private storage: StorageService,
-    private router: Router
-  ) { }
+    constructor(
+        private storage: StorageService,
+        private router: Router
+    ) { }
 
-  saveCredentials(credentials: Credentials) {
-    this.storage.setItem('credentials', credentials);
-  }
+    saveCredentials(credentials: Credentials) {
+        this.storage.setItem('credentials', credentials);
+    }
 
-  login() {
-    window.location.href = `${this.deck2}/auth/login`;
-  }
+    login() {
+        window.location.href = `${this.deck2}/auth/login`;
+    }
 
-  logout() {
-    this.storage.removeItem('credentials');
-    this.router.navigate(['/login']);
-  }
+    logout() {
+        this.storage.removeItem('credentials');
+        this.router.navigate(['/login']);
+    }
 
-  isLoggedIn(): boolean {
-    return this.storage.getItem('credentials') !== null;
-  }
+    isLoggedIn(): boolean {
+        return this.storage.getItem('credentials') !== null;
+    }
 
-  getHeaders(): HttpHeaders {
-    const credentials = this.storage.getItem('credentials') as Credentials;
+    getHeaders(): HttpHeaders {
+        const credentials = this.storage.getItem('credentials') as Credentials;
 
-    return credentials
-      ? new HttpHeaders({
-        'Authorization': `${credentials.access_token}`,
-        'Content-Type': 'application/json'
-      }) : null;
-  }
+        return credentials
+            ? new HttpHeaders({
+                'Authorization': `${credentials.access_token}`,
+                'Content-Type': 'application/json'
+            }) : null;
+    }
 
 }

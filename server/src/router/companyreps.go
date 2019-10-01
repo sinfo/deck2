@@ -9,19 +9,19 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func getCompanyReps(w http.ResponseWriter, r *http.Request){
+func getCompanyReps(w http.ResponseWriter, r *http.Request) {
 	urlQuery := r.URL.Query()
 
 	name := urlQuery.Get("name")
 
 	gcro := mongodb.GetCompanyRepOptions{}
 
-	if len(name) > 0{
+	if len(name) > 0 {
 		gcro.Name = &name
 	}
 
 	reps, err := mongodb.CompanyReps.GetCompanyReps(gcro)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
@@ -29,7 +29,7 @@ func getCompanyReps(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(reps)
 }
 
-func getCompanyRep(w http.ResponseWriter, r *http.Request){
+func getCompanyRep(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	repID, _ := primitive.ObjectIDFromHex(params["id"])
 
@@ -42,7 +42,7 @@ func getCompanyRep(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(rep)
 }
 
-func updateCompanyRep(w http.ResponseWriter, r *http.Request){
+func updateCompanyRep(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	repID, _ := primitive.ObjectIDFromHex(params["id"])
 

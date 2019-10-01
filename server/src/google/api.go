@@ -1,28 +1,29 @@
 package google
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"github.com/sinfo/deck2/src/auth"
 	"github.com/sinfo/deck2/src/mongodb"
-	"google.golang.org/api/calendar/v3"
 	"golang.org/x/oauth2"
+	"google.golang.org/api/calendar/v3"
 )
 
 const oauthGoogleURLAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
 type UserData struct {
-	ID       string `json:"id"`
-	Email    string `json:"email"`
-	Verified bool   `json:"verified_email"`
-	Picture  string `json:"picture"`
-	HD       string `json:"hd"`
-	Token	primitive.ObjectID `json:"token"`
+	ID       string             `json:"id"`
+	Email    string             `json:"email"`
+	Verified bool               `json:"verified_email"`
+	Picture  string             `json:"picture"`
+	HD       string             `json:"hd"`
+	Token    primitive.ObjectID `json:"token"`
 }
 
 // GetUserData uses code to get token and user info from Google.
@@ -39,7 +40,7 @@ func GetUserData(code string) (*UserData, error) {
 	}
 
 	newToken, err := mongodb.Tokens.CreateToken(token)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -64,7 +65,7 @@ func GetUserData(code string) (*UserData, error) {
 
 // GetCalendarService returns a service able to make request to the google calendar api"
 // TODO: Integerate calendarService in GetUserData!!!!!
-func GetCalendarService(code string) (*calendar.Service, error){
+func GetCalendarService(code string) (*calendar.Service, error) {
 	token, err := auth.OauthConfig.Exchange(context.Background(), code)
 	if err != nil {
 		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())

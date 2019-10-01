@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/models"
+	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gorilla/mux"
@@ -19,11 +19,11 @@ func getContacts(w http.ResponseWriter, r *http.Request) {
 	phone := urlQuery.Get("phone")
 	mail := urlQuery.Get("mail")
 
-	if len(phone) >0 {
+	if len(phone) > 0 {
 		options.Phone = &phone
 	}
 
-	if len(mail) >0 {
+	if len(mail) > 0 {
 		options.Mail = &mail
 	}
 
@@ -40,8 +40,8 @@ func updateContact(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	params :=mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	var ccd = &mongodb.CreateContactData{}
 
@@ -50,7 +50,7 @@ func updateContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newContact, err := mongodb.Contacts.UpdateContact(id,*ccd)
+	newContact, err := mongodb.Contacts.UpdateContact(id, *ccd)
 
 	if err != nil {
 		http.Error(w, "Could not update contact", http.StatusNotFound)
@@ -61,9 +61,9 @@ func updateContact(w http.ResponseWriter, r *http.Request) {
 }
 
 func getContact(w http.ResponseWriter, r *http.Request) {
-	params :=mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
-	
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
 	contact, err := mongodb.Contacts.GetContact(id)
 
 	if err != nil {
@@ -74,73 +74,73 @@ func getContact(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(contact)
 }
 
-func addPhone(w http.ResponseWriter, r *http.Request){
+func addPhone(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
 	var phone models.ContactPhone
 
 	params := mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
+	id, _ := primitive.ObjectIDFromHex(params["id"])
 
-	if err := json.NewDecoder(r.Body).Decode(&phone); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&phone); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
-	if len(phone.Phone) == 0{
+	if len(phone.Phone) == 0 {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
 
 	contact, err := mongodb.Contacts.AddPhone(id, phone)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Could not find contact", http.StatusNotFound)
 		return
 	}
 	json.NewEncoder(w).Encode(contact)
 }
 
-func addMail(w http.ResponseWriter, r *http.Request){
+func addMail(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
 	var mail models.ContactMail
 
 	params := mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
+	id, _ := primitive.ObjectIDFromHex(params["id"])
 
-	if err := json.NewDecoder(r.Body).Decode(&mail); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&mail); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
-	if len(mail.Mail) == 0{
+	if len(mail.Mail) == 0 {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
 
 	contact, err := mongodb.Contacts.AddMail(id, mail)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "Could not find contact", http.StatusNotFound)
 		return
 	}
 	json.NewEncoder(w).Encode(contact)
 }
 
-func updatePhone(w http.ResponseWriter, r *http.Request){
-	
+func updatePhone(w http.ResponseWriter, r *http.Request) {
+
 	defer r.Body.Close()
-	
+
 	var data mongodb.UpdatePhonesData
 
 	params := mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
+	id, _ := primitive.ObjectIDFromHex(params["id"])
 
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
-	for _, s := range data.Phones{
-		if len(s.Phone) == 0{
+	for _, s := range data.Phones {
+		if len(s.Phone) == 0 {
 			http.Error(w, "Could not parse body", http.StatusBadRequest)
 			return
 		}
@@ -155,21 +155,21 @@ func updatePhone(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(contact)
 }
 
-func updateMail(w http.ResponseWriter, r *http.Request){
-	
+func updateMail(w http.ResponseWriter, r *http.Request) {
+
 	defer r.Body.Close()
-	
+
 	var data mongodb.UpdateMailsData
 
 	params := mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
+	id, _ := primitive.ObjectIDFromHex(params["id"])
 
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
-	for _, s := range data.Mails{
-		if len(s.Mail) == 0{
+	for _, s := range data.Mails {
+		if len(s.Mail) == 0 {
 			http.Error(w, "Could not parse body", http.StatusBadRequest)
 			return
 		}
@@ -184,16 +184,16 @@ func updateMail(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(contact)
 }
 
-func updateSocials(w http.ResponseWriter, r *http.Request){
-	
+func updateSocials(w http.ResponseWriter, r *http.Request) {
+
 	defer r.Body.Close()
-	
+
 	var data models.ContactSocials
 
 	params := mux.Vars(r)
-	id,_ := primitive.ObjectIDFromHex(params["id"])
+	id, _ := primitive.ObjectIDFromHex(params["id"])
 
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil{
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}

@@ -1,23 +1,23 @@
 {
-	"type": "object",
-	"properties": {
-		"id": {
-			"type": "string"
-		},
-		"name": {
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
             "type": "string"
         },
         "img": {
-			"type": "string"
-		},
-		"istid": {
             "type": "string"
         },
-		"sinfoid": {
+        "istid": {
+            "type": "string"
+        },
+        "sinfoid": {
             "type": "string"
         },
         "contact": {
-			"type": "string"
+            "type": "string"
         }
-	}
+    }
 }

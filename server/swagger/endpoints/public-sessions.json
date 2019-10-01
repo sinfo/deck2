@@ -1,7 +1,8 @@
 {
     "get": {
         "tags": [
-            "sessions", "public"
+            "sessions",
+            "public"
         ],
         "summary": "Get all sessions, based on query",
         "operationId": "getSessionsPublic",
@@ -24,7 +25,11 @@
                 "name": "kind",
                 "description": "Kind of session",
                 "type": "string",
-                "enum": ["TALK", "PRESENTATION", "WORKSHOP"]
+                "enum": [
+                    "TALK",
+                    "PRESENTATION",
+                    "WORKSHOP"
+                ]
             }
         ],
         "responses": {

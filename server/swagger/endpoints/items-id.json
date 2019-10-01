@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the item",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {
@@ -54,9 +54,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -66,7 +66,11 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "type", "description", "price", "vat"
+                        "name",
+                        "type",
+                        "description",
+                        "price",
+                        "vat"
                     ],
                     "properties": {
                         "name": {
@@ -92,7 +96,7 @@
                 "name": "id",
                 "description": "ID of the item",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {

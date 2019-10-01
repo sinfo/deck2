@@ -13,9 +13,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "query",
@@ -62,9 +62,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -74,16 +74,17 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "istid"
+                        "name",
+                        "istid"
                     ],
                     "properties": {
                         "name": {
                             "type": "string"
                         },
-                        "istid":{
+                        "istid": {
                             "type": "string"
                         },
-                        "sinfoid":{
+                        "sinfoid": {
                             "type": "string"
                         }
                     }

@@ -24,7 +24,7 @@
                 "name": "id",
                 "description": "ID of the company",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",

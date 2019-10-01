@@ -15,23 +15,23 @@ var ctx context.Context
 var db *mongo.Database
 
 var (
-	Events			*EventsType
-	Companies  		*CompaniesType
-	Speakers   		*SpeakersType
-	Teams      		*TeamsType
-	Members    		*MembersType
-	Items      		*ItemsType
-	Packages   		*PackagesType
-	Meetings   		*MeetingsType
-	Contacts   		*ContactsType
-	Threads    		*ThreadsType
-	Posts      		*PostsType
-	FlightInfo 		*FlightInfoType
-	Sessions   		*SessionsType
-	Billings   		*BillingsType
-	CompanyReps		*CompanyRepsType
-	Notifications	*NotificationsType
-	Tokens			*TokensType
+	Events        *EventsType
+	Companies     *CompaniesType
+	Speakers      *SpeakersType
+	Teams         *TeamsType
+	Members       *MembersType
+	Items         *ItemsType
+	Packages      *PackagesType
+	Meetings      *MeetingsType
+	Contacts      *ContactsType
+	Threads       *ThreadsType
+	Posts         *PostsType
+	FlightInfo    *FlightInfoType
+	Sessions      *SessionsType
+	Billings      *BillingsType
+	CompanyReps   *CompanyRepsType
+	Notifications *NotificationsType
+	Tokens        *TokensType
 )
 
 var (
@@ -154,22 +154,22 @@ func InitializeDatabase() {
 
 	Billings = &BillingsType{
 		Collection: db.Collection("billings"),
-		Context:	ctx,
+		Context:    ctx,
 	}
 
 	CompanyReps = &CompanyRepsType{
-		Collection:	db.Collection("companyReps"),
-		Context:	ctx,
+		Collection: db.Collection("companyReps"),
+		Context:    ctx,
 	}
-	
+
 	Notifications = &NotificationsType{
 		Collection: db.Collection("notifications"),
 		Context:    ctx,
 	}
 
 	Tokens = &TokensType{
-		Collection:	db.Collection("tokens"),
-		Context:	ctx,
+		Collection: db.Collection("tokens"),
+		Context:    ctx,
 	}
 
 	log.Println("Connected to the database successfully")

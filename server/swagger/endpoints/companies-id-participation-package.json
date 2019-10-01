@@ -1,7 +1,8 @@
 {
     "post": {
         "tags": [
-            "companies", "packages"
+            "companies",
+            "packages"
         ],
         "summary": "Adds a package on the current event to a company (must have at least coordination credentails)",
         "operationId": "addCompanyPackage",
@@ -13,16 +14,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the company",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -32,7 +33,10 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "items", "price", "vat"
+                        "name",
+                        "items",
+                        "price",
+                        "vat"
                     ],
                     "properties": {
                         "name": {

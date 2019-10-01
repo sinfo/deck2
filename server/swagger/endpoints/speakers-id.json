@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the speaker",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {
@@ -54,16 +54,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the speaker",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -73,7 +73,10 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "bio", "title", "notes"
+                        "name",
+                        "bio",
+                        "title",
+                        "notes"
                     ],
                     "properties": {
                         "name": {

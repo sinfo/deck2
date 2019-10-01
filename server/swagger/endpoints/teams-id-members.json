@@ -1,7 +1,8 @@
 {
     "post": {
         "tags": [
-            "teams", "members"
+            "teams",
+            "members"
         ],
         "summary": "Add a new member to the team (must have coordinator credentials)",
         "operationId": "addTeamMember",
@@ -13,16 +14,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the team",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -32,7 +33,8 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "member", "role"
+                        "member",
+                        "role"
                     ],
                     "properties": {
                         "member": {
@@ -40,7 +42,12 @@
                         },
                         "role": {
                             "type": "string",
-                            "enum": ["MEMBER", "TEAMLEADER", "COORDINATOR", "ADMIN"]
+                            "enum": [
+                                "MEMBER",
+                                "TEAMLEADER",
+                                "COORDINATOR",
+                                "ADMIN"
+                            ]
                         }
                     }
                 }
@@ -53,7 +60,7 @@
                     "$ref": "./models/team.json"
                 }
             },
-            "400":{
+            "400": {
                 "description": "Bad name or role on payload"
             },
             "401": {
@@ -69,7 +76,8 @@
     },
     "put": {
         "tags": [
-            "teams", "members"
+            "teams",
+            "members"
         ],
         "summary": "Updates a member's role on the team (must have coordinator credentials)",
         "operationId": "updateTeamMemberRole",
@@ -81,16 +89,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the team",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -100,13 +108,14 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "member", "role"
+                        "member",
+                        "role"
                     ],
                     "properties": {
                         "member": {
                             "type": "string"
                         },
-                        "role":{
+                        "role": {
                             "type": "string"
                         }
                     }
@@ -120,7 +129,7 @@
                     "$ref": "./models/team.json"
                 }
             },
-            "400":{
+            "400": {
                 "description": "Bad name or role on payload"
             },
             "401": {
@@ -136,7 +145,8 @@
     },
     "delete": {
         "tags": [
-            "teams", "members"
+            "teams",
+            "members"
         ],
         "summary": "Removes a member from the team (must have coordinator credentials)",
         "operationId": "deleteTeamMember",
@@ -148,16 +158,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the team",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -184,7 +194,7 @@
                     "$ref": "./models/team.json"
                 }
             },
-            "400":{
+            "400": {
                 "description": "Bad name or role on payload"
             },
             "401": {

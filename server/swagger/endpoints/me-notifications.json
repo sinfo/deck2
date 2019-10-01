@@ -1,7 +1,8 @@
 {
     "get": {
         "tags": [
-            "me", "notifications"
+            "me",
+            "notifications"
         ],
         "summary": "Get member's notifications",
         "operationId": "getMyNotifications",
@@ -13,9 +14,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [],
         "responses": {
             "200": {

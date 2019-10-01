@@ -1,7 +1,8 @@
 {
     "delete": {
         "tags": [
-            "events", "items"
+            "events",
+            "items"
         ],
         "summary": "Removes item from the current event's packages (must have coordinator credentials)",
         "operationId": "removeEventItem",
@@ -13,9 +14,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",

@@ -15,7 +15,7 @@ type Claims struct {
 	ID      primitive.ObjectID `json:"id"`
 	SINFOID string             `json:"sinfoid"`
 	Role    models.TeamRole    `json:"role"`
-	Token 	primitive.ObjectID		`json:"token"`
+	Token   primitive.ObjectID `json:"token"`
 	jwt.StandardClaims
 }
 
@@ -35,7 +35,7 @@ func SignJWT(credentials models.AuthorizationCredentials) (*string, error) {
 		ID:      credentials.ID,
 		SINFOID: credentials.SINFOID,
 		Role:    credentials.Role,
-		Token:	credentials.Token,
+		Token:   credentials.Token,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -75,7 +75,7 @@ func ParseJWT(tokenString string) (*models.AuthorizationCredentials, error) {
 		ID:      claims.ID,
 		SINFOID: claims.SINFOID,
 		Role:    claims.Role,
-		Token: claims.Token,
+		Token:   claims.Token,
 	}
 
 	return &result, nil

@@ -1,7 +1,8 @@
 {
     "get": {
         "tags": [
-            "speakers", "public"
+            "speakers",
+            "public"
         ],
         "summary": "Public endpoint for getting all speakers",
         "operationId": "getSpeakersPublic",

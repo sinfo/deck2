@@ -1,37 +1,42 @@
 {
-	"type": "object",
-	"properties": {
-		"id": {
-			"type": "string"
-		},
-		"kind": {
-			"type": "string",
-			"enum": ["CREATED", "UPDATED", "TAGGED", "DELETED"]
-        },
-        "member": {
-			"type": "string"
-		},
-        "post": {
-			"type": "string"
-		},
-		"speaker": {
+    "type": "object",
+    "properties": {
+        "id": {
             "type": "string"
         },
-		"company": {
+        "kind": {
+            "type": "string",
+            "enum": [
+                "CREATED",
+                "UPDATED",
+                "TAGGED",
+                "DELETED"
+            ]
+        },
+        "member": {
+            "type": "string"
+        },
+        "post": {
+            "type": "string"
+        },
+        "speaker": {
+            "type": "string"
+        },
+        "company": {
             "type": "string"
         },
         "meeting": {
-			"type": "string"
+            "type": "string"
         },
         "session": {
-			"type": "string"
+            "type": "string"
         },
         "date": {
-			"type": "string",
-			"format": "date-time"
-		},
-		"signature": {
-			"type": "string"
+            "type": "string",
+            "format": "date-time"
+        },
+        "signature": {
+            "type": "string"
         }
-	}
+    }
 }

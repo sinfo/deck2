@@ -3,23 +3,23 @@ import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from
 import { AuthService } from '../deck-api/auth.service';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class MemberGuard implements CanActivate {
 
-  constructor(
-    private auth: AuthService,
-    private router: Router
-  ) { }
+    constructor(
+        private auth: AuthService,
+        private router: Router
+    ) { }
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-    const isAuthenticated = this.auth.isLoggedIn();
+    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+        const isAuthenticated = this.auth.isLoggedIn();
 
-    if (!isAuthenticated) {
-      this.router.navigate(['login']);
+        if (!isAuthenticated) {
+            this.router.navigate(['login']);
+        }
+
+        return isAuthenticated;
     }
-
-    return isAuthenticated;
-  }
 
 }

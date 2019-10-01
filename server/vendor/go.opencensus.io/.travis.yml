@@ -6,8 +6,7 @@ go:
   - 1.11.x
 
 env:
-  global:
-    GO111MODULE=on
+  global: GO111MODULE=on
 
 before_script:
   - make install-tools

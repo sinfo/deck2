@@ -1,7 +1,8 @@
 {
     "get": {
         "tags": [
-            "events", "public"
+            "events",
+            "public"
         ],
         "summary": "Public endpoint for getting all events",
         "operationId": "getEventsPublic",

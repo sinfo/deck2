@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the team",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {
@@ -54,16 +54,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the team",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {
@@ -98,9 +98,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -124,9 +124,8 @@
                 "name": "id",
                 "description": "ID of the team",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
-            
         ],
         "responses": {
             "200": {

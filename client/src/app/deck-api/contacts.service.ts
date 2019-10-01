@@ -10,25 +10,25 @@ import { Contact, EditContactForm } from '../models/contact';
 import { AuthService } from './auth.service';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class ContactsService {
 
-  private headers: HttpHeaders;
-  private url: String = `${environment.deck2}/contacts`;
+    private headers: HttpHeaders;
+    private url: String = `${environment.deck2}/contacts`;
 
-  constructor(
-    private http: HttpClient,
-    private auth: AuthService
-  ) {
-    this.headers = this.auth.getHeaders();
-  }
+    constructor(
+        private http: HttpClient,
+        private auth: AuthService
+    ) {
+        this.headers = this.auth.getHeaders();
+    }
 
-  getContact(contactID: String): Observable<Contact> {
-    return this.http.get<Contact>(`${this.url}/${contactID}`, { headers: this.headers });
-  }
+    getContact(contactID: String): Observable<Contact> {
+        return this.http.get<Contact>(`${this.url}/${contactID}`, { headers: this.headers });
+    }
 
-  editContact(form: EditContactForm): Observable<Contact> {
-    return this.http.put<Contact>(`${this.url}/${form.contactId}`, form.value(), { headers: this.headers });
-  }
+    editContact(form: EditContactForm): Observable<Contact> {
+        return this.http.put<Contact>(`${this.url}/${form.contactId}`, form.value(), { headers: this.headers });
+    }
 }

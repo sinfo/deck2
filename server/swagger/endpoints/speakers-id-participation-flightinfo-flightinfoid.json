@@ -1,7 +1,8 @@
 {
     "delete": {
         "tags": [
-            "speakers", "flightInfo"
+            "speakers",
+            "flightInfo"
         ],
         "summary": "Removes flightInfo from a speaker's participation, and deletes it from the database (must have at least coordinator credentials)",
         "operationId": "removeSpeakerFlightInfo",
@@ -13,23 +14,23 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the speaker",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "path",
                 "name": "flightInfoID",
                 "description": "ID of the flightInfo",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {

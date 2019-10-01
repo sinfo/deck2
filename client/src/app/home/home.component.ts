@@ -1,10 +1,10 @@
-import {Component, OnInit} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
-import {MeService} from '../deck-api/me.service';
-import {EventsService} from '../deck-api/events.service';
+import { MeService } from '../deck-api/me.service';
+import { EventsService } from '../deck-api/events.service';
 
-import {Member} from '../models/member';
-import {Event} from '../models/event';
+import { Member } from '../models/member';
+import { Event } from '../models/event';
 
 @Component({
     selector: 'app-home',

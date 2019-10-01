@@ -1,7 +1,8 @@
 {
     "post": {
         "tags": [
-            "events", "packages"
+            "events",
+            "packages"
         ],
         "summary": "Add template to packages of the current event and make it available (must have coordinator credentials)",
         "operationId": "addEventPackage",
@@ -13,9 +14,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -25,7 +26,8 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "template", "public_name"
+                        "template",
+                        "public_name"
                     ],
                     "properties": {
                         "template": {

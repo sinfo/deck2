@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the company",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -71,16 +71,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the company",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -90,7 +90,10 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "member", "partner", "confirmed", "notes"
+                        "member",
+                        "partner",
+                        "confirmed",
+                        "notes"
                     ],
                     "properties": {
                         "member": {

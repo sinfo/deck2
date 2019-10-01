@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ElementRef, Input, OnInit, QueryList, ViewChildren} from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnInit, QueryList, ViewChildren } from '@angular/core';
 
 @Component({
     selector: 'app-photo',
@@ -7,7 +7,7 @@ import {AfterViewInit, Component, ElementRef, Input, OnInit, QueryList, ViewChil
 })
 export class PhotoComponent implements OnInit, AfterViewInit {
 
-    @ViewChildren('wrapper', {read: ElementRef}) wrappers: QueryList<ElementRef>;
+    @ViewChildren('wrapper', { read: ElementRef }) wrappers: QueryList<ElementRef>;
 
     @Input('status')
     set status(value: String) {

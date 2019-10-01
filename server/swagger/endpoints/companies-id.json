@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the company",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {
@@ -54,16 +54,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the company",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -73,7 +73,9 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "description", "site"
+                        "name",
+                        "description",
+                        "site"
                     ],
                     "properties": {
                         "name": {
@@ -138,16 +140,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the company",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {

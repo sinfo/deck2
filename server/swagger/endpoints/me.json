@@ -13,10 +13,10 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
-        "parameters": [ ],
+        ],
+        "parameters": [],
         "responses": {
             "200": {
                 "description": "My information",
@@ -46,9 +46,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -58,7 +58,8 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "istid"
+                        "name",
+                        "istid"
                     ],
                     "properties": {
                         "name": {

@@ -1,31 +1,31 @@
 {
-  "type": "object",
-  "properties": {
-    "name": {
-      "type": "string"
-    },
-    "img": {
-      "type": "string"
-    },
-    "socials": {
-      "type": "object",
-      "properties": {
-        "facebook": {
-          "type": "string"
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
         },
-        "skype": {
-          "type": "string"
+        "img": {
+            "type": "string"
         },
-        "github": {
-          "type": "string"
-        },
-        "twitter": {
-          "type": "string"
-        },
-        "linkedin": {
-          "type": "string"
+        "socials": {
+            "type": "object",
+            "properties": {
+                "facebook": {
+                    "type": "string"
+                },
+                "skype": {
+                    "type": "string"
+                },
+                "github": {
+                    "type": "string"
+                },
+                "twitter": {
+                    "type": "string"
+                },
+                "linkedin": {
+                    "type": "string"
+                }
+            }
         }
-      }
     }
-  }
 }

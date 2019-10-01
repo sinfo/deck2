@@ -1,26 +1,26 @@
 {
-	"type": "object",
-	"properties": {
-		"id": {
-			"type": "integer",
-			"format": "int64"
-		},
-		"name": {
-			"type": "string"
-		},
-		"begin": {
-			"type": "string",
-			"format": "date-time"
-		},
-		"end": {
-			"type": "string",
-			"format": "date-time"
-		},
-		"themes": {
-			"type": "array",
-			"items": {
-				"type": "string"
-			}
-		}
-	}
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer",
+            "format": "int64"
+        },
+        "name": {
+            "type": "string"
+        },
+        "begin": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "end": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "themes": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
 }

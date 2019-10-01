@@ -23,14 +23,14 @@
                 "name": "id",
                 "description": "ID of the company",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "path",
                 "name": "rep",
                 "description": "ID of the companyRep",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {

@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the post",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {
@@ -54,23 +54,23 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the post",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
                 "name": "payload",
                 "description": "Data need for post update",
                 "required": true,
-				"schema": {
+                "schema": {
                     "type": "object",
                     "required": [
                         "text"

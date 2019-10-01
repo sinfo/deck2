@@ -1,7 +1,8 @@
 {
     "put": {
         "tags": [
-            "packages", "items"
+            "packages",
+            "items"
         ],
         "summary": "Updates a specific package's items (must have coordinator credentials)",
         "operationId": "updatePackageItems",
@@ -13,16 +14,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the package",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",

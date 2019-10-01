@@ -1,7 +1,8 @@
 {
     "get": {
         "tags": [
-            "companies", "public"
+            "companies",
+            "public"
         ],
         "summary": "Public endpoint for getting all companies",
         "operationId": "getCompaniesPublic",

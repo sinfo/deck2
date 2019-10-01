@@ -13,9 +13,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
@@ -41,7 +41,17 @@
                                     },
                                     "next": {
                                         "type": "string",
-                                        "enum": ["SUGGESTED", "SELECTED", "ON_HOLD", "CONTACTED", "IN_CONVERSATIONS", "ACCEPTED", "REJECTED", "GIVEN_UP", "ANNOUNCED"]
+                                        "enum": [
+                                            "SUGGESTED",
+                                            "SELECTED",
+                                            "ON_HOLD",
+                                            "CONTACTED",
+                                            "IN_CONVERSATIONS",
+                                            "ACCEPTED",
+                                            "REJECTED",
+                                            "GIVEN_UP",
+                                            "ANNOUNCED"
+                                        ]
                                     }
                                 }
                             }

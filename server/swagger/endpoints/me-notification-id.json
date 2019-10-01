@@ -1,7 +1,8 @@
 {
     "delete": {
         "tags": [
-            "me", "notifications"
+            "me",
+            "notifications"
         ],
         "summary": "Delete my notification",
         "operationId": "deleteMyNotifications",
@@ -13,16 +14,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the notification",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {

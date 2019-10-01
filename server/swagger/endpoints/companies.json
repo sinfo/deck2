@@ -13,9 +13,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "query",
@@ -74,9 +74,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -86,7 +86,9 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "description", "site"
+                        "name",
+                        "description",
+                        "site"
                     ],
                     "properties": {
                         "name": {

@@ -48,6 +48,7 @@ import { ThreadsService } from './deck-api/threads.service';
 import { PostsService } from './deck-api/posts.service';
 import { EditFormService } from './templates/edit-form/edit-form.service';
 import { ContactsService } from './deck-api/contacts.service';
+import { ItemsComponent } from './home/content/items/items.component';
 
 @NgModule({
     declarations: [
@@ -75,6 +76,7 @@ import { ContactsService } from './deck-api/contacts.service';
         ContactComponent,
         TeamsComponent,
         AddSpeakerFormComponent,
+        ItemsComponent,
     ],
     imports: [
         BrowserModule,

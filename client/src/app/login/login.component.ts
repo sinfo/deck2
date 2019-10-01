@@ -1,9 +1,9 @@
-import {Component, OnInit} from '@angular/core';
-import {ActivatedRoute, Router} from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import {Credentials} from '../models/credentials';
-import {AuthService} from '../deck-api/auth.service';
-import {ThemeService} from '../theme.service';
+import { Credentials } from '../models/credentials';
+import { AuthService } from '../deck-api/auth.service';
+import { ThemeService } from '../theme.service';
 
 @Component({
     selector: 'app-login',

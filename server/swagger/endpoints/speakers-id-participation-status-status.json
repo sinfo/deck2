@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the speaker",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "path",
@@ -30,7 +30,17 @@
                 "description": "New status",
                 "required": true,
                 "type": "string",
-                "enum": ["SUGGESTED", "SELECTED", "ON_HOLD", "CONTACTED", "IN_CONVERSATIONS", "ACCEPTED", "REJECTED", "GIVEN_UP", "ANNOUNCED"]
+                "enum": [
+                    "SUGGESTED",
+                    "SELECTED",
+                    "ON_HOLD",
+                    "CONTACTED",
+                    "IN_CONVERSATIONS",
+                    "ACCEPTED",
+                    "REJECTED",
+                    "GIVEN_UP",
+                    "ANNOUNCED"
+                ]
             }
         ],
         "responses": {

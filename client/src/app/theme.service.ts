@@ -1,11 +1,11 @@
-import {Injectable} from '@angular/core';
+import { Injectable } from '@angular/core';
 
-import {ReplaySubject} from 'rxjs/internal/ReplaySubject';
-import {Observable} from 'rxjs/internal/Observable';
+import { ReplaySubject } from 'rxjs/internal/ReplaySubject';
+import { Observable } from 'rxjs/internal/Observable';
 
-import {StorageService} from './storage.service';
+import { StorageService } from './storage.service';
 
-import {dark, light, Theme} from './theme';
+import { dark, light, Theme } from './theme';
 
 const THEME_KEY = 'theme';
 
@@ -53,7 +53,7 @@ export class ThemeService {
     }
 
     getThemeSubscription(): { active: Theme, subscription: Observable<Theme> } {
-        return {active: this.active, subscription: this.themeSubject.asObservable()};
+        return { active: this.active, subscription: this.themeSubject.asObservable() };
     }
 
     private getAvailableThemes(): Theme[] {
@@ -74,7 +74,7 @@ export class ThemeService {
             );
         });
 
-        this.storageService.setItem(THEME_KEY, {theme: theme.name});
+        this.storageService.setItem(THEME_KEY, { theme: theme.name });
         this.themeSubject.next(this.active);
     }
 

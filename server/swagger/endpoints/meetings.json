@@ -13,9 +13,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -38,7 +38,7 @@
                             "type": "string",
                             "format": "date-time"
                         },
-                        "local":{
+                        "local": {
                             "type": "string"
                         }
                     }
@@ -77,9 +77,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "query",

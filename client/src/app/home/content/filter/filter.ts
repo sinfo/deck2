@@ -8,12 +8,14 @@ export enum FilterField {
     Name = 'name',
     Event = 'event',
     MemberName = 'memberName',
+    Type = 'type'
 }
 
 export enum FilterType {
     Member,
     Speaker,
     Team,
+    Item,
 }
 
 class Field<T> {
@@ -263,6 +265,42 @@ export class FilterTeam extends Filter {
 
     duplicate(): FilterTeam {
         const copy = new FilterTeam(this.eventsService);
+        copy.copyFields(this);
+        return copy;
+    }
+}
+
+export class FilterItem extends Filter {
+    constructor(protected eventsService: EventsService, callback?: FilterConstructorCallback) {
+        super();
+
+        this.addField<string>(FilterField.Name, null, []);
+        this.addField<number>(FilterField.Event, null, []);
+        this.addField<string>(FilterField.Type, null, []);
+
+        this.eventsService.getEvents().subscribe((events: Event[]) => {
+            for (const field of this.fields) {
+                if (field.name === FilterField.Event) {
+                    field.options = events.sort(EventComparator).map((event: Event) => +event.id);
+                    break;
+                }
+            }
+
+            this.eventsService.getCurrentEvent().subscribe((event: Event) => {
+                for (const field of this.fields) {
+                    if (field.name === FilterField.Event) {
+                        field.setDefault(+event.id);
+                        break;
+                    }
+                }
+
+                if (callback) { callback(this); }
+            });
+        });
+    }
+
+    duplicate(): FilterItem {
+        const copy = new FilterItem(this.eventsService);
         copy.copyFields(this);
         return copy;
     }

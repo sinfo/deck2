@@ -50,5 +50,4 @@ type AuthorizationCredentials struct {
 
 	//Token Struct
 	Token primitive.ObjectID
-	
 }

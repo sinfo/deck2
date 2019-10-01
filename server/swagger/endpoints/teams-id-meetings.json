@@ -1,7 +1,8 @@
 {
     "post": {
         "tags": [
-            "teams", "meetings"
+            "teams",
+            "meetings"
         ],
         "summary": "Creates a meeting and adds it to a team",
         "operationId": "addTeamMeeting",
@@ -13,9 +14,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -38,7 +39,7 @@
                             "type": "string",
                             "format": "date-time"
                         },
-                        "local":{
+                        "local": {
                             "type": "string"
                         }
                     }
@@ -49,7 +50,7 @@
                 "name": "id",
                 "description": "ID of the team",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {

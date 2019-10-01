@@ -13,16 +13,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the flight info",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {
@@ -54,16 +54,16 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "id",
                 "description": "ID of the flight info",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "body",
@@ -73,7 +73,13 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "inbound", "outbound", "from", "to", "bought", "cost", "notes"
+                        "inbound",
+                        "outbound",
+                        "from",
+                        "to",
+                        "bought",
+                        "cost",
+                        "notes"
                     ],
                     "properties": {
                         "inbound": {

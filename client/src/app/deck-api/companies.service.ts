@@ -10,22 +10,22 @@ import { Company } from '../models/company';
 import { AuthService } from './auth.service';
 
 @Injectable({
-  providedIn: 'root'
+    providedIn: 'root'
 })
 export class CompaniesService {
 
-  private headers: HttpHeaders;
-  private url: String = `${environment.deck2}/companies`;
+    private headers: HttpHeaders;
+    private url: String = `${environment.deck2}/companies`;
 
-  constructor(
-    private http: HttpClient,
-    private auth: AuthService
-  ) {
-    this.headers = this.auth.getHeaders();
-  }
+    constructor(
+        private http: HttpClient,
+        private auth: AuthService
+    ) {
+        this.headers = this.auth.getHeaders();
+    }
 
-  getCompanies(): Observable<Company[]> {
-    return this.http.get<Company[]>(`${this.url}`, { headers: this.headers });
-  }
+    getCompanies(): Observable<Company[]> {
+        return this.http.get<Company[]>(`${this.url}`, { headers: this.headers });
+    }
 
 }

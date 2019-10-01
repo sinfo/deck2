@@ -1,7 +1,8 @@
 {
     "delete": {
         "tags": [
-            "threads", "posts"
+            "threads",
+            "posts"
         ],
         "summary": "Remove comment from thread",
         "operationId": "removeCommentFromThread",
@@ -13,23 +14,23 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "path",
                 "name": "threadID",
                 "description": "ID of the thread",
                 "required": true,
-				"type": "string"
+                "type": "string"
             },
             {
                 "in": "path",
                 "name": "postID",
                 "description": "ID of the post",
                 "required": true,
-				"type": "string"
+                "type": "string"
             }
         ],
         "responses": {

@@ -217,7 +217,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 			for _, t := range team.Members {
 				var member models.Member
 
-				findQuery := bson.M{"_id": t.Member,}
+				findQuery := bson.M{"_id": t.Member}
 
 				if options.Name != nil {
 					findQuery["name"] = filter["name"]

@@ -2,9 +2,10 @@ package router
 
 import (
 	"encoding/json"
-	"github.com/sinfo/deck2/src/models"
 	"net/http"
 	"strconv"
+
+	"github.com/sinfo/deck2/src/models"
 
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"

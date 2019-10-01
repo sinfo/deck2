@@ -6,14 +6,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"github.com/sinfo/deck2/src/models"
 
 	"github.com/gorilla/mux"
 )
 
-func getBillings(w http.ResponseWriter, r *http.Request){
+func getBillings(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
 	options := mongodb.GetBillingsOptions{}
@@ -23,7 +23,7 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 	valueGreaterThan := urlQuery.Get("valueGreaterThan")
 	valueLessThan := urlQuery.Get("valueLessThan")
 	event := urlQuery.Get("event")
-	company:= urlQuery.Get("company")
+	company := urlQuery.Get("company")
 
 	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 
@@ -58,7 +58,7 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 
 	if len(valueGreaterThan) > 0 {
 		vgt, err := strconv.Atoi(valueGreaterThan)
-		
+
 		if err != nil {
 			http.Error(w, "Invalid value (greater)", http.StatusBadRequest)
 			return
@@ -69,7 +69,7 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 
 	if len(valueLessThan) > 0 {
 		vlt, err := strconv.Atoi(valueLessThan)
-		
+
 		if err != nil {
 			http.Error(w, "Invalid value (less)", http.StatusBadRequest)
 			return
@@ -78,9 +78,9 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 		options.ValueLessThan = &vlt
 	}
 
-	if len(event) > 0{
+	if len(event) > 0 {
 		eventInt, err := strconv.Atoi(event)
-		
+
 		if err != nil {
 			http.Error(w, "Invalid value (event)", http.StatusBadRequest)
 			return
@@ -92,7 +92,7 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 	if len(company) > 0 {
 
 		companyID, err := primitive.ObjectIDFromHex(company)
-		if err != nil{
+		if err != nil {
 			http.Error(w, "Invalid value (company)", http.StatusBadRequest)
 			return
 		}
@@ -101,7 +101,7 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 	}
 
 	billings, err := mongodb.Billings.GetBillings(options)
-	if err != nil{
+	if err != nil {
 		http.Error(w, "unexpected error found", http.StatusExpectationFailed)
 		return
 	}
@@ -109,7 +109,7 @@ func getBillings(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(billings)
 }
 
-func getBilling(w http.ResponseWriter, r *http.Request){
+func getBilling(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	billingID, _ := primitive.ObjectIDFromHex(params["id"])
@@ -123,12 +123,12 @@ func getBilling(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(billing)
 }
 
-func createBilling(w http.ResponseWriter, r *http.Request){
+func createBilling(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var cbd = &mongodb.CreateBillingData{}
 
-	if err := cbd.ParseBody(r.Body); err != nil{
+	if err := cbd.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -142,7 +142,7 @@ func createBilling(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(newBilling)
 }
 
-func updateBilling(w http.ResponseWriter, r *http.Request){
+func updateBilling(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	params := mux.Vars(r)
@@ -150,7 +150,7 @@ func updateBilling(w http.ResponseWriter, r *http.Request){
 
 	var cbd = &mongodb.CreateBillingData{}
 
-	if err := cbd.ParseBody(r.Body); err != nil{
+	if err := cbd.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -164,7 +164,7 @@ func updateBilling(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(newBilling)
 }
 
-func deleteBilling(w http.ResponseWriter, r *http.Request){
+func deleteBilling(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	billingID, _ := primitive.ObjectIDFromHex(params["id"])

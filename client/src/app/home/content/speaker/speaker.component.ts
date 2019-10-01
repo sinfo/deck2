@@ -226,7 +226,7 @@ export class SpeakerComponent implements OnInit {
                     const participation = GetParticipation(this.speaker, this.event.id);
                     this.updateParticipation(participation);
                 });
-            break;
+                break;
         }
     }
 

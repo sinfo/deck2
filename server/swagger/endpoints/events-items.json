@@ -1,7 +1,8 @@
 {
     "post": {
         "tags": [
-            "events", "items"
+            "events",
+            "items"
         ],
         "summary": "Adds an item to the current event (must have coordinator credentials)",
         "operationId": "addEventItem",
@@ -13,9 +14,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",

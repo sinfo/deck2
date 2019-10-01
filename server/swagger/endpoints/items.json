@@ -13,9 +13,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "query",
@@ -62,9 +62,9 @@
         ],
         "security": [
             {
-              "Bearer": []
+                "Bearer": []
             }
-          ],
+        ],
         "parameters": [
             {
                 "in": "body",
@@ -74,7 +74,11 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "name", "type", "description", "price", "vat"
+                        "name",
+                        "type",
+                        "description",
+                        "price",
+                        "vat"
                     ],
                     "properties": {
                         "name": {
@@ -88,7 +92,7 @@
                         },
                         "price": {
                             "type": "integer"
-                            },
+                        },
                         "vat": {
                             "type": "integer"
                         }

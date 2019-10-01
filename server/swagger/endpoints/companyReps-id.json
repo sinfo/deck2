@@ -22,7 +22,7 @@
                 "name": "id",
                 "description": "ID of the companyRep",
                 "type": "string",
-                "required":true
+                "required": true
             }
         ],
         "responses": {
@@ -66,7 +66,7 @@
                 "name": "id",
                 "description": "ID of the companyrep",
                 "type": "string",
-                "required":true
+                "required": true
             },
             {
                 "in": "body",
@@ -173,8 +173,8 @@
             "401": {
                 "description": "Unauthorized"
             },
-            "404":{
-                "description":"CompanyRep not found"
+            "404": {
+                "description": "CompanyRep not found"
             },
             "417": {
                 "description": "Unable to get companies"
