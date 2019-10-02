@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 
 import { environment } from 'environments/environment';
 
-import { Item } from '../models/item';
+import { Item, AddItemForm } from '../models/item';
 import { FilterItem } from '../home/content/filter/filter';
 
 import { AuthService } from './auth.service';
@@ -27,5 +27,32 @@ export class ItemsService {
         private auth: AuthService
     ) {
         this.headers = this.auth.getHeaders();
+    }
+
+    getItems(filterItem?: FilterItem): Observable<Item[]> {
+        const filterHasContent = filterItem !== undefined && filterItem.hasContent();
+
+        if (!filterHasContent && this.items !== undefined) {
+            return of(this.items);
+        }
+
+        const params = filterHasContent ? filterItem.getHttpQuery() : new HttpParams();
+        return this.http.get<Item[]>(`${this.url}`, { params: params, headers: this.headers }).pipe(
+            map((items: Item[]) => {
+                if (!filterHasContent && this.items === undefined) {
+                    this.items = items;
+                }
+
+                return items;
+            })
+        );
+    }
+
+    getItem(ItemID: string): Observable<Item> {
+        return this.http.get<Item>(`${this.url}/${ItemID}`, { headers: this.headers });
+    }
+
+    createItem(form: AddItemForm): Observable<Item> {
+        return this.http.post<Item>(`${this.url}`, form.value(), { headers: this.headers });
     }
 }

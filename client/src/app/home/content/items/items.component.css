@@ -1,0 +1,23 @@
+.items-wrapper {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+}
+
+.filter-wrapper {
+    height: 100%;
+    width: 15%;
+    margin-right: 2%;
+}
+
+.items-list-wrapper {
+    width: 83%;
+    overflow: auto;
+}
+
+.items-list {
+    display: inline-flex;
+    flex-direction: row;
+    height: 100%;
+}

@@ -3,7 +3,7 @@ import { Component, Input, OnInit, ViewContainerRef } from '@angular/core';
 import { FilterService } from './filter.service';
 import { EditFormService } from '../../../templates/edit-form/edit-form.service';
 
-import { Filters, FilterField } from './filter';
+import { Filter, Filters, FilterField, FilterType } from './filter';
 import { AppliedForm } from '../../../templates/edit-form/edit-form-communicator.service';
 
 @Component({
@@ -25,108 +25,94 @@ export class FilterComponent implements OnInit {
 
     ngOnInit() { }
 
-    eventsOptions() {
-        if (this.filters.speaker) {
-            return this.filters.speaker.getOptions(FilterField.Event);
-        }
-
-        if (this.filters.member) {
-            return this.filters.member.getOptions(FilterField.Event);
-        }
-
-        if (this.filters.team) {
-            return this.filters.team.getOptions(FilterField.Event);
-        }
+    eventsOptions(filter: Filter) {
+        return filter.getOptions(FilterField.Event);
     }
 
-    statusOptions() {
-        return this.filters.speaker.getOptions(FilterField.Status);
+    statusOptions(filter: Filter) {
+        return filter.getOptions(FilterField.Status);
     }
 
-    changeEvent(event: string) {
+    changeEvent(filter: Filter, event: string) {
         // if it's selected the current event, then unset the filter
-        if (event.length === 0 || event === `${this.filters.speaker.getOptions(FilterField.Event)[0]}`) {
-            this.filters.speaker.setValue(FilterField.Event, null, !this.filters.speaker.isSet(FilterField.Name));
-            this.filters.member.setValue(FilterField.Event, null);
+        if (event.length === 0 || event === `${filter.getOptions(FilterField.Event)[0]}`) {
+
+            if (filter.isType(FilterType.Speaker)) {
+                filter.setValue(FilterField.Event, null, !filter.isSet(FilterField.Name));
+                this.filters.member.setValue(FilterField.Event, null);
+            } else {
+                filter.setValue(FilterField.Event, null);
+            }
+
         } else {
-            this.filters.speaker.setValue(FilterField.Event, +event);
-            this.filters.member.setValue(FilterField.Event, +event);
+            filter.setValue(FilterField.Event, +event);
+
+            if (filter.isType(FilterType.Speaker)) {
+                this.filters.member.setValue(FilterField.Event, +event);
+            }
         }
 
         this.filterService.changeFilters(this.filters);
     }
 
-    changeStatus(status: string) {
+    changeStatus(filter: Filter, status: string) {
         if (status.length === 0) {
-            this.filters.speaker.setValue(FilterField.Status, null);
+            filter.setValue(FilterField.Status, null);
         } else {
-            this.filters.speaker.setValue(FilterField.Status, status);
+            filter.setValue(FilterField.Status, status);
         }
 
         this.filterService.changeFilters(this.filters);
     }
 
-    changeMember(member: string) {
-        if (member.length === 0) {
-            this.filters.member.setValue(FilterField.Name, null);
-        } else {
-            this.filters.member.setValue(FilterField.Name, member);
-        }
+    changeName(filter: Filter, name: string) {
+        if (name.length === 0) {
 
-        this.filterService.changeFilters(this.filters);
-    }
-
-    changeSpeaker(speaker: string) {
-        if (speaker.length === 0) {
-            this.filters.speaker.setValue(FilterField.Name, null);
-
-            if (!this.filters.speaker.isSet(FilterField.Event)) {
-                this.filters.speaker.setValue(FilterField.Event, null, true);
+            if (filter.isType(FilterType.Speaker) && !filter.isSet(FilterField.Event)) {
+                filter.setValue(FilterField.Event, null, true);
+            } else {
+                filter.setValue(FilterField.Name, null);
             }
-        } else {
-            this.filters.speaker.setValue(FilterField.Name, speaker);
 
-            if (this.filters.speaker.isDefaultValue(FilterField.Event)) {
-                this.filters.speaker.setValue(FilterField.Event, null, false);
+        } else {
+            filter.setValue(FilterField.Name, name);
+
+            if (filter.isType(FilterType.Speaker) && filter.isDefaultValue(FilterField.Event)) {
+                filter.setValue(FilterField.Event, null, false);
             }
         }
 
         this.filterService.changeFilters(this.filters);
     }
 
-    changeTeamMember(member: string) {
+    changeMemberName(filter: Filter, member: string) {
         if (member.length === 0) {
-            this.filters.team.setValue(FilterField.MemberName, null);
+            filter.setValue(FilterField.MemberName, null);
         } else {
-            this.filters.team.setValue(FilterField.MemberName, member);
+            filter.setValue(FilterField.MemberName, member);
         }
 
         this.filterService.changeFilters(this.filters);
     }
 
-    changeTeamEvent(event: string) {
-        // if it's selected the current event, then unset the filter
-        if (event.length === 0 || event === `${this.filters.team.getOptions(FilterField.Event)[0]}`) {
-            this.filters.team.setValue(FilterField.Event, null, true);
+    changeType(filter: Filter, type: string) {
+        if (type.length === 0) {
+            filter.setValue(FilterField.Type, null);
         } else {
-            this.filters.team.setValue(FilterField.Event, +event);
-        }
-
-        this.filterService.changeFilters(this.filters);
-    }
-
-    changeTeamName(team: string) {
-        if (team.length === 0) {
-            this.filters.team.setValue(FilterField.Name, null);
-        } else {
-            this.filters.team.setValue(FilterField.Name, team);
+            filter.setValue(FilterField.Type, type);
         }
 
         this.filterService.changeFilters(this.filters);
     }
 
     addSpeaker() {
-        this.editFormService.showAddSpeakerForm(this.vcRef, (appliedForm: AppliedForm) => {
+        this.editFormService.showAddSpeakerForm(this.vcRef, () => {
+            this.filterService.changeFilters(this.filters);
+        });
+    }
+
+    addItem() {
+        this.editFormService.showAddItemForm(this.vcRef, () => {
             this.filterService.changeFilters(this.filters);
         });
     }

@@ -72,16 +72,22 @@ class Field<T> {
     }
 }
 
-abstract class Filter {
+export abstract class Filter {
 
     protected fields: Field<any>[];
+    protected type: FilterType;
 
-    constructor() {
+    constructor(type: FilterType) {
         this.fields = [];
+        this.type = type;
     }
 
     protected addField<T>(name: FilterField, value: T, options: T[], optional?: { httpQuery?: boolean, default?: T }) {
         this.fields.push(new Field<T>(name, value, options, optional));
+    }
+
+    isType(type: FilterType): boolean {
+        return this.type === type;
     }
 
     isSet(name: FilterField) {
@@ -175,18 +181,6 @@ abstract class Filter {
 
         return false;
     }
-
-    abstract duplicate(): Filter;
-
-    protected copyFields(filter: Filter) {
-        for (const copyField of this.fields) {
-            for (const filterField of filter.fields) {
-                if (copyField.name === filterField.name) {
-                    copyField.copy(filterField);
-                }
-            }
-        }
-    }
 }
 
 export type FiltersInitCallback = () => void;
@@ -195,7 +189,7 @@ type FilterConstructorCallback = (instance: Filter) => void;
 export class FilterSpeaker extends Filter {
 
     constructor(protected eventsService: EventsService, callback?: FilterConstructorCallback) {
-        super();
+        super(FilterType.Member);
 
         this.addField<string>(FilterField.Status, null, [
             'SUGGESTED', 'SELECTED', 'ON_HOLD',
@@ -226,17 +220,11 @@ export class FilterSpeaker extends Filter {
             });
         });
     }
-
-    duplicate(): FilterSpeaker {
-        const copy = new FilterSpeaker(this.eventsService);
-        copy.copyFields(this);
-        return copy;
-    }
 }
 
 export class FilterTeam extends Filter {
     constructor(protected eventsService: EventsService, callback?: FilterConstructorCallback) {
-        super();
+        super(FilterType.Team);
 
         this.addField<string>(FilterField.Name, null, []);
         this.addField<number>(FilterField.Event, null, []);
@@ -262,17 +250,11 @@ export class FilterTeam extends Filter {
             });
         });
     }
-
-    duplicate(): FilterTeam {
-        const copy = new FilterTeam(this.eventsService);
-        copy.copyFields(this);
-        return copy;
-    }
 }
 
 export class FilterItem extends Filter {
     constructor(protected eventsService: EventsService, callback?: FilterConstructorCallback) {
-        super();
+        super(FilterType.Item);
 
         this.addField<string>(FilterField.Name, null, []);
         this.addField<number>(FilterField.Event, null, []);
@@ -298,17 +280,11 @@ export class FilterItem extends Filter {
             });
         });
     }
-
-    duplicate(): FilterItem {
-        const copy = new FilterItem(this.eventsService);
-        copy.copyFields(this);
-        return copy;
-    }
 }
 
 export class FilterMember extends Filter {
     constructor(protected eventsService: EventsService, callback?: FilterConstructorCallback) {
-        super();
+        super(FilterType.Member);
 
         this.addField<string>(FilterField.Name, null, []);
         this.addField<number>(FilterField.Event, null, []);
@@ -333,12 +309,6 @@ export class FilterMember extends Filter {
             });
         });
     }
-
-    duplicate(): FilterMember {
-        const copy = new FilterMember(this.eventsService);
-        copy.copyFields(this);
-        return copy;
-    }
 }
 
 export class Filters {
@@ -348,6 +318,7 @@ export class Filters {
     member: FilterMember;
     speaker: FilterSpeaker;
     team: FilterTeam;
+    item: FilterItem;
 
     constructor(private eventsService: EventsService) { }
 
@@ -387,6 +358,12 @@ export class Filters {
                     if (callback) { callback(); }
                 });
 
+            case FilterType.Item:
+                return new FilterItem(this.eventsService, (instance: FilterItem) => {
+                    this.item = instance;
+                    if (callback) { callback(); }
+                });
+
             default:
                 if (callback) { callback(); }
         }
@@ -402,5 +379,9 @@ export class Filters {
 
     isPrimaryFilterTeam(): boolean {
         return this.primary === FilterType.Team;
+    }
+
+    isPrimaryFilterItem(): boolean {
+        return this.primary === FilterType.Item;
     }
 }

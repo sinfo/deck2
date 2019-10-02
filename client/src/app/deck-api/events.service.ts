@@ -64,4 +64,12 @@ export class EventsService {
 
     }
 
+    addItem(itemID: string): Observable<Event> {
+        return this.http.post<Event>(`${this.url}/items`, { item: itemID }, { headers: this.headers });
+    }
+
+    removeItem(itemID: string): Observable<Event> {
+        return this.http.delete<Event>(`${this.url}/items/${itemID}`, { headers: this.headers });
+    }
+
 }

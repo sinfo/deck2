@@ -1,1 +1,15 @@
-<p>items works!</p>
+<div class="items-wrapper">
+    <div class="filter-wrapper">
+        <app-filter [filters]="filters"></app-filter>
+    </div>
+
+    <div class="items-list-wrapper">
+        <div class="items-list" *ngIf="items">
+
+            <div class="item" *ngFor="let item of items">
+                <div>{{item.name}}</div>
+            </div>
+
+        </div>
+    </div>
+</div>

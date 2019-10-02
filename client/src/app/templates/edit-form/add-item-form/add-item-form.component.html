@@ -1,0 +1,21 @@
+<div class="header">
+    <h4 class="name">Create new item</h4>
+</div>
+
+<div *ngIf="form">
+    <form class="form" [formGroup]="form.form">
+
+        <label>Name:<input type="text" formControlName="name"></label>
+        <label>Type:<input type="text" formControlName="type"></label>
+        <label>Price:<input type="number" formControlName="price"></label>
+        <label>VAT:<input type="number" formControlName="vat"></label>
+        <label>Description:<textarea type="text" formControlName="description"></textarea></label>
+
+    </form>
+
+    <div class="buttons">
+        <button class="save" type="submit" [disabled]="!form.valid()" (click)="submitNewItem()">
+            Save
+        </button>
+    </div>
+</div>

@@ -10,6 +10,7 @@ import { CompaniesComponent } from './home/content/companies/companies.component
 import { SpeakersComponent } from './home/content/speakers/speakers.component';
 import { SpeakerComponent } from './home/content/speaker/speaker.component';
 import { TeamsComponent } from './home/content/teams/teams.component';
+import { ItemsComponent } from './home/content/items/items.component';
 
 import { TemplateSpeakers27Component } from './templates/speakers/template-speakers27/template-speakers27.component';
 
@@ -57,6 +58,11 @@ const appRoutes: Routes = [
             {
                 path: 'teams',
                 component: TeamsComponent,
+                pathMatch: 'full'
+            },
+            {
+                path: 'items',
+                component: ItemsComponent,
                 pathMatch: 'full'
             },
         ]

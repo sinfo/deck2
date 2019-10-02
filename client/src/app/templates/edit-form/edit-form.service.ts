@@ -7,6 +7,7 @@ import { AddSpeakerFormComponent } from './add-speaker-form/add-speaker-form.com
 import { EditFormTemplateComponent } from './edit-form-template/edit-form-template.component';
 
 import { Speaker } from '../../models/speaker';
+import { AddItemFormComponent } from './add-item-form/add-item-form.component';
 
 @Injectable({
     providedIn: 'root'
@@ -43,6 +44,18 @@ export class EditFormService {
         viewContainerRef.createComponent(factory);
 
         this.editFormCommunicatorService.setForm(AddSpeakerFormComponent);
+
+        if (callback) {
+            this.editFormCommunicatorService.subscribeCallback(callback);
+        }
+    }
+
+    showAddItemForm(viewContainerRef: ViewContainerRef, callback?: AppliedFormCallback) {
+        this.viewContainerRef = viewContainerRef;
+        const factory = this.factoryResolver.resolveComponentFactory(EditFormTemplateComponent);
+        viewContainerRef.createComponent(factory);
+
+        this.editFormCommunicatorService.setForm(AddItemFormComponent);
 
         if (callback) {
             this.editFormCommunicatorService.subscribeCallback(callback);

@@ -27,6 +27,8 @@ import { NotificationsComponent } from './home/menu/notifications/notifications.
 import { ContactComponent } from './home/content/contact/contact.component';
 import { TeamsComponent } from './home/content/teams/teams.component';
 import { AddSpeakerFormComponent } from './templates/edit-form/add-speaker-form/add-speaker-form.component';
+import { ItemsComponent } from './home/content/items/items.component';
+import { AddItemFormComponent } from './templates/edit-form/add-item-form/add-item-form.component';
 
 import { ParseStatusPipe } from './helpers/parse-status.pipe';
 import { MarkdownPipe } from './helpers/markdown.pipe';
@@ -48,7 +50,6 @@ import { ThreadsService } from './deck-api/threads.service';
 import { PostsService } from './deck-api/posts.service';
 import { EditFormService } from './templates/edit-form/edit-form.service';
 import { ContactsService } from './deck-api/contacts.service';
-import { ItemsComponent } from './home/content/items/items.component';
 
 @NgModule({
     declarations: [
@@ -77,6 +78,7 @@ import { ItemsComponent } from './home/content/items/items.component';
         TeamsComponent,
         AddSpeakerFormComponent,
         ItemsComponent,
+        AddItemFormComponent,
     ],
     imports: [
         BrowserModule,
@@ -111,7 +113,10 @@ import { ItemsComponent } from './home/content/items/items.component';
         ContactsService
     ],
     bootstrap: [AppComponent],
-    entryComponents: [EditFormTemplateComponent, EditSpeakerFormComponent, AddSpeakerFormComponent]
+    entryComponents: [
+        EditFormTemplateComponent, EditSpeakerFormComponent, AddSpeakerFormComponent,
+        AddItemFormComponent
+    ]
 })
 export class AppModule {
 }

@@ -5,7 +5,7 @@ import { Speaker } from '../../../models/speaker';
 import { Company } from '../../../models/company';
 import { Member } from '../../../models/member';
 import { Event } from '../../../models/event';
-import { FilterMember, FilterField } from '../filter/filter';
+import { FilterMember, FilterField, FilterType } from '../filter/filter';
 
 import { MembersService } from '../../../deck-api/members.service';
 import { MeService } from '../../../deck-api/me.service';
