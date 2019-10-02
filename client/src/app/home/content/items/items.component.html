@@ -7,7 +7,25 @@
         <div class="items-list" *ngIf="items">
 
             <div class="item" *ngFor="let item of items">
-                <div>{{item.name}}</div>
+
+                <div class="title">
+                    <div class="name">{{item.name}}</div>
+                    <div class="type">{{item.type}}</div>
+                </div>
+
+                <div class="image-and-values">
+
+                    <div class="image">
+                        <app-photo setBy="width" [url]="item.img"></app-photo>
+                    </div>
+
+                    <div class="values">
+                        <div class="price">{{item.price / 100 | currency:'EUR'}}</div>
+                        <div class="vat">{{item.vat}}% VAT</div>
+                    </div>
+                </div>
+
+                <div class="description">{{item.description}}</div>
             </div>
 
         </div>
