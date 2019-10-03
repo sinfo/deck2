@@ -1,5 +1,4 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { ItemsService } from '../deck-api/items.service';
 
 export class Item {
     id: String;

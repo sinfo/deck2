@@ -2,9 +2,10 @@ import { Component, Input, OnInit, ViewContainerRef } from '@angular/core';
 
 import { FilterService } from './filter.service';
 import { EditFormService } from '../../../templates/edit-form/edit-form.service';
+import { MeService } from '../../../deck-api/me.service';
 
 import { Filter, Filters, FilterField, FilterType } from './filter';
-import { AppliedForm } from '../../../templates/edit-form/edit-form-communicator.service';
+import { Role, CoordinatorAccessLevel } from '../../../models/role';
 
 @Component({
     selector: 'app-filter',
@@ -16,14 +17,20 @@ export class FilterComponent implements OnInit {
     @Input() filters: Filters;
 
     currentEvent: Event;
+    coordinatorAccessLevel: boolean;
 
     constructor(
         private filterService: FilterService,
         private editFormService: EditFormService,
+        private meService: MeService,
         public vcRef: ViewContainerRef
     ) { }
 
-    ngOnInit() { }
+    ngOnInit() {
+        this.meService.getMyRole().subscribe((role: Role) => {
+            this.coordinatorAccessLevel = CoordinatorAccessLevel(role);
+        });
+    }
 
     eventsOptions(filter: Filter) {
         return filter.getOptions(FilterField.Event);
@@ -115,6 +122,14 @@ export class FilterComponent implements OnInit {
         this.editFormService.showAddItemForm(this.vcRef, () => {
             this.filterService.changeFilters(this.filters);
         });
+    }
+
+    addTeam() {
+        /* TODO:
+        this.editFormService.showAddTeamForm(this.vcRef, () => {
+            this.filterService.changeFilters(this.filters);
+        });
+        */
     }
 
 }

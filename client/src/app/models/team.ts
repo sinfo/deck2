@@ -1,3 +1,5 @@
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+
 import { Member } from './member';
 import { Meeting } from './meeting';
 
@@ -64,4 +66,29 @@ export function PopulatedTeamMemberComparator(m1: PopulatedTeamMember, m2: Popul
     }
 
     return RoleComparator(m1.role, m2.role);
+}
+
+export class AddTeamForm {
+
+    form: FormGroup;
+
+    constructor() {
+        this.form = new FormGroup({
+            name: new FormControl('', [Validators.required, Validators.minLength(1)]),
+            type: new FormControl('', [Validators.required, Validators.minLength(1)]),
+            price: new FormControl(0, [Validators.required, Validators.min(0)]),
+            vat: new FormControl(0, [Validators.required, Validators.min(0), Validators.max(100)]),
+            description: new FormControl('', [Validators.required]),
+        });
+    }
+
+    value() {
+        const value = this.form.value;
+        value['price'] = Math.trunc(value['price'] * 100);
+        return value;
+    }
+
+    valid() {
+        return this.form.valid;
+    }
 }

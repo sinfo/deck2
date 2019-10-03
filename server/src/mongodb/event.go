@@ -476,7 +476,7 @@ type AddEventPackageData struct {
 	PublicName *string             `json:"public_name"`
 }
 
-// ParseBody fills the CreateTeamData from a body
+// ParseBody fills the AddEventPackageData from a body
 func (aepd *AddEventPackageData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(aepd); err != nil {
@@ -577,7 +577,7 @@ type UpdateEventPackageData struct {
 	Available  *bool   `json:"available"`
 }
 
-// ParseBody fills the CreateTeamData from a body
+// ParseBody fills the UpdateEventPackageData from a body
 func (uepd *UpdateEventPackageData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(uepd); err != nil {
@@ -625,7 +625,7 @@ type AddEventItemData struct {
 	ItemID *primitive.ObjectID `json:"item"`
 }
 
-// ParseBody fills the CreateTeamData from a body
+// ParseBody fills the AddEventItemData from a body
 func (aeid *AddEventItemData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(aeid); err != nil {

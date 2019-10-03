@@ -14,6 +14,7 @@ export enum FilterField {
 export enum FilterType {
     Member,
     Speaker,
+    Company,
     Team,
     Item,
 }
@@ -186,6 +187,42 @@ export abstract class Filter {
 export type FiltersInitCallback = () => void;
 type FilterConstructorCallback = (instance: Filter) => void;
 
+export class FilterCompany extends Filter {
+
+    constructor(protected eventsService: EventsService, callback?: FilterConstructorCallback) {
+        super(FilterType.Company);
+
+        this.addField<string>(FilterField.Status, null, [
+            'SUGGESTED', 'SELECTED', 'ON_HOLD',
+            'CONTACTED', 'IN_CONVERSATIONS', 'ACCEPTED',
+            'REJECTED', 'GIVEN_UP', 'ANNOUNCED'
+        ], { httpQuery: false });
+
+        this.addField<string>(FilterField.Name, null, []);
+        this.addField<number>(FilterField.Event, null, []);
+
+        this.eventsService.getEvents().subscribe((events: Event[]) => {
+            for (const field of this.fields) {
+                if (field.name === FilterField.Event) {
+                    field.options = events.sort(EventComparator).map((event: Event) => +event.id);
+                    break;
+                }
+            }
+
+            this.eventsService.getCurrentEvent().subscribe((event: Event) => {
+                for (const field of this.fields) {
+                    if (field.name === FilterField.Event) {
+                        field.setDefault(+event.id);
+                        break;
+                    }
+                }
+
+                if (callback) { callback(this); }
+            });
+        });
+    }
+}
+
 export class FilterSpeaker extends Filter {
 
     constructor(protected eventsService: EventsService, callback?: FilterConstructorCallback) {
@@ -317,6 +354,7 @@ export class Filters {
 
     member: FilterMember;
     speaker: FilterSpeaker;
+    company: FilterCompany;
     team: FilterTeam;
     item: FilterItem;
 
@@ -346,6 +384,12 @@ export class Filters {
                     if (callback) { callback(); }
                 });
 
+            case FilterType.Company:
+                return new FilterCompany(this.eventsService, (instance: FilterCompany) => {
+                    this.company = instance;
+                    if (callback) { callback(); }
+                });
+
             case FilterType.Speaker:
                 return new FilterSpeaker(this.eventsService, (instance: FilterSpeaker) => {
                     this.speaker = instance;
@@ -367,6 +411,10 @@ export class Filters {
             default:
                 if (callback) { callback(); }
         }
+    }
+
+    isPrimaryFilterCompany(): boolean {
+        return this.primary === FilterType.Company;
     }
 
     isPrimaryFilterSpeaker(): boolean {

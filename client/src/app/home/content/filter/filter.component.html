@@ -38,6 +38,35 @@
 
             <!--
                 ***************************************************
+                Company Filters
+                ***************************************************
+            -->
+
+            <div *ngIf="filters.company" class="form-group borders">
+                <select class="form-control" (change)="changeEvent(filters.company, $event.target.value)" name="event"
+                    required>
+                    <option value="">Events</option>
+                    <option *ngFor="let event of eventsOptions(filters.company)" [value]="event">{{event}}
+                    </option>
+                </select>
+            </div>
+
+            <div *ngIf="filters.company" class="form-group borders">
+                <select class="form-control" (change)="changeStatus(filters.company, $event.target.value)" name="status"
+                    required>
+                    <option value="">Status</option>
+                    <option *ngFor="let status of statusOptions(filters.company)" [value]="status">{{status}}
+                    </option>
+                </select>
+            </div>
+
+            <div *ngIf="filters.company" class="form-group borders">
+                <input type="text" class="form-control" (input)="changeName(filters.company, $event.target.value)"
+                    placeholder="Company">
+            </div>
+
+            <!--
+                ***************************************************
                 Member Filters
                 ***************************************************
             -->
@@ -99,17 +128,23 @@
 
         </div>
 
-        <div class="operations">
+        <div class="operations" *ngIf="
+            filters.isPrimaryFilterSpeaker() ||
+            coordinatorAccessLevel && (filters.isPrimaryFilterItem() || filters.isPrimaryFilterTeam())">
             <div class="filter-title borders">
                 Operations
             </div>
 
             <div class="form-group borders" *ngIf="filters.isPrimaryFilterSpeaker()">
-                <button class="form-control" (click)="addSpeaker()">Add speaker</button>
+                <button class="form-control" (click)="addSpeaker()">Create speaker</button>
             </div>
 
             <div class="form-group borders" *ngIf="filters.isPrimaryFilterItem()">
-                <button class="form-control" (click)="addItem()">Add item</button>
+                <button class="form-control" (click)="addItem()">Create item</button>
+            </div>
+
+            <div class="form-group borders" *ngIf="filters.isPrimaryFilterTeam()">
+                <button class="form-control" (click)="addTeam()">Create team</button>
             </div>
         </div>
 

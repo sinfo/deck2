@@ -1,1 +1,62 @@
-<p>companies works!</p>
+<div class="companies-wrapper">
+    <div class="filter-wrapper">
+        <app-filter [filters]="filters"></app-filter>
+    </div>
+
+    <div class="companies-list-wrapper">
+        <div class="companies-list" *ngIf="companiesByMember && companiesByMember.length > 0">
+
+            <div class="member" *ngFor="let item of companiesByMember">
+
+                <div class="member-wrapper" *ngIf="item.member; else companyWithoutCurrentParticipation">
+                    <div class="member-label" *ngIf="item.member">
+                        <div class="member-img">
+                            <app-photo setBy="height" [url]="item.member.img"></app-photo>
+                        </div>
+
+                        <div class="member-text">
+                            <span>{{item.member.name | uppercase}}</span>
+                        </div>
+                    </div>
+                    <div class="companies">
+                        <div class="company" *ngFor="let subitem of item.companies"
+                            [routerLink]="['/companies/'+subitem.company.id]">
+
+                            <div class="company-image">
+                                <app-photo setBy="height" [url]="subitem.company.imgs.internal"
+                                    [status]="subitem.participation ? subitem.participation.status : ''">
+                                </app-photo>
+                            </div>
+
+                            <div class="company-text">
+                                <span class="company-name">{{subitem.company.name}}</span>
+                                <span class="company-title">{{subitem.company.title}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <ng-template class="member-wrapper" #companyWithoutCurrentParticipation>
+                    <div class="companies noParticipation">
+                        <div class="company" *ngFor="let subitem of item.companies"
+                            [routerLink]="['/companies/'+subitem.company.id]">
+
+                            <div class="company-image">
+                                <app-photo setBy="height" [url]="subitem.company.imgs.internal"
+                                    [status]="subitem.participation ? subitem.participation.status : ''">
+                                </app-photo>
+                            </div>
+
+                            <div class="company-text">
+                                <span class="company-name">{{subitem.company.name}}</span>
+                                <span class="company-title">{{subitem.company.title}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+
+            </div>
+
+        </div>
+    </div>
+</div>
