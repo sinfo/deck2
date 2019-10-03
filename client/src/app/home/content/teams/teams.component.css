@@ -74,10 +74,6 @@
     margin: 2.5%;
 }
 
-.member:hover {
-    cursor: pointer;
-}
-
 .member-image {
     display: flex;
     align-content: center;
