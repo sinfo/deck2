@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 
-import { SpeakersService } from '../../../deck-api/speakers.service';
 import { EventsService } from '../../../deck-api/events.service';
 import { MembersService } from '../../../deck-api/members.service';
 import { FilterService } from '../filter/filter.service';
@@ -46,7 +45,6 @@ export class TeamsComponent implements OnInit {
             for (const team of teams) {
                 const newTeam = new PopulatedTeam(team, this.membersService, () => {
                     this.teams.push(newTeam);
-                    console.log(newTeam);
                 });
             }
         });

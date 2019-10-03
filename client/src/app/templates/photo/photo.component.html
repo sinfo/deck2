@@ -9,7 +9,10 @@
         'rejected': _status == 'REJECTED',
         'given-up': _status == 'GIVEN_UP',
         'announced': _status == 'ANNOUNCED',
-        'status': _status
+        'status': _status || role == 'TEAM_LEADER' || role == 'COORDINATOR' || role == 'ADMIN',
+        'team-leader': role == 'TEAM_LEADER',
+        'coordinator': role == 'COORDINATOR',
+        'admin': role == 'ADMIN'
     }">
     <div class="label" *ngIf="_status">
         <span><b>{{ _status | parseStatus }}</b></span>

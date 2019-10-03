@@ -18,12 +18,13 @@
                         <div class="member" *ngFor="let teamMember of team.members">
 
                             <div class="member-image">
-                                <app-photo setBy="height" [url]="teamMember.member.img"></app-photo>
+                                <app-photo setBy="height" [url]="teamMember.member.img" [role]="teamMember.role">
+                                </app-photo>
                             </div>
 
                             <div class="member-text">
-                                <span class="member-name">{{teamMember.member.name}}</span>
-                                <span class="member-title">{{teamMember.role}}</span>
+                                <div class="member-name">{{teamMember.member.name}}</div>
+                                <div class="member-title">{{teamMember.role}}</div>
                             </div>
                         </div>
                     </div>

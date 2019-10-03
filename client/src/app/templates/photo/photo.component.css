@@ -46,12 +46,12 @@
     border-style: solid;
 }
 
-.suggested {
+.suggested, .team-leader {
     color: var(--suggested);
     border-color: var(--suggested);
 }
 
-.selected {
+.selected, .coordinator {
     color: var(--selected);
     border-color: var(--selected);
 }
@@ -71,7 +71,7 @@
     border-color: var(--in-conversations);
 }
 
-.accepted {
+.accepted, .admin {
     color: var(--accepted);
     border-color: var(--accepted);
 }

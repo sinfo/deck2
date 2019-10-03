@@ -68,7 +68,7 @@ export class FilterComponent implements OnInit {
     changeName(filter: Filter, name: string) {
         if (name.length === 0) {
 
-            if (filter.isType(FilterType.Speaker) && !filter.isSet(FilterField.Event)) {
+            if ((filter.isType(FilterType.Speaker) || filter.isType(FilterType.Team)) && !filter.isSet(FilterField.Event)) {
                 filter.setValue(FilterField.Event, null, true);
             } else {
                 filter.setValue(FilterField.Name, null);
@@ -77,7 +77,7 @@ export class FilterComponent implements OnInit {
         } else {
             filter.setValue(FilterField.Name, name);
 
-            if (filter.isType(FilterType.Speaker) && filter.isDefaultValue(FilterField.Event)) {
+            if ((filter.isType(FilterType.Speaker) || filter.isType(FilterType.Team)) && filter.isDefaultValue(FilterField.Event)) {
                 filter.setValue(FilterField.Event, null, false);
             }
         }

@@ -189,7 +189,7 @@ type FilterConstructorCallback = (instance: Filter) => void;
 export class FilterSpeaker extends Filter {
 
     constructor(protected eventsService: EventsService, callback?: FilterConstructorCallback) {
-        super(FilterType.Member);
+        super(FilterType.Speaker);
 
         this.addField<string>(FilterField.Status, null, [
             'SUGGESTED', 'SELECTED', 'ON_HOLD',

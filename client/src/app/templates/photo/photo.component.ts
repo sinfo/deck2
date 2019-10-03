@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, ElementRef, Input, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Role, RoleType } from '../../models/role';
 
 @Component({
     selector: 'app-photo',
@@ -24,6 +25,8 @@ export class PhotoComponent implements OnInit, AfterViewInit {
             }
         }
     }
+
+    @Input() role: RoleType;
 
     @Input() setBy: string;
     @Input() url: string;
