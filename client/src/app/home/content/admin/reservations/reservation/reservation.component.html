@@ -1,0 +1,58 @@
+<div class="reservation" [ngClass]="{'confirmed': reservation.isConfirmed(), 'cancelled': reservation.isCancelled(), 'pending': reservation.isPending()}">
+  <div class="reservation-content" *ngIf="reservation">
+
+    <div class="status" *ngIf="reservation.company">
+      <div class="company-img">
+<!-- TODO       <img [defaultImage]="loadingSrc" [lazyLoad]="reservation.company.img" [ngStyle]="{'height': '100%', 'width': 'auto' }">-->
+                <img src="reservation.company.img" [ngStyle]="{'height': '100%', 'width': 'auto' }">
+      </div>
+
+    </div>
+
+    <hr class="divider" />
+
+    <div class="issued">
+      <b>Issued: </b>{{reservation.issued | date:'dd/MM/yyyy HH\'h\'mm'}}
+    </div>
+
+    <div class="reservation-stands-wrapper">
+      <span class="reservation-stands-list">
+
+        <div class="reservation-stands border" *ngFor="let stand of reservation.stands">
+          <div class="reservation-day">
+            <b>Day: </b>
+            {{stand.day}}
+          </div>
+          <div class="reservation-stand">
+            <b>Stand: </b>
+            {{stand.standId + 1}}
+          </div>
+        </div>
+
+      </span>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-danger" (click)="cancel()" *ngIf="reservation.feedback.status !== 'CANCELLED'">Cancel</button>
+      <button class="btn btn-success" (click)="confirm()" [disabled]="confirmationBlocked" *ngIf="adminMode && reservation.feedback.status === 'PENDING'">Confirm</button>
+      <button class="btn btn-danger" (click)="removeWarning(warning)" *ngIf="adminMode && reservation.feedback.status === 'CANCELLED'">Delete</button>
+    </div>
+  </div>
+</div>
+
+<ng-template #warning let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">WARNING</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss()">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <h5>This will <b>NOT</b> cancel the reservation. It will <b>REMOVE</b> it.</h5>
+    <h6>Are you sure you want to delete this reservation?</h6>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-primary" (click)="modal.close()">Cancel</button>
+    <button type="button" class="btn btn-danger" (click)="remove(modal)">Delete</button>
+  </div>
+</ng-template>

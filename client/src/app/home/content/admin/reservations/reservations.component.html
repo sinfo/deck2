@@ -1,0 +1,136 @@
+<div class="canvas-stands" *ngIf="event && venue">
+
+    <div class="canvas-wrapper">
+        <div class="canvas">
+
+            <div class="day-selection">
+                <b>Day: </b>
+                <ngb-pagination [collectionSize]="event.getDuration()" [pageSize]="1" [(page)]="day" (pageChange)="changeDay($event)"
+                    aria-label="Default pagination" size="sm"></ngb-pagination>
+            </div>
+
+
+            <app-venue-image [maxWidth]="30" [state]="canvasState"></app-venue-image>
+
+        </div>
+    </div>
+
+</div>
+
+<div class="info">
+
+    <ngb-tabset style="width: 100%;">
+        <ngb-tab title="Week view">
+            <ng-template ngbTabContent>
+                <div id="stands-wrapper">
+
+                    <div id="reservations-table" *ngIf="availability">
+                        <table class="table table-bordered table-striped">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th scope="col">
+                                        Stand
+                                    </th>
+                                    <th *ngFor="let day of availability.availability" scope="col">
+                                        Day {{day.day}}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngFor="let stand of availability | buildTable">
+                                    <th scope="row">
+                                        {{stand.standId + 1}}
+                                    </th>
+                                    <td *ngFor="let day of stand.days">
+                                        {{day.company ? day.company.name : ''}}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </ng-template>
+        </ngb-tab>
+        <ngb-tab title="Pending ({{reservations.pending.length}})">
+            <ng-template ngbTabContent>
+                <div class="pending">
+
+                    <div class="filter">
+
+                        <ng-template #rt let-r="result" let-t="term">
+                            <img [src]="r.company.img" class="mr-1" style="width: 70px">
+                            <ngb-highlight [result]="r.company.name" [term]="t"></ngb-highlight>
+                        </ng-template>
+
+                        <label for="typeahead-template">Filter by company:</label>
+                        <input id="typeahead-template" type="text" class="form-control" [(ngModel)]="filteredReservation"
+                            [ngbTypeahead]="search" [resultTemplate]="rt" [inputFormatter]="formatter" />
+
+                    </div>
+
+                    <div class="reservations">
+                        <div *ngFor="let reservation of reservations.pending | filterReservations : filteredReservation ">
+                            <app-reservation [reservation]="reservation" [adminMode]="true" [confirmationBlocked]="confirmationBlocked(reservation)"></app-reservation>
+                        </div>
+                    </div>
+
+                </div>
+            </ng-template>
+        </ngb-tab>
+        <ngb-tab title="Confirmed ({{reservations.confirmed.length}})">
+            <ng-template ngbTabContent>
+                <div class="confirmed">
+
+                    <div class="filter">
+
+                        <ng-template #rt let-r="result" let-t="term">
+                            <img [src]="r.company.img" class="mr-1" style="width: 70px">
+                            <ngb-highlight [result]="r.company.name" [term]="t"></ngb-highlight>
+                        </ng-template>
+
+                        <label for="typeahead-template">Filter by company:</label>
+                        <input id="typeahead-template" type="text" class="form-control" [(ngModel)]="filteredReservation"
+                            [ngbTypeahead]="search" [resultTemplate]="rt" [inputFormatter]="formatter" />
+
+                    </div>
+
+                    <div class="reservations">
+                        <div *ngFor="let reservation of reservations.confirmed | filterReservations : filteredReservation ">
+                            <app-reservation [reservation]="reservation" [adminMode]="true"></app-reservation>
+                        </div>
+                    </div>
+
+                </div>
+            </ng-template>
+        </ngb-tab>
+
+        <ngb-tab title="Cancelled ({{reservations.cancelled.length}})">
+            <ng-template ngbTabContent>
+                <div class="cancelled">
+                    <div class="filter">
+
+                        <ng-template #rt let-r="result" let-t="term">
+                            <img [src]="r.company.img" class="mr-1" style="width: 70px">
+                            <ngb-highlight [result]="r.company.name" [term]="t"></ngb-highlight>
+                        </ng-template>
+
+                        <label for="typeahead-template">Filter by company:</label>
+                        <input id="typeahead-template" type="text" class="form-control" [(ngModel)]="filteredReservation"
+                            [ngbTypeahead]="search" [resultTemplate]="rt" [inputFormatter]="formatter" />
+
+                    </div>
+
+                    <div class="reservations">
+                        <div *ngFor="let reservation of reservations.cancelled | filterReservations : filteredReservation ">
+                            <app-reservation [reservation]="reservation" [adminMode]="true"></app-reservation>
+                        </div>
+                    </div>
+
+                </div>
+            </ng-template>
+        </ngb-tab>
+
+    </ngb-tabset>
+
+</div>

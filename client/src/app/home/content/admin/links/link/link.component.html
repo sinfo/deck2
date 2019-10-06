@@ -1,0 +1,203 @@
+<div class="company" *ngIf="company">
+
+  <div class="img">
+<!-- TODO   <img [defaultImage]="loadingSrc" [lazyLoad]="company.img" [errorImage]="errorSrc">-->
+     <img src="company.img">
+  </div>
+
+  <div class="content" [ngClass]="{'content-with-link': company.link && company.link.valid}">
+
+    <div class="name">
+      <h4>{{company.name}}</h4>
+    </div>
+
+    <div class="info">
+
+      <span *ngIf="company.currentParticipation">
+        <div class="status" *ngIf="company.currentParticipation.status">
+          <b>Status:</b>
+          {{ company.currentParticipation.status }}
+        </div>
+
+        <div class="status" *ngIf="company.currentParticipation.kind">
+          <b>Kind:</b>
+          {{ company.currentParticipation.kind }}
+        </div>
+
+        <div class="status" *ngIf="company.currentParticipation.advertisementLvl">
+          <b>Advertisement:</b>
+          {{ company.currentParticipation.advertisementLvl }}
+        </div>
+
+        <div class="member" *ngIf="company.currentParticipation.member">
+          <b>Member:</b>
+          {{ company.currentParticipation.member }}
+        </div>
+      </span>
+
+      <hr class="divider" *ngIf="company.link" />
+
+    </div>
+
+    <div class="link" *ngIf="company.link">
+
+      <div class="token" *ngIf="company.link.valid">
+        <b>Link:</b>
+
+        <span class="token-copy">
+          <fa-icon [icon]="['fas', 'clipboard']" #t1="ngbTooltip" [ngbTooltip]="tipContent" triggers="click:blur"
+            (click)="copyToClipboard(t1, company.link.token)"></fa-icon>
+          <ng-template #tipContent>Copied!</ng-template>
+        </span>
+
+      </div>
+
+      <div class="created">
+        <b>Created:</b>
+        {{ company.link.created | date:'dd/MM/yyyy HH\'h\'mm'}}
+      </div>
+
+      <div class="participationDays">
+        <b>Participation days:</b>
+        {{ company.link.participationDays }}
+      </div>
+
+      <div class="expirationDate" *ngIf="company.link.expirationDate">
+        <b>Valid until:</b>
+        {{ company.link.expirationDate | date:'dd/MM/yyyy' }}
+      </div>
+
+      <div class="companyEmail" *ngIf="company.link.contacts.company">
+        <b>Company contact:</b>
+        {{ company.link.contacts.company }}
+      </div>
+
+      <div class="memberEmail" *ngIf="company.link.contacts.member">
+        <b>Member contact:</b>
+        {{ company.link.contacts.member }}
+      </div>
+
+      <hr class="divider" />
+
+      <div class="actions">
+
+        <div class="extendLink" *ngIf="extendLinkForm">
+          <form [formGroup]="extendLinkForm" class="form-inline">
+            <label>
+              <b>Expiration:</b>
+            </label>
+            <input class="form-control" type="date" formControlName="expirationDate">
+          </form>
+        </div>
+
+        <span class="actions-buttons" *ngIf="extendLinkForm === undefined">
+          <button class="btn btn-primary" (click)="alternateExtendLinkFormVisibility()">Extend</button>
+          <button class="btn btn-warning" (click)="openEditLinkForm(editLinkFormWindow)">Edit</button>
+          <button class="btn btn-success" (click)="check()" *ngIf="company.link.valid">Check</button>
+          <button class="btn btn-danger" (click)="revoke()" *ngIf="company.link.valid">Revoke</button>
+        </span>
+
+        <span class="actions-buttons" *ngIf="extendLinkForm">
+          <button class="btn btn-danger" (click)="alternateExtendLinkFormVisibility()">Cancel</button>
+          <button class="btn btn-primary" [disabled]="!extendLinkForm.valid" (click)="extend()">Extend</button>
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="addLink addLink-animation" (click)="openLinkForm(linkFormWindow)" *ngIf="event && company.link === undefined">
+    <div class="addLinkIcon">
+      <fa-icon [icon]="['fas', 'link']"></fa-icon>
+    </div>
+  </div>
+
+</div>
+
+<ng-template #linkFormWindow let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Create link for {{company.name}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="linkForm" class="form">
+
+      <div>
+        <label>Days:</label>
+        <select class="form-control" formControlName="participationDays">
+          <option *ngFor="let day of (event | getArrayOfParticipationDays)">{{day}}</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Kind:</label>
+        <input required class="form-control" type="text" formControlName="advertisementKind" placeholder="Ex: Silver, Gold...">
+      </div>
+
+      <div>
+        <label>Expiration:</label>
+        <input class="form-control" type="date" formControlName="expirationDate">
+      </div>
+
+      <div>
+        <label>Email:</label>
+        <input class="form-control" type="email" formControlName="companyEmail" placeholder="{{company.name}} employer's email">
+      </div>
+
+    </form>
+
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-danger" (click)="modal.close('Cancelled')">Cancel</button>
+    <button class="btn btn-success" [disabled]="!linkForm.valid" (click)="submitLink(modal)">Submit</button>
+  </div>
+
+</ng-template>
+
+<ng-template #editLinkFormWindow let-modal>
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Create link for {{company.name}}</h4>
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+    <form [formGroup]="editLinkForm" class="form">
+
+      <div>
+        <label>Company email:</label>
+        <input class="form-control" type="email" formControlName="companyContact" placeholder="{{company.name}} employer's email">
+      </div>
+
+      <div>
+        <label>Member email:</label>
+        <input class="form-control" type="email" formControlName="memberContact" placeholder="Member's email">
+      </div>
+
+      <div>
+        <label>Days:</label>
+        <select class="form-control" formControlName="participationDays">
+          <option *ngFor="let day of (event | getArrayOfParticipationDays)" [value]="day" [selected]="day === company.link.participationDays">{{day}}</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Kind:</label>
+        <input required class="form-control" type="text" formControlName="advertisementKind" placeholder="Ex: Silver, Gold...">
+      </div>
+
+    </form>
+
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-danger" (click)="modal.close('Cancelled')">Cancel</button>
+    <button class="btn btn-success" [disabled]="!editLinkForm.valid" (click)="edit(modal)">Submit</button>
+  </div>
+
+</ng-template>

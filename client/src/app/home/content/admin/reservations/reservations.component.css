@@ -1,0 +1,124 @@
+.info {
+    position: absolute;
+    margin-right: 3%;
+    display: flex;
+    width: 50vw;
+    right: 0;
+    flex-direction: row;
+}
+
+.info /deep/ .nav-link {
+    color: black;
+}
+
+.canvas-stands {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+
+    height: 85vh;
+    width: 40vw;
+    position: fixed;
+}
+
+.canvas-wrapper {
+    height: 100%;
+}
+
+.stands-wrapper {
+    width: 100%;
+}
+
+.day-selection {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 100%;
+    margin-bottom: 2%;
+}
+
+.day-selection b {
+    margin-right: 20px;
+}
+
+/deep/ .pagination {
+    margin: 0;
+}
+
+/deep/ .pagination .page-item .page-link {
+    color: black !important;
+}
+
+/deep/ .pagination .page-item.active .page-link {
+    background-color: #00386f !important;
+    border-color: #00386f !important;
+    color: white !important;
+}
+
+.canvas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    height: 100%;
+    width: fit-content;
+}
+
+.title {
+    margin-top: 2%;
+}
+
+.filter {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    margin-top: 2%;
+}
+
+.filter label {
+    width: 20%;
+    margin: 0;
+}
+
+.filter input {
+    width: 40%;
+}
+
+.reservations {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: wrap;
+
+    margin-top: 3%;
+}
+
+.reservations div {
+    width: 40%;
+}
+
+#reservations-table {
+    overflow-y: hidden;
+}
+
+table td, th {
+    text-align: center;
+    vertical-align: middle;
+    width: 16.67%;
+}
+
+.table .thead-dark th {
+    background-color: #00234b;
+    border-color: #32383e;
+}
+
+.table-bordered, .table-bordered td, .table-bordered th {
+    border-color: #00224c9e;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 34, 76, 0.1);
+}

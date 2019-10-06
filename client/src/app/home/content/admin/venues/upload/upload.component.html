@@ -1,0 +1,46 @@
+<ng-template #content let-modal>
+
+  <div class="modal-header">
+    <h4 class="modal-title" id="modal-basic-title">Upload venue's image</h4>
+
+    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+  <div class="modal-body">
+
+    <div *ngIf="error === undefined || error.type !== 'fatal'">
+      <div *ngIf="error">
+        <h6 class="text-danger">{{error.message}}</h6>
+      </div>
+
+      <div class="venueUploaded" *ngIf="venue">
+<!--  TODO      <img [defaultImage]="loadingSrc" [lazyLoad]="venue.image" alt="Venue Image">-->
+        <img src="venue.image" alt="Venue Image">
+      </div>
+
+      <div class="uploadVenue" [ngClass]="{ 'spaced': venue }">
+        <label class="btn btn-default">
+          <input type="file" (change)="selectFile($event)">
+        </label>
+
+        <button class="btn btn-primary" [disabled]="!selectedFiles" (click)="upload()">Upload</button>
+      </div>
+    </div>
+
+    <div class="fatal-error" *ngIf="error && error.type === 'fatal'">
+      <h6 class="text-danger">{{error.message}}</h6>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <div class="progressbar">
+      <ngb-progressbar type="info" [value]="progress.percentage" [max]="100"></ngb-progressbar>
+    </div>
+  </div>
+
+</ng-template>
+
+<button class="btn btn-primary" (click)="open(content)">Upload image</button>

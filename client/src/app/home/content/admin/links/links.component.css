@@ -1,0 +1,32 @@
+.companies {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.company {
+    width: 40%;
+    margin: 1%;
+}
+
+.title h6 {
+    color: white;
+    margin: 0;
+}
+
+.accordion /deep/ .card {
+    background-color: #00254a;
+    border-color: #143c69;
+}
+
+.accordion /deep/ button:hover, .accordion /deep/ button {
+    text-decoration: none !important;
+}
+
+.accordion /deep/ .card-header button {
+    width: 100%;
+    height: 100%;
+    padding: .5rem 1.25rem;
+    text-align: left;
+}    

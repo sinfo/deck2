@@ -1,0 +1,33 @@
+<nav class="navbar navbar-dark bg-dark justify-content-between">
+  <span class="routers">
+    <span class="navbar-brand">Sponsors</span>
+
+    <a class="nav-link" routerLink="/admin/reservations" routerLinkActive="selected" [routerLinkActiveOptions]="{exact: true}">Reservations</a>
+
+    <a class="nav-link" routerLink="/admin/links" routerLinkActive="selected" [routerLinkActiveOptions]="{exact: true}">Links</a>
+
+    <a class="nav-link" routerLink="/admin/venues" routerLinkActive="selected" [routerLinkActiveOptions]="{exact: true}">Venue</a>
+
+  </span>
+
+
+  <div class="right-side">
+
+    <div class="navbar-text edition" *ngIf="event">
+
+      <div ngbDropdown class="d-inline-block">
+        <button class="event-dropdown" id="dropdownBasic1" ngbDropdownToggle>{{ event.name }}</button>
+        <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+          <button *ngFor="let e of events" class="dropdown-item" (click)="switchEvent(e.id)">{{ e.name }}</button>
+        </div>
+      </div>
+
+    </div>
+
+    <img src="https://sinfo.ams3.digitaloceanspaces.com/static/25-sinfo/powerOn.png" alt="SINFO">
+  </div>
+</nav>
+
+<div class="content">
+  <router-outlet></router-outlet>
+</div>

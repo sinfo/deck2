@@ -1,0 +1,183 @@
+.company {
+    display: flex;
+    flex-direction: row;
+
+    position: relative;
+
+    border: 3px solid black;
+    border-radius: 15px;
+    background-color: #f6f9fceb;
+
+    height: 100%;
+}
+
+.img {
+    display: flex;
+    align-items: center;
+    max-width: 30%;
+}
+
+.img img {
+    width: 80%;
+    margin: 10%;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
+    width: 70%;
+    padding: 2%;
+}
+
+/*.content .info div {
+    margin-top: 2%;
+    margin-bottom: 2%;
+}*/
+
+.content-with-link {
+    justify-content: space-between !important;
+}
+
+.addLink-animation {
+    opacity: 0;
+
+    transition: opacity 0.2s ease-in; /* vendorless fallback */
+         -o-transition: opacity 0.2s ease-in; /* opera */
+        -ms-transition: opacity 0.2s ease-in; /* IE 10 betas, not needed in final build. */
+       -moz-transition: opacity  0.2s ease-in; /* Firefox */
+    -webkit-transition: opacity 0.2s ease-in; /*safari and chrome */
+}
+
+.addLink-animation:hover {
+    opacity: 1;    
+            transition: opacity 0.2s ease-in; /* vendorless fallback */
+         -o-transition: opacity 0.2s ease-in; /* opera */
+        -ms-transition: opacity 0.2s ease-in; /* IE 10 betas, not needed in final build. */
+       -moz-transition: opacity  0.2s ease-in; /* Firefox */
+    -webkit-transition: opacity 0.2s ease-in; /*safari and chrome */
+
+    cursor: pointer;
+}
+
+.addLink {
+    position: absolute;
+
+    width: 100%;
+    height: 100%;
+
+    padding: 1%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-radius: 15px;
+    background-color: #ffffffb3;
+}
+
+.addLinkIcon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 6rem;
+    color: #002448;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.form div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    
+    width: 100%;
+    margin-top: 2%;
+    margin-bottom: 2%;
+}
+
+.form label {
+    margin: 0;
+    font-size: 1vw;
+}
+
+.form input, .form select {
+    width: 70%;
+}
+
+.modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.addLink button {
+    display: flex;
+    justify-content: center;
+
+    padding: 0;
+    width: 2vw;
+    height: 2vw;
+}
+
+.cancel {
+    position: absolute;
+    right: 2%;
+    top: 5%;
+}
+
+.submit {
+    position: absolute;
+    right: 2%;
+    bottom: 5%;
+}
+
+.divider {
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+    height: 0.1rem;
+}
+
+.token-copy {
+    margin-left: 2%;
+}
+
+.token-copy:hover {
+    cursor: pointer;
+    color: #2c5285;
+}
+
+.actions-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+}
+
+.actions-buttons button {
+    width: 35%;
+    margin: 1%;
+}
+
+.extendLink {
+    margin-bottom: 5%;
+}
+
+.extendLink form {
+    display: flex;
+    justify-content: space-between;
+
+    width: 100%;
+    background-color: transparent;
+}
+
+.extendLink form input {
+    width: 65%;
+}

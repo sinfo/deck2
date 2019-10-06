@@ -1,0 +1,8 @@
+<span class="image-wrapper" *ngIf="venue" [ngClass]="{'on': canvasOn}">
+<!-- TODO <img (onLoad)="canvasStateSetup()" [defaultImage]="loadingSrc" [lazyLoad]="venue.image" [ngStyle]="{'max-width.vw': maxWidth ? maxWidth: 'unset', 'max-height.vh': maxHeight ? maxHeight : 'unset'}">-->
+  <img (onLoad)="canvasStateSetup()" src="venue.image" [ngStyle]="{'max-width.vw': maxWidth ? maxWidth: 'unset', 'max-height.vh': maxHeight ? maxHeight : 'unset'}">
+
+  <span class="venue-canvas">
+    <app-canvas [state]="state" (standClickCanvas)="standClickCanvas($event)"></app-canvas>
+  </span>
+</span>

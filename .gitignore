@@ -111,3 +111,4 @@ yarn-error.log
 
 deck2_nginx.conf
 docker-compose.yml
+deck.sh

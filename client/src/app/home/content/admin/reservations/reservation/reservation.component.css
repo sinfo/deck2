@@ -1,0 +1,128 @@
+.reservation-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+    padding: 1%;
+}
+
+.reservation-content .issued {
+    display: flex;
+    justify-content: center;
+    
+    margin-bottom: 3%;
+    font-size: 1vw;
+}
+
+.reservation {
+    position: relative;
+
+    width: 100%;
+    height: fit-content;
+    min-height: 50%;
+
+    padding: 2%;
+    margin-bottom: 3%;
+
+    border: 2px solid black;
+    border-radius: 15px;
+}
+
+.cancelled {
+    border-color: red;
+    background-color: #ff000033;
+}
+
+.confirmed {
+    border-color: #00386f;
+    background-color: #dbedff29;
+}
+
+.pending {
+    border-color: #d8d80c;
+    background-color: #fbfbec8a;
+}
+
+.reservation-stands-wrapper {
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: 3%;
+}
+
+.reservation-stands-list {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: wrap;
+
+    font-size: 1vw;
+}
+
+.reservation-stands {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    
+    width: fit-content;
+    padding: 1%;
+
+    margin: 1%;
+}
+
+.reservation-stands div {
+    display: flex;
+    justify-content: space-between;
+}
+
+.reservation-stands div b {
+    margin-right: 10px;
+}
+
+.reservation .status {
+    display: flex;
+    justify-content: space-between;
+}
+
+.reservation .status .company-img {
+    display: flex;
+    justify-content: center;
+    
+    height: 15vh;
+    width: 100%;
+}
+
+.divider {
+    margin-top: 0.6rem;
+    margin-bottom: 0.6rem;
+    height: 0.1rem;
+    width: 90%;
+}
+
+.reservation .actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+
+    margin-top: 2%;
+}
+
+.reservation .actions button {
+    font-size: 1vw;
+}
+
+.reservation .stands-counter {
+    position: absolute;
+    top: 3%;
+    left: 5%;
+}
+
+.modal-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
