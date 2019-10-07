@@ -35,7 +35,7 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 
 	meeting, err := mongodb.Meetings.DeleteMeeting(id)
 	if err != nil {
-		http.Error(w, "Could not find team", http.StatusNotFound)
+		http.Error(w, "Could not find meeting", http.StatusNotFound)
 		return
 	}
 
@@ -57,7 +57,7 @@ func createMeeting(w http.ResponseWriter, r *http.Request) {
 	var cmd = mongodb.CreateMeetingData{}
 
 	if err := cmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 

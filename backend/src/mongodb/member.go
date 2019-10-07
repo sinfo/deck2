@@ -497,6 +497,11 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 
 func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error) {
 
+	member, err := m.GetMember(id)
+	if err != nil {
+		return nil, err
+	}
+
 	// Check companies
 	var c models.Company
 	if err := Companies.Collection.FindOne(Companies.Context, bson.M{"participations.member": id}).Decode(&c); err == nil {
@@ -533,11 +538,6 @@ func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error
 	var t models.Team
 	if err := Teams.Collection.FindOne(Teams.Context, bson.M{"members.member": id}).Decode(&t); err == nil {
 		return nil, errors.New(MemberAssociated)
-	}
-
-	member, err := m.GetMember(id)
-	if err != nil {
-		return nil, err
 	}
 
 	deleteResult, err := m.Collection.DeleteOne(m.Context, bson.M{"_id": id})
