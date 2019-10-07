@@ -91,8 +91,11 @@ func healthCheck(w http.ResponseWriter, req *http.Request) {
 
 // Router is the exported router.
 var Router http.Handler
-var UrlRegexCompiler *regexp.Regexp
 
+//URLRegexCompiler is a regex compiler for urls
+var URLRegexCompiler *regexp.Regexp
+
+// InitializeRouter initializes the router and all handlers
 func InitializeRouter() {
 	r := mux.NewRouter()
 
@@ -103,9 +106,9 @@ func InitializeRouter() {
 	r.Use(headersMiddleware)
 
 	if config.Production {
-		UrlRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(https:\/\/)?(.*sinfo\.org)(\/.*)?)\/?\|.*`)
+		URLRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(https:\/\/)?(.*sinfo\.org)(\/.*)?)\/?\|.*`)
 	} else {
-		UrlRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(.*))(\/)?\|.*`)
+		URLRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(.*))(\/)?\|.*`)
 	}
 
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})

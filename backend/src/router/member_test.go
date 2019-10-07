@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -53,8 +54,9 @@ func containsMemberPublic(members []models.MemberPublic, member *models.Member) 
 }
 
 func TestGetMembers(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
@@ -81,8 +83,9 @@ func TestGetMembers(t *testing.T) {
 }
 
 func TestGetMembersName(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
@@ -134,12 +137,13 @@ func TestGetMembersName(t *testing.T) {
 }
 
 func TestGetMembersEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	_, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
 	assert.NilError(t, err)
 
 	event1, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: "SINFO2"})
@@ -197,7 +201,8 @@ func TestGetMembersEvent(t *testing.T) {
 }
 
 func TestGetMember(t *testing.T) {
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
@@ -217,14 +222,16 @@ func TestGetMember(t *testing.T) {
 }
 
 func TestGetMemberBadID(t *testing.T) {
+
 	res, err := executeRequest("GET", "/members/wrong", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
 func TestCreateMember(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	b, errMarshal := json.Marshal(Member1Data)
 	assert.NilError(t, errMarshal)
@@ -250,7 +257,8 @@ func TestCreateMember(t *testing.T) {
 }
 
 func TestCreateMemberBadPayload(t *testing.T) {
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	cmdName := mongodb.CreateMemberData{
 		Name:  "",
@@ -302,7 +310,8 @@ func TestCreateMemberBadPayload(t *testing.T) {
 }
 
 func TestUpdateMember(t *testing.T) {
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
@@ -325,7 +334,8 @@ func TestUpdateMember(t *testing.T) {
 }
 
 func TestUpdateMemberBadPayload(t *testing.T) {
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
@@ -370,8 +380,9 @@ func TestUpdateMemberBadPayload(t *testing.T) {
 }
 
 func TestGetMembersPublic(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
@@ -398,8 +409,9 @@ func TestGetMembersPublic(t *testing.T) {
 }
 
 func TestGetMembersPublicName(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	Member1, err := mongodb.Members.CreateMember(Member1Data)
 	if err != nil {
@@ -451,12 +463,13 @@ func TestGetMembersPublicName(t *testing.T) {
 }
 
 func TestGetMembersPublicEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	_, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
 	assert.NilError(t, err)
 
 	event1, err := mongodb.Events.CreateEvent(mongodb.CreateEventData{Name: "SINFO2"})
@@ -514,11 +527,12 @@ func TestGetMembersPublicEvent(t *testing.T) {
 }
 
 func TestDeleteMember(t *testing.T) {
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	ctx := context.Background()
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	_, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
 	assert.NilError(t, err)
 
 	team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})

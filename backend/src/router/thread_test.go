@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -22,11 +23,12 @@ var (
 )
 
 func TestGetThread(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -51,10 +53,11 @@ func TestGetThread(t *testing.T) {
 }
 
 func TestGetThreadNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -64,14 +67,15 @@ func TestGetThreadNotFound(t *testing.T) {
 }
 
 func TestAddCommentToThread(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -143,14 +147,15 @@ func TestAddCommentToThread(t *testing.T) {
 }
 
 func TestAddCommentToThreadInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -213,14 +218,15 @@ func TestAddCommentToThreadInvalidPayload(t *testing.T) {
 }
 
 func TestAddCommentToThreadInvalidThreadID(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -270,14 +276,15 @@ func TestAddCommentToThreadInvalidThreadID(t *testing.T) {
 }
 
 func TestRemoveCommentFromThread(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -345,14 +352,15 @@ func TestRemoveCommentFromThread(t *testing.T) {
 }
 
 func TestRemoveCommentFromThreadInvalidThread(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -406,14 +414,15 @@ func TestRemoveCommentFromThreadInvalidThread(t *testing.T) {
 }
 
 func TestRemoveCommentFromThreadInvalidPost(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 

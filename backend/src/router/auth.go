@@ -51,7 +51,7 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		log.Println("invalid oauth google state")
 		return
 	}
-	matches := UrlRegexCompiler.FindStringSubmatch(oauthState.Value)
+	matches := URLRegexCompiler.FindStringSubmatch(oauthState.Value)
 	if len(matches) <= 1 {
 		log.Println("Invalid RedirectUrl")
 		return

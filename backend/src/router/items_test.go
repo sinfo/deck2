@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -21,11 +22,12 @@ var (
 )
 
 func TestCreateItem(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -55,11 +57,12 @@ func TestCreateItem(t *testing.T) {
 }
 
 func TestCreateItemInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -80,11 +83,12 @@ func TestCreateItemInvalidPayload(t *testing.T) {
 }
 
 func TestGetItem(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -114,11 +118,12 @@ func TestGetItem(t *testing.T) {
 }
 
 func TestGetItems(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -149,11 +154,12 @@ func TestGetItems(t *testing.T) {
 }
 
 func TestUpdateItem(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -195,11 +201,12 @@ func TestUpdateItem(t *testing.T) {
 }
 
 func TestUpdateItemNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 

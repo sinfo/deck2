@@ -17,14 +17,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+//SessionsType contains database information on sessions
 type SessionsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // Cached version of the public sessions for the current event
 var currentPublicSessions *[]*models.SessionPublic
 
+//ResetCurrentPublicSessions resets public current sessions
 func ResetCurrentPublicSessions() {
 	currentPublicSessions = nil
 }
@@ -174,6 +175,7 @@ func (csd *CreateSessionData) ParseBody(body io.Reader) error {
 
 // CreateSession creates a new session.
 func (s *SessionsType) CreateSession(data CreateSessionData) (*models.Session, error) {
+	ctx = context.Background()
 
 	var session models.Session
 
@@ -205,13 +207,13 @@ func (s *SessionsType) CreateSession(data CreateSessionData) (*models.Session, e
 		}
 	}
 
-	insertResult, err := s.Collection.InsertOne(s.Context, c)
+	insertResult, err := s.Collection.InsertOne(ctx, c)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := s.Collection.FindOne(s.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&session); err != nil {
+	if err := s.Collection.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&session); err != nil {
 		log.Println("Error finding created session:", err)
 		return nil, err
 	}
@@ -223,9 +225,10 @@ func (s *SessionsType) CreateSession(data CreateSessionData) (*models.Session, e
 
 // GetSession gets an session by its ID
 func (s *SessionsType) GetSession(sessionID primitive.ObjectID) (*models.Session, error) {
+	ctx = context.Background()
 	var session models.Session
 
-	err := s.Collection.FindOne(s.Context, bson.M{"_id": sessionID}).Decode(&session)
+	err := s.Collection.FindOne(ctx, bson.M{"_id": sessionID}).Decode(&session)
 	if err != nil {
 		return nil, err
 	}
@@ -235,9 +238,10 @@ func (s *SessionsType) GetSession(sessionID primitive.ObjectID) (*models.Session
 
 // GetSessionPublic gets a session (public) by its ID
 func (s *SessionsType) GetSessionPublic(sessionID primitive.ObjectID) (*models.SessionPublic, error) {
+	ctx = context.Background()
 	var session models.Session
 
-	err := s.Collection.FindOne(s.Context, bson.M{"_id": sessionID}).Decode(&session)
+	err := s.Collection.FindOne(ctx, bson.M{"_id": sessionID}).Decode(&session)
 	if err != nil {
 		return nil, err
 	}
@@ -328,6 +332,7 @@ func (usd *UpdateSessionData) ParseBody(body io.Reader) error {
 
 // UpdateSession updates a session by its ID
 func (s *SessionsType) UpdateSession(sessionID primitive.ObjectID, data UpdateSessionData) (*models.Session, error) {
+	ctx = context.Background()
 
 	var session models.Session
 
@@ -368,7 +373,7 @@ func (s *SessionsType) UpdateSession(sessionID primitive.ObjectID, data UpdateSe
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, bson.M{"_id": sessionID}, updateQuery, optionsQuery).Decode(&session); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"_id": sessionID}, updateQuery, optionsQuery).Decode(&session); err != nil {
 		return nil, err
 	}
 
@@ -379,10 +384,11 @@ func (s *SessionsType) UpdateSession(sessionID primitive.ObjectID, data UpdateSe
 
 // DeleteSession deletes a session by its ID.
 func (s *SessionsType) DeleteSession(sessionID primitive.ObjectID) (*models.Session, error) {
+	ctx = context.Background()
 
 	var session models.Session
 
-	err := s.Collection.FindOneAndDelete(s.Context, bson.M{"_id": sessionID}).Decode(&session)
+	err := s.Collection.FindOneAndDelete(ctx, bson.M{"_id": sessionID}).Decode(&session)
 	if err != nil {
 		return nil, err
 	}
@@ -403,6 +409,7 @@ type GetSessionsOptions struct {
 
 // GetSessions retrieves all sessions from the current event if no event is specified
 func (s *SessionsType) GetSessions(options GetSessionsOptions) ([]*models.Session, error) {
+	ctx = context.Background()
 
 	var sessions = make([]*models.Session, 0)
 
@@ -484,6 +491,7 @@ type GetSessionsPublicOptions struct {
 
 // GetPublicSessions gets all sessions specified with a query to be shown publicly
 func (s *SessionsType) GetPublicSessions(options GetSessionsPublicOptions) ([]*models.SessionPublic, error) {
+	ctx = context.Background()
 
 	var public = make([]*models.SessionPublic, 0)
 	var filtered = make([]*models.Session, 0)

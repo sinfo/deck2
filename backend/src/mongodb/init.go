@@ -15,23 +15,40 @@ var ctx context.Context
 var db *mongo.Database
 
 var (
-	Events        *EventsType
-	Companies     *CompaniesType
-	Speakers      *SpeakersType
-	Teams         *TeamsType
-	Members       *MembersType
-	Items         *ItemsType
-	Packages      *PackagesType
-	Meetings      *MeetingsType
-	Contacts      *ContactsType
-	Threads       *ThreadsType
-	Posts         *PostsType
-	FlightInfo    *FlightInfoType
-	Sessions      *SessionsType
-	Billings      *BillingsType
-	CompanyReps   *CompanyRepsType
+	//Events is an instance of a mongodb collection
+	Events *EventsType
+	//Companies is an instance of a mongodb collection
+	Companies *CompaniesType
+	//Speakers is an instance of a mongodb collection
+	Speakers *SpeakersType
+	//Teams is an instance of a mongodb collection
+	Teams *TeamsType
+	//Members is an instance of a mongodb collection
+	Members *MembersType
+	//Items is an instance of a mongodb collection
+	Items *ItemsType
+	//Packages is an instance of a mongodb collection
+	Packages *PackagesType
+	//Meetings is an instance of a mongodb collection
+	Meetings *MeetingsType
+	//Contacts is an instance of a mongodb collection
+	Contacts *ContactsType
+	//Threads is an instance of a mongodb collection
+	Threads *ThreadsType
+	//Posts is an instance of a mongodb collection
+	Posts *PostsType
+	//FlightInfo is an instance of a mongodb collection
+	FlightInfo *FlightInfoType
+	//Sessions is an instance of a mongodb collection
+	Sessions *SessionsType
+	//Billings is an instance of a mongodb collection
+	Billings *BillingsType
+	//CompanyReps is an instance of a mongodb collection
+	CompanyReps *CompanyRepsType
+	//Notifications is an instance of a mongodb collection
 	Notifications *NotificationsType
-	Tokens        *TokensType
+	//Tokens is an instance of a mongodb collection
+	Tokens *TokensType
 )
 
 var (
@@ -42,7 +59,7 @@ const (
 	cacheCleanupPeriod = 1 * time.Hour
 )
 
-// In case you decide to run many instances of this program at the same time (for example
+// CleanupCache : In case you decide to run many instances of this program at the same time (for example
 // using a load balancer), the cached versions between these instances will not coincide.
 // A workaround is to just clean up the cached content every X time.
 func CleanupCache() {
@@ -70,7 +87,7 @@ func InitializeDatabase() {
 		return
 	}
 
-	ctx := context.Background()
+	ctx = context.Background()
 
 	err = client.Connect(ctx)
 	if err != nil {
@@ -89,87 +106,70 @@ func InitializeDatabase() {
 
 	Events = &EventsType{
 		Collection: db.Collection("events"),
-		Context:    ctx,
 	}
 
 	Companies = &CompaniesType{
 		Collection: db.Collection("companies"),
-		Context:    ctx,
 	}
 
 	Speakers = &SpeakersType{
 		Collection: db.Collection("speakers"),
-		Context:    ctx,
 	}
 
 	Teams = &TeamsType{
 		Collection: db.Collection("teams"),
-		Context:    ctx,
 	}
 
 	Members = &MembersType{
 		Collection: db.Collection("members"),
-		Context:    ctx,
 	}
 
 	Items = &ItemsType{
 		Collection: db.Collection("items"),
-		Context:    ctx,
 	}
 
 	Packages = &PackagesType{
 		Collection: db.Collection("packages"),
-		Context:    ctx,
 	}
 
 	Meetings = &MeetingsType{
 		Collection: db.Collection("meetings"),
-		Context:    ctx,
 	}
 
 	Contacts = &ContactsType{
 		Collection: db.Collection("contacts"),
-		Context:    ctx,
 	}
 
 	Threads = &ThreadsType{
 		Collection: db.Collection("threads"),
-		Context:    ctx,
 	}
 
 	Posts = &PostsType{
 		Collection: db.Collection("posts"),
-		Context:    ctx,
 	}
 
 	FlightInfo = &FlightInfoType{
 		Collection: db.Collection("flightInfo"),
-		Context:    ctx,
 	}
 
 	Sessions = &SessionsType{
 		Collection: db.Collection("sessions"),
-		Context:    ctx,
 	}
 
 	Billings = &BillingsType{
 		Collection: db.Collection("billings"),
-		Context:    ctx,
 	}
 
 	CompanyReps = &CompanyRepsType{
 		Collection: db.Collection("companyReps"),
-		Context:    ctx,
 	}
 
 	Notifications = &NotificationsType{
 		Collection: db.Collection("notifications"),
-		Context:    ctx,
 	}
 
 	Tokens = &TokensType{
 		Collection: db.Collection("tokens"),
-		Context:    ctx,
 	}
 
 	log.Println("Connected to the database successfully")

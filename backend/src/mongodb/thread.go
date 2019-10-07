@@ -15,9 +15,9 @@ import (
 // ThreadsType contains important database information on Meetings
 type ThreadsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
+//CreateThreadData holds data needed to create a thread
 type CreateThreadData struct {
 	Entry   primitive.ObjectID
 	Meeting *primitive.ObjectID
@@ -26,6 +26,7 @@ type CreateThreadData struct {
 
 // CreateThread creates a new thread and saves it to the database
 func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error) {
+	ctx := context.Background()
 
 	query := bson.M{
 		"entry":    data.Entry,
@@ -38,7 +39,7 @@ func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error
 		query["meeting"] = *data.Meeting
 	}
 
-	insertResult, err := t.Collection.InsertOne(t.Context, query)
+	insertResult, err := t.Collection.InsertOne(ctx, query)
 
 	if err != nil {
 		return nil, err
@@ -56,9 +57,10 @@ func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error
 
 // GetThread gets a thread by its ID.
 func (t *ThreadsType) GetThread(threadID primitive.ObjectID) (*models.Thread, error) {
+	ctx := context.Background()
 	var thread models.Thread
 
-	err := t.Collection.FindOne(t.Context, bson.M{"_id": threadID}).Decode(&thread)
+	err := t.Collection.FindOne(ctx, bson.M{"_id": threadID}).Decode(&thread)
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +70,11 @@ func (t *ThreadsType) GetThread(threadID primitive.ObjectID) (*models.Thread, er
 
 // DeleteThread deletes a thread by its ID.
 func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread, error) {
+	ctx := context.Background()
 
 	var thread models.Thread
 
-	err := t.Collection.FindOneAndDelete(t.Context, bson.M{"_id": threadID}).Decode(&thread)
+	err := t.Collection.FindOneAndDelete(ctx, bson.M{"_id": threadID}).Decode(&thread)
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +84,7 @@ func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread,
 
 // AddCommentToThread adds a Post to a thread's comments.
 func (t *ThreadsType) AddCommentToThread(threadID primitive.ObjectID, postID primitive.ObjectID) (*models.Thread, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
@@ -95,7 +99,7 @@ func (t *ThreadsType) AddCommentToThread(threadID primitive.ObjectID, postID pri
 
 	var updatedThread models.Thread
 
-	if err := t.Collection.FindOneAndUpdate(t.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedThread); err != nil {
+	if err := t.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedThread); err != nil {
 		log.Println("error updating thread:", err)
 		return nil, err
 	}
@@ -105,6 +109,7 @@ func (t *ThreadsType) AddCommentToThread(threadID primitive.ObjectID, postID pri
 
 // RemoveCommentFromThread removes a comment Post from a thread
 func (t *ThreadsType) RemoveCommentFromThread(threadID primitive.ObjectID, postID primitive.ObjectID) (*models.Thread, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$pull": bson.M{
@@ -119,7 +124,7 @@ func (t *ThreadsType) RemoveCommentFromThread(threadID primitive.ObjectID, postI
 
 	var updatedThread models.Thread
 
-	if err := t.Collection.FindOneAndUpdate(t.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedThread); err != nil {
+	if err := t.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedThread); err != nil {
 		log.Println("error removing comment from thread:", err)
 		return nil, err
 	}

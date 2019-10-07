@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -25,12 +26,13 @@ var (
 )
 
 func TestCreatePackage(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -74,12 +76,13 @@ func TestCreatePackage(t *testing.T) {
 }
 
 func TestCreatePackageInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -100,11 +103,12 @@ func TestCreatePackageInvalidPayload(t *testing.T) {
 }
 
 func TestCreatePackageInvalidItemID(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -126,12 +130,13 @@ func TestCreatePackageInvalidItemID(t *testing.T) {
 }
 
 func TestUpdatePackageItems(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -204,12 +209,13 @@ func TestUpdatePackageItems(t *testing.T) {
 }
 
 func TestUpdatePackageItemsPackageIDNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -228,12 +234,13 @@ func TestUpdatePackageItemsPackageIDNotFound(t *testing.T) {
 }
 
 func TestUpdatePackageItemsInvalidItemID(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -280,12 +287,13 @@ func TestUpdatePackageItemsInvalidItemID(t *testing.T) {
 }
 
 func TestGetPackages(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -328,12 +336,13 @@ func TestGetPackages(t *testing.T) {
 }
 
 func TestGetPackage(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -375,12 +384,13 @@ func TestGetPackage(t *testing.T) {
 }
 
 func TestGetPackageNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -390,12 +400,13 @@ func TestGetPackageNotFound(t *testing.T) {
 }
 
 func TestUpdatePackage(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -450,12 +461,13 @@ func TestUpdatePackage(t *testing.T) {
 }
 
 func TestUpdatePackageInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -499,12 +511,13 @@ func TestUpdatePackageInvalidPayload(t *testing.T) {
 }
 
 func TestUpdatePackageNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 

@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -47,13 +48,14 @@ type createSessionPayload struct {
 }
 
 func TestCreateSession(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Sessions.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -121,13 +123,14 @@ func TestCreateSession(t *testing.T) {
 }
 
 func TestCreateSessionBadPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Sessions.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -169,12 +172,13 @@ func TestCreateSessionBadPayload(t *testing.T) {
 }
 
 func TestGetSession(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Sessions.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -231,12 +235,13 @@ func TestGetSession(t *testing.T) {
 }
 
 func TestGetSessionPublic(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Sessions.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -293,12 +298,13 @@ func TestGetSessionPublic(t *testing.T) {
 }
 
 func TestGetSessionNotFound(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Sessions.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -308,13 +314,14 @@ func TestGetSessionNotFound(t *testing.T) {
 }
 
 func TestGetSessions(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Sessions.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -381,13 +388,14 @@ func TestGetSessions(t *testing.T) {
 }
 
 func TestUpdateSession(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Sessions.Collection.Drop(mongodb.Sessions.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Sessions.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 

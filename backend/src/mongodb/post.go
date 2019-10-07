@@ -17,11 +17,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// PostsType contains database information on posts
 type PostsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
+//CreatePostData holds data needed to create a post
 type CreatePostData struct {
 	Member primitive.ObjectID
 	Text   string
@@ -29,6 +30,7 @@ type CreatePostData struct {
 
 // CreatePost creates a new post and saves it to the database
 func (p *PostsType) CreatePost(data CreatePostData) (*models.Post, error) {
+	ctx = context.Background()
 
 	query := bson.M{
 		"member": data.Member,
@@ -36,7 +38,7 @@ func (p *PostsType) CreatePost(data CreatePostData) (*models.Post, error) {
 		"posted": time.Now().UTC(),
 	}
 
-	insertResult, err := p.Collection.InsertOne(p.Context, query)
+	insertResult, err := p.Collection.InsertOne(ctx, query)
 
 	if err != nil {
 		return nil, err
@@ -54,9 +56,10 @@ func (p *PostsType) CreatePost(data CreatePostData) (*models.Post, error) {
 
 // GetPost gets a post by its ID.
 func (p *PostsType) GetPost(postID primitive.ObjectID) (*models.Post, error) {
+	ctx = context.Background()
 	var post models.Post
 
-	err := p.Collection.FindOne(p.Context, bson.M{"_id": postID}).Decode(&post)
+	err := p.Collection.FindOne(ctx, bson.M{"_id": postID}).Decode(&post)
 	if err != nil {
 		return nil, err
 	}
@@ -66,10 +69,11 @@ func (p *PostsType) GetPost(postID primitive.ObjectID) (*models.Post, error) {
 
 // DeletePost deletes a post by its ID.
 func (p *PostsType) DeletePost(postID primitive.ObjectID) (*models.Post, error) {
+	ctx = context.Background()
 
 	var post models.Post
 
-	err := p.Collection.FindOneAndDelete(p.Context, bson.M{"_id": postID}).Decode(&post)
+	err := p.Collection.FindOneAndDelete(ctx, bson.M{"_id": postID}).Decode(&post)
 	if err != nil {
 		return nil, err
 	}
@@ -77,6 +81,7 @@ func (p *PostsType) DeletePost(postID primitive.ObjectID) (*models.Post, error) 
 	return &post, nil
 }
 
+//UpdatePostData contains data needed to update a post
 type UpdatePostData struct {
 	Text string `json:"text"`
 }
@@ -97,6 +102,7 @@ func (upd *UpdatePostData) ParseBody(body io.Reader) error {
 
 // UpdatePost updates a post by its ID
 func (p *PostsType) UpdatePost(postID primitive.ObjectID, data UpdatePostData) (*models.Post, error) {
+	ctx = context.Background()
 
 	var post models.Post
 
@@ -110,7 +116,7 @@ func (p *PostsType) UpdatePost(postID primitive.ObjectID, data UpdatePostData) (
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := p.Collection.FindOneAndUpdate(p.Context, bson.M{"_id": postID}, updateQuery, optionsQuery).Decode(&post); err != nil {
+	if err := p.Collection.FindOneAndUpdate(ctx, bson.M{"_id": postID}, updateQuery, optionsQuery).Decode(&post); err != nil {
 		return nil, err
 	}
 

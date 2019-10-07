@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -45,7 +46,9 @@ func containsTeamPublic(teams []models.TeamPublic, team *models.Team) bool {
 
 func setupTest() {
 
-	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	ctx := context.Background()
+
+	_, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
 
 	if err != nil {
 		log.Fatal(err)
@@ -60,11 +63,12 @@ func setupTest() {
 }
 
 func TestGetTeams(t *testing.T) {
+	ctx := context.Background()
 
 	setupTest()
 
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
@@ -89,11 +93,12 @@ func TestGetTeams(t *testing.T) {
 }
 
 func TestGetTeamsByName(t *testing.T) {
+	ctx := context.Background()
 
 	setupTest()
 
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
@@ -127,11 +132,12 @@ func TestGetTeamsByName(t *testing.T) {
 }
 
 func TestGetTeamsByEvent(t *testing.T) {
+	ctx := context.Background()
 
 	setupTest()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
 
 	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
@@ -176,11 +182,12 @@ func TestGetTeamsBadQuery(t *testing.T) {
 }
 
 func TestGetTeam(t *testing.T) {
+	ctx := context.Background()
 
 	setupTest()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
@@ -218,11 +225,12 @@ func TestGetTeamBadID(t *testing.T) {
 }
 
 func TestDeleteTeam(t *testing.T) {
+	ctx := context.Background()
 
 	setupTest()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
@@ -268,9 +276,10 @@ func TestDeleteTeamsBadID(t *testing.T) {
 }
 
 func TestCreateTeam(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -303,9 +312,10 @@ func TestCreateTeam(t *testing.T) {
 }
 
 func TestUpdateTeam(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -333,8 +343,9 @@ func TestUpdateTeam(t *testing.T) {
 }
 
 func TestUpdateTeamBadPayload(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -355,8 +366,9 @@ func TestUpdateTeamBadPayload(t *testing.T) {
 }
 
 func TestUpdateTeamBadID(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -382,9 +394,10 @@ func TestUpdateTeamBadID(t *testing.T) {
 }
 
 func TestAddTeamMember(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -454,9 +467,10 @@ func TestAddTeamMember(t *testing.T) {
 }
 
 func TestUpdateTeamMemberRole(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -536,9 +550,10 @@ func TestUpdateTeamMemberRole(t *testing.T) {
 }
 
 func TestDeleteTeamMember(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -617,9 +632,10 @@ func TestDeleteTeamMember(t *testing.T) {
 }
 
 func TestAddMeeting(t *testing.T) {
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	ctx := context.Background()
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -656,10 +672,11 @@ func TestAddMeeting(t *testing.T) {
 }
 
 func TestAddMeetingBadPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -716,9 +733,10 @@ func TestAddMeetingBadPayload(t *testing.T) {
 }
 
 func TestDeleteTeamMeeting(t *testing.T) {
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	ctx := context.Background()
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	setupTest()
 
@@ -755,9 +773,10 @@ func TestDeleteTeamMeeting(t *testing.T) {
 }
 
 func TestDeleteTeamMeetingBad(t *testing.T) {
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	ctx := context.Background()
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	setupTest()
 

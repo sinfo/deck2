@@ -16,11 +16,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+//PackagesType contains database information on Packages
 type PackagesType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
+// CreatePackageData holds data needed to create a package
 type CreatePackageData struct {
 	Name  *string               `json:"name"`
 	Items *[]models.PackageItem `json:"items"`
@@ -58,6 +59,7 @@ func (cpd *CreatePackageData) ParseBody(body io.Reader) error {
 
 // CreatePackage creates a new package.
 func (p *PackagesType) CreatePackage(data CreatePackageData) (*models.Package, error) {
+	ctx = context.Background()
 
 	var newPackage models.Package
 
@@ -68,13 +70,13 @@ func (p *PackagesType) CreatePackage(data CreatePackageData) (*models.Package, e
 		"vat":   *data.VAT,
 	}
 
-	insertResult, err := p.Collection.InsertOne(p.Context, query)
+	insertResult, err := p.Collection.InsertOne(ctx, query)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := p.Collection.FindOne(p.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&newPackage); err != nil {
+	if err := p.Collection.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&newPackage); err != nil {
 		log.Println("Error finding created package:", err)
 		return nil, err
 	}
@@ -84,9 +86,10 @@ func (p *PackagesType) CreatePackage(data CreatePackageData) (*models.Package, e
 
 // GetPackage gets a package by its ID
 func (p *PackagesType) GetPackage(packageID primitive.ObjectID) (*models.Package, error) {
+	ctx = context.Background()
 	var result models.Package
 
-	err := p.Collection.FindOne(p.Context, bson.M{"_id": packageID}).Decode(&result)
+	err := p.Collection.FindOne(ctx, bson.M{"_id": packageID}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
@@ -125,6 +128,7 @@ func (upid *UpdatePackageItemsData) ParseBody(body io.Reader) error {
 
 // UpdatePackageItems updates the items of a package by id
 func (p *PackagesType) UpdatePackageItems(packageID primitive.ObjectID, data UpdatePackageItemsData) (*models.Package, error) {
+	ctx = context.Background()
 	var result models.Package
 
 	var updateQuery = bson.M{
@@ -136,7 +140,7 @@ func (p *PackagesType) UpdatePackageItems(packageID primitive.ObjectID, data Upd
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := p.Collection.FindOneAndUpdate(p.Context, bson.M{"_id": packageID}, updateQuery, optionsQuery).Decode(&result); err != nil {
+	if err := p.Collection.FindOneAndUpdate(ctx, bson.M{"_id": packageID}, updateQuery, optionsQuery).Decode(&result); err != nil {
 		return nil, err
 	}
 
@@ -174,6 +178,7 @@ func (upd *UpdatePackageData) ParseBody(body io.Reader) error {
 
 // UpdatePackage updates the items of a package by id
 func (p *PackagesType) UpdatePackage(packageID primitive.ObjectID, data UpdatePackageData) (*models.Package, error) {
+	ctx = context.Background()
 	var result models.Package
 
 	var updateQuery = bson.M{
@@ -187,7 +192,7 @@ func (p *PackagesType) UpdatePackage(packageID primitive.ObjectID, data UpdatePa
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := p.Collection.FindOneAndUpdate(p.Context, bson.M{"_id": packageID}, updateQuery, optionsQuery).Decode(&result); err != nil {
+	if err := p.Collection.FindOneAndUpdate(ctx, bson.M{"_id": packageID}, updateQuery, optionsQuery).Decode(&result); err != nil {
 		return nil, err
 	}
 
@@ -196,9 +201,10 @@ func (p *PackagesType) UpdatePackage(packageID primitive.ObjectID, data UpdatePa
 
 // DeletePackage deletes a package by its ID
 func (p *PackagesType) DeletePackage(packageID primitive.ObjectID) (*models.Package, error) {
+	ctx = context.Background()
 	var result models.Package
 
-	err := p.Collection.FindOneAndDelete(p.Context, bson.M{"_id": packageID}).Decode(&result)
+	err := p.Collection.FindOneAndDelete(ctx, bson.M{"_id": packageID}).Decode(&result)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +225,7 @@ type GetPackagesOptions struct {
 
 // GetPackages gets an array of packages
 func (p *PackagesType) GetPackages(options GetPackagesOptions) ([]*models.Package, error) {
+	ctx = context.Background()
 
 	var packages = make([]*models.Package, 0)
 
@@ -239,12 +246,12 @@ func (p *PackagesType) GetPackages(options GetPackagesOptions) ([]*models.Packag
 		filter["vat"] = options.VAT
 	}
 
-	cur, err := p.Collection.Find(p.Context, filter)
+	cur, err := p.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for cur.Next(p.Context) {
+	for cur.Next(ctx) {
 
 		// create a value into which the single document can be decoded
 		var p models.Package
@@ -260,7 +267,7 @@ func (p *PackagesType) GetPackages(options GetPackagesOptions) ([]*models.Packag
 		return nil, err
 	}
 
-	cur.Close(p.Context)
+	cur.Close(ctx)
 
 	return packages, nil
 }

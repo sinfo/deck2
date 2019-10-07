@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -51,14 +52,15 @@ func containsPublicEvent(events []models.EventPublic, event models.Event) bool {
 }
 
 func TestGetEvents(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -75,14 +77,15 @@ func TestGetEvents(t *testing.T) {
 }
 
 func TestGetPublicEvents(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -99,14 +102,15 @@ func TestGetPublicEvents(t *testing.T) {
 }
 
 func TestGetEventsByName(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -124,15 +128,16 @@ func TestGetEventsByName(t *testing.T) {
 }
 
 func TestGetEventsBeforeDate(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{
 		"_id": Event2.ID, "name": Event2.Name, "begin": Event2.Begin, "end": Event2.End}); err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{
 		"_id": Event3.ID, "name": Event3.Name, "begin": Event3.Begin, "end": Event3.End}); err != nil {
 		log.Fatal(err)
 	}
@@ -152,15 +157,16 @@ func TestGetEventsBeforeDate(t *testing.T) {
 }
 
 func TestGetEventsAfterDate(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{
 		"_id": Event2.ID, "name": Event2.Name, "begin": Event2.Begin, "end": Event2.End}); err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{
 		"_id": Event3.ID, "name": Event3.Name, "begin": Event3.Begin, "end": Event3.End}); err != nil {
 		log.Fatal(err)
 	}
@@ -180,15 +186,16 @@ func TestGetEventsAfterDate(t *testing.T) {
 }
 
 func TestGetEventsDuringDate(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{
 		"_id": Event2.ID, "name": Event2.Name, "begin": Event2.Begin, "end": Event2.End}); err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{
 		"_id": Event3.ID, "name": Event3.Name, "begin": Event3.Begin, "end": Event3.End}); err != nil {
 		log.Fatal(err)
 	}
@@ -226,14 +233,15 @@ func TestGetEventsBadQuery(t *testing.T) {
 }
 
 func TestGetEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -262,10 +270,11 @@ func TestGetEventBadID(t *testing.T) {
 }
 
 func TestCreateEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -287,10 +296,11 @@ func TestCreateEvent(t *testing.T) {
 }
 
 func TestCreateEventInvalidName(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -305,12 +315,13 @@ func TestCreateEventInvalidName(t *testing.T) {
 }
 
 func TestUpdateEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	var future = TimeAfter.Add(time.Hour * 10)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -341,14 +352,15 @@ func TestUpdateEvent(t *testing.T) {
 }
 
 func TestUpdateEventIncompletePayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	type IncompletePayload struct {
 		Name string
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -369,8 +381,9 @@ func TestUpdateEventIncompletePayload(t *testing.T) {
 }
 
 func TestUpdateEventWrongPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	type IncompletePayload struct {
 		Name  string
@@ -378,7 +391,7 @@ func TestUpdateEventWrongPayload(t *testing.T) {
 		End   string
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -399,14 +412,15 @@ func TestUpdateEventWrongPayload(t *testing.T) {
 }
 
 func TestDeleteEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event2.ID, "name": Event2.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -433,10 +447,11 @@ func TestDeleteNonExistentEvent(t *testing.T) {
 }
 
 func TestUpdateEventThemes(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -452,7 +467,7 @@ func TestUpdateEventThemes(t *testing.T) {
 	var filterQuery = bson.M{"_id": currentEvent.ID}
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
-	mongodb.Events.Collection.FindOneAndUpdate(mongodb.Events.Context, filterQuery, updateQuery, optionsQuery).Decode(&currentEvent)
+	mongodb.Events.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&currentEvent)
 
 	// fill the themes
 	var themes = []string{}
@@ -480,14 +495,15 @@ func TestUpdateEventThemes(t *testing.T) {
 	}
 }
 func TestUpdateEventThemesIncompletePayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
 
 	type IncompletePayload struct {
 		Random string
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -503,7 +519,7 @@ func TestUpdateEventThemesIncompletePayload(t *testing.T) {
 	var filterQuery = bson.M{"_id": currentEvent.ID}
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
-	mongodb.Events.Collection.FindOneAndUpdate(mongodb.Events.Context, filterQuery, updateQuery, optionsQuery).Decode(&currentEvent)
+	mongodb.Events.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&currentEvent)
 
 	// fill the themes
 	var payload = IncompletePayload{Random: "somerandomname"}
@@ -517,12 +533,13 @@ func TestUpdateEventThemesIncompletePayload(t *testing.T) {
 }
 
 func TestAddPackageToEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -584,12 +601,13 @@ func TestAddPackageToEvent(t *testing.T) {
 }
 
 func TestAddPackageToEventPackageNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -629,12 +647,13 @@ func TestAddPackageToEventPackageNotFound(t *testing.T) {
 }
 
 func TestAddPackageToEventInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -661,12 +680,13 @@ func TestAddPackageToEventInvalidPayload(t *testing.T) {
 }
 
 func TestRemovePackageFromEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -726,12 +746,13 @@ func TestRemovePackageFromEvent(t *testing.T) {
 }
 
 func TestUpdatePackageFromEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -805,11 +826,12 @@ func TestUpdatePackageFromEvent(t *testing.T) {
 }
 
 func TestAddItemToEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -850,11 +872,12 @@ func TestAddItemToEvent(t *testing.T) {
 }
 
 func TestAddItemToEventInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -889,11 +912,12 @@ func TestAddItemToEventInvalidPayload(t *testing.T) {
 }
 
 func TestAddItemToEventItemNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -914,11 +938,12 @@ func TestAddItemToEventItemNotFound(t *testing.T) {
 }
 
 func TestRemoveItemFromEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -958,11 +983,12 @@ func TestRemoveItemFromEvent(t *testing.T) {
 }
 
 func TestAddMeetingToEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1003,11 +1029,12 @@ func TestAddMeetingToEvent(t *testing.T) {
 }
 
 func TestRemoveMeetingFromEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1046,11 +1073,12 @@ func TestRemoveMeetingFromEvent(t *testing.T) {
 }
 
 func TestRemoveMeetingFromEventMeetingNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1066,11 +1094,12 @@ func TestRemoveMeetingFromEventMeetingNotFound(t *testing.T) {
 }
 
 func TestRemoveTeamFromEvent(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1108,11 +1137,12 @@ func TestRemoveTeamFromEvent(t *testing.T) {
 }
 
 func TestRemoveTeamFromEventMeetingNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 

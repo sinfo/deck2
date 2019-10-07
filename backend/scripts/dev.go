@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -28,17 +29,20 @@ var (
 )
 
 func onError(err error) {
-	mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	mongodb.Speakers.Collection.Drop(mongodb.Speakers.Context)
+	ctx := context.Background()
+	mongodb.Events.Collection.Drop(ctx)
+	mongodb.Members.Collection.Drop(ctx)
+	mongodb.Teams.Collection.Drop(ctx)
+	mongodb.Companies.Collection.Drop(ctx)
+	mongodb.Speakers.Collection.Drop(ctx)
 
 	log.Fatal(err)
 }
 
 func main() {
 	mongodb.InitializeDatabase()
+
+	ctx := context.Background()
 
 	var text string
 	var memberName string
@@ -80,7 +84,7 @@ func main() {
 		role = models.RoleAdmin
 	}
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{
 		"_id":   1,
 		"name":  event.Name,
 		"begin": *event.Begin,
