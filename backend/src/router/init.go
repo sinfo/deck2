@@ -266,6 +266,7 @@ func InitializeRouter() {
 	meetingRouter.HandleFunc("", authCoordinator(createMeeting)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}", authMember(getMeeting)).Methods("GET")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
+	meetingRouter.HandleFunc("/{id}", authCoordinator(updateMeeting)).Methods("PUT")
 
 	// threads handlers
 	threadRouter := r.PathPrefix("/threads").Subrouter()

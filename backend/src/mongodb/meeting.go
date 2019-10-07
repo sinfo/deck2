@@ -38,6 +38,29 @@ type GetMeetingsOptions struct {
 	Company *primitive.ObjectID
 }
 
+type UpdateMeetingData struct {
+	Begin  time.Time `json:"begin" bson:"begin"`
+	End    time.Time `json:"end" bson:"end"`
+	Place  string    `json:"place" bson:"place"`
+	Minute string    `json:"minute" bson:"minute"`
+}
+
+func (umd *UpdateMeetingData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(umd); err != nil {
+		return err
+	}
+	if len(umd.Place) == 0 {
+		return errors.New("invalid place")
+	}
+
+	if umd.Begin.After(umd.End) {
+		return errors.New("invalid begin and end dates: begin must be before end")
+	}
+
+	return nil
+}
+
 // Validate the data for meeting creation
 func (cmd *CreateMeetingData) Validate() error {
 	if cmd.Begin == nil {
@@ -59,7 +82,7 @@ func (cmd *CreateMeetingData) Validate() error {
 	return nil
 }
 
-// ParseBody fills the CreateItemData from a body
+// ParseBody fills the CreateMeetingData from a body
 func (cmd *CreateMeetingData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(cmd); err != nil {
@@ -223,13 +246,15 @@ func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, 
 	return meetings, nil
 }
 
-// AddCalendarID associates a google calendar event id to a meeting
-func (m *MeetingsType) AddCalendarID(meetingID primitive.ObjectID, googleID string) (*models.Meeting, error) {
-	var updatedMeeting models.Meeting
+// UpdateMeeting updates a meeting
+func (m *MeetingsType) UpdateMeeting(data UpdateMeetingData, meetingID primitive.ObjectID) (*models.Meeting, error) {
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"calendarID": googleID,
+			"begin":  data.Begin,
+			"end":    data.End,
+			"place":  data.Place,
+			"minute": data.Minute,
 		},
 	}
 
@@ -238,7 +263,10 @@ func (m *MeetingsType) AddCalendarID(meetingID primitive.ObjectID, googleID stri
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
+	var updatedMeeting models.Meeting
+
 	if err := m.Collection.FindOneAndUpdate(m.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		log.Println("error updating meeting:", err)
 		return nil, err
 	}
 
