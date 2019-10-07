@@ -244,6 +244,7 @@ func InitializeRouter() {
 	itemRouter.HandleFunc("", authCoordinator(createItem)).Methods("POST")
 	itemRouter.HandleFunc("/{id}", authMember(getItem)).Methods("GET")
 	itemRouter.HandleFunc("/{id}", authCoordinator(updateItem)).Methods("PUT")
+	itemRouter.HandleFunc("/{id}/image", authCoordinator(uploadItemImage)).Methods("POST")
 
 	// package handlers
 	packageRouter := r.PathPrefix("/packages").Subrouter()
