@@ -33,7 +33,7 @@
             "description": "Contacted companies"
         },
         {
-            "name": "companyRep",
+            "name": "companyReps",
             "description": "Person representing a certain company"
         },
         {
@@ -346,6 +346,9 @@
         },
         "/events/teams/{id}": {
             "$ref": "./endpoints/events-teams-id.json"
+        },
+        "/items/{id}/image": {
+            "$ref": "./endpoints/items-id-image.json"
         }
     },
     "externalDocs": {
