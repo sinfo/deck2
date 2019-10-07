@@ -79,7 +79,7 @@ type Company struct {
 	Employers []primitive.ObjectID `json:"employers,omitempty" bson:"employers,omitempty"`
 
 	BillingInfo    CompanyBillingInfo     `json:"billingInfo,omitempty" bson:"billingInfo,omitempty"`
-	Participations []CompanyParticipation `json:"participations,omitempty" bson:"participations,omitempty"`
+	Participations []CompanyParticipation `json:"participations" bson:"participations"`
 }
 
 // CompanyParticipationPublic stores a company's participation info to be shown to everyone publicly.

@@ -8,6 +8,7 @@ import { PostsService } from '../../../deck-api/posts.service';
 import { ThreadsService } from '../../../deck-api/threads.service';
 import { SpeakersService } from '../../../deck-api/speakers.service';
 import { MeService } from '../../../deck-api/me.service';
+import { EventsService } from '../../../deck-api/events.service';
 
 @Component({
     selector: 'app-notifications',
@@ -23,6 +24,7 @@ export class NotificationsComponent implements OnInit {
         for (const notification of notifications) {
             this.populatedNotifications.push(new PopulatedNotification(
                 notification,
+                this.eventsService,
                 this.membersService,
                 this.postsService,
                 this.threadsService,
@@ -36,6 +38,7 @@ export class NotificationsComponent implements OnInit {
 
     constructor(
         private membersService: MembersService,
+        private eventsService: EventsService,
         private postsService: PostsService,
         private threadsService: ThreadsService,
         private speakersService: SpeakersService,

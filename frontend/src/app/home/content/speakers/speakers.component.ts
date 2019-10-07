@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { SpeakersService } from '../../../deck-api/speakers.service';
 import { EventsService } from '../../../deck-api/events.service';
@@ -8,14 +8,16 @@ import { FilterService } from '../filter/filter.service';
 import { Speaker, SpeakerParticipation } from '../../../models/speaker';
 import { Member } from '../../../models/member';
 import { FilterField, FilterType, Filters } from '../filter/filter';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-speakers',
     templateUrl: './speakers.component.html',
     styleUrls: ['./speakers.component.css']
 })
-export class SpeakersComponent implements OnInit {
+export class SpeakersComponent implements OnInit, OnDestroy {
 
+    filterSubscription: Subscription;
     filters: Filters;
 
     private speakers: Speaker[];
@@ -35,7 +37,7 @@ export class SpeakersComponent implements OnInit {
         private membersService: MembersService,
         private filterService: FilterService,
     ) {
-        this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
+        this.filterSubscription = this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
             this.filters = filters;
             this.fetchAndFilterSpeakers();
         });
@@ -46,6 +48,10 @@ export class SpeakersComponent implements OnInit {
         this.filters.initFilters(FilterType.Speaker, [FilterType.Member], () => {
             this.fetchAndFilterSpeakers();
         });
+    }
+
+    ngOnDestroy() {
+        this.filterSubscription.unsubscribe();
     }
 
     fetchAndFilterSpeakers() {

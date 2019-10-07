@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { EventsService } from '../../../deck-api/events.service';
 import { MembersService } from '../../../deck-api/members.service';
@@ -8,15 +8,17 @@ import { TeamsService } from '../../../deck-api/teams.service';
 import { Member } from '../../../models/member';
 import { Team, PopulatedTeam } from '../../../models/team';
 import { FilterField, FilterType, Filters } from '../filter/filter';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-teams',
     templateUrl: './teams.component.html',
     styleUrls: ['./teams.component.css']
 })
-export class TeamsComponent implements OnInit {
+export class TeamsComponent implements OnInit, OnDestroy {
 
     teams: PopulatedTeam[];
+    filterSubscription: Subscription;
     filters: Filters;
 
     constructor(
@@ -25,7 +27,7 @@ export class TeamsComponent implements OnInit {
         private membersService: MembersService,
         private filterService: FilterService
     ) {
-        this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
+        this.filterSubscription = this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
             this.filters.team = filters.team;
             this.updateTeams();
         });
@@ -36,6 +38,10 @@ export class TeamsComponent implements OnInit {
         this.filters.initFilters(FilterType.Team, [], () => {
             this.updateTeams();
         });
+    }
+
+    ngOnDestroy() {
+        this.filterSubscription.unsubscribe();
     }
 
     updateTeams() {

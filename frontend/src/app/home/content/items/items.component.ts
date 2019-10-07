@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { EventsService } from '../../../deck-api/events.service';
 import { ItemsService } from '../../../deck-api/items.service';
@@ -6,14 +6,16 @@ import { FilterService } from '../filter/filter.service';
 
 import { Item } from '../../../models/item';
 import { FilterField, FilterType, Filters } from '../filter/filter';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-items',
     templateUrl: './items.component.html',
     styleUrls: ['./items.component.css']
 })
-export class ItemsComponent implements OnInit {
+export class ItemsComponent implements OnInit, OnDestroy {
 
+    filterSubscription: Subscription;
     filters: Filters;
 
     private items: Item[];
@@ -23,7 +25,7 @@ export class ItemsComponent implements OnInit {
         private itemsService: ItemsService,
         private eventsService: EventsService
     ) {
-        this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
+        this.filterSubscription = this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
             this.filters = filters;
             this.fetchItems();
         });
@@ -34,6 +36,10 @@ export class ItemsComponent implements OnInit {
         this.filters.initFilters(FilterType.Item, [], () => {
             this.fetchItems();
         });
+    }
+
+    ngOnDestroy() {
+        this.filterSubscription.unsubscribe();
     }
 
     fetchItems() {

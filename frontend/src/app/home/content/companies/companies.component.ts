@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
 import { CompaniesService } from '../../../deck-api/companies.service';
 import { EventsService } from '../../../deck-api/events.service';
@@ -8,14 +8,16 @@ import { FilterService } from '../filter/filter.service';
 import { Company, CompanyParticipation } from '../../../models/company';
 import { Member } from '../../../models/member';
 import { FilterField, FilterType, Filters } from '../filter/filter';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-companies',
     templateUrl: './companies.component.html',
     styleUrls: ['./companies.component.css']
 })
-export class CompaniesComponent implements OnInit {
+export class CompaniesComponent implements OnInit, OnDestroy {
 
+    filterSubscription: Subscription;
     filters: Filters;
 
     private companies: Company[];
@@ -35,7 +37,7 @@ export class CompaniesComponent implements OnInit {
         private membersService: MembersService,
         private filterService: FilterService,
     ) {
-        this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
+        this.filterSubscription = this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
             this.filters = filters;
             this.fetchAndFilterCompanies();
         });
@@ -46,6 +48,10 @@ export class CompaniesComponent implements OnInit {
         this.filters.initFilters(FilterType.Company, [FilterType.Member], () => {
             this.fetchAndFilterCompanies();
         });
+    }
+
+    ngOnDestroy() {
+        this.filterSubscription.unsubscribe();
     }
 
     fetchAndFilterCompanies() {

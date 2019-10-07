@@ -153,16 +153,19 @@ export class EditSpeakerParticipationStatusForm {
     speaker: Speaker;
     label: String;
 
-    constructor(private speakersService: SpeakersService, speaker: Speaker) {
+    constructor(private speakersService: SpeakersService, speaker: Speaker, participation?: SpeakerParticipation) {
         this.form = new FormGroup({
             step: new FormControl('', [Validators.required, Validators.minLength(1)]),
         });
 
         this.speaker = speaker;
-        this.updateOptions();
+
+        this.updateOptions(participation);
     }
 
-    updateOptions() {
+    updateOptions(participation: SpeakerParticipation) {
+        if (participation === undefined || participation === null) { return; }
+
         this.speakersService.getValidStatusSteps(`${this.speaker.id}`)
             .subscribe((steps: SpeakerParticipationValidStatusSteps) => {
                 this.options = steps;
