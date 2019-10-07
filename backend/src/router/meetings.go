@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -155,7 +156,7 @@ func updateMeeting(w http.ResponseWriter, r *http.Request) {
 	// notify
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
 		if err := google.UpdateCalendarEvent(umd, id, credentials.Token); err != nil {
-			http.Error(w, "Could not update googleCalendar event: "+err.Error(), http.StatusNotFound)
+			log.Println("Event not found in calendar: if this was an event meeting, this is an error")
 		}
 	}
 }
