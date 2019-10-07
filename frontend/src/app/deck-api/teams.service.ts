@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 
 import { environment } from 'environments/environment';
 
-import { Team } from '../models/team';
+import { Team, AddMemberToTeamForm } from '../models/team';
 import { FilterTeam } from '../home/content/filter/filter';
 
 import { AuthService } from './auth.service';
@@ -50,5 +50,9 @@ export class TeamsService {
 
     getTeam(teamID: string): Observable<Team> {
         return this.http.get<Team>(`${this.url}/${teamID}`, { headers: this.headers });
+    }
+
+    addMemberToTeam(teamID: string, form: AddMemberToTeamForm): Observable<Team> {
+        return this.http.post<Team>(`${this.url}/${teamID}/members`, form.value(), { headers: this.headers });
     }
 }

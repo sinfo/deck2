@@ -61,7 +61,7 @@ export class MeService implements OnDestroy {
     }
 
     removeNotification(id: String): Observable<void> {
-        return this.http.delete<void>(`${this.url}/notification/${id}`, { headers: this.headers });
+        return this.http.delete<void>(`${this.url}/notifications/${id}`, { headers: this.headers });
     }
 
     getMyRole(): Observable<Role> {

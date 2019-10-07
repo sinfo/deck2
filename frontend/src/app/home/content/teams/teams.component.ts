@@ -1,14 +1,19 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewContainerRef } from '@angular/core';
+
+import { Subscription } from 'rxjs';
 
 import { EventsService } from '../../../deck-api/events.service';
 import { MembersService } from '../../../deck-api/members.service';
 import { FilterService } from '../filter/filter.service';
 import { TeamsService } from '../../../deck-api/teams.service';
+import { ThemeService } from '../../../theme.service';
+import { EditFormService } from '../../../templates/edit-form/edit-form.service';
 
 import { Member } from '../../../models/member';
 import { Team, PopulatedTeam } from '../../../models/team';
 import { FilterField, FilterType, Filters } from '../filter/filter';
-import { Subscription } from 'rxjs';
+import { Theme } from '../../../theme';
+import { AppliedForm } from '../../../templates/edit-form/edit-form-communicator.service';
 
 @Component({
     selector: 'app-teams',
@@ -21,15 +26,26 @@ export class TeamsComponent implements OnInit, OnDestroy {
     filterSubscription: Subscription;
     filters: Filters;
 
+    darkMode: boolean;
+
     constructor(
         private eventsService: EventsService,
         private teamsService: TeamsService,
         private membersService: MembersService,
-        private filterService: FilterService
+        private filterService: FilterService,
+        private themeService: ThemeService,
+        private editFormService: EditFormService,
+        public vcRef: ViewContainerRef
     ) {
         this.filterSubscription = this.filterService.getFiltersSubscription().subscribe((filters: Filters) => {
             this.filters.team = filters.team;
             this.updateTeams();
+        });
+
+        const result = this.themeService.getThemeSubscription();
+        this.darkMode = result.active.dark;
+        result.subscription.subscribe((theme: Theme) => {
+            this.darkMode = theme.dark;
         });
     }
 
@@ -53,6 +69,12 @@ export class TeamsComponent implements OnInit, OnDestroy {
                     this.teams.push(newTeam);
                 });
             }
+        });
+    }
+
+    addMember(team: PopulatedTeam) {
+        this.editFormService.showAddMemberToTeamForm(this.vcRef, team, (appliedForm: AppliedForm) => {
+            this.updateTeams();
         });
     }
 
