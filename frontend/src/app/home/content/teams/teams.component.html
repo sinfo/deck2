@@ -13,6 +13,11 @@
                         <div class="team-text">
                             <span>{{team.name | uppercase}}</span>
                         </div>
+
+                        <div class="icon">
+                            <img [src]="darkMode ? 'assets/icons/night/add.png' : 'assets/icons/day/add.png'"
+                                (click)="addMember(team)">
+                        </div>
                     </div>
                     <div class="members">
                         <div class="member" *ngFor="let teamMember of team.members">

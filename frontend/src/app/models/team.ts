@@ -92,3 +92,23 @@ export class AddTeamForm {
         return this.form.valid;
     }
 }
+
+export class AddMemberToTeamForm {
+
+    form: FormGroup;
+
+    constructor() {
+        this.form = new FormGroup({
+            member: new FormControl('', [Validators.required, Validators.minLength(1)]),
+            role: new FormControl('', [Validators.required, Validators.minLength(1)]),
+        });
+    }
+
+    valid() {
+        return this.form.valid;
+    }
+
+    value() {
+        return this.form.value;
+    }
+}

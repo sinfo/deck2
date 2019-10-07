@@ -12,7 +12,8 @@ export enum AppliedForm {
     EditSpeakerContact,
     EditSpeakerParticipationStepStatus,
     AddSpeaker,
-    AddItem
+    AddItem,
+    AddMemberToTeam,
 }
 
 export type AppliedFormCallback = (appliedForm: AppliedForm) => void;
