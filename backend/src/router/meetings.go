@@ -2,9 +2,11 @@ package router
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/sinfo/deck2/src/google"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -33,7 +35,7 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 
 	meeting, err := mongodb.Meetings.DeleteMeeting(id)
 	if err != nil {
-		http.Error(w, "Could not find team", http.StatusNotFound)
+		http.Error(w, "Could not find meeting", http.StatusNotFound)
 		return
 	}
 
@@ -55,7 +57,7 @@ func createMeeting(w http.ResponseWriter, r *http.Request) {
 	var cmd = mongodb.CreateMeetingData{}
 
 	if err := cmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -122,4 +124,39 @@ func getMeetings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(meetings)
+}
+
+func updateMeeting(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	var umd = mongodb.UpdateMeetingData{}
+
+	if _, err := mongodb.Meetings.GetMeeting(id); err != nil {
+		http.Error(w, "Could not find meeting", http.StatusNotFound)
+		return
+	}
+
+	if err := umd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	meeting, err := mongodb.Meetings.UpdateMeeting(umd, id)
+	if err != nil {
+		http.Error(w, "Could not update meeting", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(meeting)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		if err := google.UpdateCalendarEvent(umd, id, credentials.Token); err != nil {
+			log.Println("Event not found in calendar: if this was an event meeting, this is an error")
+		}
+	}
 }

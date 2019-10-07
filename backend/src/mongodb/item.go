@@ -217,3 +217,24 @@ func (i *ItemsType) GetItems(options GetItemsOptions) ([]*models.Item, error) {
 
 	return items, nil
 }
+
+func (i *ItemsType) UpdateItemImage(itemID primitive.ObjectID, url string) (*models.Item, error) {
+
+	var item models.Item
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"img": url,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := i.Collection.FindOneAndUpdate(i.Context, bson.M{"_id": itemID}, updateQuery, optionsQuery).Decode(&item); err != nil {
+		return nil, err
+	}
+
+	return &item, nil
+
+}

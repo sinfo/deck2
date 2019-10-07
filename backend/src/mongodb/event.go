@@ -733,3 +733,27 @@ func (e *EventsType) RemoveMeeting(eventID int, meetingID primitive.ObjectID) (*
 
 	return &updatedEvent, nil
 }
+
+// RemoveTeam removes a team from an event
+func (e *EventsType) RemoveTeam(eventID int, teamID primitive.ObjectID) (*models.Event, error) {
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"teams": teamID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedEvent models.Event
+
+	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+		log.Println("error remove event's item:", err)
+		return nil, err
+	}
+
+	return &updatedEvent, nil
+}

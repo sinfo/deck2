@@ -28,6 +28,17 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 		return
 	}
 
+	if !config.Production {
+		members, err := Teams.GetMembersByRole(models.RoleAdmin)
+		if err != nil {
+			log.Println("error fetching admins: " + err.Error())
+		} else {
+			for _, s := range members {
+				n.NotifyMember(s, data)
+			}
+		}
+	}
+
 	// notify subscribers
 	if data.Company != nil {
 		company, err := Companies.GetCompany(*data.Company)

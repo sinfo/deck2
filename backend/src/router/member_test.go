@@ -538,7 +538,7 @@ func TestDeleteMember(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	//Sucess
+	//Success
 	res, err := executeRequest("DELETE", "/members/"+Member2.ID.Hex(), nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)

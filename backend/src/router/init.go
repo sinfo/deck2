@@ -206,6 +206,7 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/meetings", authCoordinator(addMeetingToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/meetings/{id}", authCoordinator(removeMeetingFromEvent)).Methods("DELETE")
 	eventRouter.HandleFunc("/sessions", authCoordinator(addSessionToEvent)).Methods("POST")
+	eventRouter.HandleFunc("/teams/{id}", authAdmin(removeTeamFromEvent)).Methods("DELETE")
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
@@ -226,7 +227,7 @@ func InitializeRouter() {
 	meRouter.HandleFunc("", authMember(updateMe)).Methods("PUT")
 	meRouter.HandleFunc("/image", authMember(setMyImage)).Methods("POST")
 	meRouter.HandleFunc("/notifications", authMember(getMyNotifications)).Methods("GET")
-	meRouter.HandleFunc("/notification/{id}", authMember(deleteMyNotification)).Methods("DELETE")
+	meRouter.HandleFunc("/notifications/{id}", authMember(deleteMyNotification)).Methods("DELETE")
 
 	// member handlers
 	memberRouter := r.PathPrefix("/members").Subrouter()
@@ -243,6 +244,7 @@ func InitializeRouter() {
 	itemRouter.HandleFunc("", authCoordinator(createItem)).Methods("POST")
 	itemRouter.HandleFunc("/{id}", authMember(getItem)).Methods("GET")
 	itemRouter.HandleFunc("/{id}", authCoordinator(updateItem)).Methods("PUT")
+	itemRouter.HandleFunc("/{id}/image", authCoordinator(uploadItemImage)).Methods("POST")
 
 	// package handlers
 	packageRouter := r.PathPrefix("/packages").Subrouter()
@@ -264,6 +266,7 @@ func InitializeRouter() {
 	meetingRouter.HandleFunc("", authCoordinator(createMeeting)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}", authMember(getMeeting)).Methods("GET")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
+	meetingRouter.HandleFunc("/{id}", authCoordinator(updateMeeting)).Methods("PUT")
 
 	// threads handlers
 	threadRouter := r.PathPrefix("/threads").Subrouter()

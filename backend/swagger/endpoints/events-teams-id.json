@@ -2,10 +2,10 @@
     "delete": {
         "tags": [
             "events",
-            "meetings"
+            "teams"
         ],
-        "summary": "Removes and deletes a meeting from the current event (must have coordinator credentials)",
-        "operationId": "removeMeetingFromEvent",
+        "summary": "Removes (but does not delete) a team from the current event (must have admin credentials)",
+        "operationId": "removeTeamFromEvent",
         "consumes": [
             "application/json"
         ],
@@ -21,7 +21,7 @@
             {
                 "in": "path",
                 "name": "id",
-                "description": "ID of the meeting",
+                "description": "ID of the team",
                 "required": true,
                 "type": "string"
             }
@@ -40,10 +40,10 @@
                 "description": "Unauthorized"
             },
             "404": {
-                "description": "Event not found or meeting not found"
+                "description": "Event not found or team not found"
             },
             "417": {
-                "description": "Unable to remove or delete meeting"
+                "description": "Unable to remove team"
             },
             "403": {
                 "description": "Valid authorization, but not enough credentials"

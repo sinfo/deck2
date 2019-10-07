@@ -431,3 +431,53 @@ func (t *TeamsType) DeleteTeamMeeting(teamID, meetingID primitive.ObjectID) (*mo
 
 	return meeting, nil
 }
+
+func (t *TeamsType) GetMembersByRole(role models.TeamRole) ([]primitive.ObjectID, error) {
+
+	var members = make([]primitive.ObjectID, 0)
+
+	if !role.IsValidRole() {
+		return nil, errors.New("invalid role")
+	}
+
+	var query = []bson.M{
+		bson.M{"$match": bson.M{"members.role": role}},
+		bson.M{"$project": bson.M{
+			"_id": 0,
+			"members": bson.M{
+				"$filter": bson.M{
+					"input": "$members",
+					"as":    "member",
+					"cond":  bson.M{"$eq": []string{"$$member.role", string(role)}},
+				},
+			},
+		}},
+		bson.M{
+			"$unwind": "$members",
+		},
+		bson.M{
+			"$group": bson.M{"_id": "$members.member"},
+		},
+	}
+
+	type QueryResult struct {
+		ID primitive.ObjectID `bson:"_id"`
+	}
+
+	cur, err := t.Collection.Aggregate(t.Context, query)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(t.Context) {
+		var result QueryResult
+		if err := cur.Decode(&result); err != nil {
+			return nil, err
+		}
+		members = append(members, result.ID)
+	}
+
+	cur.Close(t.Context)
+
+	return members, nil
+}

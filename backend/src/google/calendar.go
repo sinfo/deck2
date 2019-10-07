@@ -15,7 +15,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func CreateCalendarEvent(meeting *models.Meeting, id primitive.ObjectID) error {
+func CreateCalendarEvent(meeting *models.Meeting, tokenID primitive.ObjectID) error {
 	if !config.Production {
 		log.Println("Running in dev: Skipped Google Calendar Event creation")
 		return nil
@@ -23,7 +23,7 @@ func CreateCalendarEvent(meeting *models.Meeting, id primitive.ObjectID) error {
 
 	ctx := context.Background()
 
-	token, err := mongodb.Tokens.GetToken(id)
+	token, err := mongodb.Tokens.GetToken(tokenID)
 	if err != nil {
 		return err
 	}
@@ -121,6 +121,63 @@ func DeleteCalendarEvent(meetingID, tokenID primitive.ObjectID) error {
 	}
 
 	log.Printf("Deleted event %s", deletedEvent.Summary)
+
+	return nil
+}
+
+func UpdateCalendarEvent(data mongodb.UpdateMeetingData, meetingID, tokenID primitive.ObjectID) error {
+	if !config.Production {
+		log.Println("Running in dev: Skipped Google Calendar Event deletion")
+		return nil
+	}
+
+	ctx := context.Background()
+
+	token, err := mongodb.Tokens.GetToken(tokenID)
+	if err != nil {
+		return err
+	}
+
+	newToken := new(oauth2.Token)
+	newToken.Expiry = token.Expiry
+	newToken.RefreshToken = token.Refresh
+	newToken.AccessToken = token.Access
+
+	client := auth.OauthConfig.Client(ctx, newToken)
+
+	calendarService, err := calendar.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return err
+	}
+
+	calendarList, err := calendarService.CalendarList.List().Do()
+	if err != nil {
+		return err
+	}
+
+	var calendarID string
+
+	for _, s := range calendarList.Items {
+		if s.Summary == config.SinfoCalendarName {
+			calendarID = s.Id
+		}
+	}
+
+	updatedEvent, err := calendarService.Events.Get(calendarID, meetingID.Hex()).Do()
+	if err != nil {
+		return err
+	}
+
+	updatedEvent.Start = &calendar.EventDateTime{DateTime: data.Begin.Format(time.RFC3339)}
+	updatedEvent.End = &calendar.EventDateTime{DateTime: data.End.Format(time.RFC3339)}
+	updatedEvent.Location = data.Place
+
+	event, err := calendarService.Events.Update(calendarID, meetingID.Hex(), updatedEvent).Do()
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Updated event %s\n", event.Id)
 
 	return nil
 }
