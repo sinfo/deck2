@@ -83,12 +83,14 @@ export class EditSpeakerFormComponent {
         this.eventsService.getCurrentEvent().subscribe((event: Event) => {
             this.participation = GetParticipation(this.speaker, event.id);
             this.event = event;
+
             if (this.participation != null) {
                 this.forms.participation = new EditSpeakerParticipationForm(this.participation);
+                this.forms.status = new EditSpeakerParticipationStatusForm(this.speakersService, this.speaker);
+                this.forms.status.updateOptions(this.participation);
             }
         });
 
-        this.forms.status.updateOptions();
     }
 
     coordinatorAccessLevel() {
@@ -200,7 +202,11 @@ export class EditSpeakerFormComponent {
         this.speakersService.stepStatus(`${this.speaker.id}`, +this.forms.status.value()).subscribe((speaker: Speaker) => {
             this.speaker = speaker;
             this.participation = GetParticipation(this.speaker, this.event.id);
-            this.forms.status.updateOptions();
+
+            if (this.participation != null) {
+                this.forms.status.updateOptions(this.participation);
+            }
+
             this.editFormCommunicatorService.setAppliedForm(AppliedForm.EditSpeakerParticipationStepStatus);
         });
 

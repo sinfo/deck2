@@ -131,13 +131,15 @@
 
         <ngb-tab title="Participation">
             <ng-template ngbTabContent>
-                <div class="operations-status" *ngIf="forms.status.options.steps.length > 0">
+                <div class="operations-status" *ngIf="forms.status.options && forms.status.options.steps.length > 0">
                     <label>Status:</label>
                     <form class="form" [formGroup]="forms.status.form">
-                        <app-dropdown [labelTemplate]="statusLabelTemplate" [optionsTemplate]="statusOptionsTemplate" [options]="forms.status.options">
+                        <app-dropdown [labelTemplate]="statusLabelTemplate" [optionsTemplate]="statusOptionsTemplate"
+                            [options]="forms.status.options">
                         </app-dropdown>
                         <ng-template #statusLabelTemplate>
-                            <div *ngIf="!forms.status.label; else showCurrentStatus" class="speaker-event-option-status">Change status</div>
+                            <div *ngIf="!forms.status.label; else showCurrentStatus"
+                                class="speaker-event-option-status">Change status</div>
                             <ng-template #showCurrentStatus>
                                 <div class="speaker-event-option-status" [ngClass]="{
                                     'suggested': forms.status.label == 'SUGGESTED',
@@ -153,7 +155,8 @@
                             </ng-template>
                         </ng-template>
                         <ng-template #statusOptionsTemplate>
-                            <button *ngFor="let step of forms.status.options.steps" (click)="changeStatus(step)" ngbDropdownItem>
+                            <button *ngFor="let step of forms.status.options.steps" (click)="changeStatus(step)"
+                                ngbDropdownItem>
                                 <div class="speaker-event-option-status" [ngClass]="{
                                     'suggested': step.next == 'SUGGESTED',
                                     'selected': step.next == 'SELECTED',

@@ -1,29 +1,36 @@
 import { Member } from './member';
 import { Post } from './post';
 import { Thread, PopulatedThread } from './thread';
-import { Speaker } from './speaker';
-import { Company } from './company';
+import { Speaker, GetParticipation as GetSpeakerParticipation } from './speaker';
+import { Company, GetParticipation as GetCompanyParticipation } from './company';
 import { Meeting } from './meeting';
 import { Session } from './session';
 import { MembersService } from '../deck-api/members.service';
 import { PostsService } from '../deck-api/posts.service';
 import { ThreadsService } from '../deck-api/threads.service';
 import { SpeakersService } from '../deck-api/speakers.service';
+import { EventsService } from '../deck-api/events.service';
+import { Event } from './event';
 
 export enum NotificationKind {
     Created = 'CREATED',
     Updated = 'UPDATED',
     Deleted = 'DELETED',
+
     UpdatedPrivateImage = 'UPDATED_PRIVATE_IMAGE',
     UpdatedPublicImage = 'UPDATED_PUBLIC_IMAGE',
-    UpdateCompanyImage = 'UPDATED_PUBLIC_IMAGE',
+    UpdateCompanyImage = 'UPDATED_COMPANY_IMAGE',
+
     CreatedParticipation = 'CREATED_PARTICIPATION',
     UpdatedParticipation = 'UPDATED_PARTICIPATION',
     DeletedParticipation = 'DELETED_PARTICIPATION',
+
     CreatedParticipationPackage = 'CREATED_PARTICIPATION_PACKAGE',
     UpdatedParticipationPackage = 'UPDATED_PARTICIPATION_PACKAGE',
     DeletedParticipationPackage = 'DELETED_PARTICIPATION_PACKAGE',
+
     UpdatedParticipationStatus = 'UPDATED_PARTICIPATION_STATUS',
+
     Tagged = 'TAGGED',
 }
 
@@ -65,16 +72,26 @@ export class PopulatedNotification {
     preview: String;
     url: String;
 
+    currentEvent: Event;
+
     private missing = 0;
     private PREVIEW_MAX_CHARS = 150;
 
     constructor(
         notification: Notification,
+        private eventsService: EventsService,
         private membersService: MembersService,
         private postsService: PostsService,
         private threadsService: ThreadsService,
         private speakersService: SpeakersService
     ) {
+
+        this.missing += 1;
+        this.eventsService.getCurrentEvent().subscribe((event: Event) => {
+            this.currentEvent = event;
+            this.missing -= 1;
+        });
+
         this.id = notification.id;
         this.kind = notification.kind;
         this.date = notification.date;
@@ -151,8 +168,31 @@ export class PopulatedNotification {
                             ? '' : 's'} page`;
 
                     preview = this.post.text;
+                } else {
+                    message = `${this.member.name} added `;
+                    message += `${this.speaker ? this.speaker.name : this.company.name}'`;
+                    message += `as a ${this.speaker ? 'speaker' : 'company'}`;
                 }
 
+                break;
+
+            case NotificationKind.UpdatedParticipation:
+                message = `${this.speaker ? this.speaker.name : this.company.name} `;
+                message += `is now participating on the current event (added by ${this.member.name})`;
+                break;
+
+            case NotificationKind.UpdatedParticipationStatus:
+                const status = this.speaker
+                    ? GetSpeakerParticipation(this.speaker, +this.currentEvent.id)
+                    : GetCompanyParticipation(this.company, +this.currentEvent.id);
+
+                message = `${this.speaker ? this.speaker.name : this.company.name}'`;
+                message += `${
+                    (this.speaker && this.speaker.name[this.speaker.name.length - 1] === 's') ||
+                        (this.company && this.company.name[this.company.name.length - 1] === 's')
+                        ? '' : 's'} `;
+                message += `participation status is now ${status.status} `;
+                message += `(modified by ${this.member.name})`;
                 break;
 
             case NotificationKind.Tagged:
