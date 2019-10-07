@@ -495,3 +495,29 @@ func removeMeetingFromEvent(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedEvent)
 }
+
+func removeTeamFromEvent(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	teamID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find current event", http.StatusNotFound)
+		return
+	}
+
+	if _, err = mongodb.Teams.GetTeam(teamID); err != nil {
+		http.Error(w, "Could not find team", http.StatusNotFound)
+		return
+	}
+
+	updatedEvent, err := mongodb.Events.RemoveTeam(currentEvent.ID, teamID)
+
+	if err != nil {
+		http.Error(w, "Could not remove team from event", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedEvent)
+}
