@@ -343,6 +343,9 @@
         },
         "/public/speakers/{id}": {
             "$ref": "./endpoints/public-speakers-id.json"
+        },
+        "/events/teams/{id}": {
+            "$ref": "./endpoints/events-teams-id.json"
         }
     },
     "externalDocs": {
