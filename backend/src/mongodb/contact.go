@@ -19,7 +19,6 @@ import (
 // ContactsType stores importat db information on contacts
 type ContactsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // GetContactsOptions is used as a filter on GetContacts
@@ -47,6 +46,7 @@ type UpdateMailsData struct {
 
 // ParseBody fills a CreateContactData struct from a body
 func (ccd *CreateContactData) ParseBody(body io.Reader) error {
+
 	if err := json.NewDecoder(body).Decode(ccd); err != nil {
 		return err
 	}
@@ -71,10 +71,11 @@ func partialMatch(s1, s2 string) bool {
 
 // GetContact finds a contact based on ID
 func (c *ContactsType) GetContact(id primitive.ObjectID) (*models.Contact, error) {
+	ctx := context.Background()
 
 	var contact models.Contact
 
-	if err := c.Collection.FindOne(c.Context, bson.M{"_id": id}).Decode(&contact); err != nil {
+	if err := c.Collection.FindOne(ctx, bson.M{"_id": id}).Decode(&contact); err != nil {
 		return nil, err
 	}
 
@@ -84,14 +85,15 @@ func (c *ContactsType) GetContact(id primitive.ObjectID) (*models.Contact, error
 
 // GetContacts gets all contacts based on a query
 func (c *ContactsType) GetContacts(options GetContactsOptions) ([]*models.Contact, error) {
+	ctx := context.Background()
 	var contacts = make([]*models.Contact, 0)
 
-	curr, err := c.Collection.Find(c.Context, bson.M{})
+	curr, err := c.Collection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
 
-	for curr.Next(c.Context) {
+	for curr.Next(ctx) {
 		var contact models.Contact
 
 		if err := curr.Decode(&contact); err != nil {
@@ -113,19 +115,20 @@ func (c *ContactsType) GetContacts(options GetContactsOptions) ([]*models.Contac
 		}
 	}
 
-	curr.Close(c.Context)
+	curr.Close(ctx)
 
 	return contacts, nil
 }
 
 // CreateContact addas a contact
 func (c *ContactsType) CreateContact(data CreateContactData) (*models.Contact, error) {
+	ctx := context.Background()
 	var insertData = bson.M{}
 	insertData["phones"] = data.Phones
 	insertData["socials"] = data.Socials
 	insertData["mails"] = data.Mails
 
-	insertResult, err := c.Collection.InsertOne(c.Context, insertData)
+	insertResult, err := c.Collection.InsertOne(ctx, insertData)
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +143,7 @@ func (c *ContactsType) CreateContact(data CreateContactData) (*models.Contact, e
 
 // UpdateContact updates a contact
 func (c *ContactsType) UpdateContact(contactID primitive.ObjectID, data CreateContactData) (*models.Contact, error) {
+	ctx := context.Background()
 	var updateQuery = bson.M{
 		"$set": bson.M{
 			"phones":  data.Phones,
@@ -153,7 +157,7 @@ func (c *ContactsType) UpdateContact(contactID primitive.ObjectID, data CreateCo
 
 	var contact models.Contact
 
-	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": contactID}, updateQuery, optionsQuery).Decode(&contact); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": contactID}, updateQuery, optionsQuery).Decode(&contact); err != nil {
 		return nil, err
 	}
 
@@ -162,6 +166,7 @@ func (c *ContactsType) UpdateContact(contactID primitive.ObjectID, data CreateCo
 
 // AddPhone adds a new phone number to a contact
 func (c *ContactsType) AddPhone(id primitive.ObjectID, data models.ContactPhone) (*models.Contact, error) {
+	ctx := context.Background()
 	var contact *models.Contact
 
 	contact, err := c.GetContact(id)
@@ -182,7 +187,7 @@ func (c *ContactsType) AddPhone(id primitive.ObjectID, data models.ContactPhone)
 
 	var updatedContact models.Contact
 
-	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
 		return nil, err
 	}
 
@@ -191,6 +196,7 @@ func (c *ContactsType) AddPhone(id primitive.ObjectID, data models.ContactPhone)
 
 // AddMail adds a new phone number to a contact
 func (c *ContactsType) AddMail(id primitive.ObjectID, data models.ContactMail) (*models.Contact, error) {
+	ctx := context.Background()
 	var contact *models.Contact
 
 	contact, err := c.GetContact(id)
@@ -211,7 +217,7 @@ func (c *ContactsType) AddMail(id primitive.ObjectID, data models.ContactMail) (
 
 	var updatedContact models.Contact
 
-	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
 		return nil, err
 	}
 
@@ -220,6 +226,7 @@ func (c *ContactsType) AddMail(id primitive.ObjectID, data models.ContactMail) (
 
 // UpdatePhoneNumbers updates a contact's phone list
 func (c *ContactsType) UpdatePhoneNumbers(id primitive.ObjectID, data UpdatePhonesData) (*models.Contact, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -232,7 +239,7 @@ func (c *ContactsType) UpdatePhoneNumbers(id primitive.ObjectID, data UpdatePhon
 
 	var updatedContact models.Contact
 
-	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
 		return nil, err
 	}
 
@@ -241,6 +248,7 @@ func (c *ContactsType) UpdatePhoneNumbers(id primitive.ObjectID, data UpdatePhon
 
 // UpdateMailList updates a contact's phone list
 func (c *ContactsType) UpdateMailList(id primitive.ObjectID, data UpdateMailsData) (*models.Contact, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -253,7 +261,7 @@ func (c *ContactsType) UpdateMailList(id primitive.ObjectID, data UpdateMailsDat
 
 	var updatedContact models.Contact
 
-	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
 		return nil, err
 	}
 
@@ -262,6 +270,7 @@ func (c *ContactsType) UpdateMailList(id primitive.ObjectID, data UpdateMailsDat
 
 // UpdateSocials updates the socials of a contact
 func (c *ContactsType) UpdateSocials(id primitive.ObjectID, data models.ContactSocials) (*models.Contact, error) {
+	ctx := context.Background()
 	var updateQuery = bson.M{
 		"$set": bson.M{
 			"socials": data,
@@ -273,7 +282,7 @@ func (c *ContactsType) UpdateSocials(id primitive.ObjectID, data models.ContactS
 
 	var updatedContact models.Contact
 
-	if err := c.Collection.FindOneAndUpdate(c.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedContact); err != nil {
 		return nil, err
 	}
 

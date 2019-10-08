@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -38,7 +39,8 @@ var (
 )
 
 func TestCreateMeeting(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	var meeting models.Meeting
 
@@ -59,7 +61,8 @@ func TestCreateMeeting(t *testing.T) {
 }
 
 func TestCreateMeetingWithParticipants(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	var member = primitive.NewObjectID()
 	var participants = models.MeetingParticipants{
@@ -89,6 +92,7 @@ func TestCreateMeetingWithParticipants(t *testing.T) {
 }
 
 func TestCreateMeetingBadPayload(t *testing.T) {
+
 	var BadData1 = mongodb.CreateMeetingData{
 		End:   &TimeAfter,
 		Place: &Place1,
@@ -137,7 +141,8 @@ func TestCreateMeetingBadPayload(t *testing.T) {
 }
 
 func TestGetMeeting(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
 	assert.NilError(t, err)
@@ -154,7 +159,8 @@ func TestGetMeeting(t *testing.T) {
 }
 
 func TestGetMeetingWrongID(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	_, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
 	assert.NilError(t, err)
@@ -165,7 +171,8 @@ func TestGetMeetingWrongID(t *testing.T) {
 }
 
 func TestDeleteMeeting(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
 	assert.NilError(t, err)
@@ -186,7 +193,8 @@ func TestDeleteMeeting(t *testing.T) {
 }
 
 func TestGetMeetings(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
 	assert.NilError(t, err)
@@ -204,11 +212,12 @@ func TestGetMeetings(t *testing.T) {
 }
 
 func TestGetMeetingsEvent(t *testing.T) {
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	//Setup
-	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	_, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
 
 	if err != nil {
 		log.Fatal(err)
@@ -246,12 +255,13 @@ func TestGetMeetingsEvent(t *testing.T) {
 }
 
 func TestGetMeetingsTeam(t *testing.T) {
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	//Setup
-	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	_, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
 
 	if err != nil {
 		log.Fatal(err)
@@ -298,14 +308,15 @@ func TestGetMeetingsTeam(t *testing.T) {
 }
 
 func TestGetMeetingsCompany(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	//Setup
-	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	_, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
 
 	if err != nil {
 		log.Fatal(err)
@@ -374,13 +385,14 @@ func TestGetMeetingsCompany(t *testing.T) {
 }
 
 func TestGetMeetingsEventCompany(t *testing.T) {
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	//Setup
-	_, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": 1, "name": "SINFO1"})
+	_, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": 1, "name": "SINFO1"})
 
 	if err != nil {
 		log.Fatal(err)
@@ -459,7 +471,8 @@ func TestGetMeetingsEventCompany(t *testing.T) {
 }
 
 func TestUpdateMeeting(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
 	assert.NilError(t, err)
@@ -495,7 +508,8 @@ func TestUpdateMeeting(t *testing.T) {
 }
 
 func TestUpdateMeetingBadDate(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
 	assert.NilError(t, err)
@@ -522,7 +536,8 @@ func TestUpdateMeetingBadDate(t *testing.T) {
 }
 
 func TestUpdateMeetingBadPlace(t *testing.T) {
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	ctx := context.Background()
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
 	Meeting1, err := mongodb.Meetings.CreateMeeting(Meeting1Data)
 	assert.NilError(t, err)

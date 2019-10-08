@@ -20,7 +20,6 @@ import (
 // CompanyRepsType stores importat db information on contacts
 type CompanyRepsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // GetCompanyRepOptions is a filter for GetCompanyReps
@@ -36,6 +35,7 @@ type CreateCompanyRepData struct {
 
 // ParseBody fills a CreateCompanyRepData
 func (ccrp *CreateCompanyRepData) ParseBody(body io.Reader) error {
+
 	json.NewDecoder(body).Decode(ccrp)
 
 	if ccrp.Name == nil {
@@ -46,10 +46,11 @@ func (ccrp *CreateCompanyRepData) ParseBody(body io.Reader) error {
 
 // GetCompanyRep returns a CompanyRep based on id
 func (c *CompanyRepsType) GetCompanyRep(id primitive.ObjectID) (*models.CompanyRep, error) {
+	ctx := context.Background()
 
 	var companyRep models.CompanyRep
 
-	if err := c.Collection.FindOne(c.Context, bson.M{"_id": id}).Decode(&companyRep); err != nil {
+	if err := c.Collection.FindOne(ctx, bson.M{"_id": id}).Decode(&companyRep); err != nil {
 		return nil, err
 	}
 
@@ -58,6 +59,7 @@ func (c *CompanyRepsType) GetCompanyRep(id primitive.ObjectID) (*models.CompanyR
 
 //GetCompanyReps gets all reps based on a filter
 func (c *CompanyRepsType) GetCompanyReps(options GetCompanyRepOptions) ([]*models.CompanyRep, error) {
+	ctx := context.Background()
 	reps := make([]*models.CompanyRep, 0)
 
 	filter := bson.M{}
@@ -69,12 +71,12 @@ func (c *CompanyRepsType) GetCompanyReps(options GetCompanyRepOptions) ([]*model
 		}
 	}
 
-	curr, err := c.Collection.Find(c.Context, filter)
+	curr, err := c.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for curr.Next(c.Context) {
+	for curr.Next(ctx) {
 		var rep models.CompanyRep
 
 		if err := curr.Decode(&rep); err != nil {
@@ -84,13 +86,14 @@ func (c *CompanyRepsType) GetCompanyReps(options GetCompanyRepOptions) ([]*model
 		reps = append(reps, &rep)
 	}
 
-	curr.Close(c.Context)
+	curr.Close(ctx)
 
 	return reps, nil
 }
 
 //CreateCompanyRep creates a company rep
 func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.CompanyRep, error) {
+	ctx := context.Background()
 
 	dataQuery := bson.M{"name": data.Name}
 
@@ -103,7 +106,7 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 		dataQuery["contact"] = contact.ID
 	}
 
-	insertResult, err := c.Collection.InsertOne(c.Context, dataQuery)
+	insertResult, err := c.Collection.InsertOne(ctx, dataQuery)
 
 	if err != nil {
 		return nil, err
@@ -121,6 +124,7 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 
 // UpdateCompanyRep creates a contact and adds it to a companyRep
 func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCompanyRepData) (*models.CompanyRep, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -143,7 +147,7 @@ func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCom
 	var filterQuery = bson.M{"_id": id}
 
 	var updatedRep models.CompanyRep
-	if err := c.Collection.FindOneAndUpdate(c.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedRep); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedRep); err != nil {
 		return nil, err
 	}
 
@@ -152,13 +156,14 @@ func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCom
 
 // DeleteCompanyRep deletes a companyRep
 func (c *CompanyRepsType) DeleteCompanyRep(id primitive.ObjectID) (*models.CompanyRep, error) {
+	ctx := context.Background()
 
 	rep, err := c.GetCompanyRep(id)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteResult, err := c.Collection.DeleteOne(c.Context, bson.M{"_id": id})
+	deleteResult, err := c.Collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return nil, err
 	}

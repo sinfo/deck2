@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
@@ -69,8 +70,9 @@ func containsContact(l []models.Contact, c *models.Contact) bool {
 }
 
 func TestGetContacts(t *testing.T) {
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	//Setup
 
@@ -148,9 +150,10 @@ func TestGetContacts(t *testing.T) {
 }
 
 func TestGetContact(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	//Setup
 
@@ -181,8 +184,9 @@ func TestGetContactBadId(t *testing.T) {
 }
 
 func TestUpdateContact(t *testing.T) {
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
 	//Setup
 

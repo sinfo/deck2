@@ -1,79 +1,81 @@
 package router
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"bytes"
-	"strconv"
+	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"testing"
 	"time"
-	"log"
+
 	"github.com/sinfo/deck2/src/auth"
 	"github.com/sinfo/deck2/src/config"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
-	"gotest.tools/assert"
 	"go.mongodb.org/mongo-driver/bson"
+	"gotest.tools/assert"
 )
 
 var (
-	Billing1	*models.Billing
-	Billing2	*models.Billing
-	FALSE = false
-	TRUE = true
+	Billing1      *models.Billing
+	Billing2      *models.Billing
+	FALSE         = false
+	TRUE          = true
 	BillingStatus = mongodb.CreateStatusData{
-		Invoice: &FALSE,
-		Receipt: &FALSE,
+		Invoice:  &FALSE,
+		Receipt:  &FALSE,
 		ProForma: &FALSE,
-		Paid: &FALSE,
+		Paid:     &FALSE,
 	}
-	Billing1Value = 500
-	Billing1Invoice = "123"
+	Billing1Value    = 500
+	Billing1Invoice  = "123"
 	Billing1Emission = time.Now()
 	Billing1Employer = primitive.NewObjectID()
-	Billing1Notes = "Some notes"
-	Billing1Data = mongodb.CreateBillingData{
-		Status: &BillingStatus,
-		Event: &Event1.ID,
-		Value: &Billing1Value,
+	Billing1Notes    = "Some notes"
+	Billing1Data     = mongodb.CreateBillingData{
+		Status:        &BillingStatus,
+		Event:         &Event1.ID,
+		Value:         &Billing1Value,
 		InvoiceNumber: &Billing1Invoice,
-		Emission: &Billing1Emission,
-		Notes: &Billing1Notes,
+		Emission:      &Billing1Emission,
+		Notes:         &Billing1Notes,
 	}
-	Billing2Value = 800
-	Billing2Invoice = "321"
+	Billing2Value    = 800
+	Billing2Invoice  = "321"
 	Billing2Emission = Billing1Emission.Add(time.Hour * 20)
 	Billing2Employer = primitive.NewObjectID()
-	Billing2Notes = "Some notes2"
-	Billing2Data = mongodb.CreateBillingData{
-		Status: &BillingStatus,
-		Event: &Event2.ID,
-		Value: &Billing2Value,
+	Billing2Notes    = "Some notes2"
+	Billing2Data     = mongodb.CreateBillingData{
+		Status:        &BillingStatus,
+		Event:         &Event2.ID,
+		Value:         &Billing2Value,
 		InvoiceNumber: &Billing2Invoice,
-		Emission: &Billing2Emission,
-		Notes: &Billing2Notes,
+		Emission:      &Billing2Emission,
+		Notes:         &Billing2Notes,
 	}
 )
 
-func TestGetBillings(t *testing.T){
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Billings.Collection.Drop(mongodb.Billings.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
+func TestGetBillings(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Billings.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
 	company, err := mongodb.Companies.CreateCompany(mongodb.CreateCompanyData{
-		Name: &Company.Name,
+		Name:        &Company.Name,
 		Description: &Company.Description,
-		Site: &Company.Site,
-		
+		Site:        &Company.Site,
 	})
 	assert.NilError(t, err)
 
@@ -171,7 +173,7 @@ func TestGetBillings(t *testing.T){
 
 	// After on query
 
-	var query = "?after="+ url.QueryEscape(TimeAfter.Format(time.RFC3339))
+	var query = "?after=" + url.QueryEscape(TimeAfter.Format(time.RFC3339))
 
 	config.Authentication = true
 	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
@@ -186,7 +188,7 @@ func TestGetBillings(t *testing.T){
 
 	// Before on query
 
-	query = "?before="+url.QueryEscape(TimeAfter.Format(time.RFC3339))
+	query = "?before=" + url.QueryEscape(TimeAfter.Format(time.RFC3339))
 
 	config.Authentication = true
 	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
@@ -201,7 +203,7 @@ func TestGetBillings(t *testing.T){
 
 	// ValueGreaterThan on query
 
-	query = "?valueGreaterThan="+url.QueryEscape(strconv.Itoa(600))
+	query = "?valueGreaterThan=" + url.QueryEscape(strconv.Itoa(600))
 
 	config.Authentication = true
 	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
@@ -216,7 +218,7 @@ func TestGetBillings(t *testing.T){
 
 	// ValueLessThan on query
 
-	query = "?valueLessThan="+url.QueryEscape(strconv.Itoa(600))
+	query = "?valueLessThan=" + url.QueryEscape(strconv.Itoa(600))
 
 	config.Authentication = true
 	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
@@ -231,7 +233,7 @@ func TestGetBillings(t *testing.T){
 
 	// Event on query
 
-	query = "?event="+url.QueryEscape(strconv.Itoa(Event1.ID))
+	query = "?event=" + url.QueryEscape(strconv.Itoa(Event1.ID))
 
 	config.Authentication = true
 	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
@@ -246,7 +248,7 @@ func TestGetBillings(t *testing.T){
 
 	// Company on query
 
-	query = "?company="+url.QueryEscape(company.ID.Hex())
+	query = "?company=" + url.QueryEscape(company.ID.Hex())
 	config.Authentication = true
 	res, err = executeAuthenticatedRequest("GET", "/billings"+query, nil, *tokenAdmin)
 	config.Authentication = false
@@ -259,8 +261,9 @@ func TestGetBillings(t *testing.T){
 	assert.Equal(t, billings[0].ID, Billing1.ID)
 }
 
-func TestGetBillingsBadQuey(t *testing.T){
-	defer mongodb.Billings.Collection.Drop(mongodb.Billings.Context)
+func TestGetBillingsBadQuey(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Billings.Collection.Drop(ctx)
 
 	_, err := mongodb.Billings.CreateBilling(Billing1Data)
 	assert.NilError(t, err)
@@ -287,8 +290,9 @@ func TestGetBillingsBadQuey(t *testing.T){
 
 }
 
-func TestGetBilling(t *testing.T){
-	defer mongodb.Billings.Collection.Drop(mongodb.Billings.Context)
+func TestGetBilling(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Billings.Collection.Drop(ctx)
 
 	Billing1, err := mongodb.Billings.CreateBilling(Billing1Data)
 	assert.NilError(t, err)
@@ -308,15 +312,16 @@ func TestGetBilling(t *testing.T){
 
 }
 
-func TestCreateBilling(t *testing.T){
-	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
+func TestCreateBilling(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.CompanyReps.Collection.Drop(ctx)
 
 	b, errMarshal := json.Marshal(Billing1Data)
 	assert.NilError(t, errMarshal)
 
 	var billing models.Billing
 
-	res, err := executeRequest("POST" ,"/billings", bytes.NewBuffer(b))
+	res, err := executeRequest("POST", "/billings", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -329,8 +334,9 @@ func TestCreateBilling(t *testing.T){
 
 }
 
-func TestUpdateBilling(t *testing.T){
-	defer mongodb.Billings.Collection.Drop(mongodb.Billings.Context)
+func TestUpdateBilling(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Billings.Collection.Drop(ctx)
 
 	Billing1, err := mongodb.Billings.CreateBilling(Billing1Data)
 	assert.NilError(t, err)
@@ -340,7 +346,7 @@ func TestUpdateBilling(t *testing.T){
 
 	var billing models.Billing
 
-	res, err := executeRequest("PUT" ,"/billings/" + Billing1.ID.Hex(), bytes.NewBuffer(b))
+	res, err := executeRequest("PUT", "/billings/"+Billing1.ID.Hex(), bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -351,8 +357,9 @@ func TestUpdateBilling(t *testing.T){
 
 }
 
-func TestDeleteBilling(t *testing.T){
-	defer mongodb.Billings.Collection.Drop(mongodb.Billings.Context)
+func TestDeleteBilling(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Billings.Collection.Drop(ctx)
 
 	Billing1, err := mongodb.Billings.CreateBilling(Billing1Data)
 

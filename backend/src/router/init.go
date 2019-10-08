@@ -91,8 +91,11 @@ func healthCheck(w http.ResponseWriter, req *http.Request) {
 
 // Router is the exported router.
 var Router http.Handler
-var UrlRegexCompiler *regexp.Regexp
 
+//URLRegexCompiler is a regex compiler for urls
+var URLRegexCompiler *regexp.Regexp
+
+// InitializeRouter initializes the router and all handlers
 func InitializeRouter() {
 	r := mux.NewRouter()
 
@@ -103,9 +106,9 @@ func InitializeRouter() {
 	r.Use(headersMiddleware)
 
 	if config.Production {
-		UrlRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(https:\/\/)?(.*sinfo\.org)(\/.*)?)\/?\|.*`)
+		URLRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(https:\/\/)?(.*sinfo\.org)(\/.*)?)\/?\|.*`)
 	} else {
-		UrlRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(.*))(\/)?\|.*`)
+		URLRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(.*))(\/)?\|.*`)
 	}
 
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
@@ -143,6 +146,7 @@ func InitializeRouter() {
 	authRouter := r.PathPrefix("/auth").Subrouter()
 	authRouter.HandleFunc("/login", oauthGoogleLogin).Methods("GET")
 	authRouter.HandleFunc("/callback", oauthGoogleCallback).Methods("GET")
+	authRouter.HandleFunc("/verify/{token}", verifyToken).Methods("GET")
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
@@ -184,6 +188,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/image/public/speaker", authCoordinator(setSpeakerPublicImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/image/public/company", authCoordinator(setSpeakerCompanyImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/thread", authMember(addSpeakerThread)).Methods("POST")
+	speakerRouter.HandleFunc("/{id}/participation", authAdmin(removeSpeakerParticipation)).Methods("DELETE")
 
 	// flightInfo handlers
 	flightInfoRouter := r.PathPrefix("/flightInfo").Subrouter()

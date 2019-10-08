@@ -2,10 +2,11 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
-	"testing"
 	"net/url"
+	"testing"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
@@ -17,8 +18,9 @@ var (
 	Name2 = "NAME2"
 )
 
-func TestGetCompanyReps(t *testing.T){
-	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
+func TestGetCompanyReps(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.CompanyReps.Collection.Drop(ctx)
 
 	rep1, err := mongodb.CompanyReps.CreateCompanyRep(mongodb.CreateCompanyRepData{Name: &Name1})
 	assert.NilError(t, err)
@@ -26,7 +28,7 @@ func TestGetCompanyReps(t *testing.T){
 	_, err = mongodb.CompanyReps.CreateCompanyRep(mongodb.CreateCompanyRepData{Name: &Name2})
 	assert.NilError(t, err)
 
-	var query = "?name="+url.QueryEscape(Name1)
+	var query = "?name=" + url.QueryEscape(Name1)
 	res, err := executeRequest("GET", "/companyReps"+query, nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
@@ -36,7 +38,7 @@ func TestGetCompanyReps(t *testing.T){
 	json.NewDecoder(res.Body).Decode(&reps)
 
 	assert.Equal(t, len(reps), 1)
-	assert.Equal(t,rep1.ID, reps[0].ID)
+	assert.Equal(t, rep1.ID, reps[0].ID)
 
 	res, err = executeRequest("GET", "/companyReps", nil)
 	assert.NilError(t, err)
@@ -47,8 +49,9 @@ func TestGetCompanyReps(t *testing.T){
 	assert.Equal(t, len(reps), 2)
 }
 
-func TestGetCompanyRep(t *testing.T){
-	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
+func TestGetCompanyRep(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.CompanyReps.Collection.Drop(ctx)
 
 	rep1, err := mongodb.CompanyReps.CreateCompanyRep(mongodb.CreateCompanyRepData{Name: &Name1})
 	assert.NilError(t, err)
@@ -64,15 +67,16 @@ func TestGetCompanyRep(t *testing.T){
 
 	json.NewDecoder(res.Body).Decode(&rep)
 
-	assert.Equal(t,rep1.ID, rep.ID)
+	assert.Equal(t, rep1.ID, rep.ID)
 
 	res, err = executeRequest("GET", "/companyReps/wrong", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
-func TestUpdateCompanyRep(t *testing.T){
-	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
+func TestUpdateCompanyRep(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.CompanyReps.Collection.Drop(ctx)
 
 	rep1, err := mongodb.CompanyReps.CreateCompanyRep(mongodb.CreateCompanyRepData{Name: &Name1})
 	assert.NilError(t, err)

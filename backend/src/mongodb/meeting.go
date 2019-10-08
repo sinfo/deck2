@@ -20,7 +20,6 @@ import (
 // MeetingsType contains important database information on Meetings
 type MeetingsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // CreateMeetingData contains data needed to create a new meeting
@@ -38,6 +37,7 @@ type GetMeetingsOptions struct {
 	Company *primitive.ObjectID
 }
 
+// UpdateMeetingData contains data needed to update a new meeting
 type UpdateMeetingData struct {
 	Begin  time.Time `json:"begin" bson:"begin"`
 	End    time.Time `json:"end" bson:"end"`
@@ -45,7 +45,9 @@ type UpdateMeetingData struct {
 	Minute string    `json:"minute" bson:"minute"`
 }
 
+//ParseBody fills an UpdateMeetingData from a body
 func (umd *UpdateMeetingData) ParseBody(body io.Reader) error {
+	ctx = context.Background()
 
 	if err := json.NewDecoder(body).Decode(umd); err != nil {
 		return err
@@ -63,6 +65,8 @@ func (umd *UpdateMeetingData) ParseBody(body io.Reader) error {
 
 // Validate the data for meeting creation
 func (cmd *CreateMeetingData) Validate() error {
+	ctx = context.Background()
+
 	if cmd.Begin == nil {
 		return errors.New("no begin date given")
 	}
@@ -84,6 +88,7 @@ func (cmd *CreateMeetingData) Validate() error {
 
 // ParseBody fills the CreateMeetingData from a body
 func (cmd *CreateMeetingData) ParseBody(body io.Reader) error {
+	ctx = context.Background()
 
 	if err := json.NewDecoder(body).Decode(cmd); err != nil {
 		return err
@@ -98,6 +103,7 @@ func (cmd *CreateMeetingData) ParseBody(body io.Reader) error {
 
 // CreateMeeting creates a meeting.
 func (m *MeetingsType) CreateMeeting(data CreateMeetingData) (*models.Meeting, error) {
+	ctx = context.Background()
 
 	var meeting models.Meeting
 
@@ -111,13 +117,13 @@ func (m *MeetingsType) CreateMeeting(data CreateMeetingData) (*models.Meeting, e
 		c["participants"] = *data.Participants
 	}
 
-	insertResult, err := m.Collection.InsertOne(m.Context, c)
+	insertResult, err := m.Collection.InsertOne(ctx, c)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := m.Collection.FindOne(m.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&meeting); err != nil {
+	if err := m.Collection.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&meeting); err != nil {
 		log.Println("Error creating a meeting:", err)
 		return nil, err
 	}
@@ -127,9 +133,11 @@ func (m *MeetingsType) CreateMeeting(data CreateMeetingData) (*models.Meeting, e
 
 // GetMeeting gets a meeting by its ID
 func (m *MeetingsType) GetMeeting(meetingID primitive.ObjectID) (*models.Meeting, error) {
+	ctx = context.Background()
+
 	var meeting models.Meeting
 
-	err := m.Collection.FindOne(m.Context, bson.M{"_id": meetingID}).Decode(&meeting)
+	err := m.Collection.FindOne(ctx, bson.M{"_id": meetingID}).Decode(&meeting)
 	if err != nil {
 		return nil, err
 	}
@@ -139,14 +147,16 @@ func (m *MeetingsType) GetMeeting(meetingID primitive.ObjectID) (*models.Meeting
 
 // DeleteMeeting removes a meeting by its ID
 func (m *MeetingsType) DeleteMeeting(meetingID primitive.ObjectID) (*models.Meeting, error) {
+	ctx = context.Background()
+
 	var meeting models.Meeting
 
-	err := m.Collection.FindOne(m.Context, bson.M{"_id": meetingID}).Decode(&meeting)
+	err := m.Collection.FindOne(ctx, bson.M{"_id": meetingID}).Decode(&meeting)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteResult, err := Meetings.Collection.DeleteOne(m.Context, bson.M{"_id": meetingID})
+	deleteResult, err := Meetings.Collection.DeleteOne(ctx, bson.M{"_id": meetingID})
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +170,8 @@ func (m *MeetingsType) DeleteMeeting(meetingID primitive.ObjectID) (*models.Meet
 
 // GetMeetings gets teams by event, company, company and event, or team.
 func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, error) {
+	ctx = context.Background()
+
 	var meetings = make([]*models.Meeting, 0)
 	var meetingID = make([]primitive.ObjectID, 0)
 
@@ -214,11 +226,11 @@ func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, 
 		}
 		meetingID = append(meetingID, event.Meetings...)
 	} else {
-		cur, err := m.Collection.Find(m.Context, bson.M{})
+		cur, err := m.Collection.Find(ctx, bson.M{})
 		if err != nil {
 			return nil, err
 		}
-		for cur.Next(m.Context) {
+		for cur.Next(ctx) {
 			var e models.Meeting
 			err := cur.Decode(&e)
 			if err != nil {
@@ -231,7 +243,7 @@ func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, 
 			return nil, err
 		}
 
-		cur.Close(m.Context)
+		cur.Close(ctx)
 		return meetings, nil
 	}
 
@@ -248,6 +260,7 @@ func (m *MeetingsType) GetMeetings(data GetMeetingsOptions) ([]*models.Meeting, 
 
 // UpdateMeeting updates a meeting
 func (m *MeetingsType) UpdateMeeting(data UpdateMeetingData, meetingID primitive.ObjectID) (*models.Meeting, error) {
+	ctx = context.Background()
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -265,7 +278,7 @@ func (m *MeetingsType) UpdateMeeting(data UpdateMeetingData, meetingID primitive
 
 	var updatedMeeting models.Meeting
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+	if err := m.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
 		log.Println("error updating meeting:", err)
 		return nil, err
 	}

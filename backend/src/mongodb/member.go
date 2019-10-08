@@ -18,18 +18,19 @@ import (
 )
 
 var (
+	// MemberAssociated is an error returned when deleting a memebr
 	MemberAssociated = "Member associated"
 )
 
 // MembersType contains database information on Members
 type MembersType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // Cached version of the public members for the current event
 var currentPublicMembers *[]*models.MemberPublic
 
+//ResetCurrentPublicMembers does exactly what the name says
 func ResetCurrentPublicMembers() {
 	currentPublicMembers = nil
 }
@@ -99,6 +100,7 @@ func (umd *UpdateMemberData) ParseBody(body io.Reader) error {
 }
 
 func filterDuplicatesMembers(orig []*models.Member) (res []*models.Member) {
+	ctx = context.Background()
 	res = make([]*models.Member, 0)
 
 	for _, s := range orig {
@@ -118,6 +120,7 @@ func filterDuplicatesMembers(orig []*models.Member) (res []*models.Member) {
 }
 
 func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) {
+	ctx = context.Background()
 
 	var public = make([]*models.MemberPublic, 0)
 
@@ -139,12 +142,13 @@ func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) 
 	return public
 }
 
-// GetMember finds a member with specified id.
+// GetMemberBySinfoID finds a member with specified id.
 func (m *MembersType) GetMemberBySinfoID(sinfoid string) (*models.Member, error) {
+	ctx = context.Background()
 
 	var member models.Member
 
-	if err := m.Collection.FindOne(m.Context, bson.M{"sinfoid": sinfoid}).Decode(&member); err != nil {
+	if err := m.Collection.FindOne(ctx, bson.M{"sinfoid": sinfoid}).Decode(&member); err != nil {
 		return nil, err
 	}
 
@@ -153,10 +157,11 @@ func (m *MembersType) GetMemberBySinfoID(sinfoid string) (*models.Member, error)
 
 // GetMember finds a member with specified id.
 func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
+	ctx = context.Background()
 
 	var member models.Member
 
-	if err := m.Collection.FindOne(m.Context, bson.M{"_id": id}).Decode(&member); err != nil {
+	if err := m.Collection.FindOne(ctx, bson.M{"_id": id}).Decode(&member); err != nil {
 		return nil, err
 	}
 
@@ -167,6 +172,7 @@ func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
 // with a case insensitive partial match to given name
 // or all members in event if event is given
 func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, error) {
+	ctx = context.Background()
 
 	var members []*models.Member
 	filter := bson.M{}
@@ -180,12 +186,12 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 
 	if options.Event == nil {
 
-		cur, err := m.Collection.Find(m.Context, filter)
+		cur, err := m.Collection.Find(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
 
-		for cur.Next(m.Context) {
+		for cur.Next(ctx) {
 
 			var x models.Member
 
@@ -200,7 +206,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 			return nil, err
 		}
 
-		cur.Close(m.Context)
+		cur.Close(ctx)
 
 	} else {
 		event, err := Events.GetEvent(*options.Event)
@@ -223,7 +229,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 					findQuery["name"] = filter["name"]
 				}
 
-				if err := m.Collection.FindOne(m.Context, findQuery).Decode(&member); err != nil {
+				if err := m.Collection.FindOne(ctx, findQuery).Decode(&member); err != nil {
 					continue
 				}
 
@@ -237,11 +243,12 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 
 // GetMemberAuthCredentials finds a member and returns his/her information for auth purposes.
 func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.AuthorizationCredentials, error) {
+	ctx = context.Background()
 
 	var member models.Member
 	var result models.AuthorizationCredentials
 
-	if err := m.Collection.FindOne(m.Context, bson.M{"sinfoid": sinfoID}).Decode(&member); err != nil {
+	if err := m.Collection.FindOne(ctx, bson.M{"sinfoid": sinfoID}).Decode(&member); err != nil {
 		return nil, err
 	}
 
@@ -291,8 +298,9 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 
 // CreateMember creates a new member
 func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error) {
+	ctx = context.Background()
 
-	createdContact, err := Contacts.Collection.InsertOne(Contacts.Context, bson.M{
+	createdContact, err := Contacts.Collection.InsertOne(ctx, bson.M{
 		"phones": []models.ContactPhone{},
 		"socials": bson.M{
 			"facebook": "",
@@ -315,7 +323,7 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 		"contact": createdContact.InsertedID.(primitive.ObjectID),
 	}
 
-	insertResult, err := m.Collection.InsertOne(m.Context, insertData)
+	insertResult, err := m.Collection.InsertOne(ctx, insertData)
 	if err != nil {
 		return nil, err
 	}
@@ -332,6 +340,7 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 
 // UpdateImage updates a member's image
 func (m *MembersType) UpdateImage(memberID primitive.ObjectID, url string) (*models.Member, error) {
+	ctx = context.Background()
 
 	var member models.Member
 
@@ -344,7 +353,7 @@ func (m *MembersType) UpdateImage(memberID primitive.ObjectID, url string) (*mod
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil {
+	if err := m.Collection.FindOneAndUpdate(ctx, bson.M{"_id": memberID}, updateQuery, optionsQuery).Decode(&member); err != nil {
 		return nil, err
 	}
 
@@ -355,6 +364,7 @@ func (m *MembersType) UpdateImage(memberID primitive.ObjectID, url string) (*mod
 
 // UpdateMember updates a member's name, image and istid
 func (m *MembersType) UpdateMember(id primitive.ObjectID, data UpdateMemberData) (*models.Member, error) {
+	ctx = context.Background()
 	var member models.Member
 
 	var updateQuery = bson.M{
@@ -367,7 +377,7 @@ func (m *MembersType) UpdateMember(id primitive.ObjectID, data UpdateMemberData)
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil {
+	if err := m.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil {
 		return nil, err
 	}
 
@@ -378,6 +388,7 @@ func (m *MembersType) UpdateMember(id primitive.ObjectID, data UpdateMemberData)
 
 // AddNotification adds notification.
 func (m *MembersType) AddNotification(id primitive.ObjectID, notificationID primitive.ObjectID) (*models.Member, error) {
+	ctx = context.Background()
 
 	var member models.Member
 
@@ -390,7 +401,7 @@ func (m *MembersType) AddNotification(id primitive.ObjectID, notificationID prim
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := m.Collection.FindOneAndUpdate(m.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil {
+	if err := m.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&member); err != nil {
 		return nil, err
 	}
 
@@ -401,6 +412,7 @@ func (m *MembersType) AddNotification(id primitive.ObjectID, notificationID prim
 // with a case insensitive partial match to given name
 // or all members in event if event is given
 func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.MemberPublic, error) {
+	ctx = context.Background()
 
 	var members []*models.Member
 
@@ -447,12 +459,12 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 
 	} else {
 
-		cur, err := m.Collection.Find(m.Context, bson.M{})
+		cur, err := m.Collection.Find(ctx, bson.M{})
 		if err != nil {
 			return nil, err
 		}
 
-		for cur.Next(m.Context) {
+		for cur.Next(ctx) {
 
 			var member models.Member
 
@@ -467,7 +479,7 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 			return nil, err
 		}
 
-		cur.Close(m.Context)
+		cur.Close(ctx)
 	}
 
 	filtered := filterDuplicatesMembers(members)
@@ -495,7 +507,9 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 	return public, nil
 }
 
+//DeleteMember deletes a member if it's not associated with any other instance
 func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error) {
+	ctx = context.Background()
 
 	member, err := m.GetMember(id)
 	if err != nil {
@@ -504,13 +518,13 @@ func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error
 
 	// Check companies
 	var c models.Company
-	if err := Companies.Collection.FindOne(Companies.Context, bson.M{"participations.member": id}).Decode(&c); err == nil {
+	if err := Companies.Collection.FindOne(ctx, bson.M{"participations.member": id}).Decode(&c); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
 	// Check meetings
 	var meeting models.Meeting
-	if err := Meetings.Collection.FindOne(Meetings.Context, bson.M{
+	if err := Meetings.Collection.FindOne(ctx, bson.M{
 		"participants.members": id,
 	}).Decode(&meeting); err == nil {
 		return nil, errors.New(MemberAssociated)
@@ -518,29 +532,29 @@ func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error
 
 	// Check notifications
 	var n models.Notification
-	if err := Notifications.Collection.FindOne(Notifications.Context, bson.M{"member": id}).Decode(&n); err == nil {
+	if err := Notifications.Collection.FindOne(ctx, bson.M{"member": id}).Decode(&n); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
 	// Check posts
 	var p models.Post
-	if err := Posts.Collection.FindOne(Posts.Context, bson.M{"member": id}).Decode(&p); err == nil {
+	if err := Posts.Collection.FindOne(ctx, bson.M{"member": id}).Decode(&p); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
 	// Check speakers
 	var s models.Speaker
-	if err := Speakers.Collection.FindOne(Speakers.Context, bson.M{"participations.member": id}).Decode(&s); err == nil {
+	if err := Speakers.Collection.FindOne(ctx, bson.M{"participations.member": id}).Decode(&s); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
 	// Check teams
 	var t models.Team
-	if err := Teams.Collection.FindOne(Teams.Context, bson.M{"members.member": id}).Decode(&t); err == nil {
+	if err := Teams.Collection.FindOne(ctx, bson.M{"members.member": id}).Decode(&t); err == nil {
 		return nil, errors.New(MemberAssociated)
 	}
 
-	deleteResult, err := m.Collection.DeleteOne(m.Context, bson.M{"_id": id})
+	deleteResult, err := m.Collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return nil, err
 	}

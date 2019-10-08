@@ -17,9 +17,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+//ItemsType holds a mongodb collection
 type ItemsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // CreateItemData is the structure used on CreateItem
@@ -63,6 +63,7 @@ func (cid *CreateItemData) ParseBody(body io.Reader) error {
 
 // CreateItem creates a new item.
 func (i *ItemsType) CreateItem(data CreateItemData) (*models.Item, error) {
+	ctx = context.Background()
 
 	var item models.Item
 
@@ -74,13 +75,13 @@ func (i *ItemsType) CreateItem(data CreateItemData) (*models.Item, error) {
 		"vat":         data.VAT,
 	}
 
-	insertResult, err := i.Collection.InsertOne(i.Context, c)
+	insertResult, err := i.Collection.InsertOne(ctx, c)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := i.Collection.FindOne(i.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&item); err != nil {
+	if err := i.Collection.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&item); err != nil {
 		log.Println("Error finding created event:", err)
 		return nil, err
 	}
@@ -90,9 +91,10 @@ func (i *ItemsType) CreateItem(data CreateItemData) (*models.Item, error) {
 
 // GetItem gets an item by its ID
 func (i *ItemsType) GetItem(itemID primitive.ObjectID) (*models.Item, error) {
+	ctx = context.Background()
 	var item models.Item
 
-	err := i.Collection.FindOne(i.Context, bson.M{"_id": itemID}).Decode(&item)
+	err := i.Collection.FindOne(ctx, bson.M{"_id": itemID}).Decode(&item)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +143,7 @@ func (uid *UpdateItemData) ParseBody(body io.Reader) error {
 
 // UpdateItem updates an item by its ID
 func (i *ItemsType) UpdateItem(itemID primitive.ObjectID, data UpdateItemData) (*models.Item, error) {
+	ctx = context.Background()
 
 	var item models.Item
 
@@ -157,7 +160,7 @@ func (i *ItemsType) UpdateItem(itemID primitive.ObjectID, data UpdateItemData) (
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := i.Collection.FindOneAndUpdate(i.Context, bson.M{"_id": itemID}, updateQuery, optionsQuery).Decode(&item); err != nil {
+	if err := i.Collection.FindOneAndUpdate(ctx, bson.M{"_id": itemID}, updateQuery, optionsQuery).Decode(&item); err != nil {
 		return nil, err
 	}
 
@@ -176,6 +179,7 @@ type GetItemsOptions struct {
 
 // GetItems gets an array of events using a filter.
 func (i *ItemsType) GetItems(options GetItemsOptions) ([]*models.Item, error) {
+	ctx = context.Background()
 
 	var items = make([]*models.Item, 0)
 
@@ -192,12 +196,12 @@ func (i *ItemsType) GetItems(options GetItemsOptions) ([]*models.Item, error) {
 		filter["type"] = options.Type
 	}
 
-	cur, err := i.Collection.Find(i.Context, filter)
+	cur, err := i.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for cur.Next(i.Context) {
+	for cur.Next(ctx) {
 
 		// create a value into which the single document can be decoded
 		var i models.Item
@@ -213,12 +217,14 @@ func (i *ItemsType) GetItems(options GetItemsOptions) ([]*models.Item, error) {
 		return nil, err
 	}
 
-	cur.Close(i.Context)
+	cur.Close(ctx)
 
 	return items, nil
 }
 
+// UpdateItemImage updates an item's image
 func (i *ItemsType) UpdateItemImage(itemID primitive.ObjectID, url string) (*models.Item, error) {
+	ctx = context.Background()
 
 	var item models.Item
 
@@ -231,7 +237,7 @@ func (i *ItemsType) UpdateItemImage(itemID primitive.ObjectID, url string) (*mod
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := i.Collection.FindOneAndUpdate(i.Context, bson.M{"_id": itemID}, updateQuery, optionsQuery).Decode(&item); err != nil {
+	if err := i.Collection.FindOneAndUpdate(ctx, bson.M{"_id": itemID}, updateQuery, optionsQuery).Decode(&item); err != nil {
 		return nil, err
 	}
 

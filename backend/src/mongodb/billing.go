@@ -21,7 +21,6 @@ import (
 // BillingsType stores importat db information on contacts
 type BillingsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // GetBillingsOptions is used as a filter on getBillings
@@ -107,6 +106,7 @@ func (cbd *CreateBillingData) ParseBody(body io.Reader) error {
 
 // GetBillings gets all billings based on a filter
 func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billing, error) {
+	ctx = context.Background()
 
 	var billings = make([]*models.Billing, 0)
 
@@ -148,12 +148,12 @@ func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billin
 		filter["company"] = *options.Company
 	}
 
-	curr, err := b.Collection.Find(b.Context, filter)
+	curr, err := b.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for curr.Next(b.Context) {
+	for curr.Next(ctx) {
 		var billing models.Billing
 
 		if err := curr.Decode(&billing); err != nil {
@@ -163,7 +163,7 @@ func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billin
 		billings = append(billings, &billing)
 	}
 
-	curr.Close(b.Context)
+	curr.Close(ctx)
 
 	return billings, nil
 
@@ -172,8 +172,9 @@ func (b *BillingsType) GetBillings(options GetBillingsOptions) ([]*models.Billin
 // GetBilling returns a single billing based on id
 func (b *BillingsType) GetBilling(id primitive.ObjectID) (*models.Billing, error) {
 	var billing models.Billing
+	ctx := context.Background()
 
-	if err := b.Collection.FindOne(b.Context, bson.M{"_id": id}).Decode(&billing); err != nil {
+	if err := b.Collection.FindOne(ctx, bson.M{"_id": id}).Decode(&billing); err != nil {
 		return nil, err
 	}
 
@@ -182,6 +183,8 @@ func (b *BillingsType) GetBilling(id primitive.ObjectID) (*models.Billing, error
 
 // CreateBilling creates a new billing
 func (b *BillingsType) CreateBilling(data CreateBillingData) (*models.Billing, error) {
+
+	ctx := context.Background()
 
 	var insertData = bson.M{
 		"status": bson.M{
@@ -205,7 +208,7 @@ func (b *BillingsType) CreateBilling(data CreateBillingData) (*models.Billing, e
 		insertData["visible"] = *data.Visible
 	}
 
-	insertResult, err := b.Collection.InsertOne(b.Context, insertData)
+	insertResult, err := b.Collection.InsertOne(ctx, insertData)
 
 	if err != nil {
 		return nil, err
@@ -223,6 +226,8 @@ func (b *BillingsType) CreateBilling(data CreateBillingData) (*models.Billing, e
 
 // UpdateBilling updates a billing
 func (b *BillingsType) UpdateBilling(id primitive.ObjectID, data CreateBillingData) (*models.Billing, error) {
+
+	ctx := context.Background()
 
 	var billing models.Billing
 
@@ -253,7 +258,7 @@ func (b *BillingsType) UpdateBilling(id primitive.ObjectID, data CreateBillingDa
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := b.Collection.FindOneAndUpdate(b.Context, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&billing); err != nil {
+	if err := b.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&billing); err != nil {
 		return nil, err
 	}
 
@@ -262,13 +267,14 @@ func (b *BillingsType) UpdateBilling(id primitive.ObjectID, data CreateBillingDa
 
 //DeleteBilling deletes a billing and removes it from a company if associated with it
 func (b *BillingsType) DeleteBilling(id primitive.ObjectID) (*models.Billing, error) {
+	ctx := context.Background()
 
 	billing, err := b.GetBilling(id)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteResult, err := b.Collection.DeleteOne(b.Context, bson.M{"_id": id})
+	deleteResult, err := b.Collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return nil, err
 	}

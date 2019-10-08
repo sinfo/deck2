@@ -2,6 +2,7 @@ package router
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -23,11 +24,12 @@ var (
 )
 
 func TestCreateCompany(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -54,11 +56,12 @@ func TestCreateCompany(t *testing.T) {
 }
 
 func TestCreateCompanyInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -79,11 +82,12 @@ func TestCreateCompanyInvalidPayload(t *testing.T) {
 }
 
 func TestGetCompanies(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -109,11 +113,12 @@ func TestGetCompanies(t *testing.T) {
 }
 
 func TestGetCompany(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -138,11 +143,12 @@ func TestGetCompany(t *testing.T) {
 }
 
 func TestGetCompanyPublic(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -168,11 +174,12 @@ func TestGetCompanyPublic(t *testing.T) {
 }
 
 func TestGetCompanyNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -182,13 +189,14 @@ func TestGetCompanyNotFound(t *testing.T) {
 }
 
 func TestAddCompanyParticipation(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -255,13 +263,14 @@ func TestAddCompanyParticipation(t *testing.T) {
 }
 
 func TestAddCompanyParticipationAlreadyIsParticipating(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -323,15 +332,16 @@ func TestAddCompanyParticipationAlreadyIsParticipating(t *testing.T) {
 }
 
 func TestAddCompanyThread(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -422,15 +432,16 @@ func TestAddCompanyThread(t *testing.T) {
 }
 
 func TestAddCompanyThreadInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -496,15 +507,16 @@ func TestAddCompanyThreadInvalidPayload(t *testing.T) {
 }
 
 func TestAddCompanyThreadCompanyNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -514,15 +526,16 @@ func TestAddCompanyThreadCompanyNotFound(t *testing.T) {
 }
 
 func TestAddCompanyThreadNoParticipation(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -585,16 +598,17 @@ func TestAddCompanyThreadNoParticipation(t *testing.T) {
 }
 
 func TestAddCompanyThreadMeeting(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -704,16 +718,17 @@ func TestAddCompanyThreadMeeting(t *testing.T) {
 }
 
 func TestAddCompanyThreadMeetingDataMissing(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Threads.Collection.Drop(mongodb.Threads.Context)
-	defer mongodb.Posts.Collection.Drop(mongodb.Posts.Context)
-	defer mongodb.Meetings.Collection.Drop(mongodb.Meetings.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+	defer mongodb.Posts.Collection.Drop(ctx)
+	defer mongodb.Meetings.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -783,15 +798,16 @@ func TestAddCompanyThreadMeetingDataMissing(t *testing.T) {
 }
 
 func TestAddCompanyPackage(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -893,15 +909,16 @@ func TestAddCompanyPackage(t *testing.T) {
 }
 
 func TestAddCompanyPackageItemNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -985,15 +1002,16 @@ func TestAddCompanyPackageItemNotFound(t *testing.T) {
 }
 
 func TestAddCompanyPackageNoParticipation(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
-	defer mongodb.Packages.Collection.Drop(mongodb.Packages.Context)
-	defer mongodb.Items.Collection.Drop(mongodb.Items.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
+	defer mongodb.Packages.Collection.Drop(ctx)
+	defer mongodb.Items.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1074,11 +1092,12 @@ func TestAddCompanyPackageNoParticipation(t *testing.T) {
 }
 
 func TestUpdateCompany(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1124,11 +1143,12 @@ func TestUpdateCompany(t *testing.T) {
 }
 
 func TestUpdateCompanyInvalidPayload(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1161,11 +1181,12 @@ func TestUpdateCompanyInvalidPayload(t *testing.T) {
 }
 
 func TestUpdateCompanyNotFound(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1190,11 +1211,12 @@ func TestUpdateCompanyNotFound(t *testing.T) {
 }
 
 func TestDeleteCompany(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1224,11 +1246,12 @@ func TestDeleteCompany(t *testing.T) {
 }
 
 func TestDeleteCompanyInvalidID(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1238,13 +1261,14 @@ func TestDeleteCompanyInvalidID(t *testing.T) {
 }
 
 func TestSetCompanyStatus(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1310,13 +1334,14 @@ func TestSetCompanyStatus(t *testing.T) {
 }
 
 func TestSetCompanyStatusNoParticipation(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1366,13 +1391,14 @@ func TestSetCompanyStatusNoParticipation(t *testing.T) {
 }
 
 func TestSetCompanyStatusInvalidCompany(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1413,13 +1439,14 @@ func TestSetCompanyStatusInvalidCompany(t *testing.T) {
 }
 
 func TestSetCompanyStatusInvalidStatus(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1478,13 +1505,14 @@ func TestSetCompanyStatusInvalidStatus(t *testing.T) {
 }
 
 func TestListCompanyValidSteps(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1545,13 +1573,14 @@ func TestListCompanyValidSteps(t *testing.T) {
 }
 
 func TestStepCompanyStatus(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1620,13 +1649,14 @@ func TestStepCompanyStatus(t *testing.T) {
 }
 
 func TestUpdateCompanyParticipation(t *testing.T) {
+	ctx := context.Background()
 
-	defer mongodb.Events.Collection.Drop(mongodb.Events.Context)
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.Teams.Collection.Drop(mongodb.Teams.Context)
-	defer mongodb.Members.Collection.Drop(mongodb.Members.Context)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Teams.Collection.Drop(ctx)
+	defer mongodb.Members.Collection.Drop(ctx)
 
-	if _, err := mongodb.Events.Collection.InsertOne(mongodb.Events.Context, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -1702,9 +1732,10 @@ func TestUpdateCompanyParticipation(t *testing.T) {
 }
 
 func TestAddEmployer(t *testing.T) {
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
+	ctx := context.Background()
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.CompanyReps.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	createCompanyData := mongodb.CreateCompanyData{
 		Name:        &Company.Name,
@@ -1754,9 +1785,10 @@ func TestAddEmployer(t *testing.T) {
 }
 
 func TestRemoveEmployer(t *testing.T) {
-	defer mongodb.Companies.Collection.Drop(mongodb.Companies.Context)
-	defer mongodb.CompanyReps.Collection.Drop(mongodb.CompanyReps.Context)
-	defer mongodb.Contacts.Collection.Drop(mongodb.Contacts.Context)
+	ctx := context.Background()
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.CompanyReps.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	createCompanyData := mongodb.CreateCompanyData{
 		Name:        &Company.Name,

@@ -17,14 +17,15 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+//SpeakersType contains database information on speakers
 type SpeakersType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // Cached version of the public speakers for the current event
 var currentPublicSpeakers *[]*models.SpeakerPublic
 
+//ResetCurrentPublicSpeakers resets current public speakers
 func ResetCurrentPublicSpeakers() {
 	currentPublicSpeakers = nil
 }
@@ -70,6 +71,7 @@ func speakerToPublic(speaker models.Speaker, eventID *int) (*models.SpeakerPubli
 	return &public, nil
 }
 
+//CreateSpeakerData holds data needed to create a speaker
 type CreateSpeakerData struct {
 	Name  *string `json:"name"`
 	Title *string `json:"title"`
@@ -100,8 +102,9 @@ func (cpd *CreateSpeakerData) ParseBody(body io.Reader) error {
 
 // CreateSpeaker creates a new speaker and saves it to the database
 func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, error) {
+	ctx := context.Background()
 
-	createdContact, err := Contacts.Collection.InsertOne(Contacts.Context, bson.M{
+	createdContact, err := Contacts.Collection.InsertOne(ctx, bson.M{
 		"phones": []models.ContactPhone{},
 		"socials": bson.M{
 			"facebook": "",
@@ -117,7 +120,7 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 		return nil, err
 	}
 
-	insertResult, err := s.Collection.InsertOne(s.Context, bson.M{
+	insertResult, err := s.Collection.InsertOne(ctx, bson.M{
 		"name":           data.Name,
 		"title":          data.Title,
 		"bio":            data.Bio,
@@ -154,6 +157,7 @@ type GetSpeakersOptions struct {
 
 // GetSpeakers gets all speakers specified with a query
 func (s *SpeakersType) GetSpeakers(options GetSpeakersOptions) ([]*models.Speaker, error) {
+	ctx := context.Background()
 	var speakers = make([]*models.Speaker, 0)
 
 	filter := bson.M{}
@@ -173,12 +177,12 @@ func (s *SpeakersType) GetSpeakers(options GetSpeakersOptions) ([]*models.Speake
 		}
 	}
 
-	cur, err := s.Collection.Find(s.Context, filter)
+	cur, err := s.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for cur.Next(s.Context) {
+	for cur.Next(ctx) {
 
 		// create a value into which the single document can be decoded
 		var s models.Speaker
@@ -194,7 +198,7 @@ func (s *SpeakersType) GetSpeakers(options GetSpeakersOptions) ([]*models.Speake
 		return nil, err
 	}
 
-	cur.Close(s.Context)
+	cur.Close(ctx)
 
 	return speakers, nil
 }
@@ -211,6 +215,7 @@ type GetSpeakersPublicOptions struct {
 
 // GetPublicSpeakers gets all companies specified with a query to be shown publicly
 func (s *SpeakersType) GetPublicSpeakers(options GetSpeakersPublicOptions) ([]*models.SpeakerPublic, error) {
+	ctx := context.Background()
 
 	var public = make([]*models.SpeakerPublic, 0)
 	var eventID int
@@ -246,12 +251,12 @@ func (s *SpeakersType) GetPublicSpeakers(options GetSpeakersPublicOptions) ([]*m
 		}
 	}
 
-	cur, err := s.Collection.Find(s.Context, filter)
+	cur, err := s.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for cur.Next(s.Context) {
+	for cur.Next(ctx) {
 
 		// create a value into which the single document can be decoded
 		var c models.Speaker
@@ -271,7 +276,7 @@ func (s *SpeakersType) GetPublicSpeakers(options GetSpeakersPublicOptions) ([]*m
 		return nil, err
 	}
 
-	cur.Close(s.Context)
+	cur.Close(ctx)
 
 	// update cached value
 	if options.EventID == nil && options.Name == nil && currentPublicSpeakers == nil {
@@ -283,9 +288,10 @@ func (s *SpeakersType) GetPublicSpeakers(options GetSpeakersPublicOptions) ([]*m
 
 // GetSpeaker gets a speaker by its ID.
 func (s *SpeakersType) GetSpeaker(speakerID primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 	var speaker models.Speaker
 
-	err := s.Collection.FindOne(s.Context, bson.M{"_id": speakerID}).Decode(&speaker)
+	err := s.Collection.FindOne(ctx, bson.M{"_id": speakerID}).Decode(&speaker)
 	if err != nil {
 		return nil, err
 	}
@@ -295,9 +301,10 @@ func (s *SpeakersType) GetSpeaker(speakerID primitive.ObjectID) (*models.Speaker
 
 // GetSpeakerPublic gets a speaker (public) by its ID.
 func (s *SpeakersType) GetSpeakerPublic(speakerID primitive.ObjectID) (*models.SpeakerPublic, error) {
+	ctx := context.Background()
 	var speaker models.Speaker
 
-	err := s.Collection.FindOne(s.Context, bson.M{"_id": speakerID}).Decode(&speaker)
+	err := s.Collection.FindOne(ctx, bson.M{"_id": speakerID}).Decode(&speaker)
 	if err != nil {
 		return nil, err
 	}
@@ -346,6 +353,7 @@ func (usd *UpdateSpeakerData) ParseBody(body io.Reader) error {
 
 // UpdateSpeaker updates the general information about a speaker, unrelated to other data types stored in de database.
 func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSpeakerData) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -363,7 +371,7 @@ func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSp
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("error updating speaker:", err)
 		return nil, err
 	}
@@ -375,6 +383,7 @@ func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSp
 
 // Subscribe a user to the current speaker's participation
 func (s *SpeakersType) Subscribe(speakerID primitive.ObjectID, memberID primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -398,7 +407,7 @@ func (s *SpeakersType) Subscribe(speakerID primitive.ObjectID, memberID primitiv
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("Error finding updated speaker:", err)
 		return nil, err
 	}
@@ -408,6 +417,7 @@ func (s *SpeakersType) Subscribe(speakerID primitive.ObjectID, memberID primitiv
 
 // Unsubscribe a user to the current speaker's participation
 func (s *SpeakersType) Unsubscribe(speakerID primitive.ObjectID, memberID primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -431,7 +441,7 @@ func (s *SpeakersType) Unsubscribe(speakerID primitive.ObjectID, memberID primit
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("Error finding updated speaker:", err)
 		return nil, err
 	}
@@ -441,6 +451,7 @@ func (s *SpeakersType) Unsubscribe(speakerID primitive.ObjectID, memberID primit
 
 // AddParticipation adds a participation on the current event to the speaker with the indicated id.
 func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	currentEvent, err := Events.GetCurrentEvent()
 
@@ -468,7 +479,7 @@ func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID p
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("Error finding created speaker:", err)
 		return nil, err
 	}
@@ -478,6 +489,7 @@ func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID p
 	return &updatedSpeaker, nil
 }
 
+//UpdateSpeakerParticipationData holds data needed to update a speakers' participation
 type UpdateSpeakerParticipationData struct {
 	Member   *primitive.ObjectID              `json:"member"`
 	Feedback *string                          `json:"feedback"`
@@ -518,6 +530,7 @@ func (uspd *UpdateSpeakerParticipationData) ParseBody(body io.Reader) error {
 // UpdateSpeakerParticipation updates a company's participation data
 // related to the current event.
 func (s *SpeakersType) UpdateSpeakerParticipation(speakerID primitive.ObjectID, data UpdateSpeakerParticipationData) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -543,7 +556,7 @@ func (s *SpeakersType) UpdateSpeakerParticipation(speakerID primitive.ObjectID, 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("Error updating speaker's status:", err)
 		return nil, err
 	}
@@ -556,6 +569,7 @@ func (s *SpeakersType) UpdateSpeakerParticipation(speakerID primitive.ObjectID, 
 // StepStatus advances the status of a speaker's participation in the current event,
 // according to the given step (see models.Speaker).
 func (s *SpeakersType) StepStatus(speakerID primitive.ObjectID, step int) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -591,7 +605,7 @@ func (s *SpeakersType) StepStatus(speakerID primitive.ObjectID, step int) (*mode
 		var optionsQuery = options.FindOneAndUpdate()
 		optionsQuery.SetReturnDocument(options.After)
 
-		if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 			log.Println("Error updating speaker's status:", err)
 			return nil, err
 		}
@@ -637,6 +651,7 @@ func (s *SpeakersType) GetSpeakerParticipationStatusValidSteps(speakerID primiti
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
 func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.ObjectID, status models.ParticipationStatus) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -656,7 +671,7 @@ func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.Obje
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("Error updating speaker's status:", err)
 		return nil, err
 	}
@@ -668,6 +683,7 @@ func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.Obje
 
 // UpdateSpeakerInternalImage updates the speaker's internal image.
 func (s *SpeakersType) UpdateSpeakerInternalImage(speakerID primitive.ObjectID, url string) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -682,7 +698,7 @@ func (s *SpeakersType) UpdateSpeakerInternalImage(speakerID primitive.ObjectID, 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("error updating speaker:", err)
 		return nil, err
 	}
@@ -692,6 +708,7 @@ func (s *SpeakersType) UpdateSpeakerInternalImage(speakerID primitive.ObjectID, 
 
 // UpdateSpeakerCompanyImage updates the speaker's company image.
 func (s *SpeakersType) UpdateSpeakerCompanyImage(speakerID primitive.ObjectID, url string) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -706,7 +723,7 @@ func (s *SpeakersType) UpdateSpeakerCompanyImage(speakerID primitive.ObjectID, u
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("error updating speaker:", err)
 		return nil, err
 	}
@@ -718,6 +735,7 @@ func (s *SpeakersType) UpdateSpeakerCompanyImage(speakerID primitive.ObjectID, u
 
 // UpdateSpeakerPublicImage updates the speaker's public image.
 func (s *SpeakersType) UpdateSpeakerPublicImage(speakerID primitive.ObjectID, url string) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -732,7 +750,7 @@ func (s *SpeakersType) UpdateSpeakerPublicImage(speakerID primitive.ObjectID, ur
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("error updating speaker:", err)
 		return nil, err
 	}
@@ -744,6 +762,7 @@ func (s *SpeakersType) UpdateSpeakerPublicImage(speakerID primitive.ObjectID, ur
 
 // AddSpeakerFlightInfo stores a flightInfo on the speaker's participation.
 func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, flightInfo primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -763,7 +782,7 @@ func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, flight
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("error updating speaker's flight info:", err)
 		return nil, err
 	}
@@ -773,6 +792,7 @@ func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, flight
 
 // RemoveSpeakerFlightInfo removes a flightInfo on the speaker's participation.
 func (s *SpeakersType) RemoveSpeakerFlightInfo(speakerID primitive.ObjectID, flightInfo primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
 
@@ -792,7 +812,7 @@ func (s *SpeakersType) RemoveSpeakerFlightInfo(speakerID primitive.ObjectID, fli
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("error updating speaker's flight info:", err)
 		return nil, err
 	}
@@ -802,6 +822,7 @@ func (s *SpeakersType) RemoveSpeakerFlightInfo(speakerID primitive.ObjectID, fli
 
 // AddThread adds a models.Thread to a company's participation's list of communications (related to the current event).
 func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	currentEvent, err := Events.GetCurrentEvent()
 
@@ -822,7 +843,7 @@ func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitiv
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("Error adding communication to speaker's participation:", err)
 		return nil, err
 	}
@@ -832,6 +853,7 @@ func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitiv
 
 // RemoveCommunication removes a models.Thread from a speaker's participation's list of communications (related to the current event).
 func (s *SpeakersType) RemoveCommunication(speakerID primitive.ObjectID, threadID primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 
 	currentEvent, err := Events.GetCurrentEvent()
 
@@ -852,7 +874,7 @@ func (s *SpeakersType) RemoveCommunication(speakerID primitive.ObjectID, threadI
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(s.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		log.Println("Error removing communication to speaker's participation:", err)
 		return nil, err
 	}
@@ -860,19 +882,21 @@ func (s *SpeakersType) RemoveCommunication(speakerID primitive.ObjectID, threadI
 	return &updatedSpeaker, nil
 }
 
+//FindThread finds a thread in a speaker
 func (s *SpeakersType) FindThread(threadID primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
 	filter := bson.M{
 		"participations.communications": threadID,
 	}
 
-	cur, err := s.Collection.Find(s.Context, filter)
+	cur, err := s.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
 	var speaker models.Speaker
 
-	if cur.Next(s.Context) {
+	if cur.Next(ctx) {
 		if err := cur.Decode(&speaker); err != nil {
 			return nil, err
 		}
@@ -880,4 +904,51 @@ func (s *SpeakersType) FindThread(threadID primitive.ObjectID) (*models.Speaker,
 	}
 
 	return nil, nil
+}
+
+func (s *SpeakersType) RemoveSpeakerParticipation(speakerID primitive.ObjectID, eventID int) (*models.Speaker, error) {
+	ctx := context.Background()
+	var updatedSpeaker models.Speaker
+
+	speaker, err := s.GetSpeaker(speakerID)
+	if err != nil {
+		return nil, err
+	}
+
+	sessions, err := Sessions.GetSessions(GetSessionsOptions{Speaker: &speakerID})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(sessions) > 0 {
+		return nil, errors.New("Participation associated with session")
+	}
+
+	for _, s := range speaker.Participations {
+		if s.Event == eventID {
+			if len(s.Communications) > 0 {
+				return nil, errors.New("Participation has communication")
+			}
+			break
+		}
+	}
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations": bson.M{
+				"event": eventID,
+			},
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
 }

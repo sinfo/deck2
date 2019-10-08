@@ -17,14 +17,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+//EventsType holds the mongodb collection
 type EventsType struct {
 	Collection *mongo.Collection
-	Context    context.Context
 }
 
 // Cached version of the current public event
 var currentPublicEvent *models.EventPublic
 
+//ResetCurrentPublicEvent resets current public event
 func ResetCurrentPublicEvent() {
 	currentPublicEvent = nil
 }
@@ -34,18 +35,19 @@ func ResetCurrentPublicEvent() {
 // latest event, and it is impossible to make a connection to the database, or
 // when there are no events. In this last case, something is terribly wrong.
 func (e *EventsType) GetCurrentEvent() (*models.Event, error) {
+	ctx := context.Background()
 
 	var event *models.Event
 
 	// Query for all events.
-	cur, err := e.Collection.Find(e.Context, bson.M{})
+	cur, err := e.Collection.Find(ctx, bson.M{})
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Find the latest event by ID.
-	for cur.Next(e.Context) {
+	for cur.Next(ctx) {
 		var e models.Event
 
 		err := cur.Decode(&e)
@@ -64,7 +66,7 @@ func (e *EventsType) GetCurrentEvent() (*models.Event, error) {
 		return nil, err
 	}
 
-	cur.Close(e.Context)
+	cur.Close(ctx)
 
 	if event == nil {
 		return nil, errors.New("no events found")
@@ -86,6 +88,7 @@ func eventToPublic(event models.Event) *models.EventPublic {
 	return &public
 }
 
+//CreateEventData holds data needed to create an event
 type CreateEventData struct {
 	Name string `json:"name"`
 }
@@ -108,6 +111,7 @@ func (ced *CreateEventData) ParseBody(body io.Reader) error {
 // created is de id and name. The id is incremented to the latest event.
 // WARNING: the first event should be added to the database manually.
 func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
+	ctx := context.Background()
 
 	latestEvent, err := e.GetCurrentEvent()
 
@@ -126,7 +130,7 @@ func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
 		"teams":    make([]primitive.ObjectID, 0),
 	}
 
-	insertResult, err := e.Collection.InsertOne(e.Context, c)
+	insertResult, err := e.Collection.InsertOne(ctx, c)
 
 	if err != nil {
 		log.Fatal(err)
@@ -134,7 +138,7 @@ func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
 
 	var event models.Event
 
-	if err := e.Collection.FindOne(e.Context, bson.M{"_id": insertResult.InsertedID}).Decode(&event); err != nil {
+	if err := e.Collection.FindOne(ctx, bson.M{"_id": insertResult.InsertedID}).Decode(&event); err != nil {
 		log.Println("Error finding created event:", err)
 		return nil, err
 	}
@@ -158,6 +162,7 @@ type GetEventsOptions struct {
 
 // GetEvents gets an array of events using a filter.
 func (e *EventsType) GetEvents(options GetEventsOptions) ([]*models.Event, error) {
+	ctx := context.Background()
 
 	var events = make([]*models.Event, 0)
 
@@ -183,12 +188,12 @@ func (e *EventsType) GetEvents(options GetEventsOptions) ([]*models.Event, error
 		filter["end"] = bson.M{"$gte": options.During}
 	}
 
-	cur, err := e.Collection.Find(e.Context, filter)
+	cur, err := e.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	for cur.Next(e.Context) {
+	for cur.Next(ctx) {
 
 		// create a value into which the single document can be decoded
 		var e models.Event
@@ -204,7 +209,7 @@ func (e *EventsType) GetEvents(options GetEventsOptions) ([]*models.Event, error
 		return nil, err
 	}
 
-	cur.Close(e.Context)
+	cur.Close(ctx)
 
 	return events, nil
 }
@@ -221,6 +226,7 @@ type GetPublicEventsOptions struct {
 
 // GetPublicEvents gets an array of events using a filter, for public usage.
 func (e *EventsType) GetPublicEvents(options GetPublicEventsOptions) ([]*models.EventPublic, error) {
+	ctx := context.Background()
 
 	var events = make([]*models.EventPublic, 0)
 
@@ -230,12 +236,12 @@ func (e *EventsType) GetPublicEvents(options GetPublicEventsOptions) ([]*models.
 	if (options.Current == nil && options.PastEvents == nil) ||
 		(options.Current != nil && *options.Current && options.PastEvents != nil && *options.PastEvents) {
 
-		cur, err := e.Collection.Find(e.Context, filter)
+		cur, err := e.Collection.Find(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
 
-		for cur.Next(e.Context) {
+		for cur.Next(ctx) {
 
 			// create a value into which the single document can be decoded
 			var e models.EventPublic
@@ -251,7 +257,7 @@ func (e *EventsType) GetPublicEvents(options GetPublicEventsOptions) ([]*models.
 			return nil, err
 		}
 
-		cur.Close(e.Context)
+		cur.Close(ctx)
 
 		return events, nil
 	}
@@ -272,12 +278,12 @@ func (e *EventsType) GetPublicEvents(options GetPublicEventsOptions) ([]*models.
 
 	// if past events is true and current not defined or false, then give past events
 	if options.PastEvents != nil && *options.PastEvents && (options.Current == nil || !*options.Current) {
-		cur, err := e.Collection.Find(e.Context, filter)
+		cur, err := e.Collection.Find(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
 
-		for cur.Next(e.Context) {
+		for cur.Next(ctx) {
 
 			// create a value into which the single document can be decoded
 			var e models.EventPublic
@@ -296,7 +302,7 @@ func (e *EventsType) GetPublicEvents(options GetPublicEventsOptions) ([]*models.
 			return nil, err
 		}
 
-		cur.Close(e.Context)
+		cur.Close(ctx)
 
 		return events, nil
 	}
@@ -306,9 +312,10 @@ func (e *EventsType) GetPublicEvents(options GetPublicEventsOptions) ([]*models.
 
 // GetEvent gets an event by its ID
 func (e *EventsType) GetEvent(eventID int) (*models.Event, error) {
+	ctx := context.Background()
 	var event models.Event
 
-	err := e.Collection.FindOne(e.Context, bson.M{"_id": eventID}).Decode(&event)
+	err := e.Collection.FindOne(ctx, bson.M{"_id": eventID}).Decode(&event)
 	if err != nil {
 		return nil, err
 	}
@@ -316,6 +323,7 @@ func (e *EventsType) GetEvent(eventID int) (*models.Event, error) {
 	return &event, nil
 }
 
+// UpdateEventData holds data needed to update an event
 type UpdateEventData struct {
 	Name  string    `json:"name"`
 	Begin time.Time `json:"begin"`
@@ -344,6 +352,7 @@ func (ued *UpdateEventData) ParseBody(body io.Reader) error {
 
 // UpdateEvent updates an event with ID eventID with the new data, using the UpdateEventData structure.
 func (e *EventsType) UpdateEvent(eventID int, data UpdateEventData) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -360,7 +369,7 @@ func (e *EventsType) UpdateEvent(eventID int, data UpdateEventData) (*models.Eve
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating event:", err)
 		return nil, err
 	}
@@ -372,13 +381,14 @@ func (e *EventsType) UpdateEvent(eventID int, data UpdateEventData) (*models.Eve
 
 // DeleteEvent deletes an event.
 func (e *EventsType) DeleteEvent(eventID int) (*models.Event, error) {
+	ctx := context.Background()
 
 	event, err := Events.GetEvent(eventID)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteResult, err := Events.Collection.DeleteOne(e.Context, bson.M{"_id": eventID})
+	deleteResult, err := Events.Collection.DeleteOne(ctx, bson.M{"_id": eventID})
 	if err != nil {
 		return nil, err
 	}
@@ -422,6 +432,7 @@ func (uetd *UpdateEventThemesData) ParseBody(body io.Reader) error {
 
 // UpdateThemes updates an event with ID eventID with new days' themes.
 func (e *EventsType) UpdateThemes(eventID int, data UpdateEventThemesData) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -436,7 +447,7 @@ func (e *EventsType) UpdateThemes(eventID int, data UpdateEventThemesData) (*mod
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating event's themes:", err)
 		return nil, err
 	}
@@ -448,6 +459,7 @@ func (e *EventsType) UpdateThemes(eventID int, data UpdateEventThemesData) (*mod
 
 // UpdateTeams updates an event with ID eventID with new teams.
 func (e *EventsType) UpdateTeams(eventID int, teams []primitive.ObjectID) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -462,7 +474,7 @@ func (e *EventsType) UpdateTeams(eventID int, teams []primitive.ObjectID) (*mode
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating event's themes:", err)
 		return nil, err
 	}
@@ -496,6 +508,7 @@ func (aepd *AddEventPackageData) ParseBody(body io.Reader) error {
 
 // AddPackage adds a template to an event's packages.
 func (e *EventsType) AddPackage(eventID int, data AddEventPackageData) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
@@ -514,7 +527,7 @@ func (e *EventsType) AddPackage(eventID int, data AddEventPackageData) (*models.
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating event's packages:", err)
 		return nil, err
 	}
@@ -524,6 +537,7 @@ func (e *EventsType) AddPackage(eventID int, data AddEventPackageData) (*models.
 
 // AddSession adds a session to an event.
 func (e *EventsType) AddSession(eventID int, sessionID primitive.ObjectID) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
@@ -538,7 +552,7 @@ func (e *EventsType) AddSession(eventID int, sessionID primitive.ObjectID) (*mod
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating event's sessions:", err)
 		return nil, err
 	}
@@ -548,6 +562,7 @@ func (e *EventsType) AddSession(eventID int, sessionID primitive.ObjectID) (*mod
 
 // RemovePackage removes a template from an event's packages.
 func (e *EventsType) RemovePackage(eventID int, packageID primitive.ObjectID) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$pull": bson.M{
@@ -564,7 +579,7 @@ func (e *EventsType) RemovePackage(eventID int, packageID primitive.ObjectID) (*
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error removing package from event:", err)
 		return nil, err
 	}
@@ -572,6 +587,7 @@ func (e *EventsType) RemovePackage(eventID int, packageID primitive.ObjectID) (*
 	return &updatedEvent, nil
 }
 
+//UpdateEventPackageData holds data needed to update an event package
 type UpdateEventPackageData struct {
 	PublicName *string `json:"public_name"`
 	Available  *bool   `json:"available"`
@@ -597,6 +613,7 @@ func (uepd *UpdateEventPackageData) ParseBody(body io.Reader) error {
 
 // UpdatePackage updates a template on an event.
 func (e *EventsType) UpdatePackage(eventID int, packageID primitive.ObjectID, data UpdateEventPackageData) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -612,7 +629,7 @@ func (e *EventsType) UpdatePackage(eventID int, packageID primitive.ObjectID, da
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating template on event:", err)
 		return nil, err
 	}
@@ -641,6 +658,7 @@ func (aeid *AddEventItemData) ParseBody(body io.Reader) error {
 
 // AddItem adds an item to an event.
 func (e *EventsType) AddItem(eventID int, data AddEventItemData) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
@@ -655,7 +673,7 @@ func (e *EventsType) AddItem(eventID int, data AddEventItemData) (*models.Event,
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating event's items:", err)
 		return nil, err
 	}
@@ -665,6 +683,7 @@ func (e *EventsType) AddItem(eventID int, data AddEventItemData) (*models.Event,
 
 // RemoveItem removes an item from an event.
 func (e *EventsType) RemoveItem(eventID int, itemID primitive.ObjectID) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$pull": bson.M{
@@ -679,7 +698,7 @@ func (e *EventsType) RemoveItem(eventID int, itemID primitive.ObjectID) (*models
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error remove event's item:", err)
 		return nil, err
 	}
@@ -689,6 +708,7 @@ func (e *EventsType) RemoveItem(eventID int, itemID primitive.ObjectID) (*models
 
 // AddMeeting adds a meeting to an event.
 func (e *EventsType) AddMeeting(eventID int, meetingID primitive.ObjectID) (*models.Event, error) {
+	ctx := context.Background()
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
 			"meetings": meetingID,
@@ -702,7 +722,7 @@ func (e *EventsType) AddMeeting(eventID int, meetingID primitive.ObjectID) (*mod
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error updating event's meetings:", err)
 		return nil, err
 	}
@@ -712,6 +732,7 @@ func (e *EventsType) AddMeeting(eventID int, meetingID primitive.ObjectID) (*mod
 
 // RemoveMeeting removes a meeting from an event.
 func (e *EventsType) RemoveMeeting(eventID int, meetingID primitive.ObjectID) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$pull": bson.M{
@@ -726,7 +747,7 @@ func (e *EventsType) RemoveMeeting(eventID int, meetingID primitive.ObjectID) (*
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error remove event's item:", err)
 		return nil, err
 	}
@@ -736,6 +757,7 @@ func (e *EventsType) RemoveMeeting(eventID int, meetingID primitive.ObjectID) (*
 
 // RemoveTeam removes a team from an event
 func (e *EventsType) RemoveTeam(eventID int, teamID primitive.ObjectID) (*models.Event, error) {
+	ctx := context.Background()
 
 	var updateQuery = bson.M{
 		"$pull": bson.M{
@@ -750,7 +772,7 @@ func (e *EventsType) RemoveTeam(eventID int, teamID primitive.ObjectID) (*models
 
 	var updatedEvent models.Event
 
-	if err := e.Collection.FindOneAndUpdate(e.Context, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error remove event's item:", err)
 		return nil, err
 	}
