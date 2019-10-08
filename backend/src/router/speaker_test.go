@@ -24,6 +24,7 @@ var (
 
 func TestCreateSpeaker(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -56,6 +57,7 @@ func TestCreateSpeaker(t *testing.T) {
 
 func TestCreateSpeakerInvalidPayload(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -82,6 +84,7 @@ func TestCreateSpeakerInvalidPayload(t *testing.T) {
 
 func TestGetSpeakers(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -113,6 +116,7 @@ func TestGetSpeakers(t *testing.T) {
 
 func TestGetSpeaker(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -143,6 +147,7 @@ func TestGetSpeaker(t *testing.T) {
 
 func TestGetSpeakerPublic(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -173,6 +178,7 @@ func TestGetSpeakerPublic(t *testing.T) {
 
 func TestGetSpeakerNotFound(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -188,6 +194,7 @@ func TestGetSpeakerNotFound(t *testing.T) {
 
 func TestUpdateSpeaker(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -238,6 +245,7 @@ func TestUpdateSpeaker(t *testing.T) {
 
 func TestUpdateSpeakerInvalidPayload(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -274,6 +282,7 @@ func TestUpdateSpeakerInvalidPayload(t *testing.T) {
 
 func TestUpdateSpeakerNotFound(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -305,6 +314,7 @@ func TestUpdateSpeakerNotFound(t *testing.T) {
 
 func TestAddSpeakerParticipation(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -371,6 +381,7 @@ func TestAddSpeakerParticipation(t *testing.T) {
 
 func TestAddSpeakerParticipationAlreadyIsParticipating(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -431,6 +442,7 @@ func TestAddSpeakerParticipationAlreadyIsParticipating(t *testing.T) {
 
 func TestUpdateSpeakerParticipation(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -498,6 +510,7 @@ func TestUpdateSpeakerParticipation(t *testing.T) {
 
 func TestUpdateSpeakerParticipationInvalidPayload(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -549,6 +562,7 @@ func TestUpdateSpeakerParticipationInvalidPayload(t *testing.T) {
 
 func TestUpdateSpeakerParticipationNoParticipation(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -602,6 +616,7 @@ func TestUpdateSpeakerParticipationNoParticipation(t *testing.T) {
 
 func TestUpdateSpeakerParticipationSpeakerNotFound(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -646,6 +661,7 @@ func TestUpdateSpeakerParticipationSpeakerNotFound(t *testing.T) {
 
 func TestListSpeakerValidSteps(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -695,6 +711,7 @@ func TestListSpeakerValidSteps(t *testing.T) {
 
 func TestStepSpeakerStatus(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -752,6 +769,7 @@ func TestStepSpeakerStatus(t *testing.T) {
 
 func TestSetSpeakerStatus(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -801,6 +819,7 @@ func TestSetSpeakerStatus(t *testing.T) {
 
 func TestSetSpeakerStatusNoParticipation(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -828,6 +847,7 @@ func TestSetSpeakerStatusNoParticipation(t *testing.T) {
 
 func TestSetSpeakerStatusInvalidCompany(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Companies.Collection.Drop(ctx)
@@ -846,6 +866,7 @@ func TestSetSpeakerStatusInvalidCompany(t *testing.T) {
 
 func TestSetSpeakerStatusInvalidStatus(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -888,6 +909,7 @@ func TestSetSpeakerStatusInvalidStatus(t *testing.T) {
 
 func TestAddSpeakerFlightInfo(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -963,6 +985,7 @@ func TestAddSpeakerFlightInfo(t *testing.T) {
 
 func TestAddSpeakerFlightInfoNoParticipation(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1005,6 +1028,7 @@ func TestAddSpeakerFlightInfoNoParticipation(t *testing.T) {
 
 func TestAddSpeakerFlightInfoInvalidPayload(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1057,6 +1081,7 @@ func TestAddSpeakerFlightInfoInvalidPayload(t *testing.T) {
 
 func TestAddSpeakerFlightInfoNoSpeaker(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1090,6 +1115,7 @@ func TestAddSpeakerFlightInfoNoSpeaker(t *testing.T) {
 
 func TestRemoveSpeakerFlightInfo(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1159,6 +1185,7 @@ func TestRemoveSpeakerFlightInfo(t *testing.T) {
 
 func TestRemoveSpeakerFlightInfoInvalidFlightInfo(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1228,6 +1255,7 @@ func TestRemoveSpeakerFlightInfoInvalidFlightInfo(t *testing.T) {
 
 func TestRemoveSpeakerFlightInfoNoSpeaker(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1261,6 +1289,7 @@ func TestRemoveSpeakerFlightInfoNoSpeaker(t *testing.T) {
 
 func TestAddSpeakerThread(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1358,6 +1387,7 @@ func TestAddSpeakerThread(t *testing.T) {
 
 func TestAddSpeakerThreadInvalidPayload(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1430,6 +1460,7 @@ func TestAddSpeakerThreadInvalidPayload(t *testing.T) {
 
 func TestAddSpeakerThreadCompanyNotFound(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1449,6 +1480,7 @@ func TestAddSpeakerThreadCompanyNotFound(t *testing.T) {
 
 func TestAddSpeakerThreadNoParticipation(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1522,6 +1554,7 @@ func TestAddSpeakerThreadNoParticipation(t *testing.T) {
 
 func TestAddSpeakerThreadMeeting(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1638,6 +1671,7 @@ func TestAddSpeakerThreadMeeting(t *testing.T) {
 
 func TestAddSpeakerThreadMeetingDataMissing(t *testing.T) {
 	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
 
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Speakers.Collection.Drop(ctx)
@@ -1710,4 +1744,141 @@ func TestAddSpeakerThreadMeetingDataMissing(t *testing.T) {
 
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestRemoveSpeakerParticipation(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
+
+	var updatedSpeaker models.Speaker
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	newSpeaker, err = mongodb.Speakers.AddParticipation(newSpeaker.ID, primitive.NewObjectID())
+	assert.NilError(t, err)
+
+	res, err := executeRequest("DELETE", "/speakers/"+newSpeaker.ID.Hex()+"/participation", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	json.NewDecoder(res.Body).Decode(&updatedSpeaker)
+
+	assert.Equal(t, updatedSpeaker.ID, newSpeaker.ID)
+	assert.Equal(t, len(updatedSpeaker.Participations), 0)
+}
+
+func TestRemoveSpeakerParticipationWithCommunication(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
+	defer mongodb.Threads.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	newSpeaker, err = mongodb.Speakers.AddParticipation(newSpeaker.ID, primitive.NewObjectID())
+	assert.NilError(t, err)
+
+	atd := mongodb.CreateThreadData{
+		Entry: primitive.NewObjectID(),
+		Kind:  models.ThreadKindFrom,
+	}
+
+	thread, err := mongodb.Threads.CreateThread(atd)
+	assert.NilError(t, err)
+
+	newSpeaker, err = mongodb.Speakers.AddThread(newSpeaker.ID, thread.ID)
+	assert.NilError(t, err)
+
+	res, err := executeRequest("DELETE", "/speakers/"+newSpeaker.ID.Hex()+"/participation", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusExpectationFailed)
+
+	speaker, err := mongodb.Speakers.GetSpeaker(newSpeaker.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(speaker.Participations), 1)
+	assert.Equal(t, speaker.Participations[0].Event, Event1.ID)
+}
+
+func TestRemoveSpeakerParticipationWithSession(t *testing.T) {
+
+	ctx := context.Background()
+	defer mongodb.Contacts.Collection.Drop(ctx)
+	defer mongodb.Sessions.Collection.Drop(ctx)
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Speakers.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	createSpeakerData := mongodb.CreateSpeakerData{
+		Name:  &Speaker.Name,
+		Bio:   &Speaker.Bio,
+		Title: &Speaker.Title,
+	}
+
+	newSpeaker, err := mongodb.Speakers.CreateSpeaker(createSpeakerData)
+	assert.NilError(t, err)
+
+	newSpeaker, err = mongodb.Speakers.AddParticipation(newSpeaker.ID, primitive.NewObjectID())
+	assert.NilError(t, err)
+
+	var s = "random string"
+
+	csd := mongodb.CreateSessionData{
+		Begin:       &TimeNow,
+		End:         &TimeAfter,
+		Title:       &s,
+		Description: &s,
+		Place:       &s,
+		Kind:        &s,
+		Speakers:    &[]primitive.ObjectID{newSpeaker.ID},
+		Tickets: &models.SessionTickets{
+			Start: TimeNow,
+			End:   TimeAfter,
+			Max:   10,
+		},
+	}
+
+	session, err := mongodb.Sessions.CreateSession(csd)
+	assert.NilError(t, err)
+
+	_, err = mongodb.Events.AddSession(Event1.ID, session.ID)
+	assert.NilError(t, err)
+
+	res, err := executeRequest("DELETE", "/speakers/"+newSpeaker.ID.Hex()+"/participation", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusExpectationFailed)
+
+	speaker, err := mongodb.Speakers.GetSpeaker(newSpeaker.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(speaker.Participations), 1)
+	assert.Equal(t, speaker.Participations[0].Event, Event1.ID)
 }

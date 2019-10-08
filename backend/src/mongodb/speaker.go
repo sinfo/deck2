@@ -905,3 +905,50 @@ func (s *SpeakersType) FindThread(threadID primitive.ObjectID) (*models.Speaker,
 
 	return nil, nil
 }
+
+func (s *SpeakersType) RemoveSpeakerParticipation(speakerID primitive.ObjectID, eventID int) (*models.Speaker, error) {
+	ctx := context.Background()
+	var updatedSpeaker models.Speaker
+
+	speaker, err := s.GetSpeaker(speakerID)
+	if err != nil {
+		return nil, err
+	}
+
+	sessions, err := Sessions.GetSessions(GetSessionsOptions{Speaker: &speakerID})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(sessions) > 0 {
+		return nil, errors.New("Participation associated with session")
+	}
+
+	for _, s := range speaker.Participations {
+		if s.Event == eventID {
+			if len(s.Communications) > 0 {
+				return nil, errors.New("Participation has communication")
+			}
+			break
+		}
+	}
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations": bson.M{
+				"event": eventID,
+			},
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}

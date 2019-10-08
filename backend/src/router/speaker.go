@@ -867,3 +867,27 @@ func unsubscribeToSpeaker(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(updatedSpeaker)
 }
+
+func removeSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Speakers.GetSpeaker(id); err != nil {
+		http.Error(w, "Speaker not found", http.StatusNotFound)
+		return
+	}
+
+	event, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Could not get current event", http.StatusExpectationFailed)
+		return
+	}
+
+	speaker, err := mongodb.Speakers.RemoveSpeakerParticipation(id, event.ID)
+	if err != nil {
+		http.Error(w, "Could not remove participation: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(speaker)
+}

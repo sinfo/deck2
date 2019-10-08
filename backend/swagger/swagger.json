@@ -349,6 +349,9 @@
         },
         "/items/{id}/image": {
             "$ref": "./endpoints/items-id-image.json"
+        },
+        "/auth/verify/{token}": {
+            "$ref": "./endpoints/auth-verify-token.json"
         }
     },
     "externalDocs": {
