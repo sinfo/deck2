@@ -185,7 +185,7 @@
                     </button>
                 </div>
 
-                <div class="operations-status">
+                <div class="operations-status" *ngIf="forms.status.options && coordinatorAccessLevel()">
                     <label>Set Status:</label>
                     <form class="form" [formGroup]="forms.status.form">
                         <app-dropdown [labelTemplate]="statusLabelTemplate" [optionsTemplate]="statusOptionsTemplate"
