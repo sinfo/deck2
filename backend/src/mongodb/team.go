@@ -108,11 +108,7 @@ func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
 
 	insertResult, err := t.Collection.InsertOne(ctx, bson.M{
 		"name":     data.Name,
-<<<<<<< HEAD
 		"members":  []models.TeamMember{},
-=======
-		"members":  []primitive.ObjectID{},
->>>>>>> 452433093bc292b77158b6c3ca1008f4ec4c7021
 		"meetings": []primitive.ObjectID{},
 	})
 	if err != nil {
