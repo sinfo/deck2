@@ -1,4 +1,4 @@
-import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormControl, FormGroup, Validators, ValidatorFn, AbstractControl } from '@angular/forms';
 
 import { Member } from './member';
 import { Meeting } from './meeting';
@@ -93,15 +93,32 @@ export class AddTeamForm {
     }
 }
 
+export function roleValidator(options: RoleType[]): ValidatorFn {
+    return (control: AbstractControl): { [key: string]: any } | null => {
+        for (const option of options) {
+            if (control.value === option) {
+                return null;
+            }
+        }
+
+        return { 'invalidOption': { value: control.value } };
+    };
+}
+
 export class AddMemberToTeamForm {
 
     form: FormGroup;
+    roleOptions: RoleType[] = [RoleType.MEMBER, RoleType.TEAM_LEADER, RoleType.COORDINATOR, RoleType.ADMIN];
 
     constructor() {
         this.form = new FormGroup({
             member: new FormControl('', [Validators.required, Validators.minLength(1)]),
-            role: new FormControl('', [Validators.required, Validators.minLength(1)]),
+            role: new FormControl('', [Validators.required, Validators.minLength(1), roleValidator(this.roleOptions)]),
         });
+    }
+
+    getRoleOptions() {
+        return this.roleOptions;
     }
 
     valid() {

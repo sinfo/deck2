@@ -1,3 +1,36 @@
 <div class="header" *ngIf="team">
     <h4 class="name">Add member to {{team.name}}</h4>
 </div>
+
+<div *ngIf="form && memberFilter">
+    <ng-template #rt let-r="result" let-t="term">
+        <img [src]="r.img" class="mr-1" style="width: 32px;border-radius: 50%;">
+        <ngb-highlight [result]="r.name" [term]="t"></ngb-highlight>
+    </ng-template>
+
+    <div class="form-group">
+        <label for="typeahead-http">Search for a member:</label>
+        <input id="typeahead-http" type="text" class="form-control" [class.is-invalid]="searchFailed"
+            [(ngModel)]="model" [ngbTypeahead]="search" placeholder="Member search" [resultTemplate]="rt"
+            [inputFormatter]="formatter" (selectItem)="selectMember($event)" />
+        <span *ngIf="searching">searching...</span>
+        <div class="invalid-feedback" *ngIf="searchFailed">Sorry, suggestions could not be loaded.</div>
+    </div>
+
+    <form class="form" [formGroup]="form.form">
+        <label>Role:
+            <select class="form-control" (change)="selectRole($event.target.value)" formControlName="role" name="status"
+                required>
+                <option value="" disabled>Roles</option>
+                <option *ngFor="let role of form.getRoleOptions()" [value]="role">{{role | parseStatus}}</option>
+            </select>
+        </label>
+
+    </form>
+
+    <div class="buttons">
+        <button class="save" type="submit" [disabled]="!form.valid()" (click)="submit()">
+            Save
+        </button>
+    </div>
+</div>
