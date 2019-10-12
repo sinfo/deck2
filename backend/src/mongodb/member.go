@@ -172,73 +172,100 @@ func (m *MembersType) GetMember(id primitive.ObjectID) (*models.Member, error) {
 // with a case insensitive partial match to given name
 // or all members in event if event is given
 func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, error) {
-	ctx = context.Background()
 
-	var members []*models.Member
-	filter := bson.M{}
+	ctx = context.Background()
+	var nameFilter = ""
 
 	if options.Name != nil {
-		filter["name"] = bson.M{
-			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
-			"$options": "i",
-		}
+		nameFilter = *options.Name
 	}
 
-	if options.Event == nil {
+	var members []*models.Member = make([]*models.Member, 0)
 
-		cur, err := m.Collection.Find(ctx, filter)
-		if err != nil {
-			return nil, err
-		}
+	query := mongo.Pipeline{
 
-		for cur.Next(ctx) {
+		// filter by name first
+		{{
+			"$match", bson.M{
+				"name": bson.M{
+					"$regex":   fmt.Sprintf(".*%s.*", nameFilter),
+					"$options": "i",
+				},
+			},
+		}},
 
-			var x models.Member
+		// get all the teams on which each member is participating,
+		// and add them to each member correspondingly
+		{{
+			"$lookup", bson.D{
+				{"from", Teams.Collection.Name()},
+				{"localField", "_id"},
+				{"foreignField", "members.member"},
+				{"as", "team"},
+			},
+		}},
 
-			if err := cur.Decode(&x); err != nil {
-				return nil, err
-			}
+		// get an instance of each member for every team he/she belonged to
+		{{
+			"$unwind", "$team",
+		}},
 
-			members = append(members, &x)
-		}
+		// get the event associated with each team on each member
+		{{
+			"$lookup", bson.D{
+				{"from", Events.Collection.Name()},
+				{"localField", "team._id"},
+				{"foreignField", "teams"},
+				{"as", "event"},
+			},
+		}},
 
-		if err := cur.Err(); err != nil {
-			return nil, err
-		}
-
-		cur.Close(ctx)
-
-	} else {
-		event, err := Events.GetEvent(*options.Event)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, s := range event.Teams {
-			team, err := Teams.GetTeam(s)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, t := range team.Members {
-				var member models.Member
-
-				findQuery := bson.M{"_id": t.Member}
-
-				if options.Name != nil {
-					findQuery["name"] = filter["name"]
-				}
-
-				if err := m.Collection.FindOne(ctx, findQuery).Decode(&member); err != nil {
-					continue
-				}
-
-				members = append(members, &member)
-			}
-		}
+		// get an instance of each member for every event he/she belonged to
+		{{
+			"$unwind", "$event",
+		}},
 	}
 
-	return filterDuplicatesMembers(members), nil
+	if options.Event != nil {
+		query = append(query, bson.D{
+			{"$match", bson.M{"event._id": *options.Event}},
+		})
+	}
+
+	query = append(query, bson.D{
+		{"$group", bson.D{
+			{"_id", "$_id"},
+			{"name", bson.M{"$first": "$name"}},
+			{"sinfoid", bson.M{"$first": "$sinfoid"}},
+			{"img", bson.M{"$first": "$img"}},
+			{"istid", bson.M{"$first": "$istid"}},
+			{"contact", bson.M{"$first": "$contact"}},
+		}},
+	})
+
+	cur, err := m.Collection.Aggregate(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(ctx) {
+
+		var member models.Member
+
+		if err := cur.Decode(&member); err != nil {
+			return nil, err
+		}
+
+		members = append(members, &member)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(ctx)
+
+	return members, nil
 }
 
 // GetMemberAuthCredentials finds a member and returns his/her information for auth purposes.
@@ -320,6 +347,7 @@ func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error
 		"name":    data.Name,
 		"istid":   data.Istid,
 		"sinfoid": data.SINFOID,
+		"img":     "",
 		"contact": createdContact.InsertedID.(primitive.ObjectID),
 	}
 

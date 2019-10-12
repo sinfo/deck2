@@ -65,7 +65,7 @@ export class TeamsComponent implements OnInit, OnDestroy {
             this.teams = [];
 
             for (const team of teams) {
-                const newTeam = new PopulatedTeam(team, this.membersService, () => {
+                const _ = new PopulatedTeam(team, this.membersService, (newTeam: PopulatedTeam) => {
                     this.teams.push(newTeam);
                 });
             }

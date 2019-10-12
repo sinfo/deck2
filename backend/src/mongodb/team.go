@@ -83,7 +83,9 @@ func (t *TeamsType) CreateTeam(data CreateTeamData) (*models.Team, error) {
 	var updatedEvent models.Event
 
 	insertResult, err := t.Collection.InsertOne(ctx, bson.M{
-		"name": data.Name,
+		"name":     data.Name,
+		"members":  []primitive.ObjectID{},
+		"meetings": []primitive.ObjectID{},
 	})
 	if err != nil {
 		return nil, err

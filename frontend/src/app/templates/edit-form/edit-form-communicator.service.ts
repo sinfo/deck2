@@ -15,6 +15,7 @@ export enum AppliedForm {
     AddSpeaker,
     AddCompany,
     AddItem,
+    AddTeam,
     AddMemberToTeam,
 }
 
