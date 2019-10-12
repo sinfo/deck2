@@ -18,7 +18,7 @@ export class TeamMember {
     role: RoleType;
 }
 
-declare type PopulatedTeamCallback = () => void;
+declare type PopulatedTeamCallback = (team: PopulatedTeam) => void;
 
 export class PopulatedTeamMember {
     member: Member;
@@ -51,9 +51,13 @@ export class PopulatedTeam {
                 this.members.push(new PopulatedTeamMember(member, teamMember.role));
                 if (this.members.length === team.members.length && callback) {
                     this.members.sort(PopulatedTeamMemberComparator);
-                    callback();
+                    callback(this);
                 }
             });
+        }
+
+        if (this.members.length === team.members.length && callback) {
+            callback(this);
         }
 
         // TODO: fill meetings
@@ -75,17 +79,11 @@ export class AddTeamForm {
     constructor() {
         this.form = new FormGroup({
             name: new FormControl('', [Validators.required, Validators.minLength(1)]),
-            type: new FormControl('', [Validators.required, Validators.minLength(1)]),
-            price: new FormControl(0, [Validators.required, Validators.min(0)]),
-            vat: new FormControl(0, [Validators.required, Validators.min(0), Validators.max(100)]),
-            description: new FormControl('', [Validators.required]),
         });
     }
 
     value() {
-        const value = this.form.value;
-        value['price'] = Math.trunc(value['price'] * 100);
-        return value;
+        return this.form.value;
     }
 
     valid() {

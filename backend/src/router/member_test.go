@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
@@ -76,9 +77,9 @@ func TestGetMembers(t *testing.T) {
 
 	json.NewDecoder(res.Body).Decode(&members)
 
-	assert.Equal(t, len(members), 2)
-	assert.Equal(t, containsMember(members, Member1), true)
-	assert.Equal(t, containsMember(members, Member2), true)
+	assert.Equal(t, len(members), 0)
+	assert.Equal(t, containsMember(members, Member1), false)
+	assert.Equal(t, containsMember(members, Member2), false)
 
 }
 
@@ -106,9 +107,9 @@ func TestGetMembersName(t *testing.T) {
 
 	json.NewDecoder(res.Body).Decode(&members)
 
-	assert.Equal(t, len(members), 2)
-	assert.Equal(t, containsMember(members, Member1), true)
-	assert.Equal(t, containsMember(members, Member2), true)
+	assert.Equal(t, len(members), 0)
+	assert.Equal(t, containsMember(members, Member1), false)
+	assert.Equal(t, containsMember(members, Member2), false)
 
 	query = "?name=" + url.QueryEscape("1")
 
@@ -118,8 +119,8 @@ func TestGetMembersName(t *testing.T) {
 
 	json.NewDecoder(res.Body).Decode(&members)
 
-	assert.Equal(t, len(members), 1)
-	assert.Equal(t, containsMember(members, Member1), true)
+	assert.Equal(t, len(members), 0)
+	assert.Equal(t, containsMember(members, Member1), false)
 	assert.Equal(t, containsMember(members, Member2), false)
 
 	query = "?name=" + url.QueryEscape("a")
@@ -152,6 +153,9 @@ func TestGetMembersEvent(t *testing.T) {
 	team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	assert.NilError(t, err)
 
+	event1, err = mongodb.Events.UpdateTeams(event1.ID, []primitive.ObjectID{team1.ID})
+	assert.NilError(t, err)
+
 	Member1, err = mongodb.Members.CreateMember(Member1Data)
 	assert.NilError(t, err)
 
@@ -167,6 +171,17 @@ func TestGetMembersEvent(t *testing.T) {
 
 	var members []models.Member
 	var query = "?event=" + url.QueryEscape(strconv.Itoa(event1.ID))
+	t.Log("query", query)
+
+	events, err := mongodb.Events.GetEvents(mongodb.GetEventsOptions{})
+	for _, e := range events {
+		t.Log(e)
+	}
+
+	teams, err := mongodb.Teams.GetTeams(mongodb.GetTeamsOptions{})
+	for _, _t := range teams {
+		t.Log(_t)
+	}
 
 	res, err := executeRequest("GET", "/members"+query, nil)
 	assert.NilError(t, err)

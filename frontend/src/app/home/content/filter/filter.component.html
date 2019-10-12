@@ -130,6 +130,7 @@
 
         <div class="operations" *ngIf="
             filters.isPrimaryFilterSpeaker() ||
+            filters.isPrimaryFilterCompany() ||
             coordinatorAccessLevel && (filters.isPrimaryFilterItem() || filters.isPrimaryFilterTeam())">
             <div class="filter-title borders">
                 Operations
@@ -137,6 +138,10 @@
 
             <div class="form-group borders" *ngIf="filters.isPrimaryFilterSpeaker()">
                 <button class="form-control" (click)="addSpeaker()">Create speaker</button>
+            </div>
+
+            <div class="form-group borders" *ngIf="filters.isPrimaryFilterCompany()">
+                <button class="form-control" (click)="addCompany()">Create company</button>
             </div>
 
             <div class="form-group borders" *ngIf="filters.isPrimaryFilterItem()">

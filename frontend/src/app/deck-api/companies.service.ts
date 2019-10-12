@@ -9,7 +9,7 @@ import { environment } from 'environments/environment';
 
 import { AuthService } from './auth.service';
 
-import { Company } from '../models/company';
+import { Company, AddCompanyForm } from '../models/company';
 import { FilterCompany } from '../home/content/filter/filter';
 
 @Injectable({
@@ -52,6 +52,10 @@ export class CompaniesService {
 
     getCompany(companyID: string): Observable<Company> {
         return this.http.get<Company>(`${this.url}/${companyID}`, { headers: this.headers });
+    }
+
+    addCompany(form: AddCompanyForm): Observable<Company> {
+        return this.http.post<Company>(`${this.url}`, form.value(), { headers: this.headers });
     }
 
 }

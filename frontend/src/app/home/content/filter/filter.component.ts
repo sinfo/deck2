@@ -118,6 +118,12 @@ export class FilterComponent implements OnInit {
         });
     }
 
+    addCompany() {
+        this.editFormService.showAddCompanyForm(this.vcRef, () => {
+            this.filterService.changeFilters(this.filters);
+        });
+    }
+
     addItem() {
         this.editFormService.showAddItemForm(this.vcRef, () => {
             this.filterService.changeFilters(this.filters);
@@ -125,11 +131,10 @@ export class FilterComponent implements OnInit {
     }
 
     addTeam() {
-        /* TODO:
         this.editFormService.showAddTeamForm(this.vcRef, () => {
             this.filterService.changeFilters(this.filters);
+            this.editFormService.closeForm();
         });
-        */
     }
 
 }

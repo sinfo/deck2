@@ -54,3 +54,23 @@ export function GetParticipation(company: Company, event: Number): CompanyPartic
 
     return null;
 }
+export class AddCompanyForm {
+
+    form: FormGroup;
+
+    constructor() {
+        this.form = new FormGroup({
+            name: new FormControl('', [Validators.required, Validators.minLength(1)]),
+            site: new FormControl('', []),
+            description: new FormControl('', [Validators.required, Validators.minLength(1)]),
+        });
+    }
+
+    value() {
+        return this.form.value;
+    }
+
+    valid() {
+        return this.form.valid;
+    }
+}

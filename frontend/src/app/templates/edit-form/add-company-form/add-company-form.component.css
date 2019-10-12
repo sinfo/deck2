@@ -7,6 +7,21 @@
     align-items: center;
 }
 
+.speaker-image-wrapper {
+    height: 100%;
+}
+
+.speaker-image {
+    position: relative;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    border-radius: 50%;
+    overflow: hidden;
+    width: 100%;
+    padding-bottom: 100%;
+}
+
 .form {
     display: flex;
     flex-direction: column;
@@ -24,6 +39,10 @@ textarea {
     border: 1px solid var(--font-primary);
     padding: 1%;
     font-size: small;
+}
+
+textarea {
+    height: 20vh;
 }
 
 .buttons {
@@ -67,4 +86,27 @@ textarea {
     background-color: var(--background-default);
     color: var(--font-primary);
     border: 1px solid var(--font-primary);
+}
+
+:host /deep/ .nav-link {
+    background-color: transparent;
+    color: var(--font-primary);
+}
+
+:host /deep/ .nav-link.active {
+    background-color: var(--font-primary);
+    color: var(--background-default);
+}
+
+.image-form {
+    margin-bottom: 5%;
+}
+
+.nested-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.add-participation {
+    margin-top: 5%;
 }
