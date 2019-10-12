@@ -11,6 +11,7 @@ export enum AppliedForm {
     EditSpeakerParticipation,
     EditSpeakerContact,
     EditSpeakerParticipationStepStatus,
+    EditSpeakerParticipationStatus,
     AddSpeaker,
     AddItem,
     AddMemberToTeam,
