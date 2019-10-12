@@ -13,7 +13,7 @@ import { SpeakersService } from '../../../deck-api/speakers.service';
 import { EventsService } from '../../../deck-api/events.service';
 import { ThreadsService } from '../../../deck-api/threads.service';
 import { PostsService } from '../../../deck-api/posts.service';
-import { EditPostContentForm } from 'src/app/models/post';
+import { EditPostContentForm } from '../../../models/post';
 
 @Component({
     selector: 'app-thread',
