@@ -98,9 +98,9 @@ func TestUpdatePost(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)

@@ -906,6 +906,7 @@ func (s *SpeakersType) FindThread(threadID primitive.ObjectID) (*models.Speaker,
 	return nil, nil
 }
 
+// RemoveSpeakerParticipation removes a participation from a speaker
 func (s *SpeakersType) RemoveSpeakerParticipation(speakerID primitive.ObjectID, eventID int) (*models.Speaker, error) {
 	ctx := context.Background()
 	var updatedSpeaker models.Speaker

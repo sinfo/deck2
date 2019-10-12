@@ -348,9 +348,9 @@ func TestAddSpeakerParticipation(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -415,9 +415,9 @@ func TestAddSpeakerParticipationAlreadyIsParticipating(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -1326,9 +1326,9 @@ func TestAddSpeakerThread(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -1424,9 +1424,9 @@ func TestAddSpeakerThreadInvalidPayload(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -1517,9 +1517,9 @@ func TestAddSpeakerThreadNoParticipation(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -1591,9 +1591,9 @@ func TestAddSpeakerThreadMeeting(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -1708,9 +1708,9 @@ func TestAddSpeakerThreadMeetingDataMissing(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)

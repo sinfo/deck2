@@ -103,9 +103,9 @@ func TestAddCommentToThread(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -183,9 +183,9 @@ func TestAddCommentToThreadInvalidPayload(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -245,9 +245,9 @@ func TestAddCommentToThreadInvalidThreadID(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -312,9 +312,9 @@ func TestRemoveCommentFromThread(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -379,9 +379,9 @@ func TestRemoveCommentFromThreadInvalidThread(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)
@@ -450,9 +450,9 @@ func TestRemoveCommentFromThreadInvalidPost(t *testing.T) {
 	newMember, err := mongodb.Members.CreateMember(cmd)
 	assert.NilError(t, err)
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &newMember.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: newMember.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd)

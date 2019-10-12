@@ -140,16 +140,16 @@ func updateTeam(w http.ResponseWriter, r *http.Request) {
 func addTeamMember(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var utmd = &mongodb.UpdateTeamMemberData{}
+	var ctmd = &mongodb.CreateTeamMemberData{}
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
-	if err := utmd.ParseBody(r.Body); err != nil {
+	if err := ctmd.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
 
-	team, err := mongodb.Teams.AddTeamMember(id, *utmd)
+	team, err := mongodb.Teams.AddTeamMember(id, *ctmd)
 	if err != nil {
 		if err.Error() == "Duplicate member" {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -168,13 +168,14 @@ func updateTeamMemberRole(w http.ResponseWriter, r *http.Request) {
 	var utmd = &mongodb.UpdateTeamMemberData{}
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
+	memberID, _ := primitive.ObjectIDFromHex(params["memberID"])
 
 	if err := utmd.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body", http.StatusBadRequest)
 		return
 	}
 
-	team, err := mongodb.Teams.UpdateTeamMemberRole(id, *utmd)
+	team, err := mongodb.Teams.UpdateTeamMemberRole(id, memberID, *utmd)
 	if err != nil {
 		http.Error(w, "Team or member not found", http.StatusNotFound)
 		return

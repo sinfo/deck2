@@ -35,10 +35,15 @@ type GetTeamsOptions struct {
 	MemberName *string
 }
 
-// UpdateTeamMemberData contains data needed to update or create a team member
+// UpdateTeamMemberData contains data needed to update a team member
 type UpdateTeamMemberData struct {
-	Member *primitive.ObjectID `json:"member"`
-	Role   *models.TeamRole    `json:"role"`
+	Role *models.TeamRole `json:"role"`
+}
+
+// CreateTeamMemberData contains data needed to create a team member
+type CreateTeamMemberData struct {
+	Member primitive.ObjectID `json:"id"`
+	Role   models.TeamRole    `json:"role"`
 }
 
 // ParseBody fills the CreateTeamData from a body
@@ -68,6 +73,25 @@ func (utmd *UpdateTeamMemberData) ParseBody(body io.Reader) error {
 	}
 
 	if !(*utmd.Role).IsValidRole() {
+		return errors.New("invalid role")
+	}
+
+	return nil
+}
+
+// ParseBody fills the UpdateTeamMemberData from a body
+func (ctmd *CreateTeamMemberData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ctmd); err != nil {
+		log.Println("err 1")
+		return err
+	}
+
+	if len(ctmd.Role) == 0 {
+		return errors.New("invalid body")
+	}
+
+	if !ctmd.Role.IsValidRole() {
 		return errors.New("invalid role")
 	}
 
@@ -236,14 +260,14 @@ func (t *TeamsType) UpdateTeam(teamID primitive.ObjectID, data CreateTeamData) (
 }
 
 // AddTeamMember adds a member to a team.
-func (t *TeamsType) AddTeamMember(id primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error) {
+func (t *TeamsType) AddTeamMember(id primitive.ObjectID, data CreateTeamMemberData) (*models.Team, error) {
 	ctx := context.Background()
 
 	var team models.Team
 	var members []models.TeamMember
 
 	// Check if member exists
-	if _, err := Members.GetMember(*data.Member); err != nil {
+	if _, err := Members.GetMember(data.Member); err != nil {
 		return nil, err
 	}
 
@@ -253,13 +277,13 @@ func (t *TeamsType) AddTeamMember(id primitive.ObjectID, data UpdateTeamMemberDa
 	}
 
 	// Check for duplicate member
-	if team1.HasMember(*data.Member) {
+	if team1.HasMember(data.Member) {
 		return nil, errors.New("Duplicate member")
 	}
 
 	members = append(team1.Members, models.TeamMember{
-		Member: *data.Member,
-		Role:   *data.Role,
+		Member: data.Member,
+		Role:   data.Role,
 	})
 
 	var updateQuery = bson.M{
@@ -279,44 +303,36 @@ func (t *TeamsType) AddTeamMember(id primitive.ObjectID, data UpdateTeamMemberDa
 }
 
 // UpdateTeamMemberRole changes the role of a team member
-func (t *TeamsType) UpdateTeamMemberRole(id primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error) {
+func (t *TeamsType) UpdateTeamMemberRole(teamID, memberID primitive.ObjectID, data UpdateTeamMemberData) (*models.Team, error) {
 	ctx := context.Background()
 
 	var team models.Team
-	var members []models.TeamMember
 
 	// Check if member exists
-	if _, err := Members.GetMember(*data.Member); err != nil {
+	if _, err := Members.GetMember(memberID); err != nil {
 		return nil, err
 	}
 
-	team1, err := t.GetTeam(id)
+	_, err := t.GetTeam(teamID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check for existent member
-	if !team1.HasMember(*data.Member) {
-		return nil, errors.New("Member not found")
-	}
-
-	members = team1.Members
-	for i, s := range members {
-		if s.Member == *data.Member {
-			members[i].Role = *data.Role
-		}
-	}
-
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"members": members,
+			"members.$.role": data.Role,
 		},
+	}
+
+	var filterQuery = bson.M{
+		"_id":            teamID,
+		"members.member": memberID,
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := t.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&team); err != nil {
+	if err := t.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&team); err != nil {
 		return nil, err
 	}
 

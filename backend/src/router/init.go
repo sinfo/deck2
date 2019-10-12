@@ -221,7 +221,7 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}", authAdmin(deleteTeam)).Methods("DELETE")
 	teamRouter.HandleFunc("/{id}", authCoordinator(updateTeam)).Methods("PUT")
 	teamRouter.HandleFunc("/{id}/members", authCoordinator(addTeamMember)).Methods("POST")
-	teamRouter.HandleFunc("/{id}/members", authCoordinator(updateTeamMemberRole)).Methods("PUT")
+	teamRouter.HandleFunc("/{id}/members/{memberID}", authCoordinator(updateTeamMemberRole)).Methods("PUT")
 	teamRouter.HandleFunc("/{id}/members/{memberID}", authCoordinator(deleteTeamMember)).Methods("DELETE")
 	teamRouter.HandleFunc("/{id}/meetings", authMember(addTeamMeeting)).Methods("POST")
 	teamRouter.HandleFunc("/{id}/meetings/{meetingID}", authTeamLeader(deleteTeamMeeting)).Methods("DELETE")

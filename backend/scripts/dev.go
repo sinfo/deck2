@@ -127,9 +127,9 @@ func main() {
 
 	team = *newTeam
 
-	utmd := mongodb.UpdateTeamMemberData{
-		Member: &member.ID,
-		Role:   &role,
+	utmd := mongodb.CreateTeamMemberData{
+		Member: member.ID,
+		Role:   role,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(team.ID, utmd)

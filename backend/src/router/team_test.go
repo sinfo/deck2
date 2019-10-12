@@ -418,9 +418,9 @@ func TestAddTeamMember(t *testing.T) {
 
 	member, err := mongodb.Members.CreateMember(cmd)
 
-	utmd := &mongodb.UpdateTeamMemberData{
-		Member: &member.ID,
-		Role:   &role,
+	utmd := &mongodb.CreateTeamMemberData{
+		Member: member.ID,
+		Role:   role,
 	}
 
 	b, errMarshal := json.Marshal(utmd)
@@ -436,9 +436,9 @@ func TestAddTeamMember(t *testing.T) {
 
 	// Test Duplicate member on team
 
-	utmd = &mongodb.UpdateTeamMemberData{
-		Member: &member.ID,
-		Role:   &role,
+	utmd = &mongodb.CreateTeamMemberData{
+		Member: member.ID,
+		Role:   role,
 	}
 
 	b, errMarshal = json.Marshal(utmd)
@@ -452,9 +452,9 @@ func TestAddTeamMember(t *testing.T) {
 
 	randID := primitive.NewObjectID()
 
-	utmd = &mongodb.UpdateTeamMemberData{
-		Member: &randID,
-		Role:   &role,
+	utmd = &mongodb.CreateTeamMemberData{
+		Member: randID,
+		Role:   role,
 	}
 
 	b, errMarshal = json.Marshal(utmd)
@@ -491,33 +491,24 @@ func TestUpdateTeamMemberRole(t *testing.T) {
 
 	var role = models.RoleMember
 
+	ctmd := &mongodb.CreateTeamMemberData{
+		Member: member.ID,
+		Role:   role,
+	}
+
+	Team1, err = mongodb.Teams.AddTeamMember(Team1.ID, *ctmd)
+	assert.NilError(t, err)
+
+	var updatedRole = models.RoleTeamLeader
+
 	utmd := &mongodb.UpdateTeamMemberData{
-		Member: &member.ID,
-		Role:   &role,
+		Role: &updatedRole,
 	}
 
 	b, errMarshal := json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
-	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	json.NewDecoder(res.Body).Decode(&team)
-	assert.Equal(t, len(team.Members), 1)
-	assert.Equal(t, team.Members[0].Member, member.ID)
-
-	var updatedRole = models.RoleTeamLeader
-
-	utmd = &mongodb.UpdateTeamMemberData{
-		Member: &member.ID,
-		Role:   &updatedRole,
-	}
-
-	b, errMarshal = json.Marshal(utmd)
-	assert.NilError(t, errMarshal)
-
-	res, err = executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
+	res, err := executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/members/"+member.ID.Hex(), bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
@@ -528,23 +519,20 @@ func TestUpdateTeamMemberRole(t *testing.T) {
 
 	// Test wrong member id
 
-	randID := primitive.NewObjectID()
-
 	utmd = &mongodb.UpdateTeamMemberData{
-		Member: &randID,
-		Role:   &updatedRole,
+		Role: &updatedRole,
 	}
 
 	b, errMarshal = json.Marshal(utmd)
 	assert.NilError(t, errMarshal)
 
-	res, err = executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", "/teams/"+Team1.ID.Hex()+"/members/wrong", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 
 	// Test not found team
 
-	res, err = executeRequest("PUT", "/teams/wrong/members", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", "/teams/wrong/members/wrong", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
@@ -556,8 +544,6 @@ func TestDeleteTeamMember(t *testing.T) {
 	defer mongodb.Members.Collection.Drop(ctx)
 
 	setupTest()
-
-	var team models.Team
 
 	Team1, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	if err != nil {
@@ -574,49 +560,33 @@ func TestDeleteTeamMember(t *testing.T) {
 
 	var role = models.RoleMember
 
-	utmd := &mongodb.UpdateTeamMemberData{
-		Member: &member.ID,
-		Role:   &role,
+	ctmd := &mongodb.CreateTeamMemberData{
+		Member: member.ID,
+		Role:   role,
 	}
 
-	b, errMarshal := json.Marshal(utmd)
-	assert.NilError(t, errMarshal)
-
-	res, err := executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
+	Team1, err = mongodb.Teams.AddTeamMember(Team1.ID, *ctmd)
 	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	json.NewDecoder(res.Body).Decode(&team)
-	assert.Equal(t, len(team.Members), 1)
-	assert.Equal(t, team.Members[0].Member, member.ID)
 
 	var deletedTeam models.Team
 
-	res, err = executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/members/"+member.ID.Hex(), nil)
+	res, err := executeRequest("DELETE", "/teams/"+Team1.ID.Hex()+"/members/"+member.ID.Hex(), nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
 	json.NewDecoder(res.Body).Decode(&deletedTeam)
-	assert.Equal(t, deletedTeam.ID, team.ID)
+	assert.Equal(t, deletedTeam.ID, Team1.ID)
 	assert.Equal(t, len(deletedTeam.Members), 0)
 
 	// Test wrong member id
 
-	utmd = &mongodb.UpdateTeamMemberData{
-		Member: &member.ID,
-		Role:   &role,
+	ctmd = &mongodb.CreateTeamMemberData{
+		Member: member.ID,
+		Role:   role,
 	}
 
-	b, errMarshal = json.Marshal(utmd)
-	assert.NilError(t, errMarshal)
-
-	res, err = executeRequest("POST", "/teams/"+Team1.ID.Hex()+"/members", bytes.NewBuffer(b))
+	Team1, err = mongodb.Teams.AddTeamMember(Team1.ID, *ctmd)
 	assert.NilError(t, err)
-	assert.Equal(t, res.Code, http.StatusOK)
-
-	json.NewDecoder(res.Body).Decode(&team)
-	assert.Equal(t, len(team.Members), 1)
-	assert.Equal(t, team.Members[0].Member, member.ID)
 
 	randID := primitive.NewObjectID()
 
