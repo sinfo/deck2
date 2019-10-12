@@ -1,0 +1,31 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "img": {
+            "type": "string"
+        },
+        "socials": {
+            "type": "object",
+            "properties": {
+                "facebook": {
+                    "type": "string"
+                },
+                "skype": {
+                    "type": "string"
+                },
+                "github": {
+                    "type": "string"
+                },
+                "twitter": {
+                    "type": "string"
+                },
+                "linkedin": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

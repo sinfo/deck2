@@ -1,0 +1,60 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "begin": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "end": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "title": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "place": {
+            "type": "string"
+        },
+        "kind": {
+            "type": "string",
+            "enum": [
+                "TALK",
+                "PRESENTATION",
+                "WORKSHOP"
+            ]
+        },
+        "company": {
+            "type": "object",
+            "$ref": "./public-company.json"
+        },
+        "speaker": {
+            "type": "object",
+            "$ref": "./public-speaker.json"
+        },
+        "videoURL": {
+            "type": "string"
+        },
+        "tickets": {
+            "type": "object",
+            "properties": {
+                "start": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "end": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "max": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

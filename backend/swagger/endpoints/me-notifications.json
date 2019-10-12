@@ -1,0 +1,42 @@
+{
+    "get": {
+        "tags": [
+            "me",
+            "notifications"
+        ],
+        "summary": "Get member's notifications",
+        "operationId": "getMyNotifications",
+        "consumes": [
+            "multipart/form-data"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [],
+        "responses": {
+            "200": {
+                "description": "My notifications",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/notification.json"
+                    }
+                }
+            },
+            "417": {
+                "description": "Unable to get notifications"
+            },
+            "404": {
+                "description": "Member not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    }
+}

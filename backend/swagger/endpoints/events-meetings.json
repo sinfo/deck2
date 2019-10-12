@@ -1,0 +1,73 @@
+{
+    "post": {
+        "tags": [
+            "events",
+            "meetings"
+        ],
+        "summary": "Creates and adds a new meeting to the current event (must have coordinator credentials)",
+        "operationId": "addEventMeeting",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "meeting",
+                "description": "Meeting to store on the current event",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "begin",
+                        "end",
+                        "place"
+                    ],
+                    "properties": {
+                        "begin": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "end": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "place": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated event",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Event not found"
+            },
+            "417": {
+                "description": "Unable to create or add meeting"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
+            }
+        }
+    }
+}

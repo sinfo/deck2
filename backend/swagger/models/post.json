@@ -1,0 +1,22 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "member": {
+            "type": "string"
+        },
+        "text": {
+            "type": "string"
+        },
+        "posted": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "updated": {
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

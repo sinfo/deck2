@@ -1,0 +1,173 @@
+package router
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/sinfo/deck2/src/models"
+
+	"github.com/sinfo/deck2/src/mongodb"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
+	"github.com/gorilla/mux"
+)
+
+func getMembers(w http.ResponseWriter, r *http.Request) {
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetMemberOptions{}
+
+	name := urlQuery.Get("name")
+	event := urlQuery.Get("event")
+	var eventID int
+
+	if len(name) > 0 {
+		options.Name = &name
+	}
+
+	if len(event) > 0 {
+		eventID, _ = strconv.Atoi(event)
+		options.Event = &eventID
+	}
+
+	members, err := mongodb.Members.GetMembers(options)
+
+	if err != nil {
+		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(members)
+}
+
+func createMember(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	var cmd = &mongodb.CreateMemberData{}
+
+	if err := cmd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	newMember, err := mongodb.Members.CreateMember(*cmd)
+
+	if err != nil {
+		http.Error(w, "Could not create member", http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(newMember)
+}
+
+func getMember(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	member, err := mongodb.Members.GetMember(id)
+
+	if err != nil {
+		http.Error(w, "Could not find member", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(member)
+}
+
+func updateMember(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	var umd = &mongodb.UpdateMemberData{}
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if err := umd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	updatedMember, err := mongodb.Members.UpdateMember(id, *umd)
+
+	if err != nil {
+		http.Error(w, "Could not update member", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedMember)
+}
+
+func deleteMember(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	deletedMember, err := mongodb.Members.DeleteMember(id)
+	if err != nil {
+		if err.Error() == mongodb.MemberAssociated {
+			http.Error(w, "Error deleting member: "+err.Error(), http.StatusNotAcceptable)
+		} else {
+			http.Error(w, "Error deleting member: "+err.Error(), http.StatusNotFound)
+		}
+		return
+	}
+
+	json.NewEncoder(w).Encode(deletedMember)
+}
+
+type roleData struct {
+	Role models.TeamRole `json:"role"`
+}
+
+func getMemberRole(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	member, err := mongodb.Members.GetMember(id)
+	if err != nil {
+		http.Error(w, "Member not found: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(member.SINFOID)
+	if err != nil {
+		http.Error(w, "Error getting member credentials: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	roleData := roleData{}
+	roleData.Role = credentials.Role
+
+	json.NewEncoder(w).Encode(roleData)
+}
+
+// PUBLIC ENDPOINTS
+
+func getMembersPublic(w http.ResponseWriter, r *http.Request) {
+
+	urlQuery := r.URL.Query()
+	options := mongodb.GetMemberOptions{}
+
+	name := urlQuery.Get("name")
+	event := urlQuery.Get("event")
+	var eventID int
+
+	if len(name) > 0 {
+		options.Name = &name
+	}
+	if len(event) > 0 {
+		eventID, _ = strconv.Atoi(event)
+		options.Event = &eventID
+	}
+
+	members, err := mongodb.Members.GetMembersPublic(options)
+
+	if err != nil {
+		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+	}
+
+	json.NewEncoder(w).Encode(members)
+}

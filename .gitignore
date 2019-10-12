@@ -55,7 +55,7 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+*.env
 
 # next.js build output
 .next
@@ -111,3 +111,5 @@ yarn-error.log
 
 deck2_nginx.conf
 docker-compose.yml
+
+deck2.sh

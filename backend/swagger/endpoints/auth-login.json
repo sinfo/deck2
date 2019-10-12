@@ -1,0 +1,28 @@
+{
+    "get": {
+        "tags": [
+            "auth"
+        ],
+        "summary": "Authenticates member",
+        "operationId": "authLogin",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "redirect",
+                "description": "URl to be redirected after the successful login\n\n<b>Example:</b> \n <code>GET /auth/login?redirect=example.com/some/path</code> \n On a successful login, you'll be redirected to <code>example.com/some/path/{generated_authentication_token}</code>",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "317": {
+                "description": "Redirects to authentication server"
+            }
+        }
+    }
+}

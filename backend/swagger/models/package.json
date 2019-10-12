@@ -1,0 +1,34 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "item": {
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "type": "integer"
+                    },
+                    "public": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "price": {
+            "type": "integer"
+        },
+        "vat": {
+            "type": "integer"
+        }
+    }
+}

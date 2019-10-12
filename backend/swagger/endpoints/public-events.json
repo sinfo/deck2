@@ -1,0 +1,47 @@
+{
+    "get": {
+        "tags": [
+            "events",
+            "public"
+        ],
+        "summary": "Public endpoint for getting all events",
+        "operationId": "getEventsPublic",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "current",
+                "description": "Get current event\nOn empty query (both current and pastEvents), returns all the events",
+                "type": "boolean"
+            },
+            {
+                "in": "query",
+                "name": "pastEvents",
+                "description": "Get all the events except the current one\nOn empty query (both current and pastEvents), returns all the events",
+                "type": "boolean"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Events filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/public-event.json"
+                    }
+                }
+            },
+            "400": {
+                "description": "Unable to make query"
+            },
+            "417": {
+                "description": "Unable to get events"
+            }
+        }
+    }
+}

@@ -1,0 +1,54 @@
+{
+    "delete": {
+        "tags": [
+            "threads",
+            "posts"
+        ],
+        "summary": "Remove comment from thread",
+        "operationId": "removeCommentFromThread",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "threadID",
+                "description": "ID of the thread",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "in": "path",
+                "name": "postID",
+                "description": "ID of the post",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated Thread",
+                "schema": {
+                    "$ref": "./models/thread.json"
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Thread or post not found"
+            },
+            "417": {
+                "description": "Unable to remove post from thread"
+            }
+        }
+    }
+}

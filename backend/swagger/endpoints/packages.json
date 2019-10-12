@@ -1,0 +1,140 @@
+{
+    "get": {
+        "tags": [
+            "packages"
+        ],
+        "summary": "Get packages",
+        "operationId": "getPackages",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the package",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "price",
+                "description": "Price of the package",
+                "type": "integer"
+            },
+            {
+                "in": "query",
+                "name": "vat",
+                "description": "VAT of the package",
+                "type": "integer"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Packages filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/package.json"
+                    }
+                }
+            },
+            "400": {
+                "description": "Invalid price or vat on query"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to get packages"
+            }
+        }
+    },
+    "post": {
+        "tags": [
+            "packages"
+        ],
+        "summary": "Creates a new package (must have coordinator credentials)",
+        "operationId": "createPackage",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "package",
+                "description": "New package data",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name",
+                        "items",
+                        "price",
+                        "vat"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "item": {
+                                    "type": "string"
+                                },
+                                "quantity": {
+                                    "type": "integer"
+                                },
+                                "public": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
+                        "price": {
+                            "type": "integer"
+                        },
+                        "vat": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created package",
+                "schema": {
+                    "$ref": "./models/package.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to create the package"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
+            }
+        }
+    }
+}

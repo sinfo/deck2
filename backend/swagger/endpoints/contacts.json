@@ -1,0 +1,51 @@
+{
+    "get": {
+        "tags": [
+            "contacts"
+        ],
+        "summary": "Get all contacts",
+        "operationId": "getContacts",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "phone",
+                "description": "Partial and case insensitive match for phone",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "mail",
+                "description": "Partial and case insensitive match for mail",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Contacts filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/contact.json"
+                    }
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to get contacts"
+            }
+        }
+    }
+}

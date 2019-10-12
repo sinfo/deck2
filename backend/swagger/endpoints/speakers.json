@@ -1,0 +1,116 @@
+{
+    "get": {
+        "tags": [
+            "speakers"
+        ],
+        "summary": "Get all speakers",
+        "operationId": "getSpeakers",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "name",
+                "description": "Name of the speaker",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Has a participation entry for this event",
+                "type": "integer"
+            },
+            {
+                "in": "query",
+                "name": "member",
+                "description": "Was contacted by this member",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Speakers filtered by the query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/speaker.json"
+                    }
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to get speakers"
+            }
+        }
+    },
+    "post": {
+        "tags": [
+            "speakers"
+        ],
+        "summary": "Create a new speaker",
+        "operationId": "createSpeaker",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "Information needed to create the new speaker.",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "name",
+                        "title",
+                        "bio"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string"
+                        },
+                        "title": {
+                            "type": "string"
+                        },
+                        "bio": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Created speaker",
+                "schema": {
+                    "$ref": "./models/speaker.json"
+                }
+            },
+            "400": {
+                "description": "Invalid input or couldn't create the new speaker"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    }
+}

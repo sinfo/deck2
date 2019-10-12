@@ -1,0 +1,38 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "entry": {
+            "type": "string"
+        },
+        "meeting": {
+            "type": "string"
+        },
+        "comments": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "kind": {
+            "type": "string",
+            "enum": [
+                "TEMPLATE",
+                "TO",
+                "FROM",
+                "MEETING",
+                "PHONE_CALL"
+            ]
+        },
+        "status": {
+            "type": "string",
+            "enum": [
+                "APPROVED",
+                "REVIEWED",
+                "PENDING"
+            ]
+        }
+    }
+}

@@ -1,0 +1,39 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "title": {
+            "type": "string"
+        },
+        "imgs": {
+            "type": "object",
+            "properties": {
+                "speaker": {
+                    "type": "string"
+                },
+                "company": {
+                    "type": "string"
+                }
+            }
+        },
+        "participations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "event": {
+                        "type": "integer"
+                    },
+                    "feedback": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    }
+}

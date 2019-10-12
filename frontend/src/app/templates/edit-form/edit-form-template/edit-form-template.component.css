@@ -1,0 +1,24 @@
+.background {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: var(--background-default-dim);
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+    overflow: auto;
+}
+
+.content {
+    background-color: var(--background-default);
+    border: 3px solid var(--font-primary);
+    width: 50%;
+    height: fit-content;
+    margin-top: 2%;
+    padding: 2%;
+    border-radius: 1rem;
+    box-sizing: content-box;
+    z-index: 1000;
+}

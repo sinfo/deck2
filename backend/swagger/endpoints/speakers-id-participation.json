@@ -1,0 +1,129 @@
+{
+    "post": {
+        "tags": [
+            "speakers"
+        ],
+        "summary": "Adds participation on the current event to a speaker",
+        "operationId": "addSpeakerParticipation",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the speaker",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated speaker",
+                "schema": {
+                    "$ref": "./models/speaker.json"
+                }
+            },
+            "400": {
+                "description": "Unable to add participation for the current event to this speaker"
+            },
+            "404": {
+                "description": "Speaker not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    },
+    "put": {
+        "tags": [
+            "speakers"
+        ],
+        "summary": "Update speaker's participation on the current event",
+        "operationId": "updateSpeakerParticipation",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the speaker",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "New participation information",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "member",
+                        "feedback",
+                        "room"
+                    ],
+                    "properties": {
+                        "member": {
+                            "type": "string"
+                        },
+                        "feedback": {
+                            "type": "string"
+                        },
+                        "room": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string"
+                                },
+                                "cost": {
+                                    "type": "integer"
+                                },
+                                "notes": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated speaker",
+                "schema": {
+                    "$ref": "./models/speaker.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload"
+            },
+            "404": {
+                "description": "Speaker not found"
+            },
+            "417": {
+                "description": "Unable to update speaker's participation data"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    }
+}

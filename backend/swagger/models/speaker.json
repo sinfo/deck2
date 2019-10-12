@@ -1,0 +1,100 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "contact": {
+            "type": "string"
+        },
+        "title": {
+            "type": "string"
+        },
+        "bio": {
+            "type": "string"
+        },
+        "notes": {
+            "type": "string"
+        },
+        "imgs": {
+            "type": "object",
+            "properties": {
+                "internal": {
+                    "type": "string"
+                },
+                "speaker": {
+                    "type": "string"
+                },
+                "company": {
+                    "type": "string"
+                }
+            }
+        },
+        "participations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "event": {
+                        "type": "integer"
+                    },
+                    "member": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "SUGGESTED",
+                            "SELECTED",
+                            "ON_HOLD",
+                            "CONTACTED",
+                            "IN_CONVERSATIONS",
+                            "ACCEPTED",
+                            "REJECTED",
+                            "GIVEN_UP",
+                            "ANNOUNCED"
+                        ]
+                    },
+                    "communications": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "subscribers": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "feedback": {
+                        "type": "string"
+                    },
+                    "flights": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "room": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string"
+                            },
+                            "cost": {
+                                "type": "integer"
+                            },
+                            "notes": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

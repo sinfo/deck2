@@ -1,0 +1,109 @@
+{
+    "post": {
+        "tags": [
+            "events",
+            "sessions"
+        ],
+        "summary": "Creates and adds a new session to the current event (must have coordinator credentials)",
+        "operationId": "addEventSession",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "body",
+                "name": "session",
+                "description": "Session to store on the current event\n - kind: TALK, PRESENTATION or WORKSHOP\n - if kind=TALK, then speaker must be specified\n - if kind=PRESENTATION or kind=WORKSHOP, then company must be specified\n - dinamizers is optional\n - space is optional",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "begin",
+                        "end",
+                        "title",
+                        "description",
+                        "kind"
+                    ],
+                    "properties": {
+                        "begin": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "end": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "title": {
+                            "type": "string"
+                        },
+                        "description": {
+                            "type": "string"
+                        },
+                        "space": {
+                            "type": "string"
+                        },
+                        "kind": {
+                            "type": "string",
+                            "enum": [
+                                "TALK",
+                                "PRESENTATION",
+                                "WORKSHOP"
+                            ]
+                        },
+                        "company": {
+                            "type": "string"
+                        },
+                        "speaker": {
+                            "type": "string"
+                        },
+                        "dinamizers": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "position": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated event",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Event not found"
+            },
+            "417": {
+                "description": "Unable to create or add session"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
+            }
+        }
+    }
+}

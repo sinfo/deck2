@@ -1,0 +1,53 @@
+{
+    "delete": {
+        "tags": [
+            "events",
+            "teams"
+        ],
+        "summary": "Removes (but does not delete) a team from the current event (must have admin credentials)",
+        "operationId": "removeTeamFromEvent",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the team",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated event",
+                "schema": {
+                    "$ref": "./models/event.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Event not found or team not found"
+            },
+            "417": {
+                "description": "Unable to remove team"
+            },
+            "403": {
+                "description": "Valid authorization, but not enough credentials"
+            }
+        }
+    }
+}

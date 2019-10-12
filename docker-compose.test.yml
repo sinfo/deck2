@@ -1,30 +1,30 @@
-version: '3.3'
+version: "3.3"
 services:
-    sut:
-        build: 
-            context: './server'
-            dockerfile: './Dockerfile_test'
-        links:
-            - mongodb:db
-        depends_on:
-            - mongodb
-        environment:
-            - 'DECK2_DB_URL=mongodb://db:27017'
+  sut:
+    build:
+      context: "./backend"
+      dockerfile: "./Dockerfile_test"
+    links:
+      - mongodb:db
+    depends_on:
+      - mongodb
+    environment:
+      - "DECK2_DB_URL=mongodb://db:27017"
 
-            - 'DECK2_GOOGLE_OAUTH_CLIENT_SECRET=THIS_IS_A_SECRET'
-            - 'DECK2_GOOGLE_OAUTH_CLIENT_ID=THIS_IS_A_SECRET'
+      - "DECK2_GOOGLE_OAUTH_CLIENT_SECRET=THIS_IS_A_SECRET"
+      - "DECK2_GOOGLE_OAUTH_CLIENT_ID=THIS_IS_A_SECRET"
 
-            - 'DECK2_JWT_SECRET=THIS_IS_A_SECRET'
+      - "DECK2_JWT_SECRET=THIS_IS_A_SECRET"
 
-            - 'DECK2_DO_PAT=SOME_PAT'
+      - "DECK2_DO_PAT=SOME_PAT"
 
-            - 'DECK2_DO_SPACES_KEY=SOME_KEY'
-            - 'DECK2_DO_SPACES_SECRET=SOME_SECRET'
-            - 'DECK2_DO_SPACES_REGION=SOME_REGION'
-            - 'DECK2_DO_SPACES_NAME=SOME_NAME'
+      - "DECK2_DO_SPACES_KEY=SOME_KEY"
+      - "DECK2_DO_SPACES_SECRET=SOME_SECRET"
+      - "DECK2_DO_SPACES_REGION=SOME_REGION"
+      - "DECK2_DO_SPACES_NAME=SOME_NAME"
 
-            - 'DECK2_AUTH_REDIRECTION_URL=http://localhost:4200'
-    mongodb:
-        image: mongo:4.0.4
-        container_name: "deck2_testing_mongodb"
-        command: mongod --smallfiles --logpath=/dev/null
+      - "DECK2_AUTH_REDIRECTION_URL=http://localhost:4200"
+  mongodb:
+    image: mongo:4.0.4
+    container_name: "deck2_testing_mongodb"
+    command: mongod --smallfiles --logpath=/dev/null

@@ -1,0 +1,89 @@
+{
+    "get": {
+        "tags": [
+            "sessions"
+        ],
+        "summary": "Get sessions",
+        "operationId": "getSessions",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "query",
+                "name": "event",
+                "description": "Session from this event",
+                "type": "integer",
+                "format": "int64"
+            },
+            {
+                "in": "query",
+                "name": "before",
+                "description": "Session began before this date",
+                "type": "string",
+                "format": "date-time"
+            },
+            {
+                "in": "query",
+                "name": "after",
+                "description": "Session ended after this date",
+                "type": "string",
+                "format": "date-time"
+            },
+            {
+                "in": "query",
+                "name": "place",
+                "description": "Session happened on this location inside the venue",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "kind",
+                "description": "Kind of session",
+                "type": "string",
+                "enum": [
+                    "TALK",
+                    "PRESENTATION",
+                    "WORKSHOP"
+                ]
+            },
+            {
+                "in": "query",
+                "name": "company",
+                "description": "Session given by this company",
+                "type": "string"
+            },
+            {
+                "in": "query",
+                "name": "speaker",
+                "description": "Session given by this speaker",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Sessions filtered by query",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/session.json"
+                    }
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "417": {
+                "description": "Unable to make query"
+            }
+        }
+    }
+}

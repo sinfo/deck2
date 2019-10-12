@@ -1,0 +1,42 @@
+<div class="teams-wrapper">
+    <div class="filter-wrapper">
+        <app-filter [filters]="filters"></app-filter>
+    </div>
+
+    <div class="teams-list-wrapper">
+        <div class="teams-list" *ngIf="teams && teams.length > 0">
+
+            <div class="team" *ngFor="let team of teams">
+
+                <div class="team-wrapper">
+                    <div class="team-label">
+                        <div class="team-text">
+                            <span>{{team.name | uppercase}}</span>
+                        </div>
+
+                        <div class="icon">
+                            <img [src]="darkMode ? 'assets/icons/night/add.png' : 'assets/icons/day/add.png'"
+                                (click)="addMember(team)">
+                        </div>
+                    </div>
+                    <div class="members">
+                        <div class="member" *ngFor="let teamMember of team.members">
+
+                            <div class="member-image">
+                                <app-photo setBy="height" [url]="teamMember.member.img" [role]="teamMember.role">
+                                </app-photo>
+                            </div>
+
+                            <div class="member-text">
+                                <div class="member-name">{{teamMember.member.name}}</div>
+                                <div class="member-title">{{teamMember.role}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>

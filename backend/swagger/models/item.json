@@ -1,0 +1,26 @@
+{
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "type": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "img": {
+            "type": "string"
+        },
+        "price": {
+            "type": "integer"
+        },
+        "vat": {
+            "type": "integer"
+        }
+    }
+}
