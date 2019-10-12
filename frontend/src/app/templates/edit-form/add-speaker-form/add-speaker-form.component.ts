@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { SpeakersService } from '../../../deck-api/speakers.service';
 import { EditFormCommunicatorService, AppliedForm } from '../edit-form-communicator.service';
 
-import { AddSpeakerForm } from '../../../models/speaker';
+import { AddSpeakerForm, Speaker } from '../../../models/speaker';
 
 @Component({
     selector: 'app-add-speaker-form',
@@ -16,7 +17,8 @@ export class AddSpeakerFormComponent {
 
     constructor(
         private editFormCommunicatorService: EditFormCommunicatorService,
-        private speakersService: SpeakersService
+        private speakersService: SpeakersService,
+        private router: Router
     ) {
         this.form = new AddSpeakerForm();
     }
@@ -24,9 +26,10 @@ export class AddSpeakerFormComponent {
     submitNewSpeaker() {
         if (!this.form.valid()) { return; }
 
-        this.speakersService.createSpeaker(this.form).subscribe(() => {
+        this.speakersService.createSpeaker(this.form).subscribe((speaker: Speaker) => {
             this.editFormCommunicatorService.setAppliedForm(AppliedForm.AddSpeaker);
             this.editFormCommunicatorService.closeForm();
+            this.router.navigate(["/speakers/"+speaker.id]);
         });
     }
 

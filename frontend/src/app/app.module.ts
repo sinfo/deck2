@@ -52,6 +52,7 @@ import { EditFormService } from './templates/edit-form/edit-form.service';
 import { ContactsService } from './deck-api/contacts.service';
 import { AddTeamFormComponent } from './templates/edit-form/add-team-form/add-team-form.component';
 import { AddMemberToTeamFormComponent } from './templates/edit-form/add-member-to-team-form/add-member-to-team-form.component';
+import { AddCompanyFormComponent } from './templates/edit-form/add-company-form/add-company-form.component';
 
 @NgModule({
     declarations: [
@@ -79,6 +80,7 @@ import { AddMemberToTeamFormComponent } from './templates/edit-form/add-member-t
         ContactComponent,
         TeamsComponent,
         AddSpeakerFormComponent,
+        AddCompanyFormComponent,
         ItemsComponent,
         AddItemFormComponent,
         AddTeamFormComponent,
@@ -121,6 +123,7 @@ import { AddMemberToTeamFormComponent } from './templates/edit-form/add-member-t
     entryComponents: [
         EditFormTemplateComponent, EditSpeakerFormComponent, AddSpeakerFormComponent,
         AddItemFormComponent, AddTeamFormComponent, AddMemberToTeamFormComponent,
+        AddCompanyFormComponent,
     ]
 })
 export class AppModule {

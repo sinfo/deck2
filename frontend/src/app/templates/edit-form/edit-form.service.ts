@@ -8,6 +8,7 @@ import { EditFormTemplateComponent } from './edit-form-template/edit-form-templa
 import { AddItemFormComponent } from './add-item-form/add-item-form.component';
 import { AddMemberToTeamFormComponent } from './add-member-to-team-form/add-member-to-team-form.component';
 import { AddTeamFormComponent } from './add-team-form/add-team-form.component';
+import { AddCompanyFormComponent } from './add-company-form/add-company-form.component';
 
 import { Speaker } from '../../models/speaker';
 import { PopulatedTeam } from '../../models/team';
@@ -47,6 +48,18 @@ export class EditFormService {
         viewContainerRef.createComponent(factory);
 
         this.editFormCommunicatorService.setForm(AddSpeakerFormComponent);
+
+        if (callback) {
+            this.editFormCommunicatorService.subscribeCallback(callback);
+        }
+    }
+
+    showAddCompanyForm(viewContainerRef: ViewContainerRef, callback?: AppliedFormCallback) {
+        this.viewContainerRef = viewContainerRef;
+        const factory = this.factoryResolver.resolveComponentFactory(EditFormTemplateComponent);
+        viewContainerRef.createComponent(factory);
+
+        this.editFormCommunicatorService.setForm(AddCompanyFormComponent);
 
         if (callback) {
             this.editFormCommunicatorService.subscribeCallback(callback);
