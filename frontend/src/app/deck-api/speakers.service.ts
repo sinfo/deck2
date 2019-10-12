@@ -120,6 +120,10 @@ export class SpeakersService {
         return this.http.post<Speaker>(`${this.url}/${speakerID}/participation/status/${step}`, null, { headers: this.headers });
     }
 
+    setStatus(speakerID: string, status: String): Observable<Speaker> {
+        return this.http.put<Speaker>(`${this.url}/${speakerID}/participation/status/${status}`, null, { headers: this.headers });
+    }
+
     addThread(speakerID: string, form: AddThreadForm): Observable<Speaker> {
         return this.http.post<Speaker>(`${this.url}/${speakerID}/thread`, form.value(), { headers: this.headers });
     }

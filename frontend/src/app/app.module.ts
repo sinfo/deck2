@@ -5,7 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { AppRoutes } from './app.routes';
 import { HttpErrorInterceptor } from './errors/http-error.interceptor';
-import { NgbAlertModule, NgbDropdownModule, NgbPopoverModule, NgbTabsetModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbAlertModule, NgbDropdownModule, NgbPopoverModule, NgbTabsetModule, NgbTypeaheadModule } from '@ng-bootstrap/ng-bootstrap';
 import { intersectionObserverPreset, LazyLoadImageModule } from 'ng-lazyload-image'; // <-- include intersectionObserverPreset
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
@@ -93,7 +93,8 @@ import { AddMemberToTeamFormComponent } from './templates/edit-form/add-member-t
         LazyLoadImageModule.forRoot({
             preset: intersectionObserverPreset
         }),
-        NgbPopoverModule, NgbAlertModule, NgbDropdownModule, NgbTabsetModule
+        NgbPopoverModule, NgbAlertModule, NgbDropdownModule,
+        NgbTypeaheadModule, NgbTabsetModule
     ],
     providers: [
         AuthService,

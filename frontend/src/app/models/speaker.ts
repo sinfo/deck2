@@ -186,3 +186,43 @@ export class EditSpeakerParticipationStatusForm {
         return this.form.get('step').value;
     }
 }
+
+export class EditSpeakerParticipationStatusAdminForm {
+
+    form: FormGroup;
+    options: Array<String>;
+    speaker: Speaker;
+    label: String;
+
+    constructor(speaker: Speaker) {
+        this.form = new FormGroup({
+            status: new FormControl('', [Validators.required, Validators.minLength(1)])
+        })
+
+        this.speaker = speaker;
+        this.options = [
+            "SUGGESTED",
+            "SELECTED",
+            "ON_HOLD",
+            "CONTACTED",
+            "IN_CONVERSATIONS",
+            "ACCEPTED",
+            "REJECTED",
+            "GIVEN_UP",
+            "ANNOUNCED"
+        ];
+    }
+
+    set(status: String) {
+        this.form.controls['status'].setValue(status);
+        this.label = status;
+    }
+
+    valid() {
+        return this.form.valid;
+    }
+
+    value() {
+        return this.form.get('status').value;
+    }
+}

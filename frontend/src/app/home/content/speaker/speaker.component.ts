@@ -220,6 +220,7 @@ export class SpeakerComponent implements OnInit {
                 });
                 break;
             case AppliedForm.EditSpeakerParticipationStepStatus:
+            case AppliedForm.EditSpeakerParticipationStatus:
                 this.speakersService.getSpeaker(speakerID).subscribe((speaker: Speaker) => {
                     this.speaker = speaker;
                     this.getEventsOptions(speaker);
