@@ -12,6 +12,8 @@ import { MeService } from '../../../deck-api/me.service';
 import { SpeakersService } from '../../../deck-api/speakers.service';
 import { EventsService } from '../../../deck-api/events.service';
 import { ThreadsService } from '../../../deck-api/threads.service';
+import { PostsService } from '../../../deck-api/posts.service';
+import { EditPostContentForm } from 'src/app/models/post';
 
 @Component({
     selector: 'app-thread',
@@ -52,7 +54,8 @@ export class ThreadComponent implements OnInit, AfterViewInit {
         private speakersService: SpeakersService,
         private meService: MeService,
         private eventsService: EventsService,
-        private threadsService: ThreadsService
+        private threadsService: ThreadsService,
+        private postsService: PostsService
     ) {
         this.form = new AddThreadForm();
         this.meService.getMe().subscribe((me: Member) => {
@@ -100,6 +103,14 @@ export class ThreadComponent implements OnInit, AfterViewInit {
         if (!this.newCommentForm.valid()) { return; }
 
         this.threadsService.addCommentToThread(this.newCommentForm).subscribe(() => {
+            this.updated.emit();
+        });
+    }
+
+    editPost(form: EditPostContentForm) {
+        if (!form.valid()) { return; }
+
+        this.postsService.editPost(form).subscribe(() => {
             this.updated.emit();
         });
     }

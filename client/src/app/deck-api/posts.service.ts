@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/internal/Observable';
 
 import { environment } from 'environments/environment';
 
-import { Post } from '../models/post';
+import { Post, EditPostContentForm } from '../models/post';
 
 import { AuthService } from './auth.service';
 
@@ -26,5 +26,9 @@ export class PostsService {
 
   getPost(postID: String): Observable<Post> {
     return this.http.get<Post>(`${this.url}/${postID}`, { headers: this.headers });
+  }
+
+  editPost(postForm: EditPostContentForm): Observable<Post> {
+    return this.http.put<Post>(`${this.url}/${postForm.postID}`, postForm.value(), { headers: this.headers });
   }
 }
