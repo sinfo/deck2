@@ -161,9 +161,9 @@ func TestGetMembersEvent(t *testing.T) {
 
 	var role models.TeamRole = "MEMBER"
 
-	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.UpdateTeamMemberData{
-		Member: &Member1.ID,
-		Role:   &role,
+	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.CreateTeamMemberData{
+		Member: Member1.ID,
+		Role:   role,
 	})
 	assert.NilError(t, err)
 	assert.Equal(t, len(team1.Members), 1)
@@ -197,9 +197,9 @@ func TestGetMembersEvent(t *testing.T) {
 	team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	assert.NilError(t, err)
 
-	team2, err = mongodb.Teams.AddTeamMember(team2.ID, mongodb.UpdateTeamMemberData{
-		Member: &Member1.ID,
-		Role:   &role,
+	team2, err = mongodb.Teams.AddTeamMember(team2.ID, mongodb.CreateTeamMemberData{
+		Member: Member1.ID,
+		Role:   role,
 	})
 	assert.NilError(t, err)
 	assert.Equal(t, len(team2.Members), 1)
@@ -498,9 +498,9 @@ func TestGetMembersPublicEvent(t *testing.T) {
 
 	var role models.TeamRole = "MEMBER"
 
-	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.UpdateTeamMemberData{
-		Member: &Member1.ID,
-		Role:   &role,
+	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.CreateTeamMemberData{
+		Member: Member1.ID,
+		Role:   role,
 	})
 	assert.NilError(t, err)
 	assert.Equal(t, len(team1.Members), 1)
@@ -523,9 +523,9 @@ func TestGetMembersPublicEvent(t *testing.T) {
 	team2, err := mongodb.Teams.CreateTeam(mongodb.CreateTeamData{Name: "TEAM1"})
 	assert.NilError(t, err)
 
-	team2, err = mongodb.Teams.AddTeamMember(team2.ID, mongodb.UpdateTeamMemberData{
-		Member: &Member1.ID,
-		Role:   &role,
+	team2, err = mongodb.Teams.AddTeamMember(team2.ID, mongodb.CreateTeamMemberData{
+		Member: Member1.ID,
+		Role:   role,
 	})
 	assert.NilError(t, err)
 	assert.Equal(t, len(team2.Members), 1)
@@ -561,9 +561,9 @@ func TestDeleteMember(t *testing.T) {
 
 	var role models.TeamRole = "MEMBER"
 
-	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.UpdateTeamMemberData{
-		Member: &Member1.ID,
-		Role:   &role,
+	team1, err = mongodb.Teams.AddTeamMember(team1.ID, mongodb.CreateTeamMemberData{
+		Member: Member1.ID,
+		Role:   role,
 	})
 	assert.NilError(t, err)
 

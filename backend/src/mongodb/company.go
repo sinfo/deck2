@@ -159,10 +159,11 @@ func (c *CompaniesType) GetCompanies(options GetCompaniesOptions) ([]*models.Com
 func companyToPublic(company models.Company, eventID *int) (*models.CompanyPublic, error) {
 
 	public := models.CompanyPublic{
-		ID:    company.ID,
-		Name:  company.Name,
-		Image: company.Images.Public,
-		Site:  company.Site,
+		ID:          company.ID,
+		Name:        company.Name,
+		Image:       company.Images.Public,
+		Site:        company.Site,
+		Description: company.Description,
 	}
 
 	var participation *models.CompanyParticipation

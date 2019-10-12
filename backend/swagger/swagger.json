@@ -248,6 +248,9 @@
         "/teams/{id}/members": {
             "$ref": "./endpoints/teams-id-members.json"
         },
+        "/teams/{id}/members/{memberID}": {
+            "$ref": "./endpoints/teams-id-members-memberid.json"
+        },
         "/teams/{id}/meetings": {
             "$ref": "./endpoints/teams-id-meetings.json"
         },

@@ -105,14 +105,14 @@ func TestGetBillings(t *testing.T) {
 	newMember2, err := mongodb.Members.CreateMember(cmd2)
 	assert.NilError(t, err)
 
-	utmd1 := mongodb.UpdateTeamMemberData{
-		Member: &newMember1.ID,
-		Role:   &role1,
+	utmd1 := mongodb.CreateTeamMemberData{
+		Member: newMember1.ID,
+		Role:   role1,
 	}
 
-	utmd2 := mongodb.UpdateTeamMemberData{
-		Member: &newMember2.ID,
-		Role:   &role2,
+	utmd2 := mongodb.CreateTeamMemberData{
+		Member: newMember2.ID,
+		Role:   role2,
 	}
 
 	newTeam, err = mongodb.Teams.AddTeamMember(newTeam.ID, utmd1)
