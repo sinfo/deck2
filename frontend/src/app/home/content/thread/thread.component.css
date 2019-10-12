@@ -142,10 +142,6 @@
     margin: 0;
 }
 
-/* .communication-edit div:nth-of-type(2) {
-    flex-shrink: 500%;
-} */
-
 .new-thread-operations {
     display: flex;
     flex-direction: row;
