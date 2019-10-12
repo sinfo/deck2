@@ -125,5 +125,49 @@
                 "description": "Unauthorized"
             }
         }
+    },
+    "delete": {
+        "tags": [
+            "speakers"
+        ],
+        "summary": "Removes a speakers' participation from the current event. Admin only and must have no communications and not be associated with any session ",
+        "operationId": "removeSpeakerParticipation",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the speaker",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated speaker",
+                "schema": {
+                    "$ref": "./models/speaker.json"
+                }
+            },
+            "404": {
+                "description": "Speaker not found"
+            },
+            "417": {
+                "description": "Unable to remove speaker's participation: Has communications or is associated with a session"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
     }
 }
