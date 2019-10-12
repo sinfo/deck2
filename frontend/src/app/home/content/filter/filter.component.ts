@@ -125,11 +125,10 @@ export class FilterComponent implements OnInit {
     }
 
     addTeam() {
-        /* TODO:
         this.editFormService.showAddTeamForm(this.vcRef, () => {
             this.filterService.changeFilters(this.filters);
+            this.editFormService.closeForm();
         });
-        */
     }
 
 }
