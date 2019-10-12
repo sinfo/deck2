@@ -65,7 +65,7 @@
         "tags": [
             "teams"
         ],
-        "summary": "Create a new team (must have coordinator credentials)",
+        "summary": "Create a new team (must have coordinator credentials). Created teams are added to the current event",
         "operationId": "createTeam",
         "consumes": [
             "application/json"
