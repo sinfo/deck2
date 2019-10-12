@@ -163,3 +163,48 @@ func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 }
+
+func updateThread(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		t, err := mongodb.Threads.GetThread(id)
+		if err != nil {
+			log.Println("getThread")
+			http.Error(w, "Thread not found", http.StatusNotFound)
+			return
+		}
+
+		p, err := mongodb.Posts.GetPost(t.Entry)
+		if err != nil {
+			log.Println("getPost")
+			http.Error(w, "Post not found", http.StatusNotFound)
+			return
+		}
+
+		if credentials.Role.AccessLevel() != 0 && p.Member != credentials.ID {
+			http.Error(w, "Unauthorized", http.StatusForbidden)
+			return
+		}
+	} else {
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		return
+	}
+
+	var utd = mongodb.UpdateThreadData{}
+
+	if err := utd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	thread, err := mongodb.Threads.UpdateThread(id, utd)
+
+	if err != nil {
+		http.Error(w, "Could not find thread or meeting", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(thread)
+}

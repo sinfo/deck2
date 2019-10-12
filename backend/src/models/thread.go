@@ -15,11 +15,11 @@ const (
 
 // IsValid check the validity the thread kind
 func (tk ThreadKind) IsValid() bool {
-	return tk != ThreadKindTemplate &&
-		tk != ThreadKindTo &&
-		tk != ThreadKindFrom &&
-		tk != ThreadKindPhoneCall &&
-		tk != ThreadKindMeeting
+	return tk == ThreadKindTemplate ||
+		tk == ThreadKindTo ||
+		tk == ThreadKindFrom ||
+		tk == ThreadKindPhoneCall ||
+		tk == ThreadKindMeeting
 }
 
 // ThreadStatus is the status of the thread

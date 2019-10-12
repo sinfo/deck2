@@ -2,6 +2,9 @@ package mongodb
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"io"
 	"log"
 
 	"github.com/sinfo/deck2/src/models"
@@ -22,6 +25,28 @@ type CreateThreadData struct {
 	Entry   primitive.ObjectID
 	Meeting *primitive.ObjectID
 	Kind    models.ThreadKind
+}
+
+type UpdateThreadData struct {
+	Meeting primitive.ObjectID `json:"meeting"`
+	Kind    models.ThreadKind  `json:"kind"`
+}
+
+func (utd *UpdateThreadData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(utd); err != nil {
+		return err
+	}
+
+	if len(utd.Meeting) == 0 {
+		return errors.New("invalid meeting")
+	}
+
+	if len(utd.Kind) == 0 {
+		return errors.New("invalid kind")
+	}
+
+	return nil
 }
 
 // CreateThread creates a new thread and saves it to the database
@@ -130,4 +155,51 @@ func (t *ThreadsType) RemoveCommentFromThread(threadID primitive.ObjectID, postI
 	}
 
 	return &updatedThread, nil
+}
+
+func (t *ThreadsType) UpdateThread(threadID primitive.ObjectID, data UpdateThreadData) (*models.Thread, error) {
+	ctx := context.Background()
+
+	thread, err := t.GetThread(threadID)
+	if err != nil {
+		return nil, err
+	}
+
+	if !thread.Kind.IsValid() {
+		return nil, errors.New("Thread kind not valid")
+	}
+
+	if _, err := Meetings.GetMeeting(data.Meeting); err != nil {
+		return nil, err
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"meeting": data.Meeting,
+			"kind":    data.Kind,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var filterQuery = bson.M{
+		"_id": threadID,
+	}
+
+	var updatedThread models.Thread
+
+	if err = t.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedThread); err != nil {
+		return nil, err
+	}
+
+	if thread.Meeting != nil {
+		_, err := Meetings.DeleteMeeting(*thread.Meeting)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &updatedThread, nil
+
 }
