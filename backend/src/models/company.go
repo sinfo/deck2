@@ -102,6 +102,8 @@ type CompanyPublic struct {
 
 	Name string `json:"name"`
 
+	Description string `json:"description"`
+
 	// Company's image (public).
 	Image string `json:"img,omitempty"`
 
