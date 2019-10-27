@@ -10,7 +10,7 @@ import { ThemeService } from '../../../theme.service';
 import { EditFormService } from '../../../templates/edit-form/edit-form.service';
 
 import { Member } from '../../../models/member';
-import { Team, PopulatedTeam } from '../../../models/team';
+import { Team, PopulatedTeam, PopulatedTeamMember } from '../../../models/team';
 import { FilterField, FilterType, Filters } from '../filter/filter';
 import { Theme } from '../../../theme';
 import { AppliedForm } from '../../../templates/edit-form/edit-form-communicator.service';
@@ -74,6 +74,12 @@ export class TeamsComponent implements OnInit, OnDestroy {
 
     addMember(team: PopulatedTeam) {
         this.editFormService.showAddMemberToTeamForm(this.vcRef, team, (appliedForm: AppliedForm) => {
+            this.updateTeams();
+        });
+    }
+
+    editMember(team: PopulatedTeam, member: PopulatedTeamMember) {
+        this.editFormService.showEditTeamMemberForm(this.vcRef, team, member, (appliedForm: AppliedForm) => {
             this.updateTeams();
         });
     }

@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 
 import { environment } from 'environments/environment';
 
-import { Team, AddMemberToTeamForm, AddTeamForm } from '../models/team';
+import { Team, AddMemberToTeamForm, AddTeamForm, EditTeamMemberRoleForm } from '../models/team';
 import { FilterTeam } from '../home/content/filter/filter';
 
 import { AuthService } from './auth.service';
@@ -58,5 +58,13 @@ export class TeamsService {
 
     addMemberToTeam(teamID: string, form: AddMemberToTeamForm): Observable<Team> {
         return this.http.post<Team>(`${this.url}/${teamID}/members`, form.value(), { headers: this.headers });
+    }
+
+    editTeamMemberRole(teamID: string, memberID: string, form: EditTeamMemberRoleForm): Observable<Team> {
+        return this.http.put<Team>(`${this.url}/${teamID}/members/${memberID}`, form.value(), { headers: this.headers });
+    }
+
+    removeTeamMember(teamID: string, memberID: string): Observable<Team> {
+        return this.http.delete<Team>(`${this.url}/${teamID}/members/${memberID}`, { headers: this.headers });
     }
 }

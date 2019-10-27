@@ -4,6 +4,7 @@ import { Observable } from 'rxjs/internal/Observable';
 import { ReplaySubject } from 'rxjs/internal/ReplaySubject';
 
 export enum AppliedForm {
+    EditTeamMember,
     EditSpeaker,
     EditSpeakerInternalImage,
     EditSpeakerPublicImage,

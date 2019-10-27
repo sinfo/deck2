@@ -20,7 +20,7 @@
                         </div>
                     </div>
                     <div class="members">
-                        <div class="member" *ngFor="let teamMember of team.members">
+                        <div class="member" *ngFor="let teamMember of team.members" (click)="editMember(team, teamMember)">
 
                             <div class="member-image">
                                 <app-photo setBy="height" [url]="teamMember.member.img" [role]="teamMember.role">

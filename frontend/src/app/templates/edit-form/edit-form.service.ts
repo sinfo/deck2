@@ -11,7 +11,8 @@ import { AddTeamFormComponent } from './add-team-form/add-team-form.component';
 import { AddCompanyFormComponent } from './add-company-form/add-company-form.component';
 
 import { Speaker } from '../../models/speaker';
-import { PopulatedTeam } from '../../models/team';
+import { PopulatedTeam, PopulatedTeamMember } from '../../models/team';
+import { EditTeamMemberComponent } from '../edit-team-member/edit-team-member.component';
 
 @Injectable({
     providedIn: 'root'
@@ -97,6 +98,19 @@ export class EditFormService {
 
         this.editFormCommunicatorService.setForm(AddMemberToTeamFormComponent);
         this.editFormCommunicatorService.data = team;
+
+        if (callback) {
+            this.editFormCommunicatorService.subscribeCallback(callback);
+        }
+    }
+
+    showEditTeamMemberForm(viewContainerRef: ViewContainerRef, team: PopulatedTeam, member: PopulatedTeamMember, callback?: AppliedFormCallback) {
+        this.viewContainerRef = viewContainerRef;
+        const factory = this.factoryResolver.resolveComponentFactory(EditFormTemplateComponent);
+        viewContainerRef.createComponent(factory);
+
+        this.editFormCommunicatorService.setForm(EditTeamMemberComponent);
+        this.editFormCommunicatorService.data = { team: team, member: member };
 
         if (callback) {
             this.editFormCommunicatorService.subscribeCallback(callback);
