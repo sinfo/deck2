@@ -29,6 +29,11 @@ import { TeamsComponent } from './home/content/teams/teams.component';
 import { AddSpeakerFormComponent } from './templates/edit-form/add-speaker-form/add-speaker-form.component';
 import { ItemsComponent } from './home/content/items/items.component';
 import { AddItemFormComponent } from './templates/edit-form/add-item-form/add-item-form.component';
+import { AddTeamFormComponent } from './templates/edit-form/add-team-form/add-team-form.component';
+import { AddMemberToTeamFormComponent } from './templates/edit-form/add-member-to-team-form/add-member-to-team-form.component';
+import { SessionsComponent } from './home/content/sessions/sessions.component';
+import { AddCompanyFormComponent } from './templates/edit-form/add-company-form/add-company-form.component';
+import { EditTeamMemberComponent } from './templates/edit-team-member/edit-team-member.component';
 
 import { ParseStatusPipe } from './helpers/parse-status.pipe';
 import { MarkdownPipe } from './helpers/markdown.pipe';
@@ -50,10 +55,6 @@ import { ThreadsService } from './deck-api/threads.service';
 import { PostsService } from './deck-api/posts.service';
 import { EditFormService } from './templates/edit-form/edit-form.service';
 import { ContactsService } from './deck-api/contacts.service';
-import { AddTeamFormComponent } from './templates/edit-form/add-team-form/add-team-form.component';
-import { AddMemberToTeamFormComponent } from './templates/edit-form/add-member-to-team-form/add-member-to-team-form.component';
-import { SessionsComponent } from './home/content/sessions/sessions.component';
-import { AddCompanyFormComponent } from './templates/edit-form/add-company-form/add-company-form.component';
 
 @NgModule({
     declarations: [
@@ -87,6 +88,7 @@ import { AddCompanyFormComponent } from './templates/edit-form/add-company-form/
         AddTeamFormComponent,
         AddMemberToTeamFormComponent,
         SessionsComponent,
+        EditTeamMemberComponent,
     ],
     imports: [
         BrowserModule,
@@ -125,7 +127,7 @@ import { AddCompanyFormComponent } from './templates/edit-form/add-company-form/
     entryComponents: [
         EditFormTemplateComponent, EditSpeakerFormComponent, AddSpeakerFormComponent,
         AddItemFormComponent, AddTeamFormComponent, AddMemberToTeamFormComponent,
-        AddCompanyFormComponent,
+        AddCompanyFormComponent, EditTeamMemberComponent
     ]
 })
 export class AppModule {

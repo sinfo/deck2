@@ -1,6 +1,6 @@
 export enum RoleType {
     MEMBER = 'MEMBER',
-    TEAM_LEADER = 'TEAM_LEADER',
+    TEAM_LEADER = 'TEAMLEADER',
     COORDINATOR = 'COORDINATOR',
     ADMIN = 'ADMIN',
 }

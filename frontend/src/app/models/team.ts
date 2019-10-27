@@ -127,3 +127,27 @@ export class AddMemberToTeamForm {
         return this.form.value;
     }
 }
+
+export class EditTeamMemberRoleForm {
+
+    form: FormGroup;
+    roleOptions: RoleType[] = [RoleType.MEMBER, RoleType.TEAM_LEADER, RoleType.COORDINATOR, RoleType.ADMIN];
+
+    constructor(teamMember: PopulatedTeamMember) {
+        this.form = new FormGroup({
+            role: new FormControl(teamMember.role, [Validators.required, Validators.minLength(1), roleValidator(this.roleOptions)]),
+        });
+    }
+
+    getRoleOptions() {
+        return this.roleOptions;
+    }
+
+    valid() {
+        return this.form.valid;
+    }
+
+    value() {
+        return this.form.value;
+    }
+}
