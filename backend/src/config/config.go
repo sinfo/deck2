@@ -33,7 +33,8 @@ var (
 	// Max size of the images to be uploaded by deck2 (Companies public and private images,
 	// speakers public and private images, etc)
 	// 10 KB
-	ImageMaxSize int64 = 10 << 10
+	ImageMaxSize  int64 = 10 << 10
+	MinuteMaxSize int64 = 500 << 10
 
 	// Where to send the authentication token after successeful authentication
 	// We will be using deck website (https://deck.sinfo.org)
@@ -87,7 +88,9 @@ func InitializeConfig(filename string) {
 			file = false
 		}
 
-	} else if filename == "" || !file {
+	}
+
+	if filename == "" || !file {
 		viper.SetEnvPrefix(keyPrefix)
 		viper.AutomaticEnv()
 	}

@@ -367,8 +367,6 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("File size", handler.Size)
-
 	// check again for file size
 	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
 	if handler.Size > config.ImageMaxSize {
