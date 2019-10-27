@@ -68,16 +68,29 @@ const (
 )
 
 func set(variable *string, key string, mandatory bool) {
-	if viper.IsSet(key) {
+	if viper.IsSet(keyPrefix + "_" + key) {
+		*variable = viper.GetString(keyPrefix + "_" + key)
+	} else if viper.IsSet(key) {
 		*variable = viper.GetString(key)
 	} else if mandatory {
-		log.Fatal(fmt.Sprintf("%s_%s", keyPrefix, key) + " not set")
+		log.Fatal(fmt.Sprintf("%s", key) + " not set")
 	}
 }
 
-func InitializeConfig() {
-	viper.SetEnvPrefix(keyPrefix)
-	viper.AutomaticEnv()
+func InitializeConfig(filename string) {
+
+	var file = true
+	if filename != "" {
+		viper.SetConfigName(filename)
+		viper.AddConfigPath(".")
+		if err := viper.ReadInConfig(); err != nil {
+			file = false
+		}
+
+	} else if filename == "" || !file {
+		viper.SetEnvPrefix(keyPrefix)
+		viper.AutomaticEnv()
+	}
 
 	set(&Host, keyHost, false)
 	set(&Port, keyPort, false)
