@@ -1,10 +1,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gookit/color"
 
@@ -17,14 +17,16 @@ import (
 
 func main() {
 
-	config.InitializeConfig()
+	prod := flag.Bool("production", false, "Switch between production mode and dev mode")
+	file := flag.String("config", "", "Config filename. If ommited, configuration is obtained via env vars")
+	flag.Parse()
 
-	if len(os.Args) == 2 {
-		if os.Args[1] == "--production" {
-			color.New(color.FgWhite, color.BgRed).Println("*** WARNING: RUNNING IN PRODUCTION ***")
-			fmt.Println("")
-			config.Production = true
-		}
+	config.InitializeConfig(*file)
+
+	if *prod {
+		color.New(color.FgWhite, color.BgRed).Println("*** WARNING: RUNNING IN PRODUCTION ***")
+		fmt.Println("")
+		config.Production = true
 	}
 
 	if err := auth.InitializeOAuth2(); err != nil {

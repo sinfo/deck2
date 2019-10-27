@@ -56,6 +56,7 @@ export class SpeakersComponent implements OnInit, OnDestroy {
 
     fetchAndFilterSpeakers() {
         this.speakersByMember = [];
+        console.log(this.filters)
 
         this.membersService.getMembers(this.filters.member).subscribe((members: Member[]) => {
             this.members = members;
