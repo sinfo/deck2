@@ -80,19 +80,23 @@ func set(variable *string, key string, mandatory bool) {
 	}
 }
 
-func InitializeConfig(filename string) {
+func InitializeConfig(filename *string) {
 
 	var file = true
-	if filename != "" {
-		viper.SetConfigName(filename)
+	if filename == nil {
+		file = false
+	} else {
+		file = *filename != ""
+	}
+
+	if file {
+		viper.SetConfigName(*filename)
 		viper.AddConfigPath(".")
 		if err := viper.ReadInConfig(); err != nil {
 			file = false
 		}
 
-	}
-
-	if filename == "" || !file {
+	} else {
 		viper.SetEnvPrefix(keyPrefix)
 		viper.AutomaticEnv()
 	}

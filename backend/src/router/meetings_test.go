@@ -481,13 +481,11 @@ func TestUpdateMeeting(t *testing.T) {
 	var newBefore = timeNow.Add(time.Hour * -24)
 	var newAfter = timeNow.Add(time.Hour * 24)
 	var place = "NEW PLACE"
-	var minute = "NEW MINUTE"
 
 	var umd = mongodb.UpdateMeetingData{
-		Begin:  newBefore,
-		End:    newAfter,
-		Place:  place,
-		Minute: minute,
+		Begin: newBefore,
+		End:   newAfter,
+		Place: place,
 	}
 
 	var meeting models.Meeting
@@ -518,13 +516,11 @@ func TestUpdateMeetingBadDate(t *testing.T) {
 	var newBefore = timeNow.Add(time.Hour * -24)
 	var newAfter = timeNow.Add(time.Hour * 24)
 	var place = "NEW PLACE"
-	var minute = "NEW MINUTE"
 
 	var umd = mongodb.UpdateMeetingData{
-		Begin:  newAfter,
-		End:    newBefore,
-		Place:  place,
-		Minute: minute,
+		Begin: newAfter,
+		End:   newBefore,
+		Place: place,
 	}
 
 	b, errMarshal := json.Marshal(umd)
@@ -545,13 +541,11 @@ func TestUpdateMeetingBadPlace(t *testing.T) {
 	var timeNow = time.Now()
 	var newBefore = timeNow.Add(time.Hour * -24)
 	var newAfter = timeNow.Add(time.Hour * 24)
-	var minute = "NEW MINUTE"
 
 	var umd = mongodb.UpdateMeetingData{
-		Begin:  newBefore,
-		End:    newAfter,
-		Place:  "",
-		Minute: minute,
+		Begin: newBefore,
+		End:   newAfter,
+		Place: "",
 	}
 
 	b, errMarshal := json.Marshal(umd)
