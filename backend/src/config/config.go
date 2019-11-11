@@ -12,8 +12,9 @@ var (
 	Authentication bool = true
 	Production     bool = false
 
-	Host string = "localhost"
-	Port string = "8080"
+	Host        string = "localhost"
+	Port        string = "8080"
+	CallBackURL string = "http://localhost:8080"
 
 	DatabaseURI  string = "mongodb://localhost:27017"
 	DatabaseName string = "deck2"
@@ -33,7 +34,8 @@ var (
 	// Max size of the images to be uploaded by deck2 (Companies public and private images,
 	// speakers public and private images, etc)
 	// 10 KB
-	ImageMaxSize int64 = 10 << 10
+	ImageMaxSize  int64 = 10 << 10
+	MinuteMaxSize int64 = 500 << 10
 
 	// Where to send the authentication token after successeful authentication
 	// We will be using deck website (https://deck.sinfo.org)
@@ -50,6 +52,7 @@ const (
 
 	keyDatabaseURI  string = "DB_URL"
 	keyDatabaseName string = "DB_NAME"
+	keyCallbackURL  string = "CALLBACK_URL"
 
 	keyGoogleOAuthClientID     string = "GOOGLE_OAUTH_CLIENT_ID"
 	keyGoogleOAuthClientSecret string = "GOOGLE_OAUTH_CLIENT_SECRET"
@@ -77,17 +80,23 @@ func set(variable *string, key string, mandatory bool) {
 	}
 }
 
-func InitializeConfig(filename string) {
+func InitializeConfig(filename *string) {
 
 	var file = true
-	if filename != "" {
-		viper.SetConfigName(filename)
+	if filename == nil {
+		file = false
+	} else {
+		file = *filename != ""
+	}
+
+	if file {
+		viper.SetConfigName(*filename)
 		viper.AddConfigPath(".")
 		if err := viper.ReadInConfig(); err != nil {
 			file = false
 		}
 
-	} else if filename == "" || !file {
+	} else {
 		viper.SetEnvPrefix(keyPrefix)
 		viper.AutomaticEnv()
 	}
@@ -97,6 +106,7 @@ func InitializeConfig(filename string) {
 
 	set(&DatabaseURI, keyDatabaseURI, false)
 	set(&DatabaseName, keyDatabaseName, false)
+	set(&CallBackURL, keyCallbackURL, false)
 
 	set(&GoogleOAuthClientID, keyGoogleOAuthClientID, true)
 	set(&GoogleOAuthClientSecret, keyGoogleOAuthClientSecret, true)

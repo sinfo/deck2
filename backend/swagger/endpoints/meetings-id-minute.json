@@ -1,0 +1,55 @@
+{
+    "post": {
+        "tags": [
+            "meetings"
+        ],
+        "summary": "Upload meeting's minute by ID",
+        "operationId": "uploadMeetingMinute",
+        "consumes": [
+            "multipart/form-data"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the meeting",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "in": "formData",
+                "name": "minute",
+                "type": "file",
+                "description": "Minute"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "meeting with the updated data",
+                "schema": {
+                    "$ref": "./models/meeting.json"
+                }
+            },
+            "417": {
+                "description": "Unable to perform operation"
+            },
+            "404": {
+                "description": "Meeting not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "400": {
+                "description": "Invalid minute data"
+            }
+        }
+    }
+}

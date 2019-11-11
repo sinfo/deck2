@@ -41,7 +41,7 @@ func executeAuthenticatedRequest(method string, path string, payload io.Reader, 
 
 func TestMain(m *testing.M) {
 
-	config.InitializeConfig()
+	config.InitializeConfig(nil)
 	config.SetTestingEnv()
 
 	// Database setup

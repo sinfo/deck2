@@ -39,10 +39,9 @@ type GetMeetingsOptions struct {
 
 // UpdateMeetingData contains data needed to update a new meeting
 type UpdateMeetingData struct {
-	Begin  time.Time `json:"begin" bson:"begin"`
-	End    time.Time `json:"end" bson:"end"`
-	Place  string    `json:"place" bson:"place"`
-	Minute string    `json:"minute" bson:"minute"`
+	Begin time.Time `json:"begin" bson:"begin"`
+	End   time.Time `json:"end" bson:"end"`
+	Place string    `json:"place" bson:"place"`
 }
 
 //ParseBody fills an UpdateMeetingData from a body
@@ -264,10 +263,31 @@ func (m *MeetingsType) UpdateMeeting(data UpdateMeetingData, meetingID primitive
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"begin":  data.Begin,
-			"end":    data.End,
-			"place":  data.Place,
-			"minute": data.Minute,
+			"begin": data.Begin,
+			"end":   data.End,
+			"place": data.Place,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": meetingID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedMeeting models.Meeting
+
+	if err := m.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		log.Println("error updating meeting:", err)
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
+}
+
+func (m *MeetingsType) UploadMeetingMinute(meetingID primitive.ObjectID, url string) (*models.Meeting, error) {
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"minute": url,
 		},
 	}
 

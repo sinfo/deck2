@@ -355,6 +355,9 @@
         },
         "/auth/verify/{token}": {
             "$ref": "./endpoints/auth-verify-token.json"
+        },
+        "/meetings/{id}/minute": {
+            "$ref": "./endpoints/meetings-id-minute.json"
         }
     },
     "externalDocs": {

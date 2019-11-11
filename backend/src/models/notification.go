@@ -16,8 +16,9 @@ const (
 	NotificationKindUpdated NotificationKind = "UPDATED"
 	NotificationKindDeleted NotificationKind = "DELETED"
 
-	NotificationKindUpdatedPrivateImage NotificationKind = "UPDATED_PRIVATE_IMAGE"
-	NotificationKindUpdatedPublicImage  NotificationKind = "UPDATED_PUBLIC_IMAGE"
+	NotificationKindUpdatedPrivateImage   NotificationKind = "UPDATED_PRIVATE_IMAGE"
+	NotificationKindUpdatedPublicImage    NotificationKind = "UPDATED_PUBLIC_IMAGE"
+	NotificationKindUploadedMeetingMinute NotificationKind = "UPDLOADED_MEETING_MINUTE"
 
 	// Speaker's company image
 	NotificationKindUpdatedCompanyImage NotificationKind = "UPDATED_COMPANY_IMAGE"

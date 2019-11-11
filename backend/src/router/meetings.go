@@ -1,14 +1,21 @@
 package router
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
 
+	"github.com/h2non/filetype"
+	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/google"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
+	"github.com/sinfo/deck2/src/spaces"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gorilla/mux"
@@ -158,5 +165,85 @@ func updateMeeting(w http.ResponseWriter, r *http.Request) {
 		if err := google.UpdateCalendarEvent(umd, id, credentials.Token); err != nil {
 			log.Println("Event not found in calendar: if this was an event meeting, this is an error")
 		}
+	}
+}
+
+func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
+		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		return
+	}
+
+	if err := r.ParseMultipartForm(config.MinuteMaxSize); err != nil {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.MinuteMaxSize), http.StatusBadRequest)
+		return
+	}
+
+	file, handler, err := r.FormFile("minute")
+	if err != nil {
+		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		return
+	}
+
+	// check again for file size
+	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
+	if handler.Size > config.MinuteMaxSize {
+		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.MinuteMaxSize), http.StatusBadRequest)
+		return
+	}
+
+	defer file.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		return
+	}
+
+	// must duplicate the reader so that we can get some information first, and then pass it to the spaces package
+	var buf bytes.Buffer
+	checker := io.TeeReader(file, &buf)
+
+	bytes, err := ioutil.ReadAll(checker)
+	if err != nil {
+		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+		return
+	}
+
+	if !filetype.IsExtension(bytes, "pdf") {
+		http.Error(w, "Not a pdf", http.StatusBadRequest)
+		return
+	}
+
+	kind, err := filetype.Match(bytes)
+	log.Println(kind)
+	if err != nil {
+		http.Error(w, "Unable to get file type", http.StatusExpectationFailed)
+		return
+	}
+
+	url, err := spaces.UploadMeetingMinute(currentEvent.ID, meetingID, &buf, handler.Size, kind.MIME.Value)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
+		return
+	}
+
+	updatedMeeting, err := mongodb.Meetings.UploadMeetingMinute(meetingID, *url)
+	if err != nil {
+		http.Error(w, "Couldn't update speaker internal image", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedMeeting)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUploadedMeetingMinute,
+			Meeting: &updatedMeeting.ID,
+		})
 	}
 }

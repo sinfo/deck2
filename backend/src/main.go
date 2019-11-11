@@ -21,7 +21,7 @@ func main() {
 	file := flag.String("config", "", "Config filename. If ommited, configuration is obtained via env vars")
 	flag.Parse()
 
-	config.InitializeConfig(*file)
+	config.InitializeConfig(file)
 
 	if *prod {
 		color.New(color.FgWhite, color.BgRed).Println("*** WARNING: RUNNING IN PRODUCTION ***")
