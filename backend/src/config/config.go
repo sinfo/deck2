@@ -12,8 +12,9 @@ var (
 	Authentication bool = true
 	Production     bool = false
 
-	Host string = "localhost"
-	Port string = "8080"
+	Host        string = "localhost"
+	Port        string = "8080"
+	CallBackURL string = "http://localhost:8080"
 
 	DatabaseURI  string = "mongodb://localhost:27017"
 	DatabaseName string = "deck2"
@@ -51,6 +52,7 @@ const (
 
 	keyDatabaseURI  string = "DB_URL"
 	keyDatabaseName string = "DB_NAME"
+	keyCallbackURL  string = "CALLBACK_URL"
 
 	keyGoogleOAuthClientID     string = "GOOGLE_OAUTH_CLIENT_ID"
 	keyGoogleOAuthClientSecret string = "GOOGLE_OAUTH_CLIENT_SECRET"
@@ -100,6 +102,7 @@ func InitializeConfig(filename string) {
 
 	set(&DatabaseURI, keyDatabaseURI, false)
 	set(&DatabaseName, keyDatabaseName, false)
+	set(&CallBackURL, keyCallbackURL, false)
 
 	set(&GoogleOAuthClientID, keyGoogleOAuthClientID, true)
 	set(&GoogleOAuthClientSecret, keyGoogleOAuthClientSecret, true)

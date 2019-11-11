@@ -14,7 +14,7 @@ var OauthConfig *oauth2.Config
 func InitializeOAuth2() error {
 
 	OauthConfig = &oauth2.Config{
-		RedirectURL:  "http://localhost:8080/auth/callback",
+		RedirectURL:  config.CallBackURL + "/auth/callback",
 		ClientID:     config.GoogleOAuthClientID,
 		ClientSecret: config.GoogleOAuthClientSecret,
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/calendar.readonly", "https://www.googleapis.com/auth/calendar.events"},
