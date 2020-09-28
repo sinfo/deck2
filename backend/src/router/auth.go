@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,8 +15,8 @@ import (
 	"github.com/sinfo/deck2/src/mongodb"
 )
 
-type authResponse struct {
-	JWT string `json:"access_token"`
+type AuthResponse struct {
+	DeckToken string `json:"deck_token" bson:"deck_token"`
 }
 
 const cookieName = "oauthstate"
@@ -95,6 +96,57 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("%s/%s", matches[1], *token), http.StatusPermanentRedirect)
+}
+
+type authRequest struct {
+	AccessToken string `json:"access_token"`
+}
+
+func generateJwt(w http.ResponseWriter, r *http.Request) {
+
+	var token authRequest
+
+	err := json.NewDecoder(r.Body).Decode(&token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	data, err := google.GetUserDataWithToken(token.AccessToken)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	var emailParts = strings.Split(data.Email, "@")
+	if len(emailParts) != 2 {
+		log.Println("error parsing user email")
+		return
+	}
+
+	if (emailParts[1]) != "sinfo.org" {
+		log.Println("not valid sinfo email")
+		return
+	}
+
+	var sinfoid = emailParts[0]
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(sinfoid)
+	if err != nil {
+		log.Println("member not found, or without team")
+		return
+	}
+
+	decktoken, err := auth.SignJWT(*credentials)
+	if err != nil {
+		log.Println("unable to create jwt" + err.Error())
+		return
+	}
+
+	var authResponse = &AuthResponse{
+		DeckToken: *decktoken,
+	}
+
+	json.NewEncoder(w).Encode(authResponse)
 }
 
 func verifyToken(w http.ResponseWriter, r *http.Request) {

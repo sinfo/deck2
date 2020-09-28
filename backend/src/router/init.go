@@ -147,6 +147,7 @@ func InitializeRouter() {
 	authRouter.HandleFunc("/login", oauthGoogleLogin).Methods("GET")
 	authRouter.HandleFunc("/callback", oauthGoogleCallback).Methods("GET")
 	authRouter.HandleFunc("/verify/{token}", verifyToken).Methods("GET")
+	authRouter.HandleFunc("/checkin", generateJwt).Methods("POST")
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
