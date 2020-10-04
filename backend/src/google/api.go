@@ -7,10 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/sinfo/deck2/src/auth"
 	"github.com/sinfo/deck2/src/mongodb"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/calendar/v3"
 )
@@ -23,7 +22,7 @@ type UserData struct {
 	Verified bool               `json:"verified_email"`
 	Picture  string             `json:"picture"`
 	HD       string             `json:"hd"`
-	Token    primitive.ObjectID `json:"token"`
+	Token    primitive.ObjectID `json:"token,omitempty"`
 }
 
 // GetUserData uses code to get token and user info from Google.
@@ -59,6 +58,30 @@ func GetUserData(code string) (*UserData, error) {
 	}
 
 	result.Token = newToken.ID
+
+	return &result, nil
+}
+
+func GetUserDataWithToken(token string) (*UserData, error) {
+
+	response, err := http.Get(oauthGoogleURLAPI + token)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
+	}
+
+	defer response.Body.Close()
+
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed read response: %s", err.Error())
+	}
+
+	var result UserData
+
+	err = json.Unmarshal(contents, &result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse response from google for user data: %s", err.Error())
+	}
 
 	return &result, nil
 }
