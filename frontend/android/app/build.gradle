@@ -38,37 +38,17 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "sinfo.deck2.frontend"
+        applicationId "com.sinfo.frontend"
         minSdkVersion 16
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
 
-    signingConfigs {
-        debug {
-            storeFile file('devkey.jks')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
-        }
-        release{
-            storeFile file('key.jks')
-            storePassword 'android'
-            keyAlias 'androidreleasekey'
-            keyPassword 'android'
-        }
-    }
-
-
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
-        }
-
-        debug{
             signingConfig signingConfigs.debug
         }
     }

@@ -37,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _signInButton() {
     return OutlineButton(
-      splashColor: Colors.grey,
+      splashColor: Colors.white,
       onPressed: () {
         stateSignIn();
       },
@@ -71,6 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await _googleSignIn.signOut();
     GoogleSignInAccount user = await _googleSignIn.signIn();
     if (user == null) {
+      //TODO: Handle error
       print('Sign in failed');
     } else {
       GoogleSignInAccount account = _googleSignIn.currentUser;
