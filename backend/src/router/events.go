@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/sinfo/deck2/src/google"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -447,13 +446,6 @@ func addMeetingToEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-		if err := google.CreateCalendarEvent(newMeeting, credentials.Token); err != nil {
-			http.Error(w, "Error with google calendar: "+err.Error(), http.StatusExpectationFailed)
-			return
-		}
-	}
-
 	json.NewEncoder(w).Encode(updatedEvent)
 }
 
@@ -484,13 +476,6 @@ func removeMeetingFromEvent(w http.ResponseWriter, r *http.Request) {
 	if _, err = mongodb.Meetings.DeleteMeeting(meetingID); err != nil {
 		http.Error(w, "Could not delete meeting", http.StatusExpectationFailed)
 		return
-	}
-
-	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-		if err := google.DeleteCalendarEvent(meetingID, credentials.Token); err != nil {
-			http.Error(w, "Error with google calendar: "+err.Error(), http.StatusExpectationFailed)
-			return
-		}
 	}
 
 	json.NewEncoder(w).Encode(updatedEvent)

@@ -47,8 +47,6 @@ var (
 	CompanyReps *CompanyRepsType
 	//Notifications is an instance of a mongodb collection
 	Notifications *NotificationsType
-	//Tokens is an instance of a mongodb collection
-	Tokens *TokensType
 )
 
 var (
@@ -166,10 +164,6 @@ func InitializeDatabase() {
 
 	Notifications = &NotificationsType{
 		Collection: db.Collection("notifications"),
-	}
-
-	Tokens = &TokensType{
-		Collection: db.Collection("tokens"),
 	}
 
 	log.Println("Connected to the database successfully")

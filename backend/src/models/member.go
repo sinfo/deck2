@@ -47,7 +47,4 @@ type AuthorizationCredentials struct {
 
 	// Role on SINFO
 	Role TeamRole
-
-	//Token Struct
-	Token primitive.ObjectID
 }

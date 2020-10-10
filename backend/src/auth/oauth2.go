@@ -17,7 +17,7 @@ func InitializeOAuth2() error {
 		RedirectURL:  config.CallBackURL + "/auth/callback",
 		ClientID:     config.GoogleOAuthClientID,
 		ClientSecret: config.GoogleOAuthClientSecret,
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/calendar.readonly", "https://www.googleapis.com/auth/calendar.events"},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
 

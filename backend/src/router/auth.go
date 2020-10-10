@@ -87,8 +87,6 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	credentials.Token = data.Token
-
 	token, err := auth.SignJWT(*credentials)
 	if err != nil {
 		log.Println("unable to create jwt" + err.Error())
@@ -154,12 +152,6 @@ func verifyToken(w http.ResponseWriter, r *http.Request) {
 	tokenString := params["token"]
 
 	credentials, err := auth.ParseJWT(tokenString)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte("NOK"))
-		return
-	}
-	_, err = mongodb.Tokens.GetToken(credentials.Token)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("NOK"))

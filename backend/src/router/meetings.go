@@ -12,7 +12,6 @@ import (
 
 	"github.com/h2non/filetype"
 	"github.com/sinfo/deck2/src/config"
-	"github.com/sinfo/deck2/src/google"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/spaces"
@@ -159,13 +158,6 @@ func updateMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(meeting)
-
-	// notify
-	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-		if err := google.UpdateCalendarEvent(umd, id, credentials.Token); err != nil {
-			log.Println("Event not found in calendar: if this was an event meeting, this is an error")
-		}
-	}
 }
 
 func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {

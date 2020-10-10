@@ -39,7 +39,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
   void checkSignInStatus() async {
     bool isSignedIn = await googleSignIn.isSignedIn();
-    print(isSignedIn);
     if (!isSignedIn) {
       Navigator.pushReplacementNamed(context, Routes.LoginRoute);
     } else {
