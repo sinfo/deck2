@@ -58,6 +58,7 @@ func checkAccessLevelWrapper(required models.TeamRole) authWrapper {
 			credentials, err := auth.ParseJWT(token)
 
 			if err != nil {
+				log.Println(err)
 				http.Error(w, fmt.Sprintf("Error parsing token: %v", err.Error()), http.StatusUnauthorized)
 				return
 			}

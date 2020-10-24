@@ -5,6 +5,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/authService.dart';
+import 'package:frontend/services/memberService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

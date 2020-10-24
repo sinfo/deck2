@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -58,6 +59,7 @@ func ParseJWT(tokenString string) (*models.AuthorizationCredentials, error) {
 	})
 
 	if err != nil {
+		log.Println(token)
 		return nil, err
 	}
 

@@ -130,7 +130,7 @@ func generateJwt(w http.ResponseWriter, r *http.Request) {
 	var sinfoid = emailParts[0]
 	credentials, err := mongodb.Members.GetMemberAuthCredentials(sinfoid)
 	if err != nil {
-		log.Println("member not found, or without team")
+		log.Println("member " + sinfoid + "not found, or without team")
 		return
 	}
 
