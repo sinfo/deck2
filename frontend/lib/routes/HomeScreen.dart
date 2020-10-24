@@ -22,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
   Future<Member> _me;
   AuthService _authService = AuthService();
+  MemberService _memberService = MemberService();
 
   @override
   void initState() {

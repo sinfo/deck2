@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:frontend/models/contact.dart';
 
 class Member {
@@ -30,6 +32,11 @@ class Member {
         'sinfoid': sinfoId,
         'contact': contact,
       };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
+  }
 }
 
 class MemberPublic {
