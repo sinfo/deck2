@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -245,6 +246,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 
 	cur, err := m.Collection.Aggregate(ctx, query)
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
