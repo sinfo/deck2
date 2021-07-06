@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/services/service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -13,18 +15,25 @@ class AuthService {
       kIsWeb ? DotEnv().env['DECK2_URL'] : DotEnv().env['DECK2_MOBILE_URL'];
   GoogleSignIn _googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
+  Dio dio = Dio(BaseOptions(
+    baseUrl:
+        kIsWeb ? DotEnv().env['DECK2_URL'] : DotEnv().env['DECK2_MOBILE_URL'],
+    headers: {
+      HttpHeaders.contentTypeHeader: 'application/json',
+    },
+  ));
 
   Future<String> getJWT(String token) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    final response = await http.post(
+    Response<String> response = await dio.post(
       _deckURL + '/auth/checkin',
-      body: jsonEncode(<String, String>{
+      data: jsonEncode(<String, String>{
         'access_token': token,
       }),
     );
 
-    if (response.body.isNotEmpty) {
-      final responseJson = json.decode(response.body);
+    if (response.data.isNotEmpty) {
+      final responseJson = json.decode(response.data);
       prefs.setString("jwt", responseJson["deck_token"]);
       return responseJson["deck_token"];
     } else {
@@ -41,13 +50,11 @@ class AuthService {
     }
 
     String token = jwt == null ? prefs.getString("jwt") : jwt;
-    final response = await http.get(
-      _deckURL + '/me',
-      headers: {HttpHeaders.authorizationHeader: token},
-    );
+    dio.options.headers[HttpHeaders.authorizationHeader] = token;
+    Response<String> response = await dio.get(_deckURL + '/me');
 
-    if (response.body.isNotEmpty) {
-      final responseJson = json.decode(response.body);
+    if (response.data.isNotEmpty) {
+      final responseJson = json.decode(response.data);
       Member me = Member.fromJson(responseJson);
 
       prefs.setString("me", json.encode(me));

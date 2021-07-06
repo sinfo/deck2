@@ -31,7 +31,10 @@ class ContactPhone {
   final String phone;
   final bool valid;
 
-  ContactPhone({this.phone, this.valid});
+  ContactPhone({
+    this.phone,
+    this.valid,
+  });
 
   factory ContactPhone.fromJson(Map<String, dynamic> json) {
     return ContactPhone(
@@ -53,8 +56,13 @@ class ContactSocials {
   final String twitter;
   final String linkedin;
 
-  ContactSocials(
-      {this.facebook, this.skype, this.github, this.twitter, this.linkedin});
+  ContactSocials({
+    this.facebook,
+    this.skype,
+    this.github,
+    this.twitter,
+    this.linkedin,
+  });
 
   factory ContactSocials.fromJson(Map<String, dynamic> json) {
     return ContactSocials(
@@ -80,7 +88,11 @@ class ContactMail {
   final bool valid;
   final bool personal;
 
-  ContactMail({this.mail, this.valid, this.personal});
+  ContactMail({
+    this.mail,
+    this.valid,
+    this.personal,
+  });
 
   factory ContactMail.fromJson(Map<String, dynamic> json) {
     return ContactMail(

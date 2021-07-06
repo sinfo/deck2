@@ -10,8 +10,14 @@ class Member {
   final String sinfoId;
   final String contact;
 
-  Member(
-      {this.id, this.name, this.image, this.istId, this.sinfoId, this.contact});
+  Member({
+    this.id,
+    this.name,
+    this.image,
+    this.istId,
+    this.sinfoId,
+    this.contact,
+  });
 
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
@@ -44,7 +50,11 @@ class MemberPublic {
   final String image;
   final ContactSocials socials;
 
-  MemberPublic({this.name, this.image, this.socials});
+  MemberPublic({
+    this.name,
+    this.image,
+    this.socials,
+  });
 
   factory MemberPublic.fromJson(Map<String, dynamic> json) {
     return MemberPublic(
