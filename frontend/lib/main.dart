@@ -14,9 +14,10 @@ Future start() async {
 }
 
 class App extends StatelessWidget {
-  static SharedPreferences localStorage;
+  static late SharedPreferences localStorage;
   static Future init() async {
     localStorage = await SharedPreferences.getInstance();
+    localStorage.setString('me', null);
   }
 
   @override

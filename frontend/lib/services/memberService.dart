@@ -4,7 +4,7 @@ import 'package:frontend/services/service.dart';
 import 'package:dio/dio.dart';
 
 class MemberService extends Service {
-  Future<List<Member>> getMembers({String name, int event}) async {
+  Future<List<Member>> getMembers({String? name, int? event}) async {
     var queryParameters = {
       'name': name,
       'event': event,
@@ -14,7 +14,7 @@ class MemberService extends Service {
         await dio.get("/members", queryParameters: queryParameters);
 
     if (response.statusCode == 200) {
-      final responseJson = json.decode(response.data) as List;
+      final responseJson = json.decode(response.data!) as List;
       List<Member> members =
           responseJson.map((e) => Member.fromJson(e)).toList();
       return members;
@@ -25,7 +25,8 @@ class MemberService extends Service {
     }
   }
 
-  Future<Member> createMember(String istid, String name, String sinfoid) async {
+  Future<Member?> createMember(
+      String istid, String name, String sinfoid) async {
     var body = {
       "istid": istid,
       "name": name,
@@ -35,7 +36,7 @@ class MemberService extends Service {
     Response<String> response = await dio.post("/members", data: body);
 
     if (response.statusCode == 200) {
-      return Member.fromJson(json.decode(response.data));
+      return Member.fromJson(json.decode(response.data!));
     } else {
       // TODO: Handle Error
       print("error");
@@ -43,15 +44,17 @@ class MemberService extends Service {
     }
   }
 
-  Future<Member> getMember(String id) async {
+  Future<Member?> getMember(String id) async {
     Response<String> response = await dio.get("/members/" + id);
 
     if (response.statusCode == 200) {
-      return Member.fromJson(json.decode(response.data));
+      return Member.fromJson(json.decode(response.data!));
+    } else {
+      return null;
     }
   }
 
-  Future<Member> updateMember(String id, String istid, String name) async {
+  Future<Member?> updateMember(String id, String istid, String name) async {
     var body = {
       "istid": istid,
       "name": name,
@@ -60,7 +63,7 @@ class MemberService extends Service {
     Response<String> response = await dio.put("/members/" + id, data: body);
 
     if (response.statusCode == 200) {
-      return Member.fromJson(json.decode(response.data));
+      return Member.fromJson(json.decode(response.data!));
     } else {
       // TODO: Handle Error
       print("error");
@@ -68,10 +71,10 @@ class MemberService extends Service {
     }
   }
 
-  Future<Member> deleteMember(String id) async {
+  Future<Member?> deleteMember(String id) async {
     Response<String> response = await dio.delete("/members/" + id);
     if (response.statusCode == 200) {
-      return Member.fromJson(json.decode(response.data));
+      return Member.fromJson(json.decode(response.data!));
     } else {
       // TODO: Handle Error
       print("error");
@@ -79,10 +82,10 @@ class MemberService extends Service {
     }
   }
 
-  Future<String> getMemberRole(String id) async {
+  Future<String?> getMemberRole(String id) async {
     Response<String> response = await dio.get("/members/" + id + "/role");
     if (response.statusCode == 200) {
-      return json.decode(response.data)["role"];
+      return json.decode(response.data!)["role"];
     } else {
       // TODO: Handle Error
       print("error");
@@ -90,7 +93,7 @@ class MemberService extends Service {
     }
   }
 
-  Future<List<Member>> getPublicMembers({String name, int event}) async {
+  Future<List<Member>> getPublicMembers({String? name, int? event}) async {
     var queryParameters = {
       'name': name,
       'event': event,
@@ -100,7 +103,7 @@ class MemberService extends Service {
         await dio.get("/public/members", queryParameters: queryParameters);
 
     if (response.statusCode == 200) {
-      final responseJson = json.decode(response.data) as List;
+      final responseJson = json.decode(response.data!) as List;
       List<Member> members =
           responseJson.map((e) => Member.fromJson(e)).toList();
       return members;

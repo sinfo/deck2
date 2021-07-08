@@ -2,12 +2,12 @@ import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/post.dart';
 
 class Thread {
-  final String id;
-  final Post entry;
-  final Meeting meeting;
-  final List<Post> comments;
-  final String kind;
-  final String status;
+  final String? id;
+  final Post? entry;
+  final Meeting? meeting;
+  final List<Post>? comments;
+  final String? kind;
+  final String? status;
 
   Thread({
     this.id,

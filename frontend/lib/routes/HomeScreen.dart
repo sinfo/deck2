@@ -1,27 +1,24 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/CompanyListWidget.dart';
+import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/authService.dart';
-import 'package:frontend/services/memberService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({Key key}) : super(key: key);
+  HomeScreen({Key? key}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex;
+  late int _currentIndex;
   GoogleSignIn googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
-  Future<Member> _me;
+  late Future<Member?> _me;
   AuthService _authService = AuthService();
 
   @override
@@ -65,7 +62,8 @@ class _HomeScreenState extends State<HomeScreen> {
             future: _me,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                return MyDrawer(image: snapshot.data.image);
+                Member me = snapshot.data as Member;
+                return MyDrawer(image: me.image);
               } else {
                 return CircularProgressIndicator();
               }
@@ -90,6 +88,10 @@ class _HomeScreenState extends State<HomeScreen> {
           return Center(child: CompanyListWidget());
         }
         break;
+      default:
+        {
+          return UnknownScreen();
+        }
     }
   }
 
@@ -99,7 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pushReplacementNamed(context, '/login');
     } else {
       setState(() {
-        _me = _authService.login();
+        this._me = _authService.login();
+        print(_me);
       });
     }
   }

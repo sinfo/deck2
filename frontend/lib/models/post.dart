@@ -1,11 +1,11 @@
 import 'package:frontend/models/member.dart';
 
 class Post {
-  final String id;
-  final Member member;
-  final String text;
-  final DateTime posted;
-  final DateTime updated;
+  final String? id;
+  final Member? member;
+  final String? text;
+  final DateTime? posted;
+  final DateTime? updated;
 
   Post({
     this.id,

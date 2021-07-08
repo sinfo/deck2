@@ -9,35 +9,35 @@ class CompanyLight {
   final CompanyImages companyImages;
 
   CompanyLight({
-    this.id,
-    this.name,
-    this.companyImages,
+    required this.id,
+    required this.name,
+    required this.companyImages,
   });
 
   factory CompanyLight.fromJson(Map<String, dynamic> json) {
     return CompanyLight(
       id: json['id'],
       name: json['name'],
-      companyImages: CompanyImages.fromJson(json['companyImages']),
+      companyImages: CompanyImages.fromJson(json['imgs']),
     );
   }
 }
 
 class Company {
-  final String id;
+  final String? id;
   final String name;
-  final String description;
+  final String? description;
   final CompanyImages companyImages;
-  final String site;
-  final List<CompanyRep> employees;
-  final CompanyBillingInfo billingInfo;
-  final List<CompanyParticipation> participations;
+  final String? site;
+  final List<CompanyRep>? employees;
+  final CompanyBillingInfo? billingInfo;
+  final List<CompanyParticipation>? participations;
 
   Company({
     this.id,
-    this.name,
+    required this.name,
     this.description,
-    this.companyImages,
+    required this.companyImages,
     this.site,
     this.employees,
     this.billingInfo,
@@ -63,10 +63,10 @@ class Company {
 
 class CompanyImages {
   final String internal;
-  final String public;
+  final String? public;
 
   CompanyImages({
-    this.internal,
+    required this.internal,
     this.public,
   });
 
@@ -79,9 +79,9 @@ class CompanyImages {
 }
 
 class CompanyRep {
-  final String id;
-  final String name;
-  final Contact contact;
+  final String? id;
+  final String? name;
+  final Contact? contact;
 
   CompanyRep({
     this.id,
@@ -99,9 +99,9 @@ class CompanyRep {
 }
 
 class CompanyBillingInfo {
-  final String name;
-  final String address;
-  final String tin;
+  final String? name;
+  final String? address;
+  final String? tin;
 
   CompanyBillingInfo({
     this.name,
@@ -119,14 +119,14 @@ class CompanyBillingInfo {
 }
 
 class CompanyParticipation {
-  final int event;
-  final Member member;
-  final String status;
-  final List<Thread> communications;
-  final Package package;
-  final DateTime confirmed;
-  final bool partner;
-  final String notes;
+  final int? event;
+  final Member? member;
+  final String? status;
+  final List<Thread>? communications;
+  final Package? package;
+  final DateTime? confirmed;
+  final bool? partner;
+  final String? notes;
 
   CompanyParticipation({
     this.event,

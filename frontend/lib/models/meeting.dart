@@ -2,12 +2,12 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 
 class Meeting {
-  final String id;
-  final DateTime start;
-  final DateTime end;
-  final String place;
-  final String minute; // Ata
-  final MeetingParticipants participants;
+  final String? id;
+  final DateTime? start;
+  final DateTime? end;
+  final String? place;
+  final String? minute; // Ata
+  final MeetingParticipants? participants;
 
   Meeting({
     this.id,
@@ -31,8 +31,8 @@ class Meeting {
 }
 
 class MeetingParticipants {
-  final List<Member> members;
-  final List<CompanyRep> companyReps;
+  final List<Member>? members;
+  final List<CompanyRep>? companyReps;
 
   MeetingParticipants({
     this.members,

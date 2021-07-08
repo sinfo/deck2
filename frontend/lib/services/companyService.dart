@@ -30,8 +30,8 @@ class CompanyService extends Service {
   String companyUrl = "/companies";
 
   Future<List<CompanyLight>> getCompanies(
-      {int event, bool partner, String member, String name}) async {
-    var queryParams = {};
+      {int? event, bool? partner, String? member, String? name}) async {
+    Map<String, dynamic> queryParams = {};
     if (event != null) {
       queryParams['event'] = event;
     }
@@ -44,6 +44,7 @@ class CompanyService extends Service {
     if (name != null) {
       queryParams['name'] = name;
     }
+    queryParams['event'] = 29;
 
     debugPrint('Fecthing companies...');
     debugPrint(dio.options.baseUrl + companyUrl);
@@ -51,9 +52,16 @@ class CompanyService extends Service {
         await dio.get(companyUrl, queryParameters: queryParams);
     debugPrint('Fecthing companies done!');
 
-    if (res.statusCode == 200) {
-      final jsonRes = json.decode(res.data) as List;
-      return jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
+    if (res.statusCode == 200 && res.data!.isNotEmpty) {
+      final jsonRes = json.decode(res.data!) as List;
+      jsonRes.forEach((element) {
+        print(element);
+      });
+      List<CompanyLight> data =
+          jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
+      print('here !!!');
+      print(data[0].name);
+      return data;
     } else {
       // TODO: Handle Error
       print('error');

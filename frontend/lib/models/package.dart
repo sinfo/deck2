@@ -1,9 +1,9 @@
 class Package {
-  final String id;
-  final String name;
-  final List<PackageItem> items;
-  final int price;
-  final int vat;
+  final String? id;
+  final String? name;
+  final List<PackageItem>? items;
+  final int? price;
+  final int? vat;
 
   Package({
     this.id,
@@ -26,9 +26,9 @@ class Package {
 }
 
 class PackageItem {
-  final Item item;
-  final int quantity;
-  final bool public;
+  final Item? item;
+  final int? quantity;
+  final bool? public;
 
   PackageItem({
     this.item,
@@ -46,13 +46,13 @@ class PackageItem {
 }
 
 class Item {
-  final String id;
-  final String name;
-  final String type;
-  final String description;
-  final String image;
-  final int price;
-  final int vat;
+  final String? id;
+  final String? name;
+  final String? type;
+  final String? description;
+  final String? image;
+  final int? price;
+  final int? vat;
 
   Item({
     this.id,

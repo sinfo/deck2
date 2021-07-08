@@ -2,10 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/services/companyService.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class CompanyListWidget extends StatefulWidget {
-  const CompanyListWidget({Key key}) : super(key: key);
+  const CompanyListWidget({Key? key}) : super(key: key);
 
   @override
   _CompanyListWidgetState createState() => _CompanyListWidgetState();
@@ -13,7 +12,7 @@ class CompanyListWidget extends StatefulWidget {
 
 class _CompanyListWidgetState extends State<CompanyListWidget> {
   CompanyService companyService = new CompanyService();
-  Future<List<CompanyLight>> companies;
+  late Future<List<CompanyLight>> companies;
 
   @override
   void initState() {
@@ -23,10 +22,12 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
 
   @override
   Widget build(BuildContext context) => FutureBuilder(
-      future: this.companies,
+      future: companies,
       builder: (context, snapshot) {
+        print(snapshot.hasData);
         if (snapshot.hasData) {
-          List<CompanyLight> comps = snapshot.data as List;
+          List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
+
           return Column(
             children: comps
                 .map((e) => CompanyCard(
@@ -42,7 +43,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
 
 class CompanyCard extends StatelessWidget {
   final CompanyLight company;
-  const CompanyCard({Key key, this.company}) : super(key: key);
+  const CompanyCard({Key? key, required this.company}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

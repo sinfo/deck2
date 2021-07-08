@@ -69,16 +69,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void stateSignIn() async {
     await _googleSignIn.signOut();
-    GoogleSignInAccount user = await _googleSignIn.signIn();
+    GoogleSignInAccount? user = await _googleSignIn.signIn();
     if (user == null) {
       //TODO: Handle error
       print('Sign in failed');
     } else {
-      GoogleSignInAccount account = _googleSignIn.currentUser;
-      GoogleSignInAuthentication auth = await account.authentication;
-      await _authService.getJWT(auth.accessToken);
-      await _authService.getMe();
-      Navigator.pushReplacementNamed(context, Routes.HomeRoute);
+      GoogleSignInAccount? account = _googleSignIn.currentUser;
+      if (account != null) {
+        GoogleSignInAuthentication auth = await account.authentication;
+        await _authService.getJWT(auth.accessToken);
+        await _authService.getMe();
+        Navigator.pushReplacementNamed(context, Routes.HomeRoute);
+      }
     }
   }
 }

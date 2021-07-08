@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 class Contact {
-  final String id;
-  final List<ContactPhone> phones;
-  final ContactSocials socials;
-  final List<ContactMail> mails;
+  final String? id;
+  final List<ContactPhone>? phones;
+  final ContactSocials? socials;
+  final List<ContactMail>? mails;
 
   Contact({this.id, this.phones, this.socials, this.mails});
 
@@ -22,14 +22,14 @@ class Contact {
   Map<String, dynamic> toJson() => {
         'id': id,
         'phones': jsonEncode(phones),
-        'socials': socials.toJson(),
+        'socials': socials?.toJson(),
         'mails': jsonEncode(mails),
       };
 }
 
 class ContactPhone {
-  final String phone;
-  final bool valid;
+  final String? phone;
+  final bool? valid;
 
   ContactPhone({
     this.phone,
@@ -50,11 +50,11 @@ class ContactPhone {
 }
 
 class ContactSocials {
-  final String facebook;
-  final String skype;
-  final String github;
-  final String twitter;
-  final String linkedin;
+  final String? facebook;
+  final String? skype;
+  final String? github;
+  final String? twitter;
+  final String? linkedin;
 
   ContactSocials({
     this.facebook,
@@ -84,9 +84,9 @@ class ContactSocials {
 }
 
 class ContactMail {
-  final String mail;
-  final bool valid;
-  final bool personal;
+  final String? mail;
+  final bool? valid;
+  final bool? personal;
 
   ContactMail({
     this.mail,
