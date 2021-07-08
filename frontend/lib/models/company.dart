@@ -3,6 +3,26 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/thread.dart';
 
+class CompanyLight {
+  final String id;
+  final String name;
+  final CompanyImages companyImages;
+
+  CompanyLight({
+    this.id,
+    this.name,
+    this.companyImages,
+  });
+
+  factory CompanyLight.fromJson(Map<String, dynamic> json) {
+    return CompanyLight(
+      id: json['id'],
+      name: json['name'],
+      companyImages: CompanyImages.fromJson(json['companyImages']),
+    );
+  }
+}
+
 class Company {
   final String id;
   final String name;

@@ -1,3 +1,9 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:frontend/models/company.dart';
 import 'package:frontend/services/service.dart';
 /**
  *companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
@@ -22,4 +28,36 @@ import 'package:frontend/services/service.dart';
 
 class CompanyService extends Service {
   String companyUrl = "/companies";
+
+  Future<List<CompanyLight>> getCompanies(
+      {int event, bool partner, String member, String name}) async {
+    var queryParams = {};
+    if (event != null) {
+      queryParams['event'] = event;
+    }
+    if (partner != null) {
+      queryParams['partner'] = partner;
+    }
+    if (member != null) {
+      queryParams['member'] = member;
+    }
+    if (name != null) {
+      queryParams['name'] = name;
+    }
+
+    debugPrint('Fecthing companies...');
+    debugPrint(dio.options.baseUrl + companyUrl);
+    Response<String> res =
+        await dio.get(companyUrl, queryParameters: queryParams);
+    debugPrint('Fecthing companies done!');
+
+    if (res.statusCode == 200) {
+      final jsonRes = json.decode(res.data) as List;
+      return jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
+    } else {
+      // TODO: Handle Error
+      print('error');
+      return [];
+    }
+  }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/CompanyListWidget.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -39,17 +40,17 @@ class _HomeScreenState extends State<HomeScreen> {
             // Give a custom drawer header
             items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(
-                  title: Text('Speakers'),
+                  label: 'Speakers',
                   icon: Icon(
                     Icons.star,
                   )),
               BottomNavigationBarItem(
-                  title: Text('Home'),
+                  label: 'Home',
                   icon: Icon(
                     Icons.home,
                   )),
               BottomNavigationBarItem(
-                  title: Text('Companies'),
+                  label: 'Companies',
                   icon: Icon(
                     Icons.work,
                   ))
@@ -86,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case 2:
         {
-          return Center(child: Text("Companies in progress :)"));
+          return Center(child: CompanyListWidget());
         }
         break;
     }
