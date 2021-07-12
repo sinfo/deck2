@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/service.dart';
@@ -14,24 +16,28 @@ class ContactService extends Service {
     Response<String> response =
         await dio.get("/contacts", queryParameters: queryParameters);
 
-    if (response.statusCode == 200) {
+    try {
       final responseJson = json.decode(response.data!) as List;
       return responseJson.map((e) => Contact.fromJson(e)).toList();
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return [];
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
   Future<Contact?> getContact(String id) async {
     Response<String> response = await dio.get("/contacts/" + id);
-    if (response.statusCode == 200) {
+    try {
       return Contact.fromJson(json.decode(response.data!));
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return null;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
@@ -44,12 +50,14 @@ class ContactService extends Service {
 
     Response<String> response =
         await dio.put("/contacts/" + contact.id!, data: body);
-    if (response.statusCode == 200) {
+    try {
       return Contact.fromJson(json.decode(response.data!));
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return null;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 }

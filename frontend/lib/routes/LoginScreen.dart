@@ -71,8 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
     await _googleSignIn.signOut();
     GoogleSignInAccount? user = await _googleSignIn.signIn();
     if (user == null) {
-      //TODO: Handle error
-      print('Sign in failed');
+      Navigator.pushReplacementNamed(context, Routes.LoginRoute);
     } else {
       GoogleSignInAccount? account = _googleSignIn.currentUser;
       if (account != null) {
@@ -80,6 +79,8 @@ class _LoginScreenState extends State<LoginScreen> {
         await _authService.getJWT(auth.accessToken);
         await _authService.getMe();
         Navigator.pushReplacementNamed(context, Routes.HomeRoute);
+      } else {
+        Navigator.pushReplacementNamed(context, Routes.LoginRoute);
       }
     }
   }

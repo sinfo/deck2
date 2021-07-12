@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/service.dart';
 import 'package:dio/dio.dart';
@@ -13,15 +15,17 @@ class MemberService extends Service {
     Response<String> response =
         await dio.get("/members", queryParameters: queryParameters);
 
-    if (response.statusCode == 200) {
+    try {
       final responseJson = json.decode(response.data!) as List;
       List<Member> members =
           responseJson.map((e) => Member.fromJson(e)).toList();
       return members;
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return [];
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
@@ -35,17 +39,19 @@ class MemberService extends Service {
 
     Response<String> response = await dio.post("/members", data: body);
 
-    if (response.statusCode == 200) {
+    try {
       return Member.fromJson(json.decode(response.data!));
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return null;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
   Future<Member?> getMember(String id) async {
-    Response<String> response = await dio.get("/members/" + id);
+    Response<String> response = await dio.get('/members/$id');
 
     if (response.statusCode == 200) {
       return Member.fromJson(json.decode(response.data!));
@@ -62,34 +68,40 @@ class MemberService extends Service {
 
     Response<String> response = await dio.put("/members/" + id, data: body);
 
-    if (response.statusCode == 200) {
+    try {
       return Member.fromJson(json.decode(response.data!));
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return null;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
   Future<Member?> deleteMember(String id) async {
     Response<String> response = await dio.delete("/members/" + id);
-    if (response.statusCode == 200) {
+    try {
       return Member.fromJson(json.decode(response.data!));
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return null;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
   Future<String?> getMemberRole(String id) async {
     Response<String> response = await dio.get("/members/" + id + "/role");
-    if (response.statusCode == 200) {
+    try {
       return json.decode(response.data!)["role"];
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return null;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
@@ -102,15 +114,17 @@ class MemberService extends Service {
     Response<String> response =
         await dio.get("/public/members", queryParameters: queryParameters);
 
-    if (response.statusCode == 200) {
+    try {
       final responseJson = json.decode(response.data!) as List;
       List<Member> members =
           responseJson.map((e) => Member.fromJson(e)).toList();
       return members;
-    } else {
-      // TODO: Handle Error
-      print("error");
-      return [];
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 }

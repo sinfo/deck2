@@ -7,7 +7,7 @@ class Service {
   late Dio dio;
 
   Service() {
-    String token = App.localStorage.getString('jwt');
+    String? token = App.localStorage.getString('jwt');
     dio = Dio(BaseOptions(
       baseUrl: kIsWeb
           ? DotEnv().env['DECK2_URL']!

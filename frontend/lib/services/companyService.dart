@@ -59,8 +59,6 @@ class CompanyService extends Service {
       });
       List<CompanyLight> data =
           jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
-      print('here !!!');
-      print(data[0].name);
       return data;
     } else {
       // TODO: Handle Error
