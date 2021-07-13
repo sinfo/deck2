@@ -6,7 +6,7 @@ class Meeting{
     final DateTime begin;
     final DateTime end;
     final String place;
-    final String minute;
+    final String? minute;
     final MeetingParticipants participants;
      
     Meeting(
@@ -42,8 +42,8 @@ class Meeting{
 
 class MeetingParticipants{
 
-    final List<String> membersIds;
-    final List<String> companyRepIds;
+    final List<String>? membersIds;
+    final List<String>? companyRepIds;
 
     MeetingParticipants(
       {this.membersIds, this.companyRepIds }); 
