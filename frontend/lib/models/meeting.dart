@@ -10,7 +10,7 @@ class Meeting{
     final MeetingParticipants participants;
      
     Meeting(
-      {this.id, this.begin, this.end, this.place, this.minute, this.participants }); 
+      {required this.id, required  this.begin, required  this.end,required  this.place, this.minute, required  this.participants }); 
 
     factory Meeting.fromJson(Map<String, dynamic> json) {
         return Meeting(
