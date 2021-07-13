@@ -1,68 +1,83 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/components/deckException.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
-  final String _deckURL =
+  final String? _deckURL =
       kIsWeb ? DotEnv().env['DECK2_URL'] : DotEnv().env['DECK2_MOBILE_URL'];
   GoogleSignIn _googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
+  Dio dio = Dio(BaseOptions(
+    baseUrl: (kIsWeb
+        ? DotEnv().env['DECK2_URL']
+        : DotEnv().env['DECK2_MOBILE_URL']) as String,
+    headers: {
+      "Content-type": 'application/json',
+    },
+  ));
 
-  Future<String> getJWT(String token) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    final response = await http.post(
-      _deckURL + '/auth/checkin',
-      body: jsonEncode(<String, String>{
-        'access_token': token,
-      }),
-    );
+  Future<String> getJWT(String? token) async {
+    if (token != null) {
+      Response<String> response = await dio.post(
+        _deckURL! + '/auth/checkin',
+        data: jsonEncode(<String, String>{
+          'access_token': token,
+        }),
+      );
 
-    if (response.body.isNotEmpty) {
-      final responseJson = json.decode(response.body);
-      prefs.setString("jwt", responseJson["deck_token"]);
-      return responseJson["deck_token"];
+      try {
+        final responseJson = json.decode(response.data as String);
+        App.localStorage.setString("jwt", responseJson["deck_token"]);
+        return responseJson["deck_token"];
+      } on SocketException {
+        throw DeckException('No Internet connection');
+      } on HttpException {
+        throw DeckException('Not found');
+      } on FormatException {
+        throw DeckException('Wrong format');
+      }
     } else {
-      // Handle Error
+      return '';
     }
   }
 
-  Future<Member> getMe([String jwt]) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
+  Future<Member?> getMe([String? jwt]) async {
     // Already stored member
-    if (prefs.containsKey('me')) {
-      return Member.fromJson(json.decode(prefs.getString("me")));
+    if (App.localStorage.containsKey('me')) {
+      return Member.fromJson(json.decode(App.localStorage.getString("me")!));
     }
 
-    String token = jwt == null ? prefs.getString("jwt") : jwt;
-    final response = await http.get(
-      _deckURL + '/me',
-      headers: {HttpHeaders.authorizationHeader: token},
-    );
+    String? token = jwt == null ? App.localStorage.getString("jwt") : jwt;
+    dio.options.headers["Authorization"] = token;
+    Response<String> response = await dio.get(_deckURL! + '/me');
 
-    if (response.body.isNotEmpty) {
-      final responseJson = json.decode(response.body);
+    try {
+      final responseJson = json.decode(response.data as String);
       Member me = Member.fromJson(responseJson);
 
-      prefs.setString("me", json.encode(me));
+      App.localStorage.setString("me", json.encode(me));
       return me;
-    } else {
-      // Handle error
-      return null;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
   // Used for safety
-  Future<Member> login() async {
+  Future<Member?> login() async {
     await _googleSignIn.signInSilently();
-    GoogleSignInAccount account = _googleSignIn.currentUser;
-    GoogleSignInAuthentication auth = await account.authentication;
+    GoogleSignInAccount? account = _googleSignIn.currentUser;
+    GoogleSignInAuthentication auth = await account!.authentication;
     String token = await getJWT(auth.accessToken);
     return getMe(token);
   }
