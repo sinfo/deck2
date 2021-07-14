@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 class BillingStatus {
-  final bool proforma;
+  final bool proForma;
   final bool invoice;
   final bool receipt;
   final bool paid;
 
-  BillingStatus({required this.proforma, required this.invoice, required this.receipt, required this.paid});
+  BillingStatus({required this.proForma, required this.invoice, required this.receipt, required this.paid});
 
   factory BillingStatus.fromJson(Map<String, dynamic> json) {
     return BillingStatus(
-      proforma: json['proforma'],
+      proForma: json['proForma'],
       invoice: json['invoice'],
       receipt: json['receipt'],
       paid: json['paid'],
@@ -18,7 +18,7 @@ class BillingStatus {
   }
 
   Map<String, dynamic> toJson() => {
-        'proforma': proforma,
+        'proForma': proForma,
         'invoice': invoice,
         'receipt': receipt,
         'paid': paid,
