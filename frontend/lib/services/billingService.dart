@@ -72,7 +72,7 @@ class BillingService extends Service{
     }
 
 
-    Future<Billing?> updateMember(String id, BillingStatus status, int event, String company, int value, String invoiceNumber, DateTime emission, String notes, bool visible) async {
+    Future<Billing?> updateBilling(String id, BillingStatus status, int event, String company, int value, String invoiceNumber, DateTime emission, String notes, bool visible) async {
       var body = {
           'status': status,
           'event': event,
