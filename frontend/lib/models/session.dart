@@ -1,8 +1,5 @@
 import 'dart:convert';
 
-//import 'package:frontend/models/speaker.dart';
-import 'package:frontend/models/company.dart';
-
 class Session {
   final String? id;
   final DateTime? begin;
@@ -11,8 +8,8 @@ class Session {
   final String? description;
   final String? place;
   final String? kind;
-  final Company? company;
-  //final List<Speaker>? speakers;
+  final String? companyId;
+  final List<String>? speakersIds;
   final String? videoURL;
   final SessionTickets? tickets;
 
@@ -24,14 +21,13 @@ class Session {
     this.description,
     this.place,
     this.kind,
-    this.company,
-    //this.speakers,
+    this.companyId,
+    this.speakersIds,
     this.videoURL,
     this.tickets,
   });
 
   factory Session.fromJson(Map<String, dynamic> json) {
-    //var speaker = json['speaker'] as List;
     return Session(
       id: json['id'],
       begin: DateTime(json['begin']),
@@ -40,27 +36,31 @@ class Session {
       description: json['description'],
       place: json['place'],
       kind: json['kind'],
-      company: Company.fromJson(json['company']),
-      //speakers: speakers.map((e) => Speaker.fromJson(e)).toList(),
+      companyId: json['company'],
+      speakersIds: json['speaker'],
       videoURL: json['videoURL'],
       tickets: SessionTickets.fromJson(json['tickets']),
     );
   }
 
-  /*Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() => {
     'id': id,
-    'behin': begin,
+    'begin': begin,
     'end': end,
     'title': title,
     'description': description,
     'place': place,
-    'company': company.toJson(),
+    'kind': kind,
+    'company': companyId,
+    'speaker': speakersIds,
+    'videoURL': videoURL,
+    'tickets': tickets?.toJson(),
   }
 
-  @Override
+  @override
   String toString() {
     return json.encode(this.toJson());
-  }*/
+  }
 }
 
 class SessionPublic {
@@ -71,8 +71,8 @@ class SessionPublic {
   final String? description;
   final String? place;
   final String? kind;
-  final Company? companyPublic;
-  //final List<Speaker>? speakersPublic;
+  final String? companyPublicId;
+  final List<String>? speakersPublicIds;
   final String? videoURL;
   final SessionTickets? tickets;
 
@@ -84,8 +84,8 @@ class SessionPublic {
     this.description,
     this.place,
     this.kind,
-    this.companyPublic,
-    //this.speakersPublic,
+    this.companyPublicId,
+    this.speakersPublicIds,
     this.videoURL,
     this.tickets,
   });
@@ -99,11 +99,30 @@ class SessionPublic {
       description: json['description'],
       place: json['place'],
       kind: json['kind'],
-      companyPublic: Company.fromJson(json['company']),
-      //speakersPublic: speakersPublic.map((e) => Speaker.fromJson(e)).toList(),
+      companyPublicId: json['company'],
+      speakersPublicIds: json['speaker'],
       videoURL: json['videoURL'],
       tickets: SessionTickets.fromJson(json['tickets']),
     );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'begin': begin,
+    'end': end,
+    'title': title,
+    'description': description,
+    'place': place,
+    'kind': kind,
+    'company': companyPublicId,
+    'speaker': speakersPublicIds,
+    'videoURL': videoURL,
+    'tickets': tickets?.toJson(),
+  };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
   }
 }
 
@@ -125,4 +144,16 @@ class SessionTickets {
       max: json['max'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'start': start,
+    'end': end,
+    'max': max,
+  };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
+  }
+
 }
