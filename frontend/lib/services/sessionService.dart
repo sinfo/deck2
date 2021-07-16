@@ -42,6 +42,20 @@ class SessionService extends Service {
     }
   }
 
-  /* TODO -- updateSession */
+  Future<Session> updateSession(Session session) async {
+    var body = session.toJson();
 
+    Response<String> response =
+        await dio.put('/sessions/${session.id}', data: body);
+
+    try {
+      return Session.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 }
