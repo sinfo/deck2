@@ -1,50 +1,62 @@
-import 'package:frontend/models/company.dart';
-import 'package:frontend/models/member.dart';
+import 'dart:convert';
 
 class Meeting {
-  final String? id;
-  final DateTime? start;
-  final DateTime? end;
-  final String? place;
-  final String? minute; // Ata
-  final MeetingParticipants? participants;
+  final String id;
+  final DateTime begin;
+  final DateTime end;
+  final String place;
+  final String? minute;
+  final MeetingParticipants participants;
 
-  Meeting({
-    this.id,
-    this.start,
-    this.end,
-    this.place,
-    this.minute,
-    this.participants,
-  });
+  Meeting(
+      {required this.id,
+      required this.begin,
+      required this.end,
+      required this.place,
+      this.minute,
+      required this.participants});
 
   factory Meeting.fromJson(Map<String, dynamic> json) {
     return Meeting(
-      id: json['id'],
-      start: DateTime(json['begin']),
-      end: DateTime(json['end']),
-      place: json['place'],
-      minute: json['minute'],
-      participants: MeetingParticipants.fromJson(json['participants']),
-    );
+        id: json['id'],
+        begin: DateTime.parse(json['begin']),
+        end: DateTime.parse(json['end']),
+        place: json['place'],
+        minute: json['minute'],
+        participants: MeetingParticipants.fromJson(json['participants']));
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'begin': begin,
+        'end': end,
+        'place': place,
+        'minute': minute,
+        'participants': participants.toJson()
+      };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
   }
 }
 
 class MeetingParticipants {
-  final List<Member>? members;
-  final List<CompanyRep>? companyReps;
+  final List<String>? membersIds;
+  final List<String>? companyRepIds;
 
-  MeetingParticipants({
-    this.members,
-    this.companyReps,
-  });
+  MeetingParticipants({this.membersIds, this.companyRepIds});
 
   factory MeetingParticipants.fromJson(Map<String, dynamic> json) {
-    var members = json['members'] as List;
-    var reps = json['companyReps'] as List;
     return MeetingParticipants(
-      members: members.map((e) => Member.fromJson(e)).toList(),
-      companyReps: reps.map((e) => CompanyRep.fromJson(e)).toList(),
-    );
+        membersIds: json['members'], companyRepIds: json['companyReps']);
+  }
+
+  Map<String, dynamic> toJson() =>
+      {'members': membersIds, 'companyReps': companyRepIds};
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
   }
 }
