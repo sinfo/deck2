@@ -1,12 +1,13 @@
 import 'dart:convert';
 
+//FIXME: check the use of optional (? operator) in args
 class TeamMember {
-  final String memberID;
-  final String role;
+  final String? memberID;
+  final String? role;
 
   TeamMember({
-    required this.memberID,
-    required this.role,
+    this.memberID,
+    this.role,
   });
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
@@ -28,11 +29,11 @@ class TeamMember {
 }
 
 class TeamPublic {
-  final String id;
-  final String name;
-  final List<TeamMember> members;
+  final String? id;
+  final String? name;
+  final List<TeamMember>? members;
 
-  TeamPublic({required this.id, required this.name, required this.members});
+  TeamPublic({this.id, this.name, this.members});
 
   factory TeamPublic.fromJson(Map<String, dynamic> json) {
     var members = json['members'] as List;
@@ -56,15 +57,15 @@ class TeamPublic {
 }
 
 class Team {
-  final String id;
-  final String name;
-  final List<TeamMember> members;
+  final String? id;
+  final String? name;
+  final List<TeamMember>? members;
   final List<String>? meetings;
 
   Team({
-    required this.id,
-    required this.name,
-    required this.members,
+    this.id,
+    this.name,
+    this.members,
     this.meetings
   });
 
