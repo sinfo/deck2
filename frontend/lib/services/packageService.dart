@@ -8,9 +8,6 @@ import 'package:frontend/services/service.dart';
 
 class packageService extends Service {
   final String baseURL = '/packages';
-  /*
-	packageRouter.HandleFunc("/{id}/items", authCoordinator(updatePackageItems)).Methods("PUT")
-  */
 
   Future<List<Package>> getPackages({String? name, int? price, int? vat}) async {
     var queryParameters = {
