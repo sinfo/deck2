@@ -105,259 +105,259 @@
     },
     "paths": {
         "/auth/login": {
-            "$ref": "./endpoints/auth-login.json"
+            "$ref": "./auth-login.json"
         },
         "/auth/callback": {
-            "$ref": "./endpoints/auth-callback.json"
+            "$ref": "./auth-callback.json"
         },
         "/public/events": {
-            "$ref": "./endpoints/public-events.json"
+            "$ref": "./public-events.json"
         },
         "/events": {
-            "$ref": "./endpoints/events.json"
+            "$ref": "./events.json"
         },
         "/events/{id}": {
-            "$ref": "./endpoints/events-id.json"
+            "$ref": "./events-id.json"
         },
         "/events/themes": {
-            "$ref": "./endpoints/events-themes.json"
+            "$ref": "./events-themes.json"
         },
         "/events/packages": {
-            "$ref": "./endpoints/events-packages.json"
+            "$ref": "./events-packages.json"
         },
         "/events/items": {
-            "$ref": "./endpoints/events-items.json"
+            "$ref": "./events-items.json"
         },
         "/events/packages/{id}": {
-            "$ref": "./endpoints/events-packages-id.json"
+            "$ref": "./events-packages-id.json"
         },
         "/events/items/{id}": {
-            "$ref": "./endpoints/events-items-id.json"
+            "$ref": "./events-items-id.json"
         },
         "/events/meetings": {
-            "$ref": "./endpoints/events-meetings.json"
+            "$ref": "./events-meetings.json"
         },
         "/events/meetings/{id}": {
-            "$ref": "./endpoints/events-meetings-id.json"
+            "$ref": "./events-meetings-id.json"
         },
         "/events/sessions": {
-            "$ref": "./endpoints/events-sessions.json"
+            "$ref": "./events-sessions.json"
         },
         "/public/companies": {
-            "$ref": "./endpoints/public-companies.json"
+            "$ref": "./public-companies.json"
         },
         "/public/speakers": {
-            "$ref": "./endpoints/public-speakers.json"
+            "$ref": "./public-speakers.json"
         },
         "/companies": {
-            "$ref": "./endpoints/companies.json"
+            "$ref": "./companies.json"
         },
         "/companies/{id}": {
-            "$ref": "./endpoints/companies-id.json"
+            "$ref": "./companies-id.json"
         },
         "/companies/{id}/subscribe": {
-            "$ref": "./endpoints/companies-id-subscribe.json"
+            "$ref": "./companies-id-subscribe.json"
         },
         "/companies/{id}/unsubscribe": {
-            "$ref": "./endpoints/companies-id-unsubscribe.json"
+            "$ref": "./companies-id-unsubscribe.json"
         },
         "/companies/{id}/image/internal": {
-            "$ref": "./endpoints/companies-id-image-internal.json"
+            "$ref": "./companies-id-image-internal.json"
         },
         "/companies/{id}/image/public": {
-            "$ref": "./endpoints/companies-id-image-public.json"
+            "$ref": "./companies-id-image-public.json"
         },
         "/companies/{id}/participation": {
-            "$ref": "./endpoints/companies-id-participation.json"
+            "$ref": "./companies-id-participation.json"
         },
         "/companies/{id}/participation/status/next": {
-            "$ref": "./endpoints/companies-id-participation-status-next.json"
+            "$ref": "./companies-id-participation-status-next.json"
         },
         "/companies/{id}/participation/status/{status}": {
-            "$ref": "./endpoints/companies-id-participation-status-status.json"
+            "$ref": "./companies-id-participation-status-status.json"
         },
         "/companies/{id}/participation/status/{step}": {
-            "$ref": "./endpoints/companies-id-participation-status-step.json"
+            "$ref": "./companies-id-participation-status-step.json"
         },
         "/companies/{id}/participation/package": {
-            "$ref": "./endpoints/companies-id-participation-package.json"
+            "$ref": "./companies-id-participation-package.json"
         },
         "/companies/{id}/thread": {
-            "$ref": "./endpoints/companies-id-thread.json"
+            "$ref": "./companies-id-thread.json"
         },
         "/speakers": {
-            "$ref": "./endpoints/speakers.json"
+            "$ref": "./speakers.json"
         },
         "/speakers/{id}": {
-            "$ref": "./endpoints/speakers-id.json"
+            "$ref": "./speakers-id.json"
         },
         "/speakers/{id}/subscribe": {
-            "$ref": "./endpoints/speakers-id-subscribe.json"
+            "$ref": "./speakers-id-subscribe.json"
         },
         "/speakers/{id}/unsubscribe": {
-            "$ref": "./endpoints/speakers-id-unsubscribe.json"
+            "$ref": "./speakers-id-unsubscribe.json"
         },
         "/speakers/{id}/participation": {
-            "$ref": "./endpoints/speakers-id-participation.json"
+            "$ref": "./speakers-id-participation.json"
         },
         "/speakers/{id}/participation/status/next": {
-            "$ref": "./endpoints/speakers-id-participation-status-next.json"
+            "$ref": "./speakers-id-participation-status-next.json"
         },
         "/speakers/{id}/participation/status/{step}": {
-            "$ref": "./endpoints/speakers-id-participation-status-step.json"
+            "$ref": "./speakers-id-participation-status-step.json"
         },
         "/speakers/{id}/participation/status/{status}": {
-            "$ref": "./endpoints/speakers-id-participation-status-status.json"
+            "$ref": "./speakers-id-participation-status-status.json"
         },
         "/speakers/{id}/participation/flightInfo": {
-            "$ref": "./endpoints/speakers-id-participation-flightinfo.json"
+            "$ref": "./speakers-id-participation-flightinfo.json"
         },
         "/speakers/{id}/participation/flightInfo/{flightInfoID}": {
-            "$ref": "./endpoints/speakers-id-participation-flightinfo-flightinfoid.json"
+            "$ref": "./speakers-id-participation-flightinfo-flightinfoid.json"
         },
         "/speakers/{id}/image/internal": {
-            "$ref": "./endpoints/speakers-id-image-internal.json"
+            "$ref": "./speakers-id-image-internal.json"
         },
         "/speakers/{id}/image/public/speaker": {
-            "$ref": "./endpoints/speakers-id-image-public-speaker.json"
+            "$ref": "./speakers-id-image-public-speaker.json"
         },
         "/speakers/{id}/image/public/company": {
-            "$ref": "./endpoints/speakers-id-image-public-company.json"
+            "$ref": "./speakers-id-image-public-company.json"
         },
         "/speakers/{id}/thread": {
-            "$ref": "./endpoints/speakers-id-thread.json"
+            "$ref": "./speakers-id-thread.json"
         },
         "/flightInfo/{id}": {
-            "$ref": "./endpoints/flightInfo-id.json"
+            "$ref": "./flightInfo-id.json"
         },
         "/sessions": {
-            "$ref": "./endpoints/sessions.json"
+            "$ref": "./sessions.json"
         },
         "/sessions/{id}": {
-            "$ref": "./endpoints/sessions-id.json"
+            "$ref": "./sessions-id.json"
         },
         "/public/sessions": {
-            "$ref": "./endpoints/public-sessions.json"
+            "$ref": "./public-sessions.json"
         },
         "/teams": {
-            "$ref": "./endpoints/teams.json"
+            "$ref": "./teams.json"
         },
         "/teams/{id}": {
-            "$ref": "./endpoints/teams-id.json"
+            "$ref": "./teams-id.json"
         },
         "/teams/{id}/members": {
-            "$ref": "./endpoints/teams-id-members.json"
+            "$ref": "./teams-id-members.json"
         },
         "/teams/{id}/members/{memberID}": {
-            "$ref": "./endpoints/teams-id-members-memberid.json"
+            "$ref": "./teams-id-members-memberid.json"
         },
         "/teams/{id}/meetings": {
-            "$ref": "./endpoints/teams-id-meetings.json"
+            "$ref": "./teams-id-meetings.json"
         },
         "/teams/{id}/meetings/{meetingID}": {
-            "$ref": "./endpoints/teams-id-meetings-meetingid.json"
+            "$ref": "./teams-id-meetings-meetingid.json"
         },
         "/items": {
-            "$ref": "./endpoints/items.json"
+            "$ref": "./items.json"
         },
         "/items/{id}": {
-            "$ref": "./endpoints/items-id.json"
+            "$ref": "./items-id.json"
         },
         "/threads/{id}": {
-            "$ref": "./endpoints/threads-id.json"
+            "$ref": "./threads-id.json"
         },
         "/threads/{id}/comments": {
-            "$ref": "./endpoints/threads-id-comments.json"
+            "$ref": "./threads-id-comments.json"
         },
         "/threads/{threadID}/comments/{postID}": {
-            "$ref": "./endpoints/threads-id-comments-id.json"
+            "$ref": "./threads-id-comments-id.json"
         },
         "/posts/{id}": {
-            "$ref": "./endpoints/posts-id.json"
+            "$ref": "./posts-id.json"
         },
         "/public/members": {
-            "$ref": "./endpoints/public-members.json"
+            "$ref": "./public-members.json"
         },
         "/members": {
-            "$ref": "./endpoints/members.json"
+            "$ref": "./members.json"
         },
         "/members/{id}": {
-            "$ref": "./endpoints/members-id.json"
+            "$ref": "./members-id.json"
         },
         "/members/{id}/role": {
-            "$ref": "./endpoints/members-id-role.json"
+            "$ref": "./members-id-role.json"
         },
         "/packages": {
-            "$ref": "./endpoints/packages.json"
+            "$ref": "./packages.json"
         },
         "/packages/{id}": {
-            "$ref": "./endpoints/packages-id.json"
+            "$ref": "./packages-id.json"
         },
         "/packages/{id}/items": {
-            "$ref": "./endpoints/packages-id-items.json"
+            "$ref": "./packages-id-items.json"
         },
         "/contacts": {
-            "$ref": "./endpoints/contacts.json"
+            "$ref": "./contacts.json"
         },
         "/contacts/{id}": {
-            "$ref": "./endpoints/contacts-id.json"
+            "$ref": "./contacts-id.json"
         },
         "/meetings": {
-            "$ref": "./endpoints/meetings.json"
+            "$ref": "./meetings.json"
         },
         "/meetings/{id}": {
-            "$ref": "./endpoints/meetings-id.json"
+            "$ref": "./meetings-id.json"
         },
         "/me": {
-            "$ref": "./endpoints/me.json"
+            "$ref": "./me.json"
         },
         "/me/image": {
-            "$ref": "./endpoints/me-image.json"
+            "$ref": "./me-image.json"
         },
         "/me/notifications": {
-            "$ref": "./endpoints/me-notifications.json"
+            "$ref": "./me-notifications.json"
         },
         "/billings": {
-            "$ref": "./endpoints/billings.json"
+            "$ref": "./billings.json"
         },
         "/billings/{id}": {
-            "$ref": "./endpoints/billings-id.json"
+            "$ref": "./billings-id.json"
         },
         "/me/notification/{id}": {
-            "$ref": "./endpoints/me-notification-id.json"
+            "$ref": "./me-notification-id.json"
         },
         "/companies/{id}/employer": {
-            "$ref": "./endpoints/companies-id-employer.json"
+            "$ref": "./companies-id-employer.json"
         },
         "/companies/{id}/employer/{rep}": {
-            "$ref": "./endpoints/companies-id-employer-rep.json"
+            "$ref": "./companies-id-employer-rep.json"
         },
         "/companyReps": {
-            "$ref": "./endpoints/companyReps.json"
+            "$ref": "./companyReps.json"
         },
         "/companyReps/{id}": {
-            "$ref": "./endpoints/companyReps-id.json"
+            "$ref": "./companyReps-id.json"
         },
         "/public/companies/{id}": {
-            "$ref": "./endpoints/public-companies-id.json"
+            "$ref": "./public-companies-id.json"
         },
         "/public/sessions/{id}": {
-            "$ref": "./endpoints/public-sessions-id.json"
+            "$ref": "./public-sessions-id.json"
         },
         "/public/speakers/{id}": {
-            "$ref": "./endpoints/public-speakers-id.json"
+            "$ref": "./public-speakers-id.json"
         },
         "/events/teams/{id}": {
-            "$ref": "./endpoints/events-teams-id.json"
+            "$ref": "./events-teams-id.json"
         },
         "/items/{id}/image": {
-            "$ref": "./endpoints/items-id-image.json"
+            "$ref": "./items-id-image.json"
         },
         "/auth/verify/{token}": {
-            "$ref": "./endpoints/auth-verify-token.json"
+            "$ref": "./auth-verify-token.json"
         },
         "/meetings/{id}/minute": {
-            "$ref": "./endpoints/meetings-id-minute.json"
+            "$ref": "./meetings-id-minute.json"
         }
     },
     "externalDocs": {

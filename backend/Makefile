@@ -26,7 +26,7 @@ build-src:
 build-swagger:
 	@echo "[*] generating swagger"
 	@mkdir -p $(STATIC)
-	@swagger flatten $(SWAGGER)/swagger.json --compact -o $(STATIC)/swagger.json
+	@swagger flatten $(SWAGGER)/endpoints/swagger.json --compact -o $(STATIC)/swagger.json
 
 	@echo "[*] validating swagger"
 	@swagger validate $(STATIC)/swagger.json -q
