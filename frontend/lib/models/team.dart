@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-//FIXME: check the use of optional (? operator) in args
 class TeamMember {
   final String? memberID;
   final String? role;

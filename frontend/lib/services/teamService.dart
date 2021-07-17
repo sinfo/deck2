@@ -7,22 +7,8 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/services/service.dart';
 import 'package:frontend/models/team.dart';
 
-//FIXME: check the use of optional (? operator) in args
 class teamService extends Service {
   final String baseURL = '/teams';
-  /**
-   * 
-   * DONE teamRouter.HandleFunc("", authMember(getTeams)).Methods("GET")
-	   DONE teamRouter.HandleFunc("", authCoordinator(createTeam)).Methods("POST")
-	   DONE teamRouter.HandleFunc("/{id}", authMember(getTeam)).Methods("GET")
-     DONE teamRouter.HandleFunc("/{id}", authAdmin(deleteTeam)).Methods("DELETE")
-     DONE teamRouter.HandleFunc("/{id}", authCoordinator(updateTeam)).Methods("PUT")
-     DONE teamRouter.HandleFunc("/{id}/members", authCoordinator(addTeamMember)).Methods("POST")
-     DONE teamRouter.HandleFunc("/{id}/members/{memberID}", authCoordinator(updateTeamMemberRole)).Methods("PUT")
-     DONE teamRouter.HandleFunc("/{id}/members/{memberID}", authCoordinator(deleteTeamMember)).Methods("DELETE")
-     DONE teamRouter.HandleFunc("/{id}/meetings", authMember(addTeamMeeting)).Methods("POST")
-     DONE teamRouter.HandleFunc("/{id}/meetings/{meetingID}", authTeamLeader(deleteTeamMeeting)).Methods("DELETE")
-   */
 
   Future<List<Team>> getTeams(
       {String? name, String? member, String? memberName, int? event}) async {
@@ -131,7 +117,6 @@ class teamService extends Service {
     }
   }
 
-  //FIXME: Check if type of member parameter is correct
   Future<Team?> updateTeamMemberRole(
       String id, String memberID, Member member, String role) async {
     var body = {
