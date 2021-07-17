@@ -31,7 +31,7 @@ class ItemService extends Service{
     }
   }
 
-  Future<Item?> getBilling(String id) async {
+  Future<Item?> getItem(String id) async {
     Response<String> response = await dio.get('/items/$id');
 
     if (response.statusCode == 200) {
@@ -41,7 +41,7 @@ class ItemService extends Service{
     }
   }
 
-  Future<Item?> createBilling(String name, String type, String description, int price, int vat) async {
+  Future<Item?> createItem(String name, String type, String description, int price, int vat) async {
     var body = {
       'name': name,
       'type': type,
