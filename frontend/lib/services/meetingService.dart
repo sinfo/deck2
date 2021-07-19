@@ -14,7 +14,7 @@ class MeetingService extends Service {
         await dio.get("/meetings", queryParameters: queryParameters);
 
     try {
-      final responseJson = json.decode(response.data) as List;
+      final responseJson = json.decode(response.data!) as List;
       List<Meeting> meetings =
           responseJson.map((e) => Meeting.fromJson(e)).toList();
       return meetings;
@@ -39,7 +39,7 @@ class MeetingService extends Service {
     Response<String> response = await dio.post("/meetings", data: body);
 
     try {
-      return Meeting.fromJson(json.decode(response.data));
+      return Meeting.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -53,7 +53,7 @@ class MeetingService extends Service {
     Response<String> response = await dio.get("/meetings/" + id);
 
     try {
-      return Meeting.fromJson(json.decode(response.data));
+      return Meeting.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -66,7 +66,7 @@ class MeetingService extends Service {
   Future<Meeting> deleteMeeting(String id) async {
     Response<String> response = await dio.delete("/meetings/" + id);
     try {
-      return Meeting.fromJson(json.decode(response.data));
+      return Meeting.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -92,7 +92,7 @@ class MeetingService extends Service {
 
     Response<String> response = await dio.put("/meetings/" + id, data: body);
     try {
-      return Meeting.fromJson(json.decode(response.data));
+      return Meeting.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -102,7 +102,7 @@ class MeetingService extends Service {
     }
   }
 
-  Future<Meeting> uploadMeetingMinute(String id, String minute) async {
-    // TODO: Implement : https://pub.dev/packages/dio
-  }
+  // Future<Meeting> uploadMeetingMinute(String id, String minute) async {
+  //   // TODO: Implement : https://pub.dev/packages/dio
+  // }
 }

@@ -3,13 +3,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'components/router.dart' as router;
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  start();
+Future main() async {
+  await start();
   runApp(App());
 }
 
 Future start() async {
-  await DotEnv().load('.env');
+  await dotenv.load(fileName: '.env');
   await App.init();
 }
 

@@ -44,18 +44,18 @@ class Session {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'begin': begin,
-    'end': end,
-    'title': title,
-    'description': description,
-    'place': place,
-    'kind': kind,
-    'company': companyId,
-    'speaker': speakersIds,
-    'videoURL': videoURL,
-    'tickets': tickets?.toJson(),
-  }
+        'id': id,
+        'begin': begin,
+        'end': end,
+        'title': title,
+        'description': description,
+        'place': place,
+        'kind': kind,
+        'company': companyId,
+        'speaker': speakersIds,
+        'videoURL': videoURL,
+        'tickets': tickets?.toJson(),
+      };
 
   @override
   String toString() {
@@ -107,18 +107,18 @@ class SessionPublic {
   }
 
   Map<String, dynamic> toJson() => {
-    'id': id,
-    'begin': begin,
-    'end': end,
-    'title': title,
-    'description': description,
-    'place': place,
-    'kind': kind,
-    'company': companyPublicId,
-    'speaker': speakersPublicIds,
-    'videoURL': videoURL,
-    'tickets': tickets?.toJson(),
-  };
+        'id': id,
+        'begin': begin,
+        'end': end,
+        'title': title,
+        'description': description,
+        'place': place,
+        'kind': kind,
+        'company': companyPublicId,
+        'speaker': speakersPublicIds,
+        'videoURL': videoURL,
+        'tickets': tickets?.toJson(),
+      };
 
   @override
   String toString() {
@@ -146,14 +146,13 @@ class SessionTickets {
   }
 
   Map<String, dynamic> toJson() => {
-    'start': start,
-    'end': end,
-    'max': max,
-  };
+        'start': start,
+        'end': end,
+        'max': max,
+      };
 
   @override
   String toString() {
     return json.encode(this.toJson());
   }
-
 }
