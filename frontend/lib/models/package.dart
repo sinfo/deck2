@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:frontend/models/item.dart';
+
 class Package {
   final String? id;
   final String? name;
@@ -23,6 +26,19 @@ class Package {
       vat: json['vat'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'items': jsonEncode(items),
+        'price': price,
+        'vat': vat
+      };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
+  }
 }
 
 class PackageItem {
@@ -43,36 +59,70 @@ class PackageItem {
       public: json['public'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'item': item,
+        'quantity': quantity,
+        'public': public,
+      };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
+  }
 }
 
-class Item {
-  final String? id;
-  final String? name;
-  final String? type;
-  final String? description;
-  final String? image;
-  final int? price;
-  final int? vat;
+class PackageItemPublic {
+  final Item? item;
+  final int? quantity;
 
-  Item({
-    this.id,
-    this.name,
-    this.type,
-    this.description,
-    this.image,
-    this.price,
-    this.vat,
+  PackageItemPublic({
+    this.item,
+    this.quantity,
   });
 
-  factory Item.fromJson(Map<String, dynamic> json) {
-    return Item(
-      id: json['id'],
-      name: json['name'],
-      type: json['type'],
-      description: json['description'],
-      image: json['image'],
-      price: json['price'],
-      vat: json['vat'],
+  factory PackageItemPublic.fromJson(Map<String, dynamic> json) {
+    return PackageItemPublic(
+      item: Item.fromJson(json['item']),
+      quantity: json['quantity'],
     );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'item': item,
+        'quantity': quantity,
+      };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
+  }
+}
+
+class PackagePublic {
+  final String? name;
+  final List<PackageItemPublic>? items;
+
+  PackagePublic({
+    this.name,
+    this.items,
+  });
+
+  factory PackagePublic.fromJson(Map<String, dynamic> json) {
+    var items = json['items'] as List;
+    return PackagePublic(
+      name: json['name'],
+      items: items.map((e) => PackageItemPublic.fromJson(e)).toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'items': jsonEncode(items),
+      };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
   }
 }
