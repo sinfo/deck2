@@ -9,9 +9,8 @@ class Service {
   Service() {
     String? token = App.localStorage.getString('jwt');
     dio = Dio(BaseOptions(
-      baseUrl: kIsWeb
-          ? DotEnv().env['DECK2_URL']!
-          : DotEnv().env['DECK2_MOBILE_URL']!,
+      baseUrl:
+          kIsWeb ? dotenv.env['DECK2_URL']! : dotenv.env['DECK2_MOBILE_URL']!,
       headers: {"Content-type": 'application/json', "Authorization": token},
     ));
   }

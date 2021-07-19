@@ -9,7 +9,7 @@ class FlightInfoService extends Service {
   Future<FlightInfo> getFlightInfo(String id) async {
     Response<String> response = await dio.get("/flightInfo/" + id);
     try {
-      return FlightInfo.fromJson(json.decode(response.data));
+      return FlightInfo.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -42,7 +42,7 @@ class FlightInfoService extends Service {
 
     Response<String> response = await dio.put("/flightInfo/" + id, data: body);
     try {
-      return FlightInfo.fromJson(json.decode(response.data));
+      return FlightInfo.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {

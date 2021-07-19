@@ -11,13 +11,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
   final String? _deckURL =
-      kIsWeb ? DotEnv().env['DECK2_URL'] : DotEnv().env['DECK2_MOBILE_URL'];
+      kIsWeb ? dotenv.env['DECK2_URL'] : dotenv.env['DECK2_MOBILE_URL'];
   GoogleSignIn _googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
   Dio dio = Dio(BaseOptions(
-    baseUrl: (kIsWeb
-        ? DotEnv().env['DECK2_URL']
-        : DotEnv().env['DECK2_MOBILE_URL']) as String,
+    baseUrl: (kIsWeb ? dotenv.env['DECK2_URL'] : dotenv.env['DECK2_MOBILE_URL'])
+        as String,
     headers: {
       "Content-type": 'application/json',
     },
