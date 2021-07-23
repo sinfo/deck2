@@ -2,12 +2,12 @@ import 'dart:convert';
 
 class Session {
   final String? id;
-  final DateTime? begin;
-  final DateTime? end;
-  final String? title;
+  final DateTime begin;
+  final DateTime end;
+  final String title;
   final String? description;
   final String? place;
-  final String? kind;
+  final String kind;
   final String? companyId;
   final List<String>? speakersIds;
   final String? videoURL;
@@ -15,12 +15,12 @@ class Session {
 
   Session({
     this.id,
-    this.begin,
-    this.end,
-    this.title,
+    required this.begin,
+    required this.end,
+    required this.title,
     this.description,
     this.place,
-    this.kind,
+    required this.kind,
     this.companyId,
     this.speakersIds,
     this.videoURL,
