@@ -47,7 +47,7 @@
                         "description": {
                             "type": "string"
                         },
-                        "space": {
+                        "place": {
                             "type": "string"
                         },
                         "kind": {
