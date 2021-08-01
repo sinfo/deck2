@@ -3,7 +3,6 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/CompanyListWidget.dart';
-import 'package:frontend/routes/ThreadWidget.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -76,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 0:
         {
-          return Center(child: ThreadListWidget());
+          return Center(child: Text("Speakers in progress :)"));
         }
         break;
       case 1:
@@ -102,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.pushReplacementNamed(context, '/login');
     } else {
       this._me = _authService.login();
-      print(_me);
       return _me;
     }
   }
