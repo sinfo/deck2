@@ -19,9 +19,12 @@ class ThreadService extends Service {
 
     Response<String> response =
         await dio.post(baseUrl + '/$threadid/comments', data: body);
-
     try {
-      return Thread.fromJson(json.decode(response.data!));
+      if (response.statusCode == 200) {
+        return Thread.fromJson(json.decode(response.data!));
+      } else {
+        return null;
+      }
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -35,7 +38,12 @@ class ThreadService extends Service {
     Response<String> response = await dio.get(baseUrl + '/$id');
 
     try {
-      return Thread.fromJson(json.decode(response.data!));
+      if (response.statusCode == 200) {
+        Thread thread = Thread.fromJson(json.decode(response.data!));
+        return thread;
+      } else {
+        return null;
+      }
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -45,7 +53,7 @@ class ThreadService extends Service {
     }
   }
 
-  Future<Thread?> updateThread(String id, String meetingId, String kind) async {
+  Future<Thread?> updateThread(String id, String meetingId, String kind) async { //TODO are meetingId or kind nullable?
     var body = {
       "meeting": meetingId,
       "kind": kind,
@@ -54,7 +62,11 @@ class ThreadService extends Service {
     Response<String> response = await dio.put(baseUrl + '/$id', data: body);
 
     try {
-      return Thread.fromJson(json.decode(response.data!));
+      if (response.statusCode == 200) {
+        return Thread.fromJson(json.decode(response.data!));
+      } else {
+        return null;
+      }
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -68,7 +80,11 @@ class ThreadService extends Service {
     Response<String> response =
         await dio.delete(baseUrl + '/$id/comments/$postid');
     try {
-      return Thread.fromJson(json.decode(response.data!));
+      if (response.statusCode == 200) {
+        return Thread.fromJson(json.decode(response.data!));
+      } else {
+        return null;
+      }
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {

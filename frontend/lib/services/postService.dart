@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/post.dart';
-import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/service.dart';
 import 'package:dio/dio.dart';
 
@@ -11,9 +10,14 @@ class PostService extends Service {
 
   Future<Post?> getPost(String id) async {
     Response<String> response = await dio.get(baseUrl + '/$id');
-
     try {
-      return Post.fromJson(json.decode(response.data!));
+      if (response.statusCode == 200){
+        Post post = Post.fromJson(json.decode(response.data!));
+        await post.loadMember();
+        return post;
+      } else {
+        return null;
+      }
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -31,21 +35,11 @@ class PostService extends Service {
     Response<String> response = await dio.put(baseUrl + '/$id', data: body);
 
     try {
-      return Post.fromJson(json.decode(response.data!));
-    } on SocketException {
-      throw DeckException('No Internet connection');
-    } on HttpException {
-      throw DeckException('Not found');
-    } on FormatException {
-      throw DeckException('Wrong format');
-    }
-  }
-
-  Future<Thread?> deleteCommentFromThread(String id, String postid) async {
-    Response<String> response =
-        await dio.delete(baseUrl + '/$id/comments/$postid');
-    try {
-      return Thread.fromJson(json.decode(response.data!));
+      if (response.statusCode == 200){
+        return Post.fromJson(json.decode(response.data!));
+      } else {
+        return null;
+      }
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
