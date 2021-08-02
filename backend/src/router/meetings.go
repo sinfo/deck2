@@ -134,6 +134,8 @@ func getMeetings(w http.ResponseWriter, r *http.Request) {
 
 func updateMeeting(w http.ResponseWriter, r *http.Request) {
 
+	//TODO: Update Participants as well
+
 	defer r.Body.Close()
 
 	params := mux.Vars(r)

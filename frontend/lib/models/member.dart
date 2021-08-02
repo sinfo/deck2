@@ -1,15 +1,23 @@
+import 'dart:convert';
+
 import 'package:frontend/models/contact.dart';
 
 class Member {
-  final String id;
-  final String name;
+  final String? id;
+  final String? name;
   final String image;
-  final String istId;
-  final String sinfoId;
-  final String contact;
+  final String? istId;
+  final String? sinfoId;
+  final String? contact;
 
-  Member(
-      {this.id, this.name, this.image, this.istId, this.sinfoId, this.contact});
+  Member({
+    this.id,
+    this.name,
+    required this.image,
+    this.istId,
+    this.sinfoId,
+    this.contact,
+  });
 
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
@@ -30,14 +38,23 @@ class Member {
         'sinfoid': sinfoId,
         'contact': contact,
       };
+
+  @override
+  String toString() {
+    return json.encode(this.toJson());
+  }
 }
 
 class MemberPublic {
-  final String name;
-  final String image;
-  final ContactSocials socials;
+  final String? name;
+  final String? image;
+  final ContactSocials? socials;
 
-  MemberPublic({this.name, this.image, this.socials});
+  MemberPublic({
+    this.name,
+    this.image,
+    this.socials,
+  });
 
   factory MemberPublic.fromJson(Map<String, dynamic> json) {
     return MemberPublic(
@@ -50,6 +67,6 @@ class MemberPublic {
   Map<String, dynamic> toJson() => {
         'name': name,
         'img': image,
-        'socials': socials.toJson(),
+        'socials': socials?.toJson(),
       };
 }

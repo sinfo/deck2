@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class MyDrawer extends Drawer {
   String image;
-  MyDrawer({Key key, this.image});
+  MyDrawer({Key? key, required this.image});
 
   @override
   Drawer build(BuildContext context) {
@@ -10,7 +10,7 @@ class MyDrawer extends Drawer {
         child: ListView(
       padding: EdgeInsets.zero,
       children: <Widget>[
-        MyDrawerHeader(image: this.image),
+        buildHeader(),
         ListTile(
           leading: Icon(
             Icons.settings,
@@ -44,14 +44,8 @@ class MyDrawer extends Drawer {
       ],
     ));
   }
-}
 
-class MyDrawerHeader extends DrawerHeader {
-  String image;
-  MyDrawerHeader({Key key, this.image});
-
-  @override
-  DrawerHeader build(BuildContext context) {
+  DrawerHeader buildHeader() {
     return DrawerHeader(
         margin: EdgeInsets.zero,
         child: Column(
