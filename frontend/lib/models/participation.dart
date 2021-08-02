@@ -68,3 +68,17 @@ class Participation {
         'room': room.toJson()
       };
 }
+
+class PublicParticipation {
+  final int event;
+  final String feedback;
+
+  PublicParticipation({this.event, this.feedback});
+
+  factory PublicParticipation.fromJson(Map<String, dynamic> json) {
+    return PublicParticipation(
+        event: json['event'], feedback: json['feedback']);
+  }
+
+  Map<String, dynamic> toJson() => {'event': event, 'feedback': feedback};
+}

@@ -64,3 +64,41 @@ class Speaker {
             participations.map((participation) => participation.toJson())
       };
 }
+
+class PublicImages {
+  final String company;
+  final String speaker;
+
+  PublicImages({this.company, this.speaker});
+
+  factory PublicImages.fromJson(Map<String, dynamic> json) {
+    return PublicImages(company: json['company'], speaker: json['speaker']);
+  }
+
+  Map<String, dynamic> toJson() => {'company': company, 'speaker': speaker};
+}
+
+class PublicSpeaker {
+  final String id;
+  final String name;
+  final String title;
+  final Images imgs;
+
+  PublicSpeaker({this.id, this.name, this.title, this.imgs});
+
+  factory PublicSpeaker.fromJson(Map<String, dynamic> json) {
+    var participationsList = json['participations'] as List;
+    return PublicSpeaker(
+        id: json['id'],
+        name: json['name'],
+        title: json['title'],
+        imgs: Images.fromJson(json['imgs']));
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'title': title,
+        'imgs': imgs.toJson(),
+      };
+}
