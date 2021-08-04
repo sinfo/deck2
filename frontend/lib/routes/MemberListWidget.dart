@@ -44,10 +44,11 @@ class _MemberListWidgetState extends State<MemberListWidget> {
               ),
               floatingActionButton :FloatingActionButton(
                 onPressed: () {
+                  //TODO: on tap
                   // Add your onPressed code here!
                 },
                 child: const Icon(Icons.add),
-                backgroundColor: Color.fromRGBO(92, 127, 242, 100),
+                backgroundColor: Color.fromRGBO(92, 127, 242, 1),
               ),
           
           );
@@ -65,7 +66,7 @@ class MemberCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         decoration: BoxDecoration(
-          color: Color.fromRGBO(241, 241, 241, 100),
+          color: Color.fromRGBO(241, 241, 241, 1),
           borderRadius: BorderRadius.circular(5),
         ),
         child: Column(
