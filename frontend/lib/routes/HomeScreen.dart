@@ -3,6 +3,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/CompanyListWidget.dart';
+import 'package:frontend/routes/MemberListWidget.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -25,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     checkSignInStatus();
     super.initState();
-    _currentIndex = 1;
+    _currentIndex = 3;
   }
 
   @override
@@ -33,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
         appBar: CustomAppBar(),
         bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
             currentIndex: _currentIndex,
             // Give a custom drawer header
             items: <BottomNavigationBarItem>[
@@ -50,7 +52,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   label: 'Companies',
                   icon: Icon(
                     Icons.work,
-                  ))
+                  )),
+              //FIXME: o item aqui em baixo foi colocado apenas para processo de development
+              BottomNavigationBarItem(
+                  label: 'Members',
+                  icon: Icon(
+                    Icons.people,
+                  )),
             ],
             onTap: (newIndex) {
               setState(() {
@@ -86,6 +94,12 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         {
           return Center(child: CompanyListWidget());
+        }
+        break;
+        //FIXME: retirar isto em baixo porque não vai ficar aqui
+      case 3:
+        {
+          return Center(child: MemberListWidget());
         }
         break;
       default:
