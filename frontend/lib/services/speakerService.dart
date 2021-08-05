@@ -1,28 +1,310 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:frontend/components/deckException.dart';
+import 'package:frontend/models/participation.dart';
 import 'dart:convert';
 import 'package:frontend/models/speaker.dart';
+import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/service.dart';
 
 class SpeakerService extends Service {
   Future<List<PublicSpeaker>> getPublicSpeakers(
-      {String name, int eventId}) async {
+      {String? name, int? eventId}) async {
     var queryParameters = {'name': name, 'event': eventId};
 
     Response<String> response =
         await dio.get("/public/speakers", queryParameters: queryParameters);
 
-    if (response.statusCode == 200) {
-      final responseJson = json.decode(response.data) as List;
+   try {
+      final responseJson = json.decode(response.data!) as List;
       List<PublicSpeaker> speakers =
           responseJson.map((e) => PublicSpeaker.fromJson(e)).toList();
       return speakers;
+   } on SocketException {
+     throw DeckException('No Internet connection');
+   } on HttpException {
+     throw DeckException('Not found');
+   } on FormatException {
+     throw DeckException('Wrong format');
+   }
+  }
+
+  Future<PublicSpeaker?> getPublicSpeaker({required String id}) async {
+    Response<String> response = await dio.get("/public/speakers/" + id);
+    if (response.statusCode == 200) {
+      return PublicSpeaker.fromJson(json.decode(response.data!));
     } else {
-      print("error");
-      return [];
+      return null;
+    }
+
+  }
+
+  Future<List<Speaker>> getSpeakers({ String? name, int? eventId,
+    String? member}) async {
+    var queryParameters = {
+      'name': name,
+      'event': eventId,
+      'member': member
+    };
+
+    Response<String> response = await dio.get("/speakers",
+        queryParameters: queryParameters);
+
+    try {
+      final responseJson = json.decode(response.data!) as List;
+      List<Speaker> speakers =
+      responseJson.map((e) => Speaker.fromJson(e)).toList();
+      return speakers;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 
-  Future<PublicSpeaker> getPublicSpeaker({String id}) async {
-    //TODO: Implement this method.
+  Future<Speaker?> createSpeaker(
+      String bio, String name, String title) async {
+    var body = {
+      "bio": bio,
+      "name": name,
+      "title": title,
+    };
+
+    Response<String> response = await dio.post("/speakers", data: body);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
   }
+
+  Future<Speaker?> getSpeaker({required String id}) async {
+    Response<String> response = await dio.get("/speakers/" + id);
+    if (response.statusCode == 200) {
+      return Speaker.fromJson(json.decode(response.data!));
+    } else {
+      return null;
+    }
+  }
+
+  Future<Speaker?> updateSpeaker({required String id, String? bio, String? name,
+    String? notes, String? title}) async {
+    var body = {
+      "bio": bio,
+      "name": name,
+      "notes": notes,
+      "title": title
+    };
+
+    Response<String> response = await dio.put("/speakers" + id, data: body);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  // TODO: Speaker image (internal and public), speaker's company image (public) endpoints.
+  Future<Speaker?> updateParticipation({required String id, String? feedback,
+    String? member, Room? room}) async {
+    var body = {
+      "feedback": feedback,
+      "member": member,
+      "room": room != null ? room.toJson() : null
+    };
+
+    Response<String> response = await dio.put("/speakers/" + id +
+        "/participation", data: body);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> addParticipation({required String id}) async {
+    Response<String> response = await dio.post("/speakers/" +
+        id + "/participation");
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> removeParticipation({required String id}) async {
+    Response<String> response = await dio.delete("/speakers/" +
+        id + "/participation");
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> addFlightInfo({
+    required String id,
+    required bool bought,
+    required int cost,
+    required String from,
+    required String to,
+    required DateTime inbound,
+    required DateTime outbound,
+    required String link,
+    String? notes
+  }) async {
+    var body = {
+      "bought": bought,
+      "cost": cost,
+      "from": from,
+      "to": to,
+      "inbound": inbound,
+      "outbound": outbound,
+      "link": link,
+      "notes": notes
+    };
+
+    Response<String> response = await dio.post("/speakers/" + id +
+        "/participation/flightInfo", data: body);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> removeFlightInfo({required String id,
+    required String flightInfoId}) async {
+    Response<String> response = await dio.delete("/speakers/" + id +
+        "participation/flightInfo" + flightInfoId);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<List<ParticipationStep>> getNextParticipationSteps
+      ({required String id}) async {
+    Response<String> response = await dio.get("/speakers/" + id +
+        "participation/status/next");
+    try {
+      final responseJson = json.decode(response.data!) as List;
+      List<ParticipationStep> participationSteps =
+          responseJson.map((e) => ParticipationStep.fromJson(e)).toList();
+      return participationSteps;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> updateParticipationStatus({required String id,
+    required ParticipationStatus newStatus}) async {
+    Response<String> response = await dio.put("/speakers/" + id +
+        "/participation/status/" + newStatus.toString());
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> stepParticipationStatus({required String id,
+    required int step}) async {
+    Response<String> response = await dio.put("/speakers/" + id +
+        "/participation/status/" + step.toString());
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> subscribeToSpeaker({required String id}) async {
+    Response<String> response = await dio.put("/speakers/" + id +
+        "/subscribe");
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> unsubscribeToSpeaker({required String id}) async {
+    Response<String> response = await dio.put("/speakers/" + id +
+        "/unsubscribe");
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> addThread({required String id,
+    required Thread thread}) async {
+    Response<String> response = await dio.put("/speakers/" + id +
+        "/thread", data: thread.toJson());
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+
 }

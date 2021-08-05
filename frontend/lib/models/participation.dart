@@ -11,9 +11,9 @@ enum ParticipationStatus {
 }
 
 class Room {
-  final int cost;
-  final String notes;
-  final String type;
+  final int? cost;
+  final String? notes;
+  final String? type;
 
   Room({this.cost, this.notes, this.type});
 
@@ -26,14 +26,14 @@ class Room {
 }
 
 class Participation {
-  final List<String> communications;
-  final int event;
-  final String feedback;
-  final List<String> flights;
-  final String member;
-  final ParticipationStatus status;
-  final List<String> subscribers;
-  final Room room;
+  final List<String>? communications;
+  final int? event;
+  final String? feedback;
+  final List<String>? flights;
+  final String? member;
+  final ParticipationStatus? status;
+  final List<String>? subscribers;
+  final Room? room;
 
   Participation(
       {this.communications,
@@ -65,13 +65,13 @@ class Participation {
         'member': member,
         'status': status,
         'subscribers': subscribers,
-        'room': room.toJson()
+        'room': room?.toJson()
       };
 }
 
 class PublicParticipation {
-  final int event;
-  final String feedback;
+  final int? event;
+  final String? feedback;
 
   PublicParticipation({this.event, this.feedback});
 
@@ -81,4 +81,18 @@ class PublicParticipation {
   }
 
   Map<String, dynamic> toJson() => {'event': event, 'feedback': feedback};
+}
+
+class ParticipationStep {
+  final String? next;
+  final int? step;
+
+  ParticipationStep({this.next, this.step});
+
+  factory ParticipationStep.fromJson(Map<String, dynamic> json) {
+    return ParticipationStep(
+      next: json['next'],
+      step: json['step']
+    );
+  }
 }

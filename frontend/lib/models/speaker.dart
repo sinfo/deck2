@@ -1,9 +1,9 @@
 import 'package:frontend/models/participation.dart';
 
 class Images {
-  final String company;
-  final String internal;
-  final String speaker;
+  final String? company;
+  final String? internal;
+  final String? speaker;
 
   Images({this.company, this.internal, this.speaker});
 
@@ -19,14 +19,14 @@ class Images {
 }
 
 class Speaker {
-  final String id;
-  final String name;
-  final String title;
-  final String contact;
-  final String bio;
-  final String notes;
-  final Images imgs;
-  final List<Participation> participations;
+  final String? id;
+  final String? name;
+  final String? title;
+  final String? contact;
+  final String? bio;
+  final String? notes;
+  final Images? imgs;
+  final List<Participation>? participations;
 
   Speaker(
       {this.id,
@@ -48,8 +48,8 @@ class Speaker {
         bio: json['bio'],
         notes: json['notes'],
         imgs: Images.fromJson(json['imgs']),
-        participations: participationsList
-            .map((participation) => Participation.fromJson(participation)));
+        participations: participationsList.map((p) => Participation.fromJson(p)).toList()
+    );
   }
 
   Map<String, dynamic> toJson() => {
@@ -59,15 +59,15 @@ class Speaker {
         'contact': contact,
         'bio': bio,
         'notes': notes,
-        'imgs': imgs.toJson(),
+        'imgs': imgs?.toJson(),
         'participations':
-            participations.map((participation) => participation.toJson())
+            participations?.map((participation) => participation.toJson())
       };
 }
 
 class PublicImages {
-  final String company;
-  final String speaker;
+  final String? company;
+  final String? speaker;
 
   PublicImages({this.company, this.speaker});
 
@@ -79,15 +79,14 @@ class PublicImages {
 }
 
 class PublicSpeaker {
-  final String id;
-  final String name;
-  final String title;
-  final Images imgs;
+  final String? id;
+  final String? name;
+  final String? title;
+  final Images? imgs;
 
   PublicSpeaker({this.id, this.name, this.title, this.imgs});
 
   factory PublicSpeaker.fromJson(Map<String, dynamic> json) {
-    var participationsList = json['participations'] as List;
     return PublicSpeaker(
         id: json['id'],
         name: json['name'],
@@ -99,6 +98,6 @@ class PublicSpeaker {
         'id': id,
         'name': name,
         'title': title,
-        'imgs': imgs.toJson(),
+        'imgs': imgs?.toJson(),
       };
 }

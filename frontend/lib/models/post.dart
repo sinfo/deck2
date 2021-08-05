@@ -24,4 +24,12 @@ class Post {
       updated: DateTime(json['updated']),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'member': member?.toJson(),
+    'text': text,
+    'posted': posted,
+    'updated': updated
+  };
 }
