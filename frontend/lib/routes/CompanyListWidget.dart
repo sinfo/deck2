@@ -28,7 +28,11 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
         if (snapshot.hasData) {
           List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
 
-          return Column(
+          return GridView.count(
+            crossAxisCount: 3,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            padding: const EdgeInsets.all(20),
             children: comps
                 .map((e) => CompanyCard(
                       company: e,
@@ -47,19 +51,31 @@ class CompanyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Container(
+      padding: const EdgeInsets.all(8),
       child: Card(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            ListTile(
-              leading: CircleAvatar(
-                backgroundImage:
-                    NetworkImage(this.company.companyImages.internal),
-              ),
-              title: Text(this.company.name),
+        child: InkWell(
+          splashColor: Colors.blue.withAlpha(30),
+          onTap: () {
+            debugPrint(this.company.name + " card tapped!");
+          },
+          child: SizedBox(
+            width: 95,
+            height: 133,
+            child: Column(
+              children: <Widget>[
+                Image.network(
+                  this.company.companyImages.internal,
+                  loadingBuilder: (context, child, progress) {
+                    return progress == null ? child : LinearProgressIndicator();
+                  },
+                  width: 95,
+                  height: 95,
+                ),
+                Text(this.company.name),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
