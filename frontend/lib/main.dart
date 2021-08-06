@@ -25,8 +25,16 @@ class App extends StatelessWidget {
         title: 'Deck',
         theme: ThemeData(
           primarySwatch: Colors.indigo,
+          accentColor: Color.fromRGBO(92, 127, 242, 1),
+          cardColor: Color.fromRGBO(241, 241, 241, 1),
+
           visualDensity: VisualDensity.adaptivePlatformDensity,
-          
+          dividerTheme: DividerThemeData(
+            space: 20,
+            thickness: 2,
+            color: Color.fromRGBO(211, 211, 211, 1),
+            endIndent: 18,
+          )
         ),
         onGenerateRoute: router.generateRoute);
   }

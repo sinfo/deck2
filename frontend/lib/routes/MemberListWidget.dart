@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:frontend/routes/member/MemberScreen.dart';
 
 class MemberListWidget extends StatefulWidget {
   const MemberListWidget({Key? key}) : super(key: key);
@@ -13,7 +14,7 @@ class MemberListWidget extends StatefulWidget {
 class _MemberListWidgetState extends State<MemberListWidget> {
   MemberService memberService = new MemberService();
   late Future<List<Member>> members;
-
+  
   @override
   void initState() {
     super.initState();
@@ -38,7 +39,7 @@ class _MemberListWidgetState extends State<MemberListWidget> {
                 childAspectRatio: 0.75,
                 children: membs
                     .map((e) => MemberCard(
-                          member: e,
+                          member: e
                         ))
                     .toList(),
               ),
@@ -64,34 +65,42 @@ class MemberCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        decoration: BoxDecoration(
-          color: Color.fromRGBO(241, 241, 241, 1),
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Column(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(5),
-                    topRight: Radius.circular(5)),
-              child: Image(
-                image: (member.image == '') ? AssetImage("assets/noImage.png") as ImageProvider :  NetworkImage(member.image),
-                //image: NetworkImage(member.image),
+    return InkWell(
+      child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(5),
+                      topRight: Radius.circular(5)),
+                child: Image(
+                  image: (member.image == '') ? AssetImage("assets/noImage.png") as ImageProvider :  NetworkImage(member.image),
+                  //image: NetworkImage(member.image),
+                ),
               ),
-            ),
-            SizedBox(height: 12.5),
-            Text(member.name!,
+              SizedBox(height: 12.5),
+              Text(member.name!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    //fontFamily: 'Inter',
+                    fontWeight: FontWeight.bold,
+                  )),
+              Text(
+                'Role',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  //fontFamily: 'Inter',
-                  fontWeight: FontWeight.bold,
-                )),
-            Text(
-              'Role',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ));
+              ),
+            ],
+          )),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MemberScreen(member: this.member)),
+              );
+            }
+    );
   }
 }

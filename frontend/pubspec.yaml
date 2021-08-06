@@ -53,6 +53,7 @@ flutter:
     - assets/logo-branco2.png
     - assets/google_logo.png
     - assets/noImage.png
+    - assets/banner_background.png
     - .env
   #   - images/a_dot_ham.jpeg
 
