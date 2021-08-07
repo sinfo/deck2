@@ -193,7 +193,44 @@ class CompanyService extends Service {
     }
   }
 
-  // TODO: Create methods to update company images (internal and public).
+  Future<Company?> updateInternalImage({
+    required String id, required File image}) async {
+    FormData formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(image.path)
+    });
+
+    Response<String> response = await dio.post(
+        '/companies/' + id + '/image/internal', data: formData);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> updatePublicImage({
+    required String id, required File image}) async {
+    FormData formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(image.path)
+    });
+
+    Response<String> response = await dio.post(
+        '/companies/' + id + '/image/public', data: formData);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
   Future<Company?> createParticipation({required String id,
     required bool partner}) async {
     var body = { 'partner': partner };
@@ -268,7 +305,7 @@ class CompanyService extends Service {
   Future<List<ParticipationStep>> getNextParticipationSteps
       ({required String id}) async {
     Response<String> response = await dio.get("/companies/" + id +
-        "participation/status/next");
+        "/participation/status/next");
     try {
       final responseJson = json.decode(response.data!) as List;
       List<ParticipationStep> participationSteps =
