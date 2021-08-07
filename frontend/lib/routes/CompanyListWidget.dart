@@ -13,6 +13,7 @@ class CompanyListWidget extends StatefulWidget {
 class _CompanyListWidgetState extends State<CompanyListWidget> {
   CompanyService companyService = new CompanyService();
   late Future<List<CompanyLight>> companies;
+  static const int CARD_WIDTH = 200;
 
   @override
   void initState() {
@@ -29,7 +30,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
           List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
 
           return GridView.count(
-            crossAxisCount: 3,
+            crossAxisCount: MediaQuery.of(context).size.width ~/ CARD_WIDTH,
             crossAxisSpacing: 10,
             mainAxisSpacing: 10,
             padding: const EdgeInsets.all(20),
@@ -51,31 +52,21 @@ class CompanyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      child: Card(
-        child: InkWell(
-          splashColor: Colors.blue.withAlpha(30),
-          onTap: () {
-            debugPrint(this.company.name + " card tapped!");
-          },
-          child: SizedBox(
-            width: 95,
-            height: 133,
-            child: Column(
-              children: <Widget>[
-                Image.network(
-                  this.company.companyImages.internal,
-                  loadingBuilder: (context, child, progress) {
-                    return progress == null ? child : LinearProgressIndicator();
-                  },
-                  width: 95,
-                  height: 95,
-                ),
-                Text(this.company.name),
-              ],
-            ),
-          ),
+    return Card(
+      child: InkWell(
+        splashColor: Colors.blue.withAlpha(30),
+        onTap: () {
+          debugPrint(this.company.name + " card tapped!");
+        },
+        child: Column(
+          children: <Widget>[
+            Image.network(this.company.companyImages.internal,
+                loadingBuilder: (context, child, progress) {
+              return progress == null ? child : CircularProgressIndicator();
+            }, width: 95, height: 95),
+            Text(this.company.name,
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
         ),
       ),
     );
