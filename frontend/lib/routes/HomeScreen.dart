@@ -3,6 +3,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/CompanyListWidget.dart';
+import 'package:frontend/routes/CompanyTable.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -85,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case 2:
         {
-          return Center(child: CompanyListWidget());
+          return Center(child: CompanyTable());
         }
         break;
       default:
