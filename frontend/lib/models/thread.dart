@@ -29,4 +29,13 @@ class Thread {
       status: json['status'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'entry': null,
+    'meeting': meeting?.toJson(),
+    'comments': comments,
+    'kind': kind,
+    'status': status
+  };
 }
