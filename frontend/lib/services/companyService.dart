@@ -1,33 +1,49 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/contact.dart';
+import 'package:frontend/models/item.dart';
+import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/service.dart';
-/**
- *companyRouter.HandleFunc("", authMember(getCompanies)).Methods("GET")
-	companyRouter.HandleFunc("", authMember(createCompany)).Methods("POST")
-	companyRouter.HandleFunc("/{id}", authMember(getCompany)).Methods("GET")
-	companyRouter.HandleFunc("/{id}", authMember(updateCompany)).Methods("PUT")
-	companyRouter.HandleFunc("/{id}", authAdmin(deleteCompany)).Methods("DELETE")
-	companyRouter.HandleFunc("/{id}/subscribe", authMember(subscribeToCompany)).Methods("PUT")
-	companyRouter.HandleFunc("/{id}/unsubscribe", authMember(unsubscribeToCompany)).Methods("PUT")
-	companyRouter.HandleFunc("/{id}/image/internal", authMember(setCompanyPrivateImage)).Methods("POST")
-	companyRouter.HandleFunc("/{id}/image/public", authCoordinator(setCompanyPublicImage)).Methods("POST")
-	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
-	companyRouter.HandleFunc("/{id}/participation", authMember(updateCompanyParticipation)).Methods("PUT")
-	companyRouter.HandleFunc("/{id}/participation/status/next", authMember(getCompanyValidSteps)).Methods("GET")
-	companyRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setCompanyStatus)).Methods("PUT")
-	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
-	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
-	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
-	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
-	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
- */
 
 class CompanyService extends Service {
-  String companyUrl = "/companies";
+  Future<List<PublicCompany>> getPublicCompanies(
+      {String? name, int? event, bool? partner}) async {
+    var queryParameters = {
+      'name': name,
+      'event': event,
+      'partner': partner
+    };
+
+    Response<String> response = await dio.get(
+        '/public/companies', queryParameters: queryParameters);
+    try {
+      final responseJson = json.decode(response.data!) as List;
+      List<PublicCompany> speakers =
+      responseJson.map((e) => PublicCompany.fromJson(e)).toList();
+      return speakers;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<PublicCompany?> getPublicSpeaker({required String id}) async {
+    Response<String> response = await dio.get("/public/companies/" + id);
+    if (response.statusCode == 200) {
+      return PublicCompany.fromJson(json.decode(response.data!));
+    } else {
+      return null;
+    }
+  }
 
   Future<List<CompanyLight>> getCompanies(
       {int? event, bool? partner, String? member, String? name}) async {
@@ -46,6 +62,7 @@ class CompanyService extends Service {
     }
     queryParams['event'] = 29;
 
+    String companyUrl = '/companies';
     debugPrint('Fecthing companies...');
     debugPrint(dio.options.baseUrl + companyUrl);
     Response<String> res =
@@ -61,9 +78,283 @@ class CompanyService extends Service {
           jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
       return data;
     } else {
-      // TODO: Handle Error
-      print('error');
       return [];
     }
   }
+
+  Future<Company?> createCompany({
+    required String description,
+    required String name,
+    required String site
+  }) async {
+    var body = {
+      'description': description,
+      'name': name,
+      'site': site
+    };
+
+    Response<String> response = await dio.post('/companies', data: body);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> getCompany({required String id}) async {
+    Response<String> response = await dio.get('/companies/' + id);
+    if (response.statusCode == 200) {
+      return Company.fromJson(json.decode(response.data!));
+    } else {
+      return null;
+    }
+  }
+
+  Future<Company?> updateCompany({
+    required String id,
+    CompanyBillingInfo? billingInfo,
+    String? description,
+    String? name,
+    String? site
+  }) async {
+    var body = {
+      'billingInfo': billingInfo?.toJson(),
+      'description': description,
+      'name': name,
+      'site': site
+    };
+
+    Response<String> response = await dio.put('/companies/' + id, data: body);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> deleteCompany({required String id}) async {
+    Response<String> response = await dio.delete('/companies/' + id);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> createRep({
+    required String id,
+    required String name,
+    required Contact contact
+  }) async {
+    var body = {
+      'id': id,
+      'name': name,
+      'contact': contact.toJson()
+    };
+
+    Response<String> response = await dio.post(
+        '/companies/' + id + '/employer');
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> deleteRep({required String id,
+    required String repId}) async {
+    Response<String> response = await dio.delete(
+        '/companies/' + id + '/employer/' + repId);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  // TODO: Create methods to update company images (internal and public).
+  Future<Company?> createParticipation({required String id,
+    required bool partner}) async {
+    var body = { 'partner': partner };
+
+    Response<String> response = await dio.post(
+        '/companies/' + id + '/participation');
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> updateParticipation({
+    required String id,
+    DateTime? confirmed,
+    String? member,
+    String? notes,
+    bool? partner
+  }) async {
+    var body = {
+      'confirmed': confirmed,
+      'member': member,
+      'notes': notes,
+      'partner': partner
+    };
+
+    Response<String> response = await dio.put(
+        '/companies/' + id + '/participation');
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> addPackage({
+    required String id,
+    required List<Item>? items,
+    required String name,
+    required int price,
+    required int vat
+  }) async {
+    var body = {
+      'items': items?.map((i) => i.toJson()),
+      'name': name,
+      'price': price,
+      'vat': vat
+    };
+
+    Response<String> response = await dio.post(
+        '/companies/' + id + '/participation/package', data: body);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<List<ParticipationStep>> getNextParticipationSteps
+      ({required String id}) async {
+    Response<String> response = await dio.get("/companies/" + id +
+        "participation/status/next");
+    try {
+      final responseJson = json.decode(response.data!) as List;
+      List<ParticipationStep> participationSteps =
+      responseJson.map((e) => ParticipationStep.fromJson(e)).toList();
+      return participationSteps;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> updateParticipationStatus({required String id,
+    required ParticipationStatus newStatus}) async {
+    Response<String> response = await dio.put("/companies/" + id +
+        "/participation/status/" + newStatus.toString());
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> stepParticipationStatus({required String id,
+    required int step}) async {
+    Response<String> response = await dio.put("/companies/" + id +
+        "/participation/status/" + step.toString());
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+
+  Future<Company?> subscribeToCompany({required String id}) async {
+    Response<String> response = await dio.put("/companies/" + id +
+        "/subscribe");
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> unsubscribeToSpeaker({required String id}) async {
+    Response<String> response = await dio.put("/companies/" + id +
+        "/unsubscribe");
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> addThread({required String id,
+    required Thread thread}) async {
+    Response<String> response = await dio.put("/speakers/" + id +
+        "/thread", data: thread.toJson());
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+
 }
