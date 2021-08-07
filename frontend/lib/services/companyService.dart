@@ -8,6 +8,7 @@ import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/item.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/service.dart';
 
