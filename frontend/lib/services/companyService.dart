@@ -165,7 +165,7 @@ class CompanyService extends Service {
     };
 
     Response<String> response = await dio.post(
-        '/companies/' + id + '/employer');
+        '/companies/' + id + '/employer', data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -198,7 +198,7 @@ class CompanyService extends Service {
     var body = { 'partner': partner };
 
     Response<String> response = await dio.post(
-        '/companies/' + id + '/participation');
+        '/companies/' + id + '/participation', data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -225,7 +225,7 @@ class CompanyService extends Service {
     };
 
     Response<String> response = await dio.put(
-        '/companies/' + id + '/participation');
+        '/companies/' + id + '/participation', data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
