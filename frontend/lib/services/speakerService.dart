@@ -115,7 +115,63 @@ class SpeakerService extends Service {
     }
   }
 
-  // TODO: Speaker image (internal and public), speaker's company image (public) endpoints.
+  Future<Speaker?> updateInternalImage({
+    required String id, required File image}) async {
+    FormData formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(image.path)
+    });
+
+    Response<String> response = await dio.post(
+        '/speakers/' + id + '/image/internal', data: formData);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> updatePublicImage({
+    required String id, required File image}) async {
+    FormData formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(image.path)
+    });
+
+    Response<String> response = await dio.post(
+        '/speakers/' + id + '/image/public/speaker', data: formData);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> updateCompanyPublicImage({
+    required String id, required File image}) async {
+    FormData formData = FormData.fromMap({
+      'image': await MultipartFile.fromFile(image.path)
+    });
+
+    Response<String> response = await dio.post(
+        '/speakers/' + id + '/image/public/company', data: formData);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
   Future<Speaker?> updateParticipation({required String id, String? feedback,
     String? member, Room? room}) async {
     var body = {
