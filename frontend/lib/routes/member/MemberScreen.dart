@@ -4,21 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/routes/member/MemberBanner.dart';
-import 'package:frontend/routes/member/EditBox.dart';
+import 'package:frontend/routes/member/DisplayContacts.dart';
+import 'package:frontend/routes/member/DisplayParticipations.dart';
 
 class MemberScreen extends StatefulWidget {
   final Member member;
-  MemberScreen({Key? key, required this.member}) : super(key: key);
+  final String role;
+  MemberScreen({Key? key, required this.member, required this.role})
+      : super(key: key);
 
   @override
-  _MemberScreen createState() => _MemberScreen(member: member);
+  _MemberScreen createState() => _MemberScreen(member: member, role: role);
 }
 
 class _MemberScreen extends State<MemberScreen> {
-  MemberService companyService = new MemberService();
+  MemberService memberService = new MemberService();
   final Member member;
+  final String role;
 
-  _MemberScreen({Key? key, required this.member});
+  _MemberScreen({Key? key, required this.member, required this.role});
 
   @override
   void initState() {
@@ -40,42 +44,39 @@ class _MemberScreen extends State<MemberScreen> {
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              DeckBanner(member: this.member),
+              MemberBanner(member: this.member, role: this.role),
               DefaultTabController(
                   length: 2, // length of tabs
                   initialIndex: 0,
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
-                      
                       children: <Widget>[
                         Container(
                           width: 310,
                           child: TabBar(
                             labelColor: Colors.black,
                             labelStyle: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18),
+                                fontWeight: FontWeight.bold, fontSize: 18),
                             unselectedLabelStyle: TextStyle(
-                              fontWeight: FontWeight.normal,
-                              fontSize: 18),
+                                fontWeight: FontWeight.normal, fontSize: 18),
                             indicatorColor: Theme.of(context).accentColor,
-                            
                             tabs: [
                               Tab(
                                 text: 'Contacts',
-                                ),
+                              ),
                               Tab(text: 'Participations'),
                             ],
                           ),
                         ),
                         Container(
+                          //FIXME: este número está mal
                             height: 500,
                             child: TabBarView(children: <Widget>[
                               Container(
-                                child: displayContacts(),
+                                child: DisplayContacts(member: member),
                               ),
                               Container(
-                                child: displayParticipations(),
+                                child: DisplayParticipations(member: member),
                               ),
                             ]))
                       ])),
@@ -84,22 +85,6 @@ class _MemberScreen extends State<MemberScreen> {
     );
   }
 
-  Widget displayContacts() {
-    return Column(
-      
-      children: [
-        EditBox(
-            title: "Mails",
-            body: member.contact!),
-        EditBox(title: "Phone", body: ""),
-        EditBox(title: "Others", body: "")
-      ],
-    );
-  }
 
-  Widget displayParticipations() {
-    return Text('Participations',
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold));
-  }
-
+  
 }

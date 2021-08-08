@@ -7,7 +7,7 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/services/service.dart';
 import 'package:frontend/models/team.dart';
 
-class teamService extends Service {
+class TeamService extends Service {
   final String baseURL = '/teams';
 
   Future<List<Team>> getTeams(
