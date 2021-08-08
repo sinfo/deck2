@@ -58,23 +58,39 @@ class MemberCompaniesRow extends StatelessWidget {
         if (snapshot.hasData) {
           List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
 
-          return Scaffold(
-            body: GridView.count(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.all(10),
-              crossAxisCount: 3,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              childAspectRatio: 0.75,
-              children: comps.map((e) => ListViewCard(company: e)).toList(),
-            ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-                //TODO: on tap
-                // Add your onPressed code here!
-              },
-              child: const Icon(Icons.add),
-              backgroundColor: Color.fromRGBO(92, 127, 242, 1),
+          return Container(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(backgroundImage: NetworkImage(member.image)),
+                    Text(member.name!),
+                  ],
+                ),
+                Divider(
+                  color: Theme.of(context).cardColor,
+                  height: 20,
+                  thickness: 1,
+                  indent: 20,
+                  endIndent: 20,
+                ),
+                // Expanded(
+                //   child: GridView.count(
+                //     scrollDirection: Axis.horizontal,
+                //     padding: EdgeInsets.all(10),
+                //     crossAxisCount: 1,
+                //     mainAxisSpacing: 10,
+                //     crossAxisSpacing: 10,
+                //     childAspectRatio: 0.75,
+                //     children: comps.map((e) => Text(e.name)).toList(),
+                //   ),
+                // ),
+                ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.all(10),
+                  children: comps.map((e) => Text(e.name)).toList(),
+                ),
+              ],
             ),
           );
         } else {
