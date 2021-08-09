@@ -27,6 +27,9 @@ class ListViewCard extends StatelessWidget {
                         topLeft: Radius.circular(5),
                         topRight: Radius.circular(5)),
                     child: Image(
+                      width: 300,
+                      height: 300,
+                      fit: BoxFit.cover,
                       image: (member!.image == '')
                           ? AssetImage("assets/noImage.png") as ImageProvider
                           : NetworkImage(member!.image),
@@ -66,6 +69,9 @@ class ListViewCard extends StatelessWidget {
                         topLeft: Radius.circular(5),
                         topRight: Radius.circular(5)),
                     child: Image(
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.fill,
                       image: (company!.companyImages.internal == '')
                           ? AssetImage("assets/noImage.png") as ImageProvider
                           : NetworkImage(company!.companyImages.internal),

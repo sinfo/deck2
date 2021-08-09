@@ -14,14 +14,14 @@ class CompanyTable extends StatefulWidget {
 }
 
 class _CompanyTableState extends State<CompanyTable> {
-  MemberService memberService = MemberService();
+  final MemberService _memberService = MemberService();
   late Future<List<Member>> members;
 
   @override
   void initState() {
-    // FIXME: Add a global way to keep current event
-    members = memberService.getMembers(event: 29);
     super.initState();
+    //TODO: Dynamic event
+    members = _memberService.getMembers(event: 29);
   }
 
   @override
@@ -30,9 +30,12 @@ class _CompanyTableState extends State<CompanyTable> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
-            return ListView(
-              children:
-                  membs.map((e) => MemberCompaniesRow(member: e)).toList(),
+            membs.sort((a, b) => a.name!.compareTo(b.name!));
+            return ListView.builder(
+              itemCount: membs.length,
+              itemBuilder: (context, index) {
+                return MemberRow(member: membs[index]);
+              },
             );
           } else {
             return CircularProgressIndicator();
@@ -41,60 +44,71 @@ class _CompanyTableState extends State<CompanyTable> {
       );
 }
 
-class MemberCompaniesRow extends StatelessWidget {
+class MemberRow extends StatefulWidget {
   final Member member;
-  final CompanyService companyService = CompanyService();
-  late Future<List<CompanyLight>> companies;
+  MemberRow({Key? key, required this.member}) : super(key: key);
 
-  MemberCompaniesRow({Key? key, required this.member}) : super(key: key) {
-    this.companies =
-        companyService.getCompanies(event: 29, member: this.member.id);
+  @override
+  _MemberRowState createState() => _MemberRowState(member: member);
+}
+
+class _MemberRowState extends State<MemberRow> {
+  Member member;
+  CompanyService _companyService = CompanyService();
+  late Future<List<CompanyLight>> _companies;
+  _MemberRowState({required this.member});
+
+  @override
+  void initState() {
+    super.initState();
+    _companies =
+        _companyService.getCompanies(event: 29, member: this.member.id);
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder(
-      future: companies,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
-
-          return Container(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(backgroundImage: NetworkImage(member.image)),
-                    Text(member.name!),
-                  ],
-                ),
-                Divider(
-                  color: Theme.of(context).cardColor,
-                  height: 20,
-                  thickness: 1,
-                  indent: 20,
-                  endIndent: 20,
-                ),
-                // Expanded(
-                //   child: GridView.count(
-                //     scrollDirection: Axis.horizontal,
-                //     padding: EdgeInsets.all(10),
-                //     crossAxisCount: 1,
-                //     mainAxisSpacing: 10,
-                //     crossAxisSpacing: 10,
-                //     childAspectRatio: 0.75,
-                //     children: comps.map((e) => Text(e.name)).toList(),
-                //   ),
-                // ),
-                ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.all(10),
-                  children: comps.map((e) => Text(e.name)).toList(),
-                ),
-              ],
+  Widget build(BuildContext context) => Container(
+        margin: EdgeInsets.all(10),
+        child: Column(
+          children: [
+            Row(children: [
+              CircleAvatar(
+                backgroundImage: NetworkImage(this.member.image),
+              ),
+              Text(this.member.name!),
+            ]),
+            Divider(
+              color: Colors.grey,
+              height: 20,
+              thickness: 1,
             ),
-          );
-        } else {
-          return CircularProgressIndicator();
-        }
-      });
+            FutureBuilder(
+              future: _companies,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<CompanyLight> comps =
+                      snapshot.data as List<CompanyLight>;
+                  return Container(
+                    height: comps.length == 0 ? 0 : 300,
+                    child: GridView.count(
+                      crossAxisCount: 1,
+                      scrollDirection: Axis.horizontal,
+                      children: comps
+                          .map((e) => ListViewCard(
+                                company: e,
+                              ))
+                          .toList(),
+                    ),
+                  );
+                } else {
+                  return Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  );
+                }
+              },
+            )
+          ],
+        ),
+      );
 }
