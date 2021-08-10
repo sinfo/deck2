@@ -92,111 +92,107 @@ class _MemberRowState extends State<MemberRow>
   @override
   Widget build(BuildContext context) => Container(
         margin: EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(children: [
-              ClipRRect(
-                  borderRadius: BorderRadius.all(
-                      Radius.circular(5.0)), //add border radius here
-                  child: LayoutBuilder(builder: (context, constraints) {
-                    MediaQueryData data = MediaQuery.of(context);
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            iconColor: Colors.transparent,
+            initiallyExpanded: true,
+            textColor: Colors.black,
+            expandedAlignment: Alignment.topLeft,
+            title: Column(
+              children: [
+                Row(children: [
+                  ClipRRect(
+                      borderRadius: BorderRadius.all(
+                          Radius.circular(5.0)), //add border radius here
+                      child: LayoutBuilder(builder: (context, constraints) {
+                        MediaQueryData data = MediaQuery.of(context);
 
-                    if (data.orientation == Orientation.portrait ||
-                        data.size.width < 1500) {
-                      return Image.network(
-                        this.member.image,
-                        width: 25,
-                        height: 25,
-                        errorBuilder: (BuildContext context, Object exception,
-                            StackTrace? stackTrace) {
-                          return Image.asset(
-                            'assets/noImage.png',
+                        if (data.orientation == Orientation.portrait ||
+                            data.size.width < 1500) {
+                          return Image.network(
+                            this.member.image,
                             width: 25,
                             height: 25,
+                            errorBuilder: (BuildContext context,
+                                Object exception, StackTrace? stackTrace) {
+                              return Image.asset(
+                                'assets/noImage.png',
+                                width: 25,
+                                height: 25,
+                              );
+                            },
                           );
-                        },
-                      );
-                    } else {
-                      return Image.network(
-                        this.member.image,
-                        width: 40,
-                        height: 40,
-                        errorBuilder: (BuildContext context, Object exception,
-                            StackTrace? stackTrace) {
-                          return Image.asset(
-                            'assets/noImage.png',
+                        } else {
+                          return Image.network(
+                            this.member.image,
                             width: 40,
                             height: 40,
+                            errorBuilder: (BuildContext context,
+                                Object exception, StackTrace? stackTrace) {
+                              return Image.asset(
+                                'assets/noImage.png',
+                                width: 40,
+                                height: 40,
+                              );
+                            },
                           );
-                        },
-                      );
-                    }
-                  })),
-              Container(
-                child: LayoutBuilder(builder: (context, constraints) {
-                  MediaQueryData data = MediaQuery.of(context);
+                        }
+                      })),
+                  Container(
+                    child: LayoutBuilder(builder: (context, constraints) {
+                      MediaQueryData data = MediaQuery.of(context);
 
-                  if (data.orientation == Orientation.portrait ||
-                      data.size.width < 1500) {
-                    return Text(this.member.name!,
-                        style: TextStyle(fontSize: 12));
+                      if (data.orientation == Orientation.portrait ||
+                          data.size.width < 1500) {
+                        return Text(this.member.name!,
+                            style: TextStyle(fontSize: 12));
+                      } else {
+                        return Text(this.member.name!,
+                            style: TextStyle(fontSize: 18));
+                      }
+                    }),
+                    margin: EdgeInsets.all(8),
+                  )
+                ]),
+                Divider(
+                  color: Colors.grey,
+                  thickness: 1,
+                ),
+              ],
+            ),
+            children: [
+              FutureBuilder(
+                future: _companies,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    List<CompanyLight> comps =
+                        snapshot.data as List<CompanyLight>;
+                    return LayoutBuilder(builder: (context, constraints) {
+                      MediaQueryData data = MediaQuery.of(context);
+
+                      if (data.orientation == Orientation.portrait ||
+                          data.size.width < 1500) {
+                        return _buildListView(comps);
+                      } else {
+                        return _buildWrap(comps);
+                      }
+                    });
                   } else {
-                    return Text(this.member.name!,
-                        style: TextStyle(fontSize: 18));
-                  }
-                }),
-                margin: EdgeInsets.all(8),
-              )
-            ]),
-            LayoutBuilder(builder: (context, constraints) {
-              MediaQueryData data = MediaQuery.of(context);
-
-              if (data.orientation == Orientation.portrait ||
-                  data.size.width < 1500) {
-                return Divider(
-                  color: Colors.grey,
-                  height: 10,
-                  thickness: 1,
-                );
-              } else {
-                return Divider(
-                  color: Colors.grey,
-                  height: 20,
-                  thickness: 1,
-                );
-              }
-            }),
-            FutureBuilder(
-              future: _companies,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<CompanyLight> comps =
-                      snapshot.data as List<CompanyLight>;
-                  return LayoutBuilder(builder: (context, constraints) {
-                    MediaQueryData data = MediaQuery.of(context);
-
-                    if (data.orientation == Orientation.portrait ||
-                        data.size.width < 1500) {
-                      return _buildListView(comps);
-                    } else {
-                      return _buildWrap(comps);
-                    }
-                  });
-                } else {
-                  return Container(
-                    child: Center(
-                      child: Container(
-                        height: 50,
-                        width: 50,
-                        child: CircularProgressIndicator(),
+                    return Container(
+                      child: Center(
+                        child: Container(
+                          height: 50,
+                          width: 50,
+                          child: CircularProgressIndicator(),
+                        ),
                       ),
-                    ),
-                  );
-                }
-              },
-            )
-          ],
+                    );
+                  }
+                },
+              )
+            ],
+          ),
         ),
       );
 }

@@ -81,8 +81,8 @@ class ListViewCard extends StatelessWidget {
 
   Widget _buildBigCard(BuildContext context) {
     return Container(
-      height: 250,
-      width: 200,
+      height: 175,
+      width: 150,
       margin: EdgeInsets.all(10),
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
