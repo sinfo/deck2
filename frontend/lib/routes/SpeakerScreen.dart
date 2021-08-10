@@ -1,6 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/member.dart';
 
+enum ParticipationStatus {
+  SUGGESTED,
+  SELECTED,
+  ON_HOLD,
+  CONTACTED,
+  IN_CONVERSATIONS,
+  ACCEPTED,
+  REJECTED,
+  GIVEN_UP,
+  ANNOUNCED
+}
+
+final Map<ParticipationStatus,String> STATUSSTRING = {
+  ParticipationStatus.ACCEPTED: 'Accepted',
+  ParticipationStatus.ANNOUNCED: 'Announced',
+  ParticipationStatus.CONTACTED: 'Contacted',
+  ParticipationStatus.GIVEN_UP: 'Given Up',
+  ParticipationStatus.IN_CONVERSATIONS: 'In Conversations',
+  ParticipationStatus.ON_HOLD: 'On Hold',
+  ParticipationStatus.REJECTED: 'Rejected',
+  ParticipationStatus.SELECTED: 'Selected',
+  ParticipationStatus.SUGGESTED: 'Suggested',
+};
+
+final Map<ParticipationStatus,Color> STATUSCOLOR = {
+  ParticipationStatus.ACCEPTED: Colors.lightGreen,
+  ParticipationStatus.ANNOUNCED: Colors.green.shade700,
+  ParticipationStatus.CONTACTED: Colors.yellow,
+  ParticipationStatus.GIVEN_UP: Colors.black,
+  ParticipationStatus.IN_CONVERSATIONS: Colors.lightBlue,
+  ParticipationStatus.ON_HOLD: Colors.blueGrey,
+  ParticipationStatus.REJECTED: Colors.red,
+  ParticipationStatus.SELECTED: Colors.deepPurple,
+  ParticipationStatus.SUGGESTED: Colors.amber,
+};
+
+
+
 final Map<String,dynamic> speaker = {
 	"name" : "John Resig",
 	"title" : "Creator of jQuery",
@@ -78,10 +116,26 @@ class SpeakerScreen extends StatelessWidget {
     );
   }
 }
-
-class SpeakerBanner extends StatelessWidget {
+class SpeakerBanner extends StatefulWidget {
   const SpeakerBanner({ Key? key }) : super(key: key);
 
+  @override
+  _SpeakerBannerState createState() => _SpeakerBannerState();
+}
+
+class _SpeakerBannerState extends State<SpeakerBanner> {
+  ParticipationStatus speakerStatus = ParticipationStatus.values.firstWhere((element) {
+    return element.toString() == 'ParticipationStatus.' + 
+        speaker['participations'][(speaker['participations'] as List).length-1]["status"];
+    }
+  );
+
+  void changeSpeakerStatus(ParticipationStatus? newStatus){
+    setState(() {
+      speakerStatus = newStatus!;
+      //call service method to change participations status
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -89,7 +143,7 @@ class SpeakerBanner extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(gradient: SweepGradient(
           center: AlignmentDirectional(-0.3,1.2),
-          colors: [Colors.indigo, Colors.indigo.shade200],
+          colors: [Colors.indigo.shade200, Colors.indigo.shade300],
           transform: GradientRotation(0)
         ),),
         child: Padding(
@@ -107,36 +161,69 @@ class SpeakerBanner extends StatelessWidget {
                 flex: 1,
                 child: Padding(
                   padding: const EdgeInsets.all(15),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints.loose(Size.fromWidth(150)),
-                      child: Wrap(
-                        runAlignment: WrapAlignment.start,
-                        alignment: WrapAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(speaker['name'], style: Theme.of(context).textTheme.headline5, overflow: TextOverflow.ellipsis,),
-                              Text(speaker['title'], style: Theme.of(context).textTheme.subtitle1, softWrap: false, overflow: TextOverflow.ellipsis )
-                            ], 
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Card(color: Colors.amber[100], child: Text('Suggested'),),
-                              ElevatedButton(onPressed: () => print('zona'), child: Text('+ Subscribe'))
-                            ],
-                          ),
-                        ],
-                      ),
+                    child: Wrap(
+                      runAlignment: WrapAlignment.start,
+                      alignment: WrapAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(speaker['name'], style: Theme.of(context).textTheme.headline5, overflow: TextOverflow.ellipsis,),
+                            Text(speaker['title'], style: Theme.of(context).textTheme.subtitle1, softWrap: false, overflow: TextOverflow.ellipsis )
+                          ], 
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SpeakerStatusDropdownButton(speakerStatus: speakerStatus, statusChangeCallback: changeSpeakerStatus,),
+                            ElevatedButton(onPressed: () => print('zona'), child: Text('+ Subscribe'))
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
                 ),
               ),
             ],
           ),
         ),
     );
+  } 
+}
+class SpeakerStatusDropdownButton extends StatelessWidget {
+  final void Function(ParticipationStatus?) statusChangeCallback;
+  final ParticipationStatus speakerStatus;
+  const SpeakerStatusDropdownButton({ Key? key, required this.statusChangeCallback, required this.speakerStatus }) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: DropdownButton<ParticipationStatus>(
+        icon: null,
+        underline: Container(
+          height: 3,
+          decoration: BoxDecoration(color: STATUSCOLOR[speakerStatus]),
+        ),
+        iconEnabledColor: STATUSCOLOR[speakerStatus],
+        value: speakerStatus,
+        style: Theme.of(context).textTheme.subtitle1,
+        selectedItemBuilder: (BuildContext context) {
+          return ParticipationStatus.values.map((e) {
+            return Align(
+              alignment: AlignmentDirectional.centerStart ,
+              child: Container(
+                child: Text(STATUSSTRING[e]!)
+              ),
+            );
+          }).toList();
+        },
+        items: ParticipationStatus.values
+            .map((e) => DropdownMenuItem<ParticipationStatus>(
+              value: e, 
+              child: Text(STATUSSTRING[e]!),
+            )).toList(),
+        onChanged: statusChangeCallback,
+        
+      ),
+    );
   }
 }
+
