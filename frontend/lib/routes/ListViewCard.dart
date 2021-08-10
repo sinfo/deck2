@@ -131,8 +131,8 @@ class ListViewCard extends StatelessWidget {
                     ));
               }),
           Container(
-            padding: EdgeInsets.all(8),
-            margin: EdgeInsets.all(10),
+            padding: EdgeInsets.all(6),
+            margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
             decoration: BoxDecoration(
               color: Colors.orange,
               borderRadius: BorderRadius.all(Radius.circular(5)),
