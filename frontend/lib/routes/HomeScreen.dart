@@ -111,6 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<Member?> checkSignInStatus() async {
+    await googleSignIn.signInSilently();
     bool isSignedIn = await googleSignIn.isSignedIn();
     if (!isSignedIn) {
       Navigator.pushReplacementNamed(context, '/login');

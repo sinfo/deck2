@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/models/company.dart';
@@ -31,11 +32,9 @@ class _CompanyTableState extends State<CompanyTable> {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return ListView.builder(
-              itemCount: membs.length,
-              itemBuilder: (context, index) {
-                return MemberRow(member: membs[index]);
-              },
+            return ListView(
+              children: membs.map((e) => MemberRow(member: e)).toList(),
+              addAutomaticKeepAlives: true,
             );
           } else {
             return CircularProgressIndicator();
@@ -52,7 +51,8 @@ class MemberRow extends StatefulWidget {
   _MemberRowState createState() => _MemberRowState(member: member);
 }
 
-class _MemberRowState extends State<MemberRow> {
+class _MemberRowState extends State<MemberRow>
+    with AutomaticKeepAliveClientMixin {
   Member member;
   CompanyService _companyService = CompanyService();
   late Future<List<CompanyLight>> _companies;
@@ -66,44 +66,132 @@ class _MemberRowState extends State<MemberRow> {
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  Widget _buildWrap(List<CompanyLight> comps) {
+    return Container(
+      height: comps.length == 0 ? 0 : null,
+      child: Wrap(
+        alignment: WrapAlignment.start,
+        crossAxisAlignment: WrapCrossAlignment.start,
+        children: comps.map((e) => ListViewCard(company: e)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildListView(List<CompanyLight> comps) {
+    return Container(
+      height: comps.length == 0 ? 0 : 125,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: comps.map((e) => ListViewCard(company: e)).toList(),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) => Container(
         margin: EdgeInsets.all(10),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(children: [
-              CircleAvatar(
-                backgroundImage: NetworkImage(this.member.image),
-              ),
-              Text(this.member.name!),
+              ClipRRect(
+                  borderRadius: BorderRadius.all(
+                      Radius.circular(5.0)), //add border radius here
+                  child: LayoutBuilder(builder: (context, constraints) {
+                    MediaQueryData data = MediaQuery.of(context);
+
+                    if (data.orientation == Orientation.portrait ||
+                        data.size.width < 1500) {
+                      return Image.network(
+                        this.member.image,
+                        width: 25,
+                        height: 25,
+                        errorBuilder: (BuildContext context, Object exception,
+                            StackTrace? stackTrace) {
+                          return Image.asset(
+                            'assets/noImage.png',
+                            width: 25,
+                            height: 25,
+                          );
+                        },
+                      );
+                    } else {
+                      return Image.network(
+                        this.member.image,
+                        width: 40,
+                        height: 40,
+                        errorBuilder: (BuildContext context, Object exception,
+                            StackTrace? stackTrace) {
+                          return Image.asset(
+                            'assets/noImage.png',
+                            width: 40,
+                            height: 40,
+                          );
+                        },
+                      );
+                    }
+                  })),
+              Container(
+                child: LayoutBuilder(builder: (context, constraints) {
+                  MediaQueryData data = MediaQuery.of(context);
+
+                  if (data.orientation == Orientation.portrait ||
+                      data.size.width < 1500) {
+                    return Text(this.member.name!,
+                        style: TextStyle(fontSize: 12));
+                  } else {
+                    return Text(this.member.name!,
+                        style: TextStyle(fontSize: 18));
+                  }
+                }),
+                margin: EdgeInsets.all(8),
+              )
             ]),
-            Divider(
-              color: Colors.grey,
-              height: 20,
-              thickness: 1,
-            ),
+            LayoutBuilder(builder: (context, constraints) {
+              MediaQueryData data = MediaQuery.of(context);
+
+              if (data.orientation == Orientation.portrait ||
+                  data.size.width < 1500) {
+                return Divider(
+                  color: Colors.grey,
+                  height: 10,
+                  thickness: 1,
+                );
+              } else {
+                return Divider(
+                  color: Colors.grey,
+                  height: 20,
+                  thickness: 1,
+                );
+              }
+            }),
             FutureBuilder(
               future: _companies,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   List<CompanyLight> comps =
                       snapshot.data as List<CompanyLight>;
-                  return Container(
-                    height: comps.length == 0 ? 0 : 300,
-                    child: GridView.count(
-                      crossAxisCount: 1,
-                      scrollDirection: Axis.horizontal,
-                      children: comps
-                          .map((e) => ListViewCard(
-                                company: e,
-                              ))
-                          .toList(),
-                    ),
-                  );
+                  return LayoutBuilder(builder: (context, constraints) {
+                    MediaQueryData data = MediaQuery.of(context);
+
+                    if (data.orientation == Orientation.portrait ||
+                        data.size.width < 1500) {
+                      return _buildListView(comps);
+                    } else {
+                      return _buildWrap(comps);
+                    }
+                  });
                 } else {
                   return Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
+                    child: Center(
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
                   );
                 }
               },
