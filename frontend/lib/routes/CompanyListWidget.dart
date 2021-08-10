@@ -29,17 +29,24 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
         if (snapshot.hasData) {
           List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
 
-          return GridView.count(
-            crossAxisCount: MediaQuery.of(context).size.width ~/ CARD_WIDTH,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            padding: const EdgeInsets.all(20),
-            children: comps
-                .map((e) => CompanyCard(
-                      company: e,
-                    ))
-                .toList(),
-          );
+          return Scaffold(
+              body: GridView.count(
+                crossAxisCount: MediaQuery.of(context).size.width ~/ CARD_WIDTH,
+                crossAxisSpacing: 5,
+                mainAxisSpacing: 5,
+                children: comps
+                    .map((e) => CompanyCard(
+                          company: e,
+                        ))
+                    .toList(),
+              ),
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {
+                  debugPrint("Floating Action Button tapped!");
+                },
+                child: const Icon(Icons.add),
+                backgroundColor: Color(0xff5C7FF2),
+              ));
         } else {
           return CircularProgressIndicator();
         }
@@ -52,23 +59,34 @@ class CompanyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        splashColor: Colors.blue.withAlpha(30),
-        onTap: () {
-          debugPrint(this.company.name + " card tapped!");
-        },
-        child: Column(
-          children: <Widget>[
-            Image.network(this.company.companyImages.internal,
-                loadingBuilder: (context, child, progress) {
-              return progress == null ? child : CircularProgressIndicator();
-            }, width: 95, height: 95),
-            Text(this.company.name,
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
+    return InkWell(
+      onTap: () {
+        debugPrint(this.company.name + " card tapped!");
+      },
+      child: Column(children: <Widget>[
+        Expanded(
+            child: Stack(children: <Widget>[
+          Image.network(this.company.companyImages.internal, fit: BoxFit.cover),
+          DecoratedBox(
+              decoration: BoxDecoration(
+                  color: Color(0xffEDA460),
+                  borderRadius: BorderRadius.circular(3)),
+              child: Padding(
+                padding: EdgeInsets.all(4.0),
+                child:
+                    Text("Suggestion", style: TextStyle(color: Colors.white)),
+              ))
+        ])),
+        SizedBox(
+            width: double.infinity,
+            child: DecoratedBox(
+                decoration: const BoxDecoration(color: Color(0xffF1F1F1)),
+                child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Center(
+                        child: Text(this.company.name,
+                            style: TextStyle(fontWeight: FontWeight.bold)))))),
+      ]),
     );
   }
 }
