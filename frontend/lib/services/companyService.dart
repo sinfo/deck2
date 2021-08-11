@@ -15,18 +15,14 @@ import 'package:frontend/services/service.dart';
 class CompanyService extends Service {
   Future<List<PublicCompany>> getPublicCompanies(
       {String? name, int? event, bool? partner}) async {
-    var queryParameters = {
-      'name': name,
-      'event': event,
-      'partner': partner
-    };
+    var queryParameters = {'name': name, 'event': event, 'partner': partner};
 
-    Response<String> response = await dio.get(
-        '/public/companies', queryParameters: queryParameters);
+    Response<String> response =
+        await dio.get('/public/companies', queryParameters: queryParameters);
     try {
       final responseJson = json.decode(response.data!) as List;
       List<PublicCompany> speakers =
-      responseJson.map((e) => PublicCompany.fromJson(e)).toList();
+          responseJson.map((e) => PublicCompany.fromJson(e)).toList();
       return speakers;
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -46,7 +42,7 @@ class CompanyService extends Service {
     }
   }
 
-  Future<List<CompanyLight>> getCompanies(
+  Future<List<Company>> getCompanies(
       {int? event, bool? partner, String? member, String? name}) async {
     Map<String, dynamic> queryParams = {};
     if (event != null) {
@@ -61,38 +57,33 @@ class CompanyService extends Service {
     if (name != null) {
       queryParams['name'] = name;
     }
-    queryParams['event'] = 29;
 
     String companyUrl = '/companies';
-    debugPrint('Fecthing companies...');
-    debugPrint(dio.options.baseUrl + companyUrl);
     Response<String> res =
         await dio.get(companyUrl, queryParameters: queryParams);
-    debugPrint('Fecthing companies done!');
 
     if (res.statusCode == 200 && res.data!.isNotEmpty) {
       final jsonRes = json.decode(res.data!) as List;
+      print("companies:");
       jsonRes.forEach((element) {
-        print(element);
+        print(element['name']);
       });
-      List<CompanyLight> data =
-          jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
+      List<Company> data = jsonRes.map((e) => Company.fromJson(e)).toList();
+      print("companies:");
+      data.forEach((element) {
+        print(element.name);
+      });
       return data;
     } else {
       return [];
     }
   }
 
-  Future<Company?> createCompany({
-    required String description,
-    required String name,
-    required String site
-  }) async {
-    var body = {
-      'description': description,
-      'name': name,
-      'site': site
-    };
+  Future<Company?> createCompany(
+      {required String description,
+      required String name,
+      required String site}) async {
+    var body = {'description': description, 'name': name, 'site': site};
 
     Response<String> response = await dio.post('/companies', data: body);
     try {
@@ -115,13 +106,12 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> updateCompany({
-    required String id,
-    CompanyBillingInfo? billingInfo,
-    String? description,
-    String? name,
-    String? site
-  }) async {
+  Future<Company?> updateCompany(
+      {required String id,
+      CompanyBillingInfo? billingInfo,
+      String? description,
+      String? name,
+      String? site}) async {
     var body = {
       'billingInfo': billingInfo?.toJson(),
       'description': description,
@@ -154,19 +144,14 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> createRep({
-    required String id,
-    required String name,
-    required Contact contact
-  }) async {
-    var body = {
-      'id': id,
-      'name': name,
-      'contact': contact.toJson()
-    };
+  Future<Company?> createRep(
+      {required String id,
+      required String name,
+      required Contact contact}) async {
+    var body = {'id': id, 'name': name, 'contact': contact.toJson()};
 
-    Response<String> response = await dio.post(
-        '/companies/' + id + '/employer', data: body);
+    Response<String> response =
+        await dio.post('/companies/' + id + '/employer', data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -178,10 +163,10 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> deleteRep({required String id,
-    required String repId}) async {
-    Response<String> response = await dio.delete(
-        '/companies/' + id + '/employer/' + repId);
+  Future<Company?> deleteRep(
+      {required String id, required String repId}) async {
+    Response<String> response =
+        await dio.delete('/companies/' + id + '/employer/' + repId);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -193,14 +178,13 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> updateInternalImage({
-    required String id, required File image}) async {
-    FormData formData = FormData.fromMap({
-      'image': await MultipartFile.fromFile(image.path)
-    });
+  Future<Company?> updateInternalImage(
+      {required String id, required File image}) async {
+    FormData formData =
+        FormData.fromMap({'image': await MultipartFile.fromFile(image.path)});
 
-    Response<String> response = await dio.post(
-        '/companies/' + id + '/image/internal', data: formData);
+    Response<String> response =
+        await dio.post('/companies/' + id + '/image/internal', data: formData);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -212,14 +196,13 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> updatePublicImage({
-    required String id, required File image}) async {
-    FormData formData = FormData.fromMap({
-      'image': await MultipartFile.fromFile(image.path)
-    });
+  Future<Company?> updatePublicImage(
+      {required String id, required File image}) async {
+    FormData formData =
+        FormData.fromMap({'image': await MultipartFile.fromFile(image.path)});
 
-    Response<String> response = await dio.post(
-        '/companies/' + id + '/image/public', data: formData);
+    Response<String> response =
+        await dio.post('/companies/' + id + '/image/public', data: formData);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -231,12 +214,12 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> createParticipation({required String id,
-    required bool partner}) async {
-    var body = { 'partner': partner };
+  Future<Company?> createParticipation(
+      {required String id, required bool partner}) async {
+    var body = {'partner': partner};
 
-    Response<String> response = await dio.post(
-        '/companies/' + id + '/participation', data: body);
+    Response<String> response =
+        await dio.post('/companies/' + id + '/participation', data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -248,13 +231,12 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> updateParticipation({
-    required String id,
-    DateTime? confirmed,
-    String? member,
-    String? notes,
-    bool? partner
-  }) async {
+  Future<Company?> updateParticipation(
+      {required String id,
+      DateTime? confirmed,
+      String? member,
+      String? notes,
+      bool? partner}) async {
     var body = {
       'confirmed': confirmed,
       'member': member,
@@ -262,8 +244,8 @@ class CompanyService extends Service {
       'partner': partner
     };
 
-    Response<String> response = await dio.put(
-        '/companies/' + id + '/participation', data: body);
+    Response<String> response =
+        await dio.put('/companies/' + id + '/participation', data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -275,13 +257,12 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> addPackage({
-    required String id,
-    required List<Item>? items,
-    required String name,
-    required int price,
-    required int vat
-  }) async {
+  Future<Company?> addPackage(
+      {required String id,
+      required List<Item>? items,
+      required String name,
+      required int price,
+      required int vat}) async {
     var body = {
       'items': items?.map((i) => i.toJson()),
       'name': name,
@@ -289,8 +270,8 @@ class CompanyService extends Service {
       'vat': vat
     };
 
-    Response<String> response = await dio.post(
-        '/companies/' + id + '/participation/package', data: body);
+    Response<String> response = await dio
+        .post('/companies/' + id + '/participation/package', data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -302,14 +283,14 @@ class CompanyService extends Service {
     }
   }
 
-  Future<List<ParticipationStep>> getNextParticipationSteps
-      ({required String id}) async {
-    Response<String> response = await dio.get("/companies/" + id +
-        "/participation/status/next");
+  Future<List<ParticipationStep>> getNextParticipationSteps(
+      {required String id}) async {
+    Response<String> response =
+        await dio.get("/companies/" + id + "/participation/status/next");
     try {
       final responseJson = json.decode(response.data!) as List;
       List<ParticipationStep> participationSteps =
-      responseJson.map((e) => ParticipationStep.fromJson(e)).toList();
+          responseJson.map((e) => ParticipationStep.fromJson(e)).toList();
       return participationSteps;
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -320,10 +301,10 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> updateParticipationStatus({required String id,
-    required ParticipationStatus newStatus}) async {
-    Response<String> response = await dio.put("/companies/" + id +
-        "/participation/status/" + newStatus.toString());
+  Future<Company?> updateParticipationStatus(
+      {required String id, required ParticipationStatus newStatus}) async {
+    Response<String> response = await dio.put(
+        "/companies/" + id + "/participation/status/" + newStatus.toString());
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -335,10 +316,10 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> stepParticipationStatus({required String id,
-    required int step}) async {
-    Response<String> response = await dio.put("/companies/" + id +
-        "/participation/status/" + step.toString());
+  Future<Company?> stepParticipationStatus(
+      {required String id, required int step}) async {
+    Response<String> response = await dio
+        .put("/companies/" + id + "/participation/status/" + step.toString());
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -349,11 +330,10 @@ class CompanyService extends Service {
       throw DeckException('Wrong format');
     }
   }
-
 
   Future<Company?> subscribeToCompany({required String id}) async {
-    Response<String> response = await dio.put("/companies/" + id +
-        "/subscribe");
+    Response<String> response =
+        await dio.put("/companies/" + id + "/subscribe");
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -366,8 +346,8 @@ class CompanyService extends Service {
   }
 
   Future<Company?> unsubscribeToSpeaker({required String id}) async {
-    Response<String> response = await dio.put("/companies/" + id +
-        "/unsubscribe");
+    Response<String> response =
+        await dio.put("/companies/" + id + "/unsubscribe");
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -379,10 +359,10 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> addThread({required String id,
-    required Thread thread}) async {
-    Response<String> response = await dio.put("/speakers/" + id +
-        "/thread", data: thread.toJson());
+  Future<Company?> addThread(
+      {required String id, required Thread thread}) async {
+    Response<String> response =
+        await dio.put("/speakers/" + id + "/thread", data: thread.toJson());
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -393,6 +373,4 @@ class CompanyService extends Service {
       throw DeckException('Wrong format');
     }
   }
-
-
 }
