@@ -49,5 +49,4 @@ class Post {
         'updated': updated,
         'member': memberId
       };
-
 }
