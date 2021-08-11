@@ -134,7 +134,7 @@ class _SpeakerBannerState extends State<SpeakerBanner> {
   void revertSpeakerStatus() {
     setState(() {
       speakerStatus = previousStatus!;
-      //call service method to change par
+      //call service method to change back participations status
     });
   }
 
@@ -231,16 +231,16 @@ class SpeakerStatusDropdownButton extends StatelessWidget {
   }
 }
 
-class DetailsScreen extends StatelessWidget {
-  const DetailsScreen({ Key? key }) : super(key: key);
+// class DetailsScreen extends StatelessWidget {
+//   const DetailsScreen({ Key? key }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      Column(
-        children: [],
-      )
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       Column(
+//         children: [],
+//       )
+//     );
+//   }
+// }
 
