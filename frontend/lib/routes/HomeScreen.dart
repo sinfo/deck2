@@ -23,8 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    checkSignInStatus();
     super.initState();
+    _me = checkSignInStatus();
     _currentIndex = 1;
   }
 
@@ -95,15 +95,13 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void checkSignInStatus() async {
+  Future<Member?> checkSignInStatus() async {
     bool isSignedIn = await googleSignIn.isSignedIn();
     if (!isSignedIn) {
       Navigator.pushReplacementNamed(context, '/login');
     } else {
-      setState(() {
-        this._me = _authService.login();
-        print(_me);
-      });
+      this._me = _authService.login();
+      return _me;
     }
   }
 }
