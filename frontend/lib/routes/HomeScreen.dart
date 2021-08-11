@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/CompanyListWidget.dart';
 import 'package:frontend/routes/CompanyTable.dart';
@@ -25,9 +26,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    super.initState();
     _me = checkSignInStatus();
     _currentIndex = 1;
+    App.localStorage.setInt("event", 29);
+    super.initState();
   }
 
   @override

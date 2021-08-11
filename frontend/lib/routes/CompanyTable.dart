@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/ListViewCard.dart';
@@ -21,8 +22,8 @@ class _CompanyTableState extends State<CompanyTable> {
   @override
   void initState() {
     super.initState();
-    //TODO: Dynamic event
-    members = _memberService.getMembers(event: 29);
+    members =
+        _memberService.getMembers(event: App.localStorage.getInt("event"));
   }
 
   @override
@@ -30,6 +31,7 @@ class _CompanyTableState extends State<CompanyTable> {
         future: members,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            //TODO: LayoutBuilder here
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
             return ListView(
@@ -55,7 +57,7 @@ class _MemberRowState extends State<MemberRow>
     with AutomaticKeepAliveClientMixin {
   Member member;
   CompanyService _companyService = CompanyService();
-  late Future<List<CompanyLight>> _companies;
+  late Future<List<Company>> _companies;
   _MemberRowState({required this.member});
 
   @override
@@ -68,7 +70,7 @@ class _MemberRowState extends State<MemberRow>
   @override
   bool get wantKeepAlive => true;
 
-  Widget _buildWrap(List<CompanyLight> comps) {
+  Widget _buildWrap(List<Company> comps) {
     return Container(
       height: comps.length == 0 ? 0 : null,
       child: Wrap(
@@ -79,7 +81,7 @@ class _MemberRowState extends State<MemberRow>
     );
   }
 
-  Widget _buildListView(List<CompanyLight> comps) {
+  Widget _buildListView(List<Company> comps) {
     return Container(
       height: comps.length == 0 ? 0 : 125,
       child: ListView(
@@ -166,8 +168,10 @@ class _MemberRowState extends State<MemberRow>
                 future: _companies,
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    List<CompanyLight> comps =
-                        snapshot.data as List<CompanyLight>;
+                    List<Company> comps = snapshot.data as List<Company>;
+                    comps.forEach((element) {
+                      print(element.name);
+                    });
                     return LayoutBuilder(builder: (context, constraints) {
                       MediaQueryData data = MediaQuery.of(context);
 

@@ -1,16 +1,67 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 
 class ListViewCard extends StatelessWidget {
   final Member? member;
-  final CompanyLight? company;
+  final Company? company;
+  CompanyParticipation? _participation;
   //Speaker? speaker;
 
-  const ListViewCard({Key? key, this.member, this.company}) : super(key: key);
+  ListViewCard({Key? key, this.member, this.company}) : super(key: key) {
+    int? event = App.localStorage.getInt("event");
+    if (event != null && company != null && company!.participations != null) {
+      _participation = company!.participations!
+          .firstWhere((element) => element.event == event);
+      print(_participation!.status);
+    }
+  }
+
+  Widget _buildStatusCard(String status) {
+    status = status.toUpperCase();
+    Color color;
+    switch (status) {
+      case "SUGGESTED":
+      case "SELECTED":
+        color = Colors.orange;
+        break;
+      case "ON HOLD":
+      case "CONTACTED":
+        color = Colors.yellow;
+        break;
+      case "IN CONVERSATIONS":
+        color = Colors.blue;
+        break;
+      case "ACCEPTED":
+      case "ANNOUNCED":
+        color = Colors.green;
+        break;
+      case "REJECTED":
+        color = Colors.red;
+        break;
+      case "GIVE UP":
+      default:
+        color = Colors.black;
+        break;
+    }
+
+    return Container(
+      padding: EdgeInsets.all(6),
+      margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.all(Radius.circular(5)),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(fontSize: 14),
+      ),
+    );
+  }
 
   Widget _buildSmallCard(BuildContext context) {
     return Container(
@@ -62,18 +113,7 @@ class ListViewCard extends StatelessWidget {
                 } // CompanyScreen(company: this.company)),
                     ));
               }),
-          Container(
-            padding: EdgeInsets.all(4),
-            margin: EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              color: Colors.orange,
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-            ),
-            child: Text(
-              "STATUS",
-              style: TextStyle(fontSize: 8),
-            ),
-          )
+          _buildStatusCard(_participation!.status),
         ],
       ),
     );

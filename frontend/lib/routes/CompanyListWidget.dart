@@ -12,7 +12,7 @@ class CompanyListWidget extends StatefulWidget {
 
 class _CompanyListWidgetState extends State<CompanyListWidget> {
   CompanyService companyService = new CompanyService();
-  late Future<List<CompanyLight>> companies;
+  late Future<List<Company>> companies;
 
   @override
   void initState() {
