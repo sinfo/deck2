@@ -18,7 +18,7 @@ final Map<ParticipationStatus,String> STATUSSTRING = {
   ParticipationStatus.ANNOUNCED: 'Announced',
   ParticipationStatus.CONTACTED: 'Contacted',
   ParticipationStatus.GIVEN_UP: 'Given Up',
-  ParticipationStatus.IN_CONVERSATIONS: 'In Conversations',
+  ParticipationStatus.IN_CONVERSATIONS: 'In Convers.',
   ParticipationStatus.ON_HOLD: 'On Hold',
   ParticipationStatus.REJECTED: 'Rejected',
   ParticipationStatus.SELECTED: 'Selected',
@@ -40,7 +40,7 @@ final Map<ParticipationStatus,Color> STATUSCOLOR = {
 
 
 final Map<String,dynamic> speaker = {
-	"name" : "John Resig",
+	"name" : "Reginald Fils-Aime",
 	"title" : "Creator of jQuery",
 	"participations" : [
 		{
@@ -124,63 +124,67 @@ class SpeakerBanner extends StatefulWidget {
 }
 
 class _SpeakerBannerState extends State<SpeakerBanner> {
+  ParticipationStatus? previousStatus;
   ParticipationStatus speakerStatus = ParticipationStatus.values.firstWhere((element) {
     return element.toString() == 'ParticipationStatus.' + 
         speaker['participations'][(speaker['participations'] as List).length-1]["status"];
     }
   );
 
-  void changeSpeakerStatus(ParticipationStatus? newStatus){
+  void revertSpeakerStatus() {
     setState(() {
+      speakerStatus = previousStatus!;
+      //call service method to change par
+    });
+  }
+
+  void changeSpeakerStatus(ParticipationStatus? newStatus, BuildContext context){
+    setState(() {
+      previousStatus = speakerStatus;
       speakerStatus = newStatus!;
       //call service method to change participations status
+      final SnackBar snackBar = SnackBar(
+        content: Text('Speaker status updated'),
+        action: SnackBarAction(label: 'Undo', onPressed: revertSpeakerStatus),
+      );
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
     });
   }
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
         height: 200,
         width: double.infinity,
-        decoration: BoxDecoration(gradient: SweepGradient(
-          center: AlignmentDirectional(-0.3,1.2),
-          colors: [Colors.indigo.shade200, Colors.indigo.shade300],
+        decoration: BoxDecoration(gradient: LinearGradient(
+          colors: [STATUSCOLOR[speakerStatus]!.withAlpha(100  ), Colors.white],
           transform: GradientRotation(0)
         ),),
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 30, vertical: 25),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 25),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [ 
               ClipOval(
                 child: Container(
-                  child: Image.network(speaker["imgs"]["speaker"]),
+                  child: Image.network(speaker["imgs"]["speaker"],),
                 ),
               ),
               SizedBox(width:20), //Padding
               Expanded(
-                flex: 1,
                 child: Padding(
-                  padding: const EdgeInsets.all(15),
-                    child: Wrap(
-                      runAlignment: WrapAlignment.start,
-                      alignment: WrapAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(speaker['name'], style: Theme.of(context).textTheme.headline5, overflow: TextOverflow.ellipsis,),
-                            Text(speaker['title'], style: Theme.of(context).textTheme.subtitle1, softWrap: false, overflow: TextOverflow.ellipsis )
-                          ], 
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SpeakerStatusDropdownButton(speakerStatus: speakerStatus, statusChangeCallback: changeSpeakerStatus,),
-                            ElevatedButton(onPressed: () => print('zona'), child: Text('+ Subscribe'))
-                          ],
-                        ),
-                      ],
-                    ),
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(speaker['name'], style: Theme.of(context).textTheme.headline5, overflow: TextOverflow.ellipsis,),
+                      Text(speaker['title'], style: Theme.of(context).textTheme.subtitle1, softWrap: false, overflow: TextOverflow.ellipsis ),
+                      SpeakerStatusDropdownButton(speakerStatus: speakerStatus, statusChangeCallback: changeSpeakerStatus,),
+                      ElevatedButton(onPressed: () => print('zona'), child: Text('+ Subscribe'))
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -190,21 +194,19 @@ class _SpeakerBannerState extends State<SpeakerBanner> {
   } 
 }
 class SpeakerStatusDropdownButton extends StatelessWidget {
-  final void Function(ParticipationStatus?) statusChangeCallback;
+  final void Function(ParticipationStatus?, BuildContext) statusChangeCallback;
   final ParticipationStatus speakerStatus;
   const SpeakerStatusDropdownButton({ Key? key, required this.statusChangeCallback, required this.speakerStatus }) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
       child: DropdownButton<ParticipationStatus>(
-        icon: null,
         underline: Container(
           height: 3,
-          decoration: BoxDecoration(color: STATUSCOLOR[speakerStatus]),
+          decoration: BoxDecoration(color: Theme.of(context).accentColor),
         ),
-        iconEnabledColor: STATUSCOLOR[speakerStatus],
         value: speakerStatus,
-        style: Theme.of(context).textTheme.subtitle1,
+        style: Theme.of(context).textTheme.subtitle2,
         selectedItemBuilder: (BuildContext context) {
           return ParticipationStatus.values.map((e) {
             return Align(
@@ -220,9 +222,24 @@ class SpeakerStatusDropdownButton extends StatelessWidget {
               value: e, 
               child: Text(STATUSSTRING[e]!),
             )).toList(),
-        onChanged: statusChangeCallback,
+        onChanged: (status) {
+          statusChangeCallback(status, context);
+        },
         
       ),
+    );
+  }
+}
+
+class DetailsScreen extends StatelessWidget {
+  const DetailsScreen({ Key? key }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      Column(
+        children: [],
+      )
     );
   }
 }
