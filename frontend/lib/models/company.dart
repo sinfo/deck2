@@ -3,6 +3,34 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/thread.dart';
 
+class PublicCompany {
+  final String id;
+  final String img;
+  final String name;
+  final List<CompanyParticipation>? participations;
+  final String site;
+
+  PublicCompany({
+    required this.id,
+    required this.img,
+    required this.name,
+    this.participations,
+    required this.site
+  });
+
+  factory PublicCompany.fromJson(Map<String, dynamic> json) {
+    var participations = json['participations'] as List;
+    return PublicCompany(
+      id: json['id'],
+      img: json['img'],
+      name: json['name'],
+      participations:
+        participations.map((e) => CompanyParticipation.fromJson(e)).toList(),
+      site: json['site']
+    );
+  }
+}
+
 class CompanyLight {
   final String id;
   final String name;
@@ -116,6 +144,12 @@ class CompanyBillingInfo {
       tin: json['tin'],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'address': address,
+    'tin': tin
+  };
 }
 
 class CompanyParticipation {

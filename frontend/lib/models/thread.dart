@@ -78,6 +78,7 @@ class Thread {
     _meeting = await _meetingService.getMeeting(meetingId!);
     return _meeting;
   }
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'entry': entry,
@@ -85,5 +86,5 @@ class Thread {
         'kind': kind,
         'status': status,
         'comments': commentIds
-      };
+  };
 }
