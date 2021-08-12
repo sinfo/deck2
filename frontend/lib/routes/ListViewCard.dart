@@ -9,55 +9,54 @@ import 'package:frontend/routes/UnknownScreen.dart';
 class ListViewCard extends StatelessWidget {
   final Member? member;
   final Company? company;
-  CompanyParticipation? _participation;
+  late String _status;
+  late Color _color;
   //Speaker? speaker;
 
   ListViewCard({Key? key, this.member, this.company}) : super(key: key) {
     int? event = App.localStorage.getInt("event");
+
     if (event != null && company != null && company!.participations != null) {
-      _participation = company!.participations!
+      CompanyParticipation participation = company!.participations!
           .firstWhere((element) => element.event == event);
-      print(_participation!.status);
+      _status = participation.status.toUpperCase();
+      switch (_status) {
+        case "SUGGESTED":
+        case "SELECTED":
+          _color = Colors.orange;
+          break;
+        case "ON HOLD":
+        case "CONTACTED":
+          _color = Colors.yellow;
+          break;
+        case "IN CONVERSATIONS":
+          _color = Colors.blue;
+          break;
+        case "ACCEPTED":
+        case "ANNOUNCED":
+          _color = Colors.green;
+          break;
+        case "REJECTED":
+          _color = Colors.red;
+          break;
+        case "GIVE UP":
+        default:
+          _color = Colors.black;
+          break;
+      }
     }
   }
 
-  Widget _buildStatusCard(String status) {
-    status = status.toUpperCase();
-    Color color;
-    switch (status) {
-      case "SUGGESTED":
-      case "SELECTED":
-        color = Colors.orange;
-        break;
-      case "ON HOLD":
-      case "CONTACTED":
-        color = Colors.yellow;
-        break;
-      case "IN CONVERSATIONS":
-        color = Colors.blue;
-        break;
-      case "ACCEPTED":
-      case "ANNOUNCED":
-        color = Colors.green;
-        break;
-      case "REJECTED":
-        color = Colors.red;
-        break;
-      case "GIVE UP":
-      default:
-        color = Colors.black;
-        break;
-    }
-
+  Widget _buildStatusCard() {
     return Container(
       padding: EdgeInsets.all(6),
       margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
       decoration: BoxDecoration(
-        color: color,
+        color: _color,
         borderRadius: BorderRadius.all(Radius.circular(5)),
       ),
       child: Text(
-        status,
+        _status,
         style: TextStyle(fontSize: 14),
       ),
     );
@@ -72,7 +71,7 @@ class ListViewCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Colors.orange),
+        border: Border.all(color: _color),
       ),
       child: Stack(
         children: [
@@ -113,7 +112,7 @@ class ListViewCard extends StatelessWidget {
                 } // CompanyScreen(company: this.company)),
                     ));
               }),
-          _buildStatusCard(_participation!.status),
+          _buildStatusCard(),
         ],
       ),
     );
@@ -128,7 +127,7 @@ class ListViewCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Colors.orange),
+        border: Border.all(color: _color, width: 2),
       ),
       child: Stack(
         children: [
@@ -170,18 +169,7 @@ class ListViewCard extends StatelessWidget {
                 } // CompanyScreen(company: this.company)),
                     ));
               }),
-          Container(
-            padding: EdgeInsets.all(6),
-            margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
-            decoration: BoxDecoration(
-              color: Colors.orange,
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-            ),
-            child: Text(
-              "STATUS",
-              style: TextStyle(fontSize: 14),
-            ),
-          )
+          _buildStatusCard()
         ],
       ),
     );

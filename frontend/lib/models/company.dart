@@ -76,15 +76,15 @@ class Company {
   });
 
   factory Company.fromJson(Map<String, dynamic> json) {
-    var employees = json['employers'] as List;
+    // var employees = json['employers'] as List;
     var participations = json['participations'] as List;
     return Company(
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      companyImages: CompanyImages.fromJson(json['companyImages']),
+      companyImages: CompanyImages.fromJson(json['imgs']),
       site: json['site'],
-      employees: employees.map((e) => CompanyRep.fromJson(e)).toList(),
+      // employees: employees.map((e) => CompanyRep.fromJson(e)).toList(),
       billingInfo: CompanyBillingInfo.fromJson(json['billingInfo']),
       participations:
           participations.map((e) => CompanyParticipation.fromJson(e)).toList(),
@@ -198,9 +198,9 @@ class CompanyParticipation {
       event: json['event'],
       memberId: json['member'],
       status: json['status'],
-      communicationsId: json['communications'] as List<String>,
+      communicationsId: List.from(json['communications']),
       packageId: json['package'],
-      confirmed: DateTime(json['confirmed']),
+      confirmed: DateTime.parse(json['confirmed']),
       partner: json['partner'],
       notes: json['notes'],
     );

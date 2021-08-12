@@ -64,15 +64,8 @@ class CompanyService extends Service {
 
     if (res.statusCode == 200 && res.data!.isNotEmpty) {
       final jsonRes = json.decode(res.data!) as List;
-      print("companies:");
-      jsonRes.forEach((element) {
-        print(element['name']);
-      });
+
       List<Company> data = jsonRes.map((e) => Company.fromJson(e)).toList();
-      print("companies:");
-      data.forEach((element) {
-        print(element.name);
-      });
       return data;
     } else {
       return [];
