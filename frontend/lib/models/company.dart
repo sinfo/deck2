@@ -10,24 +10,23 @@ class PublicCompany {
   final List<CompanyParticipation>? participations;
   final String site;
 
-  PublicCompany({
-    required this.id,
-    required this.img,
-    required this.name,
-    this.participations,
-    required this.site
-  });
+  PublicCompany(
+      {required this.id,
+      required this.img,
+      required this.name,
+      this.participations,
+      required this.site});
 
   factory PublicCompany.fromJson(Map<String, dynamic> json) {
     var participations = json['participations'] as List;
     return PublicCompany(
-      id: json['id'],
-      img: json['img'],
-      name: json['name'],
-      participations:
-        participations.map((e) => CompanyParticipation.fromJson(e)).toList(),
-      site: json['site']
-    );
+        id: json['id'],
+        img: json['img'],
+        name: json['name'],
+        participations: participations
+            .map((e) => CompanyParticipation.fromJson(e))
+            .toList(),
+        site: json['site']);
   }
 }
 
@@ -35,18 +34,22 @@ class CompanyLight {
   final String id;
   final String name;
   final CompanyImages companyImages;
+  final String status;
 
   CompanyLight({
     required this.id,
     required this.name,
     required this.companyImages,
+    required this.status,
   });
 
   factory CompanyLight.fromJson(Map<String, dynamic> json) {
+    var participations = json['participations'];
     return CompanyLight(
       id: json['id'],
       name: json['name'],
       companyImages: CompanyImages.fromJson(json['imgs']),
+      status: participations[participations.length - 1]['status'],
     );
   }
 }
@@ -145,11 +148,8 @@ class CompanyBillingInfo {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'address': address,
-    'tin': tin
-  };
+  Map<String, dynamic> toJson() =>
+      {'name': name, 'address': address, 'tin': tin};
 }
 
 class CompanyParticipation {
