@@ -29,16 +29,65 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
           List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
 
           return Column(
-            children: comps
-                .map((e) => CompanyCard(
-                      company: e,
-                    ))
-                .toList(),
+            children: <Widget>[
+              Column(
+                children: <Widget>[
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: rowChips(),
+                  )
+                ],
+              ),
+              Column(
+                children: comps
+                    .map((e) => CompanyCard(
+                          company: e,
+                        ))
+                    .toList(),
+              ),
+            ],
           );
         } else {
           return CircularProgressIndicator();
         }
       });
+}
+
+rowChips() {
+  return Row(
+    children: <Widget>[
+      createChip("Suggestion", Colors.orange),
+      createChip("Contacted", Colors.yellow),
+      createChip("Rejected", Colors.red),
+      createChip("Give Up", Colors.black),
+      createChip("Announced", Colors.green),
+      createChip("In Conversations", Colors.blue),
+      createChip("In Negotiations", Colors.blueGrey),
+    ],
+  );
+}
+
+Widget createChip(String label, Color color) {
+  return Container(
+    margin: EdgeInsets.all(6.0),
+    child: Chip(
+      labelPadding: EdgeInsets.all(5.0),
+      //avatar: CircleAvatar(
+      //  backgroundColor: Colors.grey.shade600,
+      //  child: Text(label[0].toUpperCase()),
+      //),
+      label: Text(
+        label,
+        style: TextStyle(
+          color: Colors.white,
+        ),
+      ),
+      backgroundColor: color,
+      elevation: 6.0,
+      shadowColor: Colors.grey[60],
+      padding: EdgeInsets.all(6.0),
+    ),
+  );
 }
 
 class CompanyCard extends StatelessWidget {
