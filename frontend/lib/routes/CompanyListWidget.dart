@@ -41,30 +41,70 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
         if (snapshot.hasData) {
           List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
 
-          return Stack(children: <Widget>[
-            GridView.count(
-              crossAxisCount: MediaQuery.of(context).size.width ~/ CARD_WIDTH,
-              crossAxisSpacing: 5,
-              mainAxisSpacing: 5,
-              childAspectRatio: 0.85,
-              children: comps
-                  .map((e) => CompanyCard(
-                        company: e,
-                      ))
-                  .toList(),
-            ),
-            Positioned(
-                bottom: 15,
-                right: 15,
-                child: FloatingActionButton(
-                  onPressed: () {
-                    //Redirect to create a company!!!
-                    debugPrint("Floating Action Button tapped!");
-                  },
-                  child: const Icon(Icons.add),
-                  backgroundColor: Color(0xff5C7FF2),
-                ))
-          ]);
+          return Column(
+            children: <Widget>[
+              Divider(
+                height: 10,
+                thickness: 0.5,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  IconButton(
+                    onPressed: () {
+                      print("you clicked me");
+                    },
+                    icon: Icon(Icons.grid_on_outlined),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      print("you clicked me");
+                    },
+                    icon: Icon(Icons.person),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      print("you clicked me");
+                    },
+                    icon: Icon(Icons.filter_alt),
+                  ),
+                ],
+              ),
+              Divider(
+                height: 10,
+                thickness: 0.5,
+              ),
+              Expanded(
+                child: Stack(
+                  children: <Widget>[
+                    GridView.count(
+                      crossAxisCount:
+                          MediaQuery.of(context).size.width ~/ CARD_WIDTH,
+                      crossAxisSpacing: 5,
+                      mainAxisSpacing: 5,
+                      childAspectRatio: 0.85,
+                      children: comps
+                          .map((e) => CompanyCard(
+                                company: e,
+                              ))
+                          .toList(),
+                    ),
+                    Positioned(
+                        bottom: 15,
+                        right: 15,
+                        child: FloatingActionButton(
+                          onPressed: () {
+                            //Redirect to create a company!!!
+                            debugPrint("Floating Action Button tapped!");
+                          },
+                          child: const Icon(Icons.add),
+                          backgroundColor: Color(0xff5C7FF2),
+                        ))
+                  ],
+                ),
+              ),
+            ],
+          );
         } else {
           return CircularProgressIndicator();
         }
