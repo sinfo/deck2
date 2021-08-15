@@ -61,7 +61,6 @@ class CompanyService extends Service {
     if (name != null) {
       queryParams['name'] = name;
     }
-    queryParams['event'] = 29;
 
     String companyUrl = '/companies';
     debugPrint('Fecthing companies...');

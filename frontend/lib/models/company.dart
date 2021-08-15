@@ -49,7 +49,7 @@ class CompanyLight {
       id: json['id'],
       name: json['name'],
       companyImages: CompanyImages.fromJson(json['imgs']),
-      status: participations[participations.length - 1]['status'],
+      status: participations.length > 0 ? participations[participations.length - 1]['status'] : "NO STATUS",
     );
   }
 }

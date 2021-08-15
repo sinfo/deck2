@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/models/company.dart';
-import 'package:frontend/services/companyService.dart';
+import 'package:frontend/models/speaker.dart';
+import 'package:frontend/services/speakerService.dart';
 
 final Map<String, Color> partColor = {
   //For suggested, I can also use Color(0xffEDA460)
@@ -13,36 +13,44 @@ final Map<String, Color> partColor = {
   'ACCEPTED': Colors.lightGreen,
   'REJECTED': Colors.red,
   'GIVEN_UP': Colors.black,
-  'ANNOUNCED': Colors.green.shade700,
-  'NO STATUS': Colors.red
+  'ANNOUNCED': Colors.green.shade700
 };
 
 final double CARD_WIDTH = 200;
 
-class CompanyListWidget extends StatefulWidget {
-  const CompanyListWidget({Key? key}) : super(key: key);
+class SpeakerListWidget extends StatefulWidget {
+  const SpeakerListWidget({Key? key}) : super(key: key);
 
   @override
-  _CompanyListWidgetState createState() => _CompanyListWidgetState();
+  _SpeakerListWidgetState createState() => _SpeakerListWidgetState();
 }
 
-class _CompanyListWidgetState extends State<CompanyListWidget> {
-  CompanyService companyService = new CompanyService();
-  late Future<List<CompanyLight>> companies;
+class _SpeakerListWidgetState extends State<SpeakerListWidget> {
+  SpeakerService speakerService = new SpeakerService();
+  late Future<List<Speaker>> speakers;
 
   @override
   void initState() {
     super.initState();
-    this.companies = companyService.getCompanies();
+    this.speakers = speakerService.getSpeakers();
   }
 
   @override
   Widget build(BuildContext context) => FutureBuilder(
-      future: companies,
+      future: speakers,
       builder: (context, snapshot) {
-        print(snapshot.hasData);
+        if (snapshot.hasError) {
+          print(snapshot.error);
+          return Text('Error: ${snapshot.error}');
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Text("Loading");
+        }
+
+        print('Snapshot data: ${snapshot.hasData}');
         if (snapshot.hasData) {
-          List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
+          List<Speaker> comps = snapshot.data as List<Speaker>;
 
           return Stack(children: <Widget>[
             GridView.count(
@@ -51,8 +59,8 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
               mainAxisSpacing: 5,
               childAspectRatio: 0.80,
               children: comps
-                  .map((e) => CompanyCard(
-                        company: e,
+                  .map((e) => SpeakerCard(
+                        speaker: e,
                       ))
                   .toList(),
             ),
@@ -65,7 +73,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                       context,
                       MaterialPageRoute(
                           builder: (context) =>
-                              CreateCompanyScreen()),
+                              CreateSpeakerScreen()),
                     );*/
                     debugPrint("Floating Action Button tapped!");
                   },
@@ -79,9 +87,9 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
       });
 }
 
-class CompanyCard extends StatelessWidget {
-  final CompanyLight company;
-  const CompanyCard({Key? key, required this.company}) : super(key: key);
+class SpeakerCard extends StatelessWidget {
+  final Speaker speaker;
+  const SpeakerCard({Key? key, required this.speaker}) : super(key: key);
 
   String partName(String participationStatus) {
     int i;
@@ -90,7 +98,8 @@ class CompanyCard extends StatelessWidget {
         break;
       }
     }
-    if (i >= participationStatus.length - 1) {
+    //Assuming that last character is not _
+    if (i == participationStatus.length) {
       return participationStatus.substring(0, 1) +
           participationStatus.substring(1).toLowerCase();
     } else {
@@ -109,13 +118,13 @@ class CompanyCard extends StatelessWidget {
         /*Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => CompanyScreen(companyLight: this.company)),
+              builder: (context) => SpeakerScreen(speakerLight: this.speaker)),
         );*/
-        debugPrint(this.company.name + " card tapped!");
+        debugPrint(this.speaker.name! + " card tapped!");
       },
       child: Column(children: <Widget>[
         Stack(children: <Widget>[
-          Image.network(this.company.companyImages.internal, fit: BoxFit.cover,
+          Image.network(this.speaker.imgs!.internal!, fit: BoxFit.cover,
               loadingBuilder: (context, child, progress) {
             return progress == null ? child : CircularProgressIndicator();
           }, errorBuilder: (context, exception, stackTrace) {
@@ -125,17 +134,25 @@ class CompanyCard extends StatelessWidget {
                 decoration: BoxDecoration(
                     shape: BoxShape.circle, color: Color(0xff5C7FF2)),
                 child: Center(
-                  child: Text(this.company.name.substring(0, 1),
+                  child: Text(this.speaker.name!.substring(0, 1),
                       style: TextStyle(fontSize: 72, color: Colors.white)),
                 ));
           }),
           DecoratedBox(
               decoration: BoxDecoration(
-                  color: partColor[this.company.status],
+                  color: partColor[this
+                      .speaker
+                      .participations![this.speaker.participations!.length - 1]
+                      .status],
                   borderRadius: BorderRadius.circular(3)),
               child: Padding(
                 padding: EdgeInsets.all(4.0),
-                child: Text(partName(this.company.status),
+                child: Text(
+                    partName(this
+                        .speaker
+                        .participations![this.speaker.participations!.length - 1]
+                        .status
+                        .toString()),
                     style: TextStyle(color: Colors.white)),
               ))
         ]),
@@ -144,7 +161,7 @@ class CompanyCard extends StatelessWidget {
             child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Center(
-                    child: Text(this.company.name,
+                    child: Text(this.speaker.name!,
                         style: TextStyle(fontWeight: FontWeight.bold))))),
       ]),
     );
