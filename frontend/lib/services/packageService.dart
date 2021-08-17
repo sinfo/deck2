@@ -6,10 +6,11 @@ import 'package:frontend/models/item.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/services/service.dart';
 
-class packageService extends Service {
+class PackageService extends Service {
   final String baseURL = '/packages';
 
-  Future<List<Package>> getPackages({String? name, int? price, int? vat}) async {
+  Future<List<Package>> getPackages(
+      {String? name, int? price, int? vat}) async {
     var queryParameters = {
       "name": name,
       "price": price,
@@ -21,7 +22,8 @@ class packageService extends Service {
 
     try {
       final responseJson = json.decode(response.data!) as List;
-      List<Package> packages = responseJson.map((e) => Package.fromJson(e)).toList();
+      List<Package> packages =
+          responseJson.map((e) => Package.fromJson(e)).toList();
       return packages;
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -32,7 +34,8 @@ class packageService extends Service {
     }
   }
 
-  Future<Package?> createPackage(Item item, String name, int price, int vat) async {
+  Future<Package?> createPackage(
+      Item item, String name, int price, int vat) async {
     var body = {
       "item": item.toJson(),
       "name": name,
@@ -67,7 +70,8 @@ class packageService extends Service {
     }
   }
 
-  Future<Package?> updatePackage(String id, String name, int price, int vat) async {
+  Future<Package?> updatePackage(
+      String id, String name, int price, int vat) async {
     var body = {
       "name": name,
       "price": price,
@@ -88,9 +92,7 @@ class packageService extends Service {
   }
 
   Future<Package?> updatePackageItems(String id, List<Item> package) async {
-    var body = {
-      "package": jsonEncode(package)
-    };
+    var body = {"package": jsonEncode(package)};
 
     Response<String> response = await dio.put(baseURL + '/$id', data: body);
 
