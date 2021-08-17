@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/services/companyService.dart';
 
+/**
+ * TODO: Remove later.
+ * Temporary widget for testing purposes only
+ */
+
 class CompanyListWidget extends StatefulWidget {
   const CompanyListWidget({Key? key}) : super(key: key);
 

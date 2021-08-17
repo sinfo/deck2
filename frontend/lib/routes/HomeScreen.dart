@@ -4,8 +4,9 @@ import 'package:frontend/components/drawer.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/CompanyListWidget.dart';
-import 'package:frontend/routes/CompanyTable.dart';
+import 'package:frontend/routes/company/CompanyTable.dart';
 import 'package:frontend/routes/MemberListWidget.dart';
+import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -86,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 0:
         {
-          return Center(child: Text("Speakers in progress :)"));
+          return Center(child: SpeakerTable());
         }
         break;
       case 1:
