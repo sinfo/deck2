@@ -7,93 +7,111 @@ import 'package:frontend/routes/company/CompanyBanner.dart';
 import 'package:frontend/routes/company/EditBox.dart';
 
 class CompanyScreen extends StatefulWidget {
-  final CompanyLight companyLight;
-  CompanyScreen({Key? key, required this.companyLight}) : super(key: key);
+  final String companyId;
+  CompanyScreen({Key? key, required this.companyId}) : super(key: key);
 
   @override
-  _CompanyScreen createState() => _CompanyScreen(companyLight: companyLight);
+  _CompanyScreen createState() => _CompanyScreen(companyId: companyId);
 }
 
 class _CompanyScreen extends State<CompanyScreen> {
   CompanyService companyService = new CompanyService();
-  final CompanyLight companyLight;
+  late Future<Company?> company;
+  final String companyId;
 
-  _CompanyScreen({Key? key, required this.companyLight});
+  _CompanyScreen({Key? key, required this.companyId});
 
   @override
   void initState() {
     super.initState();
+    company = companyService.getCompany(id: companyId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: GestureDetector(
-            child: Image.asset(
-          'assets/logo-branco2.png',
-          height: 100,
-          width: 100,
-        )),
-      ),
-      body: Container(
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              DeckBanner(companyLight: this.companyLight),
-              DefaultTabController(
-                  length: 5, // length of tabs
-                  initialIndex: 0,
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        Container(
-                          child: TabBar(
-                            labelColor: Colors.indigo,
-                            unselectedLabelColor: Colors.black,
-                            tabs: [
-                              Tab(text: 'Details'),
-                               Tab(text: 'Communications'),
-                                Tab(text: 'Participations'),
-                              Tab(text: 'Employees'),
-                              Tab(text: 'Billing'),
-                             
-                             
-                            ],
-                          ),
-                        ),
-                        Container(
-                            height: 500, //height of TabBarView
-                            decoration: BoxDecoration(
-                                border: Border(
-                                    top: BorderSide(
-                                        color: Colors.indigo, width: 0.5))),
-                            child: TabBarView(children: <Widget>[
-                              Container(
-                                child: displayDetails(),
-                              ),
-                              Container(
-                                child: displayCommunication(),
-                              ),
-                              Container(
-                                child: displayParticipations(),
-                              ),
-                              Container(
-                                child: displayEmployees(),
-                              ),
-                              Container(
-                                child: displayBilling(),
-                              ),
-                            ]))
-                      ])),
-            ]),
-      ),
-    );
+        appBar: AppBar(
+          title: GestureDetector(
+              child: Image.asset(
+            'assets/logo-branco2.png',
+            height: 100,
+            width: 100,
+          )),
+        ),
+        body: FutureBuilder(
+            future: company,
+            builder: (context, snapshot) {
+              print(snapshot.hasData);
+              if (snapshot.hasData) {
+                Company? cmp = snapshot.data as Company?;
+                if (cmp == null) {
+                  return Text("No such company");
+                }
+                return Container(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                      DeckBanner(cmp: cmp),
+                      DefaultTabController(
+                          length: 5, // length of tabs
+                          initialIndex: 0,
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: <Widget>[
+                                Container(
+                                  child: TabBar(
+                                    labelColor: Colors.indigo,
+                                    unselectedLabelColor: Colors.black,
+                                    tabs: [
+                                      Tab(text: 'Details'),
+                                      Tab(text: 'Communications'),
+                                      Tab(text: 'Participations'),
+                                      Tab(text: 'Employees'),
+                                      Tab(text: 'Billing'),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                    height: 500, //height of TabBarView
+                                    decoration: BoxDecoration(
+                                        border: Border(
+                                            top: BorderSide(
+                                                color: Colors.indigo,
+                                                width: 0.5))),
+                                    child: TabBarView(children: <Widget>[
+                                      Container(
+                                        child: displayDetails(),
+                                      ),
+                                      Container(
+                                        child: displayCommunication(),
+                                      ),
+                                      Container(
+                                        child: displayParticipations(),
+                                      ),
+                                      Container(
+                                        child: displayEmployees(),
+                                      ),
+                                      Container(
+                                        child: displayBilling(),
+                                      ),
+                                    ]))
+                              ])),
+                    ]));
+              } else {
+                return Text("Loading...");
+              }
+            }));
+
+    /*
+    
+    
+    
+    */
   }
 
   Widget displayDetails() {
     return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         EditBox(
             title: "Description",

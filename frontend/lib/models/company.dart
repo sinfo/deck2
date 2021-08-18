@@ -10,24 +10,23 @@ class PublicCompany {
   final List<CompanyParticipation>? participations;
   final String site;
 
-  PublicCompany({
-    required this.id,
-    required this.img,
-    required this.name,
-    this.participations,
-    required this.site
-  });
+  PublicCompany(
+      {required this.id,
+      required this.img,
+      required this.name,
+      this.participations,
+      required this.site});
 
   factory PublicCompany.fromJson(Map<String, dynamic> json) {
     var participations = json['participations'] as List;
     return PublicCompany(
-      id: json['id'],
-      img: json['img'],
-      name: json['name'],
-      participations:
-        participations.map((e) => CompanyParticipation.fromJson(e)).toList(),
-      site: json['site']
-    );
+        id: json['id'],
+        img: json['img'],
+        name: json['name'],
+        participations: participations
+            .map((e) => CompanyParticipation.fromJson(e))
+            .toList(),
+        site: json['site']);
   }
 }
 
@@ -57,7 +56,7 @@ class Company {
   final String? description;
   final CompanyImages companyImages;
   final String? site;
-  final List<CompanyRep>? employees;
+  final List<String>? employers;
   final CompanyBillingInfo? billingInfo;
   final List<CompanyParticipation>? participations;
 
@@ -67,24 +66,26 @@ class Company {
     this.description,
     required this.companyImages,
     this.site,
-    this.employees,
+    this.employers,
     this.billingInfo,
     this.participations,
   });
 
   factory Company.fromJson(Map<String, dynamic> json) {
-    var employees = json['employers'] as List;
-    var participations = json['participations'] as List;
+    var jsonParticipations = json['participations'] as List;
+    var employers = json['employers'] as List<String>?;
+    var participations = jsonParticipations
+        .map((e) => CompanyParticipation.fromJson(e))
+        .toList();
     return Company(
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      companyImages: CompanyImages.fromJson(json['companyImages']),
+      companyImages: CompanyImages.fromJson(json['imgs']),
       site: json['site'],
-      employees: employees.map((e) => CompanyRep.fromJson(e)).toList(),
+      employers: employers,
       billingInfo: CompanyBillingInfo.fromJson(json['billingInfo']),
-      participations:
-          participations.map((e) => CompanyParticipation.fromJson(e)).toList(),
+      participations: participations,
     );
   }
 }
@@ -145,19 +146,16 @@ class CompanyBillingInfo {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-    'name': name,
-    'address': address,
-    'tin': tin
-  };
+  Map<String, dynamic> toJson() =>
+      {'name': name, 'address': address, 'tin': tin};
 }
 
 class CompanyParticipation {
   final int? event;
-  final Member? member;
+  final String? member;
   final String? status;
-  final List<Thread>? communications;
-  final Package? package;
+  final List<String>? communications;
+  final String? package;
   final DateTime? confirmed;
   final bool? partner;
   final String? notes;
@@ -174,16 +172,17 @@ class CompanyParticipation {
   });
 
   factory CompanyParticipation.fromJson(Map<String, dynamic> json) {
-    var threads = json['communications'] as List;
-    return CompanyParticipation(
+    CompanyParticipation result = CompanyParticipation(
       event: json['event'],
-      member: Member.fromJson(json['member']),
+      member: json['member'],
       status: json['status'],
-      communications: threads.map((e) => Thread.fromJson(e)).toList(),
-      package: Package.fromJson(json['package']),
-      confirmed: DateTime(json['confirmed']),
+      communications: List.from(json['communications']),
+      package: json['package'],
+      confirmed: DateTime.parse(json['confirmed']),
       partner: json['partner'],
       notes: json['notes'],
     );
+    print(result);
+    return result;
   }
 }

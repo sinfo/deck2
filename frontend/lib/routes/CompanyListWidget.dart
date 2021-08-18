@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/routes/company/CompanyScreen.dart';
 import 'package:frontend/services/companyService.dart';
 
 class CompanyListWidget extends StatefulWidget {
@@ -48,20 +49,27 @@ class CompanyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Card(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            ListTile(
-              leading: CircleAvatar(
-                backgroundImage:
-                    NetworkImage(this.company.companyImages.internal),
-              ),
-              title: Text(this.company.name),
+      child: InkWell(
+          child: Card(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage:
+                        NetworkImage(this.company.companyImages.internal),
+                  ),
+                  title: Text(this.company.name),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => CompanyScreen(companyId :  company.id)),
+            );
+          }),
     );
   }
 }
