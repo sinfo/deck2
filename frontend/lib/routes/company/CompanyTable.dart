@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:frontend/components/filterbar.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
@@ -18,6 +19,7 @@ class CompanyTable extends StatefulWidget {
 class _CompanyTableState extends State<CompanyTable> {
   final MemberService _memberService = MemberService();
   late Future<List<Member>> members;
+  String _filter = "ALL";
 
   @override
   void initState() {
@@ -31,35 +33,56 @@ class _CompanyTableState extends State<CompanyTable> {
         future: members,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            print("snapshot: " + _filter);
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return ListView(
-              children:
-                  membs.map((e) => MemberCompaniesRow(member: e)).toList(),
-              addAutomaticKeepAlives: true,
+            return Column(
+              children: <Widget>[
+                FilterBar(onSelected: (value) => onSelected(value)),
+                Expanded(
+                  child: ListView(
+                    children: membs
+                        .map((e) =>
+                            MemberCompaniesRow(member: e, filter: _filter))
+                        .toList(),
+                    addAutomaticKeepAlives: true,
+                  ),
+                ),
+              ],
             );
           } else {
             return CircularProgressIndicator();
           }
         },
       );
+
+  onSelected(String filter) {
+    setState(() {
+      print("antes: " + _filter);
+      _filter = filter;
+      print("depois: " + _filter);
+    });
+  }
 }
 
 class MemberCompaniesRow extends StatefulWidget {
   final Member member;
-  MemberCompaniesRow({Key? key, required this.member}) : super(key: key);
+  String filter;
+  MemberCompaniesRow({Key? key, required this.member, required this.filter})
+      : super(key: key);
 
   @override
   _MemberCompaniesRowState createState() =>
-      _MemberCompaniesRowState(member: member);
+      _MemberCompaniesRowState(member: member, filter: filter);
 }
 
 class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     with AutomaticKeepAliveClientMixin {
   Member member;
+  String filter;
   CompanyService _companyService = CompanyService();
   late Future<List<Company>> _companies;
-  _MemberCompaniesRowState({required this.member});
+  _MemberCompaniesRowState({required this.member, required this.filter});
 
   @override
   void initState() {
@@ -114,6 +137,14 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
+              if (filter != "ALL") {
+                for (Company c in comps) {
+                  CompanyParticipation p = c.participations!
+                      .firstWhere((element) => element.event == 29);
+                  String s = p.status.toUpperCase();
+                  if (s != filter) comps.remove(c);
+                }
+              }
               return Container(
                 height: comps.length == 0 ? 0 : null,
                 child: Wrap(
@@ -182,6 +213,15 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
+              if (filter != "ALL") {
+                for (Company c in comps) {
+                  CompanyParticipation p = c.participations!
+                      .firstWhere((element) => element.event == 29);
+                  String s = p.status.toUpperCase();
+                  if (s != filter) comps.remove(c);
+                }
+              }
+
               comps.forEach((element) {
                 print(element.name);
               });
@@ -218,8 +258,10 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: LayoutBuilder(builder: (context, constraints) {
               if (constraints.maxWidth < 1500) {
+                print("smalltile" + filter);
                 return _buildSmallTile();
               } else {
+                print("big tile" + filter);
                 return _buildBigTile();
               }
             })),
