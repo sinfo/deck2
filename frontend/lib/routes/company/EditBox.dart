@@ -39,7 +39,9 @@ class EditBox extends StatelessWidget {
             child: Icon(
               Icons.edit,
               color: Color.fromRGBO(211, 211, 211, 1),
-              size: 18),
+              size: 18,
+              
+              ),
           )]
       ),
     );

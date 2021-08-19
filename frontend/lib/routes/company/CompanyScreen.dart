@@ -80,19 +80,19 @@ class _CompanyScreen extends State<CompanyScreen> {
                                                 width: 0.5))),
                                     child: TabBarView(children: <Widget>[
                                       Container(
-                                        child: displayDetails(),
+                                        child: displayDetails(cmp),
                                       ),
                                       Container(
-                                        child: displayCommunication(),
+                                        child: displayCommunication(cmp),
                                       ),
                                       Container(
-                                        child: displayParticipations(),
+                                        child: displayParticipations(cmp),
                                       ),
                                       Container(
-                                        child: displayEmployees(),
+                                        child: displayEmployees(cmp),
                                       ),
                                       Container(
-                                        child: displayBilling(),
+                                        child: displayBilling(cmp),
                                       ),
                                     ]))
                               ])),
@@ -109,7 +109,7 @@ class _CompanyScreen extends State<CompanyScreen> {
     */
   }
 
-  Widget displayDetails() {
+  Widget displayDetails(Company cmp) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -126,22 +126,34 @@ class _CompanyScreen extends State<CompanyScreen> {
     );
   }
 
-  Widget displayEmployees() {
-    return Text('Employees',
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold));
+  Widget displayEmployees(Company cmp) {
+    if(cmp.employers==null){
+      return Text("No employers information");
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: cmp.employers!.map((e) => EditBox(title: "", body: e)).toList(),
+    );
   }
 
-  Widget displayBilling() {
+  Widget displayBilling(Company cmp) {
     return Text('Billing',
         style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold));
   }
 
-  Widget displayParticipations() {
-    return Text('Participations',
-        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold));
+  Widget displayParticipations(Company cmp) {
+    if(cmp.participations==null){
+      return Text("No participations information");
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: cmp.participations!.map((p) => EditBox(title: "SINFO ${p.event}", body: p.member!)).toList(),
+    );
   }
 
-  Widget displayCommunication() {
+  Widget displayCommunication(Company cmp) {
     return Text('Communications',
         style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold));
   }
