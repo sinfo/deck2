@@ -26,34 +26,58 @@ class Room {
 }
 
 class Participation {
-  final List<String>? communications;
-  final int? event;
+  final List<String>? communications; //TODO: lazy load
+  final int event;
   final String? feedback;
-  final List<String>? flights;
-  final String? member;
+  final List<String>? flights; //TODO: Lazy load
+  final String? member; //TODO: Lazy load
   final ParticipationStatus? status;
-  final List<String>? subscribers;
   final Room? room;
 
   Participation(
       {this.communications,
-      this.event,
+      required this.event,
       this.feedback,
       this.flights,
       this.member,
       this.status,
-      this.subscribers,
       this.room});
+
+  static ParticipationStatus convert(String s) {
+    s = s.toUpperCase();
+
+    switch (s) {
+      case "SUGGESTED":
+        return ParticipationStatus.SUGGESTED;
+      case "SELECTED":
+        return ParticipationStatus.SELECTED;
+      case "ON HOLD":
+        return ParticipationStatus.ON_HOLD;
+      case "CONTACTED":
+        return ParticipationStatus.CONTACTED;
+      case "IN CONVERSATIONS":
+        return ParticipationStatus.IN_CONVERSATIONS;
+      case "ACCEPTED":
+        return ParticipationStatus.ACCEPTED;
+      case "ANNOUNCED":
+        return ParticipationStatus.ANNOUNCED;
+      case "REJECTED":
+        return ParticipationStatus.REJECTED;
+      case "GIVE UP":
+        return ParticipationStatus.GIVEN_UP;
+      default:
+        return ParticipationStatus.GIVEN_UP;
+    }
+  }
 
   factory Participation.fromJson(Map<String, dynamic> json) {
     return Participation(
-        communications: json['communications'],
+        communications: List.from(json['communications']),
         event: json['event'],
         feedback: json['feedback'],
-        flights: json['flights'],
+        flights: List.from(json['flights']),
         member: json['member'],
-        status: json['status'],
-        subscribers: json['subscribers'],
+        status: convert(json['status']),
         room: Room.fromJson(json['room']));
   }
 
@@ -64,7 +88,6 @@ class Participation {
         'flights': flights,
         'member': member,
         'status': status,
-        'subscribers': subscribers,
         'room': room?.toJson()
       };
 }
@@ -90,9 +113,6 @@ class ParticipationStep {
   ParticipationStep({this.next, this.step});
 
   factory ParticipationStep.fromJson(Map<String, dynamic> json) {
-    return ParticipationStep(
-      next: json['next'],
-      step: json['step']
-    );
+    return ParticipationStep(next: json['next'], step: json['step']);
   }
 }

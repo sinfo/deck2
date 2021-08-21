@@ -43,9 +43,6 @@ class SpeakerService extends Service {
       {String? name, int? eventId, String? member}) async {
     var queryParameters = {'name': name, 'event': eventId, 'member': member};
 
-    //FIXME -- Take this later
-    queryParameters['event'] = 29;
-
     Response<String> response =
         await dio.get("/speakers", queryParameters: queryParameters);
 

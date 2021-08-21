@@ -19,18 +19,18 @@ class Images {
 }
 
 class Speaker {
-  final String? id;
-  final String? name;
+  final String id;
+  final String name;
   final String? title;
-  final String? contact;
+  final String? contact; //TODO: lazy load
   final String? bio;
   final String? notes;
   final Images? imgs;
   final List<Participation>? participations;
 
   Speaker(
-      {this.id,
-      this.name,
+      {required this.id,
+      required this.name,
       this.title,
       this.contact,
       this.bio,
@@ -48,8 +48,8 @@ class Speaker {
         bio: json['bio'],
         notes: json['notes'],
         imgs: Images.fromJson(json['imgs']),
-        participations: participationsList.map((p) => Participation.fromJson(p)).toList()
-    );
+        participations:
+            participationsList.map((p) => Participation.fromJson(p)).toList());
   }
 
   Map<String, dynamic> toJson() => {

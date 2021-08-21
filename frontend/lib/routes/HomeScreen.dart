@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/CompanyListWidget.dart';
-import 'package:frontend/routes/SpeakerListWidget.dart';
+import 'package:frontend/routes/company/CompanyListWidget.dart';
+import 'package:frontend/routes/company/CompanyTable.dart';
+import 'package:frontend/routes/MemberListWidget.dart';
+import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -24,9 +27,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    super.initState();
     _me = checkSignInStatus();
     _currentIndex = 1;
+    App.localStorage.setInt("event", 29);
+    super.initState();
   }
 
   @override
@@ -34,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
         appBar: CustomAppBar(),
         bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
             currentIndex: _currentIndex,
             // Give a custom drawer header
             items: <BottomNavigationBarItem>[
@@ -51,7 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   label: 'Companies',
                   icon: Icon(
                     Icons.work,
-                  ))
+                  )),
+              //FIXME: o item aqui em baixo foi colocado apenas para processo de development
+              BottomNavigationBarItem(
+                  label: 'Members',
+                  icon: Icon(
+                    Icons.people,
+                  )),
             ],
             onTap: (newIndex) {
               setState(() {
@@ -76,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 0:
         {
-          return Center(child: SpeakerListWidget());
+          return Center(child: SpeakerTable());
         }
         break;
       case 1:
@@ -86,7 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case 2:
         {
-          return Center(child: CompanyListWidget());
+          return Center(child: CompanyTable());
+        }
+        break;
+      //FIXME: retirar isto em baixo porque não vai ficar aqui
+      case 3:
+        {
+          return Center(child: MemberListWidget());
         }
         break;
       default:
@@ -97,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<Member?> checkSignInStatus() async {
+    await googleSignIn.signInSilently();
     bool isSignedIn = await googleSignIn.isSignedIn();
     if (!isSignedIn) {
       Navigator.pushReplacementNamed(context, '/login');

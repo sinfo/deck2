@@ -2,6 +2,10 @@ import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/thread.dart';
+import 'package:frontend/services/contactService.dart';
+import 'package:frontend/services/memberService.dart';
+import 'package:frontend/services/packageService.dart';
+import 'package:frontend/services/threadService.dart';
 
 class PublicCompany {
   final String id;
@@ -55,17 +59,17 @@ class CompanyLight {
 }
 
 class Company {
-  final String? id;
+  final String id;
   final String name;
   final String? description;
   final CompanyImages companyImages;
   final String? site;
-  final List<CompanyRep>? employees;
-  final CompanyBillingInfo? billingInfo;
-  final List<CompanyParticipation>? participations;
+  List<CompanyRep>? employees;
+  CompanyBillingInfo? billingInfo;
+  List<CompanyParticipation>? participations;
 
   Company({
-    this.id,
+    required this.id,
     required this.name,
     this.description,
     required this.companyImages,
@@ -76,15 +80,15 @@ class Company {
   });
 
   factory Company.fromJson(Map<String, dynamic> json) {
-    var employees = json['employers'] as List;
+    // var employees = json['employers'] as List;
     var participations = json['participations'] as List;
     return Company(
       id: json['id'],
       name: json['name'],
       description: json['description'],
-      companyImages: CompanyImages.fromJson(json['companyImages']),
+      companyImages: CompanyImages.fromJson(json['imgs']),
       site: json['site'],
-      employees: employees.map((e) => CompanyRep.fromJson(e)).toList(),
+      // employees: employees.map((e) => CompanyRep.fromJson(e)).toList(),
       billingInfo: CompanyBillingInfo.fromJson(json['billingInfo']),
       participations:
           participations.map((e) => CompanyParticipation.fromJson(e)).toList(),
@@ -110,22 +114,30 @@ class CompanyImages {
 }
 
 class CompanyRep {
-  final String? id;
-  final String? name;
-  final Contact? contact;
+  final String id;
+  final String name;
+  final String contactID;
+  Contact? _contact;
+  ContactService _contactService = ContactService();
 
   CompanyRep({
-    this.id,
-    this.name,
-    this.contact,
+    required this.id,
+    required this.name,
+    required this.contactID,
   });
 
   factory CompanyRep.fromJson(Map<String, dynamic> json) {
     return CompanyRep(
       id: json['id'],
       name: json['name'],
-      contact: Contact.fromJson(json['contact']),
+      contactID: json['contact'],
     );
+  }
+
+  Future<Contact?> get contact async {
+    if (_contact != null) return _contact;
+    _contact = await _contactService.getContact(contactID);
+    return _contact;
   }
 }
 
@@ -153,37 +165,78 @@ class CompanyBillingInfo {
 }
 
 class CompanyParticipation {
-  final int? event;
-  final Member? member;
-  final String? status;
-  final List<Thread>? communications;
-  final Package? package;
+  MemberService _memberService = MemberService();
+  PackageService _packageService = PackageService();
+  ThreadService _threadService = ThreadService();
+
+  final int event;
+
+  final String memberId;
+  Member? _member;
+
+  final String status;
+
+  final List<String>? communicationsId;
+  List<Thread>? _communications;
+
+  final String? packageId;
+  Package? _package;
+
   final DateTime? confirmed;
   final bool? partner;
   final String? notes;
 
   CompanyParticipation({
-    this.event,
-    this.member,
-    this.status,
-    this.communications,
-    this.package,
+    required this.event,
+    required this.memberId,
+    required this.status,
+    this.communicationsId,
+    this.packageId,
     this.confirmed,
     this.partner,
     this.notes,
   });
 
   factory CompanyParticipation.fromJson(Map<String, dynamic> json) {
-    var threads = json['communications'] as List;
     return CompanyParticipation(
       event: json['event'],
-      member: Member.fromJson(json['member']),
+      memberId: json['member'],
       status: json['status'],
-      communications: threads.map((e) => Thread.fromJson(e)).toList(),
-      package: Package.fromJson(json['package']),
-      confirmed: DateTime(json['confirmed']),
+      communicationsId: List.from(json['communications']),
+      packageId: json['package'],
+      confirmed: DateTime.parse(json['confirmed']),
       partner: json['partner'],
       notes: json['notes'],
     );
+  }
+
+  Future<Member?> get member async {
+    if (_member != null) return _member;
+
+    _member = await _memberService.getMember(memberId);
+    return _member;
+  }
+
+  Future<Package?> get package async {
+    if (_package != null) return _package;
+    if (packageId == null) return null;
+
+    _package = await _packageService.getPackage(packageId!);
+    return _package;
+  }
+
+  Future<List<Thread>?> get communications async {
+    if (_communications != null) return _communications;
+    if (communicationsId == null) return [];
+
+    _communications = [];
+    communicationsId!.forEach((element) async {
+      Thread? t = await _threadService.getThread(element);
+      if (t != null) {
+        _communications!.add(t);
+      }
+    });
+
+    return _communications;
   }
 }
