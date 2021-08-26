@@ -19,13 +19,14 @@ class CompanyTable extends StatefulWidget {
 class _CompanyTableState extends State<CompanyTable> {
   final MemberService _memberService = MemberService();
   late Future<List<Member>> members;
-  String _filter = "ALL";
+  late String _filter;
 
   @override
   void initState() {
     super.initState();
     members =
         _memberService.getMembers(event: App.localStorage.getInt("event"));
+    _filter = "ALL";
   }
 
   @override
@@ -33,7 +34,6 @@ class _CompanyTableState extends State<CompanyTable> {
         future: members,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            print("snapshot: " + _filter);
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
             return Column(
@@ -58,9 +58,7 @@ class _CompanyTableState extends State<CompanyTable> {
 
   onSelected(String filter) {
     setState(() {
-      print("antes: " + _filter);
       _filter = filter;
-      print("depois: " + _filter);
     });
   }
 }
@@ -94,7 +92,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
   @override
   bool get wantKeepAlive => true;
 
-  Widget _buildBigTile() {
+  Widget _buildBigTile(String _filter) {
     return ExpansionTile(
       maintainState: true,
       iconColor: Colors.transparent,
@@ -137,20 +135,13 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
-              if (filter != "ALL") {
-                for (Company c in comps) {
-                  CompanyParticipation p = c.participations!
-                      .firstWhere((element) => element.event == 29);
-                  String s = p.status.toUpperCase();
-                  if (s != filter) comps.remove(c);
-                }
-              }
+              List<Company> compscpy = filterListByStatus(comps, _filter);
               return Container(
-                height: comps.length == 0 ? 0 : null,
+                height: compscpy.length == 0 ? 0 : null,
                 child: Wrap(
                   alignment: WrapAlignment.start,
                   crossAxisAlignment: WrapCrossAlignment.start,
-                  children: comps
+                  children: compscpy
                       .map((e) => ListViewCard(small: false, company: e))
                       .toList(),
                 ),
@@ -172,7 +163,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     );
   }
 
-  Widget _buildSmallTile() {
+  Widget _buildSmallTile(String _filter) {
     return ExpansionTile(
       iconColor: Colors.transparent,
       initiallyExpanded: true,
@@ -213,23 +204,12 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
-              if (filter != "ALL") {
-                for (Company c in comps) {
-                  CompanyParticipation p = c.participations!
-                      .firstWhere((element) => element.event == 29);
-                  String s = p.status.toUpperCase();
-                  if (s != filter) comps.remove(c);
-                }
-              }
-
-              comps.forEach((element) {
-                print(element.name);
-              });
+              List<Company> compscpy = filterListByStatus(comps, _filter);
               return Container(
-                height: comps.length == 0 ? 0 : 125,
+                height: compscpy.length == 0 ? 0 : 125,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  children: comps
+                  children: compscpy
                       .map((e) => ListViewCard(small: true, company: e))
                       .toList(),
                 ),
@@ -251,19 +231,35 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     );
   }
 
+  List<Company> filterListByStatus(List comps, String _filter) {
+    List<Company> compscpy = [];
+    if (_filter != "ALL") {
+      for (Company c in comps) {
+        CompanyParticipation p =
+            c.participations!.firstWhere((element) => element.event == 29);
+        String s = p.status.toUpperCase();
+        if (s == _filter) compscpy.add(c);
+      }
+    } else {
+      compscpy = List.from(comps);
+    }
+    return compscpy;
+  }
+
   @override
-  Widget build(BuildContext context) => Container(
-        margin: EdgeInsets.all(10),
-        child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: LayoutBuilder(builder: (context, constraints) {
-              if (constraints.maxWidth < 1500) {
-                print("smalltile" + filter);
-                return _buildSmallTile();
-              } else {
-                print("big tile" + filter);
-                return _buildBigTile();
-              }
-            })),
-      );
+  Widget build(BuildContext context) {
+    String _filter = widget.filter;
+    return Container(
+      margin: EdgeInsets.all(10),
+      child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: LayoutBuilder(builder: (context, constraints) {
+            if (constraints.maxWidth < 1500) {
+              return _buildSmallTile(_filter);
+            } else {
+              return _buildBigTile(_filter);
+            }
+          })),
+    );
+  }
 }
