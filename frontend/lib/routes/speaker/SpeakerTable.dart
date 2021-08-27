@@ -9,6 +9,8 @@ import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/speakerService.dart';
+import 'package:frontend/components/filterbar.dart';
+import 'package:frontend/models/participation.dart';
 
 class SpeakerTable extends StatefulWidget {
   SpeakerTable({Key? key}) : super(key: key);
@@ -20,12 +22,14 @@ class SpeakerTable extends StatefulWidget {
 class _SpeakerTableState extends State<SpeakerTable> {
   final MemberService _memberService = MemberService();
   late Future<List<Member>> members;
+  late String _filter;
 
   @override
   void initState() {
     super.initState();
     members =
         _memberService.getMembers(event: App.localStorage.getInt("event"));
+    _filter = "ALL";
   }
 
   @override
@@ -35,32 +39,47 @@ class _SpeakerTableState extends State<SpeakerTable> {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return ListView(
-              children: membs.map((e) => MemberSpeakerRow(member: e)).toList(),
-              addAutomaticKeepAlives: true,
-            );
+            return Column(children: <Widget>[
+              FilterBar(onSelected: (value) => onSelected(value)),
+              Expanded(
+                  child: ListView(
+                children: membs
+                    .map((e) => MemberSpeakerRow(member: e, filter: _filter))
+                    .toList(),
+                addAutomaticKeepAlives: true,
+              ))
+            ]);
           } else {
             return CircularProgressIndicator();
           }
         },
       );
+
+  onSelected(String filter) {
+    setState(() {
+      _filter = filter;
+    });
+  }
 }
 
 class MemberSpeakerRow extends StatefulWidget {
   final Member member;
-  MemberSpeakerRow({Key? key, required this.member}) : super(key: key);
+  String filter;
+  MemberSpeakerRow({Key? key, required this.member, required this.filter})
+      : super(key: key);
 
   @override
   _MemberSpeakerRowState createState() =>
-      _MemberSpeakerRowState(member: member);
+      _MemberSpeakerRowState(member: member, filter: filter);
 }
 
 class _MemberSpeakerRowState extends State<MemberSpeakerRow>
     with AutomaticKeepAliveClientMixin {
   Member member;
+  String filter;
   SpeakerService _speakerService = SpeakerService();
   late Future<List<Speaker>> _speakers;
-  _MemberSpeakerRowState({required this.member});
+  _MemberSpeakerRowState({required this.member, required this.filter});
 
   @override
   void initState() {
@@ -72,7 +91,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
   @override
   bool get wantKeepAlive => true;
 
-  Widget _buildBigTile() {
+  Widget _buildBigTile(String _filter) {
     return ExpansionTile(
       maintainState: true,
       iconColor: Colors.transparent,
@@ -114,13 +133,14 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
           future: _speakers,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<Speaker> comps = snapshot.data as List<Speaker>;
+              List<Speaker> spks = snapshot.data as List<Speaker>;
+              List<Speaker> spkscpy = filterListByStatus(spks, _filter);
               return Container(
-                height: comps.length == 0 ? 0 : null,
+                height: spkscpy.length == 0 ? 0 : null,
                 child: Wrap(
                   alignment: WrapAlignment.start,
                   crossAxisAlignment: WrapCrossAlignment.start,
-                  children: comps
+                  children: spkscpy
                       .map((e) => ListViewCard(small: false, speaker: e))
                       .toList(),
                 ),
@@ -142,7 +162,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
     );
   }
 
-  Widget _buildSmallTile() {
+  Widget _buildSmallTile(String _filter) {
     return ExpansionTile(
       iconColor: Colors.transparent,
       initiallyExpanded: true,
@@ -182,15 +202,13 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
           future: _speakers,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<Speaker> comps = snapshot.data as List<Speaker>;
-              comps.forEach((element) {
-                print(element.name);
-              });
+              List<Speaker> spks = snapshot.data as List<Speaker>;
+              List<Speaker> spkscpy = filterListByStatus(spks, _filter);
               return Container(
-                height: comps.length == 0 ? 0 : 125,
+                height: spkscpy.length == 0 ? 0 : 125,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  children: comps
+                  children: spkscpy
                       .map((e) => ListViewCard(small: true, speaker: e))
                       .toList(),
                 ),
@@ -212,17 +230,36 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
     );
   }
 
+  List<Speaker> filterListByStatus(List spks, String _filter) {
+    List<Speaker> spkscpy = [];
+    if (_filter != "ALL") {
+      for (Speaker s in spks) {
+        Participation p =
+            s.participations!.firstWhere((element) => element.event == 29);
+        if (p.status.toString().split('.').last ==
+            _filter) //TODO: find a better way to do this
+          spkscpy.add(s);
+      }
+    } else {
+      spkscpy = List.from(spks);
+    }
+    return spkscpy;
+  }
+
   @override
-  Widget build(BuildContext context) => Container(
-        margin: EdgeInsets.all(10),
-        child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: LayoutBuilder(builder: (context, constraints) {
-              if (constraints.maxWidth < 1500) {
-                return _buildSmallTile();
-              } else {
-                return _buildBigTile();
-              }
-            })),
-      );
+  Widget build(BuildContext context) {
+    String _filter = widget.filter;
+    return Container(
+      margin: EdgeInsets.all(10),
+      child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: LayoutBuilder(builder: (context, constraints) {
+            if (constraints.maxWidth < 1500) {
+              return _buildSmallTile(_filter);
+            } else {
+              return _buildBigTile(_filter);
+            }
+          })),
+    );
+  }
 }
