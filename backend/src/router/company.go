@@ -617,13 +617,17 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
+		log.Printf("Exceeded file size (%v bytes)", config.ImageMaxSize)
+
 		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
 		return
 	}
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		log.Println(err)
+
+		http.Error(w, "Invalid payload!", http.StatusBadRequest)
 		return
 	}
 
@@ -733,6 +737,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !filetype.IsImage(bytes) {
+		log.Print("Not an image")
 		http.Error(w, "Not an image", http.StatusBadRequest)
 		return
 	}

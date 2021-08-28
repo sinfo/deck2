@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/CompanyListWidget.dart';
@@ -36,50 +37,77 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: CustomAppBar(),
-        bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _currentIndex,
-            // Give a custom drawer header
-            items: <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                  label: 'Speakers',
-                  icon: Icon(
-                    Icons.star,
-                  )),
-              BottomNavigationBarItem(
-                  label: 'Home',
-                  icon: Icon(
-                    Icons.home,
-                  )),
-              BottomNavigationBarItem(
-                  label: 'Companies',
-                  icon: Icon(
-                    Icons.work,
-                  )),
-              //FIXME: o item aqui em baixo foi colocado apenas para processo de development
-              BottomNavigationBarItem(
-                  label: 'Members',
-                  icon: Icon(
-                    Icons.people,
-                  )),
-            ],
-            onTap: (newIndex) {
-              setState(() {
-                _currentIndex = newIndex;
-              });
-            }),
-        body: _pageAtIndex(_currentIndex),
-        drawer: FutureBuilder(
-            future: _me,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                Member me = snapshot.data as Member;
-                return MyDrawer(image: me.image);
-              } else {
-                return CircularProgressIndicator();
-              }
-            }));
+      appBar: CustomAppBar(),
+      bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _currentIndex,
+          // Give a custom drawer header
+          items: <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+                label: 'Speakers',
+                icon: Icon(
+                  Icons.star,
+                )),
+            BottomNavigationBarItem(
+                label: 'Home',
+                icon: Icon(
+                  Icons.home,
+                )),
+            BottomNavigationBarItem(
+                label: 'Companies',
+                icon: Icon(
+                  Icons.work,
+                )),
+            //FIXME: o item aqui em baixo foi colocado apenas para processo de development
+            BottomNavigationBarItem(
+                label: 'Members',
+                icon: Icon(
+                  Icons.people,
+                )),
+          ],
+          onTap: (newIndex) {
+            setState(() {
+              _currentIndex = newIndex;
+            });
+          }),
+      body: _pageAtIndex(_currentIndex),
+      drawer: FutureBuilder(
+          future: _me,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              Member me = snapshot.data as Member;
+              return MyDrawer(image: me.image);
+            } else {
+              return CircularProgressIndicator();
+            }
+          }),
+      floatingActionButton: _fabAtIndex(_currentIndex),
+    );
+  }
+
+  Widget? _fabAtIndex(int index) {
+    switch (index) {
+      case 0:
+        {
+          return FloatingActionButton(
+            onPressed: () => {},
+            tooltip: 'Add Speaker',
+            child: const Icon(Icons.add),
+          );
+        }
+      case 1:
+        {
+          return null;
+        }
+      case 2:
+        {
+          return FloatingActionButton(
+            onPressed: () => {Navigator.pushNamed(context, Routes.AddCompany)},
+            tooltip: 'Add Company',
+            child: const Icon(Icons.add),
+          );
+        }
+    }
   }
 
   Widget _pageAtIndex(int index) {
@@ -119,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!isSignedIn) {
       Navigator.pushReplacementNamed(context, '/login');
     } else {
-      this._me = _authService.login();
+      _me = _authService.login();
       return _me;
     }
   }

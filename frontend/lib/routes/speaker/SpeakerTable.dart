@@ -183,9 +183,6 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Speaker> comps = snapshot.data as List<Speaker>;
-              comps.forEach((element) {
-                print(element.name);
-              });
               return Container(
                 height: comps.length == 0 ? 0 : 125,
                 child: ListView(

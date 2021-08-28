@@ -1,0 +1,30 @@
+version: "3.3"
+services:
+  web:
+    build:
+      context: "./backend"
+      dockerfile: "./Dockerfile"
+    ports:
+      - '8080:8080'
+    links:
+      - mongodb:db
+    depends_on:
+      - mongodb
+    env_file:
+      ~/sinfo/howToDevTeam/development/deck2.env
+    environment:
+      - "DECK2_DB_URL=mongodb://db:27017"
+      - "DECK2_HOST=0.0.0.0"
+
+
+  mongodb:
+    image: mongo:4.0.4
+    container_name: mongodb-deck2
+    command: mongod
+    ports:
+      - 27017:27017
+    volumes:
+      - dbvol:/data/db
+
+volumes:
+  dbvol:

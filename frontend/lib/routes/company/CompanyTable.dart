@@ -182,9 +182,6 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
-              comps.forEach((element) {
-                print(element.name);
-              });
               return Container(
                 height: comps.length == 0 ? 0 : 125,
                 child: ListView(
