@@ -3,7 +3,6 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/company/CompanyListWidget.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
 import 'package:frontend/routes/MemberListWidget.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';

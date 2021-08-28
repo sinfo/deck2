@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/contact.dart';
@@ -67,6 +65,20 @@ class CompanyService extends Service {
 
       List<Company> data = jsonRes.map((e) => Company.fromJson(e)).toList();
       return data;
+    } else {
+      return [];
+    }
+  }
+
+  Future<List<CompanyLight>> getCompaniesLight() async {
+    String companyUrl = '/companies';
+    Response<String> res =
+        await dio.get(companyUrl);
+
+    if (res.statusCode == 200 && res.data!.isNotEmpty) {
+      final jsonRes = json.decode(res.data!) as List;
+
+      return jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
     } else {
       return [];
     }

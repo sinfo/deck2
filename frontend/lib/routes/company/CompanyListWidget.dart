@@ -1,8 +1,18 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/company.dart';
-import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/companyService.dart';
+
+enum SortingMethod {
+  RANDOM,
+  NUM_PARTICIPATIONS,
+  LAST_PARTICIPATION,
+}
+
+final Map<SortingMethod, String> SORT_STRING = {
+  SortingMethod.NUM_PARTICIPATIONS: 'Sort By Number Of Participations',
+  SortingMethod.LAST_PARTICIPATION: 'Sort By Last Participation',
+};
 
 class CompanyListWidget extends StatefulWidget {
   const CompanyListWidget({Key? key}) : super(key: key);
@@ -13,104 +23,124 @@ class CompanyListWidget extends StatefulWidget {
 
 class _CompanyListWidgetState extends State<CompanyListWidget> {
   CompanyService companyService = new CompanyService();
-  late Future<List<Company>> companies;
+  late Future<List<CompanyLight>> companies;
   List<String> compNames = [];
+  SortingMethod _sortMethod = SortingMethod.RANDOM;
 
   @override
   void initState() {
     super.initState();
-    this.companies = companyService.getCompanies();
+    this.companies = companyService.getCompaniesLight();
   }
 
-  Widget companyGrid(List<Company> comps, double width) {
-    return Material(
-        child: GridView.count(
-      crossAxisCount: MediaQuery.of(context).size.width ~/ width,
-      crossAxisSpacing: 5,
-      mainAxisSpacing: 5,
-      childAspectRatio: 0.75,
-      children: comps
-          .map((e) => CompanyCard(
-                company: e,
-              ))
-          .toList(),
-    ));
+  Widget companyGrid(double width) {
+    return FutureBuilder<List<CompanyLight>>(
+        future: companies,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (_sortMethod == SortingMethod.NUM_PARTICIPATIONS) {
+              snapshot.data!.sort((a, b) =>
+                  b.participations!.length.compareTo(a.participations!.length));
+            } else if (_sortMethod == SortingMethod.LAST_PARTICIPATION) {
+              snapshot.data!.sort((a, b) {
+                if (a.participations!.length > 0 &&
+                    b.participations!.length > 0) {
+                  return b.participations![b.participations!.length - 1].event
+                      .compareTo(a
+                          .participations![a.participations!.length - 1].event);
+                } else {
+                  //We return first the company with participations and then the company with no participations
+                  //in case one of the companies does not have participations
+                  return b.participations!.length
+                      .compareTo(a.participations!.length);
+                }
+              });
+            }
+
+            return GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: MediaQuery.of(context).size.width ~/ width,
+                crossAxisSpacing: 5,
+                mainAxisSpacing: 5,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: snapshot.data!.length,
+              itemBuilder: (BuildContext context, int index) {
+                compNames.add(snapshot.data![index].name);
+                return CompanyCard(
+                    company: snapshot.data![index], cardWidth: width);
+              },
+            );
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        });
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder(
-      future: companies,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Company> comps = snapshot.data as List<Company>;
-          double card_width;
+  Widget build(BuildContext context) {
+    double card_width;
+    return LayoutBuilder(builder: (context, constraints) {
+      if (constraints.maxWidth < 1500) {
+        card_width = 200;
+      } else {
+        card_width = 250;
+      }
+      return Scaffold(
+        appBar: AppBar(
+            title: GestureDetector(
+                child: Image.asset(
+              'assets/logo-branco2.png',
+              height: 100,
+              width: 100,
+            )),
+            actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.search),
+                tooltip: 'Search company',
+                onPressed: () {
+                  showSearch(
+                      context: context,
+                      delegate: CustomSearchDelegate(compNames));
+                },
+              ),
+              PopupMenuButton<SortingMethod>(
+                icon: const Icon(Icons.sort),
+                tooltip: 'Sort Companies',
+                onSelected: (SortingMethod sort) {
+                  setState(() {
+                    _sortMethod = sort;
+                  });
+                },
+                itemBuilder: (BuildContext context) {
+                  return SORT_STRING.keys.map((SortingMethod choice) {
+                    return PopupMenuItem<SortingMethod>(
+                      value: choice,
+                      child: Center(child: Text(SORT_STRING[choice]!)),
+                    );
+                  }).toList();
+                },
+              ),
+            ]),
+        body: companyGrid(card_width),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            /*
+                  TODO when AddCompany() screen is finished
 
-          for (int i = 0; i < comps.length; i++) {
-            compNames.add(comps[i].name);
-          }
-
-          return LayoutBuilder(builder: (context, constraints) {
-            if (constraints.maxWidth < 1500) {
-              card_width = 100;
-            } else {
-              card_width = 150;
-            }
-            return Scaffold(
-                appBar: AppBar(
-                    title: GestureDetector(
-                        child: Image.asset(
-                      'assets/logo-branco2.png',
-                      height: 100,
-                      width: 100,
-                    )),
-                    actions: <Widget>[
-                      IconButton(
-                        icon: const Icon(Icons.search),
-                        tooltip: 'Search company',
-                        onPressed: () {
-                          showSearch(
-                              context: context,
-                              delegate: CustomSearchDelegate(compNames));
-                        },
-                      )
-                    ]),
-                bottomNavigationBar: BottomNavigationBar(
-                    type: BottomNavigationBarType.fixed,
-                    currentIndex: 2,
-                    // Give a custom drawer header
-                    items: <BottomNavigationBarItem>[
-                      BottomNavigationBarItem(
-                          label: 'Speakers',
-                          icon: Icon(
-                            Icons.star,
-                          )),
-                      BottomNavigationBarItem(
-                          label: 'Home',
-                          icon: Icon(
-                            Icons.home,
-                          )),
-                      BottomNavigationBarItem(
-                          label: 'Companies',
-                          icon: Icon(
-                            Icons.work,
-                          )),
-                      //FIXME: o item aqui em baixo foi colocado apenas para processo de development
-                      BottomNavigationBarItem(
-                          label: 'Members',
-                          icon: Icon(
-                            Icons.people,
-                          )),
-                    ],
-                    onTap: (newIndex) {
-                      Navigator.of(context).pop();
-                      //_pageAtIndex(newIndex);
-                    }),
-                body: companyGrid(comps, card_width));
-          });
-        } else {
-          return CircularProgressIndicator();
-        }
-      });
+                  Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AddCompany()),
+                  );*/
+          },
+          label: const Text('Add New Company'),
+          icon: const Icon(Icons.business),
+          backgroundColor: Color(0xff5C7FF2),
+        ),
+      );
+    });
+  }
 }
 
 class CustomSearchDelegate extends SearchDelegate {
@@ -142,15 +172,20 @@ class CustomSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    return Center(
-      child: Text(query),
-    );
+    var company = companyNames
+        .where((element) => element.toLowerCase() == query.toLowerCase());
+    /*return company.isEmpty ? Navigator.push(
+                              context, MaterialPageRoute(
+                                builder: (context) => CompanyScreen()),); : 
+                                Center(child: Text('Company Not Found...'));*/
+    debugPrint(company.isEmpty.toString());
+
+    //TODO after CompanyScreen() done
+    return Center(child: Text('Company Not Found...'));
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    //TODO
-
     final companiesSuggested = query.isEmpty
         ? companyNames
         : companyNames
@@ -160,15 +195,21 @@ class CustomSearchDelegate extends SearchDelegate {
     return ListView.builder(
       itemBuilder: (context, index) => ListTile(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return UnknownScreen();
-          })); // CompanyScreen(company: this.company)),
+          /*
+                  TODO when CompanyScreen() screen is finished
+
+                  Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AddCompany()),
+                  );*/
         },
-        trailing: Icon(Icons.remove_red_eye),
         title: RichText(
           text: TextSpan(
               text: companiesSuggested[index].substring(0, query.length),
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                  fontWeight: FontWeight.bold),
               children: [
                 TextSpan(
                     text: companiesSuggested[index].substring(query.length),
@@ -182,42 +223,29 @@ class CustomSearchDelegate extends SearchDelegate {
 }
 
 class CompanyCard extends StatelessWidget {
-  final Company company;
-  late String _imageUrl;
-  late String _title;
-  CompanyCard({Key? key, required this.company}) : super(key: key) {
-    _initCompany(29);
-  }
+  final CompanyLight company;
+  final double cardWidth;
+  CompanyCard({Key? key, required this.company, required this.cardWidth})
+      : super(key: key) {}
 
   @override
   Widget build(BuildContext context) => Container(
         margin: EdgeInsets.all(10),
-        child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: LayoutBuilder(builder: (context, constraints) {
-              if (constraints.maxWidth < 1500) {
-                return _buildSmallCard(context);
-              } else {
-                return _buildBigCard(context);
-              }
-            })),
+        child: cardWidth == 200
+            ? _buildSmallCard(context)
+            : _buildBigCard(context),
       );
-
-  void _initCompany(int event) {
-    _imageUrl = company.companyImages.internal;
-    _title = company.name;
-  }
 
   Widget _buildSmallCard(BuildContext context) {
     return Container(
-      height: 125,
-      width: 100,
+      height: 225,
+      width: 200,
       margin: EdgeInsets.all(5),
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Color(0xff000000)),
+        border: Border.all(color: Theme.of(context).primaryColor),
       ),
       child: InkWell(
           child: Column(
@@ -228,8 +256,13 @@ class CompanyCard extends StatelessWidget {
                       topLeft: Radius.circular(5),
                       topRight: Radius.circular(5)),
                   child: Image.network(
-                    _imageUrl,
-                    fit: BoxFit.fill,
+                    company.companyImages.internal,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, progress) {
+                      return progress == null
+                          ? child
+                          : Center(child: CircularProgressIndicator());
+                    },
                     errorBuilder: (BuildContext context, Object exception,
                         StackTrace? stackTrace) {
                       return Image.asset(
@@ -241,71 +274,82 @@ class CompanyCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 6),
-              Text(_title,
+              Text(company.name,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                   )),
               SizedBox(height: 16),
             ],
           ),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return UnknownScreen();
-            } // CompanyScreen(company: this.company)),
-                ));
+            /*
+                  TODO when CompanyScreen() screen is finished
+
+                  Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AddCompany()),
+                  );*/
           }),
     );
   }
 
   Widget _buildBigCard(BuildContext context) {
     return Container(
-      height: 175,
-      width: 150,
+      height: 275,
+      width: 250,
       margin: EdgeInsets.all(10),
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Color(0xff000000), width: 2),
+        border: Border.all(color: Theme.of(context).primaryColor, width: 2),
       ),
-      child: Expanded(
-        child: InkWell(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Image.network(
-                    _imageUrl,
-                    fit: BoxFit.fill,
-                    errorBuilder: (BuildContext context, Object exception,
-                        StackTrace? stackTrace) {
-                      return Image.asset(
-                        'assets/noImage.png',
-                        fit: BoxFit.fill,
-                      );
-                    },
-                  ),
+      child: InkWell(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Image.network(
+                  company.companyImages.internal,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, progress) {
+                    return progress == null
+                        ? child
+                        : CircularProgressIndicator();
+                  },
+                  errorBuilder: (BuildContext context, Object exception,
+                      StackTrace? stackTrace) {
+                    return Image.asset(
+                      'assets/noImage.png',
+                      fit: BoxFit.fill,
+                    );
+                  },
                 ),
-                SizedBox(height: 12.5),
-                Text(_title,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      //fontFamily: 'Inter',
-                      fontWeight: FontWeight.bold,
-                    )),
-                SizedBox(height: 12.5),
-              ],
-            ),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return UnknownScreen();
-              } // CompanyScreen(company: this.company)),
-                  ));
-            }),
-      ),
+              ),
+              SizedBox(height: 12.5),
+              Text(company.name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    //fontFamily: 'Inter',
+                    fontWeight: FontWeight.bold,
+                  )),
+              SizedBox(height: 12.5),
+            ],
+          ),
+          onTap: () {
+            /*
+                  TODO when CompanyScreen() screen is finished
+
+                  Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => AddCompany()),
+              );*/
+          }),
     );
   }
 }

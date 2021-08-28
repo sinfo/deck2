@@ -38,22 +38,23 @@ class CompanyLight {
   final String id;
   final String name;
   final CompanyImages companyImages;
-  final String status;
+  List<CompanyParticipation>? participations;
 
   CompanyLight({
     required this.id,
     required this.name,
     required this.companyImages,
-    required this.status,
+    required this.participations
   });
 
   factory CompanyLight.fromJson(Map<String, dynamic> json) {
-    var participations = json['participations'];
+    var participations = json['participations'] as List;
     return CompanyLight(
       id: json['id'],
       name: json['name'],
       companyImages: CompanyImages.fromJson(json['imgs']),
-      status: participations.length > 0 ? participations[participations.length - 1]['status'] : "NO STATUS",
+      participations:
+          participations.map((e) => CompanyParticipation.fromJson(e)).toList(),
     );
   }
 }
