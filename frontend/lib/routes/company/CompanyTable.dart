@@ -43,7 +43,7 @@ class _CompanyTableState extends State<CompanyTable> {
               Positioned(
                   bottom: 15,
                   right: 15,
-                  child: FloatingActionButton(
+                  child: FloatingActionButton.extended(
                     onPressed: () {
                       Navigator.push(
                         context,
@@ -51,7 +51,8 @@ class _CompanyTableState extends State<CompanyTable> {
                             builder: (context) => CompanyListWidget()),
                       );
                     },
-                    child: const Icon(Icons.add),
+                    label: const Text('Show All Companies'),
+                    icon: const Icon(Icons.add),
                     backgroundColor: Color(0xff5C7FF2),
                   ))
             ]);
@@ -203,7 +204,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
                 print(element.name);
               });
               return Container(
-                height: comps.length == 0 ? 0 : 125,
+                height: comps.length == 0 ? 0 : 200,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: comps

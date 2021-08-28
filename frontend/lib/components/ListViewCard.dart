@@ -13,13 +13,19 @@ class ListViewCard extends StatelessWidget {
   final Company? company;
   final Speaker? speaker;
   final bool small;
+  final bool? participationsInfo;
   late String _status;
   late Color _color;
   late String _imageUrl;
   late String _title;
 
   ListViewCard(
-      {Key? key, required this.small, this.member, this.company, this.speaker})
+      {Key? key,
+      required this.small,
+      this.member,
+      this.company,
+      this.speaker,
+      this.participationsInfo})
       : super(key: key) {
     int? event = App.localStorage.getInt("event");
     if (event != null) {
@@ -32,9 +38,15 @@ class ListViewCard extends StatelessWidget {
   }
 
   void _initCompany(int event) {
-    CompanyParticipation participation = company!.participations!
-        .firstWhere((element) => element.event == event);
-    _status = participation.status.toUpperCase();
+    if (company!.participations!.length > 0 &&
+        company!.participations![company!.participations!.length - 1].event ==
+            event) {
+      CompanyParticipation participation = company!.participations!
+          .firstWhere((element) => element.event == event);
+      _status = participation.status.toUpperCase();
+    } else {
+      _status = "";
+    }
     _imageUrl = company!.companyImages.internal;
     _title = company!.name;
     switch (_status) {
@@ -58,7 +70,7 @@ class ListViewCard extends StatelessWidget {
         break;
       case "GIVE UP":
       default:
-        _color = Colors.black;
+        _color = Colors.indigo;
         break;
     }
   }
@@ -114,8 +126,8 @@ class ListViewCard extends StatelessWidget {
 
   Widget _buildSmallCard(BuildContext context) {
     return Container(
-      height: 125,
-      width: 100,
+      height: 225,
+      width: 200,
       margin: EdgeInsets.all(5),
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
@@ -135,7 +147,12 @@ class ListViewCard extends StatelessWidget {
                           topRight: Radius.circular(5)),
                       child: Image.network(
                         _imageUrl,
-                        fit: BoxFit.fill,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, progress) {
+                          return progress == null
+                              ? child
+                              : Center(child: CircularProgressIndicator());
+                        },
                         errorBuilder: (BuildContext context, Object exception,
                             StackTrace? stackTrace) {
                           return Image.asset(
@@ -146,14 +163,7 @@ class ListViewCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 6),
-                  Text(_title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      )),
-                  SizedBox(height: 6),
+                  SizedBox(height: participationsInfo != null ? 72 : 24, child: getCompanyInfo(14)),
                 ],
               ),
               onTap: () {
@@ -162,27 +172,75 @@ class ListViewCard extends StatelessWidget {
                 } // CompanyScreen(company: this.company)),
                     ));
               }),
-          Container(
-            padding: EdgeInsets.all(6),
-            margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
-            decoration: BoxDecoration(
-              color: _color,
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-            ),
-            child: Text(
-              _status,
-              style: TextStyle(fontSize: 10),
-            ),
-          ),
+          ...getStatus(10)
         ],
       ),
     );
   }
 
+  Widget getCompanyInfo(double fontsize) {
+    if (participationsInfo != null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(_title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              )),
+          Text('${company!.participations!.length} participations',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              )),
+          Text(
+              company!.participations!.length > 0
+                  ? 'Participated in SINFO ${company!.participations![company!.participations!.length - 1].event}'
+                  : 'No Participation',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              ))
+        ],
+      );
+    } else {
+      return Text(_title,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: fontsize,
+            fontWeight: FontWeight.bold,
+          ));
+    }
+  }
+
+  List<Widget> getStatus(double fontsize) {
+    if (_status != "") {
+      return [
+        Container(
+          padding: EdgeInsets.all(6),
+          margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
+          decoration: BoxDecoration(
+            color: _color,
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+          ),
+          child: Text(
+            _status,
+            style: TextStyle(fontSize: fontsize),
+          ),
+        ),
+      ];
+    } else {
+      return [];
+    }
+  }
+
   Widget _buildBigCard(BuildContext context) {
     return Container(
-      height: 175,
-      width: 150,
+      height: 275,
+      width: 250,
       margin: EdgeInsets.all(10),
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
@@ -190,61 +248,42 @@ class ListViewCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         border: Border.all(color: _color, width: 2),
       ),
-      child: Expanded(
-        child: Stack(
-          children: [
-            Expanded(
-              child: InkWell(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Image.network(
-                          _imageUrl,
-                          fit: BoxFit.fill,
-                          errorBuilder: (BuildContext context, Object exception,
-                              StackTrace? stackTrace) {
-                            return Image.asset(
-                              'assets/noImage.png',
-                              fit: BoxFit.fill,
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 12.5),
-                      Text(_title,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            //fontFamily: 'Inter',
-                            fontWeight: FontWeight.bold,
-                          )),
-                      SizedBox(height: 12.5),
-                    ],
+      child: Stack(children: [
+        InkWell(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Image.network(
+                    _imageUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, progress) {
+                      return progress == null
+                          ? child
+                          : Center(child: CircularProgressIndicator());
+                    },
+                    errorBuilder: (BuildContext context, Object exception,
+                        StackTrace? stackTrace) {
+                      return Image.asset(
+                        'assets/noImage.png',
+                        fit: BoxFit.fill,
+                      );
+                    },
                   ),
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return UnknownScreen();
-                    } // CompanyScreen(company: this.company)),
-                            ));
-                  }),
+                ),
+                SizedBox(
+                    height: participationsInfo != null ? 70 : 35,
+                    child: getCompanyInfo(14)),
+              ],
             ),
-            Container(
-              padding: EdgeInsets.all(6),
-              margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
-              decoration: BoxDecoration(
-                color: _color,
-                borderRadius: BorderRadius.all(Radius.circular(5)),
-              ),
-              child: Text(
-                _status,
-                style: TextStyle(fontSize: 14),
-              ),
-            )
-          ],
-        ),
-      ),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return UnknownScreen();
+              } // CompanyScreen(company: this.company)),
+                  ));
+            }),
+        ...getStatus(14)
+      ]),
     );
   }
 
