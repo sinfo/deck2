@@ -8,16 +8,30 @@ import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 
+final Map<ParticipationStatus, String> STATUSSTRING = {
+  ParticipationStatus.ACCEPTED: 'ACCEPTED',
+  ParticipationStatus.ANNOUNCED: 'ANNOUNCED',
+  ParticipationStatus.CONTACTED: 'CONTACTED',
+  ParticipationStatus.GIVEN_UP: 'GIVEN_UP',
+  ParticipationStatus.IN_CONVERSATIONS: 'IN_CONVERSATIONS',
+  ParticipationStatus.ON_HOLD: 'ON_HOLD',
+  ParticipationStatus.REJECTED: 'REJECTED',
+  ParticipationStatus.SELECTED: 'SELECTED',
+  ParticipationStatus.SUGGESTED: 'SUGGESTED',
+};
+
 class ListViewCard extends StatelessWidget {
   final Member? member;
   final Company? company;
   final Speaker? speaker;
   final bool small;
   final bool? participationsInfo;
-  late String _status;
-  late Color _color;
-  late String _imageUrl;
-  late String _title;
+  late final String _status;
+  late final Color _color;
+  late final String _imageUrl;
+  late final String _title;
+  late final int? _numParticipations;
+  late final int? _lastParticipation;
 
   ListViewCard(
       {Key? key,
@@ -38,9 +52,12 @@ class ListViewCard extends StatelessWidget {
   }
 
   void _initCompany(int event) {
-    if (company!.participations!.length > 0 &&
-        company!.participations![company!.participations!.length - 1].event ==
-            event) {
+    _numParticipations = company!.participations!.length;
+    if (_numParticipations! > 0) {
+      _lastParticipation =
+          company!.participations![company!.participations!.length - 1].event;
+    }
+    if (_numParticipations! > 0 && _lastParticipation == event) {
       CompanyParticipation participation = company!.participations!
           .firstWhere((element) => element.event == event);
       _status = participation.status.toUpperCase();
@@ -49,7 +66,30 @@ class ListViewCard extends StatelessWidget {
     }
     _imageUrl = company!.companyImages.internal;
     _title = company!.name;
-    switch (_status) {
+    defineStatusColor(_status);
+  }
+
+  void _initSpeaker(int event) {
+    _numParticipations = speaker!.participations!.length;
+    if (_numParticipations! > 0) {
+      _lastParticipation =
+          speaker!.participations![speaker!.participations!.length - 1].event;
+    }
+    if (_numParticipations! > 0 && _lastParticipation == event) {
+      ParticipationStatus status = speaker!.participations!
+          .firstWhere((element) => element.event == event)
+          .status!;
+      _status = STATUSSTRING[status]!;
+    } else {
+      _status = "";
+    }
+    _imageUrl = speaker!.imgs!.speaker!;
+    _title = speaker!.name;
+    defineStatusColor(_status);
+  }
+
+  void defineStatusColor(String status) {
+    switch (status) {
       case "SUGGESTED":
       case "SELECTED":
         _color = Colors.orange;
@@ -71,55 +111,6 @@ class ListViewCard extends StatelessWidget {
       case "GIVE UP":
       default:
         _color = Colors.indigo;
-        break;
-    }
-  }
-
-  void _initSpeaker(int event) {
-    Participation participation = speaker!.participations!
-        .firstWhere((element) => element.event == event);
-    _imageUrl = speaker!.imgs!.speaker!;
-    _title = speaker!.name!;
-    switch (participation.status) {
-      case ParticipationStatus.SUGGESTED:
-        _status = "SUGGESTED";
-        _color = Colors.orange;
-        break;
-      case ParticipationStatus.SELECTED:
-        _status = "SELECTED";
-        _color = Colors.orange;
-        break;
-      case ParticipationStatus.ON_HOLD:
-        _status = "ON HOLD";
-        _color = Colors.yellow;
-        break;
-      case ParticipationStatus.CONTACTED:
-        _status = "CONTACTED";
-        _color = Colors.yellow;
-        break;
-      case ParticipationStatus.IN_CONVERSATIONS:
-        _status = "IN CONVERSATIONS";
-        _color = Colors.blue;
-        break;
-      case ParticipationStatus.ACCEPTED:
-        _status = "ACCEPTED";
-        _color = Colors.green;
-        break;
-      case ParticipationStatus.ANNOUNCED:
-        _status = "ANNOUNCED";
-        _color = Colors.green;
-        break;
-      case ParticipationStatus.REJECTED:
-        _status = "REJECTED";
-        _color = Colors.red;
-        break;
-      case ParticipationStatus.GIVEN_UP:
-        _status = "GIVEN UP";
-        _color = Colors.black;
-        break;
-      default:
-        _status = "";
-        _color = Colors.white;
         break;
     }
   }
@@ -163,7 +154,9 @@ class ListViewCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: participationsInfo != null ? 72 : 24, child: getCompanyInfo(14)),
+                  SizedBox(
+                      height: participationsInfo != null ? 72 : 24,
+                      child: getParticipationInfo(14)),
                 ],
               ),
               onTap: () {
@@ -178,7 +171,7 @@ class ListViewCard extends StatelessWidget {
     );
   }
 
-  Widget getCompanyInfo(double fontsize) {
+  Widget getParticipationInfo(double fontsize) {
     if (participationsInfo != null) {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -189,15 +182,15 @@ class ListViewCard extends StatelessWidget {
                 fontSize: fontsize,
                 fontWeight: FontWeight.bold,
               )),
-          Text('${company!.participations!.length} participations',
+          Text('${_numParticipations} participations',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: fontsize,
                 fontWeight: FontWeight.bold,
               )),
           Text(
-              company!.participations!.length > 0
-                  ? 'Participated in SINFO ${company!.participations![company!.participations!.length - 1].event}'
+              _numParticipations! > 0
+                  ? 'Participated in SINFO ${_lastParticipation}'
                   : 'No Participation',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -273,7 +266,7 @@ class ListViewCard extends StatelessWidget {
                 ),
                 SizedBox(
                     height: participationsInfo != null ? 70 : 35,
-                    child: getCompanyInfo(14)),
+                    child: getParticipationInfo(14)),
               ],
             ),
             onTap: () {

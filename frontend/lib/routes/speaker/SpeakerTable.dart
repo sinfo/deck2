@@ -2,11 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/components/ListViewCard.dart';
-import 'package:frontend/services/companyService.dart';
+import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/speakerService.dart';
 
@@ -35,10 +34,28 @@ class _SpeakerTableState extends State<SpeakerTable> {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return ListView(
-              children: membs.map((e) => MemberSpeakerRow(member: e)).toList(),
-              addAutomaticKeepAlives: true,
-            );
+            return Stack(children: <Widget>[
+              ListView(
+                children:
+                    membs.map((e) => MemberSpeakerRow(member: e)).toList(),
+                addAutomaticKeepAlives: true,
+              ),
+              Positioned(
+                  bottom: 15,
+                  right: 15,
+                  child: FloatingActionButton.extended(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => SpeakerListWidget()),
+                      );
+                    },
+                    label: const Text('Show All Speakers'),
+                    icon: const Icon(Icons.add),
+                    backgroundColor: Color(0xff5C7FF2),
+                  ))
+            ]);
           } else {
             return CircularProgressIndicator();
           }

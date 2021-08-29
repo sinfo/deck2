@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/GridLayout.dart';
+import 'package:frontend/components/searchDelegate.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/services/companyService.dart';
 
@@ -119,88 +120,5 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
         backgroundColor: Color(0xff5C7FF2),
       ),
     );
-  }
-}
-
-class CustomSearchDelegate extends SearchDelegate {
-  final List<Company> companies;
-
-  CustomSearchDelegate({required this.companies});
-
-  @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, null);
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    var company = companies
-        .where((element) => element.name.toLowerCase() == query.toLowerCase());
-    /*return company.isEmpty ? Navigator.push(
-                              context, MaterialPageRoute(
-                                builder: (context) => CompanyScreen()),); : 
-                                Center(child: Text('Company Not Found...'));*/
-    debugPrint(company.isEmpty.toString());
-
-    //TODO after CompanyScreen() done
-    return Center(child: Text('Company Not Found...'));
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    final companiesSuggested = query.isEmpty
-        ? companies
-        : companies
-            .where((p) => p.name.contains(RegExp(query, caseSensitive: false)))
-            .toList();
-
-    return GridLayout(companies: companiesSuggested);
-  }
-}
-
-class GridLayout extends StatelessWidget {
-  final List<Company> companies;
-
-  GridLayout({Key? key, required this.companies}) : super(key: key) {}
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      double cardWidth = 250;
-      bool isSmall = false;
-      if (constraints.maxWidth < 1500) {
-        cardWidth = 200;
-        isSmall = true;
-      }
-      return GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: MediaQuery.of(context).size.width ~/ cardWidth,
-          crossAxisSpacing: 5,
-          mainAxisSpacing: 5,
-          childAspectRatio: 0.75,
-        ),
-        itemCount: companies.length,
-        itemBuilder: (BuildContext context, int index) {
-          return ListViewCard(small: isSmall, company: companies[index], participationsInfo: true);
-        },
-      );
-    });
   }
 }
