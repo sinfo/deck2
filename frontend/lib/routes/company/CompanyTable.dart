@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:frontend/components/filterbar.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
@@ -18,12 +19,14 @@ class CompanyTable extends StatefulWidget {
 class _CompanyTableState extends State<CompanyTable> {
   final MemberService _memberService = MemberService();
   late Future<List<Member>> members;
+  late String _filter;
 
   @override
   void initState() {
     super.initState();
     members =
         _memberService.getMembers(event: App.localStorage.getInt("event"));
+    _filter = "ALL";
   }
 
   @override
@@ -33,33 +36,51 @@ class _CompanyTableState extends State<CompanyTable> {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return ListView(
-              children:
-                  membs.map((e) => MemberCompaniesRow(member: e)).toList(),
-              addAutomaticKeepAlives: true,
+            return Column(
+              children: <Widget>[
+                FilterBar(onSelected: (value) => onSelected(value)),
+                Expanded(
+                  child: ListView(
+                    children: membs
+                        .map((e) =>
+                            MemberCompaniesRow(member: e, filter: _filter))
+                        .toList(),
+                    addAutomaticKeepAlives: true,
+                  ),
+                ),
+              ],
             );
           } else {
             return CircularProgressIndicator();
           }
         },
       );
+
+  onSelected(String filter) {
+    setState(() {
+      _filter = filter;
+    });
+  }
 }
 
 class MemberCompaniesRow extends StatefulWidget {
   final Member member;
-  MemberCompaniesRow({Key? key, required this.member}) : super(key: key);
+  String filter;
+  MemberCompaniesRow({Key? key, required this.member, required this.filter})
+      : super(key: key);
 
   @override
   _MemberCompaniesRowState createState() =>
-      _MemberCompaniesRowState(member: member);
+      _MemberCompaniesRowState(member: member, filter: filter);
 }
 
 class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     with AutomaticKeepAliveClientMixin {
   Member member;
+  String filter;
   CompanyService _companyService = CompanyService();
   late Future<List<Company>> _companies;
-  _MemberCompaniesRowState({required this.member});
+  _MemberCompaniesRowState({required this.member, required this.filter});
 
   @override
   void initState() {
@@ -71,7 +92,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
   @override
   bool get wantKeepAlive => true;
 
-  Widget _buildBigTile() {
+  Widget _buildBigTile(String _filter) {
     return ExpansionTile(
       maintainState: true,
       iconColor: Colors.transparent,
@@ -114,12 +135,13 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
+              List<Company> compscpy = filterListByStatus(comps, _filter);
               return Container(
-                height: comps.length == 0 ? 0 : null,
+                height: compscpy.length == 0 ? 0 : null,
                 child: Wrap(
                   alignment: WrapAlignment.start,
                   crossAxisAlignment: WrapCrossAlignment.start,
-                  children: comps
+                  children: compscpy
                       .map((e) => ListViewCard(small: false, company: e))
                       .toList(),
                 ),
@@ -141,7 +163,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     );
   }
 
-  Widget _buildSmallTile() {
+  Widget _buildSmallTile(String _filter) {
     return ExpansionTile(
       iconColor: Colors.transparent,
       initiallyExpanded: true,
@@ -182,11 +204,12 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
+              List<Company> compscpy = filterListByStatus(comps, _filter);
               return Container(
-                height: comps.length == 0 ? 0 : 125,
+                height: compscpy.length == 0 ? 0 : 125,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
-                  children: comps
+                  children: compscpy
                       .map((e) => ListViewCard(small: true, company: e))
                       .toList(),
                 ),
@@ -208,17 +231,35 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     );
   }
 
+  List<Company> filterListByStatus(List comps, String _filter) {
+    List<Company> compscpy = [];
+    if (_filter != "ALL") {
+      for (Company c in comps) {
+        CompanyParticipation p =
+            c.participations!.firstWhere((element) => element.event == 29);
+        String s = p.status.toUpperCase();
+        if (s == _filter) compscpy.add(c);
+      }
+    } else {
+      compscpy = List.from(comps);
+    }
+    return compscpy;
+  }
+
   @override
-  Widget build(BuildContext context) => Container(
-        margin: EdgeInsets.all(10),
-        child: Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: LayoutBuilder(builder: (context, constraints) {
-              if (constraints.maxWidth < 1500) {
-                return _buildSmallTile();
-              } else {
-                return _buildBigTile();
-              }
-            })),
-      );
+  Widget build(BuildContext context) {
+    String _filter = widget.filter;
+    return Container(
+      margin: EdgeInsets.all(10),
+      child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: LayoutBuilder(builder: (context, constraints) {
+            if (constraints.maxWidth < 1500) {
+              return _buildSmallTile(_filter);
+            } else {
+              return _buildBigTile(_filter);
+            }
+          })),
+    );
+  }
 }

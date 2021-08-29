@@ -5,7 +5,6 @@ import 'package:frontend/services/authService.dart';
 class MyDrawer extends Drawer {
   String image;
   MyDrawer({Key? key, required this.image});
-  final AuthService _auth = AuthService();
 
   @override
   Drawer build(BuildContext context) {
@@ -21,12 +20,13 @@ class MyDrawer extends Drawer {
           title: Text('Settings Page'),
         ),
         ListTile(
-          leading: Icon(
-            Icons.person,
-          ),
-          title: Text('Logout'),
-          onTap: () async => signOut(context),
-        ),
+            leading: Icon(
+              Icons.person,
+            ),
+            title: Text('Logout'),
+            onTap: () async {
+              await signOut(context);
+            }),
         ListTile(
           leading: Icon(
             Icons.library_books,
@@ -49,8 +49,8 @@ class MyDrawer extends Drawer {
     ));
   }
 
-  void signOut(BuildContext context) async {
-    await _auth.signOut();
+  Future signOut(BuildContext context) async {
+    await AuthService.signOut();
     Navigator.pushReplacementNamed(context, Routes.LoginRoute);
   }
 

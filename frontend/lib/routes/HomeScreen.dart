@@ -1,17 +1,13 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/CompanyListWidget.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
 import 'package:frontend/routes/MemberListWidget.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
-import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
@@ -23,29 +19,32 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late int _currentIndex;
+  int _currentIndex = 1;
   GoogleSignIn googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
-  AuthService _authService = AuthService();
+  late PageController _pageController;
 
   @override
   void initState() {
-    checkSignInStatus();
-    _currentIndex = 1;
     App.localStorage.setInt("event", 29);
+    _pageController = PageController(initialPage: _currentIndex);
     super.initState();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final user = Provider.of<Member?>(context);
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    Member? user = Provider.of<Member?>(context);
     return Scaffold(
       appBar: CustomAppBar(),
       bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
-          // Give a custom drawer header
           items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
                 label: 'Speakers',
@@ -72,9 +71,24 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: (newIndex) {
             setState(() {
               _currentIndex = newIndex;
+              _pageController.animateToPage(_currentIndex,
+                  duration: Duration(milliseconds: 800), curve: Curves.easeOut);
             });
           }),
-      body: _pageAtIndex(_currentIndex),
+      body: SizedBox.expand(
+        child: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() => _currentIndex = index);
+          },
+          children: <Widget>[
+            Center(child: SpeakerTable()),
+            Center(child: Text("Home in progress :)")),
+            Center(child: CompanyTable()),
+            Center(child: MemberListWidget()),
+          ],
+        ),
+      ),
       drawer: MyDrawer(image: user != null ? user.image : ''),
       floatingActionButton: _fabAtIndex(_currentIndex),
     );
@@ -106,7 +120,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _pageAtIndex(int index) {
-    // TODO: Build speakers, companies and home page
+    return SizedBox.expand(
+      child: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() => _currentIndex = index);
+        },
+        children: <Widget>[
+          Center(child: SpeakerTable()),
+          Center(child: Text("Home in progress :)")),
+          Center(child: CompanyTable()),
+          Center(child: MemberListWidget()),
+        ],
+      ),
+    );
+
     switch (index) {
       case 0:
         {
@@ -133,13 +161,6 @@ class _HomeScreenState extends State<HomeScreen> {
         {
           return UnknownScreen();
         }
-    }
-  }
-
-  Future<Member?> checkSignInStatus() async {
-    bool isSignedIn = await _authService.isLoggedIn();
-    if (!isSignedIn) {
-      Navigator.pushReplacementNamed(context, Routes.LoginRoute);
     }
   }
 }

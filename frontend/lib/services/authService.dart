@@ -11,11 +11,11 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AuthService {
-  final String? _deckURL =
+  static final String? _deckURL =
       kIsWeb ? dotenv.env['DECK2_URL'] : dotenv.env['DECK2_MOBILE_URL'];
-  GoogleSignIn _googleSignIn =
+  static final GoogleSignIn _googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
-  Dio dio = Dio(BaseOptions(
+  static final Dio dio = Dio(BaseOptions(
     baseUrl: (kIsWeb ? dotenv.env['DECK2_URL'] : dotenv.env['DECK2_MOBILE_URL'])
         as String,
     headers: {
@@ -23,21 +23,61 @@ class AuthService {
     },
   ));
 
-  Stream<Member?> get user {
-    return _googleSignIn.onCurrentUserChanged.asyncMap(_memberFromAccount);
-  }
+  static Member? _user;
+  static String? _token;
 
-  FutureOr<Member?> _memberFromAccount(GoogleSignInAccount? acc) async {
-    if (acc != null) {
-      GoogleSignInAuthentication auth = await acc.authentication;
-      String token = await getJWT(auth.accessToken);
-      return getMe(token);
+  static Future<Member?> get user async {
+    print('\nGetting...');
+    if (_user != null) {
+      print('User is not null');
+      return _user;
+    } else if (App.localStorage.containsKey('me')) {
+      _user = Member.fromJson(json.decode(App.localStorage.getString('me')!));
+      return _user;
+    }
+    if (_token != null) {
+      bool t = await verify(_token!);
+      if (t) {
+        print('Token is valid');
+        return getMe(_token!);
+      } else {
+        print('Token is not valid, returning null');
+        _token = null;
+        return null;
+      }
+    } else if (App.localStorage.containsKey('jwt')) {
+      _token = App.localStorage.getString('jwt');
+      bool t = await verify(_token!);
+      if (t) {
+        print('Token is valid');
+        return getMe(_token!);
+      } else {
+        print('Token is not valid, returning null');
+        _token = null;
+        return null;
+      }
     } else {
-      return null;
+      bool isLoggedIn = _googleSignIn.currentUser != null;
+      if (isLoggedIn) {
+        print('Is logged in');
+        GoogleSignInAccount? acc = await _googleSignIn.signInSilently();
+        if (acc != null) {
+          print('Signing in silently');
+          GoogleSignInAuthentication auth = await acc.authentication;
+          _token = await getJWT(auth.accessToken);
+          return getMe(_token!);
+        } else {
+          print('Signing in silently failed');
+          return null;
+        }
+      } else {
+        print('Not logged in');
+        return null;
+      }
     }
   }
 
-  Future<String> getJWT(String? token) async {
+  static Future<String> getJWT(String? token) async {
     if (token != null) {
       Response<String> response = await dio.post(
         _deckURL! + '/auth/checkin',
@@ -62,7 +102,7 @@ class AuthService {
     }
   }
 
-  Future<Member?> getMe(String token) async {
+  static Future<Member?> getMe(String token) async {
     dio.options.headers["Authorization"] = token;
 
     try {
@@ -79,7 +119,7 @@ class AuthService {
     }
   }
 
-  Future<bool> verify(String token) async {
+  static Future<bool> verify(String token) async {
     final url = _deckURL! + '/auth/verify/$token';
     try {
       Response<String> res = await dio.get(url);
@@ -97,49 +137,59 @@ class AuthService {
     }
   }
 
-  Future<bool> isLoggedIn() async {
-    bool isSignedIn = await _googleSignIn.isSignedIn();
-    return isSignedIn &&
-        App.localStorage.containsKey('jwt') &&
-        App.localStorage.containsKey('me');
-  }
+  // static Future<bool> isLoggedIn() async {
+  //   bool isSignedIn = await _googleSignIn.isSignedIn();
+  //   print('isSignedIn: $isSignedIn');
+  //   return isSignedIn &&
+  //       App.localStorage.containsKey('jwt') &&
+  //       App.localStorage.containsKey('me');
+  // }
 
-  Future<bool> loginSilent() async {
-    await _googleSignIn.signInSilently();
-    bool isSignedIn = await _googleSignIn.isSignedIn();
-    if (isSignedIn) {
-      if (App.localStorage.containsKey('jwt') &&
-          App.localStorage.containsKey('me')) {
-        final jwt = App.localStorage.getString('jwt');
-        return verify(jwt!);
-      } else {
-        GoogleSignInAccount? account = _googleSignIn.currentUser;
-        GoogleSignInAuthentication auth = await account!.authentication;
-        String token = await getJWT(auth.accessToken);
-        await getMe(token);
-        return true;
-      }
-    } else {
-      return false;
-    }
-  }
+  // static Future<bool> loginSilent() async {
+  //   await _googleSignIn.signInSilently();
+  //   bool isSignedIn = await _googleSignIn.isSignedIn();
+  //   if (isSignedIn) {
+  //     if (App.localStorage.containsKey('jwt') &&
+  //         App.localStorage.containsKey('me')) {
+  //       final jwt = App.localStorage.getString('jwt');
+  //       return verify(jwt!);
+  //     } else {
+  //       GoogleSignInAccount? account = _googleSignIn.currentUser;
+  //       GoogleSignInAuthentication auth = await account!.authentication;
+  //       String token = await getJWT(auth.accessToken);
+  //       await getMe(token);
+  //       return true;
+  //     }
+  //   } else {
+  //     return false;
+  //   }
+  // }
 
-  Future<bool> login() async {
-    await _googleSignIn.signOut();
+  static Future<bool> login() async {
+    await _googleSignIn.disconnect();
     GoogleSignInAccount? acc = await _googleSignIn.signIn();
     if (acc != null) {
       GoogleSignInAuthentication auth = await acc.authentication;
-      String token = await getJWT(auth.accessToken);
-      await getMe(token);
+      _token = await getJWT(auth.accessToken);
+      App.localStorage.setString('jwt', _token!);
+      _user = await getMe(_token!);
+      App.localStorage.setString('me', json.encode(_user!.toJson()));
       return true;
     } else {
       return false;
     }
   }
 
-  Future signOut() async {
+  static Future signOut() async {
     try {
-      _googleSignIn.signOut();
+      _user = null;
+      _token = null;
+      App.localStorage.remove('me');
+      App.localStorage.remove('jwt');
+      await _googleSignIn.disconnect();
+
+      bool t = _googleSignIn.currentUser != null;
+      print('Signed in? $t');
     } catch (e) {
       print(e.toString());
     }
