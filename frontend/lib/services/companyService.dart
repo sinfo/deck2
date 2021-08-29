@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/contact.dart';
@@ -11,6 +13,7 @@ import 'package:frontend/models/item.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/service.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CompanyService extends Service {
   Future<List<PublicCompany>> getPublicCompanies(
@@ -168,6 +171,37 @@ class CompanyService extends Service {
       throw DeckException('Not found');
     } on FormatException {
       throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> updateInternalImageWeb(
+      {required String id, required XFile image}) async {
+    Uint8List file = await image.readAsBytes();
+    FormData formData = FormData.fromMap(
+      {
+        'image': MultipartFile.fromBytes(
+          file,
+          filename: image.path,
+          contentType: MediaType('multipart', 'form-data'),
+        )
+      },
+    );
+    try {
+      Response<String> response = await dio.post(
+        '/companies/' + id + '/image/internal',
+        data: formData,
+      );
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    } catch (e) {
+      if (e is DioError) {
+        print(e.response);
+      }
     }
   }
 

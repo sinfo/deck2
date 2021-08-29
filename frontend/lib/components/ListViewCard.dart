@@ -190,60 +190,55 @@ class ListViewCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         border: Border.all(color: _color, width: 2),
       ),
-      child: Expanded(
-        child: Stack(
-          children: [
-            Expanded(
-              child: InkWell(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Image.network(
-                          _imageUrl,
+      child: Stack(
+        children: [
+          InkWell(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Image.network(
+                      _imageUrl,
+                      fit: BoxFit.fill,
+                      errorBuilder: (BuildContext context, Object exception,
+                          StackTrace? stackTrace) {
+                        return Image.asset(
+                          'assets/noImage.png',
                           fit: BoxFit.fill,
-                          errorBuilder: (BuildContext context, Object exception,
-                              StackTrace? stackTrace) {
-                            return Image.asset(
-                              'assets/noImage.png',
-                              fit: BoxFit.fill,
-                            );
-                          },
-                        ),
-                      ),
-                      SizedBox(height: 12.5),
-                      Text(_title,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 14,
-                            //fontFamily: 'Inter',
-                            fontWeight: FontWeight.bold,
-                          )),
-                      SizedBox(height: 12.5),
-                    ],
+                        );
+                      },
+                    ),
                   ),
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return UnknownScreen();
-                    } // CompanyScreen(company: this.company)),
-                            ));
-                  }),
+                  SizedBox(height: 12.5),
+                  Text(_title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        //fontFamily: 'Inter',
+                        fontWeight: FontWeight.bold,
+                      )),
+                  SizedBox(height: 12.5),
+                ],
+              ),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return UnknownScreen();
+                } // CompanyScreen(company: this.company)),
+                    ));
+              }),
+          Container(
+            padding: EdgeInsets.all(6),
+            margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
+            decoration: BoxDecoration(
+              color: _color,
+              borderRadius: BorderRadius.all(Radius.circular(5)),
             ),
-            Container(
-              padding: EdgeInsets.all(6),
-              margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
-              decoration: BoxDecoration(
-                color: _color,
-                borderRadius: BorderRadius.all(Radius.circular(5)),
-              ),
-              child: Text(
-                _status,
-                style: TextStyle(fontSize: 14),
-              ),
-            )
-          ],
-        ),
+            child: Text(
+              _status,
+              style: TextStyle(fontSize: 14),
+            ),
+          )
+        ],
       ),
     );
   }

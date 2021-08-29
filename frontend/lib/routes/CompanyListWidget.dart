@@ -29,7 +29,6 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   Widget build(BuildContext context) => FutureBuilder(
       future: companies,
       builder: (context, snapshot) {
-        print(snapshot.hasData);
         if (snapshot.hasData) {
           List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
 
