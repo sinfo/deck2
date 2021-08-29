@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -21,6 +22,20 @@ class AuthService {
       "Content-type": 'application/json',
     },
   ));
+
+  Stream<Member?> get user {
+    return _googleSignIn.onCurrentUserChanged.asyncMap(_memberFromAccount);
+  }
+
+  FutureOr<Member?> _memberFromAccount(GoogleSignInAccount? acc) async {
+    if (acc != null) {
+      GoogleSignInAuthentication auth = await acc.authentication;
+      String token = await getJWT(auth.accessToken);
+      return getMe(token);
+    } else {
+      return null;
+    }
+  }
 
   Future<String> getJWT(String? token) async {
     if (token != null) {
@@ -47,21 +62,13 @@ class AuthService {
     }
   }
 
-  Future<Member?> getMe([String? jwt]) async {
-    // Already stored member
-    if (App.localStorage.containsKey('me')) {
-      return Member.fromJson(json.decode(App.localStorage.getString("me")!));
-    }
-
-    String? token = jwt == null ? App.localStorage.getString("jwt") : jwt;
+  Future<Member?> getMe(String token) async {
     dio.options.headers["Authorization"] = token;
-    Response<String> response = await dio.get(_deckURL! + '/me');
 
     try {
+      Response<String> response = await dio.get(_deckURL! + '/me');
       final responseJson = json.decode(response.data as String);
       Member me = Member.fromJson(responseJson);
-
-      App.localStorage.setString("me", json.encode(me));
       return me;
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -72,12 +79,69 @@ class AuthService {
     }
   }
 
-  // Used for safety
-  Future<Member?> login() async {
+  Future<bool> verify(String token) async {
+    final url = _deckURL! + '/auth/verify/$token';
+    try {
+      Response<String> res = await dio.get(url);
+      if (res.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<bool> isLoggedIn() async {
+    bool isSignedIn = await _googleSignIn.isSignedIn();
+    return isSignedIn &&
+        App.localStorage.containsKey('jwt') &&
+        App.localStorage.containsKey('me');
+  }
+
+  Future<bool> loginSilent() async {
     await _googleSignIn.signInSilently();
-    GoogleSignInAccount? account = _googleSignIn.currentUser;
-    GoogleSignInAuthentication auth = await account!.authentication;
-    String token = await getJWT(auth.accessToken);
-    return getMe(token);
+    bool isSignedIn = await _googleSignIn.isSignedIn();
+    if (isSignedIn) {
+      if (App.localStorage.containsKey('jwt') &&
+          App.localStorage.containsKey('me')) {
+        final jwt = App.localStorage.getString('jwt');
+        return verify(jwt!);
+      } else {
+        GoogleSignInAccount? account = _googleSignIn.currentUser;
+        GoogleSignInAuthentication auth = await account!.authentication;
+        String token = await getJWT(auth.accessToken);
+        await getMe(token);
+        return true;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> login() async {
+    await _googleSignIn.signOut();
+    GoogleSignInAccount? acc = await _googleSignIn.signIn();
+    if (acc != null) {
+      GoogleSignInAuthentication auth = await acc.authentication;
+      String token = await getJWT(auth.accessToken);
+      await getMe(token);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future signOut() async {
+    try {
+      _googleSignIn.signOut();
+    } catch (e) {
+      print(e.toString());
+    }
   }
 }

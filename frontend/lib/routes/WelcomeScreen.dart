@@ -1,51 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/router.dart';
+import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/HomeScreen.dart';
+import 'package:frontend/routes/LoginScreen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
 
-class WelcomeScreen extends StatefulWidget {
-  WelcomeScreen({Key? key}) : super(key: key);
-
-  @override
-  _WelcomeScreenState createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen> {
-  GoogleSignIn googleSignIn =
-      GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
-
-  @override
-  void initState() {
-    checkSignInStatus();
-    super.initState();
-  }
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        color: Colors.indigo,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Image(image: AssetImage("assets/logo-branco2.png"))
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+    final user = Provider.of<Member?>(context);
 
-  void checkSignInStatus() async {
-    await googleSignIn.signOut();
-    await googleSignIn.signInSilently();
-    bool isSignedIn = await googleSignIn.isSignedIn();
-    if (!isSignedIn) {
-      print("not signed in");
-      Navigator.pushReplacementNamed(context, Routes.LoginRoute);
+    if (user == null) {
+      return LoginScreen();
     } else {
-      Navigator.pushNamed(context, Routes.HomeRoute);
+      return HomeScreen();
     }
   }
 }

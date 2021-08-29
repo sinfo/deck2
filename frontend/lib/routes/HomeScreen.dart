@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
@@ -11,6 +13,7 @@ import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key? key}) : super(key: key);
@@ -23,12 +26,11 @@ class _HomeScreenState extends State<HomeScreen> {
   late int _currentIndex;
   GoogleSignIn googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
-  late Future<Member?> _me;
   AuthService _authService = AuthService();
 
   @override
   void initState() {
-    _me = checkSignInStatus();
+    checkSignInStatus();
     _currentIndex = 1;
     App.localStorage.setInt("event", 29);
     super.initState();
@@ -36,6 +38,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<Member?>(context);
+
     return Scaffold(
       appBar: CustomAppBar(),
       bottomNavigationBar: BottomNavigationBar(
@@ -71,16 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           }),
       body: _pageAtIndex(_currentIndex),
-      drawer: FutureBuilder(
-          future: _me,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              Member me = snapshot.data as Member;
-              return MyDrawer(image: me.image);
-            } else {
-              return CircularProgressIndicator();
-            }
-          }),
+      drawer: MyDrawer(image: user != null ? user.image : ''),
       floatingActionButton: _fabAtIndex(_currentIndex),
     );
   }
@@ -142,13 +137,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<Member?> checkSignInStatus() async {
-    await googleSignIn.signInSilently();
-    bool isSignedIn = await googleSignIn.isSignedIn();
+    bool isSignedIn = await _authService.isLoggedIn();
     if (!isSignedIn) {
-      Navigator.pushReplacementNamed(context, '/login');
-    } else {
-      _me = _authService.login();
-      return _me;
+      Navigator.pushReplacementNamed(context, Routes.LoginRoute);
     }
   }
 }

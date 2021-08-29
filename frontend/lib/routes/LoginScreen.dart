@@ -12,21 +12,32 @@ class _LoginScreenState extends State<LoginScreen> {
   GoogleSignIn _googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
   AuthService _authService = AuthService();
+  Future<bool>? isLoggedIn;
+
+  @override
+  void initState() {
+    isLoggedIn = tryLogin();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        color: Colors.indigo,
+    return SizedBox.expand(
+      child: Container(
+        decoration: BoxDecoration(
+            image: DecorationImage(
+                fit: BoxFit.fill,
+                image: AssetImage("assets/banner_background.png"))),
         child: Center(
           child: Column(
-            mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
+            children: [
               Image(
-                image: AssetImage("assets/logo-branco2.png"),
+                image: AssetImage('assets/logo-branco2.png'),
+                height: 150,
+                width: 700,
               ),
-              SizedBox(height: 50),
+              SizedBox(height: 200),
               _signInButton(),
             ],
           ),
@@ -36,52 +47,74 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _signInButton() {
-    return OutlineButton(
-      splashColor: Colors.white,
-      onPressed: () {
-        stateSignIn();
-      },
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
-      highlightElevation: 0,
-      borderSide: BorderSide(color: Colors.grey),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Image(image: AssetImage("assets/google_logo.png"), height: 35.0),
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: Text(
-                'Sign in with Google',
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.grey,
+    return FutureBuilder(
+        future: isLoggedIn,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            bool loggedIn = snapshot.data as bool;
+            if (loggedIn) {
+              return CircularProgressIndicator();
+            } else {
+              return OutlinedButton(
+                onPressed: () {
+                  stateSignIn();
+                },
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(40),
+                    side: BorderSide(color: Colors.blue),
+                  ),
                 ),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: <Widget>[
+                      Image(
+                          image: AssetImage("assets/google_logo.png"),
+                          height: 35.0),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: Text(
+                          'Sign in with Google',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              );
+            }
+          } else {
+            return CircularProgressIndicator();
+          }
+        });
+  }
+
+  Future<bool> tryLogin() async {
+    bool loggedIn = await _authService.loginSilent();
+    if (loggedIn) {
+      Navigator.pushReplacementNamed(context, Routes.HomeRoute);
+      return true;
+    }
+    return false;
   }
 
   void stateSignIn() async {
-    await _googleSignIn.signOut();
-    GoogleSignInAccount? user = await _googleSignIn.signIn();
-    if (user == null) {
-      Navigator.pushReplacementNamed(context, Routes.LoginRoute);
+    bool loggedIn = await _authService.login();
+    if (loggedIn) {
+      Navigator.pushReplacementNamed(context, Routes.HomeRoute);
     } else {
-      GoogleSignInAccount? account = _googleSignIn.currentUser;
-      if (account != null) {
-        GoogleSignInAuthentication auth = await account.authentication;
-        await _authService.getJWT(auth.accessToken);
-        await _authService.getMe();
-        Navigator.pushReplacementNamed(context, Routes.HomeRoute);
-      } else {
-        Navigator.pushReplacementNamed(context, Routes.LoginRoute);
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('Could not login. Please try again or contact admins.')),
+      );
     }
   }
 }

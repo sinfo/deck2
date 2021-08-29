@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/router.dart';
+import 'package:frontend/services/authService.dart';
 
 class MyDrawer extends Drawer {
   String image;
   MyDrawer({Key? key, required this.image});
+  final AuthService _auth = AuthService();
 
   @override
   Drawer build(BuildContext context) {
@@ -19,9 +22,10 @@ class MyDrawer extends Drawer {
         ),
         ListTile(
           leading: Icon(
-            Icons.info,
+            Icons.person,
           ),
-          title: Text('Info Page'),
+          title: Text('Logout'),
+          onTap: () async => signOut(context),
         ),
         ListTile(
           leading: Icon(
@@ -43,6 +47,11 @@ class MyDrawer extends Drawer {
         )
       ],
     ));
+  }
+
+  void signOut(BuildContext context) async {
+    await _auth.signOut();
+    Navigator.pushReplacementNamed(context, Routes.LoginRoute);
   }
 
   DrawerHeader buildHeader() {
