@@ -35,16 +35,16 @@ class GridLayout extends StatelessWidget {
         ),
         itemCount: getNumberOfItems(),
         itemBuilder: (BuildContext context, int index) {
-          if(speakers != null) {
+          if (speakers != null) {
             return ListViewCard(
-              small: isSmall,
-              speaker: speakers![index],
-              participationsInfo: true);
+                small: isSmall,
+                speaker: speakers![index],
+                participationsInfo: true);
           } else {
             return ListViewCard(
-              small: isSmall,
-              company: companies![index],
-              participationsInfo: true);
+                small: isSmall,
+                company: companies![index],
+                participationsInfo: true);
           }
         },
       );

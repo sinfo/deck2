@@ -155,7 +155,7 @@ class ListViewCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                      height: participationsInfo != null ? 72 : 24,
+                      height: participationsInfo != null ? 72 : 30,
                       child: getParticipationInfo(14)),
                 ],
               ),
@@ -200,12 +200,14 @@ class ListViewCard extends StatelessWidget {
         ],
       );
     } else {
-      return Text(_title,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: fontsize,
-            fontWeight: FontWeight.bold,
-          ));
+      return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(_title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: fontsize,
+              fontWeight: FontWeight.bold,
+            ))
+      ]);
     }
   }
 

@@ -221,7 +221,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
               List<Speaker> spks = snapshot.data as List<Speaker>;
               List<Speaker> spkscpy = filterListByStatus(spks, _filter);
               return Container(
-                height: spkscpy.length == 0 ? 0 : 125,
+                height: spkscpy.length == 0 ? 0 : 200,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: spkscpy
