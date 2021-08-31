@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 0:
         {
           return FloatingActionButton(
-            onPressed: () => {},
+            onPressed: () => Navigator.pushNamed(context, Routes.AddSpeaker),
             tooltip: 'Add Speaker',
             child: const Icon(Icons.add),
           );
@@ -111,55 +111,10 @@ class _HomeScreenState extends State<HomeScreen> {
       case 2:
         {
           return FloatingActionButton(
-            onPressed: () => {Navigator.pushNamed(context, Routes.AddCompany)},
+            onPressed: () => Navigator.pushNamed(context, Routes.AddCompany),
             tooltip: 'Add Company',
             child: const Icon(Icons.add),
           );
-        }
-    }
-  }
-
-  Widget _pageAtIndex(int index) {
-    return SizedBox.expand(
-      child: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() => _currentIndex = index);
-        },
-        children: <Widget>[
-          Center(child: SpeakerTable()),
-          Center(child: Text("Home in progress :)")),
-          Center(child: CompanyTable()),
-          Center(child: MemberListWidget()),
-        ],
-      ),
-    );
-
-    switch (index) {
-      case 0:
-        {
-          return Center(child: SpeakerTable());
-        }
-        break;
-      case 1:
-        {
-          return Center(child: Text("Home in progress :)"));
-        }
-        break;
-      case 2:
-        {
-          return Center(child: CompanyTable());
-        }
-        break;
-      //FIXME: retirar isto em baixo porque não vai ficar aqui
-      case 3:
-        {
-          return Center(child: MemberListWidget());
-        }
-        break;
-      default:
-        {
-          return UnknownScreen();
         }
     }
   }

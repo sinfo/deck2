@@ -36,19 +36,22 @@ class _CompanyTableState extends State<CompanyTable> {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return Column(
-              children: <Widget>[
-                FilterBar(onSelected: (value) => onSelected(value)),
-                Expanded(
-                  child: ListView(
-                    children: membs
-                        .map((e) =>
-                            MemberCompaniesRow(member: e, filter: _filter))
-                        .toList(),
-                    addAutomaticKeepAlives: true,
+            return NestedScrollView(
+              floatHeaderSlivers: true,
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+                    child: FilterBar(onSelected: (value) => onSelected(value)),
                   ),
                 ),
               ],
+              body: ListView(
+                children: membs
+                    .map((e) => MemberCompaniesRow(member: e, filter: _filter))
+                    .toList(),
+                addAutomaticKeepAlives: true,
+              ),
             );
           } else {
             return CircularProgressIndicator();
