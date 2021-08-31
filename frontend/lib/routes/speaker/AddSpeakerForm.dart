@@ -224,14 +224,11 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
     final mime = await _controller.getFileMIME(event);
     final bytes = await _controller.getFileSize(event);
     final url = await _controller.createFileUrl(event);
-    print('size: $bytes');
     XFile f = XFile(url, mimeType: mime, length: bytes, name: name);
     setState(() {
       _size = bytes;
       _image = f;
     });
-
-    print('Name:" $name, mime: $mime, size: $bytes, url: $url');
   }
 
   _pickImage() async {

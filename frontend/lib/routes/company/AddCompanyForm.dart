@@ -237,8 +237,6 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
       _size = bytes;
       _image = f;
     });
-
-    print('Name:" $name, mime: $mime, size: $bytes, url: $url');
   }
 
   _pickImage() async {
