@@ -40,6 +40,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
     super.initState();
     _controller.addListener(_scrollListener);
     this.companies = companyService.getCompaniesLight(perPage: PAGE_COUNT);
+    //storeCompaniesLoaded();
   }
 
   @override
@@ -82,51 +83,45 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
         ),
         itemCount: _count,
         itemBuilder: (BuildContext context, int index) {
-          if (index < _count - PAGE_COUNT) {
-            return ListViewCard(
-                small: isSmall,
-                company: companiesLoaded[index],
-                participationsInfo: true);
-          } else {
-            return FutureBuilder<List<CompanyLight>>(
-                future: companies,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    int i = index - companiesLoaded.length;
-                    if (index == _count - 1) {
-                      _previousID = snapshot.data![i].id;
-                    }
-                    if (_sortMethod == SortingMethod.NUM_PARTICIPATIONS) {
-                      snapshot.data!.sort((a, b) =>
-                          b.numParticipations!.compareTo(a.numParticipations!));
-                    } else if (_sortMethod ==
-                        SortingMethod.LAST_PARTICIPATION) {
-                      snapshot.data!.sort((a, b) {
-                        if (a.numParticipations! > 0 &&
-                            b.numParticipations! > 0) {
-                          return b.lastParticipation!
-                              .compareTo(a.lastParticipation!);
-                        } else {
-                          //We return first the company with participations and then the
-                          //company with no participations in case one of the companies
-                          //does not have participations
-                          return b.numParticipations!
-                              .compareTo(a.numParticipations!);
-                        }
-                      });
-                    }
-                    return ListViewCard(
-                        small: isSmall,
-                        company: snapshot.data![i],
-                        participationsInfo: true);
-                  } else {
-                    return Center(child: CircularProgressIndicator());
+          return FutureBuilder<List<CompanyLight>>(
+              future: companies,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<CompanyLight> comp =
+                      checkSortMethod(companiesLoaded + snapshot.data!);
+                  int i = index - companiesLoaded.length;
+                  if (index == _count - 1) {
+                    _previousID = snapshot.data![i].id;
                   }
-                });
-          }
+                  return ListViewCard(
+                      small: isSmall,
+                      company: comp[index],
+                      participationsInfo: true);
+                } else {
+                  return Center(child: CircularProgressIndicator());
+                }
+              });
         },
       );
     });
+  }
+
+  List<CompanyLight> checkSortMethod(List<CompanyLight> comp) {
+    if (_sortMethod == SortingMethod.NUM_PARTICIPATIONS) {
+      comp.sort((a, b) => b.numParticipations!.compareTo(a.numParticipations!));
+    } else if (_sortMethod == SortingMethod.LAST_PARTICIPATION) {
+      comp.sort((a, b) {
+        if (a.numParticipations! > 0 && b.numParticipations! > 0) {
+          return b.lastParticipation!.compareTo(a.lastParticipation!);
+        } else {
+          //We return first the company with participations and then the
+          //company with no participations in case one of the companies
+          //does not have participations
+          return b.numParticipations!.compareTo(a.numParticipations!);
+        }
+      });
+    }
+    return comp;
   }
 
   @override
