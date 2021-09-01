@@ -44,7 +44,7 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	partner := urlQuery.Get("partner")
 	member := urlQuery.Get("member")
 	name := urlQuery.Get("name")
-	page := urlQuery.Get("page")
+	previousID := urlQuery.Get("previousID")
 	perPage := urlQuery.Get("perPage")
 
 	if len(event) > 0 {
@@ -78,13 +78,13 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 		options.Name = &name
 	}
 
-	if len(page) > 0 {
-		pageNum, err := strconv.ParseInt(page, 10, 64)
+	if len(previousID) > 0 {
+		prevID, err := primitive.ObjectIDFromHex(previousID)
 		if err != nil {
-			http.Error(w, "Invalid page number format", http.StatusBadRequest)
+			http.Error(w, "Invalid Company ID format", http.StatusBadRequest)
 			return
 		}
-		options.Page = &pageNum
+		options.PreviousID = &prevID
 	}
 
 	if len(perPage) > 0 {
@@ -96,12 +96,9 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 		options.PerPage = &perPageNum
 	}
 
-	companies, numCompanies, err := mongodb.Companies.GetCompanies(options)
+	companies, err := mongodb.Companies.GetCompanies(options)
 	if err != nil {
 		http.Error(w, "Unable to get companies", http.StatusExpectationFailed)
-	}
-	if numCompanies != 0 {
-		w.Header().Add("X-Total-Count", strconv.FormatInt(numCompanies, 10));
 	}
 
 	json.NewEncoder(w).Encode(companies)

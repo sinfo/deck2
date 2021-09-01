@@ -1239,7 +1239,7 @@ func TestDeleteCompany(t *testing.T) {
 
 	assert.Equal(t, company.ID, newCompany.ID)
 
-	companies, _, err := mongodb.Companies.GetCompanies(mongodb.GetCompaniesOptions{})
+	companies, err := mongodb.Companies.GetCompanies(mongodb.GetCompaniesOptions{})
 	assert.NilError(t, err)
 
 	assert.Equal(t, len(companies), 0)

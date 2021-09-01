@@ -74,7 +74,12 @@ class CompanyService extends Service {
   }
 
   Future<List<CompanyLight>> getCompaniesLight(
-      {int? event, bool? partner, String? member, String? name}) async {
+      {int? event,
+      bool? partner,
+      String? member,
+      String? name,
+      String? previousID,
+      int? perPage}) async {
     Map<String, dynamic> queryParams = {};
     if (event != null) {
       queryParams['event'] = event;
@@ -88,8 +93,12 @@ class CompanyService extends Service {
     if (name != null) {
       queryParams['name'] = name;
     }
-    queryParams['page'] = 1;
-    queryParams['perPage'] = 30;
+    if (perPage != null) {
+      queryParams['perPage'] = perPage;
+    }
+    if (previousID != null) {
+      queryParams['previousID'] = previousID;
+    }
 
     String companyUrl = '/companies';
     Response<String> res =

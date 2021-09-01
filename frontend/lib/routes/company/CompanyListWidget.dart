@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/GridLayout.dart';
+import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/components/searchDelegate.dart';
 import 'package:frontend/models/company.dart';
@@ -17,6 +17,8 @@ final Map<SortingMethod, String> SORT_STRING = {
   SortingMethod.LAST_PARTICIPATION: 'Sort By Last Participation',
 };
 
+final int PAGE_COUNT = 30;
+
 class CompanyListWidget extends StatefulWidget {
   const CompanyListWidget({Key? key}) : super(key: key);
 
@@ -27,43 +29,104 @@ class CompanyListWidget extends StatefulWidget {
 class _CompanyListWidgetState extends State<CompanyListWidget> {
   CompanyService companyService = new CompanyService();
   late Future<List<CompanyLight>> companies;
+  List<CompanyLight> companiesLoaded = [];
   SortingMethod _sortMethod = SortingMethod.RANDOM;
+  int _count = PAGE_COUNT;
+  String _previousID = "";
+  ScrollController _controller = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    this.companies = companyService.getCompaniesLight();
+    _controller.addListener(_scrollListener);
+    this.companies = companyService.getCompaniesLight(perPage: PAGE_COUNT);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_scrollListener);
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_controller.offset >= _controller.position.maxScrollExtent &&
+        !_controller.position.outOfRange) {
+      setState(() {
+        storeCompaniesLoaded();
+        _count += PAGE_COUNT;
+        this.companies = companyService.getCompaniesLight(
+            perPage: PAGE_COUNT, previousID: _previousID);
+      });
+    }
+  }
+
+  void storeCompaniesLoaded() async {
+    this.companiesLoaded.addAll(await this.companies);
   }
 
   Widget companyGrid() {
-    return FutureBuilder<List<CompanyLight>>(
-        future: companies,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (_sortMethod == SortingMethod.NUM_PARTICIPATIONS) {
-              snapshot.data!.sort((a, b) =>
-                  b.numParticipations!.compareTo(a.numParticipations!));
-            } else if (_sortMethod == SortingMethod.LAST_PARTICIPATION) {
-              snapshot.data!.sort((a, b) {
-                if (a.numParticipations! > 0 &&
-                    b.numParticipations! > 0) {
-                  return b.lastParticipation!
-                      .compareTo(a
-                          .lastParticipation!);
-                } else {
-                  //We return first the company with participations and then the
-                  //company with no participations in case one of the companies
-                  //does not have participations
-                  return b.numParticipations!
-                      .compareTo(a.numParticipations!);
-                }
-              });
-            }
-            return GridLayout(companies: snapshot.data!);
+    return LayoutBuilder(builder: (context, constraints) {
+      double cardWidth = 250;
+      bool isSmall = false;
+      if (constraints.maxWidth < 1500) {
+        cardWidth = 200;
+        isSmall = true;
+      }
+      return GridView.builder(
+        controller: _controller,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: MediaQuery.of(context).size.width ~/ cardWidth,
+          crossAxisSpacing: 5,
+          mainAxisSpacing: 5,
+          childAspectRatio: 0.75,
+        ),
+        itemCount: _count,
+        itemBuilder: (BuildContext context, int index) {
+          if (index < _count - PAGE_COUNT) {
+            return ListViewCard(
+                small: isSmall,
+                company: companiesLoaded[index],
+                participationsInfo: true);
           } else {
-            return Center(child: CircularProgressIndicator());
+            return FutureBuilder<List<CompanyLight>>(
+                future: companies,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    int i = index - companiesLoaded.length;
+                    if (index == _count - 1) {
+                      _previousID = snapshot.data![i].id;
+                    }
+                    if (_sortMethod == SortingMethod.NUM_PARTICIPATIONS) {
+                      snapshot.data!.sort((a, b) =>
+                          b.numParticipations!.compareTo(a.numParticipations!));
+                    } else if (_sortMethod ==
+                        SortingMethod.LAST_PARTICIPATION) {
+                      snapshot.data!.sort((a, b) {
+                        if (a.numParticipations! > 0 &&
+                            b.numParticipations! > 0) {
+                          return b.lastParticipation!
+                              .compareTo(a.lastParticipation!);
+                        } else {
+                          //We return first the company with participations and then the
+                          //company with no participations in case one of the companies
+                          //does not have participations
+                          return b.numParticipations!
+                              .compareTo(a.numParticipations!);
+                        }
+                      });
+                    }
+                    return ListViewCard(
+                        small: isSmall,
+                        company: snapshot.data![i],
+                        participationsInfo: true);
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                });
           }
-        });
+        },
+      );
+    });
   }
 
   @override
@@ -83,7 +146,8 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
               onPressed: () async {
                 showSearch(
                     context: context,
-                    delegate: CustomSearchDelegate(companies: await companies));
+                    delegate: CustomSearchDelegate(
+                        companies: await companyService.getCompaniesLight()));
               },
             ),
             PopupMenuButton<SortingMethod>(

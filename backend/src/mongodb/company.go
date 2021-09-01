@@ -95,16 +95,16 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 // The field is non-existent if it has a nil value.
 // This filter will behave like a logical *and*.
 type GetCompaniesOptions struct {
-	EventID   *int
-	IsPartner *bool
-	MemberID  *primitive.ObjectID
-	Name      *string
-	Page	  *int64
-	PerPage   *int64
+	EventID    *int
+	IsPartner  *bool
+	MemberID   *primitive.ObjectID
+	Name       *string
+	PreviousID *primitive.ObjectID
+	PerPage    *int64
 }
 
 // GetCompanies gets all companies specified with a query
-func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models.Company, int64, error) {
+func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models.Company, error) {
 	var companies = make([]*models.Company, 0)
 
 	ctx := context.Background()
@@ -112,8 +112,6 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 	filter := bson.M{}
 
 	findOptions := options.Find()
-
-	var total int64 = -1
 	
 	if compOptions.EventID != nil {
 		filter["participations.event"] = compOptions.EventID
@@ -134,22 +132,19 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 		}
 	}
 
-	if *compOptions.Page == 1 {
-		var err error
-		total, err = c.Collection.CountDocuments(ctx, filter)
-		if err != nil {
-			return nil, total, err
-		}
+	if compOptions.PerPage != nil {
+		findOptions.SetLimit(*compOptions.PerPage)
 	}
 
-	if compOptions.Page != nil && compOptions.PerPage != nil {
-		findOptions.SetSkip((*compOptions.Page - 1) * (*compOptions.PerPage))
-		findOptions.SetLimit(*compOptions.PerPage)
+	if compOptions.PreviousID != nil {
+		filter["_id"] = bson.M{
+			"$gt": *compOptions.PreviousID,
+		}
 	}
 
 	cur, err := c.Collection.Find(ctx, filter, findOptions)
 	if err != nil {
-		return nil, total, err
+		return nil, err
 	}
 
 	for cur.Next(ctx) {
@@ -158,19 +153,19 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 		var c models.Company
 		err := cur.Decode(&c)
 		if err != nil {
-			return nil, total, err
+			return nil, err
 		}
 
 		companies = append(companies, &c)
 	}
 
 	if err := cur.Err(); err != nil {
-		return nil, total, err
+		return nil, err
 	}
 
 	cur.Close(ctx)
 
-	return companies, total, nil
+	return companies, nil
 }
 
 // Transforms a models.Company into a models.CompanyPublic. If eventID != nil, returns only the participation for that event, if announced.
