@@ -4,7 +4,7 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/models/speaker.dart';
 
 class CustomSearchDelegate extends SearchDelegate {
-  final List<Company>? companies;
+  final List<CompanyLight>? companies;
   final List<Speaker>? speakers;
 
   CustomSearchDelegate({this.companies, this.speakers});

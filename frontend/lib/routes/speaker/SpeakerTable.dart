@@ -38,32 +38,15 @@ class _SpeakerTableState extends State<SpeakerTable> {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return Stack(children: <Widget>[
-              Column(children: <Widget>[
-                FilterBar(onSelected: (value) => onSelected(value)),
-                Expanded(
-                    child: ListView(
-                  children: membs
-                      .map((e) => MemberSpeakerRow(member: e, filter: _filter))
-                      .toList(),
-                  addAutomaticKeepAlives: true,
-                ))
-              ]),
-              Positioned(
-                  bottom: 15,
-                  right: 15,
-                  child: FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => SpeakerListWidget()),
-                      );
-                    },
-                    label: const Text('Show All Speakers'),
-                    icon: const Icon(Icons.add),
-                    backgroundColor: Color(0xff5C7FF2),
-                  ))
+            return Column(children: <Widget>[
+              FilterBar(onSelected: (value) => onSelected(value)),
+              Expanded(
+                  child: ListView(
+                children: membs
+                    .map((e) => MemberSpeakerRow(member: e, filter: _filter))
+                    .toList(),
+                addAutomaticKeepAlives: true,
+              ))
             ]);
           } else {
             return CircularProgressIndicator();

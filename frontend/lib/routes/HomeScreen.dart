@@ -98,10 +98,16 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 0:
         {
-          return FloatingActionButton(
-            onPressed: () => {},
-            tooltip: 'Add Speaker',
-            child: const Icon(Icons.add),
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                Routes.ShowAllSpeakers,
+              );
+            },
+            label: const Text('Show All Speakers'),
+            icon: const Icon(Icons.add),
+            backgroundColor: Color(0xff5C7FF2),
           );
         }
       case 1:
@@ -110,10 +116,16 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       case 2:
         {
-          return FloatingActionButton(
-            onPressed: () => {Navigator.pushNamed(context, Routes.AddCompany)},
-            tooltip: 'Add Company',
-            child: const Icon(Icons.add),
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                Routes.ShowAllCompanies,
+              );
+            },
+            label: const Text('Show All Companies'),
+            icon: const Icon(Icons.add),
+            backgroundColor: Color(0xff5C7FF2),
           );
         }
     }

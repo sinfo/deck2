@@ -22,7 +22,7 @@ final Map<ParticipationStatus, String> STATUSSTRING = {
 
 class ListViewCard extends StatelessWidget {
   final Member? member;
-  final Company? company;
+  final CompanyLight? company;
   final Speaker? speaker;
   final bool small;
   final bool? participationsInfo;
@@ -52,18 +52,9 @@ class ListViewCard extends StatelessWidget {
   }
 
   void _initCompany(int event) {
-    _numParticipations = company!.participations!.length;
-    if (_numParticipations! > 0) {
-      _lastParticipation =
-          company!.participations![company!.participations!.length - 1].event;
-    }
-    if (_numParticipations! > 0 && _lastParticipation == event) {
-      CompanyParticipation participation = company!.participations!
-          .firstWhere((element) => element.event == event);
-      _status = participation.status.toUpperCase();
-    } else {
-      _status = "";
-    }
+    _numParticipations = company!.numParticipations;
+    _lastParticipation = company!.lastParticipation;
+    _status = company!.participationStatus!.toUpperCase();
     _imageUrl = company!.companyImages.internal;
     _title = company!.name;
     defineStatusColor(_status);

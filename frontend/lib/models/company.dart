@@ -1,3 +1,4 @@
+import 'package:frontend/main.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
@@ -39,26 +40,32 @@ class CompanyLight {
   final String name;
   final CompanyImages companyImages;
   final int? numParticipations;
-  final CompanyParticipation? lastParticipation;
+  final int? lastParticipation;
+  final String? participationStatus;
 
   CompanyLight(
       {required this.id,
       required this.name,
       required this.companyImages,
       this.numParticipations,
-      this.lastParticipation});
+      this.lastParticipation,
+      this.participationStatus});
 
   factory CompanyLight.fromJson(Map<String, dynamic> json) {
     var participations = json['participations'] as List;
     return CompanyLight(
-      id: json['id'],
-      name: json['name'],
-      companyImages: CompanyImages.fromJson(json['imgs']),
-      numParticipations: participations.length,
-      lastParticipation: participations.length > 0
-          ? participations[participations.length - 1]['status']
-          : null,
-    );
+        id: json['id'],
+        name: json['name'],
+        companyImages: CompanyImages.fromJson(json['imgs']),
+        numParticipations: participations.length,
+        lastParticipation: participations.length > 0
+            ? participations[participations.length - 1]['event']
+            : null,
+        participationStatus: participations.length > 0 &&
+                participations[participations.length - 1]['event'] ==
+                    App.localStorage.getInt("event")
+            ? participations[participations.length - 1]['status']
+            : "");
   }
 }
 

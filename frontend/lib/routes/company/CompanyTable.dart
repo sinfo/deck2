@@ -6,7 +6,6 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
-import 'package:frontend/routes/company/CompanyListWidget.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/memberService.dart';
 
@@ -37,7 +36,7 @@ class _CompanyTableState extends State<CompanyTable> {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return Stack(children: <Widget>[
+            return 
               Column(
                 children: <Widget>[
                   FilterBar(onSelected: (value) => onSelected(value)),
@@ -51,23 +50,7 @@ class _CompanyTableState extends State<CompanyTable> {
                     ),
                   ),
                 ],
-              ),
-              Positioned(
-                  bottom: 15,
-                  right: 15,
-                  child: FloatingActionButton.extended(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => CompanyListWidget()),
-                      );
-                    },
-                    label: const Text('Show All Companies'),
-                    icon: const Icon(Icons.add),
-                    backgroundColor: Color(0xff5C7FF2),
-                  ))
-            ]);
+              );
           } else {
             return CircularProgressIndicator();
           }
@@ -97,14 +80,14 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
   Member member;
   String filter;
   CompanyService _companyService = CompanyService();
-  late Future<List<Company>> _companies;
+  late Future<List<CompanyLight>> _companies;
   _MemberCompaniesRowState({required this.member, required this.filter});
 
   @override
   void initState() {
     super.initState();
     _companies =
-        _companyService.getCompanies(event: 29, member: this.member.id);
+        _companyService.getCompaniesLight(event: 29, member: this.member.id);
   }
 
   @override
@@ -152,8 +135,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           future: _companies,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<Company> comps = snapshot.data as List<Company>;
-              List<Company> compscpy = filterListByStatus(comps, _filter);
+              List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
+              List<CompanyLight> compscpy = filterListByStatus(comps, _filter);
               return Container(
                 height: compscpy.length == 0 ? 0 : null,
                 child: Wrap(
@@ -221,8 +204,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           future: _companies,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<Company> comps = snapshot.data as List<Company>;
-              List<Company> compscpy = filterListByStatus(comps, _filter);
+              List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
+              List<CompanyLight> compscpy = filterListByStatus(comps, _filter);
               return Container(
                 height: compscpy.length == 0 ? 0 : 200,
                 child: ListView(
@@ -249,13 +232,11 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     );
   }
 
-  List<Company> filterListByStatus(List comps, String _filter) {
-    List<Company> compscpy = [];
+  List<CompanyLight> filterListByStatus(List comps, String _filter) {
+    List<CompanyLight> compscpy = [];
     if (_filter != "ALL") {
-      for (Company c in comps) {
-        CompanyParticipation p =
-            c.participations!.firstWhere((element) => element.event == 29);
-        String s = p.status.toUpperCase();
+      for (CompanyLight c in comps) {
+        String s = c.participationStatus!.toUpperCase();
         if (s == _filter) compscpy.add(c);
       }
     } else {

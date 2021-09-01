@@ -5,7 +5,7 @@ import 'package:frontend/models/speaker.dart';
 
 class GridLayout extends StatelessWidget {
   final List<Speaker>? speakers;
-  final List<Company>? companies;
+  final List<CompanyLight>? companies;
 
   GridLayout({Key? key, this.speakers, this.companies}) : super(key: key) {}
 
