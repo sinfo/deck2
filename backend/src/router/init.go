@@ -112,7 +112,7 @@ func InitializeRouter() {
 		URLRegexCompiler, _ = regexp.Compile(`^(?U)(?P<url>(.*))(\/)?\|.*`)
 	}
 
-	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization", "X-Total-Count"})
 	var allowedOrigins handlers.CORSOption
 	if config.Production {
 		allowedOrigins = handlers.AllowedOrigins([]string{"*sinfo.org"})

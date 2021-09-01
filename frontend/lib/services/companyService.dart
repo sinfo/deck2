@@ -73,7 +73,7 @@ class CompanyService extends Service {
     }
   }
 
-    Future<List<CompanyLight>> getCompaniesLight(
+  Future<List<CompanyLight>> getCompaniesLight(
       {int? event, bool? partner, String? member, String? name}) async {
     Map<String, dynamic> queryParams = {};
     if (event != null) {
@@ -88,13 +88,17 @@ class CompanyService extends Service {
     if (name != null) {
       queryParams['name'] = name;
     }
+    queryParams['page'] = 1;
+    queryParams['perPage'] = 30;
 
     String companyUrl = '/companies';
-    Response<String> res = await dio.get(companyUrl, queryParameters: queryParams);
+    Response<String> res =
+        await dio.get(companyUrl, queryParameters: queryParams);
 
     if (res.statusCode == 200 && res.data!.isNotEmpty) {
       final jsonRes = json.decode(res.data!) as List;
-      List<CompanyLight> data = jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
+      List<CompanyLight> data =
+          jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
       return data;
     } else {
       return [];
