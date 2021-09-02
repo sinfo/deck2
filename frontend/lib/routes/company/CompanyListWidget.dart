@@ -31,7 +31,6 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   late Future<List<CompanyLight>> companies;
   List<CompanyLight> companiesLoaded = [];
   SortingMethod _sortMethod = SortingMethod.RANDOM;
-  int _count = PAGE_COUNT;
   String _previousID = "";
   ScrollController _controller = ScrollController();
 
@@ -40,7 +39,6 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
     super.initState();
     _controller.addListener(_scrollListener);
     this.companies = companyService.getCompaniesLight(perPage: PAGE_COUNT);
-    //storeCompaniesLoaded();
   }
 
   @override
@@ -53,12 +51,16 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
     if (_controller.offset >= _controller.position.maxScrollExtent &&
         !_controller.position.outOfRange) {
       setState(() {
-        storeCompaniesLoaded();
-        _count += PAGE_COUNT;
-        this.companies = companyService.getCompaniesLight(
-            perPage: PAGE_COUNT, previousID: _previousID);
+        _loadMoreCompanies();
       });
     }
+  }
+
+  void _loadMoreCompanies() {
+    storeCompaniesLoaded();
+    this.companies = companyService.getCompaniesLight(
+        perPage: PAGE_COUNT, previousID: _previousID);
+    // _count += PAGE_COUNT;
   }
 
   void storeCompaniesLoaded() async {
@@ -66,44 +68,43 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   }
 
   Widget companyGrid() {
-    return LayoutBuilder(builder: (context, constraints) {
-      double cardWidth = 250;
-      bool isSmall = false;
-      if (constraints.maxWidth < 1500) {
-        cardWidth = 200;
-        isSmall = true;
-      }
-      return GridView.builder(
-        controller: _controller,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: MediaQuery.of(context).size.width ~/ cardWidth,
-          crossAxisSpacing: 5,
-          mainAxisSpacing: 5,
-          childAspectRatio: 0.75,
-        ),
-        itemCount: _count,
-        itemBuilder: (BuildContext context, int index) {
-          return FutureBuilder<List<CompanyLight>>(
-              future: companies,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<CompanyLight> comp =
-                      checkSortMethod(companiesLoaded + snapshot.data!);
-                  int i = index - companiesLoaded.length;
-                  if (index == _count - 1) {
-                    _previousID = snapshot.data![i].id;
-                  }
-                  return ListViewCard(
-                      small: isSmall,
-                      company: comp[index],
-                      participationsInfo: true);
-                } else {
-                  return Center(child: CircularProgressIndicator());
-                }
-              });
-        },
-      );
-    });
+    return FutureBuilder<List<CompanyLight>>(
+        future: companies,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<CompanyLight> comp =
+                checkSortMethod(companiesLoaded + snapshot.data!);
+            if (snapshot.data!.length > 0) {
+              _previousID = snapshot.data![snapshot.data!.length - 1].id;
+            }
+            return LayoutBuilder(builder: (context, constraints) {
+              double cardWidth = 250;
+              bool isSmall = false;
+              if (constraints.maxWidth < 1500) {
+                cardWidth = 200;
+                isSmall = true;
+              }
+              return GridView.builder(
+                  controller: _controller,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:
+                        MediaQuery.of(context).size.width ~/ cardWidth,
+                    crossAxisSpacing: 5,
+                    mainAxisSpacing: 5,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemCount: comp.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return ListViewCard(
+                        small: isSmall,
+                        company: comp[index],
+                        participationsInfo: true);
+                  });
+            });
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        });
   }
 
   List<CompanyLight> checkSortMethod(List<CompanyLight> comp) {
@@ -142,7 +143,9 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                 showSearch(
                     context: context,
                     delegate: CustomSearchDelegate(
-                        companies: await companyService.getCompaniesLight()));
+                        companies: companiesLoaded +
+                            await companyService.getCompaniesLight(
+                                previousID: _previousID)));
               },
             ),
             PopupMenuButton<SortingMethod>(
