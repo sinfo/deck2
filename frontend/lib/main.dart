@@ -33,7 +33,6 @@ class App extends StatelessWidget {
             space: 20,
             thickness: 2,
             color: Color.fromRGBO(211, 211, 211, 1),
-            endIndent: 18,
           )
         ),
         onGenerateRoute: router.generateRoute);

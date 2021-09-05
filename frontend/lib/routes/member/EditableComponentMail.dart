@@ -2,17 +2,18 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/services/contactService.dart';
 
-class EditBox extends StatefulWidget {
-  final String title;
-  String body;
-  EditBox({Key? key, required this.title, required this.body})
+class EditableComponentMail extends StatefulWidget {
+  final int index;
+  final String memberId;
+  String mail;
+  EditableComponentMail({Key? key, required this.index, required this.memberId, required this.mail})
       : super(key: key);
 
   @override
-  _EditBoxState createState() => _EditBoxState();
+  _EditableComponentMailState createState() => _EditableComponentMailState();
 }
 
-class _EditBoxState extends State<EditBox> {
+class _EditableComponentMailState extends State<EditableComponentMail> {
   ContactService contactService = new ContactService();
   TextEditingController _textFieldController = TextEditingController();
 
@@ -21,7 +22,7 @@ class _EditBoxState extends State<EditBox> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Change ${widget.title}'),
+            title: Text('Change Mail'),
             content: TextField(
               controller: _textFieldController,
               textInputAction: TextInputAction.newline,
@@ -39,7 +40,8 @@ class _EditBoxState extends State<EditBox> {
                 child: new Text('Save'),
                 onPressed: () {
                   setState(() {
-                    widget.body = _textFieldController.text;
+                    //TODO: mudar
+                    widget.mail = _textFieldController.text;
                   });
                   Navigator.of(context).pop();
                 },
@@ -51,34 +53,15 @@ class _EditBoxState extends State<EditBox> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 450,
-      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-      padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
-      decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(5)),
-      child: Stack(children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return  Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(widget.title,
-                textAlign: TextAlign.left,
-                style: TextStyle(
-                    fontSize: 22,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold)),
-            Divider(),
             SelectableText(
-              widget.body,
+              widget.mail,
               textAlign: TextAlign.left,
               style: TextStyle(fontSize: 18, color: Colors.black),
-            )
-          ],
-        ),
-        Align(
-          alignment: Alignment.topRight,
-          child: IconButton(
+            ),
+            IconButton(
               padding: EdgeInsets.zero,
               constraints: BoxConstraints(),
               hoverColor: Colors.transparent,
@@ -89,8 +72,7 @@ class _EditBoxState extends State<EditBox> {
               onPressed: () {
                 _displayDialog(context);
               }),
-        )
-      ]),
+            ],
     );
   }
 }
