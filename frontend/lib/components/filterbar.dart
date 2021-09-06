@@ -28,13 +28,9 @@ class FilterBarState extends State<FilterBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: rowChips(),
-        )
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: rowChips(),
     );
   }
 

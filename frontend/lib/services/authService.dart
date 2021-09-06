@@ -27,9 +27,7 @@ class AuthService {
   static String? _token;
 
   static Future<Member?> get user async {
-    print('\nGetting...');
     if (_user != null) {
-      print('User is not null');
       return _user;
     } else if (App.localStorage.containsKey('me')) {
       _user = Member.fromJson(json.decode(App.localStorage.getString('me')!));
@@ -38,10 +36,8 @@ class AuthService {
     if (_token != null) {
       bool t = await verify(_token!);
       if (t) {
-        print('Token is valid');
         return getMe(_token!);
       } else {
-        print('Token is not valid, returning null');
         _token = null;
         return null;
       }
@@ -49,29 +45,23 @@ class AuthService {
       _token = App.localStorage.getString('jwt');
       bool t = await verify(_token!);
       if (t) {
-        print('Token is valid');
         return getMe(_token!);
       } else {
-        print('Token is not valid, returning null');
         _token = null;
         return null;
       }
     } else {
       bool isLoggedIn = _googleSignIn.currentUser != null;
       if (isLoggedIn) {
-        print('Is logged in');
         GoogleSignInAccount? acc = await _googleSignIn.signInSilently();
         if (acc != null) {
-          print('Signing in silently');
           GoogleSignInAuthentication auth = await acc.authentication;
           _token = await getJWT(auth.accessToken);
           return getMe(_token!);
         } else {
-          print('Signing in silently failed');
           return null;
         }
       } else {
-        print('Not logged in');
         return null;
       }
     }
@@ -137,34 +127,6 @@ class AuthService {
     }
   }
 
-  // static Future<bool> isLoggedIn() async {
-  //   bool isSignedIn = await _googleSignIn.isSignedIn();
-  //   print('isSignedIn: $isSignedIn');
-  //   return isSignedIn &&
-  //       App.localStorage.containsKey('jwt') &&
-  //       App.localStorage.containsKey('me');
-  // }
-
-  // static Future<bool> loginSilent() async {
-  //   await _googleSignIn.signInSilently();
-  //   bool isSignedIn = await _googleSignIn.isSignedIn();
-  //   if (isSignedIn) {
-  //     if (App.localStorage.containsKey('jwt') &&
-  //         App.localStorage.containsKey('me')) {
-  //       final jwt = App.localStorage.getString('jwt');
-  //       return verify(jwt!);
-  //     } else {
-  //       GoogleSignInAccount? account = _googleSignIn.currentUser;
-  //       GoogleSignInAuthentication auth = await account!.authentication;
-  //       String token = await getJWT(auth.accessToken);
-  //       await getMe(token);
-  //       return true;
-  //     }
-  //   } else {
-  //     return false;
-  //   }
-  // }
-
   static Future<bool> login() async {
     await _googleSignIn.disconnect();
     GoogleSignInAccount? acc = await _googleSignIn.signIn();
@@ -187,9 +149,6 @@ class AuthService {
       App.localStorage.remove('me');
       App.localStorage.remove('jwt');
       await _googleSignIn.disconnect();
-
-      bool t = _googleSignIn.currentUser != null;
-      print('Signed in? $t');
     } catch (e) {
       print(e.toString());
     }

@@ -11,8 +11,6 @@ class WrapperPage extends StatelessWidget {
   Widget build(BuildContext context) {
     Member? u = Provider.of<Member?>(context);
 
-    print(u);
-
     if (u == null) {
       return LoginScreen();
     } else {
