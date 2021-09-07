@@ -99,139 +99,126 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
   bool get wantKeepAlive => true;
 
   Widget _buildBigTile(String _filter) {
-    return ExpansionTile(
-      maintainState: true,
-      iconColor: Colors.transparent,
-      collapsedBackgroundColor: Colors.transparent,
-      initiallyExpanded: true,
-      textColor: Colors.black,
-      expandedAlignment: Alignment.topLeft,
-      title: Column(
-        children: [
-          Row(children: [
-            ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                child: Image.network(
-                  this.member.image,
-                  width: 40,
-                  height: 40,
-                  errorBuilder: (BuildContext context, Object exception,
-                      StackTrace? stackTrace) {
-                    return Image.asset(
-                      'assets/noImage.png',
-                      width: 40,
-                      height: 40,
-                    );
-                  },
-                )),
-            Container(
-              child: Text(this.member.name!, style: TextStyle(fontSize: 18)),
-              margin: EdgeInsets.all(8),
-            )
-          ]),
-          Divider(
+    return Column(
+      children: [
+        ListTile(
+          leading: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+              child: Image.network(
+                this.member.image,
+                width: 50,
+                height: 50,
+                errorBuilder: (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                  return Image.asset(
+                    'assets/noImage.png',
+                    width: 50,
+                    height: 50,
+                  );
+                },
+              )),
+          title: Container(
+            child: Text(this.member.name!),
+            margin: EdgeInsets.all(8),
+          ),
+          subtitle: Divider(
             color: Colors.grey,
             thickness: 1,
           ),
-        ],
-      ),
-      children: [
-        FutureBuilder(
-          future: _speakers,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              List<Speaker> spks = snapshot.data as List<Speaker>;
-              List<Speaker> spkscpy = filterListByStatus(spks, _filter);
-              return Container(
-                height: spkscpy.length == 0 ? 0 : null,
-                child: Wrap(
-                  alignment: WrapAlignment.start,
-                  crossAxisAlignment: WrapCrossAlignment.start,
-                  children: spkscpy
-                      .map((e) => ListViewCard(small: false, speaker: e))
-                      .toList(),
-                ),
-              );
-            } else {
-              return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              );
-            }
-          },
+        ),
+        Row(
+          children: [
+            FutureBuilder(
+              future: _speakers,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<Speaker> spks = snapshot.data as List<Speaker>;
+                  List<Speaker> spkscpy = filterListByStatus(spks, _filter);
+                  return Container(
+                    height: spkscpy.length == 0 ? 0 : null,
+                    child: Wrap(
+                      alignment: WrapAlignment.start,
+                      crossAxisAlignment: WrapCrossAlignment.start,
+                      children: spkscpy
+                          .map((e) => ListViewCard(small: false, speaker: e))
+                          .toList(),
+                    ),
+                  );
+                } else {
+                  return Container(
+                    child: Center(
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+                }
+              },
+            )
+          ],
         )
       ],
     );
   }
 
   Widget _buildSmallTile(String _filter) {
-    return ExpansionTile(
-      iconColor: Colors.transparent,
-      initiallyExpanded: true,
-      textColor: Colors.black,
-      expandedAlignment: Alignment.topLeft,
-      title: Column(
-        children: [
-          Row(children: [
-            ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                child: Image.network(
-                  this.member.image,
-                  width: 25,
-                  height: 25,
-                  errorBuilder: (BuildContext context, Object exception,
-                      StackTrace? stackTrace) {
-                    return Image.asset(
-                      'assets/noImage.png',
-                      width: 25,
-                      height: 25,
-                    );
-                  },
-                )),
-            Container(
-              child: Text(this.member.name!, style: TextStyle(fontSize: 12)),
-              margin: EdgeInsets.all(8),
-            )
-          ]),
-          Divider(
+    return Column(
+      children: [
+        ListTile(
+          leading: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+              child: Image.network(
+                this.member.image,
+                width: 40,
+                height: 40,
+                errorBuilder: (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                  return Image.asset(
+                    'assets/noImage.png',
+                    width: 40,
+                    height: 40,
+                  );
+                },
+              )),
+          title: Text(this.member.name!),
+          subtitle: Divider(
             color: Colors.grey,
             thickness: 1,
           ),
-        ],
-      ),
-      children: [
-        FutureBuilder(
-          future: _speakers,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              List<Speaker> spks = snapshot.data as List<Speaker>;
-              List<Speaker> spkscpy = filterListByStatus(spks, _filter);
-              return Container(
-                height: spkscpy.length == 0 ? 0 : 125,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: spkscpy
-                      .map((e) => ListViewCard(small: true, speaker: e))
-                      .toList(),
-                ),
-              );
-            } else {
-              return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              );
-            }
-          },
+        ),
+        Row(
+          children: [
+            FutureBuilder(
+              future: _speakers,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<Speaker> spks = snapshot.data as List<Speaker>;
+                  List<Speaker> spkscpy = filterListByStatus(spks, _filter);
+                  return Container(
+                    height: spkscpy.length == 0 ? 0 : 125,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: spkscpy
+                          .map((e) => ListViewCard(small: true, speaker: e))
+                          .toList(),
+                    ),
+                  );
+                } else {
+                  return Container(
+                    child: Center(
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+                }
+              },
+            )
+          ],
         )
       ],
     );

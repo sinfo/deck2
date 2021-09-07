@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      drawer: MyDrawer(image: user != null ? user.image : ''),
+      drawer: DeckDrawer(image: user != null ? user.image : ''),
       floatingActionButton: _fabAtIndex(_currentIndex),
     );
   }

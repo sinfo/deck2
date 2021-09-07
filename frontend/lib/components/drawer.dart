@@ -1,52 +1,85 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/router.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/services/authService.dart';
+import 'package:provider/provider.dart';
 
-class MyDrawer extends Drawer {
+class DeckDrawer extends StatefulWidget {
   String image;
-  MyDrawer({Key? key, required this.image});
+  late bool _darkTheme;
+  DeckDrawer({Key? key, required this.image}) : super(key: key) {
+    _darkTheme = App.localStorage.getBool('darkTheme')!;
+  }
 
   @override
-  Drawer build(BuildContext context) {
+  _DeckDrawerState createState() => _DeckDrawerState(image: this.image);
+}
+
+class _DeckDrawerState extends State<DeckDrawer> {
+  late bool _darkTheme;
+  final String image;
+
+  _DeckDrawerState({required this.image});
+
+  @override
+  void initState() {
+    _darkTheme = App.localStorage.getBool('darkTheme') == null
+        ? false
+        : App.localStorage.getBool('darkTheme')!;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Drawer(
-        child: ListView(
-      padding: EdgeInsets.zero,
-      children: <Widget>[
-        buildHeader(),
-        ListTile(
-          leading: Icon(
-            Icons.settings,
-          ),
-          title: Text('Settings Page'),
-        ),
-        ListTile(
-            leading: Icon(
-              Icons.person,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          buildHeader(),
+          ListTile(
+              leading: Icon(
+                Icons.person,
+              ),
+              title: Text('Logout'),
+              onTap: () async {
+                await signOut(context);
+              }),
+          MergeSemantics(
+            child: ListTile(
+              leading: Icon(
+                Icons.dark_mode,
+              ),
+              title: const Text('Dark mode'),
+              trailing: CupertinoSwitch(
+                value: _darkTheme,
+                onChanged: (bool value) {
+                  setState(() {
+                    _darkTheme = value;
+                  });
+                  onThemeChanged(value, themeNotifier);
+                },
+              ),
+              onTap: () {
+                setState(() {
+                  _darkTheme = !_darkTheme;
+                  onThemeChanged(_darkTheme, themeNotifier);
+                });
+              },
             ),
-            title: Text('Logout'),
-            onTap: () async {
-              await signOut(context);
-            }),
-        ListTile(
-          leading: Icon(
-            Icons.library_books,
           ),
-          title: Text('Library Page'),
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.help,
-          ),
-          title: Text('Help Page'),
-        ),
-        ListTile(
-          leading: Icon(
-            Icons.notifications,
-          ),
-          title: Text('Notifications'),
-        )
-      ],
-    ));
+        ],
+      ),
+    );
+  }
+
+  void onThemeChanged(bool value, ThemeNotifier themeNotifier) async {
+    (value)
+        ? themeNotifier.setTheme(DarkTheme())
+        : themeNotifier.setTheme(LightTheme());
+    App.localStorage.setBool('darkTheme', value);
   }
 
   Future signOut(BuildContext context) async {

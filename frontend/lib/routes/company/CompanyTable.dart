@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/filterbar.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
@@ -8,6 +9,7 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:provider/provider.dart';
 
 class CompanyTable extends StatefulWidget {
   CompanyTable({Key? key}) : super(key: key);
@@ -96,139 +98,126 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
   bool get wantKeepAlive => true;
 
   Widget _buildBigTile(String _filter) {
-    return ExpansionTile(
-      maintainState: true,
-      iconColor: Colors.transparent,
-      collapsedBackgroundColor: Colors.transparent,
-      initiallyExpanded: true,
-      textColor: Colors.black,
-      expandedAlignment: Alignment.topLeft,
-      title: Column(
-        children: [
-          Row(children: [
-            ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                child: Image.network(
-                  this.member.image,
-                  width: 40,
-                  height: 40,
-                  errorBuilder: (BuildContext context, Object exception,
-                      StackTrace? stackTrace) {
-                    return Image.asset(
-                      'assets/noImage.png',
-                      width: 40,
-                      height: 40,
-                    );
-                  },
-                )),
-            Container(
-              child: Text(this.member.name!, style: TextStyle(fontSize: 18)),
-              margin: EdgeInsets.all(8),
-            )
-          ]),
-          Divider(
+    return Column(
+      children: [
+        ListTile(
+          leading: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+              child: Image.network(
+                this.member.image,
+                width: 50,
+                height: 50,
+                errorBuilder: (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                  return Image.asset(
+                    'assets/noImage.png',
+                    width: 50,
+                    height: 50,
+                  );
+                },
+              )),
+          title: Text(this.member.name!, style: TextStyle(fontSize: 18)),
+          subtitle: Divider(
             color: Colors.grey,
             thickness: 1,
           ),
-        ],
-      ),
-      children: [
-        FutureBuilder(
-          future: _companies,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              List<Company> comps = snapshot.data as List<Company>;
-              List<Company> compscpy = filterListByStatus(comps, _filter);
-              return Container(
-                height: compscpy.length == 0 ? 0 : null,
-                child: Wrap(
-                  alignment: WrapAlignment.start,
-                  crossAxisAlignment: WrapCrossAlignment.start,
-                  children: compscpy
-                      .map((e) => ListViewCard(small: false, company: e))
-                      .toList(),
-                ),
-              );
-            } else {
-              return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              );
-            }
+          onTap: () {
+            print('pressedMember');
           },
+        ),
+        Row(
+          children: [
+            FutureBuilder(
+              future: _companies,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<Company> comps = snapshot.data as List<Company>;
+                  List<Company> compscpy = filterListByStatus(comps, _filter);
+                  return Container(
+                    height: compscpy.length == 0 ? 0 : null,
+                    child: Wrap(
+                      alignment: WrapAlignment.start,
+                      crossAxisAlignment: WrapCrossAlignment.start,
+                      children: compscpy
+                          .map((e) => ListViewCard(small: false, company: e))
+                          .toList(),
+                    ),
+                  );
+                } else {
+                  return Container(
+                    child: Center(
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+                }
+              },
+            )
+          ],
         )
       ],
     );
   }
 
   Widget _buildSmallTile(String _filter) {
-    return ExpansionTile(
-      iconColor: Colors.transparent,
-      initiallyExpanded: true,
-      textColor: Colors.black,
-      expandedAlignment: Alignment.topLeft,
-      title: Column(
-        children: [
-          Row(children: [
-            ClipRRect(
-                borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                child: Image.network(
-                  this.member.image,
-                  width: 25,
-                  height: 25,
-                  errorBuilder: (BuildContext context, Object exception,
-                      StackTrace? stackTrace) {
-                    return Image.asset(
-                      'assets/noImage.png',
-                      width: 25,
-                      height: 25,
-                    );
-                  },
-                )),
-            Container(
-              child: Text(this.member.name!, style: TextStyle(fontSize: 12)),
-              margin: EdgeInsets.all(8),
-            )
-          ]),
-          Divider(
+    return Column(
+      children: [
+        ListTile(
+          leading: ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(5.0)),
+              child: Image.network(
+                this.member.image,
+                width: 40,
+                height: 40,
+                errorBuilder: (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                  return Image.asset(
+                    'assets/noImage.png',
+                    width: 40,
+                    height: 40,
+                  );
+                },
+              )),
+          title: Text(this.member.name!),
+          subtitle: Divider(
             color: Colors.grey,
             thickness: 1,
           ),
-        ],
-      ),
-      children: [
-        FutureBuilder(
-          future: _companies,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              List<Company> comps = snapshot.data as List<Company>;
-              List<Company> compscpy = filterListByStatus(comps, _filter);
-              return Container(
-                height: compscpy.length == 0 ? 0 : 125,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: compscpy
-                      .map((e) => ListViewCard(small: true, company: e))
-                      .toList(),
-                ),
-              );
-            } else {
-              return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              );
-            }
-          },
+        ),
+        Row(
+          children: [
+            FutureBuilder(
+              future: _companies,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<Company> comps = snapshot.data as List<Company>;
+                  List<Company> compscpy = filterListByStatus(comps, _filter);
+                  return Container(
+                    height: compscpy.length == 0 ? 0 : 125,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: compscpy
+                          .map((e) => ListViewCard(small: true, company: e))
+                          .toList(),
+                    ),
+                  );
+                } else {
+                  return Container(
+                    child: Center(
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+                }
+              },
+            )
+          ],
         )
       ],
     );
@@ -252,17 +241,18 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
   @override
   Widget build(BuildContext context) {
     String _filter = widget.filter;
+    ThemeData t = Provider.of<ThemeNotifier>(context).theme;
     return Container(
-      margin: EdgeInsets.all(10),
-      child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        margin: EdgeInsets.all(10),
+        child: Theme(
+          data: t.copyWith(dividerColor: Colors.transparent),
           child: LayoutBuilder(builder: (context, constraints) {
             if (constraints.maxWidth < 1500) {
               return _buildSmallTile(_filter);
             } else {
               return _buildBigTile(_filter);
             }
-          })),
-    );
+          }),
+        ));
   }
 }
