@@ -38,16 +38,23 @@ class _SpeakerTableState extends State<SpeakerTable> {
           if (snapshot.hasData) {
             List<Member> membs = snapshot.data as List<Member>;
             membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return Column(children: <Widget>[
-              FilterBar(onSelected: (value) => onSelected(value)),
-              Expanded(
-                  child: ListView(
+            return NestedScrollView(
+              floatHeaderSlivers: true,
+              headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+                    child: FilterBar(onSelected: (value) => onSelected(value)),
+                  ),
+                ),
+              ],
+              body: ListView(
                 children: membs
                     .map((e) => MemberSpeakerRow(member: e, filter: _filter))
                     .toList(),
                 addAutomaticKeepAlives: true,
-              ))
-            ]);
+              ),
+            );
           } else {
             return CircularProgressIndicator();
           }

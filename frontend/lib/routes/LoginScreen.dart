@@ -45,10 +45,6 @@ class _LoginScreenState extends State<LoginScreen> {
         future: user,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            Member? m = snapshot.data as Member?;
-            if (m != null) {
-              print('\nloggedin: ${m.name}');
-            }
             return CircularProgressIndicator();
           } else {
             return OutlinedButton(
