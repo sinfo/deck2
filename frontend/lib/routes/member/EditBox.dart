@@ -1,30 +1,37 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
-import 'package:frontend/routes/member/EditableComponentPhone.dart';
+import 'package:frontend/routes/member/EditableComponent.dart';
 import 'package:frontend/services/contactService.dart';
 
-class EditBoxPhone extends StatefulWidget {
+class EditBox extends StatefulWidget {
   final String title;
   final String memberId;
-  List<ContactPhone> phones;
+  final String type;
+  int length = 0;
+  Contact contact;
 
-  EditBoxPhone(
+  EditBox(
       {Key? key,
       required this.title,
       required this.memberId,
-      required this.phones})
+      required this.contact,
+      required this.type})
       : super(key: key);
 
   @override
   _EditBoxState createState() => _EditBoxState();
 }
 
-class _EditBoxState extends State<EditBoxPhone> {
-
+class _EditBoxState extends State<EditBox> {
   @override
   Widget build(BuildContext context) {
-    
+    if (widget.type == "mail") {
+      widget.length = widget.contact.mails!.length;
+    } else if (widget.type == "phone") {
+      widget.length = widget.contact.phones!.length;
+    }
+
     return Container(
       width: 450,
       margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
@@ -43,8 +50,9 @@ class _EditBoxState extends State<EditBoxPhone> {
                     color: Colors.black,
                     fontWeight: FontWeight.bold)),
             Divider(),
-            for (int i = 0; i < widget.phones.length; i++)
-              EditableComponentPhone(index: i, memberId: widget.memberId, phone: widget.phones[i].phone!),
+            for (int i = 0; i < widget.length; i++)
+              EditableComponent(
+                  index: i, memberId: widget.memberId, contact: widget.contact, type: widget.type),
           ],
         ),
       ]),

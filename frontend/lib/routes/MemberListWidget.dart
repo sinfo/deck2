@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
+import 'package:frontend/routes/member/AddMemberForm.dart';
 
 class MemberListWidget extends StatefulWidget {
   const MemberListWidget({Key? key}) : super(key: key);
@@ -37,6 +38,7 @@ class _MemberListWidgetState extends State<MemberListWidget> {
               mainAxisSpacing: 10,
               crossAxisSpacing: 10,
               childAspectRatio: 0.75,
+              addAutomaticKeepAlives: true,
               children: membs.map((e) => MemberCard(member: e)).toList(),
             ),
             floatingActionButton: FloatingActionButton(
@@ -44,7 +46,15 @@ class _MemberListWidgetState extends State<MemberListWidget> {
                 //TODO: on tap
                 // Add your onPressed code here!
               },
-              child: const Icon(Icons.add),
+              child: IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AddMemberForm()),
+                  );
+                }, 
+                icon: Icon(Icons.add)),
               backgroundColor: Color.fromRGBO(92, 127, 242, 1),
             ),
           );
@@ -62,9 +72,12 @@ class MemberCard extends StatefulWidget {
   _MemberCardState createState() => _MemberCardState();
 }
 
-class _MemberCardState extends State<MemberCard> {
+class _MemberCardState extends State<MemberCard> with AutomaticKeepAliveClientMixin{
   MemberService memberService = new MemberService();
   late Future<String?> role;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {

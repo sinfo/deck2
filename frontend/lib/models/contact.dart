@@ -84,7 +84,7 @@ class ContactSocials {
 }
 
 class ContactMail {
-  final String? mail;
+  late final String? mail;
   final bool? valid;
   final bool? personal;
 

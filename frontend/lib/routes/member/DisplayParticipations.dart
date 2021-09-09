@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
-import 'package:frontend/routes/member/EditBoxMail.dart';
+import 'package:frontend/routes/member/EditBox.dart';
 import 'package:frontend/services/teamService.dart';
 
 class DisplayParticipations extends StatefulWidget {

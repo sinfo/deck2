@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/contactService.dart';
-import 'package:frontend/routes/member/EditBoxMail.dart';
-import 'package:frontend/routes/member/EditBoxPhone.dart';
+import 'package:frontend/routes/member/EditBox.dart';
 import 'package:frontend/routes/member/EditBoxSocials.dart';
 
 class DisplayContacts extends StatefulWidget {
@@ -40,20 +39,6 @@ class _DisplayContactsState extends State<DisplayContacts> {
         if (snapshot.hasData) {
           Contact cont = snapshot.data as Contact;
 
-          // if (cont.mails!.length > 0) {
-          //   for (int i = 0; i < cont.mails!.length; i++) {
-          //     mails += cont.mails![i].mail!;
-          //     if (i < cont.mails!.length - 1) mails += "\n";
-          //   }
-          // }
-
-          // if (cont.phones!.length > 0) {
-          //   for (int i = 0; i < cont.phones!.length; i++) {
-          //     phones += cont.phones![i].phone!;
-          //     if (i < cont.mails!.length - 1) mails += "\n";
-          //   }
-          // }
-
           if (cont.socials!.facebook != null) {
             facebook = cont.socials!.facebook!;
           }
@@ -77,8 +62,8 @@ class _DisplayContactsState extends State<DisplayContacts> {
           return Column(
             children: [
               //Text("${cont.mails!.length}"),
-              EditBoxMail(title: "Mails", memberId: widget.member.id!, mails: cont.mails! ),
-              EditBoxPhone(title: "Phones", memberId: widget.member.id!, phones: cont.phones! ),
+              EditBox(title: "Mails", memberId: widget.member.id!, contact: cont, type: "mail" ),
+              EditBox(title: "Phones", memberId: widget.member.id!, contact: cont, type: "phone"),
 
               EditBoxSocials(title: "Others", facebook: facebook, github: github, 
               twitter: twitter, skype: skype, linkedin: linkedin),
