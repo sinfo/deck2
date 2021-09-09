@@ -97,7 +97,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                   itemBuilder: (BuildContext context, int index) {
                     return ListViewCard(
                         small: isSmall,
-                        company: comp[index],
+                        companyLight: comp[index],
                         participationsInfo: true);
                   });
             });

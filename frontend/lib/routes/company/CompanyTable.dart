@@ -82,14 +82,14 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
   Member member;
   String filter;
   CompanyService _companyService = CompanyService();
-  late Future<List<CompanyLight>> _companies;
+  late Future<List<Company>> _companies;
   _MemberCompaniesRowState({required this.member, required this.filter});
 
   @override
   void initState() {
     super.initState();
     _companies =
-        _companyService.getCompaniesLight(event: 29, member: this.member.id);
+        _companyService.getCompanies(event: 29, member: this.member.id);
   }
 
   @override
@@ -137,8 +137,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           future: _companies,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
-              List<CompanyLight> compscpy = filterListByStatus(comps, _filter);
+              List<Company> comps = snapshot.data as List<Company>;
+              List<Company> compscpy = filterListByStatus(comps, _filter);
               return Container(
                 height: compscpy.length == 0 ? 0 : null,
                 child: Wrap(
@@ -206,8 +206,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           future: _companies,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<CompanyLight> comps = snapshot.data as List<CompanyLight>;
-              List<CompanyLight> compscpy = filterListByStatus(comps, _filter);
+              List<Company> comps = snapshot.data as List<Company>;
+              List<Company> compscpy = filterListByStatus(comps, _filter);
               return Container(
                 height: compscpy.length == 0 ? 0 : 200,
                 child: ListView(
@@ -234,11 +234,13 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     );
   }
 
-  List<CompanyLight> filterListByStatus(List comps, String _filter) {
-    List<CompanyLight> compscpy = [];
+  List<Company> filterListByStatus(List comps, String _filter) {
+    List<Company> compscpy = [];
     if (_filter != "ALL") {
-      for (CompanyLight c in comps) {
-        String s = c.participationStatus!.toUpperCase();
+      for (Company c in comps) {
+        CompanyParticipation p =
+            c.participations!.firstWhere((element) => element.event == 29);
+        String s = p.status.toUpperCase();
         if (s == _filter) compscpy.add(c);
       }
     } else {

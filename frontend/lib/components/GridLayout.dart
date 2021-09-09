@@ -43,7 +43,7 @@ class GridLayout extends StatelessWidget {
           } else {
             return ListViewCard(
                 small: isSmall,
-                company: companies![index],
+                companyLight: companies![index],
                 participationsInfo: true);
           }
         },

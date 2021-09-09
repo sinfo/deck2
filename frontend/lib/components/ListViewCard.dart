@@ -22,7 +22,8 @@ final Map<ParticipationStatus, String> STATUSSTRING = {
 
 class ListViewCard extends StatelessWidget {
   final Member? member;
-  final CompanyLight? company;
+  final Company? company;
+  final CompanyLight? companyLight;
   final Speaker? speaker;
   final bool small;
   final bool? participationsInfo;
@@ -38,6 +39,7 @@ class ListViewCard extends StatelessWidget {
       required this.small,
       this.member,
       this.company,
+      this.companyLight,
       this.speaker,
       this.participationsInfo})
       : super(key: key) {
@@ -47,14 +49,25 @@ class ListViewCard extends StatelessWidget {
         _initCompany(event);
       } else if (speaker != null) {
         _initSpeaker(event);
+      } else if (companyLight != null) {
+        _initCompanyLight();
       }
     }
   }
 
+  void _initCompanyLight() {
+    _numParticipations = companyLight!.numParticipations;
+    _lastParticipation = companyLight!.lastParticipation;
+    _status = companyLight!.participationStatus!.toUpperCase();
+    _imageUrl = companyLight!.companyImages.internal;
+    _title = companyLight!.name;
+    defineStatusColor(_status);
+  }
+
   void _initCompany(int event) {
-    _numParticipations = company!.numParticipations;
-    _lastParticipation = company!.lastParticipation;
-    _status = company!.participationStatus!.toUpperCase();
+    CompanyParticipation participation = company!.participations!
+        .firstWhere((element) => element.event == event);
+    _status = participation.status.toUpperCase();
     _imageUrl = company!.companyImages.internal;
     _title = company!.name;
     defineStatusColor(_status);
@@ -317,7 +330,7 @@ class ListViewCard extends StatelessWidget {
             } //MemberScreen(member: this.member)),
                 ));
           });
-    } else if (company != null || speaker != null) {
+    } else if (company != null || speaker != null || companyLight != null) {
       return small ? _buildSmallCard(context) : _buildBigCard(context);
     } else {
       return UnknownScreen();
