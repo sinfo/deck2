@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/companySearchDelegate.dart';
 import 'package:frontend/components/router.dart';
-import 'package:frontend/components/searchDelegate.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/services/companyService.dart';
 
@@ -17,7 +17,7 @@ final Map<SortingMethod, String> SORT_STRING = {
   SortingMethod.LAST_PARTICIPATION: 'Sort By Last Participation',
 };
 
-final int PAGE_COUNT = 30;
+final int MAX_COMP = 30;
 
 class CompanyListWidget extends StatefulWidget {
   const CompanyListWidget({Key? key}) : super(key: key);
@@ -38,7 +38,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   void initState() {
     super.initState();
     _controller.addListener(_scrollListener);
-    this.companies = companyService.getCompaniesLight(perPage: PAGE_COUNT);
+    this.companies = companyService.getCompaniesLight(maxCompInRequest: MAX_COMP);
   }
 
   @override
@@ -59,8 +59,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   void _loadMoreCompanies() {
     storeCompaniesLoaded();
     this.companies = companyService.getCompaniesLight(
-        perPage: PAGE_COUNT, previousID: _previousID);
-    // _count += PAGE_COUNT;
+        maxCompInRequest: MAX_COMP, previousID: _previousID);
   }
 
   void storeCompaniesLoaded() async {
@@ -140,12 +139,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
               icon: const Icon(Icons.search),
               tooltip: 'Search company',
               onPressed: () async {
-                showSearch(
-                    context: context,
-                    delegate: CustomSearchDelegate(
-                        companies: companiesLoaded +
-                            await companyService.getCompaniesLight(
-                                previousID: _previousID)));
+                showSearch(context: context, delegate: CompanySearchDelegate());
               },
             ),
             PopupMenuButton<SortingMethod>(
