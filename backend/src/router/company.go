@@ -44,8 +44,9 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	partner := urlQuery.Get("partner")
 	member := urlQuery.Get("member")
 	name := urlQuery.Get("name")
-	previousID := urlQuery.Get("previousID")
-	perPage := urlQuery.Get("perPage")
+	numRequests := urlQuery.Get("numRequests")
+	maxCompInRequest := urlQuery.Get("maxCompInRequest")
+	sortMethod := urlQuery.Get("sortMethod")
 
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
@@ -78,22 +79,26 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 		options.Name = &name
 	}
 
-	if len(previousID) > 0 {
-		prevID, err := primitive.ObjectIDFromHex(previousID)
+	if len(numRequests) > 0 {
+		numReq, err := strconv.ParseInt(numRequests, 10, 64)
 		if err != nil {
-			http.Error(w, "Invalid Company ID format", http.StatusBadRequest)
+			http.Error(w, "Number of Requests: Invalid Company ID format", http.StatusBadRequest)
 			return
 		}
-		options.PreviousID = &prevID
+		options.NumRequests = &numReq
 	}
 
-	if len(perPage) > 0 {
-		perPageNum, err := strconv.ParseInt(perPage, 10, 64)
+	if len(maxCompInRequest) > 0 {
+		maxComp, err := strconv.ParseInt(maxCompInRequest, 10, 64)
 		if err != nil {
-			http.Error(w, "Invalid per page number format", http.StatusBadRequest)
+			http.Error(w, "Max Companies in Request: Invalid number format", http.StatusBadRequest)
 			return
 		}
-		options.PerPage = &perPageNum
+		options.MaxCompInRequest = &maxComp
+	}
+
+	if len(sortMethod) > 0 {
+		options.SortingMethod = &sortMethod
 	}
 
 	companies, err := mongodb.Companies.GetCompanies(options)

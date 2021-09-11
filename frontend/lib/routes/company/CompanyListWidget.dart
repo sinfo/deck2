@@ -31,14 +31,16 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   late Future<List<CompanyLight>> companies;
   List<CompanyLight> companiesLoaded = [];
   SortingMethod _sortMethod = SortingMethod.RANDOM;
-  String _previousID = "";
+  int numRequests = 0;
   ScrollController _controller = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_scrollListener);
-    this.companies = companyService.getCompaniesLight(maxCompInRequest: MAX_COMP);
+    this.companies = companyService.getCompaniesLight(
+        maxCompInRequest: MAX_COMP, numRequestsBackend: numRequests);
+    numRequests++;
   }
 
   @override
@@ -59,7 +61,10 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   void _loadMoreCompanies() {
     storeCompaniesLoaded();
     this.companies = companyService.getCompaniesLight(
-        maxCompInRequest: MAX_COMP, previousID: _previousID);
+        maxCompInRequest: MAX_COMP,
+        numRequestsBackend: numRequests,
+        sortMethod: _sortMethod);
+    numRequests++;
   }
 
   void storeCompaniesLoaded() async {
@@ -71,11 +76,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
         future: companies,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            List<CompanyLight> comp =
-                checkSortMethod(companiesLoaded + snapshot.data!);
-            if (snapshot.data!.length > 0) {
-              _previousID = snapshot.data![snapshot.data!.length - 1].id;
-            }
+            List<CompanyLight> comp = companiesLoaded + snapshot.data!;
             return LayoutBuilder(builder: (context, constraints) {
               double cardWidth = 250;
               bool isSmall = false;
@@ -106,24 +107,6 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
         });
   }
 
-  List<CompanyLight> checkSortMethod(List<CompanyLight> comp) {
-    if (_sortMethod == SortingMethod.NUM_PARTICIPATIONS) {
-      comp.sort((a, b) => b.numParticipations!.compareTo(a.numParticipations!));
-    } else if (_sortMethod == SortingMethod.LAST_PARTICIPATION) {
-      comp.sort((a, b) {
-        if (a.numParticipations! > 0 && b.numParticipations! > 0) {
-          return b.lastParticipation!.compareTo(a.lastParticipation!);
-        } else {
-          //We return first the company with participations and then the
-          //company with no participations in case one of the companies
-          //does not have participations
-          return b.numParticipations!.compareTo(a.numParticipations!);
-        }
-      });
-    }
-    return comp;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,7 +121,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
             IconButton(
               icon: const Icon(Icons.search),
               tooltip: 'Search company',
-              onPressed: () async {
+              onPressed: () {
                 showSearch(context: context, delegate: CompanySearchDelegate());
               },
             ),
@@ -148,6 +131,13 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
               onSelected: (SortingMethod sort) {
                 setState(() {
                   _sortMethod = sort;
+                  this.companiesLoaded.clear();
+                  numRequests = 0;
+                  this.companies = companyService.getCompaniesLight(
+                      maxCompInRequest: MAX_COMP,
+                      sortMethod: sort,
+                      numRequestsBackend: numRequests);
+                  numRequests++;
                 });
               },
               itemBuilder: (BuildContext context) {

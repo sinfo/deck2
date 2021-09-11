@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:frontend/routes/company/CompanyListWidget.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
@@ -78,8 +79,9 @@ class CompanyService extends Service {
       bool? partner,
       String? member,
       String? name,
-      String? previousID,
-      int? perPage}) async {
+      int? numRequestsBackend,
+      int? maxCompInRequest,
+      SortingMethod? sortMethod}) async {
     Map<String, dynamic> queryParams = {};
     if (event != null) {
       queryParams['event'] = event;
@@ -93,11 +95,14 @@ class CompanyService extends Service {
     if (name != null) {
       queryParams['name'] = name;
     }
-    if (perPage != null) {
-      queryParams['perPage'] = perPage;
+    if (maxCompInRequest != null) {
+      queryParams['maxCompInRequest'] = maxCompInRequest;
     }
-    if (previousID != null) {
-      queryParams['previousID'] = previousID;
+    if (numRequestsBackend != null) {
+      queryParams['numRequests'] = numRequestsBackend;
+    }
+    if (sortMethod != null && sortMethod != SortingMethod.RANDOM) {
+      queryParams['sortMethod'] = sortMethod.toString().split('.').last;
     }
 
     String companyUrl = '/companies';
