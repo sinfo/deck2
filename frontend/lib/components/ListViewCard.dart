@@ -25,6 +25,7 @@ class ListViewCard extends StatelessWidget {
   final Company? company;
   final CompanyLight? companyLight;
   final Speaker? speaker;
+  final SpeakerLight? speakerLight;
   final bool small;
   final bool? participationsInfo;
   late final String _status;
@@ -41,6 +42,7 @@ class ListViewCard extends StatelessWidget {
       this.company,
       this.companyLight,
       this.speaker,
+      this.speakerLight,
       this.participationsInfo})
       : super(key: key) {
     int? event = App.localStorage.getInt("event");
@@ -51,6 +53,8 @@ class ListViewCard extends StatelessWidget {
         _initSpeaker(event);
       } else if (companyLight != null) {
         _initCompanyLight();
+      } else if (speakerLight != null) {
+        _initSpeakerLight();
       }
     }
   }
@@ -89,6 +93,15 @@ class ListViewCard extends StatelessWidget {
     }
     _imageUrl = speaker!.imgs!.speaker!;
     _title = speaker!.name;
+    defineStatusColor(_status);
+  }
+
+  void _initSpeakerLight() {
+    _numParticipations = speakerLight!.numParticipations;
+    _lastParticipation = speakerLight!.lastParticipation;
+    _status = speakerLight!.participationStatus!.toUpperCase();
+    _imageUrl = speakerLight!.speakerImages.internal!;
+    _title = speakerLight!.name;
     defineStatusColor(_status);
   }
 
@@ -330,7 +343,7 @@ class ListViewCard extends StatelessWidget {
             } //MemberScreen(member: this.member)),
                 ));
           });
-    } else if (company != null || speaker != null || companyLight != null) {
+    } else if (company != null || speaker != null || companyLight != null || speakerLight != null) {
       return small ? _buildSmallCard(context) : _buildBigCard(context);
     } else {
       return UnknownScreen();

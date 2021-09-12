@@ -7,6 +7,7 @@ import 'package:frontend/models/participation.dart';
 import 'dart:convert';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/thread.dart';
+import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/services/service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';
@@ -53,6 +54,50 @@ class SpeakerService extends Service {
       final responseJson = json.decode(response.data!) as List;
       List<Speaker> speakers =
           responseJson.map((e) => Speaker.fromJson(e)).toList();
+      return speakers;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<List<SpeakerLight>> getSpeakersLight(
+      {String? name,
+      int? eventId,
+      String? member,
+      int? numRequestsBackend,
+      int? maxSpeaksInRequest,
+      SortingMethod? sortMethod}) async {
+    Map<String, dynamic> queryParameters = {};
+    if (eventId != null) {
+      queryParameters['event'] = eventId;
+    }
+    if (member != null) {
+      queryParameters['member'] = member;
+    }
+    if (name != null) {
+      queryParameters['name'] = name;
+    }
+    if (maxSpeaksInRequest != null) {
+      queryParameters['maxSpeaksInRequest'] = maxSpeaksInRequest;
+    }
+    if (numRequestsBackend != null) {
+      queryParameters['numRequests'] = numRequestsBackend;
+    }
+    if (sortMethod != null && sortMethod != SortingMethod.RANDOM) {
+      queryParameters['sortMethod'] = sortMethod.toString().split('.').last;
+    }
+
+    Response<String> response =
+        await dio.get("/speakers", queryParameters: queryParameters);
+
+    try {
+      final responseJson = json.decode(response.data!) as List;
+      List<SpeakerLight> speakers =
+          responseJson.map((e) => SpeakerLight.fromJson(e)).toList();
       return speakers;
     } on SocketException {
       throw DeckException('No Internet connection');

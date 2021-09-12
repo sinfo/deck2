@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/GridLayout.dart';
-import 'package:frontend/components/searchDelegate.dart';
+import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/router.dart';
+import 'package:frontend/components/speakerSearchDelegate.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/speakerService.dart';
 
@@ -16,6 +17,8 @@ final Map<SortingMethod, String> SORT_STRING = {
   SortingMethod.LAST_PARTICIPATION: 'Sort By Last Participation',
 };
 
+final int MAX_SPEAKERS = 30;
+
 class SpeakerListWidget extends StatefulWidget {
   const SpeakerListWidget({Key? key}) : super(key: key);
 
@@ -25,40 +28,79 @@ class SpeakerListWidget extends StatefulWidget {
 
 class _SpeakerListWidgetState extends State<SpeakerListWidget> {
   SpeakerService speakerService = new SpeakerService();
-  late Future<List<Speaker>> speakers;
+  late Future<List<SpeakerLight>> speakers;
+  List<SpeakerLight> speakersLoaded = [];
   SortingMethod _sortMethod = SortingMethod.RANDOM;
+  int numRequests = 0;
+  ScrollController _controller = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    this.speakers = speakerService.getSpeakers();
+    _controller.addListener(_scrollListener);
+    this.speakers = speakerService.getSpeakersLight(
+        maxSpeaksInRequest: MAX_SPEAKERS, numRequestsBackend: numRequests);
+    numRequests++;
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_scrollListener);
+    super.dispose();
+  }
+
+  void _scrollListener() {
+    if (_controller.offset >= _controller.position.maxScrollExtent &&
+        !_controller.position.outOfRange) {
+      setState(() {
+        _loadMoreSpeakers();
+      });
+    }
+  }
+
+  void _loadMoreSpeakers() {
+    storeSpeakersLoaded();
+    this.speakers = speakerService.getSpeakersLight(
+        maxSpeaksInRequest: MAX_SPEAKERS,
+        numRequestsBackend: numRequests,
+        sortMethod: _sortMethod);
+    numRequests++;
+  }
+
+  void storeSpeakersLoaded() async {
+    this.speakersLoaded.addAll(await this.speakers);
   }
 
   Widget speakerGrid() {
-    return FutureBuilder<List<Speaker>>(
+    return FutureBuilder<List<SpeakerLight>>(
         future: speakers,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            if (_sortMethod == SortingMethod.NUM_PARTICIPATIONS) {
-              snapshot.data!.sort((a, b) =>
-                  b.participations!.length.compareTo(a.participations!.length));
-            } else if (_sortMethod == SortingMethod.LAST_PARTICIPATION) {
-              snapshot.data!.sort((a, b) {
-                if (a.participations!.length > 0 &&
-                    b.participations!.length > 0) {
-                  return b.participations![b.participations!.length - 1].event
-                      .compareTo(a
-                          .participations![a.participations!.length - 1].event);
-                } else {
-                  //We return first the speaker with participations and then the
-                  //speaker with no participations in case one of the speakers
-                  //does not have participations
-                  return b.participations!.length
-                      .compareTo(a.participations!.length);
-                }
-              });
-            }
-            return GridLayout(speakers: snapshot.data!);
+            List<SpeakerLight> speak = speakersLoaded + snapshot.data!;
+            return LayoutBuilder(builder: (context, constraints) {
+              double cardWidth = 250;
+              bool isSmall = false;
+              if (constraints.maxWidth < 1500) {
+                cardWidth = 200;
+                isSmall = true;
+              }
+              return GridView.builder(
+                  controller: _controller,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:
+                        MediaQuery.of(context).size.width ~/ cardWidth,
+                    crossAxisSpacing: 5,
+                    mainAxisSpacing: 5,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemCount: speak.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return ListViewCard(
+                        small: isSmall,
+                        speakerLight: speak[index],
+                        participationsInfo: true);
+                  });
+            });
           } else {
             return Center(child: CircularProgressIndicator());
           }
@@ -79,10 +121,8 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
             IconButton(
               icon: const Icon(Icons.search),
               tooltip: 'Search speaker',
-              onPressed: () async {
-                showSearch(
-                    context: context,
-                    delegate: CustomSearchDelegate(speakers: await speakers));
+              onPressed: () {
+                showSearch(context: context, delegate: SpeakerSearchDelegate());
               },
             ),
             PopupMenuButton<SortingMethod>(
@@ -91,6 +131,13 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
               onSelected: (SortingMethod sort) {
                 setState(() {
                   _sortMethod = sort;
+                  this.speakersLoaded.clear();
+                  numRequests = 0;
+                  this.speakers = speakerService.getSpeakersLight(
+                      maxSpeaksInRequest: MAX_SPEAKERS,
+                      sortMethod: sort,
+                      numRequestsBackend: numRequests);
+                  numRequests++;
                 });
               },
               itemBuilder: (BuildContext context) {
@@ -106,14 +153,10 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
       body: speakerGrid(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          /*
-                  TODO when AddCompany() screen is finished
-
-                  Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => AddCompany()),
-                  );*/
+          Navigator.pushNamed(
+            context,
+            Routes.AddSpeaker,
+          );
         },
         label: const Text('Create New Speaker'),
         icon: const Icon(Icons.person_add),

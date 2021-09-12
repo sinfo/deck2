@@ -150,36 +150,109 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 // The field is non-existent if it has a nil value.
 // This filter will behave like a logical *and*.
 type GetSpeakersOptions struct {
-	EventID  *int
-	MemberID *primitive.ObjectID
-	Name     *string
+	EventID  			*int
+	MemberID 			*primitive.ObjectID
+	Name     			*string
+	NumRequests      	*int64
+	MaxSpeaksInRequest 	*int64
+	SortingMethod    	*string
 }
 
 // GetSpeakers gets all speakers specified with a query
-func (s *SpeakersType) GetSpeakers(options GetSpeakersOptions) ([]*models.Speaker, error) {
+func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.Speaker, error) {
 	ctx := context.Background()
 	var speakers = make([]*models.Speaker, 0)
 
 	filter := bson.M{}
 
-	if options.EventID != nil {
-		filter["participations.event"] = options.EventID
+	findOptions := options.Find()
+
+	if speakOptions.EventID != nil {
+		filter["participations.event"] = speakOptions.EventID
 	}
 
-	if options.MemberID != nil {
-		filter["participations.member"] = options.MemberID
+	if speakOptions.MemberID != nil {
+		filter["participations.member"] = speakOptions.MemberID
 	}
 
-	if options.Name != nil {
+	if speakOptions.Name != nil {
 		filter["name"] = bson.M{
-			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$regex":   fmt.Sprintf(".*%s.*", *speakOptions.Name),
 			"$options": "i",
 		}
 	}
 
-	cur, err := s.Collection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
+	if speakOptions.MaxSpeaksInRequest != nil && speakOptions.SortingMethod == nil {
+		findOptions.SetLimit(*speakOptions.MaxSpeaksInRequest)
+	}
+
+	if speakOptions.NumRequests != nil && speakOptions.SortingMethod == nil {
+		findOptions.SetSkip(*speakOptions.NumRequests * (*speakOptions.MaxSpeaksInRequest))
+	}
+
+	var err error
+	var cur *mongo.Cursor
+	if speakOptions.SortingMethod != nil {
+		switch *speakOptions.SortingMethod {
+		case string(NumberParticipations):
+			query := mongo.Pipeline{
+				{
+					{"$match", filter},
+				},
+				{
+					{"$addFields", bson.D{
+						{"numParticipations", bson.D{
+							{"$size", "$participations"},
+						}},
+					}},
+				},
+				{
+					{"$sort", bson.D{
+						{"numParticipations", -1},
+					}},
+				},
+				{
+					{"$skip", (*speakOptions.NumRequests * (*speakOptions.MaxSpeaksInRequest))},
+				},
+				{
+					{"$limit", *speakOptions.MaxSpeaksInRequest},
+				},
+			}
+			cur, err = s.Collection.Aggregate(ctx, query)
+			if err != nil {
+				return nil, err
+			}
+			break
+		case string(LastParticipation):
+			query := mongo.Pipeline{
+				{
+					{"$match", filter},
+				},
+				{
+					{"$sort", bson.D{
+						{"participations.event", -1},
+					}},
+				},
+				{
+					{"$skip", (*speakOptions.NumRequests * (*speakOptions.MaxSpeaksInRequest))},
+				},
+				{
+					{"$limit", *speakOptions.MaxSpeaksInRequest},
+				},
+			}
+			cur, err = s.Collection.Aggregate(ctx, query)
+			if err != nil {
+				return nil, err
+			}
+			break
+		default:
+			return nil, errors.New("error parsing Sorting Method")
+		}
+	} else {
+		cur, err = s.Collection.Find(ctx, filter, findOptions)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for cur.Next(ctx) {

@@ -4,7 +4,7 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/models/speaker.dart';
 
 class GridLayout extends StatelessWidget {
-  final List<Speaker>? speakers;
+  final List<SpeakerLight>? speakers;
   final List<CompanyLight>? companies;
 
   GridLayout({Key? key, this.speakers, this.companies}) : super(key: key) {}
@@ -38,7 +38,7 @@ class GridLayout extends StatelessWidget {
           if (speakers != null) {
             return ListViewCard(
                 small: isSmall,
-                speaker: speakers![index],
+                speakerLight: speakers![index],
                 participationsInfo: true);
           } else {
             return ListViewCard(
