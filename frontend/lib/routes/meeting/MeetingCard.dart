@@ -1,52 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:intl/intl.dart';
 
 class MeetingCard extends StatelessWidget {
   //final Meeting meeting;
-  final List months = [
-    'JAN',
-    'FEB',
-    'MAR',
-    'APR',
-    'MAY',
-    'JUN',
-    'JUL',
-    'AUG',
-    'SEP',
-    'OCT',
-    'NOV',
-    'DEC'
-  ];
 
   MeetingCard({
     Key? key,
     /*required this.meeeting*/
   }) : super(key: key);
-
-  String getTime(DateTime time) {
-    int hour = time.hour;
-    int minute = time.minute;
-    String h = hour.toString();
-    String m = minute.toString();
-    if (hour < 10) {
-      h = '0' + hour.toString();
-    }
-    if (minute < 10) {
-      m = '0' + minute.toString();
-    }
-
-    return h + ':' + m;
-  }
-
-  String getDay(DateTime date) {
-    return date.day.toString();
-  }
-
-  String getMonth(DateTime date) {
-    int mon = date.month;
-    return this.months[mon - 1];
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,14 +33,14 @@ class MeetingCard extends StatelessWidget {
                   children: <Widget>[
                     Container(
                       margin: EdgeInsets.only(top: 20.0),
-                      //child: Text(getDay(meeting.begin),
-                      child: Text(getDay(DateTime.now()),
-                          style: TextStyle(color: Colors.white, fontSize: 20)),
+                      // child: Text(DateFormat.d().format(meeting.begin),
+                      child: Text(DateFormat.d().format(DateTime.now()),
+                          style: TextStyle(color: Colors.white, fontSize: 22)),
                     ),
                     Container(
-                      //child: Text(getMonth(meeting.begin),
-                      child: Text(getMonth(DateTime.now()),
-                          style: TextStyle(color: Colors.white, fontSize: 20)),
+                      // child: Text(DateFormat.MMM().format(meeting.begin),
+                      child: Text(DateFormat.MMM().format(DateTime.now()),
+                          style: TextStyle(color: Colors.white, fontSize: 22)),
                     ),
                   ],
                 ),
@@ -107,12 +70,12 @@ class MeetingCard extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.only(top: 5.0),
                       child: Text(
-                        /*getTime(meeting.begin) +
+                        /*DateFormat.jm().format(meeting.begin) +
                             ' - ' +
-                            getTime(meeting.end()),*/
-                        getTime(DateTime.now()) +
+                            DateFormat.jm().format(meeting.end),*/
+                        DateFormat.jm().format(DateTime.now()) +
                             ' - ' +
-                            getTime(DateTime.now()),
+                            DateFormat.jm().format(DateTime.now()),
                         style: TextStyle(color: Colors.grey, fontSize: 20.0),
                         textAlign: TextAlign.left,
                       ),
