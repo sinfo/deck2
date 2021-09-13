@@ -209,7 +209,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
               List<Company> comps = snapshot.data as List<Company>;
               List<Company> compscpy = filterListByStatus(comps, _filter);
               return Container(
-                height: compscpy.length == 0 ? 0 : 125,
+                height: compscpy.length == 0 ? 0 : 200,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: compscpy

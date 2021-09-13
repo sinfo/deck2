@@ -44,6 +44,9 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	partner := urlQuery.Get("partner")
 	member := urlQuery.Get("member")
 	name := urlQuery.Get("name")
+	numRequests := urlQuery.Get("numRequests")
+	maxCompInRequest := urlQuery.Get("maxCompInRequest")
+	sortMethod := urlQuery.Get("sortMethod")
 
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
@@ -76,8 +79,29 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 		options.Name = &name
 	}
 
-	companies, err := mongodb.Companies.GetCompanies(options)
+	if len(numRequests) > 0 {
+		numReq, err := strconv.ParseInt(numRequests, 10, 64)
+		if err != nil {
+			http.Error(w, "Number of Requests: Invalid Company ID format", http.StatusBadRequest)
+			return
+		}
+		options.NumRequests = &numReq
+	}
 
+	if len(maxCompInRequest) > 0 {
+		maxComp, err := strconv.ParseInt(maxCompInRequest, 10, 64)
+		if err != nil {
+			http.Error(w, "Max Companies in Request: Invalid number format", http.StatusBadRequest)
+			return
+		}
+		options.MaxCompInRequest = &maxComp
+	}
+
+	if len(sortMethod) > 0 {
+		options.SortingMethod = &sortMethod
+	}
+
+	companies, err := mongodb.Companies.GetCompanies(options)
 	if err != nil {
 		http.Error(w, "Unable to get companies", http.StatusExpectationFailed)
 	}

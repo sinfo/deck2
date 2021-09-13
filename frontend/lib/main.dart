@@ -28,6 +28,7 @@ class App extends StatelessWidget {
       initialData: null,
       child: MaterialApp(
           title: 'Deck',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
               primarySwatch: Colors.indigo,
               accentColor: Color.fromRGBO(92, 127, 242, 1),

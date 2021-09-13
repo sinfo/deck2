@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:frontend/routes/company/CompanyListWidget.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
@@ -67,6 +68,51 @@ class CompanyService extends Service {
       final jsonRes = json.decode(res.data!) as List;
 
       List<Company> data = jsonRes.map((e) => Company.fromJson(e)).toList();
+      return data;
+    } else {
+      return [];
+    }
+  }
+
+  Future<List<CompanyLight>> getCompaniesLight(
+      {int? event,
+      bool? partner,
+      String? member,
+      String? name,
+      int? numRequestsBackend,
+      int? maxCompInRequest,
+      SortingMethod? sortMethod}) async {
+    Map<String, dynamic> queryParams = {};
+    if (event != null) {
+      queryParams['event'] = event;
+    }
+    if (partner != null) {
+      queryParams['partner'] = partner;
+    }
+    if (member != null) {
+      queryParams['member'] = member;
+    }
+    if (name != null) {
+      queryParams['name'] = name;
+    }
+    if (maxCompInRequest != null) {
+      queryParams['maxCompInRequest'] = maxCompInRequest;
+    }
+    if (numRequestsBackend != null) {
+      queryParams['numRequests'] = numRequestsBackend;
+    }
+    if (sortMethod != null && sortMethod != SortingMethod.RANDOM) {
+      queryParams['sortMethod'] = sortMethod.toString().split('.').last;
+    }
+
+    String companyUrl = '/companies';
+    Response<String> res =
+        await dio.get(companyUrl, queryParameters: queryParams);
+
+    if (res.statusCode == 200 && res.data!.isNotEmpty) {
+      final jsonRes = json.decode(res.data!) as List;
+      List<CompanyLight> data =
+          jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
       return data;
     } else {
       return [];

@@ -2,11 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/components/ListViewCard.dart';
-import 'package:frontend/services/companyService.dart';
+import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:frontend/components/filterbar.dart';
@@ -212,7 +211,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
               List<Speaker> spks = snapshot.data as List<Speaker>;
               List<Speaker> spkscpy = filterListByStatus(spks, _filter);
               return Container(
-                height: spkscpy.length == 0 ? 0 : 125,
+                height: spkscpy.length == 0 ? 0 : 200,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: spkscpy

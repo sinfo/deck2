@@ -4,6 +4,8 @@ import 'package:frontend/routes/LoginScreen.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/Wrapper.dart';
 import 'package:frontend/routes/company/AddCompanyForm.dart';
+import 'package:frontend/routes/company/CompanyListWidget.dart';
+import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/routes/speaker/AddSpeakerForm.dart';
 
 class Routes {
@@ -11,6 +13,8 @@ class Routes {
   static const String LoginRoute = '/login';
   static const String HomeRoute = '/home';
   static const String AddCompany = '/add/company';
+  static const String ShowAllCompanies = '/all/company';
+  static const String ShowAllSpeakers = '/all/speaker';
   static const String AddSpeaker = '/add/speaker';
 }
 
@@ -24,6 +28,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return FadeRoute(page: HomeScreen());
     case Routes.AddCompany:
       return SlideRoute(page: AddCompanyForm());
+    case Routes.ShowAllCompanies:
+      return MaterialPageRoute(builder: (context) => CompanyListWidget());
+    case Routes.ShowAllSpeakers:
+      return MaterialPageRoute(builder: (context) => SpeakerListWidget());
     case Routes.AddSpeaker:
       return SlideRoute(page: AddSpeakerForm());
     default:
