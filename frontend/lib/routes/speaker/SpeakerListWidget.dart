@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/components/speakerSearchDelegate.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/speakerService.dart';
 
@@ -80,7 +81,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
             return LayoutBuilder(builder: (context, constraints) {
               double cardWidth = 250;
               bool isSmall = false;
-              if (constraints.maxWidth < 1500) {
+              if (constraints.maxWidth < App.SIZE) {
                 cardWidth = 200;
                 isSmall = true;
               }

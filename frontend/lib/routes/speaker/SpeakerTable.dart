@@ -18,10 +18,13 @@ class SpeakerTable extends StatefulWidget {
   _SpeakerTableState createState() => _SpeakerTableState();
 }
 
-class _SpeakerTableState extends State<SpeakerTable> {
+class _SpeakerTableState extends State<SpeakerTable>
+    with AutomaticKeepAliveClientMixin {
   final MemberService _memberService = MemberService();
   late Future<List<Member>> members;
   late String _filter;
+
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -260,7 +263,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
       child: Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: LayoutBuilder(builder: (context, constraints) {
-            if (constraints.maxWidth < 1500) {
+            if (constraints.maxWidth < App.SIZE) {
               return _buildSmallTile(_filter);
             } else {
               return _buildBigTile(_filter);
