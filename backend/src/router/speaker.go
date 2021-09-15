@@ -55,6 +55,9 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 	event := urlQuery.Get("event")
 	member := urlQuery.Get("member")
 	name := urlQuery.Get("name")
+	numRequests := urlQuery.Get("numRequests")
+	maxSpeaksInRequest := urlQuery.Get("maxSpeaksInRequest")
+	sortMethod := urlQuery.Get("sortMethod")
 
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
@@ -76,6 +79,28 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 
 	if len(name) > 0 {
 		options.Name = &name
+	}
+
+	if len(numRequests) > 0 {
+		numReq, err := strconv.ParseInt(numRequests, 10, 64)
+		if err != nil {
+			http.Error(w, "Number of Requests: Invalid Speaker ID format", http.StatusBadRequest)
+			return
+		}
+		options.NumRequests = &numReq
+	}
+
+	if len(maxSpeaksInRequest) > 0 {
+		maxSpeaks, err := strconv.ParseInt(maxSpeaksInRequest, 10, 64)
+		if err != nil {
+			http.Error(w, "Max Speakers in Request: Invalid number format", http.StatusBadRequest)
+			return
+		}
+		options.MaxSpeaksInRequest = &maxSpeaks
+	}
+
+	if len(sortMethod) > 0 {
+		options.SortingMethod = &sortMethod
 	}
 
 	speakers, err := mongodb.Speakers.GetSpeakers(options)

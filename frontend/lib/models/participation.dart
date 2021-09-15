@@ -7,7 +7,8 @@ enum ParticipationStatus {
   ACCEPTED,
   REJECTED,
   GIVEN_UP,
-  ANNOUNCED
+  ANNOUNCED,
+  NO_STATUS
 }
 
 class Room {

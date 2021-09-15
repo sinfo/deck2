@@ -10,18 +10,42 @@ import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:provider/provider.dart';
 
+final Map<ParticipationStatus, String> STATUSSTRING = {
+  ParticipationStatus.ACCEPTED: 'ACCEPTED',
+  ParticipationStatus.ANNOUNCED: 'ANNOUNCED',
+  ParticipationStatus.CONTACTED: 'CONTACTED',
+  ParticipationStatus.GIVEN_UP: 'GIVEN_UP',
+  ParticipationStatus.IN_CONVERSATIONS: 'IN_CONVERSATIONS',
+  ParticipationStatus.ON_HOLD: 'ON_HOLD',
+  ParticipationStatus.REJECTED: 'REJECTED',
+  ParticipationStatus.SELECTED: 'SELECTED',
+  ParticipationStatus.SUGGESTED: 'SUGGESTED',
+};
+
 class ListViewCard extends StatelessWidget {
   final Member? member;
   final Company? company;
+  final CompanyLight? companyLight;
   final Speaker? speaker;
+  final SpeakerLight? speakerLight;
   final bool small;
-  late String _status;
-  late Color _color;
-  late String _imageUrl;
-  late String _title;
+  final bool? participationsInfo;
+  late final String _status;
+  late final Color _color;
+  late final String _imageUrl;
+  late final String _title;
+  late final int? _numParticipations;
+  late final int? _lastParticipation;
 
   ListViewCard(
-      {Key? key, required this.small, this.member, this.company, this.speaker})
+      {Key? key,
+      required this.small,
+      this.member,
+      this.company,
+      this.companyLight,
+      this.speaker,
+      this.speakerLight,
+      this.participationsInfo})
       : super(key: key) {
     int? event = App.localStorage.getInt("event");
     if (event != null) {
@@ -29,8 +53,21 @@ class ListViewCard extends StatelessWidget {
         _initCompany(event);
       } else if (speaker != null) {
         _initSpeaker(event);
+      } else if (companyLight != null) {
+        _initCompanyLight();
+      } else if (speakerLight != null) {
+        _initSpeakerLight();
       }
     }
+  }
+
+  void _initCompanyLight() {
+    _numParticipations = companyLight!.numParticipations;
+    _lastParticipation = companyLight!.lastParticipation;
+    _status = companyLight!.participationStatus!.toUpperCase();
+    _imageUrl = companyLight!.companyImages.internal;
+    _title = companyLight!.name;
+    defineStatusColor(_status);
   }
 
   void _initCompany(int event) {
@@ -39,7 +76,39 @@ class ListViewCard extends StatelessWidget {
     _status = participation.status.toUpperCase();
     _imageUrl = company!.companyImages.internal;
     _title = company!.name;
-    switch (_status) {
+    defineStatusColor(_status);
+  }
+
+  void _initSpeaker(int event) {
+    _numParticipations = speaker!.participations!.length;
+    if (_numParticipations! > 0) {
+      _lastParticipation =
+          speaker!.participations![speaker!.participations!.length - 1].event;
+    }
+    if (_numParticipations! > 0 && _lastParticipation == event) {
+      ParticipationStatus status = speaker!.participations!
+          .firstWhere((element) => element.event == event)
+          .status!;
+      _status = STATUSSTRING[status]!;
+    } else {
+      _status = "";
+    }
+    _imageUrl = speaker!.imgs!.speaker!;
+    _title = speaker!.name;
+    defineStatusColor(_status);
+  }
+
+  void _initSpeakerLight() {
+    _numParticipations = speakerLight!.numParticipations;
+    _lastParticipation = speakerLight!.lastParticipation;
+    _status = speakerLight!.participationStatus!.toUpperCase();
+    _imageUrl = speakerLight!.speakerImages.internal!;
+    _title = speakerLight!.name;
+    defineStatusColor(_status);
+  }
+
+  void defineStatusColor(String status) {
+    switch (status) {
       case "SUGGESTED":
       case "SELECTED":
         _color = Colors.orange;
@@ -60,64 +129,15 @@ class ListViewCard extends StatelessWidget {
         break;
       case "GIVE UP":
       default:
-        _color = Colors.black;
-        break;
-    }
-  }
-
-  void _initSpeaker(int event) {
-    Participation participation = speaker!.participations!
-        .firstWhere((element) => element.event == event);
-    _imageUrl = speaker!.imgs!.speaker!;
-    _title = speaker!.name!;
-    switch (participation.status) {
-      case ParticipationStatus.SUGGESTED:
-        _status = "SUGGESTED";
-        _color = Colors.orange;
-        break;
-      case ParticipationStatus.SELECTED:
-        _status = "SELECTED";
-        _color = Colors.orange;
-        break;
-      case ParticipationStatus.ON_HOLD:
-        _status = "ON HOLD";
-        _color = Colors.yellow;
-        break;
-      case ParticipationStatus.CONTACTED:
-        _status = "CONTACTED";
-        _color = Colors.yellow;
-        break;
-      case ParticipationStatus.IN_CONVERSATIONS:
-        _status = "IN CONVERSATIONS";
-        _color = Colors.blue;
-        break;
-      case ParticipationStatus.ACCEPTED:
-        _status = "ACCEPTED";
-        _color = Colors.green;
-        break;
-      case ParticipationStatus.ANNOUNCED:
-        _status = "ANNOUNCED";
-        _color = Colors.green;
-        break;
-      case ParticipationStatus.REJECTED:
-        _status = "REJECTED";
-        _color = Colors.red;
-        break;
-      case ParticipationStatus.GIVEN_UP:
-        _status = "GIVEN UP";
-        _color = Colors.black;
-        break;
-      default:
-        _status = "";
-        _color = Colors.white;
+        _color = Colors.indigo;
         break;
     }
   }
 
   Widget _buildSmallCard(BuildContext context) {
     return Container(
-      height: 125,
-      width: 100,
+      height: 225,
+      width: 200,
       margin: EdgeInsets.all(5),
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
@@ -137,7 +157,12 @@ class ListViewCard extends StatelessWidget {
                           topRight: Radius.circular(5)),
                       child: Image.network(
                         _imageUrl,
-                        fit: BoxFit.fill,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, progress) {
+                          return progress == null
+                              ? child
+                              : Center(child: CircularProgressIndicator());
+                        },
                         errorBuilder: (BuildContext context, Object exception,
                             StackTrace? stackTrace) {
                           return Image.asset(
@@ -148,14 +173,9 @@ class ListViewCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 6),
-                  Text(_title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      )),
-                  SizedBox(height: 6),
+                  SizedBox(
+                      height: participationsInfo != null ? 72 : 30,
+                      child: getParticipationInfo(14)),
                 ],
               ),
               onTap: () {
@@ -164,27 +184,77 @@ class ListViewCard extends StatelessWidget {
                 } // CompanyScreen(company: this.company)),
                     ));
               }),
-          Container(
-            padding: EdgeInsets.all(6),
-            margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
-            decoration: BoxDecoration(
-              color: _color,
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-            ),
-            child: Text(
-              _status,
-              style: TextStyle(fontSize: 10),
-            ),
-          ),
+          ...getStatus(10)
         ],
       ),
     );
   }
 
+  Widget getParticipationInfo(double fontsize) {
+    if (participationsInfo != null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(_title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              )),
+          Text('${_numParticipations} participations',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              )),
+          Text(
+              _numParticipations! > 0
+                  ? 'Participated in SINFO ${_lastParticipation}'
+                  : 'No Participation',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              ))
+        ],
+      );
+    } else {
+      return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(_title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: fontsize,
+              fontWeight: FontWeight.bold,
+            ))
+      ]);
+    }
+  }
+
+  List<Widget> getStatus(double fontsize) {
+    if (_status != "") {
+      return [
+        Container(
+          padding: EdgeInsets.all(6),
+          margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
+          decoration: BoxDecoration(
+            color: _color,
+            borderRadius: BorderRadius.all(Radius.circular(5)),
+          ),
+          child: Text(
+            _status,
+            style: TextStyle(fontSize: fontsize),
+          ),
+        ),
+      ];
+    } else {
+      return [];
+    }
+  }
+
   Widget _buildBigCard(BuildContext context) {
     return Container(
-      height: 175,
-      width: 150,
+      height: 275,
+      width: 250,
       margin: EdgeInsets.all(10),
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
@@ -192,56 +262,42 @@ class ListViewCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         border: Border.all(color: _color, width: 2),
       ),
-      child: Stack(
-        children: [
-          InkWell(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Image.network(
-                      _imageUrl,
-                      fit: BoxFit.fill,
-                      errorBuilder: (BuildContext context, Object exception,
-                          StackTrace? stackTrace) {
-                        return Image.asset(
-                          'assets/noImage.png',
-                          fit: BoxFit.fill,
-                        );
-                      },
-                    ),
+      child: Stack(children: [
+        InkWell(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Image.network(
+                    _imageUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, progress) {
+                      return progress == null
+                          ? child
+                          : Center(child: CircularProgressIndicator());
+                    },
+                    errorBuilder: (BuildContext context, Object exception,
+                        StackTrace? stackTrace) {
+                      return Image.asset(
+                        'assets/noImage.png',
+                        fit: BoxFit.fill,
+                      );
+                    },
                   ),
-                  SizedBox(height: 12.5),
-                  Text(_title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        //fontFamily: 'Inter',
-                        fontWeight: FontWeight.bold,
-                      )),
-                  SizedBox(height: 12.5),
-                ],
-              ),
-              onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return UnknownScreen();
-                } // CompanyScreen(company: this.company)),
-                    ));
-              }),
-          Container(
-            padding: EdgeInsets.all(6),
-            margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
-            decoration: BoxDecoration(
-              color: _color,
-              borderRadius: BorderRadius.all(Radius.circular(5)),
+                ),
+                SizedBox(
+                    height: participationsInfo != null ? 70 : 35,
+                    child: getParticipationInfo(14)),
+              ],
             ),
-            child: Text(
-              _status,
-              style: TextStyle(fontSize: 14),
-            ),
-          )
-        ],
-      ),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return UnknownScreen();
+              } // CompanyScreen(company: this.company)),
+                  ));
+            }),
+        ...getStatus(14)
+      ]),
     );
   }
 
@@ -289,7 +345,7 @@ class ListViewCard extends StatelessWidget {
             } //MemberScreen(member: this.member)),
                 ));
           });
-    } else if (company != null || speaker != null) {
+    } else if (company != null || speaker != null || companyLight != null || speakerLight != null) {
       return small ? _buildSmallCard(context) : _buildBigCard(context);
     } else {
       return UnknownScreen();

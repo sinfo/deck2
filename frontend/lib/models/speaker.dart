@@ -1,3 +1,4 @@
+import 'package:frontend/main.dart';
 import 'package:frontend/models/participation.dart';
 
 class Images {
@@ -100,4 +101,38 @@ class PublicSpeaker {
         'title': title,
         'imgs': imgs?.toJson(),
       };
+}
+
+class SpeakerLight {
+  final String id;
+  final String name;
+  final Images speakerImages;
+  final int? numParticipations;
+  final int? lastParticipation;
+  final String? participationStatus;
+
+  SpeakerLight(
+      {required this.id,
+      required this.name,
+      required this.speakerImages,
+      this.numParticipations,
+      this.lastParticipation,
+      this.participationStatus});
+
+  factory SpeakerLight.fromJson(Map<String, dynamic> json) {
+    var participations = json['participations'] as List;
+    return SpeakerLight(
+        id: json['id'],
+        name: json['name'],
+        speakerImages: Images.fromJson(json['imgs']),
+        numParticipations: participations.length,
+        lastParticipation: participations.length > 0
+            ? participations[participations.length - 1]['event']
+            : null,
+        participationStatus: participations.length > 0 &&
+                participations[participations.length - 1]['event'] ==
+                    App.localStorage.getInt("event")
+            ? participations[participations.length - 1]['status']
+            : "");
+  }
 }
