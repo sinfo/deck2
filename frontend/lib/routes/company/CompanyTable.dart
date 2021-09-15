@@ -18,10 +18,13 @@ class CompanyTable extends StatefulWidget {
   _CompanyTableState createState() => _CompanyTableState();
 }
 
-class _CompanyTableState extends State<CompanyTable> {
+class _CompanyTableState extends State<CompanyTable>
+    with AutomaticKeepAliveClientMixin {
   final MemberService _memberService = MemberService();
   late Future<List<Member>> members;
   late String _filter;
+
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -86,6 +89,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
   CompanyService _companyService = CompanyService();
   late Future<List<Company>> _companies;
   _MemberCompaniesRowState({required this.member, required this.filter});
+  int? size = null;
 
   @override
   void initState() {
@@ -247,7 +251,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
         child: Theme(
           data: t.copyWith(dividerColor: Colors.transparent),
           child: LayoutBuilder(builder: (context, constraints) {
-            if (constraints.maxWidth < 1500) {
+            if (constraints.maxWidth < App.SIZE) {
               return _buildSmallTile(_filter);
             } else {
               return _buildBigTile(_filter);

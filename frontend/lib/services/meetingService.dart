@@ -7,14 +7,17 @@ import 'dart:io';
 
 class MeetingService extends Service {
   Future<List<Meeting>> getMeetings(
-      {team: String, company: String, event: int}) async {
+      {String? team, String? company, int? event}) async {
     var queryParameters = {'team': team, 'company': company, 'event': event};
-
-    Response<String> response =
-        await dio.get("/meetings", queryParameters: queryParameters);
+    print('here');
 
     try {
+      Response<String> response =
+          await dio.get("/meetings", queryParameters: queryParameters);
+      print('here2');
+
       final responseJson = json.decode(response.data!) as List;
+      print('res = $responseJson');
       List<Meeting> meetings =
           responseJson.map((e) => Meeting.fromJson(e)).toList();
       return meetings;

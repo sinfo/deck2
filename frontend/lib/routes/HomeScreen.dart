@@ -3,11 +3,14 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
+import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
 import 'package:frontend/routes/MemberListWidget.dart';
+import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
+import 'package:frontend/services/meetingService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
@@ -83,7 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           children: <Widget>[
             Center(child: SpeakerTable()),
-            Center(child: Text("Home in progress :)")),
+            // Center(child: Text("Home in progress :)")),
+            Center(
+              child: MeetingList(),
+            ),
             Center(child: CompanyTable()),
             Center(child: MemberListWidget()),
           ],
@@ -129,5 +135,40 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
     }
+  }
+}
+
+class MeetingList extends StatefulWidget {
+  const MeetingList({Key? key}) : super(key: key);
+
+  @override
+  _MeetingListState createState() => _MeetingListState();
+}
+
+class _MeetingListState extends State<MeetingList> {
+  final MeetingService _service = MeetingService();
+  late final Future<List<Meeting>> _meetings;
+
+  @override
+  void initState() {
+    _meetings = _service.getMeetings();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _meetings,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          List<Meeting> meets = snapshot.data as List<Meeting>;
+          return ListView(
+            children: meets.map((e) => MeetingCard(meeting: e)).toList(),
+          );
+        } else {
+          return CircularProgressIndicator();
+        }
+      },
+    );
   }
 }

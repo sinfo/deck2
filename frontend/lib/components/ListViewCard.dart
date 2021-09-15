@@ -253,8 +253,8 @@ class ListViewCard extends StatelessWidget {
 
   Widget _buildBigCard(BuildContext context) {
     return Container(
-      height: 275,
-      width: 250,
+      height: 225,
+      width: 200,
       margin: EdgeInsets.all(10),
       alignment: Alignment.topCenter,
       decoration: BoxDecoration(
@@ -345,7 +345,10 @@ class ListViewCard extends StatelessWidget {
             } //MemberScreen(member: this.member)),
                 ));
           });
-    } else if (company != null || speaker != null || companyLight != null || speakerLight != null) {
+    } else if (company != null ||
+        speaker != null ||
+        companyLight != null ||
+        speakerLight != null) {
       return small ? _buildSmallCard(context) : _buildBigCard(context);
     } else {
       return UnknownScreen();
