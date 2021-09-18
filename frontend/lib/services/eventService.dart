@@ -10,6 +10,20 @@ import 'package:frontend/services/service.dart';
 class EventService extends Service {
   final String basePath = '/events';
 
+  Future<Event> getLatestEvent() async {
+    try {
+      Response<String> res = await dio.get(basePath + "/latest");
+
+      return Event.fromJson(json.decode(res.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
   /// Lists events, filtered by name, before, during and after dates.
   Future<List<Event>> getEvents({
     String? name,
@@ -32,6 +46,23 @@ class EventService extends Service {
       List<Event> events = responseJson.map((e) => Event.fromJson(e)).toList();
 
       return events;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<List<int>> getEventIds() async {
+    try {
+      Response<String> response = await dio.get(basePath);
+
+      final responseJson = json.decode(response.data!) as List;
+      List<int> ids = responseJson.map((e) => e['id'] as int).toList();
+      ids.sort((a, b) => b.compareTo(a));
+      return ids;
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -309,7 +340,7 @@ class EventService extends Service {
 
   /// Fetches an event by ID
   Future<Event> getEvent({
-    required String eventId,
+    required int eventId,
   }) async {
     Response<String> res = await dio.get(basePath + "/$eventId");
 

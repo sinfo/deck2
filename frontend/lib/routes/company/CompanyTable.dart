@@ -1,10 +1,14 @@
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/components/deckTheme.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/filterbar.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/event.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/services/companyService.dart';
@@ -21,48 +25,49 @@ class CompanyTable extends StatefulWidget {
 class _CompanyTableState extends State<CompanyTable>
     with AutomaticKeepAliveClientMixin {
   final MemberService _memberService = MemberService();
-  late Future<List<Member>> members;
   late String _filter;
+  late int event;
 
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    members =
-        _memberService.getMembers(event: App.localStorage.getInt("event"));
     _filter = "ALL";
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder(
-        future: members,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            List<Member> membs = snapshot.data as List<Member>;
-            membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return NestedScrollView(
-              floatHeaderSlivers: true,
-              headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
-                    child: FilterBar(onSelected: (value) => onSelected(value)),
-                  ),
+  Widget build(BuildContext context) {
+    int event = Provider.of<EventNotifier>(context).event.id;
+    return FutureBuilder(
+      future: _memberService.getMembers(event: event),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          List<Member> membs = snapshot.data as List<Member>;
+          membs.sort((a, b) => a.name!.compareTo(b.name!));
+          return NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+                  child: FilterBar(onSelected: (value) => onSelected(value)),
                 ),
-              ],
-              body: ListView(
-                children: membs
-                    .map((e) => MemberCompaniesRow(member: e, filter: _filter))
-                    .toList(),
-                addAutomaticKeepAlives: true,
               ),
-            );
-          } else {
-            return CircularProgressIndicator();
-          }
-        },
-      );
+            ],
+            body: ListView(
+              children: membs
+                  .map((e) => MemberCompaniesRow(member: e, filter: _filter))
+                  .toList(),
+              addAutomaticKeepAlives: true,
+            ),
+          );
+        } else {
+          return CircularProgressIndicator();
+        }
+      },
+    );
+  }
 
   onSelected(String filter) {
     setState(() {
@@ -129,38 +134,41 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
             print('pressedMember');
           },
         ),
-        Row(
-          children: [
-            FutureBuilder(
-              future: _companies,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<Company> comps = snapshot.data as List<Company>;
-                  List<Company> compscpy = filterListByStatus(comps, _filter);
-                  return Container(
-                    height: compscpy.length == 0 ? 0 : null,
-                    child: Wrap(
-                      alignment: WrapAlignment.start,
-                      crossAxisAlignment: WrapCrossAlignment.start,
-                      children: compscpy
-                          .map((e) => ListViewCard(small: false, company: e))
-                          .toList(),
-                    ),
-                  );
-                } else {
-                  return Container(
-                    child: Center(
-                      child: Container(
-                        height: 50,
-                        width: 50,
-                        child: CircularProgressIndicator(),
+        FutureBuilder(
+          future: _companies,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              List<Company> comps = snapshot.data as List<Company>;
+              List<Company> compscpy = filterListByStatus(comps, _filter);
+              return Row(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      height: compscpy.length == 0 ? 0 : null,
+                      child: Wrap(
+                        alignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.start,
+                        children: compscpy
+                            .map((e) => ListViewCard(small: false, company: e))
+                            .toList(),
                       ),
                     ),
-                  );
-                }
-              },
-            )
-          ],
+                  ),
+                ],
+              );
+            } else {
+              return Container(
+                child: Center(
+                  child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
+            }
+          },
         )
       ],
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
@@ -9,7 +10,6 @@ import 'package:frontend/routes/company/CompanyTable.dart';
 import 'package:frontend/routes/MemberListWidget.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
-import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    App.localStorage.setInt("event", 29);
     _pageController = PageController(initialPage: _currentIndex);
     super.initState();
   }
@@ -85,12 +84,17 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() => _currentIndex = index);
           },
           children: <Widget>[
-            Center(child: SpeakerTable()),
-            // Center(child: Text("Home in progress :)")),
+            Center(
+                child: Consumer<EventNotifier>(
+              builder: (context, value, child) => SpeakerTable(),
+            )),
             Center(
               child: MeetingList(),
             ),
-            Center(child: CompanyTable()),
+            Center(
+                child: Consumer<EventNotifier>(
+              builder: (context, value, child) => CompanyTable(),
+            )),
             Center(child: MemberListWidget()),
           ],
         ),

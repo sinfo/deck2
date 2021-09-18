@@ -214,6 +214,7 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/meetings/{id}", authCoordinator(removeMeetingFromEvent)).Methods("DELETE")
 	eventRouter.HandleFunc("/sessions", authCoordinator(addSessionToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/teams/{id}", authAdmin(removeTeamFromEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/latest", authMember(getLatestEvent)).Methods("GET")
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()

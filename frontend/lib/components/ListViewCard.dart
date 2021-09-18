@@ -201,7 +201,7 @@ class ListViewCard extends StatelessWidget {
                 fontSize: fontsize,
                 fontWeight: FontWeight.bold,
               )),
-          Text('${_numParticipations} participations',
+          Text('$_numParticipations participations',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: fontsize,
@@ -209,7 +209,7 @@ class ListViewCard extends StatelessWidget {
               )),
           Text(
               _numParticipations! > 0
-                  ? 'Participated in SINFO ${_lastParticipation}'
+                  ? 'Participated in SINFO $_lastParticipation'
                   : 'No Participation',
               textAlign: TextAlign.center,
               style: TextStyle(
