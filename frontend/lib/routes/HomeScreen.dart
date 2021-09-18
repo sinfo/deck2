@@ -29,7 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    _pageController = PageController(initialPage: _currentIndex);
+    _pageController =
+        PageController(initialPage: _currentIndex, keepPage: true);
     super.initState();
   }
 
@@ -92,9 +93,9 @@ class _HomeScreenState extends State<HomeScreen> {
               child: MeetingList(),
             ),
             Center(
-                child: Consumer<EventNotifier>(
-              builder: (context, value, child) => CompanyTable(),
-            )),
+              child: Consumer<EventNotifier>(
+                  builder: (context, value, child) => CompanyTable()),
+            ),
             Center(child: MemberListWidget()),
           ],
         ),
@@ -149,7 +150,8 @@ class MeetingList extends StatefulWidget {
   _MeetingListState createState() => _MeetingListState();
 }
 
-class _MeetingListState extends State<MeetingList> {
+class _MeetingListState extends State<MeetingList>
+    with AutomaticKeepAliveClientMixin {
   final MeetingService _service = MeetingService();
   late final Future<List<Meeting>> _meetings;
 
@@ -160,7 +162,12 @@ class _MeetingListState extends State<MeetingList> {
   }
 
   @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return FutureBuilder(
       future: _meetings,
       builder: (context, snapshot) {

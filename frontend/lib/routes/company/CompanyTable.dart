@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -26,25 +27,34 @@ class _CompanyTableState extends State<CompanyTable>
     with AutomaticKeepAliveClientMixin {
   final MemberService _memberService = MemberService();
   late String _filter;
-  late int event;
-
-  bool get wantKeepAlive => true;
+  late Future<List<Member>> _members;
 
   @override
   void initState() {
     super.initState();
+    _members =
+        _memberService.getMembers(event: App.localStorage.getInt('event'));
     _filter = "ALL";
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
-    int event = Provider.of<EventNotifier>(context).event.id;
+    super.build(context);
+
     return FutureBuilder(
-      future: _memberService.getMembers(event: event),
+      future: _members,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          print('rebuild');
           List<Member> membs = snapshot.data as List<Member>;
+          Member me =
+              Member.fromJson(json.decode(App.localStorage.getString('me')!));
           membs.sort((a, b) => a.name!.compareTo(b.name!));
+          int index = membs.indexWhere((element) => element.id == me.id);
+          membs.insert(0, membs.removeAt(index));
           return NestedScrollView(
             floatHeaderSlivers: true,
             headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -55,11 +65,12 @@ class _CompanyTableState extends State<CompanyTable>
                 ),
               ),
             ],
-            body: ListView(
-              children: membs
-                  .map((e) => MemberCompaniesRow(member: e, filter: _filter))
-                  .toList(),
+            body: ListView.builder(
+              itemCount: membs.length,
+              itemBuilder: (context, index) =>
+                  MemberCompaniesRow(member: membs[index], filter: _filter),
               addAutomaticKeepAlives: true,
+              key: UniqueKey(),
             ),
           );
         } else {
@@ -78,7 +89,7 @@ class _CompanyTableState extends State<CompanyTable>
 
 class MemberCompaniesRow extends StatefulWidget {
   final Member member;
-  String filter;
+  final String filter;
   MemberCompaniesRow({Key? key, required this.member, required this.filter})
       : super(key: key);
 
@@ -97,14 +108,14 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
   int? size = null;
 
   @override
-  void initState() {
-    super.initState();
-    _companies =
-        _companyService.getCompanies(event: 29, member: this.member.id);
-  }
+  bool get wantKeepAlive => true;
 
   @override
-  bool get wantKeepAlive => true;
+  void initState() {
+    super.initState();
+    _companies = _companyService.getCompanies(
+        event: App.localStorage.getInt('event'), member: this.member.id);
+  }
 
   Widget _buildBigTile(String _filter) {
     return Column(
@@ -252,6 +263,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     String _filter = widget.filter;
     ThemeData t = Provider.of<ThemeNotifier>(context).theme;
     return Container(

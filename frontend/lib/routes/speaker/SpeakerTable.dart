@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
@@ -10,6 +13,7 @@ import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:frontend/components/filterbar.dart';
 import 'package:frontend/models/participation.dart';
+import 'package:provider/provider.dart';
 
 class SpeakerTable extends StatefulWidget {
   SpeakerTable({Key? key}) : super(key: key);
@@ -21,48 +25,55 @@ class SpeakerTable extends StatefulWidget {
 class _SpeakerTableState extends State<SpeakerTable>
     with AutomaticKeepAliveClientMixin {
   final MemberService _memberService = MemberService();
-  late Future<List<Member>> members;
   late String _filter;
+  late Future<List<Member>> _members;
 
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    members =
-        _memberService.getMembers(event: App.localStorage.getInt("event"));
+    _members =
+        _memberService.getMembers(event: App.localStorage.getInt('event'));
     _filter = "ALL";
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder(
-        future: members,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            List<Member> membs = snapshot.data as List<Member>;
-            membs.sort((a, b) => a.name!.compareTo(b.name!));
-            return NestedScrollView(
-              floatHeaderSlivers: true,
-              headerSliverBuilder: (context, innerBoxIsScrolled) => [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
-                    child: FilterBar(onSelected: (value) => onSelected(value)),
-                  ),
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _members,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          List<Member> membs = snapshot.data as List<Member>;
+          Member me =
+              Member.fromJson(json.decode(App.localStorage.getString('me')!));
+          membs.sort((a, b) => a.name!.compareTo(b.name!));
+          int index = membs.indexWhere((element) => element.id == me.id);
+          membs.insert(0, membs.removeAt(index));
+          return NestedScrollView(
+            floatHeaderSlivers: true,
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+                  child: FilterBar(onSelected: (value) => onSelected(value)),
                 ),
-              ],
-              body: ListView(
-                children: membs
-                    .map((e) => MemberSpeakerRow(member: e, filter: _filter))
-                    .toList(),
-                addAutomaticKeepAlives: true,
               ),
-            );
-          } else {
-            return CircularProgressIndicator();
-          }
-        },
-      );
+            ],
+            body: ListView(
+              key: UniqueKey(),
+              children: membs
+                  .map((e) => MemberSpeakerRow(member: e, filter: _filter))
+                  .toList(),
+              addAutomaticKeepAlives: true,
+            ),
+          );
+        } else {
+          return CircularProgressIndicator();
+        }
+      },
+    );
+  }
 
   onSelected(String filter) {
     setState(() {
@@ -73,7 +84,7 @@ class _SpeakerTableState extends State<SpeakerTable>
 
 class MemberSpeakerRow extends StatefulWidget {
   final Member member;
-  String filter;
+  final String filter;
   MemberSpeakerRow({Key? key, required this.member, required this.filter})
       : super(key: key);
 
@@ -119,47 +130,50 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
                   );
                 },
               )),
-          title: Container(
-            child: Text(this.member.name!),
-            margin: EdgeInsets.all(8),
+          title: Text(
+            this.member.name!,
+            style: TextStyle(fontSize: 18),
           ),
           subtitle: Divider(
             color: Colors.grey,
             thickness: 1,
           ),
         ),
-        Row(
-          children: [
-            FutureBuilder(
-              future: _speakers,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<Speaker> spks = snapshot.data as List<Speaker>;
-                  List<Speaker> spkscpy = filterListByStatus(spks, _filter);
-                  return Container(
-                    height: spkscpy.length == 0 ? 0 : null,
-                    child: Wrap(
-                      alignment: WrapAlignment.start,
-                      crossAxisAlignment: WrapCrossAlignment.start,
-                      children: spkscpy
-                          .map((e) => ListViewCard(small: false, speaker: e))
-                          .toList(),
-                    ),
-                  );
-                } else {
-                  return Container(
-                    child: Center(
-                      child: Container(
-                        height: 50,
-                        width: 50,
-                        child: CircularProgressIndicator(),
+        FutureBuilder(
+          future: _speakers,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              List<Speaker> spks = snapshot.data as List<Speaker>;
+              List<Speaker> spkscpy = filterListByStatus(spks, _filter);
+              return Row(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Container(
+                      height: spkscpy.length == 0 ? 0 : null,
+                      child: Wrap(
+                        alignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.start,
+                        children: spkscpy
+                            .map((e) => ListViewCard(small: false, speaker: e))
+                            .toList(),
                       ),
                     ),
-                  );
-                }
-              },
-            )
-          ],
+                  ),
+                ],
+              );
+            } else {
+              return Container(
+                child: Center(
+                  child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
+            }
+          },
         )
       ],
     );
@@ -244,6 +258,8 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     String _filter = widget.filter;
     return Container(
       margin: EdgeInsets.all(10),
