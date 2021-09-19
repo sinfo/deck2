@@ -44,7 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     Member? user = Provider.of<Member?>(context);
     return Scaffold(
-      appBar: CustomAppBar(),
+      appBar: CustomAppBar(
+        disableEventChange: false,
+      ),
       bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
@@ -101,11 +103,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       drawer: DeckDrawer(image: user != null ? user.image : ''),
-      floatingActionButton: _fabAtIndex(_currentIndex),
+      floatingActionButton: _fabAtIndex(context, _currentIndex),
     );
   }
 
-  Widget? _fabAtIndex(int index) {
+  Widget? _fabAtIndex(BuildContext context, int index) {
+    int currentEvent = Provider.of<EventNotifier>(context).event.id;
+    int latestEvent = Provider.of<EventNotifier>(context).latest.id;
+    bool disabled = currentEvent != latestEvent;
+    if (disabled) {
+      return null;
+    }
     switch (index) {
       case 0:
         {
@@ -118,7 +126,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             label: const Text('Show All Speakers'),
             icon: const Icon(Icons.add),
-            backgroundColor: Color(0xff5C7FF2),
           );
         }
       case 1:
@@ -136,7 +143,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             label: const Text('Show All Companies'),
             icon: const Icon(Icons.add),
-            backgroundColor: Color(0xff5C7FF2),
           );
         }
     }

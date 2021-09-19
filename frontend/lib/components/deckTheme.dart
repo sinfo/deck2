@@ -23,6 +23,7 @@ class LightTheme extends BaseTheme {
       cardColor: Color.fromRGBO(241, 241, 241, 1),
       accentIconTheme: IconThemeData(color: Colors.white),
       dividerColor: Colors.white54,
+      disabledColor: Colors.grey,
     );
   }
 
@@ -32,6 +33,7 @@ class LightTheme extends BaseTheme {
 class DarkTheme extends BaseTheme {
   ThemeData get materialTheme {
     return ThemeData(
+      disabledColor: Colors.grey,
       primarySwatch: Colors.grey,
       primaryColor: Colors.black,
       brightness: Brightness.dark,

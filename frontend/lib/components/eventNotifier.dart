@@ -4,9 +4,11 @@ import 'package:frontend/models/event.dart';
 
 class EventNotifier with ChangeNotifier {
   Event _event;
+  Event _latest;
 
-  EventNotifier(this._event);
+  EventNotifier(this._event, this._latest);
 
+  Event get latest => _latest;
   Event get event => _event;
   set event(Event e) {
     _event = e;

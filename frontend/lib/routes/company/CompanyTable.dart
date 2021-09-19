@@ -43,12 +43,13 @@ class _CompanyTableState extends State<CompanyTable>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    int event = Provider.of<EventNotifier>(context).event.id;
 
     return FutureBuilder(
+      key: ValueKey(event),
       future: _members,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          print('rebuild');
           List<Member> membs = snapshot.data as List<Member>;
           Member me =
               Member.fromJson(json.decode(App.localStorage.getString('me')!));
@@ -70,7 +71,6 @@ class _CompanyTableState extends State<CompanyTable>
               itemBuilder: (context, index) =>
                   MemberCompaniesRow(member: membs[index], filter: _filter),
               addAutomaticKeepAlives: true,
-              key: UniqueKey(),
             ),
           );
         } else {

@@ -40,7 +40,10 @@ class _SpeakerTableState extends State<SpeakerTable>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+    int event = Provider.of<EventNotifier>(context).event.id;
     return FutureBuilder(
+      key: ValueKey(event),
       future: _members,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
@@ -61,7 +64,6 @@ class _SpeakerTableState extends State<SpeakerTable>
               ),
             ],
             body: ListView(
-              key: UniqueKey(),
               children: membs
                   .map((e) => MemberSpeakerRow(member: e, filter: _filter))
                   .toList(),

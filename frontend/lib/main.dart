@@ -12,11 +12,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 Future main() async {
   await start();
   EventService service = EventService();
+  Event latest = await service.getLatestEvent();
   Event e;
   if (App.localStorage.containsKey('event')) {
     e = await service.getEvent(eventId: App.localStorage.getInt('event')!);
   } else {
-    e = await service.getLatestEvent();
+    e = latest;
   }
   runApp(MultiProvider(
     providers: [
@@ -26,7 +27,7 @@ Future main() async {
         ),
       ),
       ChangeNotifierProvider<EventNotifier>(
-        create: (_) => EventNotifier(e),
+        create: (_) => EventNotifier(e, latest),
       ),
     ],
     child: App(),

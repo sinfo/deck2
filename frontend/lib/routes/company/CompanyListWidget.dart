@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/companySearchDelegate.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
@@ -111,46 +112,39 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: GestureDetector(
-              child: Image.asset(
-            'assets/logo-branco2.png',
-            height: 100,
-            width: 100,
-          )),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.search),
-              tooltip: 'Search company',
-              onPressed: () {
-                showSearch(context: context, delegate: CompanySearchDelegate());
-              },
-            ),
-            PopupMenuButton<SortingMethod>(
-              icon: const Icon(Icons.sort),
-              tooltip: 'Sort Companies',
-              onSelected: (SortingMethod sort) {
-                setState(() {
-                  _sortMethod = sort;
-                  this.companiesLoaded.clear();
-                  numRequests = 0;
-                  this.companies = companyService.getCompaniesLight(
-                      maxCompInRequest: MAX_COMP,
-                      sortMethod: sort,
-                      numRequestsBackend: numRequests);
-                  numRequests++;
-                });
-              },
-              itemBuilder: (BuildContext context) {
-                return SORT_STRING.keys.map((SortingMethod choice) {
-                  return PopupMenuItem<SortingMethod>(
-                    value: choice,
-                    child: Center(child: Text(SORT_STRING[choice]!)),
-                  );
-                }).toList();
-              },
-            ),
-          ]),
+      appBar: CustomAppBar(disableEventChange: true, actions: <Widget>[
+        IconButton(
+          icon: const Icon(Icons.search),
+          tooltip: 'Search company',
+          onPressed: () {
+            showSearch(context: context, delegate: CompanySearchDelegate());
+          },
+        ),
+        PopupMenuButton<SortingMethod>(
+          icon: const Icon(Icons.sort),
+          tooltip: 'Sort Companies',
+          onSelected: (SortingMethod sort) {
+            setState(() {
+              _sortMethod = sort;
+              this.companiesLoaded.clear();
+              numRequests = 0;
+              this.companies = companyService.getCompaniesLight(
+                  maxCompInRequest: MAX_COMP,
+                  sortMethod: sort,
+                  numRequestsBackend: numRequests);
+              numRequests++;
+            });
+          },
+          itemBuilder: (BuildContext context) {
+            return SORT_STRING.keys.map((SortingMethod choice) {
+              return PopupMenuItem<SortingMethod>(
+                value: choice,
+                child: Center(child: Text(SORT_STRING[choice]!)),
+              );
+            }).toList();
+          },
+        ),
+      ]),
       body: companyGrid(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
