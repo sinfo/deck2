@@ -87,6 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
     switch (index) {
       case 0:
         {
+          //TODO use get speaker service to test this screen
           return Center(child: SpeakerScreen());
         }
         break;
