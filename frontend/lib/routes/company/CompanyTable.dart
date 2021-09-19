@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/filterbar.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/event.dart';
@@ -117,7 +118,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
         event: App.localStorage.getInt('event'), member: this.member.id);
   }
 
-  Widget _buildBigTile(String _filter) {
+  Widget _buildBigTile(BuildContext context, String _filter) {
+    int event = Provider.of<EventNotifier>(context).event.id;
     return Column(
       children: [
         ListTile(
@@ -151,6 +153,12 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
               List<Company> compscpy = filterListByStatus(comps, _filter);
+              compscpy.sort((a, b) => STATUSORDER[a.participations!
+                      .firstWhere((element) => element.event == event)
+                      .status]!
+                  .compareTo(STATUSORDER[b.participations!
+                      .firstWhere((element) => element.event == event)
+                      .status]!));
               return Row(
                 children: [
                   Expanded(
@@ -185,7 +193,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     );
   }
 
-  Widget _buildSmallTile(String _filter) {
+  Widget _buildSmallTile(BuildContext context, String _filter) {
+    int event = Provider.of<EventNotifier>(context).event.id;
     return Column(
       children: [
         ListTile(
@@ -210,37 +219,39 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
             thickness: 1,
           ),
         ),
-        Row(
-          children: [
-            FutureBuilder(
-              future: _companies,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<Company> comps = snapshot.data as List<Company>;
-                  List<Company> compscpy = filterListByStatus(comps, _filter);
-                  return Container(
-                    height: compscpy.length == 0 ? 0 : 125,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: compscpy
-                          .map((e) => ListViewCard(small: true, company: e))
-                          .toList(),
-                    ),
-                  );
-                } else {
-                  return Container(
-                    child: Center(
-                      child: Container(
-                        height: 50,
-                        width: 50,
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                  );
-                }
-              },
-            )
-          ],
+        FutureBuilder(
+          future: _companies,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              List<Company> comps = snapshot.data as List<Company>;
+              List<Company> compscpy = filterListByStatus(comps, _filter);
+              compscpy.sort((a, b) => STATUSORDER[a.participations!
+                      .firstWhere((element) => element.event == event)
+                      .status]!
+                  .compareTo(STATUSORDER[b.participations!
+                      .firstWhere((element) => element.event == event)
+                      .status]!));
+              return Container(
+                height: compscpy.length == 0 ? 0 : 175,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: compscpy
+                      .map((e) => ListViewCard(small: true, company: e))
+                      .toList(),
+                ),
+              );
+            } else {
+              return Container(
+                child: Center(
+                  child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
+            }
+          },
         )
       ],
     );
@@ -252,7 +263,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
       for (Company c in comps) {
         CompanyParticipation p =
             c.participations!.firstWhere((element) => element.event == 29);
-        String s = p.status.toUpperCase();
+        String s = STATUSSTRING[p.status]!;
         if (s == _filter) compscpy.add(c);
       }
     } else {
@@ -273,9 +284,9 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           data: t.copyWith(dividerColor: Colors.transparent),
           child: LayoutBuilder(builder: (context, constraints) {
             if (constraints.maxWidth < App.SIZE) {
-              return _buildSmallTile(_filter);
+              return _buildSmallTile(context, _filter);
             } else {
-              return _buildBigTile(_filter);
+              return _buildBigTile(context, _filter);
             }
           }),
         ));

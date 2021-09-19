@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/EditableCard.dart';
+import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/speakerService.dart';
+import 'package:provider/provider.dart';
 
-
-final Map<ParticipationStatus,String> STATUSSTRING = {
+final Map<ParticipationStatus, String> STATUSSTRING = {
   ParticipationStatus.ACCEPTED: 'Accepted',
   ParticipationStatus.ANNOUNCED: 'Announced',
   ParticipationStatus.CONTACTED: 'Contacted',
@@ -15,9 +17,10 @@ final Map<ParticipationStatus,String> STATUSSTRING = {
   ParticipationStatus.REJECTED: 'Rejected',
   ParticipationStatus.SELECTED: 'Selected',
   ParticipationStatus.SUGGESTED: 'Suggested',
+  ParticipationStatus.NO_STATUS: '',
 };
 
-final Map<ParticipationStatus,Color> STATUSCOLOR = {
+final Map<ParticipationStatus, Color> STATUSCOLOR = {
   ParticipationStatus.ACCEPTED: Colors.lightGreen,
   ParticipationStatus.ANNOUNCED: Colors.green.shade700,
   ParticipationStatus.CONTACTED: Colors.yellow,
@@ -27,46 +30,53 @@ final Map<ParticipationStatus,Color> STATUSCOLOR = {
   ParticipationStatus.REJECTED: Colors.red,
   ParticipationStatus.SELECTED: Colors.deepPurple,
   ParticipationStatus.SUGGESTED: Colors.amber,
+  ParticipationStatus.NO_STATUS: Colors.indigo,
 };
-
-
 
 class SpeakerScreen extends StatelessWidget {
   final Speaker speaker;
-  const SpeakerScreen({ Key? key, required this.speaker }) : super(key: key);
+  const SpeakerScreen({Key? key, required this.speaker}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: Column(
-        children: [
-          SpeakerBanner(speaker: speaker,),
-          TabBar(
-            labelColor: Colors.indigo,
-            unselectedLabelColor: Colors.indigo[100],
-            tabs: [
-              Tab(text: 'Details'),
-              Tab(text: 'FlightInfo'),
-              Tab(text: 'Participations'),
-              Tab(text: 'Communications'),
-            ],
-          ),
-          Expanded(
-            child: TabBarView(children: [
-              DetailsScreen(speaker: speaker,),
-              Container(decoration: BoxDecoration(color: Colors.amber)),
-              Container(decoration: BoxDecoration(color: Colors.green)),
-              Container(decoration: BoxDecoration(color: Colors.teal)),
-            ]),
-          ),
-        ],
+    return Scaffold(
+      appBar: CustomAppBar(disableEventChange: true),
+      body: DefaultTabController(
+        length: 4,
+        child: Column(
+          children: [
+            SpeakerBanner(
+              speaker: speaker,
+            ),
+            TabBar(
+              labelColor: Colors.indigo,
+              unselectedLabelColor: Colors.indigo[100],
+              tabs: [
+                Tab(text: 'Details'),
+                Tab(text: 'FlightInfo'),
+                Tab(text: 'Participations'),
+                Tab(text: 'Communications'),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(children: [
+                DetailsScreen(
+                  speaker: speaker,
+                ),
+                Container(decoration: BoxDecoration(color: Colors.amber)),
+                Container(decoration: BoxDecoration(color: Colors.green)),
+                Container(decoration: BoxDecoration(color: Colors.teal)),
+              ]),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
 class SpeakerBanner extends StatefulWidget {
   final Speaker speaker;
-  const SpeakerBanner({ Key? key, required this.speaker }) : super(key: key);
+  const SpeakerBanner({Key? key, required this.speaker}) : super(key: key);
 
   @override
   _SpeakerBannerState createState() => _SpeakerBannerState();
@@ -83,7 +93,8 @@ class _SpeakerBannerState extends State<SpeakerBanner> {
     });
   }
 
-  void changeSpeakerStatus(ParticipationStatus? newStatus, BuildContext context){
+  void changeSpeakerStatus(
+      ParticipationStatus? newStatus, BuildContext context) {
     setState(() {
       previousStatus = speakerStatus;
       speakerStatus = newStatus!;
@@ -96,58 +107,93 @@ class _SpeakerBannerState extends State<SpeakerBanner> {
       ScaffoldMessenger.of(context).showSnackBar(snackBar);
     });
   }
+
   @override
   Widget build(BuildContext context) {
-    speakerStatus = widget.speaker.participations!.reversed.first.status!;
-    return AnimatedContainer(
-        duration: Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-        height: 200,
-        width: double.infinity,
-        decoration: BoxDecoration(gradient: LinearGradient(
-          colors: [STATUSCOLOR[speakerStatus]!.withAlpha(100  ), Colors.white],
-          transform: GradientRotation(0)
-        ),),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [ 
-              ClipOval(
-                child: Container(
-                  child: Image.network(
-                    widget.speaker.imgs!.speaker ??
-                      (widget.speaker.imgs!.internal ?? 
-                        (widget.speaker.imgs!.company ?? "") )
+    int event = Provider.of<EventNotifier>(context).event.id;
+    speakerStatus = widget.speaker.participations!
+        .firstWhere((element) => element.event == event)
+        .status!;
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/banner_background.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 25),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 8.0, 20.0, 8.0),
+              child: SizedBox(
+                height: 150,
+                width: 150,
+                child: Hero(
+                  tag: widget.speaker.id + event.toString(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          width: 4,
+                          color: STATUSCOLOR[speakerStatus]!,
+                        )),
+                    child: CircleAvatar(
+                      foregroundImage: NetworkImage(
+                        widget.speaker.imgs!.speaker ??
+                            (widget.speaker.imgs!.internal ??
+                                (widget.speaker.imgs!.company ?? "")),
+                      ),
+                      backgroundImage: AssetImage('assets/noImage.png'),
                     ),
-                ),
-              ),
-              SizedBox(width:20), //Padding
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.speaker.name!, style: Theme.of(context).textTheme.headline5, overflow: TextOverflow.ellipsis,),
-                      Text(widget.speaker.bio!, style: Theme.of(context).textTheme.subtitle1, softWrap: false, overflow: TextOverflow.ellipsis ),
-                      SpeakerStatusDropdownButton(speakerStatus: speakerStatus, statusChangeCallback: changeSpeakerStatus,),
-                      //TODO define subscribe behaviour
-                      ElevatedButton(onPressed: () => print('zona'), child: Text('+ Subscribe'))
-                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.speaker.name,
+                      style: Theme.of(context).textTheme.headline5,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(widget.speaker.title!,
+                        style: Theme.of(context).textTheme.subtitle1,
+                        softWrap: false,
+                        overflow: TextOverflow.ellipsis),
+                    SpeakerStatusDropdownButton(
+                      speakerStatus: speakerStatus,
+                      statusChangeCallback: changeSpeakerStatus,
+                    ),
+                    //TODO define subscribe behaviour
+                    ElevatedButton(
+                        onPressed: () => print('zona'),
+                        child: Text('+ Subscribe'))
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
     );
-  } 
+  }
 }
+
 class SpeakerStatusDropdownButton extends StatelessWidget {
   final void Function(ParticipationStatus?, BuildContext) statusChangeCallback;
   final ParticipationStatus speakerStatus;
-  const SpeakerStatusDropdownButton({ Key? key, required this.statusChangeCallback, required this.speakerStatus }) : super(key: key);
+  const SpeakerStatusDropdownButton(
+      {Key? key,
+      required this.statusChangeCallback,
+      required this.speakerStatus})
+      : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -162,22 +208,20 @@ class SpeakerStatusDropdownButton extends StatelessWidget {
           //TODO get next possible steps, instead of all values
           return ParticipationStatus.values.map((e) {
             return Align(
-              alignment: AlignmentDirectional.centerStart ,
-              child: Container(
-                child: Text(STATUSSTRING[e]!)
-              ),
+              alignment: AlignmentDirectional.centerStart,
+              child: Container(child: Text(STATUSSTRING[e]!)),
             );
           }).toList();
         },
         items: ParticipationStatus.values
             .map((e) => DropdownMenuItem<ParticipationStatus>(
-              value: e, 
-              child: Text(STATUSSTRING[e]!),
-            )).toList(),
+                  value: e,
+                  child: Text(STATUSSTRING[e]!),
+                ))
+            .toList(),
         onChanged: (status) {
           statusChangeCallback(status, context);
         },
-        
       ),
     );
   }
@@ -185,16 +229,18 @@ class SpeakerStatusDropdownButton extends StatelessWidget {
 
 class DetailsScreen extends StatelessWidget {
   final Speaker speaker;
-  const DetailsScreen({ Key? key, required this.speaker }) : super(key: key);
+  const DetailsScreen({Key? key, required this.speaker}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Column(
-        children: [
-          EditableCard(
-            title: 'Bio', 
-            body: speaker.bio ?? "", 
+        child: ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: EditableCard(
+            title: 'Bio',
+            body: speaker.bio ?? "",
             bodyEditedCallback: (newBio) {
               //speaker.bio = newBio;
               //TODO replace bio with service call to change bio
@@ -203,9 +249,8 @@ class DetailsScreen extends StatelessWidget {
             isSingleline: false,
             textInputType: TextInputType.multiline,
           ),
-        ],
-      )
-    );
+        ),
+      ],
+    ));
   }
 }
-

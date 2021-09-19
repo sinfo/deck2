@@ -1,26 +1,15 @@
+import 'dart:html';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/speaker.dart';
+import 'package:frontend/routes/SpeakerScreen.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
-import 'package:provider/provider.dart';
-
-final Map<ParticipationStatus, String> STATUSSTRING = {
-  ParticipationStatus.ACCEPTED: 'ACCEPTED',
-  ParticipationStatus.ANNOUNCED: 'ANNOUNCED',
-  ParticipationStatus.CONTACTED: 'CONTACTED',
-  ParticipationStatus.GIVEN_UP: 'GIVEN_UP',
-  ParticipationStatus.IN_CONVERSATIONS: 'IN_CONVERSATIONS',
-  ParticipationStatus.ON_HOLD: 'ON_HOLD',
-  ParticipationStatus.REJECTED: 'REJECTED',
-  ParticipationStatus.SELECTED: 'SELECTED',
-  ParticipationStatus.SUGGESTED: 'SUGGESTED',
-};
 
 class ListViewCard extends StatelessWidget {
   final Member? member;
@@ -32,10 +21,13 @@ class ListViewCard extends StatelessWidget {
   final bool? participationsInfo;
   late final String _status;
   late final Color _color;
+  late Color? _textColor = null;
   late final String _imageUrl;
   late final String _title;
   late final int? _numParticipations;
   late final int? _lastParticipation;
+  late final String _tag;
+  late Widget _screen;
 
   ListViewCard(
       {Key? key,
@@ -71,28 +63,21 @@ class ListViewCard extends StatelessWidget {
   }
 
   void _initCompany(int event) {
+    _tag = company!.id + event.toString();
     CompanyParticipation participation = company!.participations!
         .firstWhere((element) => element.event == event);
-    _status = participation.status.toUpperCase();
+    _status = STATUSSTRING[participation.status]!;
     _imageUrl = company!.companyImages.internal;
     _title = company!.name;
     defineStatusColor(_status);
   }
 
   void _initSpeaker(int event) {
-    _numParticipations = speaker!.participations!.length;
-    if (_numParticipations! > 0) {
-      _lastParticipation =
-          speaker!.participations![speaker!.participations!.length - 1].event;
-    }
-    if (_numParticipations! > 0 && _lastParticipation == event) {
-      ParticipationStatus status = speaker!.participations!
-          .firstWhere((element) => element.event == event)
-          .status!;
-      _status = STATUSSTRING[status]!;
-    } else {
-      _status = "";
-    }
+    _tag = speaker!.id + event.toString();
+    _screen = SpeakerScreen(speaker: speaker!);
+    Participation participation = speaker!.participations!
+        .firstWhere((element) => element.event == event);
+    _status = STATUSSTRING[participation.status]!;
     _imageUrl = speaker!.imgs!.speaker!;
     _title = speaker!.name;
     defineStatusColor(_status);
@@ -108,7 +93,8 @@ class ListViewCard extends StatelessWidget {
   }
 
   void defineStatusColor(String status) {
-    switch (status) {
+    print(status.toUpperCase());
+    switch (status.toUpperCase()) {
       case "SUGGESTED":
       case "SELECTED":
         _color = Colors.orange;
@@ -127,7 +113,10 @@ class ListViewCard extends StatelessWidget {
       case "REJECTED":
         _color = Colors.red;
         break;
-      case "GIVE UP":
+      case "GIVEN UP":
+        _color = Colors.black;
+        _textColor = Colors.white;
+        break;
       default:
         _color = Colors.indigo;
         break;
@@ -135,19 +124,19 @@ class ListViewCard extends StatelessWidget {
   }
 
   Widget _buildSmallCard(BuildContext context) {
-    return Container(
-      height: 225,
-      width: 200,
-      margin: EdgeInsets.all(5),
-      alignment: Alignment.topCenter,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: _color),
-      ),
-      child: Stack(
-        children: [
-          InkWell(
+    return Stack(
+      children: [
+        Container(
+          height: 175,
+          width: 125,
+          margin: EdgeInsets.all(5),
+          alignment: Alignment.topCenter,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(color: _color),
+          ),
+          child: InkWell(
               child: Column(
                 children: [
                   Expanded(
@@ -155,38 +144,41 @@ class ListViewCard extends StatelessWidget {
                       borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(5),
                           topRight: Radius.circular(5)),
-                      child: Image.network(
-                        _imageUrl,
-                        fit: BoxFit.contain,
-                        loadingBuilder: (context, child, progress) {
-                          return progress == null
-                              ? child
-                              : Center(child: CircularProgressIndicator());
-                        },
-                        errorBuilder: (BuildContext context, Object exception,
-                            StackTrace? stackTrace) {
-                          return Image.asset(
-                            'assets/noImage.png',
-                            fit: BoxFit.fill,
-                          );
-                        },
+                      child: Hero(
+                        tag: _tag,
+                        child: Image.network(
+                          _imageUrl,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, progress) {
+                            return progress == null
+                                ? child
+                                : Center(child: CircularProgressIndicator());
+                          },
+                          errorBuilder: (BuildContext context, Object exception,
+                              StackTrace? stackTrace) {
+                            return Image.asset(
+                              'assets/noImage.png',
+                              fit: BoxFit.fill,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
                   SizedBox(
-                      height: participationsInfo != null ? 72 : 30,
+                      height: participationsInfo != null ? 72 : 50,
                       child: getParticipationInfo(14)),
                 ],
               ),
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return UnknownScreen();
+                  return _screen;
                 } // CompanyScreen(company: this.company)),
                     ));
               }),
-          ...getStatus(10)
-        ],
-      ),
+        ),
+        ...getStatus(10)
+      ],
     );
   }
 
@@ -235,14 +227,14 @@ class ListViewCard extends StatelessWidget {
       return [
         Container(
           padding: EdgeInsets.all(6),
-          margin: EdgeInsets.fromLTRB(4, 8, 0, 0),
+          margin: EdgeInsets.fromLTRB(15, 15, 0, 0),
           decoration: BoxDecoration(
             color: _color,
             borderRadius: BorderRadius.all(Radius.circular(5)),
           ),
           child: Text(
             _status,
-            style: TextStyle(fontSize: fontsize),
+            style: TextStyle(fontSize: fontsize, color: _textColor),
           ),
         ),
       ];
@@ -252,52 +244,57 @@ class ListViewCard extends StatelessWidget {
   }
 
   Widget _buildBigCard(BuildContext context) {
-    return Container(
-      height: 225,
-      width: 200,
-      margin: EdgeInsets.all(10),
-      alignment: Alignment.topCenter,
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: _color, width: 2),
-      ),
-      child: Stack(children: [
-        InkWell(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Image.network(
-                    _imageUrl,
-                    fit: BoxFit.contain,
-                    loadingBuilder: (context, child, progress) {
-                      return progress == null
-                          ? child
-                          : Center(child: CircularProgressIndicator());
-                    },
-                    errorBuilder: (BuildContext context, Object exception,
-                        StackTrace? stackTrace) {
-                      return Image.asset(
-                        'assets/noImage.png',
-                        fit: BoxFit.fill,
-                      );
-                    },
+    return Stack(
+      children: [
+        Container(
+          height: 225,
+          width: 200,
+          margin: EdgeInsets.all(10),
+          alignment: Alignment.topCenter,
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(5),
+            border: Border.all(color: _color, width: 2),
+          ),
+          child: InkWell(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Hero(
+                      tag: _tag,
+                      child: Image.network(
+                        _imageUrl,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, progress) {
+                          return progress == null
+                              ? child
+                              : Center(child: CircularProgressIndicator());
+                        },
+                        errorBuilder: (BuildContext context, Object exception,
+                            StackTrace? stackTrace) {
+                          return Image.asset(
+                            'assets/noImage.png',
+                            fit: BoxFit.fill,
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
-                SizedBox(
-                    height: participationsInfo != null ? 70 : 35,
-                    child: getParticipationInfo(14)),
-              ],
-            ),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return UnknownScreen();
-              } // CompanyScreen(company: this.company)),
-                  ));
-            }),
+                  SizedBox(
+                      height: participationsInfo != null ? 70 : 40,
+                      child: getParticipationInfo(14)),
+                ],
+              ),
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return _screen;
+                } // CompanyScreen(company: this.company)),
+                    ));
+              }),
+        ),
         ...getStatus(14)
-      ]),
+      ],
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/contactService.dart';
 import 'package:frontend/services/memberService.dart';
@@ -185,7 +186,7 @@ class CompanyParticipation {
   final String memberId;
   Member? _member;
 
-  final String status;
+  final ParticipationStatus status;
 
   final List<String>? communicationsId;
   List<Thread>? _communications;
@@ -212,7 +213,7 @@ class CompanyParticipation {
     return CompanyParticipation(
       event: json['event'],
       memberId: json['member'],
-      status: json['status'],
+      status: Participation.convert(json['status']),
       communicationsId: List.from(json['communications']),
       packageId: json['package'],
       confirmed: DateTime.parse(json['confirmed']),

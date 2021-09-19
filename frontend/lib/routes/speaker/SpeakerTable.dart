@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
@@ -106,14 +107,15 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
   @override
   void initState() {
     super.initState();
-    _speakers =
-        _speakerService.getSpeakers(eventId: 29, member: this.member.id);
+    _speakers = _speakerService.getSpeakers(
+        eventId: App.localStorage.getInt('event'), member: this.member.id);
   }
 
   @override
   bool get wantKeepAlive => true;
 
-  Widget _buildBigTile(String _filter) {
+  Widget _buildBigTile(BuildContext context, String _filter) {
+    int event = Provider.of<EventNotifier>(context).event.id;
     return Column(
       children: [
         ListTile(
@@ -147,6 +149,12 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
             if (snapshot.hasData) {
               List<Speaker> spks = snapshot.data as List<Speaker>;
               List<Speaker> spkscpy = filterListByStatus(spks, _filter);
+              spkscpy.sort((a, b) => STATUSORDER[a.participations!
+                      .firstWhere((element) => element.event == event)
+                      .status]!
+                  .compareTo(STATUSORDER[b.participations!
+                      .firstWhere((element) => element.event == event)
+                      .status]!));
               return Row(
                 children: [
                   Expanded(
@@ -181,7 +189,8 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
     );
   }
 
-  Widget _buildSmallTile(String _filter) {
+  Widget _buildSmallTile(BuildContext context, String _filter) {
+    int event = Provider.of<EventNotifier>(context).event.id;
     return Column(
       children: [
         ListTile(
@@ -206,37 +215,39 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
             thickness: 1,
           ),
         ),
-        Row(
-          children: [
-            FutureBuilder(
-              future: _speakers,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<Speaker> spks = snapshot.data as List<Speaker>;
-                  List<Speaker> spkscpy = filterListByStatus(spks, _filter);
-                  return Container(
-                    height: spkscpy.length == 0 ? 0 : 125,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: spkscpy
-                          .map((e) => ListViewCard(small: true, speaker: e))
-                          .toList(),
-                    ),
-                  );
-                } else {
-                  return Container(
-                    child: Center(
-                      child: Container(
-                        height: 50,
-                        width: 50,
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                  );
-                }
-              },
-            )
-          ],
+        FutureBuilder(
+          future: _speakers,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              List<Speaker> spks = snapshot.data as List<Speaker>;
+              List<Speaker> spkscpy = filterListByStatus(spks, _filter);
+              spkscpy.sort((a, b) => STATUSORDER[a.participations!
+                      .firstWhere((element) => element.event == event)
+                      .status]!
+                  .compareTo(STATUSORDER[b.participations!
+                      .firstWhere((element) => element.event == event)
+                      .status]!));
+              return Container(
+                height: spkscpy.length == 0 ? 0 : 175,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: spkscpy
+                      .map((e) => ListViewCard(small: true, speaker: e))
+                      .toList(),
+                ),
+              );
+            } else {
+              return Container(
+                child: Center(
+                  child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
+            }
+          },
         )
       ],
     );
@@ -269,9 +280,9 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: LayoutBuilder(builder: (context, constraints) {
             if (constraints.maxWidth < App.SIZE) {
-              return _buildSmallTile(_filter);
+              return _buildSmallTile(context, _filter);
             } else {
-              return _buildBigTile(_filter);
+              return _buildBigTile(context, _filter);
             }
           })),
     );
