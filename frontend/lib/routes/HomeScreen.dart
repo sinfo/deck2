@@ -7,6 +7,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
+import 'package:frontend/routes/SpeakerScreen.dart';
 import 'package:frontend/routes/MemberListWidget.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
