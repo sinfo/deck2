@@ -2,36 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/EditableCard.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
-
-final Map<ParticipationStatus, String> STATUSSTRING = {
-  ParticipationStatus.ACCEPTED: 'Accepted',
-  ParticipationStatus.ANNOUNCED: 'Announced',
-  ParticipationStatus.CONTACTED: 'Contacted',
-  ParticipationStatus.GIVEN_UP: 'Given Up',
-  ParticipationStatus.IN_CONVERSATIONS: 'In Convers.',
-  ParticipationStatus.ON_HOLD: 'On Hold',
-  ParticipationStatus.REJECTED: 'Rejected',
-  ParticipationStatus.SELECTED: 'Selected',
-  ParticipationStatus.SUGGESTED: 'Suggested',
-  ParticipationStatus.NO_STATUS: '',
-};
-
-final Map<ParticipationStatus, Color> STATUSCOLOR = {
-  ParticipationStatus.ACCEPTED: Colors.lightGreen,
-  ParticipationStatus.ANNOUNCED: Colors.green.shade700,
-  ParticipationStatus.CONTACTED: Colors.yellow,
-  ParticipationStatus.GIVEN_UP: Colors.black,
-  ParticipationStatus.IN_CONVERSATIONS: Colors.lightBlue,
-  ParticipationStatus.ON_HOLD: Colors.blueGrey,
-  ParticipationStatus.REJECTED: Colors.red,
-  ParticipationStatus.SELECTED: Colors.deepPurple,
-  ParticipationStatus.SUGGESTED: Colors.amber,
-  ParticipationStatus.NO_STATUS: Colors.indigo,
-};
 
 class SpeakerScreen extends StatelessWidget {
   final Speaker speaker;
@@ -112,8 +87,9 @@ class _SpeakerBannerState extends State<SpeakerBanner> {
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
     speakerStatus = widget.speaker.participations!
-        .firstWhere((element) => element.event == event)
-        .status!;
+            .firstWhere((element) => element.event == event)
+            .status ??
+        ParticipationStatus.NO_STATUS;
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(

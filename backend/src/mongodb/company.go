@@ -128,7 +128,14 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 	}
 
 	if compOptions.MemberID != nil {
-		filter["participations.member"] = compOptions.MemberID
+		if compOptions.EventID == nil{
+			filter["participations.member"] = compOptions.MemberID
+		}else{
+			filter["$elemMatch"] = bson.M{
+				"member" : compOptions.MemberID,
+				"event" : compOptions.EventID,
+			}
+		}
 	}
 
 	if compOptions.Name != nil {

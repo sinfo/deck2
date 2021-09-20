@@ -42,7 +42,7 @@ class CompanyLight {
   final CompanyImages companyImages;
   final int? numParticipations;
   final int? lastParticipation;
-  final String? participationStatus;
+  final ParticipationStatus participationStatus;
 
   CompanyLight(
       {required this.id,
@@ -50,7 +50,7 @@ class CompanyLight {
       required this.companyImages,
       this.numParticipations,
       this.lastParticipation,
-      this.participationStatus});
+      required this.participationStatus});
 
   factory CompanyLight.fromJson(Map<String, dynamic> json) {
     var participations = json['participations'] as List;
@@ -65,8 +65,9 @@ class CompanyLight {
         participationStatus: participations.length > 0 &&
                 participations[participations.length - 1]['event'] ==
                     App.localStorage.getInt("event")
-            ? participations[participations.length - 1]['status']
-            : "");
+            ? Participation.convert(
+                participations[participations.length - 1]['status'])
+            : ParticipationStatus.NO_STATUS);
   }
 }
 

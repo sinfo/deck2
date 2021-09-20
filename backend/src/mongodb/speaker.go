@@ -172,7 +172,14 @@ func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.S
 	}
 
 	if speakOptions.MemberID != nil {
-		filter["participations.member"] = speakOptions.MemberID
+		if speakOptions.EventID == nil{
+			filter["participations.member"] = speakOptions.MemberID
+		}else{
+			filter["$elemMatch"] = bson.M{
+				"member": speakOptions.MemberID,
+				"event": speakOptions.EventID,
+			}
+		}
 	}
 
 	if speakOptions.Name != nil {

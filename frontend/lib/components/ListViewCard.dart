@@ -3,6 +3,7 @@ import 'dart:html';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
@@ -19,7 +20,7 @@ class ListViewCard extends StatelessWidget {
   final SpeakerLight? speakerLight;
   final bool small;
   final bool? participationsInfo;
-  late final String _status;
+  late final ParticipationStatus _status;
   late final Color _color;
   late Color? _textColor = null;
   late final String _imageUrl;
@@ -56,20 +57,20 @@ class ListViewCard extends StatelessWidget {
   void _initCompanyLight() {
     _numParticipations = companyLight!.numParticipations;
     _lastParticipation = companyLight!.lastParticipation;
-    _status = companyLight!.participationStatus!.toUpperCase();
+    _status = companyLight!.participationStatus;
     _imageUrl = companyLight!.companyImages.internal;
     _title = companyLight!.name;
-    defineStatusColor(_status);
+    _color = STATUSCOLOR[_status]!;
   }
 
   void _initCompany(int event) {
     _tag = company!.id + event.toString();
     CompanyParticipation participation = company!.participations!
         .firstWhere((element) => element.event == event);
-    _status = STATUSSTRING[participation.status]!;
+    _status = participation.status;
     _imageUrl = company!.companyImages.internal;
     _title = company!.name;
-    defineStatusColor(_status);
+    _color = STATUSCOLOR[_status]!;
   }
 
   void _initSpeaker(int event) {
@@ -77,50 +78,19 @@ class ListViewCard extends StatelessWidget {
     _screen = SpeakerScreen(speaker: speaker!);
     Participation participation = speaker!.participations!
         .firstWhere((element) => element.event == event);
-    _status = STATUSSTRING[participation.status]!;
+    _status = participation.status!;
     _imageUrl = speaker!.imgs!.speaker!;
     _title = speaker!.name;
-    defineStatusColor(_status);
+    _color = STATUSCOLOR[_status]!;
   }
 
   void _initSpeakerLight() {
     _numParticipations = speakerLight!.numParticipations;
     _lastParticipation = speakerLight!.lastParticipation;
-    _status = speakerLight!.participationStatus!.toUpperCase();
+    _status = speakerLight!.participationStatus;
     _imageUrl = speakerLight!.speakerImages.internal!;
     _title = speakerLight!.name;
-    defineStatusColor(_status);
-  }
-
-  void defineStatusColor(String status) {
-    print(status.toUpperCase());
-    switch (status.toUpperCase()) {
-      case "SUGGESTED":
-      case "SELECTED":
-        _color = Colors.orange;
-        break;
-      case "ON HOLD":
-      case "CONTACTED":
-        _color = Colors.yellow;
-        break;
-      case "IN CONVERSATIONS":
-        _color = Colors.blue;
-        break;
-      case "ACCEPTED":
-      case "ANNOUNCED":
-        _color = Colors.green;
-        break;
-      case "REJECTED":
-        _color = Colors.red;
-        break;
-      case "GIVEN UP":
-        _color = Colors.black;
-        _textColor = Colors.white;
-        break;
-      default:
-        _color = Colors.indigo;
-        break;
-    }
+    _color = STATUSCOLOR[_status]!;
   }
 
   Widget _buildSmallCard(BuildContext context) {
@@ -223,7 +193,7 @@ class ListViewCard extends StatelessWidget {
   }
 
   List<Widget> getStatus(double fontsize) {
-    if (_status != "") {
+    if (STATUSSTRING[_status] != null) {
       return [
         Container(
           padding: EdgeInsets.all(6),
@@ -233,7 +203,7 @@ class ListViewCard extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(5)),
           ),
           child: Text(
-            _status,
+            STATUSSTRING[_status]!,
             style: TextStyle(fontSize: fontsize, color: _textColor),
           ),
         ),

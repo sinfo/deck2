@@ -109,7 +109,7 @@ class SpeakerLight {
   final Images speakerImages;
   final int? numParticipations;
   final int? lastParticipation;
-  final String? participationStatus;
+  final ParticipationStatus participationStatus;
 
   SpeakerLight(
       {required this.id,
@@ -117,7 +117,7 @@ class SpeakerLight {
       required this.speakerImages,
       this.numParticipations,
       this.lastParticipation,
-      this.participationStatus});
+      required this.participationStatus});
 
   factory SpeakerLight.fromJson(Map<String, dynamic> json) {
     var participations = json['participations'] as List;
@@ -132,7 +132,8 @@ class SpeakerLight {
         participationStatus: participations.length > 0 &&
                 participations[participations.length - 1]['event'] ==
                     App.localStorage.getInt("event")
-            ? participations[participations.length - 1]['status']
-            : "");
+            ? Participation.convert(
+                participations[participations.length - 1]['status'])
+            : ParticipationStatus.NO_STATUS);
   }
 }
