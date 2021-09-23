@@ -21,6 +21,7 @@ jobs:
       name: Build and Push the Docker Image
       id: docker_build
       with:
+        context: ./backend
         push: true
         tags: orgsinfo/deck2:latest
         file: ./backend/Dockerfile
