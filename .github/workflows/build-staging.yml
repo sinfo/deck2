@@ -23,6 +23,7 @@ jobs:
       with:
         push: true
         tags: orgsinfo/deck2:latest
+        file: ./backend/Dockerfile
     
     - name: Docker Image Digest
       run: echo ${{ steps.docker_build.outputs.digest }}
