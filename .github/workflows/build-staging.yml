@@ -39,7 +39,7 @@ jobs:
       uses: nickgronow/kubectl@master
       with:
         config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: set image deployment/deck2-staging deck2-staging=orgsinfo/deck2:latest --namespace=staging
+        args: set image deployment/deck2-staging deck2-staging-app=orgsinfo/deck2:latest --namespace=staging
         
     - name: Verify deployment
       uses: nickgronow/kubectl@master
