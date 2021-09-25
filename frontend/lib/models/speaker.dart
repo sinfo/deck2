@@ -27,7 +27,7 @@ class Speaker {
   final String? bio;
   final String? notes;
   final Images? imgs;
-  final List<Participation>? participations;
+  final List<SpeakerParticipation>? participations;
   final int? numParticipations;
   final int? lastParticipation;
   final ParticipationStatus? participationStatus;
@@ -55,8 +55,9 @@ class Speaker {
       bio: json['bio'],
       notes: json['notes'],
       imgs: Images.fromJson(json['imgs']),
-      participations:
-          participationsList.map((p) => Participation.fromJson(p)).toList(),
+      participations: participationsList
+          .map((p) => SpeakerParticipation.fromJson(p))
+          .toList(),
       numParticipations: participationsList.length,
       lastParticipation: participationsList.length > 0
           ? participationsList[participationsList.length - 1]['event']

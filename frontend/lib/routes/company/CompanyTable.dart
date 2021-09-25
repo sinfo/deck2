@@ -13,6 +13,7 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:provider/provider.dart';
@@ -152,7 +153,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
-              List<Company> compscpy = filterListByStatus(comps, _filter);
+              List<Company> compscpy =
+                  filterListByStatus(comps, _filter, event);
               compscpy.sort((a, b) => STATUSORDER[a.participations!
                       .firstWhere((element) => element.event == event)
                       .status]!
@@ -224,7 +226,8 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
           builder: (context, snapshot) {
             if (snapshot.hasData) {
               List<Company> comps = snapshot.data as List<Company>;
-              List<Company> compscpy = filterListByStatus(comps, _filter);
+              List<Company> compscpy =
+                  filterListByStatus(comps, _filter, event);
               compscpy.sort((a, b) => STATUSORDER[a.participations!
                       .firstWhere((element) => element.event == event)
                       .status]!
@@ -257,12 +260,12 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
     );
   }
 
-  List<Company> filterListByStatus(List comps, String _filter) {
+  List<Company> filterListByStatus(List comps, String _filter, int event) {
     List<Company> compscpy = [];
     if (_filter != "ALL") {
       for (Company c in comps) {
         CompanyParticipation p =
-            c.participations!.firstWhere((element) => element.event == 29);
+            c.participations!.firstWhere((element) => element.event == event);
         String s = STATUSSTRING[p.status]!;
         if (s == _filter) compscpy.add(c);
       }

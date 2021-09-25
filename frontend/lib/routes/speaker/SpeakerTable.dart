@@ -15,6 +15,7 @@ import 'package:frontend/services/speakerService.dart';
 import 'package:frontend/components/filterbar.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 class SpeakerTable extends StatefulWidget {
   SpeakerTable({Key? key}) : super(key: key);
@@ -173,15 +174,35 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
                 ],
               );
             } else {
-              return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[400]!,
+                highlightColor: Colors.white,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        child: Wrap(
+                            alignment: WrapAlignment.start,
+                            crossAxisAlignment: WrapCrossAlignment.start,
+                            children: [
+                              for (int i = 0; i < 8; i++)
+                                ListViewCard.fakeCard()
+                            ]),
+                      ),
+                    ),
+                  ],
                 ),
               );
+
+              // return ListView.builder(
+              //   itemCount: 10,
+              //   // Important code
+              //   itemBuilder: (context, index) => Shimmer.fromColors(
+              //       baseColor: Colors.grey[400]!,
+              //       highlightColor: Colors.white,
+              //       child: ListViewCard.fakeCard()),
+              // );
             }
           },
         )

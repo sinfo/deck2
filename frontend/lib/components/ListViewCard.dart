@@ -75,11 +75,12 @@ class ListViewCard extends StatelessWidget {
   void _initSpeaker(int event) {
     _tag = speaker!.id + event.toString();
     _screen = SpeakerScreen(speaker: speaker!);
-    Participation? participation = speaker!.participations!.firstWhereOrNull(
+    SpeakerParticipation? participation =
+        speaker!.participations!.firstWhereOrNull(
       (element) => element.event == event,
     );
     _status = participation != null
-        ? participation.status!
+        ? participation.status
         : ParticipationStatus.NO_STATUS;
     _imageUrl = speaker!.imgs!.speaker!;
     _title = speaker!.name;
@@ -214,7 +215,11 @@ class ListViewCard extends StatelessWidget {
           ),
           child: Text(
             STATUSSTRING[_status]!,
-            style: TextStyle(fontSize: fontsize, color: _textColor),
+            style: TextStyle(
+                fontSize: fontsize,
+                color: _status == ParticipationStatus.GIVEN_UP
+                    ? Colors.white
+                    : Colors.black),
           ),
         ),
       ];
@@ -278,6 +283,42 @@ class ListViewCard extends StatelessWidget {
         ),
         ...getStatus(14)
       ],
+    );
+  }
+
+  static Widget fakeCard() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < App.SIZE) {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: SizedBox(
+                height: 175,
+                width: 125,
+              ),
+            ),
+          );
+        } else {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: SizedBox(
+                height: 225,
+                width: 200,
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 

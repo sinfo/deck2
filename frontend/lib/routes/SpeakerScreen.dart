@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:frontend/components/EditableCard.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
@@ -13,47 +14,138 @@ import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
 
-class SpeakerScreen extends StatelessWidget {
+class SpeakerScreen extends StatefulWidget {
   final Speaker speaker;
   const SpeakerScreen({Key? key, required this.speaker}) : super(key: key);
 
   @override
+  _SpeakerScreenState createState() => _SpeakerScreenState();
+}
+
+class _SpeakerScreenState extends State<SpeakerScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_handleTabIndex);
+  }
+
+  @override
+  void dispose() {
+    _tabController.removeListener(_handleTabIndex);
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _handleTabIndex() {
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(disableEventChange: true),
-      body: DefaultTabController(
-        length: 4,
-        child: Column(
-          children: [
-            SpeakerBanner(
-              speaker: speaker,
-            ),
-            TabBar(
-              labelColor: Colors.indigo,
-              unselectedLabelColor: Colors.indigo[100],
-              tabs: [
-                Tab(text: 'Details'),
-                Tab(text: 'FlightInfo'),
-                Tab(text: 'Participations'),
-                Tab(text: 'Communications'),
-              ],
-            ),
-            Expanded(
-              child: TabBarView(children: [
-                DetailsScreen(
-                  speaker: speaker,
-                ),
-                Container(
-                  child: Center(child: Text('Work in progress :)')),
-                ),
-                Container(decoration: BoxDecoration(color: Colors.green)),
-                Container(decoration: BoxDecoration(color: Colors.teal)),
-              ]),
-            ),
-          ],
+    return LayoutBuilder(builder: (context, constraints) {
+      bool small = constraints.maxWidth < App.SIZE;
+      return Scaffold(
+        appBar: CustomAppBar(disableEventChange: true),
+        body: DefaultTabController(
+          length: 4,
+          child: Column(
+            children: [
+              SpeakerBanner(
+                speaker: widget.speaker,
+              ),
+              TabBar(
+                controller: _tabController,
+                labelColor: Colors.indigo,
+                unselectedLabelColor: Colors.indigo[100],
+                tabs: [
+                  Tab(text: 'Details'),
+                  Tab(text: 'FlightInfo'),
+                  Tab(text: 'Participations'),
+                  Tab(text: 'Communications'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(controller: _tabController, children: [
+                  DetailsScreen(
+                    speaker: widget.speaker,
+                  ),
+                  Container(
+                    child: Center(child: Text('Work in progress :)')),
+                  ),
+                  ParticipationScreen(
+                    speaker: widget.speaker,
+                    small: small,
+                  ),
+                  Container(decoration: BoxDecoration(color: Colors.teal)),
+                ]),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+        floatingActionButton: _buildFab(context),
+      );
+    });
+  }
+
+  Widget? _buildFab(BuildContext context) {
+    switch (_tabController.index) {
+      case 2:
+        print(
+            '${widget.speaker.lastParticipation} == ${Provider.of<EventNotifier>(context).latest.id}');
+        if (widget.speaker.lastParticipation ==
+            Provider.of<EventNotifier>(context).latest.id) {
+          return null;
+        }
+        return FloatingActionButton.extended(
+          onPressed: () {},
+          label: Text('Add Participation'),
+          icon: Icon(Icons.add),
+        );
+      case 0:
+      case 1:
+      case 3:
+      default:
+        return null;
+    }
+  }
+}
+
+class ParticipationScreen extends StatelessWidget {
+  final Speaker speaker;
+  final bool small;
+  const ParticipationScreen({
+    Key? key,
+    required this.speaker,
+    required this.small,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (speaker.participations != null) {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          child: ListView(
+            children: speaker.participations!.reversed
+                .map((e) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ParticipationCard(
+                        participation: e,
+                        small: small,
+                        type: CardType.SPEAKER,
+                      ),
+                    ))
+                .toList(),
+          ),
+        ),
+      );
+    } else {
+      return Container();
+    }
   }
 }
 
