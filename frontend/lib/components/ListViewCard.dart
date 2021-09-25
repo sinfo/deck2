@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -11,6 +9,7 @@ import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/SpeakerScreen.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
+import 'package:collection/collection.dart';
 
 class ListViewCard extends StatelessWidget {
   final Member? member;
@@ -76,15 +75,22 @@ class ListViewCard extends StatelessWidget {
   void _initSpeaker(int event) {
     _tag = speaker!.id + event.toString();
     _screen = SpeakerScreen(speaker: speaker!);
-    Participation participation = speaker!.participations!
-        .firstWhere((element) => element.event == event);
-    _status = participation.status!;
+    Participation? participation = speaker!.participations!.firstWhereOrNull(
+      (element) => element.event == event,
+    );
+    _status = participation != null
+        ? participation.status!
+        : ParticipationStatus.NO_STATUS;
     _imageUrl = speaker!.imgs!.speaker!;
     _title = speaker!.name;
     _color = STATUSCOLOR[_status]!;
+
+    _numParticipations = speaker!.numParticipations;
+    _lastParticipation = speaker!.lastParticipation;
   }
 
   void _initSpeakerLight() {
+    _tag = speakerLight!.id;
     _numParticipations = speakerLight!.numParticipations;
     _lastParticipation = speakerLight!.lastParticipation;
     _status = speakerLight!.participationStatus;
@@ -141,9 +147,12 @@ class ListViewCard extends StatelessWidget {
                 ],
               ),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return _screen;
-                } // CompanyScreen(company: this.company)),
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 600),
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          _screen,
                     ));
               }),
         ),
@@ -193,7 +202,8 @@ class ListViewCard extends StatelessWidget {
   }
 
   List<Widget> getStatus(double fontsize) {
-    if (STATUSSTRING[_status] != null) {
+    if (STATUSSTRING[_status] != null &&
+        STATUSSTRING[_status] != STATUSSTRING[ParticipationStatus.NO_STATUS]) {
       return [
         Container(
           padding: EdgeInsets.all(6),
@@ -257,9 +267,12 @@ class ListViewCard extends StatelessWidget {
                 ],
               ),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return _screen;
-                } // CompanyScreen(company: this.company)),
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 600),
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          _screen,
                     ));
               }),
         ),

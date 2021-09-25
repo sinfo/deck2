@@ -19,7 +19,7 @@ final Map<SortingMethod, String> SORT_STRING = {
   SortingMethod.LAST_PARTICIPATION: 'Sort By Last Participation',
 };
 
-final int MAX_SPEAKERS = 30;
+final int MAX_SPEAKERS = 40;
 
 class SpeakerListWidget extends StatefulWidget {
   const SpeakerListWidget({Key? key}) : super(key: key);
@@ -30,8 +30,8 @@ class SpeakerListWidget extends StatefulWidget {
 
 class _SpeakerListWidgetState extends State<SpeakerListWidget> {
   SpeakerService speakerService = new SpeakerService();
-  late Future<List<SpeakerLight>> speakers;
-  List<SpeakerLight> speakersLoaded = [];
+  late Future<List<Speaker>> speakers;
+  List<Speaker> speakersLoaded = [];
   SortingMethod _sortMethod = SortingMethod.RANDOM;
   int numRequests = 0;
   ScrollController _controller = ScrollController();
@@ -40,7 +40,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
   void initState() {
     super.initState();
     _controller.addListener(_scrollListener);
-    this.speakers = speakerService.getSpeakersLight(
+    this.speakers = speakerService.getSpeakers(
         maxSpeaksInRequest: MAX_SPEAKERS, numRequestsBackend: numRequests);
     numRequests++;
   }
@@ -62,7 +62,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
 
   void _loadMoreSpeakers() {
     storeSpeakersLoaded();
-    this.speakers = speakerService.getSpeakersLight(
+    this.speakers = speakerService.getSpeakers(
         maxSpeaksInRequest: MAX_SPEAKERS,
         numRequestsBackend: numRequests,
         sortMethod: _sortMethod);
@@ -74,16 +74,16 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
   }
 
   Widget speakerGrid() {
-    return FutureBuilder<List<SpeakerLight>>(
+    return FutureBuilder<List<Speaker>>(
         future: speakers,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            List<SpeakerLight> speak = speakersLoaded + snapshot.data!;
+            List<Speaker> speak = speakersLoaded + snapshot.data!;
             return LayoutBuilder(builder: (context, constraints) {
-              double cardWidth = 250;
+              double cardWidth = 200;
               bool isSmall = false;
               if (constraints.maxWidth < App.SIZE) {
-                cardWidth = 200;
+                cardWidth = 125;
                 isSmall = true;
               }
               return GridView.builder(
@@ -99,7 +99,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
                   itemBuilder: (BuildContext context, int index) {
                     return ListViewCard(
                         small: isSmall,
-                        speakerLight: speak[index],
+                        speaker: speak[index],
                         participationsInfo: true);
                   });
             });
@@ -128,7 +128,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
               _sortMethod = sort;
               this.speakersLoaded.clear();
               numRequests = 0;
-              this.speakers = speakerService.getSpeakersLight(
+              this.speakers = speakerService.getSpeakers(
                   maxSpeaksInRequest: MAX_SPEAKERS,
                   sortMethod: sort,
                   numRequestsBackend: numRequests);

@@ -128,7 +128,9 @@ class AuthService {
   }
 
   static Future<bool> login() async {
-    await _googleSignIn.disconnect();
+    if (await _googleSignIn.isSignedIn()) {
+      await _googleSignIn.disconnect();
+    }
     GoogleSignInAccount? acc = await _googleSignIn.signIn();
     if (acc != null) {
       GoogleSignInAuthentication auth = await acc.authentication;

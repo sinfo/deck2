@@ -116,26 +116,24 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 	ctx := context.Background()
 
 	filter := bson.M{}
+	elemMatch := bson.M{}
 
 	findOptions := options.Find()
 
 	if compOptions.EventID != nil {
-		filter["participations.event"] = compOptions.EventID
+		elemMatch["event"] = compOptions.EventID
 	}
 
 	if compOptions.IsPartner != nil {
-		filter["participations.partner"] = compOptions.IsPartner
+		elemMatch["partner"] = compOptions.IsPartner
 	}
 
 	if compOptions.MemberID != nil {
-		if compOptions.EventID == nil{
-			filter["participations.member"] = compOptions.MemberID
-		}else{
-			filter["$elemMatch"] = bson.M{
-				"member" : compOptions.MemberID,
-				"event" : compOptions.EventID,
-			}
-		}
+		elemMatch["member"] = compOptions.MemberID
+	}
+
+	filter["participations"] = bson.M{
+		"$elemMatch": elemMatch,
 	}
 
 	if compOptions.Name != nil {

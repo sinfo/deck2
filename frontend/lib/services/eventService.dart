@@ -12,7 +12,7 @@ class EventService extends Service {
 
   Future<Event> getLatestEvent() async {
     try {
-      Response<String> res = await dio.get(basePath + "/latest");
+      Response<String> res = await dio.get("/public/events/latest");
 
       return Event.fromJson(json.decode(res.data!));
     } on SocketException {

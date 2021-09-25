@@ -40,3 +40,16 @@ final Map<ParticipationStatus, int> STATUSORDER = {
   ParticipationStatus.GIVEN_UP: 8,
   ParticipationStatus.NO_STATUS: 9,
 };
+
+final Map<ParticipationStatus, int> STATUSSTEP = {
+  ParticipationStatus.ANNOUNCED: 0,
+  ParticipationStatus.ACCEPTED: 1,
+  ParticipationStatus.IN_CONVERSATIONS: 2,
+  ParticipationStatus.ON_HOLD: 3,
+  ParticipationStatus.CONTACTED: 4,
+  ParticipationStatus.SELECTED: 5,
+  ParticipationStatus.SUGGESTED: 6,
+  ParticipationStatus.REJECTED: 7,
+  ParticipationStatus.GIVEN_UP: 8,
+  ParticipationStatus.NO_STATUS: 9,
+};

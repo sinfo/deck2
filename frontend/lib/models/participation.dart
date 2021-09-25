@@ -108,12 +108,13 @@ class PublicParticipation {
 }
 
 class ParticipationStep {
-  final String? next;
-  final int? step;
+  final ParticipationStatus next;
+  final int step;
 
-  ParticipationStep({this.next, this.step});
+  ParticipationStep({required this.next, required this.step});
 
   factory ParticipationStep.fromJson(Map<String, dynamic> json) {
-    return ParticipationStep(next: json['next'], step: json['step']);
+    return ParticipationStep(
+        next: Participation.convert(json['next']), step: json['step']);
   }
 }

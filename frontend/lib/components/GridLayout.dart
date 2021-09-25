@@ -6,7 +6,7 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/models/speaker.dart';
 
 class GridLayout extends StatelessWidget {
-  final List<SpeakerLight>? speakers;
+  final List<Speaker>? speakers;
   final List<CompanyLight>? companies;
 
   GridLayout({Key? key, this.speakers, this.companies}) : super(key: key) {}
@@ -22,10 +22,10 @@ class GridLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      double cardWidth = 250;
+      double cardWidth = 200;
       bool isSmall = false;
       if (constraints.maxWidth < App.SIZE) {
-        cardWidth = 200;
+        cardWidth = 125;
         isSmall = true;
       }
       return GridView.builder(
@@ -40,7 +40,7 @@ class GridLayout extends StatelessWidget {
           if (speakers != null) {
             return ListViewCard(
                 small: isSmall,
-                speakerLight: speakers![index],
+                speaker: speakers![index],
                 participationsInfo: true);
           } else {
             return ListViewCard(

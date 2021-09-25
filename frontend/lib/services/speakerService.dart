@@ -43,28 +43,28 @@ class SpeakerService extends Service {
     }
   }
 
+  // Future<List<Speaker>> getSpeakers(
+  //     {String? name, int? eventId, String? member}) async {
+  //   var queryParameters = {'name': name, 'event': eventId, 'member': member};
+
+  //   Response<String> response =
+  //       await dio.get("/speakers", queryParameters: queryParameters);
+
+  //   try {
+  //     final responseJson = json.decode(response.data!) as List;
+  //     List<Speaker> speakers =
+  //         responseJson.map((e) => Speaker.fromJson(e)).toList();
+  //     return speakers;
+  //   } on SocketException {
+  //     throw DeckException('No Internet connection');
+  //   } on HttpException {
+  //     throw DeckException('Not found');
+  //   } on FormatException {
+  //     throw DeckException('Wrong format');
+  //   }
+  // }
+
   Future<List<Speaker>> getSpeakers(
-      {String? name, int? eventId, String? member}) async {
-    var queryParameters = {'name': name, 'event': eventId, 'member': member};
-
-    Response<String> response =
-        await dio.get("/speakers", queryParameters: queryParameters);
-
-    try {
-      final responseJson = json.decode(response.data!) as List;
-      List<Speaker> speakers =
-          responseJson.map((e) => Speaker.fromJson(e)).toList();
-      return speakers;
-    } on SocketException {
-      throw DeckException('No Internet connection');
-    } on HttpException {
-      throw DeckException('Not found');
-    } on FormatException {
-      throw DeckException('Wrong format');
-    }
-  }
-
-  Future<List<SpeakerLight>> getSpeakersLight(
       {String? name,
       int? eventId,
       String? member,
@@ -96,8 +96,8 @@ class SpeakerService extends Service {
 
     try {
       final responseJson = json.decode(response.data!) as List;
-      List<SpeakerLight> speakers =
-          responseJson.map((e) => SpeakerLight.fromJson(e)).toList();
+      List<Speaker> speakers =
+          responseJson.map((e) => Speaker.fromJson(e)).toList();
       return speakers;
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -345,9 +345,9 @@ class SpeakerService extends Service {
   Future<List<ParticipationStep>> getNextParticipationSteps(
       {required String id}) async {
     Response<String> response =
-        await dio.get("/speakers/" + id + "participation/status/next");
+        await dio.get("/speakers/$id/participation/status/next");
     try {
-      final responseJson = json.decode(response.data!) as List;
+      final responseJson = json.decode(response.data!)['steps'] as List;
       List<ParticipationStep> participationSteps =
           responseJson.map((e) => ParticipationStep.fromJson(e)).toList();
       return participationSteps;

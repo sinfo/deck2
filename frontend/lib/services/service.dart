@@ -7,11 +7,16 @@ class Service {
   late Dio dio;
 
   Service() {
+    print(dotenv.env['DECK2_MOBILE_URL']!);
     String? token = App.localStorage.getString('jwt');
+    print('token= $token');
     dio = Dio(BaseOptions(
       baseUrl:
           kIsWeb ? dotenv.env['DECK2_URL']! : dotenv.env['DECK2_MOBILE_URL']!,
-      headers: {"Content-type": 'application/json', "Authorization": token},
+      headers: {
+        "Content-type": 'application/json',
+        "Authorization": token ?? ''
+      },
     ));
   }
 }

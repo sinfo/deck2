@@ -28,6 +28,9 @@ class Speaker {
   final String? notes;
   final Images? imgs;
   final List<Participation>? participations;
+  final int? numParticipations;
+  final int? lastParticipation;
+  final ParticipationStatus? participationStatus;
 
   Speaker(
       {required this.id,
@@ -37,20 +40,34 @@ class Speaker {
       this.bio,
       this.notes,
       this.imgs,
-      this.participations});
+      this.participations,
+      this.numParticipations,
+      this.lastParticipation,
+      this.participationStatus});
 
   factory Speaker.fromJson(Map<String, dynamic> json) {
     var participationsList = json['participations'] as List;
     return Speaker(
-        id: json['id'],
-        name: json['name'],
-        title: json['title'],
-        contact: json['contact'],
-        bio: json['bio'],
-        notes: json['notes'],
-        imgs: Images.fromJson(json['imgs']),
-        participations:
-            participationsList.map((p) => Participation.fromJson(p)).toList());
+      id: json['id'],
+      name: json['name'],
+      title: json['title'],
+      contact: json['contact'],
+      bio: json['bio'],
+      notes: json['notes'],
+      imgs: Images.fromJson(json['imgs']),
+      participations:
+          participationsList.map((p) => Participation.fromJson(p)).toList(),
+      numParticipations: participationsList.length,
+      lastParticipation: participationsList.length > 0
+          ? participationsList[participationsList.length - 1]['event']
+          : null,
+      participationStatus: participationsList.length > 0 &&
+              participationsList[participationsList.length - 1]['event'] ==
+                  App.localStorage.getInt("event")
+          ? Participation.convert(
+              participationsList[participationsList.length - 1]['status'])
+          : ParticipationStatus.NO_STATUS,
+    );
   }
 
   Map<String, dynamic> toJson() => {
