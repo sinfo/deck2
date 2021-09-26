@@ -348,7 +348,7 @@ class _SpeakerBannerState extends State<SpeakerBanner> {
     int event = Provider.of<EventNotifier>(context).event.id;
     Participation? part = widget.speaker.participations!
         .firstWhereOrNull((element) => element.event == event);
-    speakerStatus = part != null ? part.status! : ParticipationStatus.NO_STATUS;
+    speakerStatus = part != null ? part.status : ParticipationStatus.NO_STATUS;
 
     ParticipationStatus.NO_STATUS;
     return LayoutBuilder(
