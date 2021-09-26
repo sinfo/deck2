@@ -164,15 +164,19 @@ func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.S
 	var speakers = make([]*models.Speaker, 0)
 
 	filter := bson.M{}
+	elemMatch := bson.M{}
 
 	findOptions := options.Find()
 
 	if speakOptions.EventID != nil {
-		filter["participations.event"] = speakOptions.EventID
+		elemMatch["event"] = speakOptions.EventID
 	}
 
 	if speakOptions.MemberID != nil {
-		filter["participations.member"] = speakOptions.MemberID
+		elemMatch["member"] = speakOptions.MemberID
+	}
+	filter["participations"] = bson.M{
+		"$elemMatch": elemMatch,
 	}
 
 	if speakOptions.Name != nil {

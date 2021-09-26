@@ -11,7 +11,10 @@ class Service {
     dio = Dio(BaseOptions(
       baseUrl:
           kIsWeb ? dotenv.env['DECK2_URL']! : dotenv.env['DECK2_MOBILE_URL']!,
-      headers: {"Content-type": 'application/json', "Authorization": token},
+      headers: {
+        "Content-type": 'application/json',
+        "Authorization": token ?? ''
+      },
     ));
   }
 }

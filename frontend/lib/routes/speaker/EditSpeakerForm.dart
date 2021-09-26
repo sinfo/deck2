@@ -7,61 +7,65 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/companyService.dart';
+import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 
-class AddCompanyForm extends StatefulWidget {
-  AddCompanyForm({Key? key}) : super(key: key);
+class EditSpeakerForm extends StatefulWidget {
+  final Speaker speaker;
+  EditSpeakerForm({Key? key, required this.speaker}) : super(key: key);
 
   @override
-  _AddCompanyFormState createState() => _AddCompanyFormState();
+  _EditSpeakerFormState createState() => _EditSpeakerFormState();
 }
 
-class _AddCompanyFormState extends State<AddCompanyForm> {
+class _EditSpeakerFormState extends State<EditSpeakerForm> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _descritpionController = TextEditingController();
-  final _websiteController = TextEditingController();
-  final _companyService = CompanyService();
+  late TextEditingController _nameController;
+  late TextEditingController _titleController;
+  final _speakerService = SpeakerService();
   final _imagePicker = ImagePicker();
   XFile? _image;
   int? _size;
   late DropzoneViewController _controller;
 
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.speaker.name);
+    _titleController = TextEditingController(text: widget.speaker.name);
+    var i = NetworkImage(widget.speaker.imgs!.internal!);
+  }
+
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var name = _nameController.text;
-      var description = _descritpionController.text;
-      var site = _websiteController.text;
+      var title = _titleController.text;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
-      Company? c = await _companyService.createCompany(
-          description: description, name: name, site: site);
-      if (c != null && _image != null) {
-        c = kIsWeb
-            ? await _companyService.updateInternalImageWeb(
-                id: c.id, image: _image!)
-            : await _companyService.updateInternalImage(
-                id: c.id, image: File(_image!.path));
+      Speaker? s = await _speakerService.updateSpeaker(
+          id: widget.speaker.id, name: name, title: title);
+      if (s != null && _image != null) {
+        s = kIsWeb
+            ? await _speakerService.updateInternalImageWeb(
+                id: s.id, image: _image!)
+            : await _speakerService.updateInternalImage(
+                id: s.id, image: File(_image!.path));
       }
-      if (c != null) {
-        //TODO: Redirect to company page
+      if (s != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Done'),
             duration: Duration(seconds: 2),
-            action: SnackBarAction(
-              label: 'Undo',
-              onPressed: () {
-                _companyService.deleteCompany(id: c!.id);
-              },
-            ),
           ),
         );
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -96,36 +100,17 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _descritpionController,
+              controller: _titleController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a description';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.description),
-                labelText: "Description *",
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _websiteController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a website';
+                  return 'Please enter a title';
                 } else {
-                  if (Uri.tryParse(value) == null) {
-                    return 'Not a valid URL';
-                  }
                   return null;
                 }
               },
               decoration: const InputDecoration(
                 icon: const Icon(Icons.web),
-                labelText: "Website *",
+                labelText: "Title *",
               ),
             ),
           ),
@@ -232,7 +217,7 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
     final mime = await _controller.getFileMIME(event);
     final bytes = await _controller.getFileSize(event);
     final url = await _controller.createFileUrl(event);
-    XFile f = XFile(url, name: name, mimeType: mime, length: bytes);
+    XFile f = XFile(url, mimeType: mime, length: bytes, name: name);
     setState(() {
       _size = bytes;
       _image = f;

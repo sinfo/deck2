@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
+import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
+import 'package:frontend/routes/SpeakerScreen.dart';
 import 'package:frontend/routes/MemberListWidget.dart';
+import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
-import 'package:frontend/routes/UnknownScreen.dart';
+import 'package:frontend/services/meetingService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
@@ -26,8 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    App.localStorage.setInt("event", 29);
-    _pageController = PageController(initialPage: _currentIndex);
+    _pageController =
+        PageController(initialPage: _currentIndex, keepPage: true);
     super.initState();
   }
 
@@ -41,7 +45,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     Member? user = Provider.of<Member?>(context);
     return Scaffold(
-      appBar: CustomAppBar(),
+      appBar: CustomAppBar(
+        disableEventChange: false,
+      ),
       bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
@@ -82,19 +88,33 @@ class _HomeScreenState extends State<HomeScreen> {
             setState(() => _currentIndex = index);
           },
           children: <Widget>[
-            Center(child: SpeakerTable()),
-            Center(child: Text("Home in progress :)")),
-            Center(child: CompanyTable()),
+            Center(
+                child: Consumer<EventNotifier>(
+              builder: (context, value, child) => SpeakerTable(),
+            )),
+            Center(
+              child: MeetingList(),
+            ),
+            Center(
+              child: Consumer<EventNotifier>(
+                  builder: (context, value, child) => CompanyTable()),
+            ),
             Center(child: MemberListWidget()),
           ],
         ),
       ),
-      drawer: MyDrawer(image: user != null ? user.image : ''),
-      floatingActionButton: _fabAtIndex(_currentIndex),
+      drawer: DeckDrawer(image: user != null ? user.image : ''),
+      floatingActionButton: _fabAtIndex(context, _currentIndex),
     );
   }
 
-  Widget? _fabAtIndex(int index) {
+  Widget? _fabAtIndex(BuildContext context, int index) {
+    int currentEvent = Provider.of<EventNotifier>(context).event.id;
+    int latestEvent = Provider.of<EventNotifier>(context).latest.id;
+    bool disabled = currentEvent != latestEvent;
+    if (disabled) {
+      return null;
+    }
     switch (index) {
       case 0:
         {
@@ -107,7 +127,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             label: const Text('Show All Speakers'),
             icon: const Icon(Icons.add),
-            backgroundColor: Color(0xff5C7FF2),
           );
         }
       case 1:
@@ -125,9 +144,49 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             label: const Text('Show All Companies'),
             icon: const Icon(Icons.add),
-            backgroundColor: Color(0xff5C7FF2),
           );
         }
     }
+  }
+}
+
+class MeetingList extends StatefulWidget {
+  const MeetingList({Key? key}) : super(key: key);
+
+  @override
+  _MeetingListState createState() => _MeetingListState();
+}
+
+class _MeetingListState extends State<MeetingList>
+    with AutomaticKeepAliveClientMixin {
+  final MeetingService _service = MeetingService();
+  late final Future<List<Meeting>> _meetings;
+
+  @override
+  void initState() {
+    _meetings = _service.getMeetings();
+    super.initState();
+  }
+
+  @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return FutureBuilder(
+      future: _meetings,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          List<Meeting> meets = snapshot.data as List<Meeting>;
+          return ListView(
+            children: meets.map((e) => MeetingCard(meeting: e)).toList(),
+          );
+        } else {
+          return CircularProgressIndicator();
+        }
+      },
+    );
   }
 }
