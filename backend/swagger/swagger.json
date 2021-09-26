@@ -350,6 +350,9 @@
         "/public/speakers/{id}": {
             "$ref": "./public-speakers-id.json"
         },
+        "/public/events/latest": {
+            "$ref": "./public-events-latest.json"
+        },
         "/events/teams/{id}": {
             "$ref": "./events-teams-id.json"
         },
