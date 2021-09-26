@@ -101,11 +101,6 @@ class EditBoxSocials extends StatelessWidget {
             )
           ],
         ),
-        Align(
-          alignment: Alignment.topRight,
-          child: Icon(Icons.edit,
-              color: Color.fromRGBO(211, 211, 211, 1), size: 18),
-        )
       ]),
     );
   }

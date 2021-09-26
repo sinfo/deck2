@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/member/DisplayContact2.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/routes/member/MemberBanner.dart';
 import 'package:frontend/routes/member/DisplayContacts.dart';
@@ -73,7 +74,7 @@ class _MemberScreen extends State<MemberScreen> {
                             height: 500,
                             child: TabBarView(children: <Widget>[
                               Container(
-                                child: DisplayContacts(member: member),
+                                child: DisplayContacts2(member: member),
                               ),
                               Container(
                                 child: DisplayParticipations(member: member),

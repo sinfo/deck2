@@ -21,7 +21,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
   final _nameController = TextEditingController();
   final _istIdController = TextEditingController();
   final _sinfoIdController = TextEditingController();
-  final _memberService = MemberService();
+  MemberService _memberService = new MemberService();
   //final _imagePicker = ImagePicker();
   //XFile? _image;
   //int? _size;
@@ -36,7 +36,9 @@ class _AddMemberFormState extends State<AddMemberForm> {
         const SnackBar(content: Text('Uploading')),
       );
 
+      print(1);
       Member? m = await _memberService.createMember(istid, name, sinfoid);
+      print(2);
       // if (m != null && _image != null) {
       //   m = kIsWeb
       //       ? await _memberService.updateInternalImageWeb(

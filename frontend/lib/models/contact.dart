@@ -28,8 +28,8 @@ class Contact {
 }
 
 class ContactPhone {
-  final String? phone;
-  final bool? valid;
+  late final String? phone;
+  late final bool? valid;
 
   ContactPhone({
     this.phone,
@@ -50,11 +50,11 @@ class ContactPhone {
 }
 
 class ContactSocials {
-  final String? facebook;
-  final String? skype;
-  final String? github;
-  final String? twitter;
-  final String? linkedin;
+  late final String? facebook;
+  late final String? skype;
+  late final String? github;
+  late final String? twitter;
+  late final String? linkedin;
 
   ContactSocials({
     this.facebook,
@@ -85,8 +85,8 @@ class ContactSocials {
 
 class ContactMail {
   late final String? mail;
-  final bool? valid;
-  final bool? personal;
+  late final bool? valid;
+  late final bool? personal;
 
   ContactMail({
     this.mail,

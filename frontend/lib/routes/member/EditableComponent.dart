@@ -48,7 +48,8 @@ class _EditableComponentState extends State<EditableComponent> {
               TextButton(
                 child: new Text('Save'),
                 onPressed: () {
-                  updateContact();
+                  updateContact(_textFieldController.text);
+                  _textFieldController.clear();
                   Navigator.of(context).pop();
                 },
               )
@@ -138,28 +139,42 @@ class _EditableComponentState extends State<EditableComponent> {
     }
   }
 
-  updateContact() {
-    ContactService contactService = new ContactService();
+  updateContact(String text) async {
+    //ContactService contactService = new ContactService();
 
     if (widget.type == "mail") {
       var newListContactMail = List<ContactMail>.empty(growable: true);
 
       for (int i = 0; i < widget.contact.mails!.length; i++) {
         newListContactMail.add(new ContactMail(
-            mail: i == widget.index
-                ? _textFieldController.text
-                : widget.contact.mails![i].mail,
+            mail: i == widget.index ? text : widget.contact.mails![i].mail,
             personal: widget.contact.mails![i].personal,
             valid: widget.contact.mails![i].valid));
       }
 
-      Contact newContact = new Contact(
+      await ContactService().updateContact(new Contact(
           id: widget.contact.id,
           phones: widget.contact.phones,
           socials: widget.contact.socials,
-          mails: newListContactMail);
+          mails: newListContactMail)
+          );
+    }
 
-      contactService.updateContact(newContact);
+    else if(widget.type == "phone"){
+      var newListContactPhone = List<ContactPhone>.empty(growable: true);
+
+      for (int i = 0; i < widget.contact.phones!.length; i++) {
+        newListContactPhone.add(new ContactPhone(
+            phone: i == widget.index ? text : widget.contact.phones![i].phone,
+            valid: widget.contact.mails![i].valid));
+      }
+
+      await ContactService().updateContact(new Contact(
+          id: widget.contact.id,
+          phones: newListContactPhone,
+          socials: widget.contact.socials,
+          mails: widget.contact.mails)
+          );
     }
   }
 }
