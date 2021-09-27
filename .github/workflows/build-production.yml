@@ -1,11 +1,9 @@
 name: Production Build Workflow
 
-#on:
-#  push:
-#    branches:
-#      - "master"
-#    tags:
-#      - "v*.*.*"
+on:
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   docker:
