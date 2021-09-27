@@ -45,10 +45,10 @@ jobs:
       uses: nickgronow/kubectl@master
       with:
         config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: set image deployment/deck2-staging deck2-staging-app=orgsinfo/deck2:${{ steps.vars.outputs.tag }} --namespace=staging
+        args: set image deployment/deck2-production deck2-prod-app=orgsinfo/deck2:${{ steps.vars.outputs.tag }} --namespace=production
         
     - name: Verify deployment
       uses: nickgronow/kubectl@master
       with:
         config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: rollout status deployment/deck2-staging --namespace=staging
+        args: rollout status deployment/deck2-production --namespace=production
