@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/authService.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    AuthService authService = Provider.of<AuthService>(context);
     return Container(
       decoration: BoxDecoration(
           image: DecorationImage(
@@ -33,14 +35,14 @@ class _LoginScreenState extends State<LoginScreen> {
               width: 700,
             ),
             SizedBox(height: 200),
-            _signInButton(),
+            _signInButton(authService),
           ],
         ),
       ),
     );
   }
 
-  Widget _signInButton() {
+  Widget _signInButton(AuthService authService) {
     return FutureBuilder(
         future: user,
         builder: (context, snapshot) {
@@ -48,8 +50,17 @@ class _LoginScreenState extends State<LoginScreen> {
             return CircularProgressIndicator();
           } else {
             return OutlinedButton(
-              onPressed: () {
-                stateSignIn();
+              onPressed: () async {
+                bool loggedIn = await authService.login();
+                if (loggedIn) {
+                  Navigator.pushReplacementNamed(context, Routes.HomeRoute);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            'Could not login. Please try again or contact admins.')),
+                  );
+                }
               },
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -93,16 +104,5 @@ class _LoginScreenState extends State<LoginScreen> {
   //   return false;
   // }
 
-  void stateSignIn() async {
-    bool loggedIn = await AuthService.login();
-    if (loggedIn) {
-      Navigator.pushReplacementNamed(context, Routes.HomeRoute);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content:
-                Text('Could not login. Please try again or contact admins.')),
-      );
-    }
-  }
+  void stateSignIn() async {}
 }

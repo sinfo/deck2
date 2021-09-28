@@ -113,7 +113,7 @@ class Participation {
         return ParticipationStatus.ON_HOLD;
       case "CONTACTED":
         return ParticipationStatus.CONTACTED;
-      case "IN CONVERSATIONS":
+      case "IN_CONVERSATIONS":
         return ParticipationStatus.IN_CONVERSATIONS;
       case "ACCEPTED":
         return ParticipationStatus.ACCEPTED;
@@ -121,7 +121,7 @@ class Participation {
         return ParticipationStatus.ANNOUNCED;
       case "REJECTED":
         return ParticipationStatus.REJECTED;
-      case "GIVE UP":
+      case "GIVEN_UP":
         return ParticipationStatus.GIVEN_UP;
       default:
         return ParticipationStatus.GIVEN_UP;

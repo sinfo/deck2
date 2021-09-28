@@ -57,6 +57,13 @@ class _CustomAppBarState extends State<CustomAppBar> {
               ),
             ),
           ),
+          if (disableEventChange)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                '${Provider.of<EventNotifier>(context).event.id}',
+              ),
+            ),
           if (!disableEventChange)
             Padding(
               padding: const EdgeInsets.all(8.0),

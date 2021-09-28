@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/status.dart';
 
 class FilterBar extends StatefulWidget {
   final Function onSelected;
@@ -36,8 +37,8 @@ class FilterBarState extends State<FilterBar> {
 
   rowChips() {
     List<Widget> filters = [];
-    for (int i = 0; i < _filters.length; i++) {
-      filters.add(createChip(_filters[i], i));
+    for (int i = 0; i < STATUSSTRING.length; i++) {
+      filters.add(createChip(STATUSFILTER.entries.elementAt(i).value, i));
     }
     return Row(children: filters);
   }
@@ -59,7 +60,7 @@ class FilterBarState extends State<FilterBar> {
         onSelected: (bool selected) {
           setState(() {
             _currentIndex = selected ? index : _currentIndex;
-            onSelected(_filters[_currentIndex].toUpperCase());
+            onSelected(STATUSFILTER.entries.elementAt(index).key);
           });
         },
         label: Text(label),

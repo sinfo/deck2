@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/speakerNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/eventService.dart';
@@ -29,6 +30,15 @@ Future main() async {
       ChangeNotifierProvider<EventNotifier>(
         create: (_) => EventNotifier(e, latest),
       ),
+      ChangeNotifierProvider<SpeakerTableNotifier>(
+        create: (_) => SpeakerTableNotifier(speakers: []),
+      ),
+      ChangeNotifierProvider<AuthService>(
+        create: (_) => AuthService(),
+      ),
+      ChangeNotifierProvider<BottomNavigationBarProvider>(
+        create: (_) => BottomNavigationBarProvider(),
+      ),
     ],
     child: App(),
   ));
@@ -53,13 +63,22 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return FutureProvider.value(
-      value: AuthService.user,
-      initialData: null,
-      child: MaterialApp(
-          title: 'Deck',
-          debugShowCheckedModeBanner: false,
-          theme: themeNotifier.theme,
-          onGenerateRoute: router.generateRoute),
-    );
+        value: Provider.of<AuthService>(context).user,
+        initialData: null,
+        child: MaterialApp(
+            title: 'Deck',
+            debugShowCheckedModeBanner: false,
+            theme: themeNotifier.theme,
+            onGenerateRoute: router.generateRoute));
+  }
+}
+
+class BottomNavigationBarProvider with ChangeNotifier {
+  int _currentIndex = 1;
+
+  int get currentIndex => _currentIndex;
+  set currentIndex(int i) {
+    _currentIndex = i;
+    notifyListeners();
   }
 }

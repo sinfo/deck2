@@ -1,6 +1,8 @@
+import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/status.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/participation.dart';
 
@@ -20,6 +22,40 @@ class ParticipationCard extends StatefulWidget {
     required this.small,
     required this.type,
   }) : super(key: key);
+
+  static Widget mockCard(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      bool small = constraints.maxWidth < App.SIZE;
+      return Padding(
+        padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+        child: DottedBorder(
+          borderType: BorderType.RRect,
+          color: Colors.grey,
+          strokeCap: StrokeCap.round,
+          strokeWidth: 4,
+          dashPattern: [10, 8],
+          radius: Radius.circular(5),
+          child: Container(
+            height: 130,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                color: Colors.grey[100]),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  '+ Add Participation',
+                  style: small
+                      ? Theme.of(context).textTheme.headline6
+                      : Theme.of(context).textTheme.headline4,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
 
   @override
   _ParticipationCardState createState() => _ParticipationCardState();
@@ -87,7 +123,6 @@ class _ParticipationCardState extends State<ParticipationCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        width: 450,
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(

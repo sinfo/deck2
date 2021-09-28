@@ -5,18 +5,21 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
+import 'package:frontend/components/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/participation.dart';
+import 'package:frontend/routes/participation/participationScreen.dart';
 import 'package:frontend/routes/speaker/EditSpeakerForm.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
 
 class SpeakerScreen extends StatefulWidget {
-  final Speaker speaker;
-  const SpeakerScreen({Key? key, required this.speaker}) : super(key: key);
+  Speaker speaker;
+
+  SpeakerScreen({Key? key, required this.speaker}) : super(key: key);
 
   @override
   _SpeakerScreenState createState() => _SpeakerScreenState();
@@ -24,11 +27,13 @@ class SpeakerScreen extends StatefulWidget {
 
 class _SpeakerScreenState extends State<SpeakerScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  late final TabController _tabController;
+  late final SpeakerService _speakerService;
 
   @override
   void initState() {
     super.initState();
+    _speakerService = SpeakerService();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_handleTabIndex);
   }
@@ -44,327 +49,243 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     setState(() {});
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      bool small = constraints.maxWidth < App.SIZE;
-      return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true),
-        body: DefaultTabController(
-          length: 4,
-          child: Column(
-            children: [
-              SpeakerBanner(
-                speaker: widget.speaker,
-              ),
-              TabBar(
-                controller: _tabController,
-                labelColor: Colors.indigo,
-                unselectedLabelColor: Colors.indigo[100],
-                tabs: [
-                  Tab(text: 'Details'),
-                  Tab(text: 'FlightInfo'),
-                  Tab(text: 'Participations'),
-                  Tab(text: 'Communications'),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(controller: _tabController, children: [
-                  DetailsScreen(
-                    speaker: widget.speaker,
-                  ),
-                  Container(
-                    child: Center(child: Text('Work in progress :)')),
-                  ),
-                  ParticipationScreen(
-                    speaker: widget.speaker,
-                    small: small,
-                  ),
-                  Container(decoration: BoxDecoration(color: Colors.teal)),
-                ]),
-              ),
-            ],
+  Widget _buildParticipationList(BuildContext context, bool small) {
+    if (widget.speaker.participations != null) {
+      if (widget.speaker.lastParticipation ==
+          Provider.of<EventNotifier>(context).latest.id) {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            child: ListView(
+              children: widget.speaker.participations!.reversed
+                  .map((e) => Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ParticipationCard(
+                          participation: e,
+                          small: small,
+                          type: CardType.SPEAKER,
+                        ),
+                      ))
+                  .toList(),
+            ),
           ),
-        ),
-        floatingActionButton: _buildFab(context),
-      );
-    });
-  }
-
-  Widget? _buildFab(BuildContext context) {
-    switch (_tabController.index) {
-      case 2:
-        print(
-            '${widget.speaker.lastParticipation} == ${Provider.of<EventNotifier>(context).latest.id}');
-        if (widget.speaker.lastParticipation ==
-            Provider.of<EventNotifier>(context).latest.id) {
-          return null;
-        }
-        return FloatingActionButton.extended(
-          onPressed: () {},
-          label: Text('Add Participation'),
-          icon: Icon(Icons.add),
         );
-      case 0:
-      case 1:
-      case 3:
-      default:
-        return null;
-    }
-  }
-}
-
-class ParticipationScreen extends StatelessWidget {
-  final Speaker speaker;
-  final bool small;
-  const ParticipationScreen({
-    Key? key,
-    required this.speaker,
-    required this.small,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    if (speaker.participations != null) {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Container(
-          child: ListView(
-            children: speaker.participations!.reversed
-                .map((e) => Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ParticipationCard(
-                        participation: e,
-                        small: small,
-                        type: CardType.SPEAKER,
-                      ),
-                    ))
-                .toList(),
+      } else {
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Container(
+            child: ListView(
+              children: [
+                InkWell(
+                  child: ParticipationCard.mockCard(context),
+                  onTap: () {},
+                ),
+                ...widget.speaker.participations!.reversed
+                    .map((e) => Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ParticipationCard(
+                            participation: e,
+                            small: small,
+                            type: CardType.SPEAKER,
+                          ),
+                        ))
+                    .toList(),
+              ],
+            ),
           ),
-        ),
-      );
+        );
+      }
     } else {
       return Container();
     }
   }
-}
 
-class SpeakerBanner extends StatefulWidget {
-  final Speaker speaker;
-  const SpeakerBanner({Key? key, required this.speaker}) : super(key: key);
-
-  @override
-  _SpeakerBannerState createState() => _SpeakerBannerState();
-}
-
-class _SpeakerBannerState extends State<SpeakerBanner> {
-  ParticipationStatus? previousStatus;
-  late ParticipationStatus speakerStatus;
-
-  void revertSpeakerStatus() {
-    setState(() {
-      speakerStatus = previousStatus!;
-      //TODO call service method to change back participations status
-    });
-  }
-
-  void changeSpeakerStatus(
-      ParticipationStatus? newStatus, BuildContext context) {
-    setState(() {
-      previousStatus = speakerStatus;
-      speakerStatus = newStatus!;
-      //TODO call service method to change participations status
-      final SnackBar snackBar = SnackBar(
-        content: Text('Speaker status updated'),
-        action: SnackBarAction(label: 'Undo', onPressed: revertSpeakerStatus),
-      );
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    });
-  }
-
-  Widget _buildSmallBanner(int event, ParticipationStatus speakerStatus) {
-    return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/banner_background.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 5),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 8.0, 20.0, 8.0),
-              child: SizedBox(
-                height: 100,
-                width: 100,
-                child: Hero(
-                  tag: widget.speaker.id + event.toString(),
-                  child: Container(
-                    decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          width: 4,
-                          color: STATUSCOLOR[speakerStatus]!,
-                        )),
-                    child: CircleAvatar(
-                      foregroundImage: NetworkImage(
-                        widget.speaker.imgs!.speaker ??
-                            (widget.speaker.imgs!.internal ??
-                                (widget.speaker.imgs!.company ?? "")),
-                      ),
-                      backgroundImage: AssetImage('assets/noImage.png'),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.speaker.name,
-                      style: Theme.of(context).textTheme.headline6,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(widget.speaker.title!,
-                        style: Theme.of(context).textTheme.subtitle1,
-                        softWrap: false,
-                        overflow: TextOverflow.ellipsis),
-                    SpeakerStatusDropdownButton(
-                      speakerStatus: speakerStatus,
-                      statusChangeCallback: changeSpeakerStatus,
-                      speakerId: widget.speaker.id,
-                    ),
-                    //TODO define subscribe behaviour
-                    ElevatedButton(
-                        onPressed: () => print('zona'),
-                        child: Text('+ Subscribe'))
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBigBanner(int event, ParticipationStatus speakerStatus) {
-    return Stack(
-      alignment: AlignmentDirectional.topEnd,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/banner_background.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8.0, 8.0, 20.0, 8.0),
-                  child: SizedBox(
-                    height: 150,
-                    width: 150,
-                    child: Hero(
-                      tag: widget.speaker.id + event.toString(),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              width: 4,
-                              color: STATUSCOLOR[speakerStatus]!,
-                            )),
-                        child: CircleAvatar(
-                          foregroundImage: NetworkImage(
-                            widget.speaker.imgs!.speaker ??
-                                (widget.speaker.imgs!.internal ??
-                                    (widget.speaker.imgs!.company ?? "")),
-                          ),
-                          backgroundImage: AssetImage('assets/noImage.png'),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.speaker.name,
-                          style: Theme.of(context).textTheme.headline5,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(widget.speaker.title!,
-                            style: Theme.of(context).textTheme.subtitle1,
-                            softWrap: false,
-                            overflow: TextOverflow.ellipsis),
-                        SpeakerStatusDropdownButton(
-                          speakerStatus: speakerStatus,
-                          statusChangeCallback: changeSpeakerStatus,
-                          speakerId: widget.speaker.id,
-                        ),
-                        //TODO define subscribe behaviour
-                        ElevatedButton(
-                            onPressed: () => print('zona'),
-                            child: Text('+ Subscribe'))
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: InkWell(
-            mouseCursor: SystemMouseCursors.click,
-            onTap: () => Navigator.push(context,
-                SlideRoute(page: EditSpeakerForm(speaker: widget.speaker))),
-            child: Icon(Icons.edit),
-          ),
-        ),
-      ],
-    );
+  void changeParticipationCallback(int step, BuildContext context) async {
+    Speaker? s = await _speakerService.stepParticipationStatus(
+        id: widget.speaker.id, step: step);
+    if (s != null) {
+      Provider.of<SpeakerTableNotifier>(context, listen: false).edit(s);
+      setState(() {
+        widget.speaker = s;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    int event = Provider.of<EventNotifier>(context).event.id;
-    Participation? part = widget.speaker.participations!
-        .firstWhereOrNull((element) => element.event == event);
-    speakerStatus = part != null ? part.status : ParticipationStatus.NO_STATUS;
+    return LayoutBuilder(builder: (context, constraints) {
+      bool small = constraints.maxWidth < App.SIZE;
+      return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
+        return Scaffold(
+          appBar: CustomAppBar(disableEventChange: true),
+          body: DefaultTabController(
+            length: 4,
+            child: Column(
+              children: [
+                SpeakerBanner(
+                  speaker: widget.speaker,
+                  statusChangeCallback: changeParticipationCallback,
+                ),
+                TabBar(
+                  isScrollable: small,
+                  controller: _tabController,
+                  labelColor: Colors.indigo,
+                  unselectedLabelColor: Colors.indigo[100],
+                  tabs: [
+                    Tab(text: 'Details'),
+                    Tab(text: 'FlightInfo'),
+                    Tab(text: 'Participations'),
+                    Tab(text: 'Communications'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(controller: _tabController, children: [
+                    DetailsScreen(
+                      speaker: widget.speaker,
+                    ),
+                    Container(
+                      child: Center(child: Text('Work in progress :)')),
+                    ),
+                    _buildParticipationList(context, small),
+                    Container(decoration: BoxDecoration(color: Colors.teal)),
+                  ]),
+                ),
+              ],
+            ),
+          ),
+        );
+      });
+    });
+  }
+}
 
-    ParticipationStatus.NO_STATUS;
+class SpeakerBanner extends StatelessWidget {
+  final Speaker speaker;
+  final void Function(int, BuildContext) statusChangeCallback;
+  const SpeakerBanner(
+      {Key? key, required this.speaker, required this.statusChangeCallback})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    int event = Provider.of<EventNotifier>(context).event.id;
+    bool isEditable = Provider.of<EventNotifier>(context).isLatest;
+    print(isEditable);
+    Participation? part = speaker.participations!
+        .firstWhereOrNull((element) => element.event == event);
+    ParticipationStatus speakerStatus =
+        part != null ? part.status : ParticipationStatus.NO_STATUS;
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < App.SIZE) {
-          return _buildSmallBanner(event, speakerStatus);
-        } else {
-          return _buildBigBanner(event, speakerStatus);
-        }
+        bool small = constraints.maxWidth < App.SIZE;
+        return Stack(
+          alignment: AlignmentDirectional.topEnd,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/banner_background.png'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                    horizontal: small ? 4 : 20, vertical: small ? 5 : 25),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding:
+                          EdgeInsets.fromLTRB(8.0, 8.0, small ? 8 : 20.0, 8.0),
+                      child: SizedBox(
+                        height: small ? 100 : 150,
+                        width: small ? 100 : 150,
+                        child: Hero(
+                          tag: speaker.id + event.toString(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  width: small ? 2 : 4,
+                                  color: STATUSCOLOR[speakerStatus]!,
+                                )),
+                            child: CircleAvatar(
+                              foregroundImage: NetworkImage(
+                                speaker.imgs!.speaker ??
+                                    (speaker.imgs!.internal ??
+                                        (speaker.imgs!.company ?? "")),
+                              ),
+                              backgroundImage: AssetImage('assets/noImage.png'),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.all(small ? 8 : 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              speaker.name,
+                              style: Theme.of(context).textTheme.headline5,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(speaker.title!,
+                                style: Theme.of(context).textTheme.subtitle1,
+                                softWrap: false,
+                                overflow: TextOverflow.ellipsis),
+                            if (isEditable)
+                              SpeakerStatusDropdownButton(
+                                speakerStatus: speakerStatus,
+                                statusChangeCallback: statusChangeCallback,
+                                speakerId: speaker.id,
+                              ),
+                            if (!isEditable)
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(5),
+                                      color: STATUSCOLOR[speakerStatus]),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(STATUSSTRING[speakerStatus]!),
+                                  ),
+                                ),
+                              ),
+                            //TODO define subscribe behaviour
+                            ElevatedButton(
+                                onPressed: () => print('zona'),
+                                child: Text('+ Subscribe'))
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: InkWell(
+                mouseCursor: SystemMouseCursors.click,
+                onTap: () => Navigator.push(context,
+                    SlideRoute(page: EditSpeakerForm(speaker: speaker))),
+                child: Icon(Icons.edit),
+              ),
+            ),
+          ],
+        );
       },
     );
   }
 }
 
 class SpeakerStatusDropdownButton extends StatelessWidget {
-  final void Function(ParticipationStatus?, BuildContext) statusChangeCallback;
+  final void Function(int, BuildContext) statusChangeCallback;
   final ParticipationStatus speakerStatus;
   final String speakerId;
   final SpeakerService _speakerService = SpeakerService();
@@ -384,15 +305,19 @@ class SpeakerStatusDropdownButton extends StatelessWidget {
           ParticipationStep(next: speakerStatus, step: 0)
         ];
         if (snapshot.hasData) {
+          var l = snapshot.data as List<ParticipationStep>;
+          print(l
+              .map((e) => 'step = ${e.step}, next = ${STATUSSTRING[e.next]}')
+              .toList());
           steps.addAll(snapshot.data as List<ParticipationStep>);
         }
         return Container(
-          child: DropdownButton<ParticipationStatus>(
+          child: DropdownButton<ParticipationStep>(
             underline: Container(
               height: 3,
               decoration: BoxDecoration(color: STATUSCOLOR[speakerStatus]),
             ),
-            value: speakerStatus,
+            value: steps[0],
             style: Theme.of(context).textTheme.subtitle2,
             selectedItemBuilder: (BuildContext context) {
               return steps.map((e) {
@@ -403,14 +328,14 @@ class SpeakerStatusDropdownButton extends StatelessWidget {
               }).toList();
             },
             items: steps
-                .map((e) => DropdownMenuItem<ParticipationStatus>(
-                      value: e.next,
+                .map((e) => DropdownMenuItem<ParticipationStep>(
+                      value: e,
                       child: Text(STATUSSTRING[e.next] ?? ''),
                     ))
                 .toList(),
-            onChanged: (status) {
-              if (status != speakerStatus) {
-                statusChangeCallback(status, context);
+            onChanged: (next) {
+              if (next != null && next.step != 0) {
+                statusChangeCallback(next.step, context);
               }
             },
           ),

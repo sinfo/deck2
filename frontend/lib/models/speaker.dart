@@ -1,5 +1,6 @@
 import 'package:frontend/main.dart';
 import 'package:frontend/models/participation.dart';
+import 'package:collection/collection.dart';
 
 class Images {
   final String? company;
@@ -82,6 +83,20 @@ class Speaker {
         'participations':
             participations?.map((participation) => participation.toJson())
       };
+
+  SpeakerParticipation? getParticipation(int event) {
+    return this
+        .participations!
+        .firstWhereOrNull((element) => element.event == event);
+  }
+
+  SpeakerParticipation getLatestParticipation() {
+    return this.participations!.firstWhereOrNull(
+        (element) => element.event == this.lastParticipation)!;
+  }
+
+  bool operator ==(o) => o is Speaker && id == o.id;
+  int get hashCode => id.hashCode;
 }
 
 class PublicImages {

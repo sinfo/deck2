@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:frontend/components/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
@@ -10,6 +11,7 @@ import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/SpeakerScreen.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:collection/collection.dart';
+import 'package:provider/provider.dart';
 
 class ListViewCard extends StatelessWidget {
   final Member? member;
@@ -100,68 +102,6 @@ class ListViewCard extends StatelessWidget {
     _color = STATUSCOLOR[_status]!;
   }
 
-  Widget _buildSmallCard(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          height: 175,
-          width: 125,
-          margin: EdgeInsets.all(5),
-          alignment: Alignment.topCenter,
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: _color),
-          ),
-          child: InkWell(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(5),
-                          topRight: Radius.circular(5)),
-                      child: Hero(
-                        tag: _tag,
-                        child: Image.network(
-                          _imageUrl,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (context, child, progress) {
-                            return progress == null
-                                ? child
-                                : Center(child: CircularProgressIndicator());
-                          },
-                          errorBuilder: (BuildContext context, Object exception,
-                              StackTrace? stackTrace) {
-                            return Image.asset(
-                              'assets/noImage.png',
-                              fit: BoxFit.fill,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                      height: participationsInfo != null ? 72 : 50,
-                      child: getParticipationInfo(14)),
-                ],
-              ),
-              onTap: () {
-                Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      transitionDuration: Duration(milliseconds: 600),
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          _screen,
-                    ));
-              }),
-        ),
-        ...getStatus(10)
-      ],
-    );
-  }
-
   Widget getParticipationInfo(double fontsize) {
     if (participationsInfo != null) {
       return Column(
@@ -226,64 +166,6 @@ class ListViewCard extends StatelessWidget {
     } else {
       return [];
     }
-  }
-
-  Widget _buildBigCard(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          height: 225,
-          width: 200,
-          margin: EdgeInsets.all(10),
-          alignment: Alignment.topCenter,
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: _color, width: 2),
-          ),
-          child: InkWell(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Hero(
-                      tag: _tag,
-                      child: Image.network(
-                        _imageUrl,
-                        fit: BoxFit.contain,
-                        loadingBuilder: (context, child, progress) {
-                          return progress == null
-                              ? child
-                              : Center(child: CircularProgressIndicator());
-                        },
-                        errorBuilder: (BuildContext context, Object exception,
-                            StackTrace? stackTrace) {
-                          return Image.asset(
-                            'assets/noImage.png',
-                            fit: BoxFit.fill,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                      height: participationsInfo != null ? 70 : 40,
-                      child: getParticipationInfo(14)),
-                ],
-              ),
-              onTap: () {
-                Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      transitionDuration: Duration(milliseconds: 600),
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          _screen,
-                    ));
-              }),
-        ),
-        ...getStatus(14)
-      ],
-    );
   }
 
   static Widget fakeCard() {
@@ -370,7 +252,74 @@ class ListViewCard extends StatelessWidget {
         speaker != null ||
         companyLight != null ||
         speakerLight != null) {
-      return small ? _buildSmallCard(context) : _buildBigCard(context);
+      Widget body = Stack(
+        children: [
+          Container(
+            height: small ? 175 : 225,
+            width: small ? 125 : 200,
+            margin: EdgeInsets.all(small ? 5 : 10),
+            alignment: Alignment.topCenter,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(color: _color, width: small ? 1 : 2),
+            ),
+            child: InkWell(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Hero(
+                        tag: _tag,
+                        child: Image.network(
+                          _imageUrl,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, progress) {
+                            return progress == null
+                                ? child
+                                : Center(child: CircularProgressIndicator());
+                          },
+                          errorBuilder: (BuildContext context, Object exception,
+                              StackTrace? stackTrace) {
+                            return Image.asset(
+                              'assets/noImage.png',
+                              fit: BoxFit.fill,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                        height: participationsInfo != null
+                            ? small
+                                ? 72
+                                : 70
+                            : small
+                                ? 42
+                                : 40,
+                        child: getParticipationInfo(14)),
+                  ],
+                ),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        transitionDuration: Duration(milliseconds: 600),
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            _screen,
+                      ));
+                }),
+          ),
+          ...getStatus(small ? 10 : 14)
+        ],
+      );
+
+      if (speaker != null) {
+        return Consumer<SpeakerTableNotifier>(
+          builder: (a, b, c) => body,
+        );
+      } else
+        return body;
     } else {
       return UnknownScreen();
     }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/main.dart';
@@ -10,23 +11,20 @@ import 'package:frontend/models/member.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
-class AuthService {
-  static final String? _deckURL =
+class AuthService extends ChangeNotifier {
+  final String? _deckURL =
       kIsWeb ? dotenv.env['DECK2_URL'] : dotenv.env['DECK2_MOBILE_URL'];
-  static final GoogleSignIn _googleSignIn =
+  final GoogleSignIn _googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
-  static final Dio dio = Dio(BaseOptions(
+  final Dio _dio = Dio(BaseOptions(
     baseUrl: (kIsWeb ? dotenv.env['DECK2_URL'] : dotenv.env['DECK2_MOBILE_URL'])
         as String,
-    headers: {
-      "Content-type": 'application/json',
-    },
   ));
 
-  static Member? _user;
-  static String? _token;
+  Member? _user;
+  String? _token;
 
-  static Future<Member?> get user async {
+  Future<Member?> get user async {
     if (_user != null) {
       return _user;
     } else if (App.localStorage.containsKey('me')) {
@@ -67,9 +65,9 @@ class AuthService {
     }
   }
 
-  static Future<String> getJWT(String? token) async {
+  Future<String> getJWT(String? token) async {
     if (token != null) {
-      Response<String> response = await dio.post(
+      Response<String> response = await _dio.post(
         _deckURL! + '/auth/checkin',
         data: jsonEncode(<String, String>{
           'access_token': token,
@@ -92,11 +90,11 @@ class AuthService {
     }
   }
 
-  static Future<Member?> getMe(String token) async {
-    dio.options.headers["Authorization"] = token;
+  Future<Member?> getMe(String token) async {
+    _dio.options.headers["Authorization"] = token;
 
     try {
-      Response<String> response = await dio.get(_deckURL! + '/me');
+      Response<String> response = await _dio.get(_deckURL! + '/me');
       final responseJson = json.decode(response.data as String);
       Member me = Member.fromJson(responseJson);
       return me;
@@ -109,10 +107,10 @@ class AuthService {
     }
   }
 
-  static Future<bool> verify(String token) async {
+  Future<bool> verify(String token) async {
     final url = _deckURL! + '/auth/verify/$token';
     try {
-      Response<String> res = await dio.get(url);
+      Response<String> res = await _dio.get(url);
       if (res.statusCode == 200) {
         return true;
       } else {
@@ -127,7 +125,7 @@ class AuthService {
     }
   }
 
-  static Future<bool> login() async {
+  Future<bool> login() async {
     if (await _googleSignIn.isSignedIn()) {
       await _googleSignIn.disconnect();
     }
@@ -144,7 +142,7 @@ class AuthService {
     }
   }
 
-  static Future signOut() async {
+  Future signOut() async {
     try {
       _user = null;
       _token = null;

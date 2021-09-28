@@ -17,6 +17,7 @@ import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CompanyTable extends StatefulWidget {
   CompanyTable({Key? key}) : super(key: key);
@@ -179,13 +180,24 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
                 ],
               );
             } else {
-              return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[400]!,
+                highlightColor: Colors.white,
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: Container(
+                        child: Wrap(
+                            alignment: WrapAlignment.start,
+                            crossAxisAlignment: WrapCrossAlignment.start,
+                            children: [
+                              for (int i = 0; i < 8; i++)
+                                ListViewCard.fakeCard()
+                            ]),
+                      ),
+                    ),
+                  ],
                 ),
               );
             }
