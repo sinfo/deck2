@@ -336,7 +336,6 @@ class SpeakerService extends Service {
         await dio.get("/speakers/$id/participation/status/next");
     try {
       final responseJson = json.decode(response.data!)['steps'] as List;
-      print(responseJson);
       List<ParticipationStep> participationSteps =
           responseJson.map((e) => ParticipationStep.fromJson(e)).toList();
       return participationSteps;

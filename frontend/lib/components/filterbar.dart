@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/status.dart';
+import 'package:frontend/models/participation.dart';
 
 class FilterBar extends StatefulWidget {
   final Function onSelected;
@@ -38,12 +39,13 @@ class FilterBarState extends State<FilterBar> {
   rowChips() {
     List<Widget> filters = [];
     for (int i = 0; i < STATUSSTRING.length; i++) {
-      filters.add(createChip(STATUSFILTER.entries.elementAt(i).value, i));
+      filters.add(createChip(STATUSFILTER.entries.elementAt(i).key, i));
     }
     return Row(children: filters);
   }
 
-  Widget createChip(String label, int index) {
+  Widget createChip(ParticipationStatus status, int index) {
+    String label = STATUSSTRING[status]!;
     return Container(
       margin: EdgeInsets.all(7.0),
       child: ChoiceChip(
@@ -53,19 +55,23 @@ class FilterBarState extends State<FilterBar> {
           side: BorderSide(color: Colors.black12, width: 1),
           borderRadius: BorderRadius.circular(15),
         ),
-        elevation: 2,
-        pressElevation: 1,
+        elevation: 1,
+        pressElevation: 3,
         shadowColor: Colors.teal,
-        selectedColor: Colors.indigo[400],
+        selectedColor: STATUSCOLOR[status],
         onSelected: (bool selected) {
           setState(() {
             _currentIndex = selected ? index : _currentIndex;
-            onSelected(STATUSFILTER.entries.elementAt(index).key);
+            onSelected(status);
           });
         },
-        label: Text(label),
+        label: Text(
+          label == '' ? 'All' : label,
+        ),
         labelStyle: TextStyle(
-          color: _currentIndex != index ? Colors.indigo[400] : Colors.white,
+          color: _currentIndex != index
+              ? Colors.indigo[400]
+              : STATUSTEXTCOLOR[status],
         ),
         padding: EdgeInsets.all(6.0),
       ),

@@ -1,13 +1,8 @@
 import 'package:frontend/main.dart';
 import 'package:frontend/models/contact.dart';
-import 'package:frontend/models/member.dart';
-import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
-import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/contactService.dart';
-import 'package:frontend/services/memberService.dart';
-import 'package:frontend/services/packageService.dart';
-import 'package:frontend/services/threadService.dart';
+import 'package:collection/collection.dart';
 
 class PublicCompany {
   final String id;
@@ -80,6 +75,9 @@ class Company {
   List<CompanyRep>? employees;
   CompanyBillingInfo? billingInfo;
   List<CompanyParticipation>? participations;
+  final int? numParticipations;
+  final int? lastParticipation;
+  final ParticipationStatus? participationStatus;
 
   Company({
     required this.id,
@@ -90,11 +88,14 @@ class Company {
     this.employees,
     this.billingInfo,
     this.participations,
+    this.numParticipations,
+    this.lastParticipation,
+    this.participationStatus,
   });
 
   factory Company.fromJson(Map<String, dynamic> json) {
     // var employees = json['employers'] as List;
-    var participations = json['participations'] as List;
+    var participationsList = json['participations'] as List;
     return Company(
       id: json['id'],
       name: json['name'],
@@ -103,10 +104,35 @@ class Company {
       site: json['site'],
       // employees: employees.map((e) => CompanyRep.fromJson(e)).toList(),
       billingInfo: CompanyBillingInfo.fromJson(json['billingInfo']),
-      participations:
-          participations.map((e) => CompanyParticipation.fromJson(e)).toList(),
+      participations: participationsList
+          .map((e) => CompanyParticipation.fromJson(e))
+          .toList(),
+      numParticipations: participationsList.length,
+      lastParticipation: participationsList.length > 0
+          ? participationsList[participationsList.length - 1]['event']
+          : null,
+      participationStatus: participationsList.length > 0 &&
+              participationsList[participationsList.length - 1]['event'] ==
+                  App.localStorage.getInt("event")
+          ? Participation.convert(
+              participationsList[participationsList.length - 1]['status'])
+          : ParticipationStatus.NO_STATUS,
     );
   }
+
+  CompanyParticipation? getParticipation(int event) {
+    return this
+        .participations!
+        .firstWhereOrNull((element) => element.event == event);
+  }
+
+  CompanyParticipation getLatestParticipation() {
+    return this.participations!.firstWhereOrNull(
+        (element) => element.event == this.lastParticipation)!;
+  }
+
+  bool operator ==(o) => o is Company && id == o.id;
+  int get hashCode => id.hashCode;
 }
 
 class CompanyImages {

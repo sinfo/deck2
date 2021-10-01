@@ -47,23 +47,19 @@ class _CustomAppBarState extends State<CustomAppBar> {
       actions: actions,
       title: Row(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              child: Image.asset(
-                'assets/logo-branco2.png',
-                height: 100,
-                width: 100,
+          InkWell(
+            child: SizedBox(
+              height: kToolbarHeight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                child: Image.asset(
+                  'assets/logo.png',
+                  color: Colors.grey[400],
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
-          if (disableEventChange)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                '${Provider.of<EventNotifier>(context).event.id}',
-              ),
-            ),
           if (!disableEventChange)
             Padding(
               padding: const EdgeInsets.all(8.0),

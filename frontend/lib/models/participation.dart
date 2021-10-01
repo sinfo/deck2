@@ -29,8 +29,7 @@ class Room {
     return Room(cost: json['cost'], notes: json['notes'], type: json['type']);
   }
 
-  Map<String, dynamic> toJson() =>
-      {'cost': notes, 'notes': notes, 'type': type};
+  Map<String, dynamic> toJson() => {'cost': cost, 'notes': notes, 'type': type};
 }
 
 class Participation {

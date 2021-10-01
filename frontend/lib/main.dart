@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/components/speakerNotifier.dart';
+import 'package:frontend/routes/company/CompanyTableNotifier.dart';
+import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/eventService.dart';
@@ -32,6 +33,9 @@ Future main() async {
       ),
       ChangeNotifierProvider<SpeakerTableNotifier>(
         create: (_) => SpeakerTableNotifier(speakers: []),
+      ),
+      ChangeNotifierProvider<CompanyTableNotifier>(
+        create: (_) => CompanyTableNotifier(companies: []),
       ),
       ChangeNotifierProvider<AuthService>(
         create: (_) => AuthService(),

@@ -30,8 +30,8 @@ class CompanyListWidget extends StatefulWidget {
 
 class _CompanyListWidgetState extends State<CompanyListWidget> {
   CompanyService companyService = new CompanyService();
-  late Future<List<CompanyLight>> companies;
-  List<CompanyLight> companiesLoaded = [];
+  late Future<List<Company>> companies;
+  List<Company> companiesLoaded = [];
   SortingMethod _sortMethod = SortingMethod.RANDOM;
   int numRequests = 0;
   ScrollController _controller = ScrollController();
@@ -40,7 +40,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   void initState() {
     super.initState();
     _controller.addListener(_scrollListener);
-    this.companies = companyService.getCompaniesLight(
+    this.companies = companyService.getCompanies(
         maxCompInRequest: MAX_COMP, numRequestsBackend: numRequests);
     numRequests++;
   }
@@ -62,7 +62,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
 
   void _loadMoreCompanies() {
     storeCompaniesLoaded();
-    this.companies = companyService.getCompaniesLight(
+    this.companies = companyService.getCompanies(
         maxCompInRequest: MAX_COMP,
         numRequestsBackend: numRequests,
         sortMethod: _sortMethod);
@@ -74,11 +74,11 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   }
 
   Widget companyGrid() {
-    return FutureBuilder<List<CompanyLight>>(
+    return FutureBuilder<List<Company>>(
         future: companies,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            List<CompanyLight> comp = companiesLoaded + snapshot.data!;
+            List<Company> comp = companiesLoaded + snapshot.data!;
             return LayoutBuilder(builder: (context, constraints) {
               double cardWidth = 250;
               bool isSmall = false;
@@ -99,7 +99,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                   itemBuilder: (BuildContext context, int index) {
                     return ListViewCard(
                         small: isSmall,
-                        companyLight: comp[index],
+                        company: comp[index],
                         participationsInfo: true);
                   });
             });
@@ -128,7 +128,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
               _sortMethod = sort;
               this.companiesLoaded.clear();
               numRequests = 0;
-              this.companies = companyService.getCompaniesLight(
+              this.companies = companyService.getCompanies(
                   maxCompInRequest: MAX_COMP,
                   sortMethod: sort,
                   numRequestsBackend: numRequests);

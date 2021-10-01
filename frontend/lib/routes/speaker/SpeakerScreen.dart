@@ -5,12 +5,11 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
-import 'package:frontend/components/speakerNotifier.dart';
+import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/participation.dart';
-import 'package:frontend/routes/participation/participationScreen.dart';
 import 'package:frontend/routes/speaker/EditSpeakerForm.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
@@ -49,60 +48,9 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     setState(() {});
   }
 
-  Widget _buildParticipationList(BuildContext context, bool small) {
-    if (widget.speaker.participations != null) {
-      if (widget.speaker.lastParticipation ==
-          Provider.of<EventNotifier>(context).latest.id) {
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            child: ListView(
-              children: widget.speaker.participations!.reversed
-                  .map((e) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ParticipationCard(
-                          participation: e,
-                          small: small,
-                          type: CardType.SPEAKER,
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ),
-        );
-      } else {
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            child: ListView(
-              children: [
-                InkWell(
-                  child: ParticipationCard.mockCard(context),
-                  onTap: () {},
-                ),
-                ...widget.speaker.participations!.reversed
-                    .map((e) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ParticipationCard(
-                            participation: e,
-                            small: small,
-                            type: CardType.SPEAKER,
-                          ),
-                        ))
-                    .toList(),
-              ],
-            ),
-          ),
-        );
-      }
-    } else {
-      return Container();
-    }
-  }
-
-  void changeParticipationCallback(int step, BuildContext context) async {
-    Speaker? s = await _speakerService.stepParticipationStatus(
-        id: widget.speaker.id, step: step);
+  Future<void> speakerChangedCallback(
+      BuildContext context, Future<Speaker?> fs) async {
+    Speaker? s = await fs;
     if (s != null) {
       Provider.of<SpeakerTableNotifier>(context, listen: false).edit(s);
       setState(() {
@@ -124,7 +72,13 @@ class _SpeakerScreenState extends State<SpeakerScreen>
               children: [
                 SpeakerBanner(
                   speaker: widget.speaker,
-                  statusChangeCallback: changeParticipationCallback,
+                  statusChangeCallback: (step, context) {
+                    speakerChangedCallback(
+                      context,
+                      _speakerService.stepParticipationStatus(
+                          id: widget.speaker.id, step: step),
+                    );
+                  },
                 ),
                 TabBar(
                   isScrollable: small,
@@ -146,7 +100,29 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                     Container(
                       child: Center(child: Text('Work in progress :)')),
                     ),
-                    _buildParticipationList(context, small),
+                    ParticipationList(
+                      speaker: widget.speaker,
+                      onParticipationChanged:
+                          (Map<String, dynamic> body) async {
+                        await speakerChangedCallback(
+                          context,
+                          _speakerService.updateParticipation(
+                            id: widget.speaker.id,
+                            feedback: body['feedback'],
+                            member: body['member'],
+                            room: body['room'],
+                          ),
+                        );
+                      },
+                      onParticipationAdded: () => speakerChangedCallback(
+                          context,
+                          _speakerService.addParticipation(
+                              id: widget.speaker.id)),
+                      onParticipationDeleted: () => speakerChangedCallback(
+                          context,
+                          _speakerService.removeParticipation(
+                              id: widget.speaker.id)),
+                    ),
                     Container(decoration: BoxDecoration(color: Colors.teal)),
                   ]),
                 ),
@@ -156,6 +132,80 @@ class _SpeakerScreenState extends State<SpeakerScreen>
         );
       });
     });
+  }
+}
+
+class ParticipationList extends StatelessWidget {
+  final Speaker speaker;
+  final Future<void> Function(Map<String, dynamic>) onParticipationChanged;
+  final void Function() onParticipationAdded;
+  final void Function() onParticipationDeleted;
+  const ParticipationList({
+    Key? key,
+    required this.speaker,
+    required this.onParticipationChanged,
+    required this.onParticipationAdded,
+    required this.onParticipationDeleted,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool small = constraints.maxWidth < App.SIZE;
+        if (speaker.participations != null) {
+          if (speaker.lastParticipation ==
+              Provider.of<EventNotifier>(context).latest.id) {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                child: ListView(
+                  children: speaker.participations!.reversed
+                      .map((e) => Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ParticipationCard(
+                              participation: e,
+                              small: small,
+                              type: CardType.SPEAKER,
+                              onEdit: onParticipationChanged,
+                              onDelete: onParticipationDeleted,
+                            ),
+                          ))
+                      .toList(),
+                ),
+              ),
+            );
+          } else {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Container(
+                child: ListView(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ParticipationCard.addParticipationCard(
+                          onParticipationAdded),
+                    ),
+                    ...speaker.participations!.reversed
+                        .map((e) => Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: ParticipationCard(
+                                participation: e,
+                                small: small,
+                                type: CardType.SPEAKER,
+                              ),
+                            ))
+                        .toList(),
+                  ],
+                ),
+              ),
+            );
+          }
+        } else {
+          return Container();
+        }
+      },
+    );
   }
 }
 
@@ -170,7 +220,6 @@ class SpeakerBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
     bool isEditable = Provider.of<EventNotifier>(context).isLatest;
-    print(isEditable);
     Participation? part = speaker.participations!
         .firstWhereOrNull((element) => element.event == event);
     ParticipationStatus speakerStatus =
@@ -305,10 +354,6 @@ class SpeakerStatusDropdownButton extends StatelessWidget {
           ParticipationStep(next: speakerStatus, step: 0)
         ];
         if (snapshot.hasData) {
-          var l = snapshot.data as List<ParticipationStep>;
-          print(l
-              .map((e) => 'step = ${e.step}, next = ${STATUSSTRING[e.next]}')
-              .toList());
           steps.addAll(snapshot.data as List<ParticipationStep>);
         }
         return Container(

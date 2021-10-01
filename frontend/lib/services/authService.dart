@@ -11,6 +11,14 @@ import 'package:frontend/models/member.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
+enum Role {
+  UNKNOWN,
+  MEMBER,
+  TEAMLEADER,
+  COORDINATOR,
+  ADMIN,
+}
+
 class AuthService extends ChangeNotifier {
   final String? _deckURL =
       kIsWeb ? dotenv.env['DECK2_URL'] : dotenv.env['DECK2_MOBILE_URL'];
@@ -23,6 +31,72 @@ class AuthService extends ChangeNotifier {
 
   Member? _user;
   String? _token;
+  Role? _role;
+
+  Future<Role?> get role async {
+    if (_role != null) {
+      return _role;
+    }
+
+    Member? me = await user;
+    if (_token == null) {
+      if (App.localStorage.containsKey('jwt')) {
+        _token = App.localStorage.getString('jwt');
+      } else {
+        bool isLoggedIn = _googleSignIn.currentUser != null;
+        if (isLoggedIn) {
+          GoogleSignInAccount? acc = await _googleSignIn.signInSilently();
+          if (acc != null) {
+            GoogleSignInAuthentication auth = await acc.authentication;
+            _token = await getJWT(auth.accessToken);
+          } else {
+            return null;
+          }
+        } else {
+          return null;
+        }
+      }
+    }
+    bool t = await verify(_token!);
+    if (t) {
+      Member? me;
+      if (_user == null) {
+        _user = await getMe(_token!);
+      }
+      me = _user;
+
+      try {
+        _dio.options.headers["Authorization"] = _token;
+
+        Response<String> response =
+            await _dio.get(_deckURL! + '/members/${me!.id}/role');
+        final responseJson = json.decode(response.data as String);
+        _role = convert(responseJson['role']);
+        return _role;
+      } on SocketException {
+        throw DeckException('No Internet connection');
+      } on HttpException {
+        throw DeckException('Not found');
+      } on FormatException {
+        throw DeckException('Wrong format');
+      }
+    }
+  }
+
+  Role convert(String s) {
+    switch (s) {
+      case 'ADMIN':
+        return Role.ADMIN;
+      case 'COORDINATOR':
+        return Role.COORDINATOR;
+      case 'TEAMLEADER':
+        return Role.TEAMLEADER;
+      case 'MEMBER':
+        return Role.MEMBER;
+      default:
+        return Role.UNKNOWN;
+    }
+  }
 
   Future<Member?> get user async {
     if (_user != null) {
@@ -77,6 +151,7 @@ class AuthService extends ChangeNotifier {
       try {
         final responseJson = json.decode(response.data as String);
         App.localStorage.setString("jwt", responseJson["deck_token"]);
+        _token = responseJson["deck_token"];
         return responseJson["deck_token"];
       } on SocketException {
         throw DeckException('No Internet connection');
