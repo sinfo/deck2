@@ -5,6 +5,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
+import 'package:frontend/models/post.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -125,9 +126,7 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                           _speakerService.removeParticipation(
                               id: widget.speaker.id)),
                     ),
-                    CommunicationsList(
-                      speaker: widget.speaker
-                    ),
+                    CommunicationsList(speaker: widget.speaker),
                   ]),
                 ),
               ],
@@ -139,50 +138,80 @@ class _SpeakerScreenState extends State<SpeakerScreen>
   }
 }
 
+// Start of communication Widgets
 
-class CommunicationsList extends StatelessWidget{
- final Speaker speaker;
- final ThreadService threadService = new ThreadService();
+class CommunicationsList extends StatelessWidget {
+  final Speaker speaker;
 
-  CommunicationsList({
-    Key? key,
-    required this.speaker
-  }) : super(key: key)
-  
+  CommunicationsList({Key? key, required this.speaker}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    List<SpeakerParticipation> participations = speaker.participations?? List.empty();
-    List<List<String>?> threadIds = participations.map( (participation) => participation.communicationsId).toList();
-    List<Future<Thread?>> futureThreads = threadIds
-                  .where((list) => list!=null)
-                  .expand((list) => list!)
-                  .map((id) => threadService.getThread(id))
-                  .toList();
+    List<SpeakerParticipation> participations =
+        speaker.participations ?? List.empty();
 
-
-    return FutureBuilder(
-      future: Future.wait(futureThreads),
-      builder: (context, snapshot) {
-         if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              //TODO : Handle later
-              return Container(decoration: BoxDecoration(color: Colors.red));
-            }
-          List<Thread> threads = snapshot.data as List<Thread>;
-          return Column(
-            children: threads.map((thread) => thread.entry)
-          );
-
-        } else {
-            return Text(
-              "Loading..."
-            );
-        }
-      }
-    );
+    return Column(
+        children: participations
+            .map((participation) =>
+                ParticipationThreadsWidget(participation: participation))
+            .toList());
   }
 }
 
+class ParticipationThreadsWidget extends StatelessWidget {
+  final SpeakerParticipation participation;
+
+  ParticipationThreadsWidget({Key? key, required this.participation})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    Future<List<Thread>?> futureThreads = participation.communications;
+    return FutureBuilder(
+        future: futureThreads,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Thread>? threads = snapshot.data as List<Thread>?;
+           
+            return Column(
+              children: threads!
+                  .map((thread) => ThreadWidget(thread: thread))
+                  .toList(),
+            );
+          }
+          return Text("Loading...");
+        });
+  }
+}
+
+class ThreadWidget extends StatelessWidget {
+  final Thread thread;
+
+  ThreadWidget({Key? key, required this.thread}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: Future.wait([
+          thread.entry,
+        ]),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              //handle err
+              return Text("Something failed on ThreadWidget");
+            }
+            List<dynamic> data = snapshot.data as List<dynamic>;
+            Post? entryPost = data[0] as Post?;
+            return Text(entryPost?.text ?? "");
+          } else {
+            return Text("Loading...");
+          }
+        });
+  }
+}
+
+// End of communication Widgets
 
 class ParticipationList extends StatelessWidget {
   final Speaker speaker;
@@ -257,9 +286,6 @@ class ParticipationList extends StatelessWidget {
     );
   }
 }
-
-
-
 
 class SpeakerBanner extends StatelessWidget {
   final Speaker speaker;
