@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/router.dart';
+import 'package:frontend/services/authService.dart';
 
 class MyDrawer extends Drawer {
   String image;
@@ -18,11 +20,13 @@ class MyDrawer extends Drawer {
           title: Text('Settings Page'),
         ),
         ListTile(
-          leading: Icon(
-            Icons.info,
-          ),
-          title: Text('Info Page'),
-        ),
+            leading: Icon(
+              Icons.person,
+            ),
+            title: Text('Logout'),
+            onTap: () async {
+              await signOut(context);
+            }),
         ListTile(
           leading: Icon(
             Icons.library_books,
@@ -43,6 +47,11 @@ class MyDrawer extends Drawer {
         )
       ],
     ));
+  }
+
+  Future signOut(BuildContext context) async {
+    await AuthService.signOut();
+    Navigator.pushReplacementNamed(context, Routes.LoginRoute);
   }
 
   DrawerHeader buildHeader() {

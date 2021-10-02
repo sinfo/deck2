@@ -27,7 +27,6 @@ class _MemberListWidgetState extends State<MemberListWidget> {
   Widget build(BuildContext context) => FutureBuilder(
       future: members,
       builder: (context, snapshot) {
-        print(snapshot.hasData);
         if (snapshot.hasData) {
           List<Member> membs = snapshot.data as List<Member>;
 

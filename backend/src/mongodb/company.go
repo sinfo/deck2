@@ -95,42 +95,120 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 // The field is non-existent if it has a nil value.
 // This filter will behave like a logical *and*.
 type GetCompaniesOptions struct {
-	EventID   *int
-	IsPartner *bool
-	MemberID  *primitive.ObjectID
-	Name      *string
+	EventID          *int
+	IsPartner        *bool
+	MemberID         *primitive.ObjectID
+	Name             *string
+	NumRequests      *int64
+	MaxCompInRequest *int64
+	SortingMethod    *string
 }
 
+const (
+	NumberParticipations string = "NUM_PARTICIPATIONS"
+	LastParticipation    string = "LAST_PARTICIPATION"
+)
+
 // GetCompanies gets all companies specified with a query
-func (c *CompaniesType) GetCompanies(options GetCompaniesOptions) ([]*models.Company, error) {
+func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models.Company, error) {
 	var companies = make([]*models.Company, 0)
 
 	ctx := context.Background()
 
 	filter := bson.M{}
 
-	if options.EventID != nil {
-		filter["participations.event"] = options.EventID
+	findOptions := options.Find()
+
+	if compOptions.EventID != nil {
+		filter["participations.event"] = compOptions.EventID
 	}
 
-	if options.IsPartner != nil {
-		filter["participations.partner"] = options.IsPartner
+	if compOptions.IsPartner != nil {
+		filter["participations.partner"] = compOptions.IsPartner
 	}
 
-	if options.MemberID != nil {
-		filter["participations.member"] = options.MemberID
+	if compOptions.MemberID != nil {
+		filter["participations.member"] = compOptions.MemberID
 	}
 
-	if options.Name != nil {
+	if compOptions.Name != nil {
 		filter["name"] = bson.M{
-			"$regex":   fmt.Sprintf(".*%s.*", *options.Name),
+			"$regex":   fmt.Sprintf(".*%s.*", *compOptions.Name),
 			"$options": "i",
 		}
 	}
 
-	cur, err := c.Collection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
+	if compOptions.MaxCompInRequest != nil && compOptions.SortingMethod == nil {
+		findOptions.SetLimit(*compOptions.MaxCompInRequest)
+	}
+
+	if compOptions.NumRequests != nil && compOptions.SortingMethod == nil {
+		findOptions.SetSkip(*compOptions.NumRequests * (*compOptions.MaxCompInRequest))
+	}
+
+	var err error
+	var cur *mongo.Cursor
+	if compOptions.SortingMethod != nil {
+		switch *compOptions.SortingMethod {
+		case string(NumberParticipations):
+			query := mongo.Pipeline{
+				{
+					{"$match", filter},
+				},
+				{
+					{"$addFields", bson.D{
+						{"numParticipations", bson.D{
+							{"$size", "$participations"},
+						}},
+					}},
+				},
+				{
+					{"$sort", bson.D{
+						{"numParticipations", -1},
+					}},
+				},
+				{
+					{"$skip", (*compOptions.NumRequests * (*compOptions.MaxCompInRequest))},
+				},
+				{
+					{"$limit", *compOptions.MaxCompInRequest},
+				},
+			}
+			cur, err = c.Collection.Aggregate(ctx, query)
+			if err != nil {
+				return nil, err
+			}
+			break
+		case string(LastParticipation):
+			query := mongo.Pipeline{
+				{
+					{"$match", filter},
+				},
+				{
+					{"$sort", bson.D{
+						{"participations.event", -1},
+					}},
+				},
+				{
+					{"$skip", (*compOptions.NumRequests * (*compOptions.MaxCompInRequest))},
+				},
+				{
+					{"$limit", *compOptions.MaxCompInRequest},
+				},
+			}
+			cur, err = c.Collection.Aggregate(ctx, query)
+			if err != nil {
+				return nil, err
+			}
+			break
+		default:
+			return nil, errors.New("error parsing Sorting Method")
+		}
+	} else {
+		cur, err = c.Collection.Find(ctx, filter, findOptions)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for cur.Next(ctx) {
