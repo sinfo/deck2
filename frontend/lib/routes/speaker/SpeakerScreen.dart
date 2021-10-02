@@ -5,6 +5,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
+import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
@@ -12,6 +13,7 @@ import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/speaker/EditSpeakerForm.dart';
 import 'package:frontend/services/speakerService.dart';
+import 'package:frontend/services/threadService.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
 
@@ -123,7 +125,9 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                           _speakerService.removeParticipation(
                               id: widget.speaker.id)),
                     ),
-                    Container(decoration: BoxDecoration(color: Colors.teal)),
+                    CommunicationsList(
+                      speaker: widget.speaker
+                    ),
                   ]),
                 ),
               ],
@@ -134,6 +138,51 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     });
   }
 }
+
+
+class CommunicationsList extends StatelessWidget{
+ final Speaker speaker;
+ final ThreadService threadService = new ThreadService();
+
+  CommunicationsList({
+    Key? key,
+    required this.speaker
+  }) : super(key: key)
+  
+  @override
+  Widget build(BuildContext context) {
+    List<SpeakerParticipation> participations = speaker.participations?? List.empty();
+    List<List<String>?> threadIds = participations.map( (participation) => participation.communicationsId).toList();
+    List<Future<Thread?>> futureThreads = threadIds
+                  .where((list) => list!=null)
+                  .expand((list) => list!)
+                  .map((id) => threadService.getThread(id))
+                  .toList();
+
+
+    return FutureBuilder(
+      future: Future.wait(futureThreads),
+      builder: (context, snapshot) {
+         if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              //TODO : Handle later
+              return Container(decoration: BoxDecoration(color: Colors.red));
+            }
+          List<Thread> threads = snapshot.data as List<Thread>;
+          return Column(
+            children: threads.map((thread) => thread.entry)
+          );
+
+        } else {
+            return Text(
+              "Loading..."
+            );
+        }
+      }
+    );
+  }
+}
+
 
 class ParticipationList extends StatelessWidget {
   final Speaker speaker;
@@ -208,6 +257,9 @@ class ParticipationList extends StatelessWidget {
     );
   }
 }
+
+
+
 
 class SpeakerBanner extends StatelessWidget {
   final Speaker speaker;

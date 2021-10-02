@@ -85,12 +85,16 @@ class _SpeakerTableState extends State<SpeakerTable>
             notifier.speakers = data[1] as List<Speaker>;
             List<Member> membs = data[0] as List<Member>;
 
+            membs.sort((a, b) => a.name!.compareTo(b.name!));
+
+
             Member me =
                 Member.fromJson(json.decode(App.localStorage.getString('me')!));
 
-            membs.sort((a, b) => a.name!.compareTo(b.name!));
             int index = membs.indexWhere((element) => element.id == me.id);
-            membs.insert(0, membs.removeAt(index));
+            if (index != -1) {
+              membs.insert(0, membs.removeAt(index));
+            }
 
             return RefreshIndicator(
               onRefresh: () {
