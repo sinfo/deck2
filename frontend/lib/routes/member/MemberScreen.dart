@@ -5,7 +5,6 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/member/DisplayContact2.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/routes/member/MemberBanner.dart';
-import 'package:frontend/routes/member/DisplayContacts.dart';
 import 'package:frontend/routes/member/DisplayParticipations.dart';
 
 class MemberScreen extends StatefulWidget {

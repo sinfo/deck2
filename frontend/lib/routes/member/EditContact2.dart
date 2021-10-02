@@ -91,9 +91,8 @@ class _MyFormState extends State<EditContact2> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text("Mails",
-                          style: TextStyle(
-                            fontSize: 18, 
-                            fontWeight: FontWeight.bold)),
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
                         TextButton(
                             // Add new form field
                             onPressed: () {
@@ -113,9 +112,8 @@ class _MyFormState extends State<EditContact2> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text("Phones",
-                          style: TextStyle(
-                            fontSize: 18, 
-                            fontWeight: FontWeight.bold)),
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
                         TextButton(
                             // Add new form field
                             onPressed: () {
@@ -137,20 +135,25 @@ class _MyFormState extends State<EditContact2> {
                             fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     GetSocials(),
-                   
+
                     SizedBox(height: 40),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        TextButton(
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(horizontal: 50),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
+                          ),
                           onPressed: () {
                             //Do not remove this, otherwise it will duplicate
-                              mailsList.clear();
-                              mailsValidList.clear();
-                              mailsPersonalList.clear();
-                              phonesList.clear();
-                              phonesValidList.clear();
+                            mailsList.clear();
+                            mailsValidList.clear();
+                            mailsPersonalList.clear();
+                            phonesList.clear();
+                            phonesValidList.clear();
 
                             Navigator.pushReplacement(
                               context,
@@ -159,58 +162,72 @@ class _MyFormState extends State<EditContact2> {
                                       member: widget.member, role: "whatever")),
                             );
                           },
-                          child: Text('Cancel')),
+                          child: Text("CANCEL",
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: Theme.of(context).accentColor)),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              primary: Theme.of(context).accentColor,
+                              padding: EdgeInsets.symmetric(horizontal: 50),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20)),
+                            ),
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate()) {
+                                // If the form is valid, display a snackbar. In the real world,
+                                // you'd often call a server or save the information in a database.
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text('Updated Contacts')),
+                                );
 
-                        ElevatedButton(
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              // If the form is valid, display a snackbar. In the real world,
-                              // you'd often call a server or save the information in a database.
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Updated Contacts')),
-                              );
+                                for (int i = 0; i < mailsList.length; i++) {
+                                  newListContactMail.add(new ContactMail(
+                                      mail: mailsList[i],
+                                      valid: mailsValidList[i],
+                                      personal: mailsPersonalList[i]));
+                                }
 
-                              for (int i = 0; i < mailsList.length; i++) {
-                                newListContactMail.add(new ContactMail(
-                                    mail: mailsList[i],
-                                    valid: mailsValidList[i],
-                                    personal: mailsPersonalList[i]));
+                                for (int i = 0; i < phonesList.length; i++) {
+                                  newListContactPhone.add(new ContactPhone(
+                                      phone: phonesList[i],
+                                      valid: phonesValidList[i]));
+                                }
+
+                                await contactService.updateContact(new Contact(
+                                    id: widget.contact.id,
+                                    mails: newListContactMail,
+                                    phones: newListContactPhone,
+                                    socials: new ContactSocials(
+                                        facebook: facebook,
+                                        twitter: twitter,
+                                        github: github,
+                                        skype: skype,
+                                        linkedin: linkedin)));
+
+                                //Do not remove this, otherwise it will duplicate
+                                mailsList.clear();
+                                mailsValidList.clear();
+                                mailsPersonalList.clear();
+                                phonesList.clear();
+                                phonesValidList.clear();
+
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => MemberScreen(
+                                          member: widget.member,
+                                          role: "whatever")),
+                                );
                               }
-
-                              for (int i = 0; i < phonesList.length; i++) {
-                                newListContactPhone.add(new ContactPhone(
-                                    phone: phonesList[i],
-                                    valid: phonesValidList[i]));
-                              }
-
-                              await contactService.updateContact(new Contact(
-                                  id: widget.contact.id,
-                                  mails: newListContactMail,
-                                  phones: newListContactPhone,
-                                  socials: new ContactSocials(
-                                    facebook: facebook,
-                                    twitter: twitter,
-                                    github: github,
-                                    skype: skype,
-                                    linkedin: linkedin
-                                  )));
-
-                              //Do not remove this, otherwise it will duplicate
-                              mailsList.clear();
-                              mailsValidList.clear();
-                              mailsPersonalList.clear();
-                              phonesList.clear();
-                              phonesValidList.clear();
-
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => MemberScreen(
-                                        member: widget.member, role: "whatever")),
-                              );
-                            }
-                          },
-                          child: Text('Submit'),
+                            },
+                            child: const Text('SUBMIT'),
+                          ),
                         ),
                       ],
                     ),

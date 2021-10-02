@@ -82,7 +82,7 @@ class _MemberCardState extends State<MemberCard> with AutomaticKeepAliveClientMi
   @override
   void initState() {
     super.initState();
-    this.role = memberService.getMemberRole(widget.member.id!);
+    this.role = memberService.getMemberRole(widget.member.id);
   }
 
   @override
@@ -109,12 +109,12 @@ class _MemberCardState extends State<MemberCard> with AutomaticKeepAliveClientMi
                           image: (widget.member.image == '')
                               ? AssetImage("assets/noImage.png")
                                   as ImageProvider
-                              : NetworkImage(widget.member.image),
+                              : NetworkImage(widget.member.image!),
                           //image: NetworkImage(member.image),
                         ),
                       ),
                       SizedBox(height: 12.5),
-                      Text(widget.member.name!,
+                      Text(widget.member.name,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             //fontFamily: 'Inter',

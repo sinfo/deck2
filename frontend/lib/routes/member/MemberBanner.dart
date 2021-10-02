@@ -31,11 +31,11 @@ class MemberBanner extends StatelessWidget {
             child: ClipOval(
               child: (member.image == '')
                   ? Image.asset("assets/noImage.png")
-                  : Image.network(member.image),
+                  : Image.network(member.image!),
             ),
           ),
           SizedBox(height: 20),
-          Text(member.name!,
+          Text(member.name,
               style: TextStyle(
                   fontSize: 25,
                   color: Colors.white,

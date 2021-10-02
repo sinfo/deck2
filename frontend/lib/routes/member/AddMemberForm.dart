@@ -32,12 +32,14 @@ class _AddMemberFormState extends State<AddMemberForm> {
       var name = _nameController.text;
       var istid = _istIdController.text;
       var sinfoid = _sinfoIdController.text;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
       print(1);
-      Member? m = await _memberService.createMember(istid, name, sinfoid);
+      Member? m = await _memberService.createMember(
+          istid: istid, name: name, sinfoid: sinfoid);
       print(2);
       // if (m != null && _image != null) {
       //   m = kIsWeb
@@ -47,7 +49,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
       //           id: m.id, image: File(_image!.path));
       // }
       if (m != null) {
-        //TODO: Redirect to company page
+        //TODO: Redirect to members page
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -62,6 +64,8 @@ class _AddMemberFormState extends State<AddMemberForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('An error occured.')),
         );
+
+        Navigator.pop(context);
       }
     }
   }
@@ -81,8 +85,8 @@ class _AddMemberFormState extends State<AddMemberForm> {
                 }
                 return null;
               },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.work),
+              decoration: InputDecoration(
+                icon: const Icon(Icons.person),
                 labelText: "Name *",
               ),
             ),
@@ -97,10 +101,12 @@ class _AddMemberFormState extends State<AddMemberForm> {
                 }
                 return null;
               },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.description),
+              decoration: InputDecoration(
+                icon: const Icon(Icons.school),
                 labelText: "IstID *",
+                
               ),
+              
             ),
           ),
           Padding(
@@ -114,18 +120,42 @@ class _AddMemberFormState extends State<AddMemberForm> {
                   return null;
                 }
               },
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 icon: const Icon(Icons.web),
                 labelText: "SinfoID *",
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () => _submit(),
-              child: const Text('Submit'),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: Text("CANCEL",
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).accentColor)),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Theme.of(context).accentColor,
+                    padding: EdgeInsets.symmetric(horizontal: 50),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                  ),
+                  onPressed: () => _submit(),
+                  child: const Text('SUBMIT'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

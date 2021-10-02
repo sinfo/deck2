@@ -48,8 +48,17 @@ class _DisplayContactsState extends State<DisplayContacts2> {
               InformationBox(title: "Mails", contact: cont, type: "mail"),
               InformationBox(title: "Phones", contact: cont, type: "phone"),
               InformationBox(title: "Socials", contact: cont, type: "social"),
-              //SizedBox(height: 24,),
-              TextButton(
+
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Theme.of(context).accentColor,
+                    padding: EdgeInsets.symmetric(horizontal: 50),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                  ),
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
@@ -57,7 +66,11 @@ class _DisplayContactsState extends State<DisplayContacts2> {
                           builder: (context) => EditContact2(contact: cont, member: widget.member)),
                     );
                   },
-                  child: Text('Edit Contacts'))
+                  child: const Text('EDIT CONTACTS'),
+                ),
+              ),
+              //SizedBox(height: 24,),
+              
             ],
           );
         } else {

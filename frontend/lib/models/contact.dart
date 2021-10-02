@@ -50,11 +50,11 @@ class ContactPhone {
 }
 
 class ContactSocials {
-  late final String? facebook;
-  late final String? skype;
-  late final String? github;
-  late final String? twitter;
-  late final String? linkedin;
+  final String? facebook;
+  final String? skype;
+  final String? github;
+  final String? twitter;
+  final String? linkedin;
 
   ContactSocials({
     this.facebook,

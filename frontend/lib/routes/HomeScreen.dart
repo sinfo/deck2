@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 Member me = snapshot.data as Member;
-                return MyDrawer(image: me.image);
+                return MyDrawer(image: me.image!);
               } else {
                 return CircularProgressIndicator();
               }

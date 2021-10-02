@@ -30,11 +30,11 @@ class MemberService extends Service {
   }
 
   Future<Member?> createMember(
-      String istid, String name, String sinfoid) async {
+      {required String istid, required String name, required String sinfoid}) async {
     var body = {
-      "istid": istid,
-      "name": name,
-      "sinfoid": sinfoid,
+      'istid': istid,
+      'name': name,
+      'sinfoid': sinfoid,
     };
 
     Response<String> response = await dio.post("/members", data: body);

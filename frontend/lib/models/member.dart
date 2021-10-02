@@ -3,25 +3,25 @@ import 'dart:convert';
 import 'package:frontend/models/contact.dart';
 
 class Member {
-  final String? id;
-  final String? name;
-  final String image;
-  final String? istId;
-  final String? sinfoId;
+  final String id;
+  final String name;
+  final String? image;
+  final String istId;
+  final String sinfoId;
   final String? contact;
 
   Member({
-    this.id,
-    this.name,
-    required this.image,
-    this.istId,
-    this.sinfoId,
+    required this.id,
+    required this.name,
+    this.image,
+    required this.istId,
+    required this.sinfoId,
     this.contact,
   });
 
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
-      id: json["id"],
+      id: json['id'],
       name: json['name'],
       image: json['img'],
       istId: json['istid'],
