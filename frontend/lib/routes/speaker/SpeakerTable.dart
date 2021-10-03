@@ -5,7 +5,6 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/components/ListViewCard.dart';
-import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:frontend/components/filterbar.dart';
@@ -111,7 +110,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
             ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(5.0)),
                 child: Image.network(
-                  this.member.image,
+                  this.member.image!,
                   width: 40,
                   height: 40,
                   errorBuilder: (BuildContext context, Object exception,
@@ -180,7 +179,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
             ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(5.0)),
                 child: Image.network(
-                  this.member.image,
+                  this.member.image!,
                   width: 25,
                   height: 25,
                   errorBuilder: (BuildContext context, Object exception,

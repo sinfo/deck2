@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
-import 'package:frontend/routes/member/EditBox.dart';
 import 'package:frontend/services/teamService.dart';
 
 class DisplayParticipations extends StatefulWidget {
@@ -57,8 +56,15 @@ class _DisplayParticipationsState extends State<DisplayParticipations> {
             ],
           );
         } else {
-          //FIXME: change
-          return CircularProgressIndicator();
+          return Container(
+                child: Center(
+                  child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
         }
       });
 }

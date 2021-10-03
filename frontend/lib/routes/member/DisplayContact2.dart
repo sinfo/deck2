@@ -5,10 +5,6 @@ import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/member/EditContact2.dart';
 import 'package:frontend/services/contactService.dart';
-import 'package:frontend/routes/member/EditBox.dart';
-import 'package:frontend/routes/member/EditBoxSocials.dart';
-
-import 'EditContact.dart';
 import 'InformationBox.dart';
 
 class DisplayContacts2 extends StatefulWidget {
@@ -39,7 +35,6 @@ class _DisplayContactsState extends State<DisplayContacts2> {
   Widget build(BuildContext context) => FutureBuilder(
       future: contact,
       builder: (context, snapshot) {
-        print(snapshot.hasData);
         if (snapshot.hasData) {
           Contact cont = snapshot.data as Contact;
 
@@ -74,8 +69,15 @@ class _DisplayContactsState extends State<DisplayContacts2> {
             ],
           );
         } else {
-          //FIXME: change
-          return CircularProgressIndicator();
+          return Container(
+                child: Center(
+                  child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
         }
       });
 }

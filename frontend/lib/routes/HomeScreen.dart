@@ -5,9 +5,11 @@ import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
-import 'package:frontend/routes/MemberListWidget.dart';
+import 'package:frontend/routes/member/MemberListWidget.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
+import 'package:frontend/routes/teams/TeamScreenFrontend.dart';
+import 'package:frontend/routes/teams/TeamsTable.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
@@ -63,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 )),
             //FIXME: o item aqui em baixo foi colocado apenas para processo de development
             BottomNavigationBarItem(
-                label: 'Members',
+                label: 'Teams',
                 icon: Icon(
                   Icons.people,
                 )),
@@ -85,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Center(child: SpeakerTable()),
             Center(child: Text("Home in progress :)")),
             Center(child: CompanyTable()),
-            Center(child: MemberListWidget()),
+            Center(child: TeamScreenFrontend()),
           ],
         ),
       ),
@@ -124,6 +126,20 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
             label: const Text('Show All Companies'),
+            icon: const Icon(Icons.add),
+            backgroundColor: Color(0xff5C7FF2),
+          );
+        }
+      case 3:
+        {
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                Routes.ShowAllMembers
+              );
+            },
+            label: const Text('Show All Members'),
             icon: const Icon(Icons.add),
             backgroundColor: Color(0xff5C7FF2),
           );

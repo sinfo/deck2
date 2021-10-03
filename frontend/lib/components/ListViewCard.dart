@@ -7,6 +7,7 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
+import 'package:frontend/routes/member/MemberScreen.dart';
 
 final Map<ParticipationStatus, String> STATUSSTRING = {
   ParticipationStatus.ACCEPTED: 'ACCEPTED',
@@ -55,8 +56,17 @@ class ListViewCard extends StatelessWidget {
         _initCompanyLight();
       } else if (speakerLight != null) {
         _initSpeakerLight();
+      } else if (member != null) {
+        _initMember();
       }
     }
+  }
+
+  void _initMember() {
+    _imageUrl = member!.image!;
+    _title = member!.name;
+    _color = Colors.indigo;
+    _status = '';
   }
 
   void _initCompanyLight() {
@@ -177,10 +187,14 @@ class ListViewCard extends StatelessWidget {
                 ],
               ),
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return UnknownScreen();
-                } // CompanyScreen(company: this.company)),
-                    ));
+                if (member != null) {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => MemberScreen(
+                        member: this.member!, 
+                        role: "in construction")
+                  ));
+              } else {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => UnknownScreen()));
+              }
               }),
           ...getStatus(10)
         ],
@@ -289,61 +303,87 @@ class ListViewCard extends StatelessWidget {
               ],
             ),
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) {
-                return UnknownScreen();
-              } // CompanyScreen(company: this.company)),
+              if (member != null) {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => MemberScreen(
+                        member: this.member!, 
+                        role: "in construction")
                   ));
-            }),
-        ...getStatus(14)
-      ]),
-    );
-  }
+              } else {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => UnknownScreen()));
+              }
+              } // CompanyScreen(company: this.company)),
+            ),
+            ...getStatus(14)
+          ]
+        )
+        );
+        
+        }
+        
+  
 
   @override
   Widget build(BuildContext context) {
-    if (member != null) {
-      return InkWell(
-          child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(5),
-                        topRight: Radius.circular(5)),
-                    child: Image(
-                      width: 300,
-                      height: 300,
-                      fit: BoxFit.cover,
-                      image: (member!.image == '')
-                          ? AssetImage("assets/noImage.png") as ImageProvider
-                          : NetworkImage(member!.image!),
-                      //image: NetworkImage(member.image),
+    if (0 == null) {
+      return Container(
+        height: 225,
+        width: 200,
+        margin: EdgeInsets.all(5),
+        alignment: Alignment.topCenter,
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(5),
+          border: Border.all(color: Colors.indigo),
+        ),
+        child: Stack(
+          children: [
+            InkWell(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(5),
+                            topRight: Radius.circular(5)),
+                        child: Image.network(
+                          member!.image!,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, progress) {
+                            return progress == null
+                                ? child
+                                : Center(child: CircularProgressIndicator());
+                          },
+                          errorBuilder: (BuildContext context, Object exception,
+                              StackTrace? stackTrace) {
+                            return Image.asset(
+                              'assets/noImage.png',
+                              fit: BoxFit.fill,
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 12.5),
-                  Text(member!.name!,
+                    SizedBox(height: 12.5),
+                    Text(
+                      'Role',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        //fontFamily: 'Inter',
-                        fontWeight: FontWeight.bold,
-                      )),
-                  Text(
-                    'Role',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              )),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return UnknownScreen();
-            } //MemberScreen(member: this.member)),
-                ));
-          });
-    } else if (company != null || speaker != null || companyLight != null || speakerLight != null) {
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return MemberScreen(
+                        member: this.member!, role: "in construction");
+                  }));
+                }),
+          ],
+        ),
+      );
+    } else if (company != null ||
+        speaker != null ||
+        companyLight != null ||
+        speakerLight != null ||
+        member != null) {
       return small ? _buildSmallCard(context) : _buildBigCard(context);
     } else {
       return UnknownScreen();

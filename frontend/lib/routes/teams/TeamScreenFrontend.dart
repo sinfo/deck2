@@ -1,34 +1,28 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/member/DisplayContact2.dart';
-import 'package:frontend/services/memberService.dart';
-import 'package:frontend/routes/member/DisplayParticipations.dart';
+import 'package:frontend/models/team.dart';
+import 'package:frontend/services/teamService.dart';
 
-class MemberScreen extends StatefulWidget {
-  final Member member;
-  final String role;
-  MemberScreen({Key? key, required this.member, required this.role})
+class TeamScreenFrontend extends StatefulWidget {
+  TeamScreenFrontend({Key? key})
       : super(key: key);
 
   @override
-  _MemberScreen createState() => _MemberScreen(member: member, role: role);
+  _TeamScreen createState() => _TeamScreen();
 }
 
-class _MemberScreen extends State<MemberScreen> {
-  MemberService memberService = new MemberService();
-  final Member member;
-  final String role;
+class _TeamScreen extends State<TeamScreenFrontend> {
+  TeamService teamService = new TeamService();
 
-  _MemberScreen({Key? key, required this.member, required this.role});
+  _TeamScreen({Key? key});
 
   @override
   void initState() {
     super.initState();
   }
 
-  Widget memberBanner(){
+  Widget teamBanner(){
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -49,23 +43,17 @@ class _MemberScreen extends State<MemberScreen> {
             ),
             padding: const EdgeInsets.all(5),
             child: ClipOval(
-              child: (member.image == '')
-                  ? Image.asset("assets/noImage.png")
-                  : Image.network(member.image!),
+              child: Image.asset(
+                "assets/DevTeam.jpg",
+                fit: BoxFit.cover),
             ),
           ),
           SizedBox(height: 20),
-          Text(member.name,
+          Text('DevTeam 29',
               style: TextStyle(
                   fontSize: 25,
                   color: Colors.white,
                   fontWeight: FontWeight.bold)),
-          SizedBox(height: 10),
-          Text(role.toLowerCase(),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-              )),
           SizedBox(height: 20),
         ],
       ),
@@ -78,16 +66,16 @@ class _MemberScreen extends State<MemberScreen> {
       appBar: AppBar(
         title: GestureDetector(
             child: Image.asset(
-          'assets/logo-branco2.png',
-          height: 100,
-          width: 100,
+              'assets/logo-branco2.png',
+              height: 100,
+              width: 100,
         )),
       ),
       body: Container(
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              memberBanner(),
+              teamBanner(),
               DefaultTabController(
                   length: 2, // length of tabs
                   initialIndex: 0,
@@ -105,9 +93,9 @@ class _MemberScreen extends State<MemberScreen> {
                             indicatorColor: Theme.of(context).accentColor,
                             tabs: [
                               Tab(
-                                text: 'Contacts',
+                                text: 'Members',
                               ),
-                              Tab(text: 'Participations'),
+                              Tab(text: 'Meetings'),
                             ],
                           ),
                         ),
@@ -116,10 +104,10 @@ class _MemberScreen extends State<MemberScreen> {
                             height: 500,
                             child: TabBarView(children: <Widget>[
                               Container(
-                                child: DisplayContacts2(member: member),
+                                child: Text("Members")
                               ),
                               Container(
-                                child: DisplayParticipations(member: member),
+                                child: Text('Meetings'),
                               ),
                             ]))
                       ])),

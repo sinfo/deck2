@@ -109,7 +109,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
             ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(5.0)),
                 child: Image.network(
-                  this.member.image,
+                  this.member.image!,
                   width: 40,
                   height: 40,
                   errorBuilder: (BuildContext context, Object exception,
@@ -178,7 +178,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
             ClipRRect(
                 borderRadius: BorderRadius.all(Radius.circular(5.0)),
                 child: Image.network(
-                  this.member.image,
+                  this.member.image!,
                   width: 25,
                   height: 25,
                   errorBuilder: (BuildContext context, Object exception,

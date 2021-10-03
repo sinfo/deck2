@@ -1,5 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/memberSearchDelegate.dart';
+import 'package:frontend/components/router.dart';
+import 'package:frontend/components/speakerSearchDelegate.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
@@ -31,6 +34,23 @@ class _MemberListWidgetState extends State<MemberListWidget> {
           List<Member> membs = snapshot.data as List<Member>;
 
           return Scaffold(
+            appBar: AppBar(
+              title: GestureDetector(
+                  child: Image.asset(
+                'assets/logo-branco2.png',
+                height: 100,
+                width: 100,
+              )),
+              actions: <Widget>[
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  tooltip: 'Search member',
+                  onPressed: () {
+                    showSearch(context: context, delegate: MemberSearchDelegate());
+                  },
+                ),
+                
+              ]),
             body: GridView.count(
               padding: EdgeInsets.all(10),
               crossAxisCount: 3,
@@ -40,25 +60,28 @@ class _MemberListWidgetState extends State<MemberListWidget> {
               addAutomaticKeepAlives: true,
               children: membs.map((e) => MemberCard(member: e)).toList(),
             ),
-            floatingActionButton: FloatingActionButton(
+            floatingActionButton: FloatingActionButton.extended(
               onPressed: () {
-                //TODO: on tap
-                // Add your onPressed code here!
+                Navigator.pushNamed(
+                  context,
+                  Routes.AddMember,
+                );
               },
-              child: IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => AddMemberForm()),
-                  );
-                }, 
-                icon: Icon(Icons.add)),
-              backgroundColor: Color.fromRGBO(92, 127, 242, 1),
+              label: const Text('Create New Member'),
+              icon: const Icon(Icons.person_add),
+              backgroundColor: Color(0xff5C7FF2),
             ),
           );
         } else {
-          return CircularProgressIndicator();
+          return Container(
+                child: Center(
+                  child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
         }
       });
 }
@@ -134,58 +157,16 @@ class _MemberCardState extends State<MemberCard> with AutomaticKeepAliveClientMi
                 );
               });
         } else {
-          //FIXME: change 
-          return CircularProgressIndicator();
+          return Container(
+                child: Center(
+                  child: Container(
+                    height: 50,
+                    width: 50,
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              );
         
         }
       });
 }
-
-// class MemberCard extends StatelessWidget {
-//   final Member member;
-//   final MemberService memberService = new MemberService();
-//   MemberCard({Key? key, required this.member}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return InkWell(
-//         child: Container(
-//             decoration: BoxDecoration(
-//               color: Theme.of(context).cardColor,
-//               borderRadius: BorderRadius.circular(5),
-//             ),
-//             child: Column(
-//               children: [
-//                 ClipRRect(
-//                   borderRadius: BorderRadius.only(
-//                       topLeft: Radius.circular(5),
-//                       topRight: Radius.circular(5)),
-//                   child: Image(
-//                     image: (member.image == '')
-//                         ? AssetImage("assets/noImage.png") as ImageProvider
-//                         : NetworkImage(member.image),
-//                     //image: NetworkImage(member.image),
-//                   ),
-//                 ),
-//                 SizedBox(height: 12.5),
-//                 Text(member.name!,
-//                     textAlign: TextAlign.center,
-//                     style: TextStyle(
-//                       //fontFamily: 'Inter',
-//                       fontWeight: FontWeight.bold,
-//                     )),
-//                 Text(
-//                   'Role',
-//                   textAlign: TextAlign.center,
-//                 ),
-//               ],
-//             )),
-//         onTap: () {
-//           Navigator.push(
-//             context,
-//             MaterialPageRoute(
-//                 builder: (context) => MemberScreen(member: this.member)),
-//           );
-//         });
-//   }
-// }

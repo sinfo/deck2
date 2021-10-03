@@ -1,19 +1,24 @@
 import 'package:flutter/cupertino.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
 
 class GridLayout extends StatelessWidget {
   final List<SpeakerLight>? speakers;
   final List<CompanyLight>? companies;
+  final List<Member>? members;
 
-  GridLayout({Key? key, this.speakers, this.companies}) : super(key: key) {}
+  GridLayout({Key? key, this.speakers, this.companies, this.members})
+      : super(key: key) {}
 
   int getNumberOfItems() {
     if (speakers != null) {
       return speakers!.length;
-    } else {
+    } else if (companies != null) {
       return companies!.length;
+    } else {
+      return members!.length;
     }
   }
 
@@ -40,11 +45,16 @@ class GridLayout extends StatelessWidget {
                 small: isSmall,
                 speakerLight: speakers![index],
                 participationsInfo: true);
-          } else {
+          } else if (companies != null) {
             return ListViewCard(
                 small: isSmall,
                 companyLight: companies![index],
                 participationsInfo: true);
+          } else {
+            return ListViewCard(
+              small: isSmall,
+              member: members![index],
+            );
           }
         },
       );
