@@ -62,14 +62,7 @@ jobs:
       uses: nickgronow/kubectl@master
       with:
         config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: set image deployment/deck2-staging deck2-staging-app=orgsinfo/deck2:latest --namespace=staging
-        
-    - name: Verify backend deployment
-      uses: nickgronow/kubectl@master
-      with:
-        config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: rollout status deployment/deck2-staging --namespace=staging
-        
+        args: delete pod --selector="app=deck2-staging-app" --namespace=staging        
         
   deploy-frontend:
     needs: docker-frontend
@@ -81,10 +74,5 @@ jobs:
       uses: nickgronow/kubectl@master
       with:
         config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: set image deployment/deck2-frontend-staging deck2-frontend-staging-app=orgsinfo/deck2-frontend:latest --namespace=staging
-        
-    - name: Verify frontend deployment
-      uses: nickgronow/kubectl@master
-      with:
-        config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: rollout status deployment/deck2-frontend-staging --namespace=staging
+        args: delete pod --selector="app=deck2-frontend-staging-app" --namespace=staging
+
