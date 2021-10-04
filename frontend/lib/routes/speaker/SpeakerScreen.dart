@@ -150,11 +150,13 @@ class CommunicationsList extends StatelessWidget {
     List<SpeakerParticipation> participations =
         speaker.participations ?? List.empty();
 
-    return Column(
-        children: participations
-            .map((participation) =>
-                ParticipationThreadsWidget(participation: participation))
-            .toList());
+    return LayoutBuilder(builder: (context, constraints) {
+      return ListView(
+          children: participations
+              .map((participation) =>
+                  ParticipationThreadsWidget(participation: participation))
+              .toList());
+    });
   }
 }
 
@@ -172,12 +174,19 @@ class ParticipationThreadsWidget extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<Thread>? threads = snapshot.data as List<Thread>?;
-           
-            return Column(
-              children: threads!
-                  .map((thread) => ThreadWidget(thread: thread))
-                  .toList(),
-            );
+            return Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                    width: 20,
+                    height: 500,
+                    child: ListView(
+                        children: threads!
+                            .map((thread) => Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: ThreadWidget(
+                                  thread: thread,
+                                )))
+                            .toList())));
           }
           return Text("Loading...");
         });
@@ -203,7 +212,18 @@ class ThreadWidget extends StatelessWidget {
             }
             List<dynamic> data = snapshot.data as List<dynamic>;
             Post? entryPost = data[0] as Post?;
-            return Text(entryPost?.text ?? "");
+            return EditableCard(
+              title: entryPost?.member.name ?? "",
+              body: entryPost?.text ?? "",
+              bodyEditedCallback: (text) {
+                //entryPost!.text = text;
+                //TODO replace text with service call to change text
+                print('replaced text');
+                return Future.delayed(Duration.zero);
+              },
+              isSingleline: false,
+              textInputType: TextInputType.multiline,
+            );
           } else {
             return Text("Loading...");
           }
