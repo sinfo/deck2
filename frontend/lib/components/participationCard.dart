@@ -170,7 +170,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
     return [
       TextField(
         decoration: const InputDecoration(
-          label: Text('Notes'),
+          labelText: 'Notes',
           disabledBorder: InputBorder.none,
         ),
         enabled: _isEditing,
@@ -223,7 +223,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
     return [
       TextField(
         decoration: const InputDecoration(
-          label: Text('Feedback'),
+          labelText: 'Feedback',
           disabledBorder: InputBorder.none,
         ),
         enabled: _isEditing,
@@ -235,7 +235,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
       ),
       TextField(
         decoration: const InputDecoration(
-          label: Text('Room cost'),
+          labelText: 'Room cost',
           disabledBorder: InputBorder.none,
         ),
         enabled: _isEditing,
@@ -248,7 +248,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
       ),
       TextField(
         decoration: const InputDecoration(
-          label: Text('Room notes'),
+          labelText: 'Room notes',
           disabledBorder: InputBorder.none,
         ),
         enabled: _isEditing,
@@ -260,7 +260,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
       ),
       TextField(
         decoration: const InputDecoration(
-          label: Text('Room type'),
+          labelText: 'Room type',
           disabledBorder: InputBorder.none,
         ),
         enabled: _isEditing,

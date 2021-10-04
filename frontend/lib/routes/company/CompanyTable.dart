@@ -85,7 +85,9 @@ class _CompanyTableState extends State<CompanyTable>
                 Member.fromJson(json.decode(App.localStorage.getString('me')!));
             membs.sort((a, b) => a.name!.compareTo(b.name!));
             int index = membs.indexWhere((element) => element.id == me.id);
-            membs.insert(0, membs.removeAt(index));
+            if (index != -1) {
+              membs.insert(0, membs.removeAt(index));
+            }
 
             return RefreshIndicator(
               onRefresh: () => Future.delayed(Duration.zero, () {
