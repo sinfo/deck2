@@ -45,36 +45,6 @@ class CompanyService extends Service {
   }
 
   Future<List<Company>> getCompanies(
-      {int? event, bool? partner, String? member, String? name}) async {
-    Map<String, dynamic> queryParams = {};
-    if (event != null) {
-      queryParams['event'] = event;
-    }
-    if (partner != null) {
-      queryParams['partner'] = partner;
-    }
-    if (member != null) {
-      queryParams['member'] = member;
-    }
-    if (name != null) {
-      queryParams['name'] = name;
-    }
-
-    String companyUrl = '/companies';
-    Response<String> res =
-        await dio.get(companyUrl, queryParameters: queryParams);
-
-    if (res.statusCode == 200 && res.data!.isNotEmpty) {
-      final jsonRes = json.decode(res.data!) as List;
-
-      List<Company> data = jsonRes.map((e) => Company.fromJson(e)).toList();
-      return data;
-    } else {
-      return [];
-    }
-  }
-
-  Future<List<CompanyLight>> getCompaniesLight(
       {int? event,
       bool? partner,
       String? member,
@@ -111,8 +81,7 @@ class CompanyService extends Service {
 
     if (res.statusCode == 200 && res.data!.isNotEmpty) {
       final jsonRes = json.decode(res.data!) as List;
-      List<CompanyLight> data =
-          jsonRes.map((e) => CompanyLight.fromJson(e)).toList();
+      List<Company> data = jsonRes.map((e) => Company.fromJson(e)).toList();
       return data;
     } else {
       return [];
@@ -285,7 +254,7 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> createParticipation(
+  Future<Company?> addParticipation(
       {required String id, required bool partner}) async {
     var body = {'partner': partner};
 

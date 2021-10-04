@@ -3,15 +3,16 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
+import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
-import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
-import 'package:frontend/routes/SpeakerScreen.dart';
 import 'package:frontend/routes/MemberListWidget.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
+import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/meetingService.dart';
+import 'package:frontend/services/speakerService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
@@ -23,16 +24,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 1;
   GoogleSignIn googleSignIn =
       GoogleSignIn(scopes: ['email'], hostedDomain: "sinfo.org");
   late PageController _pageController;
 
   @override
   void initState() {
-    _pageController =
-        PageController(initialPage: _currentIndex, keepPage: true);
     super.initState();
+    _pageController = PageController(
+        initialPage:
+            Provider.of<BottomNavigationBarProvider>(context, listen: false)
+                .currentIndex,
+        keepPage: true);
   }
 
   @override
@@ -43,68 +46,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Member? user = Provider.of<Member?>(context);
     return Scaffold(
       appBar: CustomAppBar(
         disableEventChange: false,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _currentIndex,
-          items: <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-                label: 'Speakers',
-                icon: Icon(
-                  Icons.star,
-                )),
-            BottomNavigationBarItem(
-                label: 'Home',
-                icon: Icon(
-                  Icons.home,
-                )),
-            BottomNavigationBarItem(
-                label: 'Companies',
-                icon: Icon(
-                  Icons.work,
-                )),
-            //FIXME: o item aqui em baixo foi colocado apenas para processo de development
-            BottomNavigationBarItem(
-                label: 'Members',
-                icon: Icon(
-                  Icons.people,
-                )),
-          ],
-          onTap: (newIndex) {
-            setState(() {
-              _currentIndex = newIndex;
-              _pageController.animateToPage(_currentIndex,
-                  duration: Duration(milliseconds: 800), curve: Curves.easeOut);
-            });
-          }),
+      bottomNavigationBar: CustomNavBar(
+        onTapped: (newIndex) {
+          Provider.of<BottomNavigationBarProvider>(context, listen: false)
+              .currentIndex = newIndex;
+          _pageController.animateToPage(newIndex,
+              duration: Duration(milliseconds: 800), curve: Curves.ease);
+        },
+      ),
       body: SizedBox.expand(
         child: PageView(
           controller: _pageController,
           onPageChanged: (index) {
-            setState(() => _currentIndex = index);
+            Provider.of<BottomNavigationBarProvider>(context, listen: false)
+                .currentIndex = index;
           },
           children: <Widget>[
             Center(
-                child: Consumer<EventNotifier>(
-              builder: (context, value, child) => SpeakerTable(),
-            )),
-            Center(
-              child: MeetingList(),
+              child: const SpeakerTable(),
             ),
             Center(
-              child: Consumer<EventNotifier>(
-                  builder: (context, value, child) => CompanyTable()),
+              child: LandingPage(),
+            ),
+            Center(
+              child: CompanyTable(),
             ),
             Center(child: MemberListWidget()),
           ],
         ),
       ),
-      drawer: DeckDrawer(image: user != null ? user.image : ''),
-      floatingActionButton: _fabAtIndex(context, _currentIndex),
+      drawer: DeckDrawer(),
+      floatingActionButton: _fabAtIndex(
+          context,
+          Provider.of<BottomNavigationBarProvider>(context, listen: false)
+              .currentIndex),
     );
   }
 
@@ -147,6 +126,63 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
     }
+  }
+}
+
+class LandingPage extends StatelessWidget {
+  const LandingPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          colorFilter:
+              ColorFilter.mode(Colors.grey.withOpacity(0.1), BlendMode.srcATop),
+          fit: BoxFit.fitWidth,
+          image: AssetImage('assets/logo-branco2.png'),
+        ),
+      ),
+      child: MeetingList(),
+    );
+  }
+}
+
+class CustomNavBar extends StatelessWidget {
+  final Function(int) onTapped;
+  const CustomNavBar({Key? key, required this.onTapped}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex:
+          Provider.of<BottomNavigationBarProvider>(context).currentIndex,
+      items: <BottomNavigationBarItem>[
+        BottomNavigationBarItem(
+            label: 'Speakers',
+            icon: Icon(
+              Icons.star,
+            )),
+        BottomNavigationBarItem(
+            label: 'Home',
+            icon: Icon(
+              Icons.home,
+            )),
+        BottomNavigationBarItem(
+            label: 'Companies',
+            icon: Icon(
+              Icons.work,
+            )),
+        //FIXME: o item aqui em baixo foi colocado apenas para processo de development
+        BottomNavigationBarItem(
+            label: 'Members',
+            icon: Icon(
+              Icons.people,
+            )),
+      ],
+      onTap: onTapped,
+    );
   }
 }
 

@@ -43,27 +43,6 @@ class SpeakerService extends Service {
     }
   }
 
-  // Future<List<Speaker>> getSpeakers(
-  //     {String? name, int? eventId, String? member}) async {
-  //   var queryParameters = {'name': name, 'event': eventId, 'member': member};
-
-  //   Response<String> response =
-  //       await dio.get("/speakers", queryParameters: queryParameters);
-
-  //   try {
-  //     final responseJson = json.decode(response.data!) as List;
-  //     List<Speaker> speakers =
-  //         responseJson.map((e) => Speaker.fromJson(e)).toList();
-  //     return speakers;
-  //   } on SocketException {
-  //     throw DeckException('No Internet connection');
-  //   } on HttpException {
-  //     throw DeckException('Not found');
-  //   } on FormatException {
-  //     throw DeckException('Wrong format');
-  //   }
-  // }
-
   Future<List<Speaker>> getSpeakers(
       {String? name,
       int? eventId,
@@ -91,10 +70,10 @@ class SpeakerService extends Service {
       queryParameters['sortMethod'] = sortMethod.toString().split('.').last;
     }
 
-    Response<String> response =
-        await dio.get("/speakers", queryParameters: queryParameters);
-
     try {
+      Response<String> response =
+          await dio.get("/speakers", queryParameters: queryParameters);
+
       final responseJson = json.decode(response.data!) as List;
       List<Speaker> speakers =
           responseJson.map((e) => Speaker.fromJson(e)).toList();
@@ -115,8 +94,9 @@ class SpeakerService extends Service {
       "title": title,
     };
 
-    Response<String> response = await dio.post("/speakers", data: body);
     try {
+      Response<String> response = await dio.post("/speakers", data: body);
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -144,8 +124,9 @@ class SpeakerService extends Service {
       String? title}) async {
     var body = {"bio": bio, "name": name, "notes": notes, "title": title};
 
-    Response<String> response = await dio.put("/speakers" + id, data: body);
     try {
+      Response<String> response = await dio.put("/speakers" + id, data: body);
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -173,6 +154,7 @@ class SpeakerService extends Service {
         '/speakers/' + id + '/image/internal',
         data: formData,
       );
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -192,9 +174,10 @@ class SpeakerService extends Service {
     FormData formData =
         FormData.fromMap({'image': await MultipartFile.fromFile(image.path)});
 
-    Response<String> response =
-        await dio.post('/speakers/' + id + '/image/internal', data: formData);
     try {
+      Response<String> response =
+          await dio.post('/speakers/' + id + '/image/internal', data: formData);
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -210,9 +193,10 @@ class SpeakerService extends Service {
     FormData formData =
         FormData.fromMap({'image': await MultipartFile.fromFile(image.path)});
 
-    Response<String> response = await dio
-        .post('/speakers/' + id + '/image/public/speaker', data: formData);
     try {
+      Response<String> response = await dio
+          .post('/speakers/' + id + '/image/public/speaker', data: formData);
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -228,9 +212,10 @@ class SpeakerService extends Service {
     FormData formData =
         FormData.fromMap({'image': await MultipartFile.fromFile(image.path)});
 
-    Response<String> response = await dio
-        .post('/speakers/' + id + '/image/public/company', data: formData);
     try {
+      Response<String> response = await dio
+          .post('/speakers/' + id + '/image/public/company', data: formData);
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -252,9 +237,10 @@ class SpeakerService extends Service {
       "room": room != null ? room.toJson() : null
     };
 
-    Response<String> response =
-        await dio.put("/speakers/" + id + "/participation", data: body);
     try {
+      Response<String> response =
+          await dio.put("/speakers/" + id + "/participation", data: body);
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -266,9 +252,10 @@ class SpeakerService extends Service {
   }
 
   Future<Speaker?> addParticipation({required String id}) async {
-    Response<String> response =
-        await dio.post("/speakers/" + id + "/participation");
     try {
+      Response<String> response =
+          await dio.post("/speakers/" + id + "/participation");
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -280,9 +267,10 @@ class SpeakerService extends Service {
   }
 
   Future<Speaker?> removeParticipation({required String id}) async {
-    Response<String> response =
-        await dio.delete("/speakers/" + id + "/participation");
     try {
+      Response<String> response =
+          await dio.delete("/speakers/" + id + "/participation");
+
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -377,8 +365,8 @@ class SpeakerService extends Service {
 
   Future<Speaker?> stepParticipationStatus(
       {required String id, required int step}) async {
-    Response<String> response = await dio
-        .put("/speakers/" + id + "/participation/status/" + step.toString());
+    Response<String> response =
+        await dio.post('/speakers/$id/participation/status/$step');
     try {
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {

@@ -99,6 +99,7 @@ modules/.vscode
 *secret.js
 backend/config.json
 *deck2.json
+key.jks
 
 # Ignore npm/yarn debug log
 npm-debug.log

@@ -3,25 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
+import 'package:frontend/models/member.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 class DeckDrawer extends StatefulWidget {
-  String image;
-  late bool _darkTheme;
-  DeckDrawer({Key? key, required this.image}) : super(key: key) {
-    _darkTheme = App.localStorage.getBool('darkTheme')!;
-  }
+  DeckDrawer({Key? key}) : super(key: key);
 
   @override
-  _DeckDrawerState createState() => _DeckDrawerState(image: this.image);
+  _DeckDrawerState createState() => _DeckDrawerState();
 }
 
 class _DeckDrawerState extends State<DeckDrawer> {
   late bool _darkTheme;
-  final String image;
 
-  _DeckDrawerState({required this.image});
+  _DeckDrawerState();
 
   @override
   void initState() {
@@ -38,7 +35,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          buildHeader(),
+          buildHeader(context),
           ListTile(
               leading: Icon(
                 Icons.person,
@@ -83,20 +80,33 @@ class _DeckDrawerState extends State<DeckDrawer> {
   }
 
   Future signOut(BuildContext context) async {
-    await AuthService.signOut();
+    await Provider.of<AuthService>(context).signOut();
     Navigator.pushReplacementNamed(context, Routes.LoginRoute);
   }
 
-  DrawerHeader buildHeader() {
+  DrawerHeader buildHeader(BuildContext context) {
     return DrawerHeader(
         margin: EdgeInsets.zero,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CircleAvatar(
-              backgroundImage: NetworkImage(this.image),
-            ),
+            FutureBuilder(
+                future: Provider.of<AuthService>(context).user,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    Member m = snapshot.data as Member;
+                    return CircleAvatar(
+                      backgroundImage: NetworkImage(m.image),
+                    );
+                  } else {
+                    return Shimmer.fromColors(
+                      baseColor: Colors.grey[400]!,
+                      highlightColor: Colors.white,
+                      child: CircleAvatar(),
+                    );
+                  }
+                }),
             Text(
               "My Account",
               style: TextStyle(

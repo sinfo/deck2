@@ -35,7 +35,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.speaker.name);
-    _titleController = TextEditingController(text: widget.speaker.name);
+    _titleController = TextEditingController(text: widget.speaker.title);
     var i = NetworkImage(widget.speaker.imgs!.internal!);
   }
 

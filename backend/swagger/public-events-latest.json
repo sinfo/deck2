@@ -16,7 +16,7 @@
       "200": {
         "description": "Latest event",
         "schema": {
-          "$ref": "./models/public-event.json"
+          "$ref": "./models/event.json"
         }
       },
       "417": {

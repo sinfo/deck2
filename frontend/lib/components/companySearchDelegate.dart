@@ -4,7 +4,7 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/services/companyService.dart';
 
 class CompanySearchDelegate extends SearchDelegate {
-  late Future<List<CompanyLight>> companies;
+  late Future<List<Company>> companies;
   CompanyService companyService = new CompanyService();
 
   @override
@@ -31,8 +31,8 @@ class CompanySearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    this.companies = companyService.getCompaniesLight(name: query);
-    return FutureBuilder<List<CompanyLight>>(
+    this.companies = companyService.getCompanies(name: query);
+    return FutureBuilder<List<Company>>(
         future: this.companies,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
@@ -54,13 +54,12 @@ class CompanySearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     if (query.length > 1) {
-      this.companies = companyService.getCompaniesLight(name: query);
+      this.companies = companyService.getCompanies(name: query);
       return FutureBuilder(
           future: this.companies,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<CompanyLight> compsMatched =
-                  snapshot.data as List<CompanyLight>;
+              List<Company> compsMatched = snapshot.data as List<Company>;
               if (compsMatched.length > 0) {
                 return GridLayout(companies: compsMatched);
               } else {
