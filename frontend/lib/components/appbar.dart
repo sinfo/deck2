@@ -22,17 +22,19 @@ class _CustomAppBarState extends State<CustomAppBar> {
   late Future<List<CompanyLight>> companies;
   late Future<List<SpeakerLight>> speakers;
   late Future<List<Member>> members;
-  String query = "";
 
   CompanyService companyService = new CompanyService();
   SpeakerService speakerService = new SpeakerService();
   MemberService memberService = new MemberService();
+
+  final _searchController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
       AppBar(
         title: TextField(
+            controller: _searchController,
             decoration: InputDecoration(
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10.0),
@@ -41,26 +43,32 @@ class _CustomAppBarState extends State<CustomAppBar> {
               fillColor: Colors.white,
               hintText: 'Search Company, Speaker or Member',
               prefixIcon: Icon(Icons.search),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {});
+                },
+                icon: Icon(Icons.clear),
+              ),
             ),
             onChanged: (newQuery) {
-              setState(() {
-                this.query = newQuery;
-              });
-              if (this.query.length > 1) {
-                this.companies =
-                    companyService.getCompaniesLight(name: this.query);
-                this.speakers =
-                    speakerService.getSpeakersLight(name: this.query);
-                this.members = memberService.getMembers(name: this.query);
+              setState(() {});
+              if (_searchController.text.length > 1) {
+                this.companies = companyService.getCompaniesLight(
+                    name: _searchController.text);
+                this.speakers = speakerService.getSpeakersLight(
+                    name: _searchController.text);
+                this.members =
+                    memberService.getMembers(name: _searchController.text);
               }
             }),
       ),
-      ...getResults()
+      ...getResults(MediaQuery.of(context).size.height / 2)
     ]);
   }
 
-  List<Widget> getResults() {
-    if (this.query.length > 1) {
+  List<Widget> getResults(double height) {
+    if (_searchController.text.length > 1) {
       return [
         FutureBuilder(
             future: Future.wait([this.speakers, this.companies, this.members]),
@@ -72,7 +80,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     data[0] as List<SpeakerLight>;
                 List<CompanyLight> compsMatched = data[1] as List<CompanyLight>;
                 List<Member> membsMatched = data[2] as List<Member>;
-                return searchResults(speaksMatched, compsMatched, membsMatched);
+                return searchResults(
+                    speaksMatched, compsMatched, membsMatched, height);
               } else {
                 return Center(child: CircularProgressIndicator());
               }
@@ -84,29 +93,51 @@ class _CustomAppBarState extends State<CustomAppBar> {
   }
 
   Widget searchResults(List<SpeakerLight> speakers,
-      List<CompanyLight> companies, List<Member> members) {
+      List<CompanyLight> companies, List<Member> members, double listHeight) {
     List<Widget> results = getListCards(speakers, companies, members);
-    return ListView.builder(
-        shrinkWrap: true,
-        itemCount: results.length,
-        itemBuilder: (BuildContext context, int index) {
-          return results[index];
-        });
+    return Container(
+        constraints: BoxConstraints(maxHeight: listHeight),
+        child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: results.length,
+            itemBuilder: (BuildContext context, int index) {
+              return results[index];
+            }));
   }
 
   List<Widget> getListCards(List<SpeakerLight> speakers,
       List<CompanyLight> companies, List<Member> members) {
     List<Widget> results = [];
     if (speakers.length != 0) {
+      results.add(getDivider("Speakers"));
       results.addAll(speakers.map((e) => SearchResultWidget(speaker: e)));
     }
     if (companies.length != 0) {
+      results.add(getDivider("Companies"));
       results.addAll(companies.map((e) => SearchResultWidget(company: e)));
     }
     if (members.length != 0) {
+      results.add(getDivider("Members"));
       results.addAll(members.map((e) => SearchResultWidget(member: e)));
     }
     return results;
+  }
+
+  Widget getDivider(String name) {
+    return Card(
+        margin: EdgeInsets.zero,
+        child: Column(
+          children: [
+            Container(
+              child: Text(name, style: TextStyle(fontSize: 18)),
+              margin: EdgeInsets.fromLTRB(0, 8, 0, 0),
+            ),
+            Divider(
+              color: Colors.grey,
+              thickness: 1,
+            ),
+          ],
+        ));
   }
 }
 

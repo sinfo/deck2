@@ -40,8 +40,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     Member? user = Provider.of<Member?>(context);
+    CustomAppBar appBar = CustomAppBar();
     return Scaffold(
-      appBar: CustomAppBar(),
       bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: _currentIndex,
@@ -75,20 +75,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   duration: Duration(milliseconds: 800), curve: Curves.easeOut);
             });
           }),
-      body: SizedBox.expand(
-        child: PageView(
-          controller: _pageController,
-          onPageChanged: (index) {
-            setState(() => _currentIndex = index);
-          },
-          children: <Widget>[
-            Center(child: SpeakerTable()),
-            Center(child: Text("Home in progress :)")),
-            Center(child: CompanyTable()),
-            Center(child: MemberListWidget()),
-          ],
-        ),
-      ),
+      body: Stack(children: [
+        Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: SizedBox.expand(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() => _currentIndex = index);
+                },
+                children: <Widget>[
+                  Center(child: SpeakerTable()),
+                  Center(child: Text("Home in progress :)")),
+                  Center(child: CompanyTable()),
+                  Center(child: MemberListWidget()),
+                ],
+              ),
+            )),
+        appBar,
+      ]),
       drawer: MyDrawer(image: user != null ? user.image : ''),
       floatingActionButton: _fabAtIndex(_currentIndex),
     );
