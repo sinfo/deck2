@@ -6,13 +6,21 @@ import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/speakerService.dart';
 
+enum SortingMethod {
+  RANDOM,
+  NUM_PARTICIPATIONS,
+  LAST_PARTICIPATION,
+}
+
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
-  CustomAppBar({Key? key})
+  CustomAppBar({Key? key, this.popUpMenuButton})
       : preferredSize = Size.fromHeight(kToolbarHeight),
         super(key: key);
 
   @override
   final Size preferredSize;
+
+  final PopupMenuButton<SortingMethod>? popUpMenuButton;
 
   @override
   _CustomAppBarState createState() => _CustomAppBarState();
@@ -62,9 +70,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
                     memberService.getMembers(name: _searchController.text);
               }
             }),
+        actions: getPopUpMenuButton(),
       ),
       ...getResults(MediaQuery.of(context).size.height / 2)
     ]);
+  }
+
+  List<Widget>? getPopUpMenuButton() {
+    List<Widget>? actions = [];
+    if (widget.popUpMenuButton != null) {
+      actions.add(widget.popUpMenuButton!);
+    }
+    return actions;
   }
 
   List<Widget> getResults(double height) {

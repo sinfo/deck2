@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:frontend/routes/company/CompanyListWidget.dart';
+import 'package:frontend/components/appbar.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
