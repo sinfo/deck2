@@ -41,35 +41,39 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget build(BuildContext context) {
     return Column(children: [
       AppBar(
-        title: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
+        title: SizedBox(
+          height: kToolbarHeight * 0.8,
+          child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                filled: true,
+                fillColor: Colors.white,
+                hintText: 'Search Company, Speaker or Member',
+                prefixIcon: Icon(Icons.search),
+                suffixIcon: _searchController.text.length != 0
+                    ? IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                        },
+                        icon: Icon(Icons.clear),
+                      )
+                    : null,
               ),
-              filled: true,
-              fillColor: Colors.white,
-              hintText: 'Search Company, Speaker or Member',
-              prefixIcon: Icon(Icons.search),
-              suffixIcon: IconButton(
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() {});
-                },
-                icon: Icon(Icons.clear),
-              ),
-            ),
-            onChanged: (newQuery) {
-              setState(() {});
-              if (_searchController.text.length > 1) {
-                this.companies = companyService.getCompaniesLight(
-                    name: _searchController.text);
-                this.speakers = speakerService.getSpeakersLight(
-                    name: _searchController.text);
-                this.members =
-                    memberService.getMembers(name: _searchController.text);
-              }
-            }),
+              onChanged: (newQuery) {
+                setState(() {});
+                if (_searchController.text.length > 1) {
+                  this.companies = companyService.getCompaniesLight(
+                      name: _searchController.text);
+                  this.speakers = speakerService.getSpeakersLight(
+                      name: _searchController.text);
+                  this.members =
+                      memberService.getMembers(name: _searchController.text);
+                }
+              }),
+        ),
         actions: getPopUpMenuButton(),
       ),
       ...getResults(MediaQuery.of(context).size.height / 2)
@@ -168,31 +172,25 @@ class SearchResultWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-        onTap: () {
-          print("HIIII");
-          // Navigator.push(context, MaterialPageRoute(builder: (context) {
-          //   return UnknownScreen();
-          // })); // TODO: Company, Speaker or Member screen
-        },
-        child: Center(
-          child: Card(
-            margin: EdgeInsets.zero,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                ListTile(
-                  leading: CircleAvatar(
-                    foregroundImage: NetworkImage(getImageURL()),
-                    backgroundImage: AssetImage(
-                      'assets/noImage.png',
-                    ),
-                  ),
-                  title: Text(getName()),
-                ),
-              ],
+      onTap: () {
+        print("HIIII");
+        // Navigator.push(context, MaterialPageRoute(builder: (context) {
+        //   return UnknownScreen();
+        // })); // TODO: Company, Speaker or Member screen
+      },
+      child: Center(
+        child: ListTile(
+          tileColor: Theme.of(context).cardColor,
+          leading: CircleAvatar(
+            foregroundImage: NetworkImage(getImageURL()),
+            backgroundImage: AssetImage(
+              'assets/noImage.png',
             ),
           ),
-        ));
+          title: Text(getName()),
+        ),
+      ),
+    );
   }
 
   String getImageURL() {
