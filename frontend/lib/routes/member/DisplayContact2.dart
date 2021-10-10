@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/member/EditContact2.dart';
+import 'package:frontend/routes/member/EditContact.dart';
 import 'package:frontend/services/contactService.dart';
 import 'InformationBox.dart';
 
@@ -18,12 +18,6 @@ class DisplayContacts2 extends StatefulWidget {
 class _DisplayContactsState extends State<DisplayContacts2> {
   ContactService contactService = new ContactService();
   late Future<Contact?> contact;
-  String socials = "";
-  String facebook = "";
-  String twitter = "";
-  String github = "";
-  String skype = "";
-  String linkedin = "";
 
   @override
   void initState() {
@@ -38,46 +32,43 @@ class _DisplayContactsState extends State<DisplayContacts2> {
         if (snapshot.hasData) {
           Contact cont = snapshot.data as Contact;
 
-          return Column(
-            children: [
-              InformationBox(title: "Mails", contact: cont, type: "mail"),
-              InformationBox(title: "Phones", contact: cont, type: "phone"),
-              InformationBox(title: "Socials", contact: cont, type: "social"),
-
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Theme.of(context).accentColor,
-                    padding: EdgeInsets.symmetric(horizontal: 50),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                  ),
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => EditContact2(contact: cont, member: widget.member)),
-                    );
-                  },
-                  child: const Text('EDIT CONTACTS'),
-                ),
-              ),
-              //SizedBox(height: 24,),
-              
-            ],
+          return Scaffold(
+            body: ListView(
+              padding: EdgeInsets.symmetric(horizontal: 32),
+              physics: BouncingScrollPhysics(),
+              children: [
+                InformationBox(title: "Mails", contact: cont, type: "mail"),
+                InformationBox(title: "Phones", contact: cont, type: "phone"),
+                InformationBox(
+                    title: "Socials",
+                    contact: cont,
+                    type: "social"), //SizedBox(height: 24,),
+              ],
+            ),
+            floatingActionButton: FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          EditContact(contact: cont, member: widget.member)),
+                );
+              },
+              label: const Text('Edit Contacts'),
+              icon: const Icon(Icons.edit),
+              backgroundColor: Color(0xff5C7FF2),
+            ),
           );
         } else {
           return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              );
+            child: Center(
+              child: Container(
+                height: 50,
+                width: 50,
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
         }
       });
 }

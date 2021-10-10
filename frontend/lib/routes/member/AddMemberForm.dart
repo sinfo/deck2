@@ -121,7 +121,10 @@ class _AddMemberFormState extends State<AddMemberForm> {
                 }
               },
               decoration: InputDecoration(
-                icon: const Icon(Icons.web),
+                icon: ImageIcon(
+                  AssetImage("assets/PowerOnIcon.png"),
+                  size: 15,
+              ),
                 labelText: "SinfoID *",
               ),
             ),

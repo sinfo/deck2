@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/EditBox.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/services/teamService.dart';
@@ -17,46 +18,31 @@ class DisplayParticipations extends StatefulWidget {
 class _DisplayParticipationsState extends State<DisplayParticipations> {
   TeamService teamService = new TeamService();
   late Future<List<Team>> teams;
-  String participations = "";
+  List<String> participations = new List<String>.empty(growable: true);
 
   @override
   void initState() {
     super.initState();
-    this.teams = teamService.getTeams();
+    this.teams = teamService.getTeams(member: widget.member.id);
   }
 
   @override
-  Widget build(BuildContext context) => FutureBuilder(
-      future: teams,
-      builder: (context, snapshot) {
-        print("hello2");
-        print(snapshot.hasData);
-        //FIXME: eu coloquei aqui prints para tentar fazer debug e percebi que o código
-        // não entra no if, idk why
-        if (snapshot.hasData) {
-          print("hello");
-          List<Team> team = snapshot.data as List<Team>;
+  Widget build(BuildContext context) => Scaffold(
+      body: FutureBuilder(
+          future: teams,
+          builder: (context, snapshot) {  
+            print(snapshot.hasData);
+            if (snapshot.hasData) {
+              List<Team> teams = snapshot.data as List<Team>;
 
-          print(team.length);
-          for (int i = 0; i < team.length; i++) {
-            print(43);
-            for (int j = 0; j < team[i].members!.length; j++) {
-              print(34);
-              if (team[i].members![j].memberID == widget.member.id) {
-                participations += team[i].name!;
-                print(participations);
-              }
-            }
-          }
-
-          return Column(
-            children: [
-              //FIXME: alterar isto
-              Text("SINFO $participations"),
-            ],
-          );
-        } else {
-          return Container(
+              return ListView(
+                children: teams
+                    .map((e) =>
+                        EditBox(title: e.name!, body: 'Role', edit: false))
+                    .toList(),
+              );
+            } else {
+              return Container(
                 child: Center(
                   child: Container(
                     height: 50,
@@ -65,6 +51,17 @@ class _DisplayParticipationsState extends State<DisplayParticipations> {
                   ),
                 ),
               );
-        }
-      });
+            }
+          }),
+
+        floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {},
+            label: const Text('Add Participation'),
+            icon: const Icon(Icons.add),
+            backgroundColor: Color(0xff5C7FF2),
+          ),
+          
+      );
+
+      
 }

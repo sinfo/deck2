@@ -38,7 +38,7 @@ class InformationBox extends StatelessWidget {
                       fontWeight: FontWeight.bold)),
               Divider(),
               for (int i = 0; i < contact.mails!.length; i++)
-                ShowMail(mail: contact.mails![i]),
+                showMail(mail: contact.mails![i]),
             ],
           ),
         ]),
@@ -63,7 +63,7 @@ class InformationBox extends StatelessWidget {
                       fontWeight: FontWeight.bold)),
               Divider(),
               for (int i = 0; i < contact.phones!.length; i++)
-                ShowPhone(phone: contact.phones![i]),
+                showPhone(phone: contact.phones![i]),
             ],
           ),
         ]),
@@ -96,7 +96,7 @@ class InformationBox extends StatelessWidget {
                           color: Color.fromRGBO(24, 119, 242, 1),
                           tooltip: contact.socials!.facebook,
                           onPressed: () {
-                            launchURL("https://facebook.com/${contact.socials!.facebook}");
+                            _launchURL("https://facebook.com/${contact.socials!.facebook}");
                           },
                         )
                       : Text(''),
@@ -107,7 +107,7 @@ class InformationBox extends StatelessWidget {
                           color: Color.fromRGBO(51, 51, 51, 1),
                           tooltip: contact.socials!.github,
                           onPressed: () {
-                            launchURL(
+                            _launchURL(
                                 "https://github.com/${contact.socials!.github}");
                           },
                         )
@@ -119,7 +119,7 @@ class InformationBox extends StatelessWidget {
                           color: Color.fromRGBO(29, 161, 242, 1),
                           tooltip: contact.socials!.twitter,
                           onPressed: () {
-                            launchURL(
+                            _launchURL(
                                 "https://twitter.com/${contact.socials!.twitter}");
                           },
                         )
@@ -141,7 +141,7 @@ class InformationBox extends StatelessWidget {
                           color: Color.fromRGBO(10, 102, 194, 1),
                           tooltip: contact.socials!.linkedin,
                           onPressed: () {
-                            launchURL(
+                            _launchURL(
                                 "https://www.linkedin.com/in/${contact.socials!.linkedin}/");
                           },
                         )
@@ -157,7 +157,7 @@ class InformationBox extends StatelessWidget {
     }
   }
 
-  ShowPhone({required ContactPhone phone}) {
+  Widget showPhone({required ContactPhone phone}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -181,7 +181,7 @@ class InformationBox extends StatelessWidget {
     );
   }
 
-  ShowMail({required ContactMail mail}) {
+  Widget showMail({required ContactMail mail}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -214,7 +214,7 @@ class InformationBox extends StatelessWidget {
   }
 }
 
-launchURL(String url) async {
+_launchURL(String url) async {
   if (await canLaunch(url)) {
     await launch(url, forceWebView: true);
   } else {

@@ -7,18 +7,18 @@ import 'package:frontend/my_flutter_app_icons.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/contactService.dart';
 
-class EditContact2 extends StatefulWidget {
+class EditContact extends StatefulWidget {
   Contact contact;
   Member member;
 
-  EditContact2({Key? key, required Contact this.contact, required this.member})
+  EditContact({Key? key, required Contact this.contact, required this.member})
       : super(key: key);
 
   @override
   _MyFormState createState() => _MyFormState();
 }
 
-class _MyFormState extends State<EditContact2> {
+class _MyFormState extends State<EditContact> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _mailController;
 

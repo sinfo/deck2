@@ -7,6 +7,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
+import 'package:frontend/routes/teams/TeamScreen.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
 
@@ -69,73 +70,19 @@ class _TeamMemberRowState extends State<TeamMemberRow>
 
   Widget _buildBigTile() {
     List<Future<Member?>> _futureMembers = widget.team.members!
-        .map((m) => _memberService.getMember(m.memberID!)).toList();
+        .map((m) => _memberService.getMember(m.memberID!))
+        .toList();
 
-    return ExpansionTile(
-        maintainState: true,
-        iconColor: Colors.transparent,
-        collapsedBackgroundColor: Colors.transparent,
-        initiallyExpanded: true,
-        textColor: Colors.black,
-        expandedAlignment: Alignment.topLeft,
-        title: Column(
-          children: [
-            Container(
-              child:
-                  Text(this.widget.team.name!, style: TextStyle(fontSize: 18)),
-              margin: EdgeInsets.all(8),
-            ),
-            Divider(
-              color: Colors.grey,
-              thickness: 1,
-            ),
-          ],
-        ),
-        children: [
-          FutureBuilder(
-              future: Future.wait(_futureMembers),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  List<Member> membs = snapshot.data as List<Member>;
-                  return Container(
-                    height: membs.length == 0 ? 0 : null,
-                    child: Wrap(
-                      alignment: WrapAlignment.start,
-                      crossAxisAlignment: WrapCrossAlignment.start,
-                      children: membs
-                          .map((e) => ListViewCard(small: false, member: e))
-                          .toList(),
-                    ),
-                  );
-                } else {
-                  return Container(
-                    child: Center(
-                      child: Container(
-                        height: 50,
-                        width: 50,
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                  );
-                }
-              })
-        ]);
-  }
-
-  Widget _buildSmallTile() {
-    List<Future<Member?>> _futureMembers = widget.team.members!
-        .map((m) => _memberService.getMember(m.memberID!)).toList();
-
-    return ExpansionTile(
-      iconColor: Colors.transparent,
-      initiallyExpanded: true,
-      textColor: Colors.black,
-      expandedAlignment: Alignment.topLeft,
-      title: Column(
+    return Column(children: [
+      Column(
         children: [
           Container(
-            child: Text(this.widget.team.name!, style: TextStyle(fontSize: 12)),
-            margin: EdgeInsets.all(8),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              this.widget.team.name!,
+              style: TextStyle(fontSize: 18),
+            ),
+            margin: EdgeInsets.fromLTRB(0, 8, 8, 0),
           ),
           Divider(
             color: Colors.grey,
@@ -143,18 +90,19 @@ class _TeamMemberRowState extends State<TeamMemberRow>
           ),
         ],
       ),
-      children: [
-        FutureBuilder(
+      FutureBuilder(
           future: Future.wait(_futureMembers),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<Member> membs = snapshot.data as List<Member>;
+              List<Member?> membs = snapshot.data as List<Member?>;
               return Container(
-                height: _futureMembers.length == 0 ? 0 : 200,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children:  membs
-                      .map((e) => ListViewCard(small: true, member: e))
+                alignment: Alignment.centerLeft,
+                height: membs.length == 0 ? 0 : null,
+                child: Wrap(
+                  alignment: WrapAlignment.start,
+                  crossAxisAlignment: WrapCrossAlignment.start,
+                  children: membs
+                      .map((e) => ListViewCard(small: false, member: e))
                       .toList(),
                 ),
               );
@@ -169,10 +117,71 @@ class _TeamMemberRowState extends State<TeamMemberRow>
                 ),
               );
             }
-          },
-        )
-      ],
+          })
+    ]);
+  }
+
+  Widget _buildSmallTile() {
+    List<Future<Member?>> _futureMembers = widget.team.members!
+        .map((m) => _memberService.getMember(m.memberID!))
+        .toList();
+
+    return FutureBuilder(
+      future: Future.wait(_futureMembers),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          List<Member?> membs = snapshot.data as List<Member?>;
+          return Column(
+            children: [
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TeamScreen(
+                              team: this.widget.team,
+                              members: membs)));
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      child:
+                          Text(this.widget.team.name!, style: TextStyle(fontSize: 12)),
+                      margin: EdgeInsets.fromLTRB(0, 8, 8, 0),
+                    ),
+                    Divider(
+                      color: Colors.grey,
+                      thickness: 1,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: _futureMembers.length == 0 ? 0 : 200,
+                child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: membs
+                        .map((e) => ListViewCard(small: true, member: e))
+                        .toList()),
+              )
+            ]);
+          
+        } else {
+          return Container(
+            child: Center(
+              child: Container(
+                height: 50,
+                width: 50,
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+      },
     );
+
+    
   }
 
   @override

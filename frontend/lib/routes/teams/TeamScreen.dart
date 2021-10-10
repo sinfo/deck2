@@ -1,12 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/services/teamService.dart';
 
 class TeamScreen extends StatefulWidget {
   final Team team;
-  TeamScreen({Key? key, required this.team})
+  final List<Member?> members;
+
+  TeamScreen({Key? key, required this.team, required this.members})
       : super(key: key);
 
   @override
@@ -23,7 +26,8 @@ class _TeamScreen extends State<TeamScreen> {
     super.initState();
   }
 
-  Widget teamBanner(){
+
+  Widget teamBanner() {
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -34,6 +38,19 @@ class _TeamScreen extends State<TeamScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
+          SizedBox(height: 30),
+          Container(
+            width: 210,
+            height: 210,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white30),
+            ),
+            padding: const EdgeInsets.all(5),
+            child: ClipOval(
+              child: Image.asset("assets/DevTeam.jpg", fit: BoxFit.cover),
+            ),
+          ),
           SizedBox(height: 30),
           Text(widget.team.name!,
               style: TextStyle(
@@ -86,12 +103,10 @@ class _TeamScreen extends State<TeamScreen> {
                           ),
                         ),
                         Container(
-                          //FIXME: este número está mal
+                            //FIXME: este número está mal
                             height: 500,
                             child: TabBarView(children: <Widget>[
-                              Container(
-                                child: Text("Members")
-                              ),
+                              Container(child: Text("Members")),
                               Container(
                                 child: Text('Meetings'),
                               ),
@@ -101,7 +116,4 @@ class _TeamScreen extends State<TeamScreen> {
       ),
     );
   }
-
-
-  
 }
