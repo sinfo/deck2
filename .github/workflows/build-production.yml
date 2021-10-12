@@ -32,6 +32,32 @@ jobs:
     - name: Docker Image Digest
       run: echo ${{ steps.docker_build.outputs.digest }}
 
+  docker-frontend:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set most recent tag
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+    - uses: docker/login-action@v1
+      name: Login to DockerHub
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - uses: docker/build-push-action@v2.7.0
+      name: Build and Push Deck2 Frontend Image
+      id: docker_build
+      with:
+        context: ./frontend
+        push: true
+        tags: orgsinfo/deck2-frontend:latest
+        file: ./frontend/Dockerfile
+    
+    - name: Deck2 Frontend Image Digest
+      run: echo ${{ steps.docker_build.outputs.digest }}
+
   deploy:
     needs: docker
     runs-on: ubuntu-latest
@@ -52,3 +78,24 @@ jobs:
       with:
         config_data: ${{ secrets.KUBE_CONFIG_DATA }}
         args: rollout status deployment/deck2-production --namespace=production
+
+  deploy-frontend:
+    needs: docker-frontend
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set most recent tag
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+    - name: Deploy the frontend app to the cluster
+      uses: nickgronow/kubectl@master
+      with:
+        config_data: ${{ secrets.KUBE_CONFIG_DATA }}
+        args: set image deployment/deck2-frontend-production deck2-frontend-prod-app=orgsinfo/deck2-frontend:${{ steps.vars.outputs.tag }} --namespace=production
+        
+    - name: Verify deployment
+      uses: nickgronow/kubectl@master
+      with:
+        config_data: ${{ secrets.KUBE_CONFIG_DATA }}
+        args: rollout status deployment/deck2-frontend-production --namespace=production
