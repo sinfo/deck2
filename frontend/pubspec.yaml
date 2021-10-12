@@ -37,7 +37,7 @@ dependencies:
   flutter_dropzone: ^2.0.1 
   google_fonts: ^2.1.0
   intl: ^0.17.0 
-  collection: ^1.15.0
+  collection: ^1.15.0 
   image: ^3.0.5
   shimmer: ^2.0.0
   # The following adds the Cupertino Icons font to your application.
@@ -65,6 +65,7 @@ flutter:
     - assets/google_logo.png
     - assets/noImage.png
     - assets/banner_background.png
+    - assets/logo.png
     - .env
   #   - images/a_dot_ham.jpeg
 
