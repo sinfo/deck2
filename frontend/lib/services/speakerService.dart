@@ -125,7 +125,7 @@ class SpeakerService extends Service {
     var body = {"bio": bio, "name": name, "notes": notes, "title": title};
 
     try {
-      Response<String> response = await dio.put("/speakers" + id, data: body);
+      Response<String> response = await dio.put("/speakers/" + id, data: body);
 
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {

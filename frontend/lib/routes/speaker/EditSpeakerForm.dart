@@ -29,6 +29,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
   final _imagePicker = ImagePicker();
   XFile? _image;
   int? _size;
+  String? _prevImage;
   late DropzoneViewController _controller;
 
   @override
@@ -36,7 +37,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
     super.initState();
     _nameController = TextEditingController(text: widget.speaker.name);
     _titleController = TextEditingController(text: widget.speaker.title);
-    var i = NetworkImage(widget.speaker.imgs!.internal!);
+    _prevImage = widget.speaker.imgs!.speaker;
   }
 
   void _submit() async {
@@ -46,6 +47,8 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
+
+      print('id = ${widget.speaker.id}');
 
       Speaker? s = await _speakerService.updateSpeaker(
           id: widget.speaker.id, name: name, title: title);
@@ -129,7 +132,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
   Widget _buildPicture(double size) {
     Widget inkWellChild;
 
-    if (_image == null) {
+    if (_image == null && _prevImage == null) {
       inkWellChild = Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -150,14 +153,15 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
         ),
       );
     } else {
+      String path = _image == null ? _prevImage! : _image!.path;
       inkWellChild = Center(
         child: kIsWeb
             ? Image.network(
-                _image!.path,
+                path,
                 fit: BoxFit.fill,
               )
             : Image.file(
-                File(_image!.path),
+                File(path),
                 fit: BoxFit.fill,
               ),
       );
@@ -238,36 +242,31 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
   @override
   Widget build(BuildContext context) {
     bool warning = _image != null && _size != null && _size! > 102400;
-    return Scaffold(
-        appBar: CustomAppBar(
-          disableEventChange: true,
-        ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 1000) {
-              return Column(
-                children: [
-                  _buildPicture(constraints.maxWidth / 3),
-                  _buildForm()
-                ],
-              );
-            } else {
-              return Column(
-                children: [
-                  _buildPicture(constraints.maxWidth / 6),
-                  warning
-                      ? Text(
-                          'Image selected is too big!',
-                          style: TextStyle(
-                            color: Colors.red,
-                          ),
-                        )
-                      : Container(),
-                  _buildForm()
-                ],
-              );
-            }
-          },
-        ));
+    return SingleChildScrollView(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 1000) {
+            return Column(
+              children: [_buildPicture(constraints.maxWidth / 3), _buildForm()],
+            );
+          } else {
+            return Column(
+              children: [
+                _buildPicture(constraints.maxWidth / 6),
+                warning
+                    ? Text(
+                        'Image selected is too big!',
+                        style: TextStyle(
+                          color: Colors.red,
+                        ),
+                      )
+                    : Container(),
+                _buildForm()
+              ],
+            );
+          }
+        },
+      ),
+    );
   }
 }

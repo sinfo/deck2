@@ -216,6 +216,17 @@ class SpeakerBanner extends StatelessWidget {
       {Key? key, required this.speaker, required this.statusChangeCallback})
       : super(key: key);
 
+  void _editSpeakerModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: EditSpeakerForm(speaker: speaker),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
@@ -317,15 +328,12 @@ class SpeakerBanner extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: InkWell(
-                mouseCursor: SystemMouseCursors.click,
-                onTap: () => Navigator.push(context,
-                    SlideRoute(page: EditSpeakerForm(speaker: speaker))),
-                child: Icon(Icons.edit),
-              ),
-            ),
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                _editSpeakerModal(context);
+              },
+            )
           ],
         );
       },
