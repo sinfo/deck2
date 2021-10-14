@@ -245,34 +245,40 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
   @override
   Widget build(BuildContext context) {
     bool warning = _image != null && _size != null && _size! > 102400;
+    CustomAppBar appBar = CustomAppBar();
     return Scaffold(
-        appBar: CustomAppBar(),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 1000) {
-              return Column(
-                children: [
-                  _buildPicture(constraints.maxWidth / 3),
-                  _buildForm()
-                ],
-              );
-            } else {
-              return Column(
-                children: [
-                  _buildPicture(constraints.maxWidth / 6),
-                  warning
-                      ? Text(
-                          'Image selected is too big!',
-                          style: TextStyle(
-                            color: Colors.red,
-                          ),
-                        )
-                      : Container(),
-                  _buildForm()
-                ],
-              );
-            }
-          },
-        ));
+      body: Stack(children: [
+        Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < 1000) {
+                  return Column(
+                    children: [
+                      _buildPicture(constraints.maxWidth / 3),
+                      _buildForm()
+                    ],
+                  );
+                } else {
+                  return Column(
+                    children: [
+                      _buildPicture(constraints.maxWidth / 6),
+                      warning
+                          ? Text(
+                              'Image selected is too big!',
+                              style: TextStyle(
+                                color: Colors.red,
+                              ),
+                            )
+                          : Container(),
+                      _buildForm()
+                    ],
+                  );
+                }
+              },
+            )),
+        appBar,
+      ]),
+    );
   }
 }
