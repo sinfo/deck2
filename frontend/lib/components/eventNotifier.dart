@@ -6,7 +6,9 @@ class EventNotifier with ChangeNotifier {
   Event _event;
   Event _latest;
 
-  EventNotifier(this._event, this._latest);
+  EventNotifier(this._event, this._latest) {
+    App.localStorage.setInt("event", _event.id);
+  }
 
   bool get isLatest => _latest.id == _event.id;
 

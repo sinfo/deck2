@@ -3,16 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/router.dart';
-import 'package:frontend/components/speakerSearchDelegate.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/speakerService.dart';
-
-enum SortingMethod {
-  RANDOM,
-  NUM_PARTICIPATIONS,
-  LAST_PARTICIPATION,
-}
 
 final Map<SortingMethod, String> SORT_STRING = {
   SortingMethod.NUM_PARTICIPATIONS: 'Sort By Number Of Participations',
@@ -111,41 +104,16 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
 
   @override
   Widget build(BuildContext context) {
+    CustomAppBar appBar = CustomAppBar(
+      disableEventChange: true,
+    );
     return Scaffold(
-      appBar: CustomAppBar(disableEventChange: true, actions: <Widget>[
-        IconButton(
-          icon: const Icon(Icons.search),
-          tooltip: 'Search speaker',
-          onPressed: () {
-            showSearch(context: context, delegate: SpeakerSearchDelegate());
-          },
-        ),
-        PopupMenuButton<SortingMethod>(
-          icon: const Icon(Icons.sort),
-          tooltip: 'Sort Speakers',
-          onSelected: (SortingMethod sort) {
-            setState(() {
-              _sortMethod = sort;
-              this.speakersLoaded.clear();
-              numRequests = 0;
-              this.speakers = speakerService.getSpeakers(
-                  maxSpeaksInRequest: MAX_SPEAKERS,
-                  sortMethod: sort,
-                  numRequestsBackend: numRequests);
-              numRequests++;
-            });
-          },
-          itemBuilder: (BuildContext context) {
-            return SORT_STRING.keys.map((SortingMethod choice) {
-              return PopupMenuItem<SortingMethod>(
-                value: choice,
-                child: Center(child: Text(SORT_STRING[choice]!)),
-              );
-            }).toList();
-          },
-        ),
+      body: Stack(children: [
+        Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: speakerGrid()),
+        appBar,
       ]),
-      body: speakerGrid(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(
