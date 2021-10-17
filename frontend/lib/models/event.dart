@@ -15,8 +15,8 @@ class Event {
     return Event(
       id: json['id'],
       name: json['name'],
-      start: DateTime(json['begin']),
-      end: DateTime(json['end']),
+      start: DateTime.parse(json['begin']),
+      end: DateTime.parse(json['end']),
     );
   }
 }
@@ -40,8 +40,8 @@ class EventPublic {
     return EventPublic(
       id: json['id'],
       name: json['name'],
-      start: DateTime(json['begin']),
-      end: DateTime(json['end']),
+      start: DateTime.parse(json['begin']),
+      end: DateTime.parse(json['end']),
       themes: json['themes'] as List<String>,
     );
   }

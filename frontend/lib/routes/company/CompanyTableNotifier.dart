@@ -1,15 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:frontend/components/status.dart';
+import 'package:frontend/models/company.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/speaker.dart';
 
-class SpeakerTableNotifier extends ChangeNotifier {
-  List<Speaker> speakers;
+class CompanyTableNotifier extends ChangeNotifier {
+  List<Company> companies;
 
-  SpeakerTableNotifier({required this.speakers});
+  CompanyTableNotifier({required this.companies});
 
-  List<Speaker> getByMember(String id, int event, ParticipationStatus status) {
-    var s = speakers
+  List<Company> getByMember(String id, int event, ParticipationStatus status) {
+    var s = companies
         .where((s) => s.participations!.any((p) {
               return p.event == event &&
                   p.memberId == id &&
@@ -26,20 +27,20 @@ class SpeakerTableNotifier extends ChangeNotifier {
     return s;
   }
 
-  void add(Speaker s) {
-    speakers.add(s);
+  void add(Company s) {
+    companies.add(s);
     notifyListeners();
   }
 
-  void remove(Speaker s) {
-    speakers.remove(s);
+  void remove(Company s) {
+    companies.remove(s);
     notifyListeners();
   }
 
-  void edit(Speaker s) {
-    int index = speakers.indexOf(s);
+  void edit(Company s) {
+    int index = companies.indexOf(s);
     if (index != -1) {
-      speakers[index] = s;
+      companies[index] = s;
       notifyListeners();
     }
   }

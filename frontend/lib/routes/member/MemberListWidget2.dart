@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/ListViewCard2.dart';
+import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/memberSearchDelegate.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
@@ -48,7 +48,7 @@ class _MemberListWidgetState extends State<MemberListWidget2> {
                   ),
                   itemCount: membs.length,
                   itemBuilder: (BuildContext context, int index) {
-                    return ListViewCard2(
+                    return ListViewCard(
                         small: isSmall,
                         member: membs[index],);
                   });

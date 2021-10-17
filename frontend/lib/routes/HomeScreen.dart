@@ -3,17 +3,13 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
-import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
-import 'package:frontend/routes/member/MemberListWidget.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/teams/TeamsTable.dart';
-import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/meetingService.dart';
-import 'package:frontend/services/speakerService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
@@ -68,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           children: <Widget>[
             Center(
-              child: SpeakerTable(),
+              child: const SpeakerTable(),
             ),
             Center(
               child: LandingPage(),

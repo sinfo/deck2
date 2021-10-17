@@ -4,7 +4,7 @@ import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/speakerService.dart';
 
 class SpeakerSearchDelegate extends SearchDelegate {
-  late Future<List<SpeakerLight>> speakers;
+  late Future<List<Speaker>> speakers;
   SpeakerService speakerService = new SpeakerService();
 
   @override
@@ -31,8 +31,8 @@ class SpeakerSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    this.speakers = speakerService.getSpeakersLight(name: query);
-    return FutureBuilder<List<SpeakerLight>>(
+    this.speakers = speakerService.getSpeakers(name: query);
+    return FutureBuilder<List<Speaker>>(
         future: this.speakers,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
@@ -54,13 +54,12 @@ class SpeakerSearchDelegate extends SearchDelegate {
   @override
   Widget buildSuggestions(BuildContext context) {
     if (query.length > 1) {
-      this.speakers = speakerService.getSpeakersLight(name: query);
+      this.speakers = speakerService.getSpeakers(name: query);
       return FutureBuilder(
           future: this.speakers,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
-              List<SpeakerLight> speaksMatched =
-                  snapshot.data as List<SpeakerLight>;
+              List<Speaker> speaksMatched = snapshot.data as List<Speaker>;
               if (speaksMatched.length > 0) {
                 return GridLayout(speakers: speaksMatched);
               } else {

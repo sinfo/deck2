@@ -43,6 +43,9 @@ class Member {
   String toString() {
     return json.encode(this.toJson());
   }
+
+  bool operator ==(o) => o is Member && id == o.id;
+  int get hashCode => id.hashCode;
 }
 
 class MemberPublic {

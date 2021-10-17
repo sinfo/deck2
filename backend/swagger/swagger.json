@@ -116,6 +116,9 @@
         "/events": {
             "$ref": "./events.json"
         },
+        "/events/latest": {
+            "$ref": "./events-latest.json"
+        },
         "/events/{id}": {
             "$ref": "./events-id.json"
         },
@@ -346,6 +349,9 @@
         },
         "/public/speakers/{id}": {
             "$ref": "./public-speakers-id.json"
+        },
+        "/public/events/latest": {
+            "$ref": "./public-events-latest.json"
         },
         "/events/teams/{id}": {
             "$ref": "./events-teams-id.json"

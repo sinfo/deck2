@@ -34,9 +34,9 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case Routes.AddCompany:
       return SlideRoute(page: AddCompanyForm());
     case Routes.ShowAllCompanies:
-      return MaterialPageRoute(builder: (context) => CompanyListWidget());
+      return FadeRoute(page: CompanyListWidget());
     case Routes.ShowAllSpeakers:
-      return MaterialPageRoute(builder: (context) => SpeakerListWidget());
+      return FadeRoute(page: SpeakerListWidget());
     case Routes.AddSpeaker:
       return SlideRoute(page: AddSpeakerForm());
     case Routes.ShowAllMembers:

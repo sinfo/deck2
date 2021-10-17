@@ -97,6 +97,16 @@ func getEventsPublic(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(events)
 }
 
+func getLatestEvent(w http.ResponseWriter, r *http.Request){
+	event, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Could not find latest event", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(event)
+}
+
 func getEvent(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, errConverter := strconv.Atoi(params["id"])

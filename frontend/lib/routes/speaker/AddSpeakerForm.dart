@@ -246,7 +246,9 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
   Widget build(BuildContext context) {
     bool warning = _image != null && _size != null && _size! > 102400;
     return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true,),
+        appBar: CustomAppBar(
+          disableEventChange: true,
+        ),
         body: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth < 1000) {

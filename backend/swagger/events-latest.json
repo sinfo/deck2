@@ -1,0 +1,34 @@
+{
+  "get": {
+    "tags": [
+      "events"
+    ],
+    "summary": "Get latest event",
+    "operationId": "getLatestEvent",
+    "consumes": [
+      "application/json"
+    ],
+    "produces": [
+      "application/json"
+    ],
+    "security": [
+      {
+        "Bearer": []
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Latest event",
+        "schema": {
+          "$ref": "./models/event.json"
+        }
+      },
+      "404": {
+        "description": "Event not found"
+      },
+      "401": {
+        "description": "Unauthorized"
+      }
+    }
+  }
+}

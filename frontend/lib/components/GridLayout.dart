@@ -1,12 +1,14 @@
 import 'package:flutter/cupertino.dart';
-import 'package:frontend/components/ListViewCard2.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
 
 class GridLayout extends StatelessWidget {
-  final List<SpeakerLight>? speakers;
-  final List<CompanyLight>? companies;
+  final List<Speaker>? speakers;
+  final List<Company>? companies;
   final List<Member>? members;
 
   GridLayout({Key? key, this.speakers, this.companies, this.members})
@@ -25,10 +27,10 @@ class GridLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
-      double cardWidth = 250;
+      double cardWidth = 200;
       bool isSmall = false;
-      if (constraints.maxWidth < 1500) {
-        cardWidth = 200;
+      if (constraints.maxWidth < App.SIZE) {
+        cardWidth = 125;
         isSmall = true;
       }
       return GridView.builder(
@@ -41,17 +43,17 @@ class GridLayout extends StatelessWidget {
         itemCount: getNumberOfItems(),
         itemBuilder: (BuildContext context, int index) {
           if (speakers != null) {
-            return ListViewCard2(
+            return ListViewCard(
                 small: isSmall,
-                speakerLight: speakers![index],
+                speaker: speakers![index],
                 participationsInfo: true);
           } else if (companies != null) {
-            return ListViewCard2(
+            return ListViewCard(
                 small: isSmall,
-                companyLight: companies![index],
+                company: companies![index],
                 participationsInfo: true);
           } else {
-            return ListViewCard2(
+            return ListViewCard(
               small: isSmall,
               member: members![index],
             );
