@@ -231,7 +231,7 @@ class ListViewCard extends StatelessWidget {
                       fit: BoxFit.cover,
                       image: (member!.image == '')
                           ? AssetImage("assets/noImage.png") as ImageProvider
-                          : NetworkImage(member!.image!x),
+                          : NetworkImage(member!.image!),
                       //image: NetworkImage(member.image),
                     ),
                   ),

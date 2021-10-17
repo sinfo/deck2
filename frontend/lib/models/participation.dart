@@ -263,8 +263,4 @@ class CompanyParticipation extends Participation {
         'partner': partner,
         'notes': notes,
       };
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> SpeakerScreen
