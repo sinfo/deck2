@@ -4,18 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/member/EditContact.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/contactService.dart';
+import 'package:provider/provider.dart';
 import 'InformationBox.dart';
 
-class DisplayContacts2 extends StatefulWidget {
+class DisplayContacts extends StatefulWidget {
   final Member member;
-  const DisplayContacts2({Key? key, required this.member}) : super(key: key);
+  const DisplayContacts({Key? key, required this.member}) : super(key: key);
 
   @override
   _DisplayContactsState createState() => _DisplayContactsState();
 }
 
-class _DisplayContactsState extends State<DisplayContacts2> {
+class _DisplayContactsState extends State<DisplayContacts> {
   ContactService contactService = new ContactService();
   late Future<Contact?> contact;
 
@@ -33,6 +35,7 @@ class _DisplayContactsState extends State<DisplayContacts2> {
           Contact cont = snapshot.data as Contact;
 
           return Scaffold(
+            backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
             body: ListView(
               padding: EdgeInsets.symmetric(horizontal: 32),
               physics: BouncingScrollPhysics(),
@@ -45,7 +48,7 @@ class _DisplayContactsState extends State<DisplayContacts2> {
                     type: "social"), //SizedBox(height: 24,),
               ],
             ),
-            floatingActionButton: FloatingActionButton.extended(
+            floatingActionButton: Provider.of<AuthService>(context).role == 'ADMIN' ? FloatingActionButton.extended(
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
@@ -57,7 +60,7 @@ class _DisplayContactsState extends State<DisplayContacts2> {
               label: const Text('Edit Contacts'),
               icon: const Icon(Icons.edit),
               backgroundColor: Color(0xff5C7FF2),
-            ),
+            ) : Container(),
           );
         } else {
           return Container(

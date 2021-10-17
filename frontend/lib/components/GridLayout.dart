@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/ListViewCard2.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
@@ -41,17 +41,17 @@ class GridLayout extends StatelessWidget {
         itemCount: getNumberOfItems(),
         itemBuilder: (BuildContext context, int index) {
           if (speakers != null) {
-            return ListViewCard(
+            return ListViewCard2(
                 small: isSmall,
                 speakerLight: speakers![index],
                 participationsInfo: true);
           } else if (companies != null) {
-            return ListViewCard(
+            return ListViewCard2(
                 small: isSmall,
                 companyLight: companies![index],
                 participationsInfo: true);
           } else {
-            return ListViewCard(
+            return ListViewCard2(
               small: isSmall,
               member: members![index],
             );

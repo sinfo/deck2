@@ -30,7 +30,9 @@ class MemberService extends Service {
   }
 
   Future<Member?> createMember(
-      {required String istid, required String name, required String sinfoid}) async {
+      {required String istid,
+      required String name,
+      required String sinfoid}) async {
     var body = {
       'istid': istid,
       'name': name,

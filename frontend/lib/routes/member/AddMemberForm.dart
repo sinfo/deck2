@@ -278,7 +278,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
   Widget build(BuildContext context) {
     //bool warning = _image != null && _size != null && _size! > 102400;
     return Scaffold(
-        appBar: CustomAppBar(),
+        appBar: CustomAppBar(disableEventChange: true,),
         body: LayoutBuilder(builder: (contex, constraints) {
           return Column(children: [
             _buildForm(),

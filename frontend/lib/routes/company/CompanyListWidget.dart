@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/ListViewCard2.dart';
 import 'package:frontend/components/companySearchDelegate.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/models/company.dart';
@@ -95,7 +95,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                   ),
                   itemCount: comp.length,
                   itemBuilder: (BuildContext context, int index) {
-                    return ListViewCard(
+                    return ListViewCard2(
                         small: isSmall,
                         companyLight: comp[index],
                         participationsInfo: true);

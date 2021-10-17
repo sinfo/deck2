@@ -4,7 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/ListViewCard2.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:frontend/components/filterbar.dart';
@@ -146,7 +146,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
                   alignment: WrapAlignment.start,
                   crossAxisAlignment: WrapCrossAlignment.start,
                   children: spkscpy
-                      .map((e) => ListViewCard(small: false, speaker: e))
+                      .map((e) => ListViewCard2(small: false, speaker: e))
                       .toList(),
                 ),
               );
@@ -214,7 +214,7 @@ class _MemberSpeakerRowState extends State<MemberSpeakerRow>
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: spkscpy
-                      .map((e) => ListViewCard(small: true, speaker: e))
+                      .map((e) => ListViewCard2(small: true, speaker: e))
                       .toList(),
                 ),
               );

@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/ListViewCard2.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/components/speakerSearchDelegate.dart';
 import 'package:frontend/models/speaker.dart';
@@ -95,7 +95,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
                   ),
                   itemCount: speak.length,
                   itemBuilder: (BuildContext context, int index) {
-                    return ListViewCard(
+                    return ListViewCard2(
                         small: isSmall,
                         speakerLight: speak[index],
                         participationsInfo: true);

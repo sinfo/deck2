@@ -21,7 +21,7 @@ final Map<ParticipationStatus, String> STATUSSTRING = {
   ParticipationStatus.SUGGESTED: 'SUGGESTED',
 };
 
-class ListViewCard extends StatelessWidget {
+class ListViewCard2 extends StatelessWidget {
   final Member? member;
   final Company? company;
   final CompanyLight? companyLight;
@@ -36,7 +36,7 @@ class ListViewCard extends StatelessWidget {
   late final int? _numParticipations;
   late final int? _lastParticipation;
 
-  ListViewCard(
+  ListViewCard2(
       {Key? key,
       required this.small,
       this.member,

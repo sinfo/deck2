@@ -1,5 +1,6 @@
 import 'package:frontend/main.dart';
 import 'package:frontend/models/participation.dart';
+import 'package:collection/collection.dart';
 
 class Images {
   final String? company;
@@ -27,7 +28,10 @@ class Speaker {
   final String? bio;
   final String? notes;
   final Images? imgs;
-  final List<Participation>? participations;
+  final List<SpeakerParticipation>? participations;
+  final int? numParticipations;
+  final int? lastParticipation;
+  final ParticipationStatus? participationStatus;
 
   Speaker(
       {required this.id,
@@ -37,20 +41,35 @@ class Speaker {
       this.bio,
       this.notes,
       this.imgs,
-      this.participations});
+      this.participations,
+      this.numParticipations,
+      this.lastParticipation,
+      this.participationStatus});
 
   factory Speaker.fromJson(Map<String, dynamic> json) {
     var participationsList = json['participations'] as List;
     return Speaker(
-        id: json['id'],
-        name: json['name'],
-        title: json['title'],
-        contact: json['contact'],
-        bio: json['bio'],
-        notes: json['notes'],
-        imgs: Images.fromJson(json['imgs']),
-        participations:
-            participationsList.map((p) => Participation.fromJson(p)).toList());
+      id: json['id'],
+      name: json['name'],
+      title: json['title'],
+      contact: json['contact'],
+      bio: json['bio'],
+      notes: json['notes'],
+      imgs: Images.fromJson(json['imgs']),
+      participations: participationsList
+          .map((p) => SpeakerParticipation.fromJson(p))
+          .toList(),
+      numParticipations: participationsList.length,
+      lastParticipation: participationsList.length > 0
+          ? participationsList[participationsList.length - 1]['event']
+          : null,
+      participationStatus: participationsList.length > 0 &&
+              participationsList[participationsList.length - 1]['event'] ==
+                  App.localStorage.getInt("event")
+          ? Participation.convert(
+              participationsList[participationsList.length - 1]['status'])
+          : ParticipationStatus.NO_STATUS,
+    );
   }
 
   Map<String, dynamic> toJson() => {
@@ -64,6 +83,20 @@ class Speaker {
         'participations':
             participations?.map((participation) => participation.toJson())
       };
+
+  SpeakerParticipation? getParticipation(int event) {
+    return this
+        .participations!
+        .firstWhereOrNull((element) => element.event == event);
+  }
+
+  SpeakerParticipation getLatestParticipation() {
+    return this.participations!.firstWhereOrNull(
+        (element) => element.event == this.lastParticipation)!;
+  }
+
+  bool operator ==(o) => o is Speaker && id == o.id;
+  int get hashCode => id.hashCode;
 }
 
 class PublicImages {
@@ -109,7 +142,7 @@ class SpeakerLight {
   final Images speakerImages;
   final int? numParticipations;
   final int? lastParticipation;
-  final String? participationStatus;
+  final ParticipationStatus participationStatus;
 
   SpeakerLight(
       {required this.id,
@@ -117,7 +150,7 @@ class SpeakerLight {
       required this.speakerImages,
       this.numParticipations,
       this.lastParticipation,
-      this.participationStatus});
+      required this.participationStatus});
 
   factory SpeakerLight.fromJson(Map<String, dynamic> json) {
     var participations = json['participations'] as List;
@@ -132,7 +165,8 @@ class SpeakerLight {
         participationStatus: participations.length > 0 &&
                 participations[participations.length - 1]['event'] ==
                     App.localStorage.getInt("event")
-            ? participations[participations.length - 1]['status']
-            : "");
+            ? Participation.convert(
+                participations[participations.length - 1]['status'])
+            : ParticipationStatus.NO_STATUS);
   }
 }

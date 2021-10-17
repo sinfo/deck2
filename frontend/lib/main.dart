@@ -4,6 +4,7 @@ import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
 import 'components/router.dart' as router;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 Future main() async {
   await start();
@@ -17,6 +18,7 @@ Future start() async {
 
 class App extends StatelessWidget {
   static late SharedPreferences localStorage;
+  static final SIZE = 600;
   static Future init() async {
     localStorage = await SharedPreferences.getInstance();
   }
@@ -25,7 +27,7 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return FutureProvider.value(
-      value: AuthService.user,
+      value: Provider.of<AuthService>(context).user,
       initialData: null,
       child: MaterialApp(
           title: 'Deck',

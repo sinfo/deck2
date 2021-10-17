@@ -5,7 +5,7 @@ import 'package:frontend/components/filterbar.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/ListViewCard2.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/memberService.dart';
 
@@ -145,7 +145,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
                   alignment: WrapAlignment.start,
                   crossAxisAlignment: WrapCrossAlignment.start,
                   children: compscpy
-                      .map((e) => ListViewCard(small: false, company: e))
+                      .map((e) => ListViewCard2(small: false, company: e))
                       .toList(),
                 ),
               );
@@ -213,7 +213,7 @@ class _MemberCompaniesRowState extends State<MemberCompaniesRow>
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: compscpy
-                      .map((e) => ListViewCard(small: true, company: e))
+                      .map((e) => ListViewCard2(small: true, company: e))
                       .toList(),
                 ),
               );

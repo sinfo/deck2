@@ -15,8 +15,15 @@ class EditBox extends StatelessWidget {
       margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
       padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
       decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(5)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(5),
+          boxShadow: [
+              BoxShadow(
+                blurRadius: 7.0,
+                color: Colors.grey.withOpacity(0.3),
+                offset: new Offset(0, 3),
+                spreadRadius: 4.0),
+            ],),
       child: Stack(children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

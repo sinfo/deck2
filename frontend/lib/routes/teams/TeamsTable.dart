@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/ListViewCard2.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
 import 'package:frontend/services/memberService.dart';

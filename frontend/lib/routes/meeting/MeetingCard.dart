@@ -4,12 +4,9 @@ import 'package:frontend/models/meeting.dart';
 import 'package:intl/intl.dart';
 
 class MeetingCard extends StatelessWidget {
-  //final Meeting meeting;
+  final Meeting meeting;
 
-  MeetingCard({
-    Key? key,
-    /*required this.meeeting*/
-  }) : super(key: key);
+  MeetingCard({Key? key, required this.meeting}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -33,14 +30,14 @@ class MeetingCard extends StatelessWidget {
                   children: <Widget>[
                     Container(
                       margin: EdgeInsets.only(top: 20.0),
-                      // child: Text(DateFormat.d().format(meeting.begin),
-                      child: Text(DateFormat.d().format(DateTime.now()),
-                          style: TextStyle(color: Colors.white, fontSize: 22)),
+                      child: Text(
+                        DateFormat.d().format(meeting.begin),
+                      ),
                     ),
                     Container(
-                      // child: Text(DateFormat.MMM().format(meeting.begin),
-                      child: Text(DateFormat.MMM().format(DateTime.now()),
-                          style: TextStyle(color: Colors.white, fontSize: 22)),
+                      child: Text(
+                        DateFormat.MMM().format(meeting.begin),
+                      ),
                     ),
                   ],
                 ),
@@ -61,8 +58,7 @@ class MeetingCard extends StatelessWidget {
                   children: <Widget>[
                     Container(
                       child: Text(
-                        "Zoom",
-                        /*Text(meeting.place,*/
+                        meeting.place,
                         style: TextStyle(color: Colors.black, fontSize: 23.0),
                         textAlign: TextAlign.left,
                       ),
@@ -70,12 +66,9 @@ class MeetingCard extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.only(top: 5.0),
                       child: Text(
-                        /*DateFormat.jm().format(meeting.begin) +
+                        DateFormat.jm().format(meeting.begin) +
                             ' - ' +
-                            DateFormat.jm().format(meeting.end),*/
-                        DateFormat.jm().format(DateTime.now()) +
-                            ' - ' +
-                            DateFormat.jm().format(DateTime.now()),
+                            DateFormat.jm().format(meeting.end),
                         style: TextStyle(color: Colors.grey, fontSize: 20.0),
                         textAlign: TextAlign.left,
                       ),

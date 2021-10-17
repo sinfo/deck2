@@ -1,54 +1,63 @@
 import 'dart:io';
-
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/models/company.dart';
-import 'package:frontend/models/speaker.dart';
-import 'package:frontend/services/companyService.dart';
-import 'package:frontend/services/speakerService.dart';
+import 'package:frontend/models/member.dart';
+import 'package:frontend/services/memberService.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 
-class AddSpeakerForm extends StatefulWidget {
-  AddSpeakerForm({Key? key}) : super(key: key);
+class EditMemberForm extends StatefulWidget {
+  final Member member;
+  EditMemberForm({Key? key, required this.member}) : super(key: key);
 
   @override
-  _AddSpeakerFormState createState() => _AddSpeakerFormState();
+  _EditMemberFormState createState() => _EditMemberFormState();
 }
 
-class _AddSpeakerFormState extends State<AddSpeakerForm> {
+class _EditMemberFormState extends State<EditMemberForm> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _bioController = TextEditingController();
-  final _titleController = TextEditingController();
-  final _speakerService = SpeakerService();
+  late TextEditingController _nameController;
+  late TextEditingController _istIdController;
+  final _memberService = MemberService();
   final _imagePicker = ImagePicker();
   XFile? _image;
   int? _size;
+  String? _prevImage;
   late DropzoneViewController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.member.name);
+    _istIdController = TextEditingController(text: widget.member.id);
+    _prevImage = widget.member.image;
+  }
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var name = _nameController.text;
-      var bio = _bioController.text;
-      var title = _titleController.text;
+      var istId = _istIdController.text;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
-      Speaker? s = await _speakerService.createSpeaker(bio, name, title);
-      if (s != null && _image != null) {
-        s = kIsWeb
-            ? await _speakerService.updateInternalImageWeb(
-                id: s.id, image: _image!)
-            : await _speakerService.updateInternalImage(
-                id: s.id, image: File(_image!.path));
+      print('id = ${widget.member.id}');
+
+      Member? m =
+          await _memberService.updateMember(widget.member.id, name, istId);
+      if (m != null && _image != null) {
+        //FIXME: update image
+        // m = kIsWeb
+        //     ? await _memberService.updateInternalImageWeb(
+        //         id: m.id, image: _image!)
+        //     : await _memberService.updateInternalImage(
+        //         id: m.id, image: File(_image!.path));
       }
-      if (s != null) {
-        //TODO: Redirect to company page
+      if (m != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -57,6 +66,7 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
             duration: Duration(seconds: 2),
           ),
         );
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -83,7 +93,7 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
                 return null;
               },
               decoration: const InputDecoration(
-                icon: const Icon(Icons.work),
+                icon: const Icon(Icons.person),
                 labelText: "Name *",
               ),
             ),
@@ -91,42 +101,50 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _bioController,
+              controller: _istIdController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a short bio';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.description),
-                labelText: "Biography *",
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _titleController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a title';
+                  return 'Please enter ist id';
                 } else {
                   return null;
                 }
               },
               decoration: const InputDecoration(
-                icon: const Icon(Icons.web),
-                labelText: "Title *",
+                icon: const Icon(Icons.school),
+                labelText: "IstId *",
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () => _submit(),
-              child: const Text('Submit'),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: Text("CANCEL",
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).accentColor)),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Theme.of(context).accentColor,
+                    padding: EdgeInsets.symmetric(horizontal: 50),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                  ),
+                  onPressed: () => _submit(),
+                  child: const Text('SUBMIT'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -136,7 +154,7 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
   Widget _buildPicture(double size) {
     Widget inkWellChild;
 
-    if (_image == null) {
+    if (_image == null && _prevImage == null) {
       inkWellChild = Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -157,14 +175,15 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
         ),
       );
     } else {
+      String path = _image == null ? _prevImage! : _image!.path;
       inkWellChild = Center(
         child: kIsWeb
             ? Image.network(
-                _image!.path,
+                path,
                 fit: BoxFit.fill,
               )
             : Image.file(
-                File(_image!.path),
+                File(path),
                 fit: BoxFit.fill,
               ),
       );
@@ -244,35 +263,41 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
 
   @override
   Widget build(BuildContext context) {
-    bool warning = _image != null && _size != null && _size! > 102400;
+    // bool warning = _image != null && _size != null && _size! > 102400;
+
     return Scaffold(
         appBar: CustomAppBar(disableEventChange: true,),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 1000) {
-              return Column(
-                children: [
-                  _buildPicture(constraints.maxWidth / 3),
-                  _buildForm()
-                ],
-              );
-            } else {
-              return Column(
-                children: [
-                  _buildPicture(constraints.maxWidth / 6),
-                  warning
-                      ? Text(
-                          'Image selected is too big!',
-                          style: TextStyle(
-                            color: Colors.red,
-                          ),
-                        )
-                      : Container(),
-                  _buildForm()
-                ],
-              );
-            }
-          },
-        ));
+        body: LayoutBuilder(builder: (contex, constraints) {
+          return Column(children: [
+            _buildForm(),
+          ]);
+        }));
+
+    // return SingleChildScrollView(
+    //   child: LayoutBuilder(
+    //     builder: (context, constraints) {
+    //       if (constraints.maxWidth < 1000) {
+    //         return Column(
+    //           children: [_buildPicture(constraints.maxWidth / 3), _buildForm()],
+    //         );
+    //       } else {
+    //         return Column(
+    //           children: [
+    //             _buildPicture(constraints.maxWidth / 6),
+    //             warning
+    //                 ? Text(
+    //                     'Image selected is too big!',
+    //                     style: TextStyle(
+    //                       color: Colors.red,
+    //                     ),
+    //                   )
+    //                 : Container(),
+    //             _buildForm()
+    //           ],
+    //         );
+    //       }
+    //     },
+    //   ),
+    // );
   }
 }
