@@ -22,7 +22,7 @@ class LightTheme extends BaseTheme {
       accentColor: Color.fromRGBO(92, 127, 242, 1),
       cardColor: Color.fromRGBO(241, 241, 241, 1),
       accentIconTheme: IconThemeData(color: Colors.white),
-      dividerColor: Colors.white54,
+      dividerColor: Colors.grey,
       disabledColor: Colors.grey,
     );
   }

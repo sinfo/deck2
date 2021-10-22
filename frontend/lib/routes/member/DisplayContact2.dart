@@ -27,13 +27,40 @@ class _DisplayContactsState extends State<DisplayContacts> {
     this.contact = contactService.getContact(widget.member.contact!);
   }
 
+  _isEditable(Contact cont) {
+    return FutureBuilder(
+        future: Provider.of<AuthService>(context).role,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Role r = snapshot.data as Role;
+
+            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+              return FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            EditContact(contact: cont, member: widget.member)),
+                  );
+                },
+                label: const Text('Edit Contacts'),
+                icon: const Icon(Icons.edit),
+                backgroundColor: Color(0xff5C7FF2),
+              );
+            } else
+              return Container();
+          } else
+            return Container();
+        });
+  }
+
   @override
   Widget build(BuildContext context) => FutureBuilder(
       future: contact,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           Contact cont = snapshot.data as Contact;
-
           return Scaffold(
             backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
             body: ListView(
@@ -48,19 +75,7 @@ class _DisplayContactsState extends State<DisplayContacts> {
                     type: "social"), //SizedBox(height: 24,),
               ],
             ),
-            floatingActionButton: Provider.of<AuthService>(context).role == 'ADMIN' ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          EditContact(contact: cont, member: widget.member)),
-                );
-              },
-              label: const Text('Edit Contacts'),
-              icon: const Icon(Icons.edit),
-              backgroundColor: Color(0xff5C7FF2),
-            ) : Container(),
+            floatingActionButton: _isEditable(cont),
           );
         } else {
           return Container(

@@ -103,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             label: const Text('Show All Speakers'),
             icon: const Icon(Icons.add),
+
           );
         }
       case 1:
@@ -187,7 +188,7 @@ class CustomNavBar extends StatelessWidget {
             )),
         //FIXME: o item aqui em baixo foi colocado apenas para processo de development
         BottomNavigationBarItem(
-            label: 'Members',
+            label: 'Teams',
             icon: Icon(
               Icons.people,
             )),

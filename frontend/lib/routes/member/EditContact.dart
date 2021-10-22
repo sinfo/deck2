@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/my_flutter_app_icons.dart';
@@ -72,7 +73,9 @@ class _MyFormState extends State<EditContact> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(disableEventChange: true,),
+      appBar: CustomAppBar(
+        disableEventChange: true,
+      ),
       body: ListView(
           padding: EdgeInsets.symmetric(horizontal: 32),
           physics: BouncingScrollPhysics(),
@@ -158,8 +161,8 @@ class _MyFormState extends State<EditContact> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => MemberScreen(
-                                      member: widget.member, role: "whatever")),
+                                  builder: (context) =>
+                                      MemberScreen(member: widget.member)),
                             );
                           },
                           child: Text("CANCEL",
@@ -220,9 +223,8 @@ class _MyFormState extends State<EditContact> {
                                 Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => MemberScreen(
-                                          member: widget.member,
-                                          role: "whatever")),
+                                      builder: (context) =>
+                                          MemberScreen(member: widget.member)),
                                 );
                               }
                             },
@@ -424,7 +426,7 @@ class _MyFormState extends State<EditContact> {
               width: 16,
             ),
             // we need add button at last friends row only
-            _removeButton(i, 'mail'),
+            _removeButton(i, 'phone'),
           ],
         ),
       ));
@@ -436,16 +438,26 @@ class _MyFormState extends State<EditContact> {
   Widget _removeButton(int index, String tag) {
     return InkWell(
       onTap: () {
-        if (tag == 'mail') {
-          mailsList.removeAt(index);
-          mailsValidList.removeAt(index);
-          mailsPersonalList.removeAt(index);
-        } else if (tag == 'phone') {
-          phonesList.removeAt(index);
-          phonesValidList.removeAt(index);
-        }
+        BlurryDialog d = BlurryDialog(
+            'Warning', 'Are you sure you want to delete this ${tag}?', () {
+          if (tag == 'mail') {
+            mailsList.removeAt(index);
+            mailsValidList.removeAt(index);
+            mailsPersonalList.removeAt(index);
+          } else if (tag == 'phone') {
+            phonesList.removeAt(index);
+            phonesValidList.removeAt(index);
+          }
 
-        setState(() {});
+          setState(() {});
+        });
+
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return d;
+          },
+        );
       },
       child: Container(
         width: 30,

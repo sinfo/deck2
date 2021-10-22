@@ -7,7 +7,6 @@ import 'package:frontend/routes/company/AddCompanyForm.dart';
 import 'package:frontend/routes/company/CompanyListWidget.dart';
 import 'package:frontend/routes/member/AddMemberForm.dart';
 import 'package:frontend/routes/member/MemberListWidget.dart';
-import 'package:frontend/routes/member/MemberListWidget2.dart';
 import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/routes/speaker/AddSpeakerForm.dart';
 
@@ -40,7 +39,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case Routes.AddSpeaker:
       return SlideRoute(page: AddSpeakerForm());
     case Routes.ShowAllMembers:
-      return MaterialPageRoute(builder: (context) => MemberListWidget2());
+      return MaterialPageRoute(builder: (context) => MemberListWidget());
     case Routes.AddMember:
       return SlideRoute(page: AddMemberForm());
     default:
