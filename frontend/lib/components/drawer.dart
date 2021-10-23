@@ -97,7 +97,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                   if (snapshot.hasData) {
                     Member m = snapshot.data as Member;
                     return CircleAvatar(
-                      backgroundImage: NetworkImage(m.image),
+                      backgroundImage: NetworkImage(m.image!),
                     );
                   } else {
                     return Shimmer.fromColors(

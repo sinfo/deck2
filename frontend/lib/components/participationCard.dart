@@ -440,8 +440,8 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                     borderRadius: BorderRadius.circular(5),
                                     child: Image.network(
                                       _currentMember != null
-                                          ? _currentMember!.image
-                                          : m.image,
+                                          ? _currentMember!.image!
+                                          : m.image!,
                                       errorBuilder: (BuildContext context,
                                           Object exception,
                                           StackTrace? stackTrace) {
@@ -531,7 +531,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                                               BorderRadius
                                                                   .circular(5),
                                                           child: Image.network(
-                                                            e.image,
+                                                            e.image!,
                                                             errorBuilder:
                                                                 (BuildContext
                                                                         context,
@@ -580,7 +580,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                                                           5),
                                                               child:
                                                                   Image.network(
-                                                                e.image,
+                                                                e.image!,
                                                                 errorBuilder: (BuildContext
                                                                         context,
                                                                     Object
