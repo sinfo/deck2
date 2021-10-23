@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
       drawer: DeckDrawer(),
       floatingActionButton: _fabAtIndex(
           context,
-          Provider.of<BottomNavigationBarProvider>(context, listen: false)
+          Provider.of<BottomNavigationBarProvider>(context, listen: true)
               .currentIndex),
     );
   }

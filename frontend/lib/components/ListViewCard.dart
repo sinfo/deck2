@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
+import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
@@ -223,8 +224,8 @@ class ListViewCard extends StatelessWidget {
               )),
           onTap: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return UnknownScreen();
-            } //MemberScreen(member: this.member)),
+              return MemberScreen(member: this.member!);
+            }
                 ));
           });
     } else if (company != null || speaker != null) {

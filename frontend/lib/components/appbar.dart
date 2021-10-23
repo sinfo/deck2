@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/event.dart';
+import 'package:frontend/routes/company/CompanyScreen.dart';
+import 'package:frontend/routes/member/MemberScreen.dart';
+import 'package:frontend/routes/speaker/SpeakerScreen.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/company.dart';
@@ -210,15 +213,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
     List<Widget> results = [];
     if (speakers.length != 0) {
       results.add(getDivider("Speakers"));
-      results.addAll(speakers.map((e) => SearchResultWidget(speaker: e)));
+      results.addAll(speakers.map(
+          (e) => SearchResultWidget(speaker: e, index: speakers.indexOf(e))));
     }
     if (companies.length != 0) {
       results.add(getDivider("Companies"));
-      results.addAll(companies.map((e) => SearchResultWidget(company: e)));
+      results.addAll(companies.map(
+          (e) => SearchResultWidget(company: e, index: companies.indexOf(e))));
     }
     if (members.length != 0) {
       results.add(getDivider("Members"));
-      results.addAll(members.map((e) => SearchResultWidget(member: e)));
+      results.addAll(members.map(
+          (e) => SearchResultWidget(member: e, index: members.indexOf(e))));
     }
     return results;
   }
@@ -241,17 +247,22 @@ class SearchResultWidget extends StatelessWidget {
   final Company? company;
   final Speaker? speaker;
   final Member? member;
-  const SearchResultWidget({Key? key, this.company, this.speaker, this.member})
-      : super(key: key);
+  final int? index;
+  const SearchResultWidget(
+      {Key? key, this.company, this.speaker, this.member, this.index});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
         onTap: () {
-          print("HIIII");
-          // Navigator.push(context, MaterialPageRoute(builder: (context) {
-          //   return UnknownScreen();
-          // })); // TODO: Company, Speaker or Member screen
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            if (company != null) {
+              return CompanyScreen(company: company!);
+            } else if (speaker != null) {
+              return SpeakerScreen(speaker: speaker!);
+            }
+            return MemberScreen(member: member!);
+          }));
         },
         child: Center(
           child: ListTile(
