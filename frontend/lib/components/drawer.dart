@@ -80,7 +80,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
   }
 
   Future signOut(BuildContext context) async {
-    await Provider.of<AuthService>(context).signOut();
+    await Provider.of<AuthService>(context, listen: false).signOut();
     Navigator.pushReplacementNamed(context, Routes.LoginRoute);
   }
 

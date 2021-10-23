@@ -55,6 +55,7 @@ class ThemeNotifier with ChangeNotifier {
 
   ThemeData get theme => _themeData.materialTheme;
   BaseTheme get fullTheme => _themeData;
+  bool get isDark => _themeData is DarkTheme;
 
   setTheme(BaseTheme themeData) async {
     _themeData = themeData;

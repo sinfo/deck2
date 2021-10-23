@@ -73,10 +73,7 @@ class _EditableCardState extends State<EditableCard> {
           children: [
             Text(widget.title,
                 textAlign: TextAlign.left,
-                style: TextStyle(
-                    fontSize: 22,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             Divider(
               color: Colors.grey[600],
             ),
@@ -84,7 +81,7 @@ class _EditableCardState extends State<EditableCard> {
               firstChild: SelectableText(
                 _body,
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 18, color: Colors.black),
+                style: TextStyle(fontSize: 18),
               ),
               secondChild: Column(
                 children: [

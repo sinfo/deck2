@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/components/EditableCard.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
@@ -83,8 +84,6 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                 TabBar(
                   isScrollable: small,
                   controller: _tabController,
-                  labelColor: Colors.indigo,
-                  unselectedLabelColor: Colors.indigo[100],
                   tabs: [
                     Tab(text: 'Details'),
                     Tab(text: 'FlightInfo'),
@@ -236,6 +235,29 @@ class SpeakerBanner extends StatelessWidget {
     ParticipationStatus speakerStatus =
         part != null ? part.status : ParticipationStatus.NO_STATUS;
 
+    double lum = 0.2;
+    var matrix = <double>[
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ]; // Greyscale matrix. Lum represents level of luminosity
     return LayoutBuilder(
       builder: (context, constraints) {
         bool small = constraints.maxWidth < App.SIZE;
@@ -245,6 +267,9 @@ class SpeakerBanner extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
+                  colorFilter: Provider.of<ThemeNotifier>(context).isDark
+                      ? ColorFilter.matrix(matrix)
+                      : null,
                   image: AssetImage('assets/banner_background.png'),
                   fit: BoxFit.cover,
                 ),

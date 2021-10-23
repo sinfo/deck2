@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/event.dart';
@@ -99,14 +100,12 @@ class _CustomAppBarState extends State<CustomAppBar> {
       ),
     );
   }
-  /**
-   * IconButton(
-              icon: Image.asset('assets/logo.png'),
-              iconSize: 50,
-              onPressed: () {},
-            ),
-            if (!widget.disableEventChange) _buildEventSelector(context),
-   */
+  //   IconButton(
+  //             icon: Image.asset('assets/logo_deck.png'),
+  //             iconSize: 50,
+  //             onPressed: () {},
+  //           ),
+  //           if (!widget.disableEventChange) _buildEventSelector(context),
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +120,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: Provider.of<ThemeNotifier>(context).isDark
+                    ? null
+                    : Colors.white,
                 hintText: 'Search Company, Speaker or Member',
                 prefixIcon: Icon(Icons.search),
                 suffixIcon: _searchController.text.length != 0

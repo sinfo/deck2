@@ -15,12 +15,6 @@ Future main() async {
   await start();
   EventService service = EventService();
   Event latest = await service.getLatestEvent();
-  Event e;
-  if (App.localStorage.containsKey('event')) {
-    e = await service.getEvent(eventId: App.localStorage.getInt('event')!);
-  } else {
-    e = latest;
-  }
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider<ThemeNotifier>(
@@ -29,7 +23,7 @@ Future main() async {
         ),
       ),
       ChangeNotifierProvider<EventNotifier>(
-        create: (_) => EventNotifier(e, latest),
+        create: (_) => EventNotifier(latest, latest),
       ),
       ChangeNotifierProvider<SpeakerTableNotifier>(
         create: (_) => SpeakerTableNotifier(speakers: []),

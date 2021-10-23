@@ -86,7 +86,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
   late TextEditingController _roomNotesController;
   late TextEditingController _roomTypeController;
   late TextEditingController _notesController;
-  Member? _currentMember = null;
+  Member? _currentMember;
   late bool _partner;
   late DateTime? _confirmed;
   final MemberService _memberService = MemberService();
@@ -337,9 +337,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                         'SINFO ${widget.participation.event}',
                         textAlign: TextAlign.left,
                         style: TextStyle(
-                            fontSize: 22,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold),
+                            fontSize: 22, fontWeight: FontWeight.bold),
                       ),
                       Container(
                         child: Row(
