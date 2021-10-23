@@ -325,6 +325,31 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 	return &result, nil
 }
 
+func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models.MemberEventTeam, error) {
+	memberEventTeams := make([]*models.MemberEventTeam, 0)
+	options := GetEventsOptions{}
+	events, err := Events.GetEvents(options)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, event := range events {
+		for _, teamID := range event.Teams {
+			team, err := Teams.GetTeam(teamID)
+			if err != nil {
+				return nil, err
+			}
+			for _, teamMember := range team.Members {
+				if teamMember.Member == id {
+					memEvtTeam := models.MemberEventTeam{event.ID, team.Name, teamMember.Role}
+					memberEventTeams = append(memberEventTeams, &memEvtTeam)
+				}
+			}
+		}
+	}
+	return memberEventTeams, nil
+}
+
 // CreateMember creates a new member
 func (m *MembersType) CreateMember(data CreateMemberData) (*models.Member, error) {
 	ctx = context.Background()

@@ -144,6 +144,19 @@ func getMemberRole(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(roleData)
 }
 
+func getMembersParticipations(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	membersEventsTeams, err := mongodb.Members.GetMembersParticipations(id)
+	if err != nil {
+		http.Error(w, "Member not found: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(membersEventsTeams)
+}
+
 // PUBLIC ENDPOINTS
 
 func getMembersPublic(w http.ResponseWriter, r *http.Request) {

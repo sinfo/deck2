@@ -48,3 +48,14 @@ type AuthorizationCredentials struct {
 	// Role on SINFO
 	Role TeamRole
 }
+
+type MemberEventTeam struct {
+	//Number of event where Member was in <Team>
+	Event int
+
+	//Team of Member on SINFO <Event>
+	Team string
+
+	// Role on SINFO <Event>
+	Role TeamRole
+}
