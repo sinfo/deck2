@@ -46,6 +46,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    CustomAppBar appBar = CustomAppBar(disableEventChange: false);
+
     return Scaffold(
       appBar: CustomAppBar(
         disableEventChange: false,
@@ -58,27 +60,33 @@ class _HomeScreenState extends State<HomeScreen> {
               duration: Duration(milliseconds: 800), curve: Curves.ease);
         },
       ),
-      body: SizedBox.expand(
-        child: PageView(
-          controller: _pageController,
-          onPageChanged: (index) {
-            Provider.of<BottomNavigationBarProvider>(context, listen: false)
-                .currentIndex = index;
-          },
-          children: <Widget>[
-            Center(
-              child: const SpeakerTable(),
-            ),
-            Center(
-              child: LandingPage(),
-            ),
-            Center(
-              child: CompanyTable(),
-            ),
-            Center(child: MemberListWidget()),
-          ],
-        ),
-      ),
+      body: Stack(children: [
+        Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: SizedBox.expand(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  Provider.of<BottomNavigationBarProvider>(context,
+                          listen: false)
+                      .currentIndex = index;
+                },
+                children: <Widget>[
+                  Center(
+                    child: const SpeakerTable(),
+                  ),
+                  Center(
+                    child: LandingPage(),
+                  ),
+                  Center(
+                    child: CompanyTable(),
+                  ),
+                  Center(child: MemberListWidget()),
+                ],
+              ),
+            )),
+        appBar,
+      ]),
       drawer: DeckDrawer(),
       floatingActionButton: _fabAtIndex(
           context,

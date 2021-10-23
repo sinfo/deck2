@@ -2,12 +2,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/participation.dart';
 import 'dart:convert';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/thread.dart';
-import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/services/service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http_parser/http_parser.dart';

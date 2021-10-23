@@ -17,9 +17,7 @@ import 'package:provider/provider.dart';
 class ListViewCard extends StatelessWidget {
   final Member? member;
   final Company? company;
-  final CompanyLight? companyLight;
   final Speaker? speaker;
-  final SpeakerLight? speakerLight;
   final bool small;
   final bool? participationsInfo;
   late final ParticipationStatus _status;
@@ -36,9 +34,7 @@ class ListViewCard extends StatelessWidget {
       required this.small,
       this.member,
       this.company,
-      this.companyLight,
       this.speaker,
-      this.speakerLight,
       this.participationsInfo})
       : super(key: key) {
     int? event = App.localStorage.getInt("event");
@@ -47,21 +43,8 @@ class ListViewCard extends StatelessWidget {
         _initCompany(event);
       } else if (speaker != null) {
         _initSpeaker(event);
-      } else if (companyLight != null) {
-        _initCompanyLight();
-      } else if (speakerLight != null) {
-        _initSpeakerLight();
       }
     }
-  }
-
-  void _initCompanyLight() {
-    _numParticipations = companyLight!.numParticipations;
-    _lastParticipation = companyLight!.lastParticipation;
-    _status = companyLight!.participationStatus;
-    _imageUrl = companyLight!.companyImages.internal;
-    _title = companyLight!.name;
-    _color = STATUSCOLOR[_status]!;
   }
 
   void _initCompany(int event) {
@@ -96,16 +79,6 @@ class ListViewCard extends StatelessWidget {
 
     _numParticipations = speaker!.numParticipations;
     _lastParticipation = speaker!.lastParticipation;
-  }
-
-  void _initSpeakerLight() {
-    _tag = speakerLight!.id;
-    _numParticipations = speakerLight!.numParticipations;
-    _lastParticipation = speakerLight!.lastParticipation;
-    _status = speakerLight!.participationStatus;
-    _imageUrl = speakerLight!.speakerImages.internal!;
-    _title = speakerLight!.name;
-    _color = STATUSCOLOR[_status]!;
   }
 
   Widget getParticipationInfo(double fontsize) {
@@ -254,10 +227,7 @@ class ListViewCard extends StatelessWidget {
             } //MemberScreen(member: this.member)),
                 ));
           });
-    } else if (company != null ||
-        speaker != null ||
-        companyLight != null ||
-        speakerLight != null) {
+    } else if (company != null || speaker != null) {
       Widget body = Stack(
         children: [
           InkWell(

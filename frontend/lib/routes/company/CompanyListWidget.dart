@@ -2,17 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/components/companySearchDelegate.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/services/companyService.dart';
-
-enum SortingMethod {
-  RANDOM,
-  NUM_PARTICIPATIONS,
-  LAST_PARTICIPATION,
-}
 
 final Map<SortingMethod, String> SORT_STRING = {
   SortingMethod.NUM_PARTICIPATIONS: 'Sort By Number Of Participations',
@@ -111,41 +104,16 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
 
   @override
   Widget build(BuildContext context) {
+    List<Widget> popupMenuBtn = popUpMenuButton();
+    CustomAppBar appBar =
+        CustomAppBar(actions: popupMenuBtn, disableEventChange: false);
     return Scaffold(
-      appBar: CustomAppBar(disableEventChange: true, actions: <Widget>[
-        IconButton(
-          icon: const Icon(Icons.search),
-          tooltip: 'Search company',
-          onPressed: () {
-            showSearch(context: context, delegate: CompanySearchDelegate());
-          },
-        ),
-        PopupMenuButton<SortingMethod>(
-          icon: const Icon(Icons.sort),
-          tooltip: 'Sort Companies',
-          onSelected: (SortingMethod sort) {
-            setState(() {
-              _sortMethod = sort;
-              this.companiesLoaded.clear();
-              numRequests = 0;
-              this.companies = companyService.getCompanies(
-                  maxCompInRequest: MAX_COMP,
-                  sortMethod: sort,
-                  numRequestsBackend: numRequests);
-              numRequests++;
-            });
-          },
-          itemBuilder: (BuildContext context) {
-            return SORT_STRING.keys.map((SortingMethod choice) {
-              return PopupMenuItem<SortingMethod>(
-                value: choice,
-                child: Center(child: Text(SORT_STRING[choice]!)),
-              );
-            }).toList();
-          },
-        ),
+      body: Stack(children: [
+        Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: companyGrid()),
+        appBar,
       ]),
-      body: companyGrid(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(
@@ -158,5 +126,34 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
         backgroundColor: Color(0xff5C7FF2),
       ),
     );
+  }
+
+  List<Widget> popUpMenuButton() {
+    return [
+      PopupMenuButton<SortingMethod>(
+        icon: const Icon(Icons.sort),
+        tooltip: 'Sort Companies',
+        onSelected: (SortingMethod sort) {
+          setState(() {
+            _sortMethod = sort;
+            this.companiesLoaded.clear();
+            numRequests = 0;
+            this.companies = companyService.getCompanies(
+                maxCompInRequest: MAX_COMP,
+                sortMethod: sort,
+                numRequestsBackend: numRequests);
+            numRequests++;
+          });
+        },
+        itemBuilder: (BuildContext context) {
+          return SORT_STRING.keys.map((SortingMethod choice) {
+            return PopupMenuItem<SortingMethod>(
+              value: choice,
+              child: Center(child: Text(SORT_STRING[choice]!)),
+            );
+          }).toList();
+        },
+      )
+    ];
   }
 }
