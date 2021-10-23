@@ -144,6 +144,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
                         ? IconButton(
                             onPressed: () {
                               _searchController.clear();
+                              setState(() {});
                             },
                             icon: Icon(Icons.clear),
                           )
