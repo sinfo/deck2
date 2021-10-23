@@ -18,9 +18,7 @@ import 'package:provider/provider.dart';
 class ListViewCard extends StatelessWidget {
   final Member? member;
   final Company? company;
-  final CompanyLight? companyLight;
   final Speaker? speaker;
-  final SpeakerLight? speakerLight;
   final bool small;
   final bool? participationsInfo;
   late final ParticipationStatus _status;
@@ -37,9 +35,7 @@ class ListViewCard extends StatelessWidget {
       required this.small,
       this.member,
       this.company,
-      this.companyLight,
       this.speaker,
-      this.speakerLight,
       this.participationsInfo})
       : super(key: key) {
     int? event = App.localStorage.getInt("event");
@@ -201,11 +197,7 @@ class ListViewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (company != null ||
-        speaker != null ||
-        companyLight != null ||
-        speakerLight != null ||
-        member != null) {
+    if (company != null || speaker != null || member != null) {
       Widget body = Stack(
         children: [
           InkWell(

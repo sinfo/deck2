@@ -8,6 +8,7 @@ import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
+import 'package:frontend/routes/company/EditCompanyForm.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
@@ -52,13 +53,18 @@ class _CompanyScreenState extends State<CompanyScreen>
     setState(() {});
   }
 
-  Future<void> companyChangedCallback(
-      BuildContext context, Future<Company?> fs) async {
-    Company? s = await fs;
+  Future<void> companyChangedCallback(BuildContext context,
+      {Future<Company?>? fs, Company? company}) async {
+    Company? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (company != null) {
+      s = company;
+    }
     if (s != null) {
       Provider.of<CompanyTableNotifier>(context, listen: false).edit(s);
       setState(() {
-        widget.company = s;
+        widget.company = s!;
       });
     }
   }
@@ -69,7 +75,6 @@ class _CompanyScreenState extends State<CompanyScreen>
       bool small = constraints.maxWidth < App.SIZE;
       return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
-          appBar: CustomAppBar(disableEventChange: true),
           body: DefaultTabController(
             length: 4,
             child: Column(
@@ -79,9 +84,12 @@ class _CompanyScreenState extends State<CompanyScreen>
                   statusChangeCallback: (step, context) {
                     companyChangedCallback(
                       context,
-                      _companyService.stepParticipationStatus(
+                      fs: _companyService.stepParticipationStatus(
                           id: widget.company.id, step: step),
                     );
+                  },
+                  onEdit: (context, _comp) {
+                    companyChangedCallback(context, company: _comp);
                   },
                 ),
                 TabBar(
@@ -108,7 +116,7 @@ class _CompanyScreenState extends State<CompanyScreen>
                           (Map<String, dynamic> body) async {
                         await companyChangedCallback(
                           context,
-                          _companyService.updateParticipation(
+                          fs: _companyService.updateParticipation(
                             id: widget.company.id,
                             notes: body['notes'],
                             member: body['member'],
@@ -117,12 +125,12 @@ class _CompanyScreenState extends State<CompanyScreen>
                           ),
                         );
                       },
-                      onParticipationAdded: () => companyChangedCallback(
-                          context,
-                          _companyService.addParticipation(
-                            id: widget.company.id,
-                            partner: false,
-                          )),
+                      onParticipationAdded: () =>
+                          companyChangedCallback(context,
+                              fs: _companyService.addParticipation(
+                                id: widget.company.id,
+                                partner: false,
+                              )),
                     ),
                     Container(decoration: BoxDecoration(color: Colors.teal)),
                   ]),
@@ -210,9 +218,25 @@ class ParticipationList extends StatelessWidget {
 class CompanyBanner extends StatelessWidget {
   final Company company;
   final void Function(int, BuildContext) statusChangeCallback;
+  final void Function(BuildContext, Company?) onEdit;
+
   const CompanyBanner(
-      {Key? key, required this.company, required this.statusChangeCallback})
+      {Key? key,
+      required this.company,
+      required this.statusChangeCallback,
+      required this.onEdit})
       : super(key: key);
+
+  void _editCompanyModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: EditCompanyForm(company: company, onEdit: this.onEdit),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,9 +308,7 @@ class CompanyBanner extends StatelessWidget {
                                 )),
                             child: CircleAvatar(
                               foregroundImage: NetworkImage(
-                                company.companyImages.internal ??
-                                    company.companyImages.public ??
-                                    '',
+                                company.companyImages.internal,
                               ),
                               backgroundImage: AssetImage('assets/noImage.png'),
                             ),
@@ -336,14 +358,12 @@ class CompanyBanner extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: InkWell(
-                mouseCursor: SystemMouseCursors.click,
-                onTap: () {}, //TODO: Edit company,
-                child: Icon(Icons.edit),
-              ),
-            ),
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                _editCompanyModal(context);
+              },
+            )
           ],
         );
       },

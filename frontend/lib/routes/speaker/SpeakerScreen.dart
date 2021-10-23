@@ -49,13 +49,18 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     setState(() {});
   }
 
-  Future<void> speakerChangedCallback(
-      BuildContext context, Future<Speaker?> fs) async {
-    Speaker? s = await fs;
+  Future<void> speakerChangedCallback(BuildContext context,
+      {Future<Speaker?>? fs, Speaker? speaker}) async {
+    Speaker? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (speaker != null) {
+      s = speaker;
+    }
     if (s != null) {
       Provider.of<SpeakerTableNotifier>(context, listen: false).edit(s);
       setState(() {
-        widget.speaker = s;
+        widget.speaker = s!;
       });
     }
   }
@@ -72,15 +77,17 @@ class _SpeakerScreenState extends State<SpeakerScreen>
             child: Column(
               children: [
                 SpeakerBanner(
-                  speaker: widget.speaker,
-                  statusChangeCallback: (step, context) {
-                    speakerChangedCallback(
-                      context,
-                      _speakerService.stepParticipationStatus(
-                          id: widget.speaker.id, step: step),
-                    );
-                  },
-                ),
+                    speaker: widget.speaker,
+                    statusChangeCallback: (step, context) {
+                      speakerChangedCallback(
+                        context,
+                        fs: _speakerService.stepParticipationStatus(
+                            id: widget.speaker.id, step: step),
+                      );
+                    },
+                    onEdit: (context, _speaker) {
+                      speakerChangedCallback(context, speaker: _speaker);
+                    }),
                 TabBar(
                   isScrollable: small,
                   controller: _tabController,
@@ -105,7 +112,7 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                           (Map<String, dynamic> body) async {
                         await speakerChangedCallback(
                           context,
-                          _speakerService.updateParticipation(
+                          fs: _speakerService.updateParticipation(
                             id: widget.speaker.id,
                             feedback: body['feedback'],
                             member: body['member'],
@@ -115,11 +122,11 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                       },
                       onParticipationAdded: () => speakerChangedCallback(
                           context,
-                          _speakerService.addParticipation(
+                          fs: _speakerService.addParticipation(
                               id: widget.speaker.id)),
                       onParticipationDeleted: () => speakerChangedCallback(
                           context,
-                          _speakerService.removeParticipation(
+                          fs: _speakerService.removeParticipation(
                               id: widget.speaker.id)),
                     ),
                     Container(decoration: BoxDecoration(color: Colors.teal)),
@@ -211,8 +218,12 @@ class ParticipationList extends StatelessWidget {
 class SpeakerBanner extends StatelessWidget {
   final Speaker speaker;
   final void Function(int, BuildContext) statusChangeCallback;
+  final void Function(BuildContext, Speaker?) onEdit;
   const SpeakerBanner(
-      {Key? key, required this.speaker, required this.statusChangeCallback})
+      {Key? key,
+      required this.speaker,
+      required this.statusChangeCallback,
+      required this.onEdit})
       : super(key: key);
 
   void _editSpeakerModal(context) {
@@ -220,7 +231,7 @@ class SpeakerBanner extends StatelessWidget {
       context: context,
       builder: (context) {
         return Container(
-          child: EditSpeakerForm(speaker: speaker),
+          child: EditSpeakerForm(speaker: speaker, onEdit: this.onEdit),
         );
       },
     );

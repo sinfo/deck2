@@ -123,6 +123,7 @@ class SpeakerService extends Service {
       String? notes,
       String? title}) async {
     var body = {"bio": bio, "name": name, "notes": notes, "title": title};
+    print(body);
 
     try {
       Response<String> response = await dio.put("/speakers/" + id, data: body);

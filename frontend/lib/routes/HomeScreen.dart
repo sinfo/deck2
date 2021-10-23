@@ -43,9 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    CustomAppBar appBar = CustomAppBar(
-      disableEventChange: false,
-    );
+    CustomAppBar appBar = CustomAppBar(disableEventChange: false);
+
     return Scaffold(
       bottomNavigationBar: CustomNavBar(
         onTapped: (newIndex) {
@@ -57,6 +56,18 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Stack(
         children: [
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  colorFilter: ColorFilter.mode(
+                      Colors.grey.withOpacity(0.1), BlendMode.srcATop),
+                  fit: BoxFit.contain,
+                  image: AssetImage('assets/logo_deck.png'),
+                ),
+              ),
+            ),
+          ),
           Container(
             margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
             child: SizedBox.expand(
@@ -82,9 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          CustomAppBar(
-            disableEventChange: false,
-          ),
+          appBar,
         ],
       ),
       drawer: DeckDrawer(),
@@ -155,14 +164,6 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          colorFilter:
-              ColorFilter.mode(Colors.grey.withOpacity(0.1), BlendMode.srcATop),
-          fit: BoxFit.fitWidth,
-          image: AssetImage('assets/logo-branco2.png'),
-        ),
-      ),
       child: MeetingList(),
     );
   }

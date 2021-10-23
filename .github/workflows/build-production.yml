@@ -1,15 +1,18 @@
-name: Staging Build Workflow
+name: Production Build Workflow
 
 on:
   push:
-    branches:
-      - "staging"
+    tags:
+      - "v*.*.*"
 
 jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Set most recent tag
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
         
     - uses: docker/login-action@v1
       name: Login to DockerHub
@@ -18,22 +21,25 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
         
     - uses: docker/build-push-action@v2.7.0
-      name: Build and Push Deck2 Backend Image
+      name: Build and Push the Docker Image
       id: docker_build
       with:
         context: ./backend
         push: true
-        tags: orgsinfo/deck2:latest
+        tags: orgsinfo/deck2:${{ steps.vars.outputs.tag }}
         file: ./backend/Dockerfile
     
-    - name: Deck2 Backend Image Digest
+    - name: Docker Image Digest
       run: echo ${{ steps.docker_build.outputs.digest }}
-      
+
   docker-frontend:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-        
+    - name: Set most recent tag
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
     - uses: docker/login-action@v1
       name: Login to DockerHub
       with:
@@ -57,22 +63,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Set most recent tag
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
-    - name: Deploy the backend to the cluster
+    - name: Deploy the app to the cluster
       uses: nickgronow/kubectl@master
       with:
         config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: delete pod --selector="app=deck2-staging-app" --namespace=staging        
+        args: set image deployment/deck2-production deck2-prod-app=orgsinfo/deck2:${{ steps.vars.outputs.tag }} --namespace=production
         
+    - name: Verify deployment
+      uses: nickgronow/kubectl@master
+      with:
+        config_data: ${{ secrets.KUBE_CONFIG_DATA }}
+        args: rollout status deployment/deck2-production --namespace=production
+
   deploy-frontend:
     needs: docker-frontend
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Set most recent tag
+      id: vars
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
 
-    - name: Deploy the frontend to the cluster
+    - name: Deploy the frontend app to the cluster
       uses: nickgronow/kubectl@master
       with:
         config_data: ${{ secrets.KUBE_CONFIG_DATA }}
-        args: delete pod --selector="app=deck2-frontend-staging-app" --namespace=staging
-
+        args: set image deployment/deck2-frontend-production deck2-frontend-prod-app=orgsinfo/deck2-frontend:${{ steps.vars.outputs.tag }} --namespace=production
+        
+    - name: Verify deployment
+      uses: nickgronow/kubectl@master
+      with:
+        config_data: ${{ secrets.KUBE_CONFIG_DATA }}
+        args: rollout status deployment/deck2-frontend-production --namespace=production

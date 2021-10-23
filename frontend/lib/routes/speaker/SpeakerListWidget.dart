@@ -104,9 +104,9 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    CustomAppBar appBar = CustomAppBar(
-      disableEventChange: true,
-    );
+    List<Widget> popUpMenuButton = popUpMenuBtn();
+    CustomAppBar appBar =
+        CustomAppBar(actions: popUpMenuButton, disableEventChange: true);
     return Scaffold(
       body: Stack(children: [
         Container(
@@ -126,5 +126,34 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
         backgroundColor: Color(0xff5C7FF2),
       ),
     );
+  }
+
+  List<Widget> popUpMenuBtn() {
+    return [
+      PopupMenuButton<SortingMethod>(
+        icon: const Icon(Icons.sort),
+        tooltip: 'Sort Speakers',
+        onSelected: (SortingMethod sort) {
+          setState(() {
+            _sortMethod = sort;
+            this.speakersLoaded.clear();
+            numRequests = 0;
+            this.speakers = speakerService.getSpeakers(
+                maxSpeaksInRequest: MAX_SPEAKERS,
+                sortMethod: sort,
+                numRequestsBackend: numRequests);
+            numRequests++;
+          });
+        },
+        itemBuilder: (BuildContext context) {
+          return SORT_STRING.keys.map((SortingMethod choice) {
+            return PopupMenuItem<SortingMethod>(
+              value: choice,
+              child: Center(child: Text(SORT_STRING[choice]!)),
+            );
+          }).toList();
+        },
+      )
+    ];
   }
 }

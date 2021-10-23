@@ -37,64 +37,74 @@ class _TeamTableState extends State<TeamTable>
   Widget build(BuildContext context) {
     super.build(context);
 
-    //TODO: colocar Nested Scroll View
-    return FutureBuilder(
-      future: Future.wait([
-        _teamService.getTeams(
-            event: Provider.of<EventNotifier>(context).event.id)
-      ]),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasError) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    return NestedScrollView(
+      floatHeaderSlivers: true,
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+          ),
+        ),
+      ],
+      body: FutureBuilder(
+        future: Future.wait([
+          _teamService.getTeams(
+              event: Provider.of<EventNotifier>(context).event.id)
+        ]),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content:
-                    Text('An error has occured. Please contact the admins'),
-                duration: Duration(seconds: 4),
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content:
+                      Text('An error has occured. Please contact the admins'),
+                  duration: Duration(seconds: 4),
+                ),
+              );
+              return Center(
+                  child: Icon(
+                Icons.error,
+                size: 200,
+              ));
+            }
+
+            List<List<Object>> data = snapshot.data as List<List<Object>>;
+
+            List<Team> tms = data[0] as List<Team>;
+
+            tms.sort((a, b) => a.name!.compareTo(b.name!));
+
+            return RefreshIndicator(
+              onRefresh: () {
+                return Future.delayed(Duration.zero, () {
+                  setState(() {});
+                });
+              },
+              child: ListView.builder(
+                itemCount: tms.length,
+                itemBuilder: (context, index) =>
+                    TeamMemberRow(team: tms[index]),
+                addAutomaticKeepAlives: true,
+                physics: const AlwaysScrollableScrollPhysics(),
               ),
             );
-            return Center(
-                child: Icon(
-              Icons.error,
-              size: 200,
-            ));
+          } else {
+            return Shimmer.fromColors(
+              baseColor: Colors.grey[400]!,
+              highlightColor: Colors.white,
+              child: ListView.builder(
+                itemCount: 5,
+                itemBuilder: (context, index) => TeamMemberRow.fake(),
+                addAutomaticKeepAlives: true,
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
+              ),
+            );
           }
-
-          List<List<Object>> data = snapshot.data as List<List<Object>>;
-
-          List<Team> tms = data[0] as List<Team>;
-
-          tms.sort((a, b) => a.name!.compareTo(b.name!));
-
-          return RefreshIndicator(
-            onRefresh: () {
-              return Future.delayed(Duration.zero, () {
-                setState(() {});
-              });
-            },
-            child: ListView.builder(
-              itemCount: tms.length,
-              itemBuilder: (context, index) => TeamMemberRow(team: tms[index]),
-              addAutomaticKeepAlives: true,
-              physics: const AlwaysScrollableScrollPhysics(),
-            ),
-          );
-        } else {
-          return Shimmer.fromColors(
-            baseColor: Colors.grey[400]!,
-            highlightColor: Colors.white,
-            child: ListView.builder(
-              itemCount: 5,
-              itemBuilder: (context, index) => TeamMemberRow.fake(),
-              addAutomaticKeepAlives: true,
-              physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics()),
-            ),
-          );
-        }
-      },
+        },
+      ),
     );
   }
 }
@@ -154,7 +164,6 @@ class TeamMemberRow extends StatelessWidget {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     List<Future<Member?>> _futureMembers = team.members!
@@ -190,7 +199,8 @@ class TeamMemberRow extends StatelessWidget {
                               Container(
                                 alignment: Alignment.centerLeft,
                                 child: Text(this.team.name!,
-                                    style: TextStyle(fontSize: 12)),
+                                    style:
+                                        TextStyle(fontSize: small ? 14 : 18)),
                                 margin: EdgeInsets.fromLTRB(0, 8, 8, 0),
                               ),
                               Divider(
@@ -234,19 +244,17 @@ class TeamMemberRow extends StatelessWidget {
                     );
                   })),
             );
-          }  else {
-              return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
+          } else {
+            return Container(
+              child: Center(
+                child: Container(
+                  height: 50,
+                  width: 50,
+                  child: CircularProgressIndicator(),
                 ),
-              );
-            }
-          });
-        }
+              ),
+            );
+          }
+        });
   }
-
-
+}

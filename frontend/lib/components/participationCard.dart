@@ -17,6 +17,7 @@ import 'package:frontend/routes/participation/participationScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 enum CardType {
   MEMBER,
@@ -315,368 +316,374 @@ class _ParticipationCardState extends State<ParticipationCard> {
   Widget build(BuildContext context) {
     bool editable = widget.participation.event ==
         Provider.of<EventNotifier>(context).latest.id;
-    return Container(
-        margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-        padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
-        decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(5)),
-        child: FutureBuilder(
-          future: widget.participation.member,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              Member m = snapshot.data as Member;
-              if (_currentMember == null) _currentMember = m;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'SINFO ${widget.participation.event}',
-                        textAlign: TextAlign.left,
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      Container(
-                        child: Row(
-                          children: [
-                            if (editable) ...[
-                              FutureBuilder(
-                                  future:
-                                      Provider.of<AuthService>(context).role,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData) {
-                                      Role r = snapshot.data as Role;
+    return FutureBuilder(
+      future: widget.participation.member,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          Member m = snapshot.data as Member;
+          if (_currentMember == null) _currentMember = m;
+          return Container(
+            margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+            padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+            decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(5)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'SINFO ${widget.participation.event}',
+                      textAlign: TextAlign.left,
+                      style:
+                          TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    Container(
+                      child: Row(
+                        children: [
+                          if (editable) ...[
+                            FutureBuilder(
+                                future: Provider.of<AuthService>(context).role,
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasData) {
+                                    Role r = snapshot.data as Role;
 
-                                      if (r == Role.ADMIN &&
-                                          widget.onDelete != null) {
-                                        //TODO: Check for other constraints
-                                        return IconButton(
-                                            constraints: BoxConstraints(),
-                                            hoverColor: Colors.transparent,
-                                            splashColor: Colors.transparent,
-                                            icon: Icon(Icons.delete),
-                                            color: Color.fromRGBO(
-                                                211, 211, 211, 1),
-                                            iconSize: 22,
-                                            onPressed: () {
-                                              BlurryDialog d = BlurryDialog(
-                                                  'Warning',
-                                                  'Are you sure you want to delete this participation?',
-                                                  widget.onDelete!);
-                                              showDialog(
-                                                context: context,
-                                                builder:
-                                                    (BuildContext context) {
-                                                  return d;
-                                                },
-                                              );
-                                            });
-                                      }
+                                    if (r == Role.ADMIN &&
+                                        widget.onDelete != null) {
+                                      //TODO: Check for other constraints
+                                      return IconButton(
+                                          constraints: BoxConstraints(),
+                                          hoverColor: Colors.transparent,
+                                          splashColor: Colors.transparent,
+                                          icon: Icon(Icons.delete),
+                                          color:
+                                              Color.fromRGBO(211, 211, 211, 1),
+                                          iconSize: 22,
+                                          onPressed: () {
+                                            BlurryDialog d = BlurryDialog(
+                                                'Warning',
+                                                'Are you sure you want to delete this participation?',
+                                                widget.onDelete!);
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return d;
+                                              },
+                                            );
+                                          });
                                     }
-                                    return Container();
+                                  }
+                                  return Container();
+                                }),
+                            Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: IconButton(
+                                  constraints: BoxConstraints(),
+                                  hoverColor: Colors.transparent,
+                                  splashColor: Colors.transparent,
+                                  icon: !_isEditing
+                                      ? Icon(Icons.edit)
+                                      : Icon(Icons.cancel),
+                                  color: !_isEditing
+                                      ? Color.fromRGBO(211, 211, 211, 1)
+                                      : Colors.red,
+                                  iconSize: 22,
+                                  onPressed: () {
+                                    setState(() {
+                                      _isEditing = !_isEditing;
+                                      _resetControllers();
+                                    });
                                   }),
-                              Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: IconButton(
-                                    constraints: BoxConstraints(),
-                                    hoverColor: Colors.transparent,
-                                    splashColor: Colors.transparent,
-                                    icon: !_isEditing
-                                        ? Icon(Icons.edit)
-                                        : Icon(Icons.cancel),
-                                    color: !_isEditing
-                                        ? Color.fromRGBO(211, 211, 211, 1)
-                                        : Colors.red,
-                                    iconSize: 22,
-                                    onPressed: () {
-                                      setState(() {
-                                        _isEditing = !_isEditing;
-                                        _resetControllers();
-                                      });
-                                    }),
-                              ),
-                            ],
-                            Container(
-                              decoration: BoxDecoration(
-                                  color:
-                                      STATUSCOLOR[widget.participation.status],
-                                  borderRadius: BorderRadius.circular(5)),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  STATUSSTRING[widget.participation.status]!,
-                                  style: TextStyle(
-                                    color: widget.participation.status ==
-                                            ParticipationStatus.GIVEN_UP
-                                        ? Colors.white
-                                        : Colors.black,
-                                  ),
-                                ),
-                              ),
                             ),
                           ],
-                        ),
-                      )
+                          Container(
+                            decoration: BoxDecoration(
+                                color: STATUSCOLOR[widget.participation.status],
+                                borderRadius: BorderRadius.circular(5)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                STATUSSTRING[widget.participation.status]!,
+                                style: TextStyle(
+                                  color: widget.participation.status ==
+                                          ParticipationStatus.GIVEN_UP
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+                Divider(
+                  color: Colors.grey[600],
+                ),
+                AnimatedCrossFade(
+                  firstChild: Column(
+                    children: [
+                      Stack(
+                        alignment: AlignmentDirectional.bottomEnd,
+                        children: [
+                          Row(
+                            children: [
+                              SizedBox(
+                                width: widget.small ? 25 : 35,
+                                height: widget.small ? 25 : 35,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(5),
+                                  child: Image.network(
+                                    _currentMember != null
+                                        ? _currentMember!.image!
+                                        : m.image!,
+                                    errorBuilder: (BuildContext context,
+                                        Object exception,
+                                        StackTrace? stackTrace) {
+                                      return Image.asset(
+                                        'assets/noImage.png',
+                                        fit: BoxFit.fill,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  _currentMember != null
+                                      ? _currentMember!.name
+                                      : m.name,
+                                ),
+                              ),
+                            ],
+                          ),
+                          TextButton(
+                            child: Text('See more'),
+                            onPressed: () {
+                              setState(() {
+                                _expanded = true;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                  Divider(
-                    color: Colors.grey[600],
-                  ),
-                  AnimatedCrossFade(
-                    firstChild: Column(
-                      children: [
-                        Stack(
-                          alignment: AlignmentDirectional.bottomEnd,
-                          children: [
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: widget.small ? 25 : 35,
-                                  height: widget.small ? 25 : 35,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(5),
-                                    child: Image.network(
-                                      _currentMember != null
-                                          ? _currentMember!.image!
-                                          : m.image!,
-                                      errorBuilder: (BuildContext context,
-                                          Object exception,
-                                          StackTrace? stackTrace) {
-                                        return Image.asset(
-                                          'assets/noImage.png',
-                                          fit: BoxFit.fill,
-                                        );
-                                      },
-                                    ),
+                  secondChild: Column(
+                    children: [
+                      Stack(
+                        alignment: AlignmentDirectional.bottomEnd,
+                        children: <Widget>[
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  FutureBuilder(
+                                    future: _memberService.getMembers(
+                                        event:
+                                            Provider.of<EventNotifier>(context)
+                                                .event
+                                                .id),
+                                    builder: (context, snapshot) {
+                                      List<Member> members = [
+                                        _currentMember ?? m
+                                      ];
+                                      if (snapshot.hasData) {
+                                        List<Member> ms =
+                                            snapshot.data as List<Member>;
+                                        ms.remove(_currentMember);
+                                        ms.sort(
+                                            (a, b) => a.name.compareTo(b.name));
+                                        members.addAll(ms);
+                                      }
+                                      return Container(
+                                        child: DropdownButton<Member>(
+                                          underline: Container(
+                                            height: 3,
+                                          ),
+                                          value: _currentMember,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .subtitle2,
+                                          selectedItemBuilder:
+                                              (BuildContext context) {
+                                            return members.map((e) {
+                                              return Align(
+                                                alignment: AlignmentDirectional
+                                                    .centerStart,
+                                                child: Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      width: widget.small
+                                                          ? 25
+                                                          : 35,
+                                                      height: widget.small
+                                                          ? 25
+                                                          : 35,
+                                                      child: ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(5),
+                                                        child: Image.network(
+                                                          e.image!,
+                                                          errorBuilder:
+                                                              (BuildContext
+                                                                      context,
+                                                                  Object
+                                                                      exception,
+                                                                  StackTrace?
+                                                                      stackTrace) {
+                                                            return Image.asset(
+                                                              'assets/noImage.png',
+                                                              fit: BoxFit.fill,
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      child: Text(e.name),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            }).toList();
+                                          },
+                                          items: members
+                                              .map((e) =>
+                                                  DropdownMenuItem<Member>(
+                                                    value: e,
+                                                    child: Row(
+                                                      children: [
+                                                        SizedBox(
+                                                          width: widget.small
+                                                              ? 25
+                                                              : 35,
+                                                          height: widget.small
+                                                              ? 25
+                                                              : 35,
+                                                          child: ClipRRect(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        5),
+                                                            child:
+                                                                Image.network(
+                                                              e.image!,
+                                                              errorBuilder: (BuildContext
+                                                                      context,
+                                                                  Object
+                                                                      exception,
+                                                                  StackTrace?
+                                                                      stackTrace) {
+                                                                return Image
+                                                                    .asset(
+                                                                  'assets/noImage.png',
+                                                                  fit: BoxFit
+                                                                      .fill,
+                                                                );
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(8.0),
+                                                          child: Text(e.name),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ))
+                                              .toList(),
+                                          onChanged: _isEditing
+                                              ? (next) {
+                                                  setState(() {
+                                                    _currentMember = next!;
+                                                  });
+                                                }
+                                              : null,
+                                        ),
+                                      );
+                                    },
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    _currentMember != null
-                                        ? _currentMember!.name!
-                                        : m.name!,
-                                  ),
-                                ),
-                              ],
-                            ),
+                                  ..._buildFields(),
+                                ],
+                              ),
+                            ] +
+                            (_isWaiting
+                                ? [
+                                    BackdropFilter(
+                                      filter: ImageFilter.blur(
+                                          sigmaX: 5, sigmaY: 5),
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  ]
+                                : []),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if (_expanded && !_isEditing)
                             TextButton(
-                              child: Text('See more'),
+                              child: Text('See less'),
                               onPressed: () {
                                 setState(() {
-                                  _expanded = true;
+                                  _expanded = false;
                                 });
                               },
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    secondChild: Column(
-                      children: [
-                        Stack(
-                          alignment: AlignmentDirectional.bottomEnd,
-                          children: <Widget>[
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    FutureBuilder(
-                                      future: _memberService.getMembers(
-                                          event: Provider.of<EventNotifier>(
-                                                  context)
-                                              .event
-                                              .id),
-                                      builder: (context, snapshot) {
-                                        List<Member> members = [
-                                          _currentMember ?? m
-                                        ];
-                                        if (snapshot.hasData) {
-                                          List<Member> ms =
-                                              snapshot.data as List<Member>;
-                                          ms.remove(_currentMember);
-                                          ms.sort((a, b) =>
-                                              a.name!.compareTo(b.name!));
-                                          members.addAll(ms);
-                                        }
-                                        return Container(
-                                          child: DropdownButton<Member>(
-                                            underline: Container(
-                                              height: 3,
-                                            ),
-                                            value: _currentMember,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .subtitle2,
-                                            selectedItemBuilder:
-                                                (BuildContext context) {
-                                              return members.map((e) {
-                                                return Align(
-                                                  alignment:
-                                                      AlignmentDirectional
-                                                          .centerStart,
-                                                  child: Row(
-                                                    children: [
-                                                      SizedBox(
-                                                        width: widget.small
-                                                            ? 25
-                                                            : 35,
-                                                        height: widget.small
-                                                            ? 25
-                                                            : 35,
-                                                        child: ClipRRect(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(5),
-                                                          child: Image.network(
-                                                            e.image!,
-                                                            errorBuilder:
-                                                                (BuildContext
-                                                                        context,
-                                                                    Object
-                                                                        exception,
-                                                                    StackTrace?
-                                                                        stackTrace) {
-                                                              return Image
-                                                                  .asset(
-                                                                'assets/noImage.png',
-                                                                fit:
-                                                                    BoxFit.fill,
-                                                              );
-                                                            },
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(8.0),
-                                                        child: Text(e.name!),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              }).toList();
-                                            },
-                                            items: members
-                                                .map((e) =>
-                                                    DropdownMenuItem<Member>(
-                                                      value: e,
-                                                      child: Row(
-                                                        children: [
-                                                          SizedBox(
-                                                            width: widget.small
-                                                                ? 25
-                                                                : 35,
-                                                            height: widget.small
-                                                                ? 25
-                                                                : 35,
-                                                            child: ClipRRect(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          5),
-                                                              child:
-                                                                  Image.network(
-                                                                e.image!,
-                                                                errorBuilder: (BuildContext
-                                                                        context,
-                                                                    Object
-                                                                        exception,
-                                                                    StackTrace?
-                                                                        stackTrace) {
-                                                                  return Image
-                                                                      .asset(
-                                                                    'assets/noImage.png',
-                                                                    fit: BoxFit
-                                                                        .fill,
-                                                                  );
-                                                                },
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(8.0),
-                                                            child:
-                                                                Text(e.name!),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ))
-                                                .toList(),
-                                            onChanged: _isEditing
-                                                ? (next) {
-                                                    setState(() {
-                                                      _currentMember = next!;
-                                                    });
-                                                  }
-                                                : null,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                    ..._buildFields(),
-                                  ],
-                                ),
-                              ] +
-                              (_isWaiting
-                                  ? [
-                                      BackdropFilter(
-                                        filter: ImageFilter.blur(
-                                            sigmaX: 5, sigmaY: 5),
-                                        child: CircularProgressIndicator(),
-                                      )
-                                    ]
-                                  : []),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            if (_expanded && !_isEditing)
-                              TextButton(
-                                child: Text('See less'),
-                                onPressed: () {
-                                  setState(() {
-                                    _expanded = false;
-                                  });
-                                },
-                              ),
-                            if (_isEditing)
-                              TextButton(
-                                child: Text('Submit'),
-                                onPressed: () {
-                                  switch (widget.type) {
-                                    case CardType.COMPANY:
-                                      return submitCompany(m);
-                                    case CardType.SPEAKER:
-                                      return submitSpeaker(m);
-                                    case CardType.MEMBER:
-                                    default:
-                                  }
-                                },
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    crossFadeState: !_isEditing && !_expanded
-                        ? CrossFadeState.showFirst
-                        : CrossFadeState.showSecond,
-                    duration: Duration(milliseconds: 250),
-                    firstCurve: Curves.easeOut,
-                    secondCurve: Curves.easeOut,
-                    sizeCurve: Curves.easeOut,
+                          if (_isEditing)
+                            TextButton(
+                              child: Text('Submit'),
+                              onPressed: () {
+                                switch (widget.type) {
+                                  case CardType.COMPANY:
+                                    return submitCompany(m);
+                                  case CardType.SPEAKER:
+                                    return submitSpeaker(m);
+                                  case CardType.MEMBER:
+                                  default:
+                                }
+                              },
+                            ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              );
-            } else {
-              return CircularProgressIndicator();
-            }
-          },
-        ));
+                  crossFadeState: !_isEditing && !_expanded
+                      ? CrossFadeState.showFirst
+                      : CrossFadeState.showSecond,
+                  duration: Duration(milliseconds: 250),
+                  firstCurve: Curves.easeOut,
+                  secondCurve: Curves.easeOut,
+                  sizeCurve: Curves.easeOut,
+                ),
+              ],
+            ),
+          );
+        } else {
+          return Shimmer.fromColors(
+            baseColor: Colors.grey[400]!,
+            highlightColor: Colors.white,
+            child: Container(
+              margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+              padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+              decoration: BoxDecoration(
+                color: Colors.grey[400],
+                borderRadius: BorderRadius.circular(5),
+              ),
+              height: 135,
+            ),
+          );
+        }
+      },
+    );
   }
 }
