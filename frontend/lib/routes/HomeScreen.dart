@@ -49,9 +49,6 @@ class _HomeScreenState extends State<HomeScreen> {
     CustomAppBar appBar = CustomAppBar(disableEventChange: false);
 
     return Scaffold(
-      appBar: CustomAppBar(
-        disableEventChange: false,
-      ),
       bottomNavigationBar: CustomNavBar(
         onTapped: (newIndex) {
           Provider.of<BottomNavigationBarProvider>(context, listen: false)

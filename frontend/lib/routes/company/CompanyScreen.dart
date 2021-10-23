@@ -68,7 +68,6 @@ class _CompanyScreenState extends State<CompanyScreen>
       bool small = constraints.maxWidth < App.SIZE;
       return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
-          appBar: CustomAppBar(disableEventChange: true),
           body: DefaultTabController(
             length: 4,
             child: Column(

@@ -84,7 +84,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           ),
           if (!disableEventChange)
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.fromLTRB(8.0, 8.0, 24.0, 8.0),
               child: FutureBuilder(
                 future: _eventIds,
                 builder: (context, snapshot) {
@@ -126,36 +126,37 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 },
               ),
             ),
-          TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                hintText: 'Search Company, Speaker or Member',
-                prefixIcon: Icon(Icons.search),
-                suffixIcon: _searchController.text.length != 0
-                    ? IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                        },
-                        icon: Icon(Icons.clear),
-                      )
-                    : null,
-              ),
-              onChanged: (newQuery) {
-                setState(() {});
-                if (_searchController.text.length > 1) {
-                  this.companies =
-                      companyService.getCompanies(name: _searchController.text);
-                  this.speakers =
-                      speakerService.getSpeakers(name: _searchController.text);
-                  this.members =
-                      memberService.getMembers(name: _searchController.text);
-                }
-              }),
+          Expanded(
+              child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintText: 'Search Company, Speaker or Member',
+                    prefixIcon: Icon(Icons.search),
+                    suffixIcon: _searchController.text.length != 0
+                        ? IconButton(
+                            onPressed: () {
+                              _searchController.clear();
+                            },
+                            icon: Icon(Icons.clear),
+                          )
+                        : null,
+                  ),
+                  onChanged: (newQuery) {
+                    setState(() {});
+                    if (_searchController.text.length > 1) {
+                      this.companies = companyService.getCompanies(
+                          name: _searchController.text);
+                      this.speakers = speakerService.getSpeakers(
+                          name: _searchController.text);
+                      this.members = memberService.getMembers(
+                          name: _searchController.text);
+                    }
+                  })),
         ]),
       ),
       ...getResults(MediaQuery.of(context).size.height / 2)
@@ -165,21 +166,26 @@ class _CustomAppBarState extends State<CustomAppBar> {
   List<Widget> getResults(double height) {
     if (_searchController.text.length > 1) {
       return [
-        FutureBuilder(
-            future: Future.wait([this.speakers, this.companies, this.members]),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                List<dynamic> data = snapshot.data as List<dynamic>;
+        Container(
+            decoration: new BoxDecoration(
+              color: Theme.of(context).cardColor,
+            ),
+            child: FutureBuilder(
+                future:
+                    Future.wait([this.speakers, this.companies, this.members]),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    List<dynamic> data = snapshot.data as List<dynamic>;
 
-                List<Speaker> speaksMatched = data[0] as List<Speaker>;
-                List<Company> compsMatched = data[1] as List<Company>;
-                List<Member> membsMatched = data[2] as List<Member>;
-                return searchResults(
-                    speaksMatched, compsMatched, membsMatched, height);
-              } else {
-                return Center(child: CircularProgressIndicator());
-              }
-            })
+                    List<Speaker> speaksMatched = data[0] as List<Speaker>;
+                    List<Company> compsMatched = data[1] as List<Company>;
+                    List<Member> membsMatched = data[2] as List<Member>;
+                    return searchResults(
+                        speaksMatched, compsMatched, membsMatched, height);
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                }))
       ];
     } else {
       return [];
@@ -224,11 +230,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
           children: [
             Container(
               child: Text(name, style: TextStyle(fontSize: 18)),
-              margin: EdgeInsets.fromLTRB(0, 8, 0, 0),
-            ),
-            Divider(
-              color: Colors.grey,
-              thickness: 1,
+              margin: EdgeInsets.fromLTRB(0, 8, 0, 4),
             ),
           ],
         ));
@@ -253,7 +255,6 @@ class SearchResultWidget extends StatelessWidget {
         },
         child: Center(
           child: ListTile(
-            tileColor: Theme.of(context).cardColor,
             leading: CircleAvatar(
               foregroundImage: NetworkImage(getImageURL()),
               backgroundImage: AssetImage(
