@@ -5,8 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 //import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/models/team.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:frontend/services/teamService.dart';
+import 'package:provider/provider.dart';
 //import 'package:image_picker/image_picker.dart';
 
 class AddMemberForm extends StatefulWidget {
@@ -22,6 +26,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
   final _istIdController = TextEditingController();
   final _sinfoIdController = TextEditingController();
   MemberService _memberService = new MemberService();
+  TeamService _teamService = new TeamService();
   //final _imagePicker = ImagePicker();
   //XFile? _image;
   //int? _size;
@@ -38,8 +43,16 @@ class _AddMemberFormState extends State<AddMemberForm> {
       );
 
       print(1);
+      // Creates new member
       Member? m = await _memberService.createMember(
           istid: istid, name: name, sinfoid: sinfoid);
+
+      print(2);
+
+      // Searchs for current team event
+
+      // Adds Member to the current event team
+
       print(2);
       // if (m != null && _image != null) {
       //   m = kIsWeb
@@ -49,6 +62,13 @@ class _AddMemberFormState extends State<AddMemberForm> {
       //           id: m.id, image: File(_image!.path));
       // }
       if (m != null) {
+        //TODO: mudar event para current event e
+
+        List<Team?> t = await _teamService.getTeams(name: 'SINFO 29 team');
+
+        print(m.id);
+
+        await _teamService.addTeamMember(t[0]!.id!, m.id, 'MEMBER');
         //TODO: Redirect to members page
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -58,14 +78,14 @@ class _AddMemberFormState extends State<AddMemberForm> {
             duration: Duration(seconds: 2),
           ),
         );
+
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('An error occured.')),
         );
-
-        Navigator.pop(context);
       }
     }
   }
@@ -104,9 +124,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
               decoration: InputDecoration(
                 icon: const Icon(Icons.school),
                 labelText: "IstID *",
-                
               ),
-              
             ),
           ),
           Padding(
@@ -124,7 +142,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
                 icon: ImageIcon(
                   AssetImage("assets/PowerOnIcon.png"),
                   size: 15,
-              ),
+                ),
                 labelText: "SinfoID *",
               ),
             ),
@@ -141,8 +159,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
                 onPressed: () => Navigator.pop(context),
                 child: Text("CANCEL",
                     style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).accentColor)),
+                        fontSize: 14, color: Theme.of(context).accentColor)),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -278,7 +295,9 @@ class _AddMemberFormState extends State<AddMemberForm> {
   Widget build(BuildContext context) {
     //bool warning = _image != null && _size != null && _size! > 102400;
     return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true,),
+        appBar: CustomAppBar(
+          disableEventChange: true,
+        ),
         body: LayoutBuilder(builder: (contex, constraints) {
           return Column(children: [
             _buildForm(),

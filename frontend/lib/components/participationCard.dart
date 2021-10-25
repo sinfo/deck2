@@ -459,8 +459,8 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                   padding: const EdgeInsets.all(8.0),
                                   child: Text(
                                     _currentMember != null
-                                        ? _currentMember!.name!
-                                        : m.name!,
+                                        ? _currentMember!.name
+                                        : m.name,
                                   ),
                                 ),
                               ],
@@ -500,7 +500,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                               snapshot.data as List<Member>;
                                           ms.remove(_currentMember);
                                           ms.sort((a, b) =>
-                                              a.name!.compareTo(b.name!));
+                                              a.name.compareTo(b.name));
                                           members.addAll(ms);
                                         }
                                         return Container(
@@ -555,7 +555,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                                         padding:
                                                             const EdgeInsets
                                                                 .all(8.0),
-                                                        child: Text(e.name!),
+                                                        child: Text(e.name),
                                                       ),
                                                     ],
                                                   ),
@@ -604,7 +604,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                                                 const EdgeInsets
                                                                     .all(8.0),
                                                             child:
-                                                                Text(e.name!),
+                                                                Text(e.name),
                                                           ),
                                                         ],
                                                       ),

@@ -37,7 +37,7 @@ class _DisplayContactsState extends State<DisplayContacts> {
             if (r == Role.ADMIN || r == Role.COORDINATOR) {
               return FloatingActionButton.extended(
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) =>

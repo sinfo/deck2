@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
@@ -79,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
       drawer: DeckDrawer(),
       floatingActionButton: _fabAtIndex(
           context,
-          Provider.of<BottomNavigationBarProvider>(context, listen: false)
+          Provider.of<BottomNavigationBarProvider>(context, listen: true)
               .currentIndex),
     );
   }
@@ -103,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             label: const Text('Show All Speakers'),
             icon: const Icon(Icons.add),
-
           );
         }
       case 1:
@@ -124,17 +124,43 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
-        case 3:
+      case 3:
         {
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                Routes.ShowAllMembers,
-              );
-            },
-            label: const Text('Show All Members'),
-            icon: const Icon(Icons.add),
+          return SpeedDial(
+            animatedIcon: AnimatedIcons.menu_close,
+            spacing: 3,
+            children: [
+              SpeedDialChild(
+                child: Icon(Icons.people),
+                label: 'Add New Team',
+                onTap: (){
+                  Navigator.pushNamed(
+                    context,
+                    Routes.AddTeam,
+                  );
+                }
+              ),
+              SpeedDialChild(
+                child: Icon(Icons.person),
+                label: 'Add New Member',
+                onTap: (){
+                  Navigator.pushNamed(
+                    context,
+                    Routes.AddMember,
+                  );
+                }
+              ),
+              SpeedDialChild(
+                child: Icon(Icons.people),
+                label: 'Show All Members',
+                onTap: (){
+                  Navigator.pushNamed(
+                    context,
+                    Routes.ShowAllMembers,
+                  );
+                }
+              ),
+            ],
           );
         }
     }

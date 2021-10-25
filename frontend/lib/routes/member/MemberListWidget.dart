@@ -97,7 +97,7 @@ class _MemberListWidgetState extends State<MemberListWidget> {
       appBar: CustomAppBar(disableEventChange: true, actions: <Widget>[
         IconButton(
           icon: const Icon(Icons.search),
-          tooltip: 'Search speaker',
+          tooltip: 'Search member',
           onPressed: () {
             showSearch(context: context, delegate: MemberSearchDelegate());
           },

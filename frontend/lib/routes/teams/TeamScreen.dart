@@ -7,6 +7,7 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
+import 'package:frontend/routes/teams/EditMembers.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/teamService.dart';
 
@@ -162,7 +163,11 @@ class DisplayMembers extends StatelessWidget {
           scrollDirection: Axis.vertical,
           children: members.map((e) => ShowMember(member: e!)).toList()),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+              context, MaterialPageRoute(
+              builder: (context) => EditMembers()),);
+        },
         label: const Text('Edit Members'),
         icon: const Icon(Icons.edit),
         backgroundColor: Color(0xff5C7FF2),

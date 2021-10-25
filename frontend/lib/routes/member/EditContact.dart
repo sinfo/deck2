@@ -158,12 +158,7 @@ class _MyFormState extends State<EditContact> {
                             phonesList.clear();
                             phonesValidList.clear();
 
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      MemberScreen(member: widget.member)),
-                            );
+                            Navigator.pop(context);
                           },
                           child: Text("CANCEL",
                               style: TextStyle(
@@ -220,12 +215,8 @@ class _MyFormState extends State<EditContact> {
                                 phonesList.clear();
                                 phonesValidList.clear();
 
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          MemberScreen(member: widget.member)),
-                                );
+                                Navigator.pop(context);
+                                
                               }
                             },
                             child: const Text('SUBMIT'),
