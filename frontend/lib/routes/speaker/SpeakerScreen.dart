@@ -6,9 +6,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
-import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threadCard.dart';
-import 'package:frontend/models/post.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -17,7 +15,6 @@ import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/speaker/EditSpeakerForm.dart';
 import 'package:frontend/services/speakerService.dart';
-import 'package:frontend/services/threadService.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
 
@@ -154,7 +151,6 @@ class _SpeakerScreenState extends State<SpeakerScreen>
   }
 
   Widget? _fabAtIndex(BuildContext context) {
-    int currentEvent = Provider.of<EventNotifier>(context).event.id;
     int latestEvent = Provider.of<EventNotifier>(context).latest.id;
     int index = _tabController.index;
     switch (index) {

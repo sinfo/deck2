@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/event.dart';
@@ -136,7 +137,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: Provider.of<ThemeNotifier>(context).isDark
+                        ? Colors.grey[800]
+                        : Colors.white,
                     hintText: 'Search Company, Speaker or Member',
                     prefixIcon: Icon(Icons.search),
                     suffixIcon: _searchController.text.length != 0

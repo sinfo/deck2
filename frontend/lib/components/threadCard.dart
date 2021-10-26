@@ -1,13 +1,14 @@
-import 'dart:html';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/post.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/postService.dart';
 import 'package:frontend/services/threadService.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 final Map<String, Color> THREADCOLOR = {
   "APPROVED": Colors.green,
@@ -56,9 +57,8 @@ class ThreadCardState extends State<ThreadCard>
                 children: [
                   ThreadCardHeader(
                       p: p, thread: widget.thread, small: widget.small),
-                  Divider(
-                    thickness: 2,
-                    color: Colors.grey[600],
+                  SizedBox(
+                    height: 16,
                   ),
                   ThreadCardBody(
                     thread: widget.thread,
@@ -113,6 +113,8 @@ class ThreadCardHeader extends StatelessWidget {
           }
           Member? m = snapshot.data as Member?;
           if (m != null) {
+            Member? me = Provider.of<Member?>(context);
+            bool owner = me != null && m.id == me.id;
             return Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -136,15 +138,36 @@ class ThreadCardHeader extends StatelessWidget {
                     ),
                     Padding(
                       padding: EdgeInsets.all(small ? 4.0 : 8.0),
-                      child: Text(
-                        m.name,
-                        style: TextStyle(fontSize: small ? 12 : 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            m.name,
+                            style: TextStyle(fontSize: small ? 12 : 20),
+                          ),
+                          Text(
+                            timeago.format(thread.posted),
+                            style: TextStyle(fontSize: small ? 10 : 14),
+                          )
+                        ],
                       ),
-                    )
+                    ),
                   ],
                 ),
                 Row(
                   children: [
+                    if (owner)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: IconButton(
+                            onPressed: () {}, icon: Icon(Icons.delete)),
+                      ),
+                    if (owner)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: IconButton(
+                            onPressed: () {}, icon: Icon(Icons.edit)),
+                      ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
@@ -184,7 +207,7 @@ class ThreadCardHeader extends StatelessWidget {
 }
 
 class ThreadCardBody extends StatefulWidget {
-  final Thread thread;
+  Thread thread;
   final Post post;
   final bool small;
   ThreadCardBody(
@@ -196,39 +219,34 @@ class ThreadCardBody extends StatefulWidget {
 }
 
 class _ThreadCardBodyState extends State<ThreadCardBody> {
-  late Future<Post?> _post;
   bool _expanded = false;
+  late TextEditingController _newCommentController;
+  ThreadService _threadService = ThreadService();
 
   @override
   void initState() {
     super.initState();
-    _post = widget.thread.entry;
+    _newCommentController = TextEditingController();
   }
 
   Widget _buildFooter(BuildContext context) {
-    if (widget.thread.commentIds.length != 0) {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: TextButton(
-          child: _expanded
-              ? Text('See less')
-              : Text('${widget.thread.commentIds.length} comments'),
-          onPressed: () {
-            setState(() {
-              _expanded = !_expanded;
-            });
-          },
-        ),
-      );
-    } else {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          'No comments yet',
-          style: TextStyle(fontStyle: FontStyle.italic),
-        ),
-      );
-    }
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextButton(
+        child: _expanded
+            ? Text('See less')
+            : Text(widget.thread.commentIds.length != 0
+                ? widget.thread.commentIds.length == 1
+                    ? '${widget.thread.commentIds.length} comment'
+                    : '${widget.thread.commentIds.length} comments'
+                : "Add comment"),
+        onPressed: () {
+          setState(() {
+            _expanded = !_expanded;
+          });
+        },
+      ),
+    );
   }
 
   Widget _buildComments(BuildContext context) {
@@ -243,17 +261,51 @@ class _ThreadCardBodyState extends State<ThreadCardBody> {
             comments = comments.where((element) => element != null).toList();
             comments.sort((a, b) => a!.posted.compareTo(b!.posted));
             return Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: comments
-                  .map((e) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: CommentStrip(post: e!),
-                      ))
-                  .toList(),
-            );
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ...comments
+                      .map((e) => Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: CommentStrip(post: e!),
+                          ))
+                      .toList(),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                      controller: _newCommentController,
+                      decoration: InputDecoration(
+                        labelText: 'New comment',
+                        disabledBorder: InputBorder.none,
+                        suffixIcon: IconButton(
+                          onPressed: () async {
+                            String comment = _newCommentController.text;
+                            if (comment.isNotEmpty) {
+                              Thread? t =
+                                  await _threadService.addCommentToThread(
+                                      widget.thread.id, comment);
+                              if (t != null) {
+                                setState(() {
+                                  widget.thread = t;
+                                });
+                                _newCommentController.clear();
+                              }
+                            }
+                          },
+                          icon: Icon(Icons.add_circle_outline_outlined),
+                        ),
+                      ),
+                    ),
+                  ),
+                ]);
           } else {
-            return CircularProgressIndicator();
+            return Shimmer.fromColors(
+                baseColor: Colors.grey[400]!,
+                highlightColor: Colors.white,
+                child: Column(
+                  children:
+                      widget.thread.commentIds.map((e) => Container()).toList(),
+                ));
           }
         });
   }
@@ -264,7 +316,10 @@ class _ThreadCardBodyState extends State<ThreadCardBody> {
       firstChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.post.text ?? ''),
+          Text(
+            widget.post.text ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
           Align(
             alignment: Alignment.bottomRight,
             child: _buildFooter(context),
@@ -274,13 +329,17 @@ class _ThreadCardBodyState extends State<ThreadCardBody> {
       secondChild: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.post.text ?? ''),
+          Text(
+            widget.post.text ?? '',
+            style: TextStyle(fontSize: 16),
+          ),
           Padding(
             padding: EdgeInsets.all(widget.small ? 4.0 : 8.0),
             child: IntrinsicHeight(
               child: Row(
                 children: [
                   VerticalDivider(
+                    color: Colors.grey,
                     width: 8,
                     thickness: 5,
                   ),
@@ -321,6 +380,8 @@ class CommentStrip extends StatelessWidget {
           }
           Member? m = snapshot.data as Member?;
           if (m != null) {
+            Member? me = Provider.of<Member?>(context);
+            bool owner = me != null && m.id == me.id;
             return IntrinsicWidth(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,12 +407,39 @@ class CommentStrip extends StatelessWidget {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text(m.name),
-                      )
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              m.name,
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            Text(
+                              timeago.format(post.posted),
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (owner)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(4.0, 0, 0, 0),
+                          child: IconButton(
+                            onPressed: () {},
+                            icon: Icon(Icons.delete),
+                            iconSize: 18,
+                          ),
+                        ),
+                      if (owner)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 0, 4.0, 0),
+                          child: IconButton(
+                            onPressed: () {},
+                            icon: Icon(Icons.edit),
+                            iconSize: 18,
+                          ),
+                        ),
                     ],
-                  ),
-                  Divider(
-                    thickness: 2,
                   ),
                 ],
               ),
@@ -374,17 +462,26 @@ class CommentStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: Provider.of<ThemeNotifier>(context).isDark
+            ? Colors.grey[850]
+            : Colors.grey[300],
         borderRadius: BorderRadius.circular(5),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(context),
-          Text(
-            post.text ?? '',
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(context),
+            SizedBox(
+              height: 16,
+            ),
+            Text(
+              post.text ?? '',
+              style: TextStyle(fontSize: 16),
+            )
+          ],
+        ),
       ),
     );
   }
