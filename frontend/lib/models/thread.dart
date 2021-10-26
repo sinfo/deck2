@@ -10,33 +10,25 @@ class Thread {
   final String? meetingId;
   Meeting? _meeting;
   final List<String> commentIds;
-  late List<Post?> _comments; 
+  List<Post?>? _comments;
   final String kind;
   final String status;
   final PostService _postService = PostService();
   final MeetingService _meetingService = MeetingService();
+  final DateTime posted;
 
-  Thread({
-    required this.id,
-    required this.entryid,
-    this.meetingId,
-    required this.commentIds,
-    required this.kind,
-    required this.status,
-  }){
-    print('Thread created with:');
-    print('id: $id');
-    print('entry: $entry');
-    print('comments: $commentIds');
-    print('kind: $kind');
-    print('status: $status');
-    _comments = List<Post?>.filled(commentIds.length, null);
-  }
+  Thread(
+      {required this.id,
+      required this.entryid,
+      this.meetingId,
+      required this.commentIds,
+      required this.kind,
+      required this.status,
+      required this.posted}) {}
 
   factory Thread.fromJson(Map<String, dynamic> json) {
-    print(json);
-    List<String> commentIds = List.from( json['comments'] );
- 
+    List<String> commentIds = List.from(json['comments']);
+
     var thread = Thread(
       id: json['id'],
       entryid: json['entry'],
@@ -44,35 +36,34 @@ class Thread {
       commentIds: commentIds,
       kind: json['kind'],
       status: json['status'],
+      posted: DateTime.parse(json['posted']),
     );
-    print(thread);
     return thread;
   }
 
   Future<Post?> get entry async {
-    if (_entry != null){
+    if (_entry != null) {
       return _entry!;
     }
     _entry = await _postService.getPost(entryid);
     return _entry;
   }
 
-  Future<Post?> getComment(int index) async{
-    if (index >= _comments.length) {
-      throw RangeError('index out of range');
+  Future<List<Post?>> get comments async {
+    if (_comments != null) {
+      return _comments!;
     }
-    if (_comments[index] == null){
-      _comments[index] = await _postService.getPost(commentIds[index]); //TODO, getPost might return null
-    }
-    return _comments[index];
+    _comments = await Future.wait(
+        commentIds.map((e) async => await _postService.getPost(e)).toList());
+    return _comments!;
   }
 
   bool get hasMeeting {
     return meetingId != null;
   }
-  
-  Future<Meeting?> get meeting async{
-    if (_meeting != null){
+
+  Future<Meeting?> get meeting async {
+    if (_meeting != null) {
       return _meeting!;
     }
     _meeting = await _meetingService.getMeeting(meetingId!);
@@ -86,5 +77,5 @@ class Thread {
         'kind': kind,
         'status': status,
         'comments': commentIds
-  };
+      };
 }

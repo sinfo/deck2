@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckException.dart';
+import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/participation.dart';
 import 'dart:convert';
 import 'package:frontend/models/speaker.dart';
@@ -406,10 +407,20 @@ class SpeakerService extends Service {
     }
   }
 
-  Future<Speaker?> addThread(
-      {required String id, required Thread thread}) async {
+  Future<Speaker?> addThread({
+    required String id,
+    required String kind,
+    required String text,
+    Meeting? meeting,
+  }) async {
+    var body = {
+      "kind": kind,
+      "text": text,
+      "meeting": meeting != null ? meeting.toJson() : null
+    };
+
     Response<String> response =
-        await dio.put("/speakers/" + id + "/thread", data: thread.toJson());
+        await dio.post("/speakers/" + id + "/thread", data: body);
     try {
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
