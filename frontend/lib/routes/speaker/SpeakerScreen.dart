@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/components/EditableCard.dart';
+import 'package:frontend/components/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
-import 'package:frontend/components/router.dart';
+import 'package:frontend/components/threadCard.dart';
+import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
@@ -48,13 +51,18 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     setState(() {});
   }
 
-  Future<void> speakerChangedCallback(
-      BuildContext context, Future<Speaker?> fs) async {
-    Speaker? s = await fs;
+  Future<void> speakerChangedCallback(BuildContext context,
+      {Future<Speaker?>? fs, Speaker? speaker}) async {
+    Speaker? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (speaker != null) {
+      s = speaker;
+    }
     if (s != null) {
       Provider.of<SpeakerTableNotifier>(context, listen: false).edit(s);
       setState(() {
-        widget.speaker = s;
+        widget.speaker = s!;
       });
     }
   }
@@ -66,85 +74,207 @@ class _SpeakerScreenState extends State<SpeakerScreen>
       return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
           appBar: CustomAppBar(disableEventChange: true),
-          body: DefaultTabController(
-            length: 4,
-            child: Column(
-              children: [
-                SpeakerBanner(
+          body: Column(
+            children: [
+              SpeakerBanner(
                   speaker: widget.speaker,
                   statusChangeCallback: (step, context) {
                     speakerChangedCallback(
                       context,
-                      _speakerService.stepParticipationStatus(
+                      fs: _speakerService.stepParticipationStatus(
                           id: widget.speaker.id, step: step),
                     );
                   },
-                ),
-                TabBar(
-                  isScrollable: small,
-                  controller: _tabController,
-                  labelColor: Colors.indigo,
-                  unselectedLabelColor: Colors.indigo[100],
-                  tabs: [
-                    Tab(text: 'Details'),
-                    Tab(text: 'FlightInfo'),
-                    Tab(text: 'Participations'),
-                    Tab(text: 'Communications'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(controller: _tabController, children: [
-                    DetailsScreen(
-                      speaker: widget.speaker,
-                    ),
-                    Container(
-                      child: Center(child: Text('Work in progress :)')),
-                    ),
-                    ParticipationList(
-                      speaker: widget.speaker,
-                      onParticipationChanged:
-                          (Map<String, dynamic> body) async {
-                        await speakerChangedCallback(
-                          context,
-                          _speakerService.updateParticipation(
-                            id: widget.speaker.id,
-                            feedback: body['feedback'],
-                            member: body['member'],
-                            room: body['room'],
-                          ),
-                        );
-                      },
-                      onParticipationAdded: () => speakerChangedCallback(
-                          context,
-                          _speakerService.addParticipation(
-                              id: widget.speaker.id)),
-                      onParticipationDeleted: () => speakerChangedCallback(
-                          context,
-                          _speakerService.removeParticipation(
-                              id: widget.speaker.id)),
-                    ),
-                    Container(decoration: BoxDecoration(color: Colors.teal)),
-                  ]),
-                ),
-              ],
-            ),
+                  onEdit: (context, _speaker) {
+                    speakerChangedCallback(context, speaker: _speaker);
+                  }),
+              TabBar(
+                isScrollable: small,
+                controller: _tabController,
+                tabs: [
+                  Tab(text: 'Details'),
+                  Tab(text: 'FlightInfo'),
+                  Tab(text: 'Participations'),
+                  Tab(text: 'Communications'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(controller: _tabController, children: [
+                  DetailsScreen(
+                    speaker: widget.speaker,
+                  ),
+                  Container(
+                    child: Center(child: Text('Work in progress :)')),
+                  ),
+                  ParticipationList(
+                    speaker: widget.speaker,
+                    onParticipationChanged: (Map<String, dynamic> body) async {
+                      await speakerChangedCallback(
+                        context,
+                        fs: _speakerService.updateParticipation(
+                          id: widget.speaker.id,
+                          feedback: body['feedback'],
+                          member: body['member'],
+                          room: body['room'],
+                        ),
+                      );
+                    },
+                    onParticipationDeleted: () => speakerChangedCallback(
+                        context,
+                        fs: _speakerService.removeParticipation(
+                            id: widget.speaker.id)),
+                  ),
+                  CommunicationsList(speaker: widget.speaker, small: small),
+                ]),
+              ),
+            ],
           ),
+          floatingActionButton: _fabAtIndex(context),
         );
       });
     });
   }
+
+  void _addThreadModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: AddThreadForm(
+              speaker: widget.speaker,
+              onEdit: (context, _speaker) {
+                speakerChangedCallback(context, speaker: _speaker);
+              }),
+        );
+      },
+    );
+  }
+
+  Widget? _fabAtIndex(BuildContext context) {
+    int latestEvent = Provider.of<EventNotifier>(context).latest.id;
+    int index = _tabController.index;
+    switch (index) {
+      case 0:
+      case 1:
+        return null;
+      case 2:
+        {
+          if (widget.speaker.lastParticipation != latestEvent) {
+            return FloatingActionButton.extended(
+              onPressed: () => speakerChangedCallback(context,
+                  fs: _speakerService.addParticipation(id: widget.speaker.id)),
+              label: const Text('Add Participation'),
+              icon: const Icon(Icons.add),
+            );
+          } else {
+            return null;
+          }
+        }
+      case 3:
+        {
+          return FloatingActionButton.extended(
+            onPressed: () {
+              _addThreadModal(context);
+            },
+            label: const Text('Add Communication'),
+            icon: const Icon(Icons.add),
+          );
+        }
+    }
+  }
 }
+
+// Start of communication Widgets
+
+class CommunicationsList extends StatelessWidget {
+  final Speaker speaker;
+  final bool small;
+
+  CommunicationsList({Key? key, required this.speaker, required this.small})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    List<SpeakerParticipation> participations =
+        speaker.participations ?? List.empty();
+
+    return LayoutBuilder(builder: (context, constraints) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+        child: ListView(
+            controller: ScrollController(),
+            children: participations.reversed
+                .where((element) =>
+                    element.communicationsId != null &&
+                    element.communicationsId!.length != 0)
+                .map((participation) => ParticipationThreadsWidget(
+                    participation: participation, small: small))
+                .toList()),
+      );
+    });
+  }
+}
+
+class ParticipationThreadsWidget extends StatelessWidget {
+  final SpeakerParticipation participation;
+  final bool small;
+
+  ParticipationThreadsWidget(
+      {Key? key, required this.participation, required this.small})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    Future<List<Thread>?> futureThreads = participation.communications;
+    return FutureBuilder(
+        future: futureThreads,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            List<Thread>? threads = snapshot.data as List<Thread>?;
+            if (threads == null) {
+              threads = [];
+            }
+            threads.sort((a, b) => b.posted.compareTo(a.posted));
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text('SINFO ${participation.event}'),
+                  ),
+                ),
+                Divider(),
+                ...threads
+                    .map(
+                      (thread) => Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ThreadCard(
+                          thread: thread,
+                          small: small,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ]),
+            );
+          }
+          return Text("Loading...");
+        });
+  }
+}
+
+// End of communication Widgets
 
 class ParticipationList extends StatelessWidget {
   final Speaker speaker;
   final Future<void> Function(Map<String, dynamic>) onParticipationChanged;
-  final void Function() onParticipationAdded;
   final void Function() onParticipationDeleted;
   const ParticipationList({
     Key? key,
     required this.speaker,
     required this.onParticipationChanged,
-    required this.onParticipationAdded,
     required this.onParticipationDeleted,
   }) : super(key: key);
 
@@ -154,53 +284,25 @@ class ParticipationList extends StatelessWidget {
       builder: (context, constraints) {
         bool small = constraints.maxWidth < App.SIZE;
         if (speaker.participations != null) {
-          if (speaker.lastParticipation ==
-              Provider.of<EventNotifier>(context).latest.id) {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                child: ListView(
-                  children: speaker.participations!.reversed
-                      .map((e) => Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: ParticipationCard(
-                              participation: e,
-                              small: small,
-                              type: CardType.SPEAKER,
-                              onEdit: onParticipationChanged,
-                              onDelete: onParticipationDeleted,
-                            ),
-                          ))
-                      .toList(),
-                ),
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              child: ListView(
+                children: speaker.participations!.reversed
+                    .map((e) => Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ParticipationCard(
+                            participation: e,
+                            small: small,
+                            type: CardType.SPEAKER,
+                            onEdit: onParticipationChanged,
+                            onDelete: onParticipationDeleted,
+                          ),
+                        ))
+                    .toList(),
               ),
-            );
-          } else {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                child: ListView(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ParticipationCard.addParticipationCard(
-                          onParticipationAdded),
-                    ),
-                    ...speaker.participations!.reversed
-                        .map((e) => Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: ParticipationCard(
-                                participation: e,
-                                small: small,
-                                type: CardType.SPEAKER,
-                              ),
-                            ))
-                        .toList(),
-                  ],
-                ),
-              ),
-            );
-          }
+            ),
+          );
         } else {
           return Container();
         }
@@ -212,9 +314,24 @@ class ParticipationList extends StatelessWidget {
 class SpeakerBanner extends StatelessWidget {
   final Speaker speaker;
   final void Function(int, BuildContext) statusChangeCallback;
+  final void Function(BuildContext, Speaker?) onEdit;
   const SpeakerBanner(
-      {Key? key, required this.speaker, required this.statusChangeCallback})
+      {Key? key,
+      required this.speaker,
+      required this.statusChangeCallback,
+      required this.onEdit})
       : super(key: key);
+
+  void _editSpeakerModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: EditSpeakerForm(speaker: speaker, onEdit: this.onEdit),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,6 +342,29 @@ class SpeakerBanner extends StatelessWidget {
     ParticipationStatus speakerStatus =
         part != null ? part.status : ParticipationStatus.NO_STATUS;
 
+    double lum = 0.2;
+    var matrix = <double>[
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ]; // Greyscale matrix. Lum represents level of luminosity
     return LayoutBuilder(
       builder: (context, constraints) {
         bool small = constraints.maxWidth < App.SIZE;
@@ -234,6 +374,9 @@ class SpeakerBanner extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
+                  colorFilter: Provider.of<ThemeNotifier>(context).isDark
+                      ? ColorFilter.matrix(matrix)
+                      : null,
                   image: AssetImage('assets/banner_background.png'),
                   fit: BoxFit.cover,
                 ),
@@ -317,15 +460,12 @@ class SpeakerBanner extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: InkWell(
-                mouseCursor: SystemMouseCursors.click,
-                onTap: () => Navigator.push(context,
-                    SlideRoute(page: EditSpeakerForm(speaker: speaker))),
-                child: Icon(Icons.edit),
-              ),
-            ),
+            IconButton(
+              icon: Icon(Icons.edit),
+              onPressed: () {
+                _editSpeakerModal(context);
+              },
+            )
           ],
         );
       },

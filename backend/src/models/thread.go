@@ -1,6 +1,10 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 // ThreadKind is the type of thread
 type ThreadKind string
@@ -40,6 +44,9 @@ type Thread struct {
 
 	// Thread's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
+
+	// Time posted
+	Posted  time.Time `json:"posted" bson:"posted"`
 
 	// Entry is an _id of Post (see models.Post).
 	Entry primitive.ObjectID `json:"entry" bson:"entry"`

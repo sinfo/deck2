@@ -198,7 +198,7 @@ class MemberCompanyRow extends StatelessWidget {
                   leading: ClipRRect(
                       borderRadius: BorderRadius.all(Radius.circular(5.0)),
                       child: Image.network(
-                        this.member.image,
+                        this.member.image!,
                         width: small ? 40 : 50,
                         height: small ? 40 : 50,
                         errorBuilder: (BuildContext context, Object exception,

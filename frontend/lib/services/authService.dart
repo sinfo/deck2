@@ -101,9 +101,6 @@ class AuthService extends ChangeNotifier {
   Future<Member?> get user async {
     if (_user != null) {
       return _user;
-    } else if (App.localStorage.containsKey('me')) {
-      _user = Member.fromJson(json.decode(App.localStorage.getString('me')!));
-      return _user;
     }
     if (_token != null) {
       bool t = await verify(_token!);

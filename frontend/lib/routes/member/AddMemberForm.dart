@@ -1,65 +1,61 @@
-import 'dart:io';
-
-import 'package:dotted_border/dotted_border.dart';
+//import 'dart:io';
+//import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_dropzone/flutter_dropzone.dart';
+//import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/models/company.dart';
-import 'package:frontend/services/companyService.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:frontend/models/member.dart';
+import 'package:frontend/services/memberService.dart';
+//import 'package:image_picker/image_picker.dart';
 
-class AddCompanyForm extends StatefulWidget {
-  AddCompanyForm({Key? key}) : super(key: key);
+class AddMemberForm extends StatefulWidget {
+  AddMemberForm({Key? key}) : super(key: key);
 
   @override
-  _AddCompanyFormState createState() => _AddCompanyFormState();
+  _AddMemberFormState createState() => _AddMemberFormState();
 }
 
-class _AddCompanyFormState extends State<AddCompanyForm> {
+class _AddMemberFormState extends State<AddMemberForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _descritpionController = TextEditingController();
-  final _websiteController = TextEditingController();
-  final _companyService = CompanyService();
-  final _imagePicker = ImagePicker();
-  XFile? _image;
-  int? _size;
-  late DropzoneViewController _controller;
+  final _istIdController = TextEditingController();
+  final _sinfoIdController = TextEditingController();
+  MemberService _memberService = new MemberService();
+  //final _imagePicker = ImagePicker();
+  //XFile? _image;
+  //int? _size;
+  //late DropzoneViewController _controller;
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var name = _nameController.text;
-      var description = _descritpionController.text;
-      var site = _websiteController.text;
+      var istid = _istIdController.text;
+      var sinfoid = _sinfoIdController.text;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
-      Company? c = await _companyService.createCompany(
-          description: description, name: name, site: site);
-      if (c != null && _image != null) {
-        c = kIsWeb
-            ? await _companyService.updateInternalImageWeb(
-                id: c.id, image: _image!)
-            : await _companyService.updateInternalImage(
-                id: c.id, image: File(_image!.path));
-      }
-      if (c != null) {
-        //TODO: Redirect to company page
+      print(1);
+      Member? m = await _memberService.createMember(
+          istid: istid, name: name, sinfoid: sinfoid);
+      print(2);
+      // if (m != null && _image != null) {
+      //   m = kIsWeb
+      //       ? await _memberService.updateInternalImageWeb(
+      //           id: m.id, image: _image!)
+      //       : await _memberService.updateInternalImage(
+      //           id: m.id, image: File(_image!.path));
+      // }
+      if (m != null) {
+        //TODO: Redirect to members page
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Done'),
             duration: Duration(seconds: 2),
-            action: SnackBarAction(
-              label: 'Undo',
-              onPressed: () {
-                _companyService.deleteCompany(id: c!.id);
-              },
-            ),
           ),
         );
       } else {
@@ -68,6 +64,8 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('An error occured.')),
         );
+
+        Navigator.pop(context);
       }
     }
   }
@@ -87,8 +85,8 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
                 }
                 return null;
               },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.work),
+              decoration: InputDecoration(
+                icon: const Icon(Icons.person),
                 labelText: "Name *",
               ),
             ),
@@ -96,52 +94,78 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _descritpionController,
+              controller: _istIdController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a description';
+                  return 'Please enter ist id';
                 }
                 return null;
               },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.description),
-                labelText: "Description *",
+              decoration: InputDecoration(
+                icon: const Icon(Icons.school),
+                labelText: "IstID *",
+                
               ),
+              
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _websiteController,
+              controller: _sinfoIdController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a website';
+                  return 'Please enter sinfo id';
                 } else {
-                  if (Uri.tryParse(value) == null) {
-                    return 'Not a valid URL';
-                  }
                   return null;
                 }
               },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.web),
-                labelText: "Website *",
+              decoration: InputDecoration(
+                icon: ImageIcon(
+                  AssetImage("assets/PowerOnIcon.png"),
+                  size: 15,
+              ),
+                labelText: "SinfoID *",
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () => _submit(),
-              child: const Text('Submit'),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: Text("CANCEL",
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Theme.of(context).accentColor)),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Theme.of(context).accentColor,
+                    padding: EdgeInsets.symmetric(horizontal: 50),
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                  ),
+                  onPressed: () => _submit(),
+                  child: const Text('SUBMIT'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPicture(double size) {
+  /*Widget _buildPicture(double size) {
     Widget inkWellChild;
 
     if (_image == null) {
@@ -232,7 +256,7 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
     final mime = await _controller.getFileMIME(event);
     final bytes = await _controller.getFileSize(event);
     final url = await _controller.createFileUrl(event);
-    XFile f = XFile(url, name: name, mimeType: mime, length: bytes);
+    XFile f = XFile(url, mimeType: mime, length: bytes, name: name);
     setState(() {
       _size = bytes;
       _image = f;
@@ -248,47 +272,43 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
         _image = image;
       });
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
-    bool warning = _image != null && _size != null && _size! > 102400;
-    CustomAppBar appBar = CustomAppBar(
-      disableEventChange: true,
-    );
+    //bool warning = _image != null && _size != null && _size! > 102400;
     return Scaffold(
-      body: Stack(children: [
-        Container(
-            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                if (constraints.maxWidth < 1000) {
-                  return Column(
-                    children: [
-                      _buildPicture(constraints.maxWidth / 3),
-                      _buildForm()
-                    ],
-                  );
-                } else {
-                  return Column(
-                    children: [
-                      _buildPicture(constraints.maxWidth / 6),
-                      warning
-                          ? Text(
-                              'Image selected is too big!',
-                              style: TextStyle(
-                                color: Colors.red,
-                              ),
-                            )
-                          : Container(),
-                      _buildForm()
-                    ],
-                  );
-                }
-              },
-            )),
-        appBar,
-      ]),
-    );
+        appBar: CustomAppBar(disableEventChange: true,),
+        body: LayoutBuilder(builder: (contex, constraints) {
+          return Column(children: [
+            _buildForm(),
+          ]);
+        }
+            // builder: (context, constraints) {
+            //   if (constraints.maxWidth < 1000) {
+            //     return Column(
+            //       children: [
+            //         //_buildPicture(constraints.maxWidth / 3),
+            //         _buildForm()
+            //       ],
+            //     );
+            //   } else {
+            //     return Column(
+            //       children: [
+            //         _buildPicture(constraints.maxWidth / 6),
+            //         warning
+            //             ? Text(
+            //                 'Image selected is too big!',
+            //                 style: TextStyle(
+            //                   color: Colors.red,
+            //                 ),
+            //               )
+            //             : Container(),
+            //         _buildForm()
+            //       ],
+            //     );
+            //   }
+            // },
+            ));
   }
 }

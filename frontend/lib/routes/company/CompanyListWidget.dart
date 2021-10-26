@@ -106,7 +106,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   Widget build(BuildContext context) {
     List<Widget> popupMenuBtn = popUpMenuButton();
     CustomAppBar appBar =
-        CustomAppBar(actions: popupMenuBtn, disableEventChange: false);
+        CustomAppBar(actions: popupMenuBtn, disableEventChange: true);
     return Scaffold(
       body: Stack(children: [
         Container(

@@ -13,21 +13,20 @@ import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 
-class EditSpeakerForm extends StatefulWidget {
-  final Speaker speaker;
-  final void Function(BuildContext, Speaker?) onEdit;
-  EditSpeakerForm({Key? key, required this.speaker, required this.onEdit})
+class EditCompanyForm extends StatefulWidget {
+  final Company company;
+  final void Function(BuildContext, Company?) onEdit;
+  EditCompanyForm({Key? key, required this.company, required this.onEdit})
       : super(key: key);
 
   @override
-  _EditSpeakerFormState createState() => _EditSpeakerFormState();
+  _EditCompanyFormState createState() => _EditCompanyFormState();
 }
 
-class _EditSpeakerFormState extends State<EditSpeakerForm> {
+class _EditCompanyFormState extends State<EditCompanyForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _titleController;
-  final _speakerService = SpeakerService();
+  final _companyService = CompanyService();
   final _imagePicker = ImagePicker();
   XFile? _image;
   int? _size;
@@ -37,30 +36,29 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.speaker.name);
-    _titleController = TextEditingController(text: widget.speaker.title);
-    _prevImage = widget.speaker.imgs!.speaker;
+    _nameController = TextEditingController(text: widget.company.name);
+    _prevImage = widget.company.companyImages.internal;
   }
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var name = _nameController.text;
-      var title = _titleController.text;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
-      Speaker? s = await _speakerService.updateSpeaker(
-          id: widget.speaker.id,
-          name: name,
-          title: title,
-          bio: widget.speaker.bio,
-          notes: widget.speaker.notes);
+      Company? s = await _companyService.updateCompany(
+        id: widget.company.id,
+        name: name,
+        billingInfo: widget.company.billingInfo,
+        description: widget.company.description,
+        site: widget.company.site,
+      );
       if (s != null && _image != null) {
         s = kIsWeb
-            ? await _speakerService.updateInternalImageWeb(
+            ? await _companyService.updateInternalImageWeb(
                 id: s.id, image: _image!)
-            : await _speakerService.updateInternalImage(
+            : await _companyService.updateInternalImage(
                 id: s.id, image: File(_image!.path));
       }
       if (s != null) {
@@ -102,23 +100,6 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
               decoration: const InputDecoration(
                 icon: const Icon(Icons.work),
                 labelText: "Name *",
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _titleController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a title';
-                } else {
-                  return null;
-                }
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.web),
-                labelText: "Title *",
               ),
             ),
           ),

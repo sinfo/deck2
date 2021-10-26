@@ -116,3 +116,9 @@ deck2_nginx.conf
 docker-compose.yml
 
 deck2.sh
+
+#Frontend macos
+
+/frontend/ios/Flutter/Debug.xcconfig
+/frontend/ios/Flutter/Release.xcconfig
+Podfile

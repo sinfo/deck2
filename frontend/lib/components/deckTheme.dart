@@ -15,6 +15,7 @@ abstract class BaseTheme {
 class LightTheme extends BaseTheme {
   ThemeData get materialTheme {
     return ThemeData(
+      tabBarTheme: TabBarTheme(labelColor: Colors.black),
       primarySwatch: Colors.indigo,
       primaryColor: Colors.indigo,
       brightness: Brightness.light,
@@ -22,7 +23,7 @@ class LightTheme extends BaseTheme {
       accentColor: Color.fromRGBO(92, 127, 242, 1),
       cardColor: Color.fromRGBO(241, 241, 241, 1),
       accentIconTheme: IconThemeData(color: Colors.white),
-      dividerColor: Colors.white54,
+      dividerColor: Colors.grey,
       disabledColor: Colors.grey,
     );
   }
@@ -33,6 +34,7 @@ class LightTheme extends BaseTheme {
 class DarkTheme extends BaseTheme {
   ThemeData get materialTheme {
     return ThemeData(
+      tabBarTheme: TabBarTheme(labelColor: Colors.white),
       disabledColor: Colors.grey,
       primarySwatch: Colors.grey,
       primaryColor: Colors.black,
@@ -55,6 +57,7 @@ class ThemeNotifier with ChangeNotifier {
 
   ThemeData get theme => _themeData.materialTheme;
   BaseTheme get fullTheme => _themeData;
+  bool get isDark => _themeData is DarkTheme;
 
   setTheme(BaseTheme themeData) async {
     _themeData = themeData;
