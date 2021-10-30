@@ -1,15 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/teams/EditMembers.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/teamService.dart';
+import 'package:provider/provider.dart';
+
+import 'EditTeamForm.dart';
 
 class TeamScreen extends StatefulWidget {
   final Team team;
@@ -50,13 +55,8 @@ class _TeamScreen extends State<TeamScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: GestureDetector(
-            child: Image.asset(
-          'assets/logo-branco2.png',
-          height: 100,
-          width: 100,
-        )),
+      appBar: CustomAppBar(
+        disableEventChange: false,
       ),
       body: Container(
         child: DefaultTabController(
@@ -77,7 +77,8 @@ class _TeamScreen extends State<TeamScreen>
                   child: TabBarView(
                 controller: _tabController,
                 children: [
-                  DisplayMembers(teamId: widget.team.id!, members: widget.members),
+                  DisplayMembers(
+                      teamId: widget.team.id!, members: widget.members),
                   DisplayMeeting(meetingsIds: widget.team.meetings),
                 ],
               ))
@@ -154,7 +155,8 @@ class _DisplayMeetingState extends State<DisplayMeeting> {
 class DisplayMembers extends StatelessWidget {
   final List<Member?> members;
   final String teamId;
-  const DisplayMembers({Key? key, required this.members, required this.teamId}) : super(key: key);
+  const DisplayMembers({Key? key, required this.members, required this.teamId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -170,7 +172,8 @@ class DisplayMembers extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => EditMembers(teamId: teamId, previousMembers: members)),
+                builder: (context) =>
+                    EditMembers(teamId: teamId, previousMembers: members)),
           );
         },
         label: const Text('Edit Members'),
@@ -238,9 +241,98 @@ class ShowMember extends StatelessWidget {
   }
 }
 
-class TeamBanner extends StatelessWidget {
+class TeamBanner extends StatefulWidget {
   final Team team;
   const TeamBanner({Key? key, required this.team}) : super(key: key);
+
+  @override
+  State<TeamBanner> createState() => _TeamBannerState();
+}
+
+class _TeamBannerState extends State<TeamBanner> {
+  deleteTeam() {
+    TeamService _teamService = TeamService();
+
+    return FutureBuilder(
+        future: Provider.of<AuthService>(context).role,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Role r = snapshot.data as Role;
+
+            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+              return Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  onPressed: () {
+                    BlurryDialog d = BlurryDialog(
+                        'Warning', 'Are you sure you want to delete this team?',
+                        () async {
+                      await _teamService.deleteTeam(widget.team.id!);
+
+                      Navigator.pop(context);
+                    });
+
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return d;
+                      },
+                    );
+                  },
+                  icon: Icon(Icons.delete),
+                  color: Colors.white,
+                ),
+              );
+            } else
+              return Container(width: 0);
+          } else
+            return Container(width: 0);
+        });
+  }
+
+  editTeam() {
+    return FutureBuilder(
+        future: Provider.of<AuthService>(context).role,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Role r = snapshot.data as Role;
+
+            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+              return Positioned(
+                  bottom: 15,
+                  right: 15,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                EditTeamForm(team: widget.team)),
+                      );
+                    },
+                    child: Container(
+                      height: 40,
+                      width: 40,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          width: 2,
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                        ),
+                        color: Colors.indigo[200],
+                      ),
+                      child: Icon(
+                        Icons.edit,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ));
+            } else
+              return Container(width: 0);
+          } else
+            return Container(width: 0);
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -256,26 +348,30 @@ class TeamBanner extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            SizedBox(height: 30),
-            Container(
-              width: 210,
-              height: 210,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white30),
+            deleteTeam(),
+            Stack(children: [
+              Container(
+                width: 210,
+                height: 210,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white30),
+                ),
+                padding: const EdgeInsets.all(5),
+                child: ClipOval(
+                  //FIXME: colocar imagem da team
+                  child: Image.asset("assets/DevTeam.jpg", fit: BoxFit.cover),
+                ),
               ),
-              padding: const EdgeInsets.all(5),
-              child: ClipOval(
-                child: Image.asset("assets/DevTeam.jpg", fit: BoxFit.cover),
-              ),
-            ),
-            SizedBox(height: 30),
-            Text(team.name!,
+              editTeam(),
+            ]),
+            SizedBox(height: 20),
+            Text(widget.team.name!,
                 style: TextStyle(
                     fontSize: 25,
                     color: Colors.white,
                     fontWeight: FontWeight.bold)),
-            SizedBox(height: 20),
+            SizedBox(height: 30),
           ],
         ),
       );

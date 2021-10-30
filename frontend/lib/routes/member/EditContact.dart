@@ -5,7 +5,6 @@ import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/my_flutter_app_icons.dart';
-import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/contactService.dart';
 
 class EditContact extends StatefulWidget {

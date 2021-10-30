@@ -9,7 +9,7 @@ import 'package:frontend/routes/member/AddMemberForm.dart';
 import 'package:frontend/routes/member/MemberListWidget.dart';
 import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/routes/speaker/AddSpeakerForm.dart';
-import 'package:frontend/routes/teams/AddTeam.dart';
+import 'package:frontend/routes/teams/AddTeamForm.dart';
 
 class Routes {
   static const String BaseRoute = '/';
@@ -45,7 +45,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case Routes.AddMember:
       return SlideRoute(page: AddMemberForm());
     case Routes.AddTeam:
-      return SlideRoute(page: AddTeam());
+      return SlideRoute(page: AddTeamForm());
     default:
       return MaterialPageRoute(builder: (context) => UnknownScreen());
   }

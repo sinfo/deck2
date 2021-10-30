@@ -2,19 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/components/router.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
 import 'package:frontend/services/teamService.dart';
 
-class AddTeam extends StatefulWidget {
-  AddTeam({Key? key}) : super(key: key);
+class AddTeamForm extends StatefulWidget {
+  AddTeamForm({Key? key}) : super(key: key);
 
   @override
-  _AddTeamState createState() => _AddTeamState();
+  _AddTeamFormState createState() => _AddTeamFormState();
 }
 
-class _AddTeamState extends State<AddTeam> {
+class _AddTeamFormState extends State<AddTeamForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   TeamService _teamService = new TeamService();

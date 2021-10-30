@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/EditBox.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
@@ -83,14 +84,63 @@ class _MemberScreen extends State<MemberScreen>
 class MemberBanner extends StatefulWidget {
   final Member member;
 
-  const MemberBanner({ Key? key, required this.member}) : super(key: key);
+  const MemberBanner({Key? key, required this.member}) : super(key: key);
 
   @override
   _MemberBannerState createState() => _MemberBannerState();
 }
 
 class _MemberBannerState extends State<MemberBanner> {
+  deleteMember() {
+    MemberService _memberService = MemberService();
+    TeamService _teamService = TeamService();
 
+    return FutureBuilder(
+        future: Provider.of<AuthService>(context).role,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Role r = snapshot.data as Role;
+
+            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+              return Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  onPressed: () {
+                    BlurryDialog d = BlurryDialog('Warning',
+                        'Are you sure you want to delete this member?',
+                        () async {
+                      List<Team?> t =
+                          await _teamService.getTeams(member: widget.member.id);
+
+                      //Remove from all teams
+                      for (int i = 0; i < t.length; i++){
+                        await _teamService.deleteTeamMember(
+                            t[i]!.id!, widget.member.id);
+                      }
+
+                      //Remove Member
+                      await _memberService.deleteMember(widget.member.id);
+
+                      Navigator.pop(context);
+                    });
+
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return d;
+                      },
+                    );
+                  },
+                  icon: Icon(Icons.delete),
+                  color: Colors.white,
+                ),
+              );
+            } else
+              return Container(width: 0);
+          } else
+            return Container(width: 0);
+        });
+  }
 
   editMember() {
     return FutureBuilder(
@@ -99,7 +149,6 @@ class _MemberBannerState extends State<MemberBanner> {
           if (snapshot.hasData) {
             Role r = snapshot.data as Role;
 
-          
             if (r == Role.ADMIN || r == Role.COORDINATOR) {
               return Positioned(
                   bottom: 15,
@@ -131,12 +180,11 @@ class _MemberBannerState extends State<MemberBanner> {
                     ),
                   ));
             } else
-              return Container(width:0);
+              return Container(width: 0);
           } else
-            return Container(width:0);
+            return Container(width: 0);
         });
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +202,7 @@ class _MemberBannerState extends State<MemberBanner> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            SizedBox(height: 30),
+            deleteMember(),
             Stack(children: [
               Container(
                 width: 210,
@@ -178,14 +226,12 @@ class _MemberBannerState extends State<MemberBanner> {
                     fontSize: 25,
                     color: Colors.white,
                     fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            SizedBox(height: 20),
+            SizedBox(height: 30),
           ],
         ),
       );
     });
   }
-
 }
 
 class DisplayParticipations extends StatefulWidget {

@@ -2,45 +2,39 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/models/member.dart';
-import 'package:frontend/services/memberService.dart';
+import 'package:frontend/models/team.dart';
+import 'package:frontend/services/teamService.dart';
 
-class EditMemberForm extends StatefulWidget {
-  final Member member;
-  EditMemberForm({Key? key, required this.member}) : super(key: key);
+class EditTeamForm extends StatefulWidget {
+  Team team;
+  EditTeamForm({Key? key, required this.team}) : super(key: key);
 
   @override
-  _EditMemberFormState createState() => _EditMemberFormState();
+  _EditTeamFormState createState() => _EditTeamFormState();
 }
 
-class _EditMemberFormState extends State<EditMemberForm> {
+class _EditTeamFormState extends State<EditTeamForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _istIdController;
-  final _memberService = MemberService();
+  TeamService _teamService = new TeamService();
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.member.name);
-    _istIdController = TextEditingController(text: widget.member.istId);
+    _nameController = TextEditingController(text: widget.team.name);
   }
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var name = _nameController.text;
-      var istId = _istIdController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
-      print('id = ${widget.member.id}');
+      Team? t = await _teamService.updateTeam(widget.team.id!, name);
 
-      Member? m =
-          await _memberService.updateMember(widget.member.id, istId, name);
-
-      if (m != null) {
+      if (t != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -49,6 +43,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
             duration: Duration(seconds: 2),
           ),
         );
+
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -75,26 +70,9 @@ class _EditMemberFormState extends State<EditMemberForm> {
                 }
                 return null;
               },
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 icon: const Icon(Icons.person),
                 labelText: "Name *",
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _istIdController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter ist id';
-                } else {
-                  return null;
-                }
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.school),
-                labelText: "IstId *",
               ),
             ),
           ),
@@ -110,8 +88,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
                 onPressed: () => Navigator.pop(context),
                 child: Text("CANCEL",
                     style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).accentColor)),
+                        fontSize: 14, color: Theme.of(context).accentColor)),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -133,13 +110,13 @@ class _EditMemberFormState extends State<EditMemberForm> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    // bool warning = _image != null && _size != null && _size! > 102400;
-
     return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true,),
+        appBar: CustomAppBar(
+          disableEventChange: true,
+        ),
         body: LayoutBuilder(builder: (contex, constraints) {
           return Column(children: [
             _buildForm(),
