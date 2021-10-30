@@ -112,12 +112,6 @@ class _MemberBannerState extends State<MemberBanner> {
                       List<Team?> t =
                           await _teamService.getTeams(member: widget.member.id);
 
-                      //Remove from all teams
-                      for (int i = 0; i < t.length; i++){
-                        await _teamService.deleteTeamMember(
-                            t[i]!.id!, widget.member.id);
-                      }
-
                       //Remove Member
                       await _memberService.deleteMember(widget.member.id);
 
