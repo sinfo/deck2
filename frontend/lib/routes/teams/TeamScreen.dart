@@ -77,7 +77,7 @@ class _TeamScreen extends State<TeamScreen>
                   child: TabBarView(
                 controller: _tabController,
                 children: [
-                  DisplayMembers(members: widget.members),
+                  DisplayMembers(teamId: widget.team.id!, members: widget.members),
                   DisplayMeeting(meetingsIds: widget.team.meetings),
                 ],
               ))
@@ -109,36 +109,38 @@ class _DisplayMeetingState extends State<DisplayMeeting> {
 
   @override
   Widget build(BuildContext context) {
-    List<Future<Meeting?>> _futureMeetings = widget.meetingsIds!
-        .map((m) => _meetingService.getMeeting(m))
-        .toList();
+    List<Future<Meeting?>> _futureMeetings =
+        widget.meetingsIds!.map((m) => _meetingService.getMeeting(m)).toList();
 
     return Scaffold(
       backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-      body: (widget.meetingsIds == null) ? Container() : FutureBuilder(
-        future: Future.wait(_futureMeetings),
-        builder: (context, snapshot){
-          if (snapshot.hasData) {
-            List<Meeting?> meetings = snapshot.data as List<Meeting?>;
+      body: (widget.meetingsIds == null)
+          ? Container()
+          : FutureBuilder(
+              future: Future.wait(_futureMeetings),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<Meeting?> meetings = snapshot.data as List<Meeting?>;
 
-            return ListView(
-                  padding: EdgeInsets.symmetric(horizontal: 32),
-                  physics: BouncingScrollPhysics(),
-                  scrollDirection: Axis.vertical,
-                  children:
-                      meetings.map((e) => MeetingCard(meeting: e!)).toList());
-          } else {
-            return Container(
-            child: Center(
-              child: Container(
-                height: 50,
-                width: 50,
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          );
-          }
-        }),      
+                  return ListView(
+                      padding: EdgeInsets.symmetric(horizontal: 32),
+                      physics: BouncingScrollPhysics(),
+                      scrollDirection: Axis.vertical,
+                      children: meetings
+                          .map((e) => MeetingCard(meeting: e!))
+                          .toList());
+                } else {
+                  return Container(
+                    child: Center(
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+                }
+              }),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         label: const Text('Add Meetings'),
@@ -151,7 +153,8 @@ class _DisplayMeetingState extends State<DisplayMeeting> {
 
 class DisplayMembers extends StatelessWidget {
   final List<Member?> members;
-  const DisplayMembers({Key? key, required this.members}) : super(key: key);
+  final String teamId;
+  const DisplayMembers({Key? key, required this.members, required this.teamId}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -165,8 +168,10 @@ class DisplayMembers extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
-              context, MaterialPageRoute(
-              builder: (context) => EditMembers()),);
+            context,
+            MaterialPageRoute(
+                builder: (context) => EditMembers(teamId: teamId, previousMembers: members)),
+          );
         },
         label: const Text('Edit Members'),
         icon: const Icon(Icons.edit),

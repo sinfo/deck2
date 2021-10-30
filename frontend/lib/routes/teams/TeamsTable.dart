@@ -26,7 +26,7 @@ class _TeamTableState extends State<TeamTable>
   final TeamService _teamService = TeamService();
   late Future<List<Team>> teams;
 
-  bool get wantKeepAlive => true;
+  bool get wantKeepAlive => false;
 
   @override
   void initState() {
@@ -82,17 +82,19 @@ class _TeamTableState extends State<TeamTable>
             ),
           );
         } else {
-          return Shimmer.fromColors(
-            baseColor: Colors.grey[400]!,
-            highlightColor: Colors.white,
-            child: ListView.builder(
-              itemCount: 5,
-              itemBuilder: (context, index) => TeamMemberRow.fake(),
-              addAutomaticKeepAlives: true,
-              physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics()),
-            ),
-          );
+          return CircularProgressIndicator();
+
+          // Shimmer.fromColors(
+          //   baseColor: Colors.grey[400]!,
+          //   highlightColor: Colors.white,
+          //   child: ListView.builder(
+          //     itemCount: 5,
+          //     itemBuilder: (context, index) => TeamMemberRow.fake(),
+          //     addAutomaticKeepAlives: true,
+          //     physics: const BouncingScrollPhysics(
+          //         parent: AlwaysScrollableScrollPhysics()),
+          //   ),
+          // );
         }
       },
     );
@@ -153,7 +155,6 @@ class TeamMemberRow extends StatelessWidget {
       }),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -234,19 +235,17 @@ class TeamMemberRow extends StatelessWidget {
                     );
                   })),
             );
-          }  else {
-              return Container(
-                child: Center(
-                  child: Container(
-                    height: 50,
-                    width: 50,
-                    child: CircularProgressIndicator(),
-                  ),
+          } else {
+            return Container(
+              child: Center(
+                child: Container(
+                  height: 50,
+                  width: 50,
+                  child: CircularProgressIndicator(),
                 ),
-              );
-            }
-          });
-        }
+              ),
+            );
+          }
+        });
   }
-
-
+}

@@ -68,7 +68,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
 
         print(m.id);
 
-        await _teamService.addTeamMember(t[0]!.id!, m.id, 'MEMBER');
+        //await _teamService.addTeamMember(t[0]!.id!, m.id, 'MEMBER');
         //TODO: Redirect to members page
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -80,6 +80,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
         );
 
         Navigator.pop(context);
+
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -87,6 +88,8 @@ class _AddMemberFormState extends State<AddMemberForm> {
           const SnackBar(content: Text('An error occured.')),
         );
       }
+
+
     }
   }
 
