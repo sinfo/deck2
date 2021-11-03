@@ -2,19 +2,106 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/post.dart';
 import 'package:frontend/models/thread.dart';
-import 'package:frontend/services/postService.dart';
 import 'package:frontend/services/threadService.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:intl/intl.dart';
 
 final Map<String, Color> THREADCOLOR = {
   "APPROVED": Colors.green,
   "REVIEWED": Colors.green,
   "PENDING": Colors.yellow,
 };
+
+class CommunicationsList extends StatelessWidget {
+  final List<Participation> participations;
+  final bool small;
+
+  CommunicationsList(
+      {Key? key, required this.participations, required this.small})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+        child: ListView(
+            controller: ScrollController(),
+            children: participations.reversed
+                .where((element) =>
+                    element.communicationsId != null &&
+                    element.communicationsId!.length != 0)
+                .map(
+                  (participation) => ParticipationThreadsWidget(
+                    participation: participation,
+                    small: small,
+                  ),
+                )
+                .toList()),
+      );
+    });
+  }
+}
+
+class ParticipationThreadsWidget extends StatelessWidget {
+  final Participation participation;
+  final bool small;
+
+  ParticipationThreadsWidget(
+      {Key? key, required this.participation, required this.small})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    print('Getting ${participation.event}');
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FutureBuilder(
+        future: participation.communications,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text('Error');
+          }
+          if (snapshot.connectionState == ConnectionState.done) {
+            List<Thread>? threads = snapshot.data as List<Thread>?;
+            if (threads == null) {
+              threads = [];
+            }
+            threads.sort((a, b) => b.posted.compareTo(a.posted));
+            return Column(children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text('SINFO ${participation.event}'),
+                ),
+              ),
+              Divider(),
+              ...threads
+                  .map(
+                    (thread) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ThreadCard(
+                        thread: thread,
+                        small: small,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ]);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+    );
+  }
+}
 
 class ThreadCard extends StatefulWidget {
   final Thread thread;
@@ -36,6 +123,7 @@ class ThreadCardState extends State<ThreadCard>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    print(widget.thread.posted.toString());
     return FutureBuilder(
       future: widget.thread.entry,
       builder: (context, snapshot) {
@@ -146,7 +234,7 @@ class ThreadCardHeader extends StatelessWidget {
                             style: TextStyle(fontSize: small ? 12 : 20),
                           ),
                           Text(
-                            timeago.format(thread.posted),
+                            DateFormat('dd/MM/yyyy').format(thread.posted),
                             style: TextStyle(fontSize: small ? 10 : 14),
                           )
                         ],
@@ -415,7 +503,7 @@ class CommentStrip extends StatelessWidget {
                               style: TextStyle(fontSize: 18),
                             ),
                             Text(
-                              timeago.format(post.posted),
+                              DateFormat('dd/MM/yyyy').format(post.posted),
                               style: TextStyle(fontSize: 12),
                             ),
                           ],

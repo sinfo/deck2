@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/models/meeting.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
@@ -399,10 +400,20 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> addThread(
-      {required String id, required Thread thread}) async {
+  Future<Company?> addThread({
+    required String id,
+    required String kind,
+    required String text,
+    Meeting? meeting,
+  }) async {
+    var body = {
+      "kind": kind,
+      "text": text,
+      "meeting": meeting != null ? meeting.toJson() : null
+    };
+
     Response<String> response =
-        await dio.put("/speakers/" + id + "/thread", data: thread.toJson());
+        await dio.post("/companies/" + id + "/thread", data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {

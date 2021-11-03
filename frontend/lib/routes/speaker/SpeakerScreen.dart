@@ -124,7 +124,9 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                         fs: _speakerService.removeParticipation(
                             id: widget.speaker.id)),
                   ),
-                  CommunicationsList(speaker: widget.speaker, small: small),
+                  CommunicationsList(
+                      participations: widget.speaker.participations ?? [],
+                      small: small),
                 ]),
               ),
             ],
@@ -142,7 +144,7 @@ class _SpeakerScreenState extends State<SpeakerScreen>
         return Container(
           child: AddThreadForm(
               speaker: widget.speaker,
-              onEdit: (context, _speaker) {
+              onEditSpeaker: (context, _speaker) {
                 speakerChangedCallback(context, speaker: _speaker);
               }),
         );
@@ -184,89 +186,6 @@ class _SpeakerScreenState extends State<SpeakerScreen>
   }
 }
 
-// Start of communication Widgets
-
-class CommunicationsList extends StatelessWidget {
-  final Speaker speaker;
-  final bool small;
-
-  CommunicationsList({Key? key, required this.speaker, required this.small})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    List<SpeakerParticipation> participations =
-        speaker.participations ?? List.empty();
-
-    return LayoutBuilder(builder: (context, constraints) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-        child: ListView(
-            controller: ScrollController(),
-            children: participations.reversed
-                .where((element) =>
-                    element.communicationsId != null &&
-                    element.communicationsId!.length != 0)
-                .map((participation) => ParticipationThreadsWidget(
-                    participation: participation, small: small))
-                .toList()),
-      );
-    });
-  }
-}
-
-class ParticipationThreadsWidget extends StatelessWidget {
-  final SpeakerParticipation participation;
-  final bool small;
-
-  ParticipationThreadsWidget(
-      {Key? key, required this.participation, required this.small})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    Future<List<Thread>?> futureThreads = participation.communications;
-    return FutureBuilder(
-        future: futureThreads,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            List<Thread>? threads = snapshot.data as List<Thread>?;
-            if (threads == null) {
-              threads = [];
-            }
-            threads.sort((a, b) => b.posted.compareTo(a.posted));
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('SINFO ${participation.event}'),
-                  ),
-                ),
-                Divider(),
-                ...threads
-                    .map(
-                      (thread) => Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ThreadCard(
-                          thread: thread,
-                          small: small,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ]),
-            );
-          }
-          return Text("Loading...");
-        });
-  }
-}
-
-// End of communication Widgets
-
 class ParticipationList extends StatelessWidget {
   final Speaker speaker;
   final Future<void> Function(Map<String, dynamic>) onParticipationChanged;
@@ -288,6 +207,7 @@ class ParticipationList extends StatelessWidget {
             padding: const EdgeInsets.all(8.0),
             child: Container(
               child: ListView(
+                controller: ScrollController(),
                 children: speaker.participations!.reversed
                     .map((e) => Padding(
                           padding: const EdgeInsets.all(8.0),

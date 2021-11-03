@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/components/EditableCard.dart';
+import 'package:frontend/components/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
+import 'package:frontend/components/threadCard.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/EditCompanyForm.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
@@ -66,6 +69,55 @@ class _CompanyScreenState extends State<CompanyScreen>
       setState(() {
         widget.company = s!;
       });
+    }
+  }
+
+  void _addThreadModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: AddThreadForm(
+              company: widget.company,
+              onEditCompany: (context, _company) {
+                companyChangedCallback(context, company: _company);
+              }),
+        );
+      },
+    );
+  }
+
+  Widget? _fabAtIndex(BuildContext context) {
+    int latestEvent = Provider.of<EventNotifier>(context).latest.id;
+    int index = _tabController.index;
+    switch (index) {
+      case 0:
+      case 1:
+        return null;
+      case 2:
+        {
+          if (widget.company.lastParticipation != latestEvent) {
+            return FloatingActionButton.extended(
+              onPressed: () => companyChangedCallback(context,
+                  fs: _companyService.addParticipation(
+                      id: widget.company.id, partner: false)),
+              label: const Text('Add Participation'),
+              icon: const Icon(Icons.add),
+            );
+          } else {
+            return null;
+          }
+        }
+      case 3:
+        {
+          return FloatingActionButton.extended(
+            onPressed: () {
+              _addThreadModal(context);
+            },
+            label: const Text('Add Communication'),
+            icon: const Icon(Icons.add),
+          );
+        }
     }
   }
 
@@ -132,7 +184,9 @@ class _CompanyScreenState extends State<CompanyScreen>
                                 partner: false,
                               )),
                     ),
-                    Container(decoration: BoxDecoration(color: Colors.teal)),
+                    CommunicationsList(
+                        participations: widget.company.participations ?? [],
+                        small: small),
                   ]),
                 ),
               ],
