@@ -54,17 +54,22 @@ class Participation {
   }
 
   Future<List<Thread>?> get communications async {
-    if (_communications != null) return _communications;
-    if (communicationsId == null) return [];
+    if (_communications != null && _communications!.length == 0) {
+      return _communications;
+    }
+    if (communicationsId == null) {
+      return [];
+    }
 
-    _communications = [];
-    communicationsId!.forEach((element) async {
+    List<Thread> l = [];
+    for (String element in communicationsId!) {
       Thread? t = await _threadService.getThread(element);
       if (t != null) {
-        _communications!.add(t);
+        l.add(t);
       }
-    });
+    }
 
+    _communications = l;
     return _communications;
   }
 

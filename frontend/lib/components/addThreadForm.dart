@@ -15,8 +15,14 @@ import 'package:image_picker/image_picker.dart';
 class AddThreadForm extends StatefulWidget {
   final Speaker? speaker;
   final Company? company;
-  final void Function(BuildContext, Speaker?) onEdit;
-  AddThreadForm({Key? key, this.speaker, this.company, required this.onEdit})
+  final void Function(BuildContext, Speaker?)? onEditSpeaker;
+  final void Function(BuildContext, Company?)? onEditCompany;
+  AddThreadForm(
+      {Key? key,
+      this.speaker,
+      this.company,
+      this.onEditSpeaker,
+      this.onEditCompany})
       : super(key: key);
 
   @override
@@ -34,7 +40,7 @@ class _AddThreadFormState extends State<AddThreadForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
-      if (widget.speaker != null) {
+      if (widget.speaker != null && widget.onEditSpeaker != null) {
         SpeakerService service = SpeakerService();
         Speaker? s = await service.addThread(
             id: widget.speaker!.id, text: text, kind: kind);
@@ -47,7 +53,28 @@ class _AddThreadFormState extends State<AddThreadForm> {
               duration: Duration(seconds: 2),
             ),
           );
-          widget.onEdit(context, s);
+          widget.onEditSpeaker!(context, s);
+        } else {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('An error occured.')),
+          );
+        }
+      } else if (widget.company != null && widget.onEditCompany != null) {
+        CompanyService service = CompanyService();
+        Company? s = await service.addThread(
+            id: widget.speaker!.id, text: text, kind: kind);
+        if (s != null) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Done'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          widget.onEditCompany!(context, s);
         } else {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
