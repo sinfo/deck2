@@ -44,10 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    CustomAppBar appBar = CustomAppBar(disableEventChange: false);
+
     return Scaffold(
-      appBar: CustomAppBar(
-        disableEventChange: false,
-      ),
       bottomNavigationBar: CustomNavBar(
         onTapped: (newIndex) {
           Provider.of<BottomNavigationBarProvider>(context, listen: false)
@@ -56,32 +55,51 @@ class _HomeScreenState extends State<HomeScreen> {
               duration: Duration(milliseconds: 800), curve: Curves.ease);
         },
       ),
-      body: SizedBox.expand(
-        child: PageView(
-          controller: _pageController,
-          onPageChanged: (index) {
-            Provider.of<BottomNavigationBarProvider>(context, listen: false)
-                .currentIndex = index;
-          },
-          children: <Widget>[
-            Center(
-              child: const SpeakerTable(),
+      body: Stack(
+        children: [
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  colorFilter: ColorFilter.mode(
+                      Colors.grey.withOpacity(0.1), BlendMode.srcATop),
+                  fit: BoxFit.contain,
+                  image: AssetImage('assets/logo_deck.png'),
+                ),
+              ),
             ),
-            Center(
-              child: LandingPage(),
+          ),
+          Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: SizedBox.expand(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  Provider.of<BottomNavigationBarProvider>(context,
+                          listen: false)
+                      .currentIndex = index;
+                },
+                children: <Widget>[
+                  Center(
+                    child: const SpeakerTable(),
+                  ),
+                  Center(
+                    child: LandingPage(),
+                  ),
+                  Center(
+                    child: CompanyTable(),
+                  ),
+                  Center(child: TeamTable()),
+                ],
+              ),
             ),
-            Center(
-              child: CompanyTable(),
-            ),
-            Center(child: TeamTable()),
-          ],
-        ),
+          ),
+          appBar,
+        ],
       ),
       drawer: DeckDrawer(),
-      floatingActionButton: _fabAtIndex(
-          context,
-          Provider.of<BottomNavigationBarProvider>(context, listen: true)
-              .currentIndex),
+      floatingActionButton: _fabAtIndex(context,
+          Provider.of<BottomNavigationBarProvider>(context).currentIndex),
     );
   }
 
@@ -173,14 +191,6 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          colorFilter:
-              ColorFilter.mode(Colors.grey.withOpacity(0.1), BlendMode.srcATop),
-          fit: BoxFit.fitWidth,
-          image: AssetImage('assets/logo-branco2.png'),
-        ),
-      ),
       child: MeetingList(),
     );
   }

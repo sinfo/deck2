@@ -63,7 +63,7 @@ class _TeamScreen extends State<TeamScreen>
       t = team;
     }
     if (t != null) {
-      Provider.of<TeamTableNotifier>(context, listen: true).edit(t);
+      Provider.of<TeamTableNotifier>(context, listen: false).edit(t);
       setState(() {
         widget.team = t!;
       });

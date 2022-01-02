@@ -17,7 +17,8 @@ class Service {
     );
     dio.interceptors.add(InterceptorsWrapper(
       onError: (e, handler) {
-        print('ERROR[${e.response?.statusCode}] => MESSAGE: ${e.message}');
+        print(
+            'REQUEST[${e.requestOptions.method} ${e.requestOptions.baseUrl}${e.requestOptions.path}] ERROR[${e.response?.statusCode}] => MESSAGE: ${e.message}');
         handler.next(e);
       },
     ));

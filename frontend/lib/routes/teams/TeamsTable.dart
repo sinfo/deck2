@@ -1,5 +1,3 @@
-import 'dart:html';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -27,7 +25,7 @@ class _TeamTableState extends State<TeamTable>
   final TeamService _teamService = TeamService();
   late Future<List<Team>> teams;
 
-  bool get wantKeepAlive => false;
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -37,71 +35,79 @@ class _TeamTableState extends State<TeamTable>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+     return NestedScrollView(
+        floatHeaderSlivers: true,
+        headerSliverBuilder: (context, innerBoxIsScrolled) => [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+            ),
+          ),
+        ],
+        body: FutureBuilder(
+          future: Future.wait([
+            _teamService.getTeams(
+                event: Provider.of<EventNotifier>(context).event.id)
+          ]),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    //TODO: colocar Nested Scroll View
-    return FutureBuilder(
-      future: Future.wait([
-        _teamService.getTeams(
-            event: Provider.of<EventNotifier>(context).event.id)
-      ]),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasError) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content:
+                        Text('An error has occured. Please contact the admins'),
+                    duration: Duration(seconds: 4),
+                  ),
+                );
+                return Center(
+                    child: Icon(
+                  Icons.error,
+                  size: 200,
+                ));
+              }
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content:
-                    Text('An error has occured. Please contact the admins'),
-                duration: Duration(seconds: 4),
+            TeamTableNotifier notifier =
+                  Provider.of<TeamTableNotifier>(context);
+
+            List<List<Object>> data = snapshot.data as List<List<Object>>;
+
+            notifier.teams = data[0] as List<Team>;
+
+            notifier.teams.sort((a, b) => a.name!.compareTo(b.name!));
+            
+            return RefreshIndicator(
+              onRefresh: () {
+                return Future.delayed(Duration.zero, () {
+                  setState(() {});
+                });
+              },
+              child: ListView.builder(
+                itemCount: notifier.teams.length,
+                itemBuilder: (context, index) => TeamMemberRow(team: notifier.teams[index]),
+                addAutomaticKeepAlives: true,
+                physics: const AlwaysScrollableScrollPhysics(),
               ),
             );
-            return Center(
-                child: Icon(
-              Icons.error,
-              size: 200,
-            ));
+          } else {
+            return CircularProgressIndicator();
+
+            // Shimmer.fromColors(
+            //   baseColor: Colors.grey[400]!,
+            //   highlightColor: Colors.white,
+            //   child: ListView.builder(
+            //     itemCount: 5,
+            //     itemBuilder: (context, index) => TeamMemberRow.fake(),
+            //     addAutomaticKeepAlives: true,
+            //     physics: const BouncingScrollPhysics(
+            //         parent: AlwaysScrollableScrollPhysics()),
+            //   ),
+            // );
           }
-
-          TeamTableNotifier notifier =
-                Provider.of<TeamTableNotifier>(context);
-
-          List<List<Object>> data = snapshot.data as List<List<Object>>;
-
-          notifier.teams = data[0] as List<Team>;
-
-          notifier.teams.sort((a, b) => a.name!.compareTo(b.name!));
-
-          return RefreshIndicator(
-            onRefresh: () {
-              return Future.delayed(Duration.zero, () {
-                setState(() {});
-              });
-            },
-            child: ListView.builder(
-              itemCount: notifier.teams.length,
-              itemBuilder: (context, index) => TeamMemberRow(team: notifier.teams[index]),
-              addAutomaticKeepAlives: true,
-              physics: const AlwaysScrollableScrollPhysics(),
-            ),
-          );
-        } else {
-          return CircularProgressIndicator();
-
-          // Shimmer.fromColors(
-          //   baseColor: Colors.grey[400]!,
-          //   highlightColor: Colors.white,
-          //   child: ListView.builder(
-          //     itemCount: 5,
-          //     itemBuilder: (context, index) => TeamMemberRow.fake(),
-          //     addAutomaticKeepAlives: true,
-          //     physics: const BouncingScrollPhysics(
-          //         parent: AlwaysScrollableScrollPhysics()),
-          //   ),
-          // );
-        }
-      },
-    );
+        },
+      ));
+    
   }
 }
 
@@ -181,6 +187,7 @@ class _TeamMemberRowState extends State<TeamMemberRow> {
             List<Member?> membs = snapshot.data as List<Member?>;
             membs.sort((a, b) => a!.name.compareTo(b!.name));
 
+        
             return Container(
               margin: EdgeInsets.all(10),
               child: Theme(

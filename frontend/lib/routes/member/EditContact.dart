@@ -10,8 +10,9 @@ import 'package:frontend/services/contactService.dart';
 class EditContact extends StatefulWidget {
   Contact contact;
   Member member;
+  final void Function(BuildContext, Member?) onEdit;
 
-  EditContact({Key? key, required Contact this.contact, required this.member})
+  EditContact({Key? key, required Contact this.contact, required this.member, required this.onEdit})
       : super(key: key);
 
   @override
@@ -215,6 +216,9 @@ class _MyFormState extends State<EditContact> {
                                 phonesValidList.clear();
 
                                 Navigator.pop(context);
+
+                                //TODO: chamar o edit
+
                                 
                               }
                             },

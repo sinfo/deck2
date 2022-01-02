@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 
 class MemberTableNotifier extends ChangeNotifier {
@@ -24,4 +25,5 @@ class MemberTableNotifier extends ChangeNotifier {
       notifyListeners();
     }
   }
+
 }

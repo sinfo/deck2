@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/components/memberSearchDelegate.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
@@ -72,7 +71,7 @@ class _MemberListWidgetState extends State<MemberListWidget> {
           if (snapshot.hasData) {
             Role r = snapshot.data as Role;
 
-            if (r == Role.ADMIN || r == Role.COORDINATOR){
+            if (r == Role.ADMIN || r == Role.COORDINATOR) {
               return FloatingActionButton.extended(
                 onPressed: () {
                   Navigator.pushNamed(
@@ -93,17 +92,16 @@ class _MemberListWidgetState extends State<MemberListWidget> {
 
   @override
   Widget build(BuildContext context) {
+    CustomAppBar appBar = CustomAppBar(
+      disableEventChange: true,
+    );
     return Scaffold(
-      appBar: CustomAppBar(disableEventChange: true, actions: <Widget>[
-        IconButton(
-          icon: const Icon(Icons.search),
-          tooltip: 'Search member',
-          onPressed: () {
-            showSearch(context: context, delegate: MemberSearchDelegate());
-          },
-        ),
+      body: Stack(children: [
+        Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: memberGrid()),
+        appBar,
       ]),
-      body: memberGrid(),
       floatingActionButton: _isEditable(),
     );
   }

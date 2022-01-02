@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/EditBox.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
@@ -20,19 +21,18 @@ import 'package:provider/provider.dart';
 
 class MemberScreen extends StatefulWidget {
   Member member;
-  
 
   MemberScreen({Key? key, required this.member}) : super(key: key);
 
   @override
-  _MemberScreen createState() => _MemberScreen();
+  _MemberScreenState createState() => _MemberScreenState();
 }
 
-class _MemberScreen extends State<MemberScreen>
+class _MemberScreenState extends State<MemberScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
-  _MemberScreen({Key? key});
+  _MemberScreenState({Key? key});
 
   @override
   void initState() {
@@ -79,10 +79,10 @@ class _MemberScreen extends State<MemberScreen>
               length: 2,
               child: Column(children: <Widget>[
                 MemberBanner(
-                  member: widget.member,
-                  onEdit: (context, _member) {
-                    memberChangedCallback(context, member: _member);
-                  }),
+                    member: widget.member,
+                    onEdit: (context, _member) {
+                      memberChangedCallback(context, member: _member);
+                    }),
                 TabBar(
                   isScrollable: small,
                   controller: _tabController,
@@ -98,7 +98,8 @@ class _MemberScreen extends State<MemberScreen>
                   controller: _tabController,
                   children: [
                     DisplayContacts(
-                      member: widget.member,),
+                      member: widget.member,
+                    ),
                     DisplayParticipations(member: widget.member),
                   ],
                 ))
@@ -113,7 +114,8 @@ class MemberBanner extends StatefulWidget {
   final Member member;
   final void Function(BuildContext, Member?) onEdit;
 
-  const MemberBanner({Key? key, required this.member, required this.onEdit}) : super(key: key);
+  const MemberBanner({Key? key, required this.member, required this.onEdit})
+      : super(key: key);
 
   @override
   _MemberBannerState createState() => _MemberBannerState();
@@ -190,7 +192,6 @@ class _MemberBannerState extends State<MemberBanner> {
                   child: GestureDetector(
                     onTap: () {
                       _editMemberModal(context);
-                    
                     },
                     child: Container(
                       height: 40,
@@ -218,6 +219,7 @@ class _MemberBannerState extends State<MemberBanner> {
 
   @override
   Widget build(BuildContext context) {
+    int event = Provider.of<EventNotifier>(context).event.id;
     return LayoutBuilder(builder: (context, constraints) {
       //FIXME: colcocar o código dinàmico em relação ao tamanho do dispositivo
       //bool small = constraints.maxWidth < App.SIZE;
@@ -242,10 +244,13 @@ class _MemberBannerState extends State<MemberBanner> {
                   border: Border.all(color: Colors.white30),
                 ),
                 padding: const EdgeInsets.all(5),
-                child: ClipOval(
-                  child: (widget.member.image == '')
-                      ? Image.asset("assets/noImage.png")
-                      : Image.network(widget.member.image!),
+                child: Hero(
+                  tag: widget.member.id + event.toString(),
+                  child: ClipOval(
+                    child: (widget.member.image == '')
+                        ? Image.asset("assets/noImage.png")
+                        : Image.network(widget.member.image!),
+                  ),
                 ),
               ),
               editMember(),
@@ -353,8 +358,12 @@ class _DisplayContactsState extends State<DisplayContacts> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            EditContact(contact: cont, member: widget.member)),
+                        builder: (context) => EditContact(
+                            contact: cont,
+                            member: widget.member,
+                            //TODO: what to do
+                            onEdit: (context, _member) {
+                            })),
                   );
                 },
                 label: const Text('Edit Contacts'),
@@ -403,3 +412,4 @@ class _DisplayContactsState extends State<DisplayContacts> {
         }
       });
 }
+

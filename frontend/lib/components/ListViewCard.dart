@@ -60,7 +60,6 @@ class ListViewCard extends StatelessWidget {
     _status = ParticipationStatus.NO_STATUS;
   }
 
-
   void _initCompany(int event) {
     _tag = company!.id + event.toString();
     _screen = CompanyScreen(company: company!);
@@ -94,7 +93,6 @@ class ListViewCard extends StatelessWidget {
     _numParticipations = speaker!.numParticipations;
     _lastParticipation = speaker!.lastParticipation;
   }
-
 
   Widget getParticipationInfo(double fontsize) {
     if (participationsInfo != null) {
@@ -200,9 +198,7 @@ class ListViewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (company != null ||
-        speaker != null ||
-        member != null) {
+    if (company != null || speaker != null || member != null) {
       Widget body = Stack(
         children: [
           InkWell(
@@ -267,18 +263,19 @@ class ListViewCard extends StatelessWidget {
         ],
       );
 
-      if (speaker != null) {
-        return Consumer<SpeakerTableNotifier>(
-          builder: (a, b, c) => body,
-        );
-      }
-      else if (member != null){
+      if (member != null) {
+        print("member chegou aqui");
         return Consumer<MemberTableNotifier>(
-          builder: (a, b, c) => body,
+          builder: (context, notif, child) => body,
         );
-      
+      } else if (speaker != null) {
+        print("speaker chegou aqui");
+        return Consumer<SpeakerTableNotifier>(
+          builder: (context, notif, child) => body,
+        );
       } else
-        return body;
+        print("alguém chegou aqui");
+      return body;
     } else {
       return UnknownScreen();
     }
