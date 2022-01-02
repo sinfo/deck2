@@ -47,10 +47,7 @@ class _EditTeamFormState extends State<EditTeamForm> {
         );
 
         Navigator.pop(context);
-        print("a imprimir t");
-        print(t);
         widget.onEdit(context, t);
-        print("chamou onEdit no form");
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -119,11 +116,9 @@ class _EditTeamFormState extends State<EditTeamForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: CustomAppBar(
-          disableEventChange: true,
-        ),
-        body: LayoutBuilder(builder: (contex, constraints) {
+    return SingleChildScrollView(
+        child: LayoutBuilder(
+          builder: (contex, constraints) {
           return Column(children: [
             _buildForm(),
           ]);

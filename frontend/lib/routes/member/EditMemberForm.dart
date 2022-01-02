@@ -7,7 +7,9 @@ import 'package:frontend/services/memberService.dart';
 
 class EditMemberForm extends StatefulWidget {
   final Member member;
-  EditMemberForm({Key? key, required this.member}) : super(key: key);
+  final void Function(BuildContext, Member?) onEdit;
+  EditMemberForm({Key? key, required this.member, required this.onEdit})
+      : super(key: key);
 
   @override
   _EditMemberFormState createState() => _EditMemberFormState();
@@ -40,6 +42,8 @@ class _EditMemberFormState extends State<EditMemberForm> {
       Member? m =
           await _memberService.updateMember(widget.member.id, istId, name);
 
+      print("deu update bem");
+
       if (m != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -49,7 +53,9 @@ class _EditMemberFormState extends State<EditMemberForm> {
             duration: Duration(seconds: 2),
           ),
         );
+
         Navigator.pop(context);
+        widget.onEdit(context, m);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -85,13 +91,13 @@ class _EditMemberFormState extends State<EditMemberForm> {
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
               controller: _istIdController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter ist id';
-                } else {
-                  return null;
-                }
-              },
+              // validator: (value) {
+              //   if (value!.length != 6) {
+              //     return 'Please enter ist id with 6 numbers';
+              //   } else {
+              //     return null;
+              //   }
+              //},
               decoration: const InputDecoration(
                 icon: const Icon(Icons.school),
                 labelText: "IstId *",
@@ -110,8 +116,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
                 onPressed: () => Navigator.pop(context),
                 child: Text("CANCEL",
                     style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).accentColor)),
+                        fontSize: 14, color: Theme.of(context).accentColor)),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -133,17 +138,14 @@ class _EditMemberFormState extends State<EditMemberForm> {
       ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    // bool warning = _image != null && _size != null && _size! > 102400;
-
-    return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true,),
-        body: LayoutBuilder(builder: (contex, constraints) {
-          return Column(children: [
-            _buildForm(),
-          ]);
-        }));
+    return SingleChildScrollView(
+        child: LayoutBuilder(builder: (contex, constraints) {
+      return Column(children: [
+        _buildForm(),
+      ]);
+    }));
   }
 }

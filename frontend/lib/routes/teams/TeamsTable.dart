@@ -105,9 +105,9 @@ class _TeamTableState extends State<TeamTable>
   }
 }
 
-class TeamMemberRow extends StatelessWidget {
+class TeamMemberRow extends StatefulWidget {
   final Team team;
-  MemberService _memberService = MemberService();
+
   TeamMemberRow({Key? key, required this.team}) : super(key: key);
 
   static Widget fake() {
@@ -161,9 +161,16 @@ class TeamMemberRow extends StatelessWidget {
   }
 
   @override
+  State<TeamMemberRow> createState() => _TeamMemberRowState();
+}
+
+class _TeamMemberRowState extends State<TeamMemberRow> {
+  MemberService _memberService = MemberService();
+
+  @override
   Widget build(BuildContext context) {
     //TODO: faço assim???
-    List<Future<Member?>> _futureMembers = team.members!
+    List<Future<Member?>> _futureMembers = widget.team.members!
         .map((m) => _memberService.getMember(m.memberID!))
         .toList();
 
@@ -189,13 +196,13 @@ class TeamMemberRow extends StatelessWidget {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => TeamScreen(
-                                        team: team, members: membs)));
+                                        team: widget.team, members: membs)));
                           },
                           child: Column(
                             children: [
                               Container(
                                 alignment: Alignment.centerLeft,
-                                child: Text(this.team.name!,
+                                child: Text(widget.team.name!,
                                     style: TextStyle(fontSize: 12)),
                                 margin: EdgeInsets.fromLTRB(0, 8, 8, 0),
                               ),

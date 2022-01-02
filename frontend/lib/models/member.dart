@@ -7,7 +7,7 @@ class Member {
   final String name;
   final String? image;
   final String istId;
-  final String sinfoId;
+  final String? sinfoId;
   final String? contact;
 
   Member({
@@ -15,7 +15,7 @@ class Member {
     required this.name,
     this.image,
     required this.istId,
-    required this.sinfoId,
+    this.sinfoId,
     this.contact,
   });
 

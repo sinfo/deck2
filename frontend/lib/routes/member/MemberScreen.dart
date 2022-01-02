@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 
 class MemberScreen extends StatefulWidget {
   Member member;
+  
 
   MemberScreen({Key? key, required this.member}) : super(key: key);
 
@@ -51,7 +52,7 @@ class _MemberScreen extends State<MemberScreen>
     setState(() {});
   }
 
-  Future<void> speakerChangedCallback(BuildContext context,
+  Future<void> memberChangedCallback(BuildContext context,
       {Future<Member?>? fm, Member? member}) async {
     Member? m;
     if (fm != null) {
@@ -77,7 +78,11 @@ class _MemberScreen extends State<MemberScreen>
           body: DefaultTabController(
               length: 2,
               child: Column(children: <Widget>[
-                MemberBanner(member: widget.member),
+                MemberBanner(
+                  member: widget.member,
+                  onEdit: (context, _member) {
+                    memberChangedCallback(context, member: _member);
+                  }),
                 TabBar(
                   isScrollable: small,
                   controller: _tabController,
@@ -106,14 +111,26 @@ class _MemberScreen extends State<MemberScreen>
 
 class MemberBanner extends StatefulWidget {
   final Member member;
+  final void Function(BuildContext, Member?) onEdit;
 
-  const MemberBanner({Key? key, required this.member}) : super(key: key);
+  const MemberBanner({Key? key, required this.member, required this.onEdit}) : super(key: key);
 
   @override
   _MemberBannerState createState() => _MemberBannerState();
 }
 
 class _MemberBannerState extends State<MemberBanner> {
+  void _editMemberModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: EditMemberForm(member: widget.member, onEdit: widget.onEdit),
+        );
+      },
+    );
+  }
+
   deleteMember() {
     MemberService _memberService = MemberService();
     TeamService _teamService = TeamService();
@@ -172,12 +189,8 @@ class _MemberBannerState extends State<MemberBanner> {
                   right: 15,
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                EditMemberForm(member: widget.member)),
-                      );
+                      _editMemberModal(context);
+                    
                     },
                     child: Container(
                       height: 40,
