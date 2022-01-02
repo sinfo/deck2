@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
@@ -58,7 +59,7 @@ class _TeamScreen extends State<TeamScreen>
     Team? t;
     if (ft != null) {
       t = await ft;
-    } else if (t != null) {
+    } else if (team != null) {
       t = team;
     }
     if (t != null) {
@@ -71,41 +72,46 @@ class _TeamScreen extends State<TeamScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        disableEventChange: false,
-      ),
-      body: Container(
-        child: DefaultTabController(
-            length: 2,
-            child: Column(children: <Widget>[
-              TeamBanner(
-                  team: widget.team,
-                  onEdit: (context, _team) {
-                    teamChangedCallback(context, team: _team);
-                  }),
-              TabBar(
-                controller: _tabController,
-                labelColor: Colors.black,
-                tabs: [
-                  Tab(
-                    text: 'Members',
+    return LayoutBuilder(builder: (context, constraints) {
+      bool small = constraints.maxWidth < App.SIZE;
+      return Consumer<TeamTableNotifier>(builder: (context, notif, child) {
+        return Scaffold(
+          appBar: CustomAppBar(
+            disableEventChange: true,
+          ),
+          body: Container(
+            child: DefaultTabController(
+                length: 2,
+                child: Column(children: <Widget>[
+                  TeamBanner(
+                      team: widget.team,
+                      onEdit: (context, _team) {
+                        teamChangedCallback(context, team: _team);
+                      }),
+                  TabBar(
+                    controller: _tabController,
+                    labelColor: Colors.black,
+                    tabs: [
+                      Tab(
+                        text: 'Members',
+                      ),
+                      Tab(text: 'Meetings'),
+                    ],
                   ),
-                  Tab(text: 'Meetings'),
-                ],
-              ),
-              Expanded(
-                  child: TabBarView(
-                controller: _tabController,
-                children: [
-                  DisplayMembers(
-                      teamId: widget.team.id!, members: widget.members),
-                  DisplayMeeting(meetingsIds: widget.team.meetings),
-                ],
-              ))
-            ])),
-      ),
-    );
+                  Expanded(
+                      child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      DisplayMembers(
+                          teamId: widget.team.id!, members: widget.members),
+                      DisplayMeeting(meetingsIds: widget.team.meetings),
+                    ],
+                  ))
+                ])),
+          ),
+        );
+      });
+    });
   }
 }
 
@@ -264,14 +270,26 @@ class ShowMember extends StatelessWidget {
 
 class TeamBanner extends StatefulWidget {
   final Team team;
-  final void Function(BuildContext, Speaker?) onEdit;
-  const TeamBanner({Key? key, required this.team, required this.onEdit}) : super(key: key);
+  final void Function(BuildContext, Team?) onEdit;
+  const TeamBanner({Key? key, required this.team, required this.onEdit})
+      : super(key: key);
 
   @override
   State<TeamBanner> createState() => _TeamBannerState();
 }
 
 class _TeamBannerState extends State<TeamBanner> {
+  void _editTeamModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: EditTeamForm(team: widget.team, onEdit: widget.onEdit),
+        );
+      },
+    );
+  }
+
   deleteTeam() {
     TeamService _teamService = TeamService();
 
@@ -325,12 +343,7 @@ class _TeamBannerState extends State<TeamBanner> {
                   right: 15,
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                EditTeamForm(team: widget.team)),
-                      );
+                      _editTeamModal(context);
                     },
                     child: Container(
                       height: 40,

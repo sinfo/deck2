@@ -7,7 +7,9 @@ import 'package:frontend/services/teamService.dart';
 
 class EditTeamForm extends StatefulWidget {
   Team team;
-  EditTeamForm({Key? key, required this.team}) : super(key: key);
+  final void Function(BuildContext, Team?) onEdit;
+  EditTeamForm({Key? key, required this.team, required this.onEdit})
+      : super(key: key);
 
   @override
   _EditTeamFormState createState() => _EditTeamFormState();
@@ -45,6 +47,10 @@ class _EditTeamFormState extends State<EditTeamForm> {
         );
 
         Navigator.pop(context);
+        print("a imprimir t");
+        print(t);
+        widget.onEdit(context, t);
+        print("chamou onEdit no form");
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
