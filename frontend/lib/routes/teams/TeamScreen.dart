@@ -9,6 +9,7 @@ import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/teams/EditMembers.dart';
+import 'package:frontend/routes/teams/TeamNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/teamService.dart';
@@ -17,7 +18,7 @@ import 'package:provider/provider.dart';
 import 'EditTeamForm.dart';
 
 class TeamScreen extends StatefulWidget {
-  final Team team;
+  Team team;
   final List<Member?> members;
 
   TeamScreen({Key? key, required this.team, required this.members})
@@ -52,6 +53,22 @@ class _TeamScreen extends State<TeamScreen>
     setState(() {});
   }
 
+  Future<void> teamChangedCallback(BuildContext context,
+      {Future<Team?>? ft, Team? team}) async {
+    Team? t;
+    if (ft != null) {
+      t = await ft;
+    } else if (t != null) {
+      t = team;
+    }
+    if (t != null) {
+      Provider.of<TeamTableNotifier>(context, listen: false).edit(t);
+      setState(() {
+        widget.team = t!;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,7 +79,11 @@ class _TeamScreen extends State<TeamScreen>
         child: DefaultTabController(
             length: 2,
             child: Column(children: <Widget>[
-              TeamBanner(team: widget.team),
+              TeamBanner(
+                  team: widget.team,
+                  onEdit: (context, _team) {
+                    teamChangedCallback(context, team: _team);
+                  }),
               TabBar(
                 controller: _tabController,
                 labelColor: Colors.black,
@@ -243,7 +264,8 @@ class ShowMember extends StatelessWidget {
 
 class TeamBanner extends StatefulWidget {
   final Team team;
-  const TeamBanner({Key? key, required this.team}) : super(key: key);
+  final void Function(BuildContext, Speaker?) onEdit;
+  const TeamBanner({Key? key, required this.team, required this.onEdit}) : super(key: key);
 
   @override
   State<TeamBanner> createState() => _TeamBannerState();

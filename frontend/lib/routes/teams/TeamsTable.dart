@@ -8,6 +8,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
+import 'package:frontend/routes/teams/TeamNotifier.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
@@ -62,11 +63,14 @@ class _TeamTableState extends State<TeamTable>
             ));
           }
 
+          TeamTableNotifier notifier =
+                Provider.of<TeamTableNotifier>(context);
+
           List<List<Object>> data = snapshot.data as List<List<Object>>;
 
-          List<Team> tms = data[0] as List<Team>;
+          notifier.teams = data[0] as List<Team>;
 
-          tms.sort((a, b) => a.name!.compareTo(b.name!));
+          notifier.teams.sort((a, b) => a.name!.compareTo(b.name!));
 
           return RefreshIndicator(
             onRefresh: () {
@@ -75,8 +79,8 @@ class _TeamTableState extends State<TeamTable>
               });
             },
             child: ListView.builder(
-              itemCount: tms.length,
-              itemBuilder: (context, index) => TeamMemberRow(team: tms[index]),
+              itemCount: notifier.teams.length,
+              itemBuilder: (context, index) => TeamMemberRow(team: notifier.teams[index]),
               addAutomaticKeepAlives: true,
               physics: const AlwaysScrollableScrollPhysics(),
             ),
@@ -158,6 +162,7 @@ class TeamMemberRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //TODO: faço assim???
     List<Future<Member?>> _futureMembers = team.members!
         .map((m) => _memberService.getMember(m.memberID!))
         .toList();

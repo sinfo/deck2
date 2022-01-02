@@ -44,7 +44,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.3
   url_launcher: ^6.0.9
-  flutter_speed_dial: ^4.3.0
+  flutter_speed_dial: ^5.0.0+1
 
 dev_dependencies:
   flutter_test:

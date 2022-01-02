@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
+import 'package:frontend/routes/member/MemberNotifier.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -297,6 +298,12 @@ class ListViewCard extends StatelessWidget {
         return Consumer<SpeakerTableNotifier>(
           builder: (a, b, c) => body,
         );
+      }
+      else if (member != null){
+        return Consumer<MemberTableNotifier>(
+          builder: (a, b, c) => body,
+        );
+      
       } else
         return body;
     } else {
