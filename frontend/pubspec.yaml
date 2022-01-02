@@ -69,6 +69,7 @@ flutter:
     - assets/DevTeam.jpg
     - assets/PowerOnIcon.png
     - assets/logo.png
+    - assets/logo_deck.png
     - .env
   #   - images/a_dot_ham.jpeg
 
