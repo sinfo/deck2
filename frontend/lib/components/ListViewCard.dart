@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
-import 'package:frontend/routes/member/MemberNotifier.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -14,6 +13,7 @@ import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/speaker/SpeakerScreen.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:collection/collection.dart';
+import 'package:frontend/routes/teams/TeamNotifier.dart';
 import 'package:provider/provider.dart';
 
 class ListViewCard extends StatelessWidget {
@@ -263,19 +263,12 @@ class ListViewCard extends StatelessWidget {
         ],
       );
 
-      if (member != null) {
-        print("member chegou aqui");
-        return Consumer<MemberTableNotifier>(
-          builder: (context, notif, child) => body,
-        );
-      } else if (speaker != null) {
-        print("speaker chegou aqui");
+      if (speaker != null) {
         return Consumer<SpeakerTableNotifier>(
           builder: (context, notif, child) => body,
         );
       } else
-        print("alguém chegou aqui");
-      return body;
+        return body;
     } else {
       return UnknownScreen();
     }

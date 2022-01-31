@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:frontend/models/member.dart';
+import 'package:frontend/services/memberService.dart';
+
 class TeamMember {
   final String? memberID;
   final String? role;
@@ -58,10 +61,13 @@ class TeamPublic {
 class Team {
   final String? id;
   final String? name;
-  final List<TeamMember>? members;
+  final List<TeamMember>? membersID;
+  List<Member?>? _members;
   final List<String>? meetings;
+  final MemberService _memberService = MemberService();
 
-  Team({this.id, this.name, this.members, this.meetings});
+
+  Team({this.id, this.name, this.membersID, this.meetings});
 
   factory Team.fromJson(Map<String, dynamic> json) {
     var members = json['members'] as List;
@@ -70,8 +76,8 @@ class Team {
     return Team(
       id: json['id'],
       name: json['name'],
-      members: members.map((e) => TeamMember.fromJson(e)).toList(),
-      meetings: meetings.length == 0? [] :  meetings as List<String>,
+      membersID: members.map((e) => TeamMember.fromJson(e)).toList(),
+      meetings: meetings.length == 0 ? [] : meetings as List<String>,
     );
   }
 
@@ -85,5 +91,16 @@ class Team {
   @override
   String toString() {
     return json.encode(this.toJson());
+  }
+
+  Future<List<Member?>> get members async {
+    if (_members != null) {
+      return _members!;
+    }
+    _members = await Future.wait(
+        membersID!.map((m) async => await _memberService.getMember(m.memberID!)).toList());
+
+    return _members!;
+
   }
 }

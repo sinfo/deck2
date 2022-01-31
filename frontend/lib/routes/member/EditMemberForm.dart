@@ -54,8 +54,9 @@ class _EditMemberFormState extends State<EditMemberForm> {
           ),
         );
 
-        Navigator.pop(context);
         widget.onEdit(context, m);
+        Navigator.pop(context);
+        
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 

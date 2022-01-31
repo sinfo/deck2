@@ -12,7 +12,7 @@ import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/member/EditContact.dart';
 import 'package:frontend/routes/member/EditMemberForm.dart';
 import 'package:frontend/routes/member/InformationBox.dart';
-import 'package:frontend/routes/member/MemberNotifier.dart';
+import 'package:frontend/routes/teams/TeamNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/contactService.dart';
 import 'package:frontend/services/memberService.dart';
@@ -61,7 +61,7 @@ class _MemberScreenState extends State<MemberScreen>
       m = member;
     }
     if (m != null) {
-      Provider.of<MemberTableNotifier>(context, listen: false).edit(m);
+      Provider.of<TeamTableNotifier>(context, listen: false).editMember(m);
       setState(() {
         widget.member = m!;
       });
@@ -72,7 +72,7 @@ class _MemberScreenState extends State<MemberScreen>
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       bool small = constraints.maxWidth < App.SIZE;
-      return Consumer<MemberTableNotifier>(builder: (context, notif, child) {
+      return Consumer<TeamTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
           appBar: CustomAppBar(disableEventChange: true),
           body: DefaultTabController(

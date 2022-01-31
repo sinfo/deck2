@@ -175,16 +175,17 @@ class _TeamMemberRowState extends State<TeamMemberRow> {
 
   @override
   Widget build(BuildContext context) {
-    //TODO: faço assim???
-    List<Future<Member?>> _futureMembers = widget.team.members!
-        .map((m) => _memberService.getMember(m.memberID!))
-        .toList();
 
     return FutureBuilder(
-        future: Future.wait(_futureMembers),
+        future: widget.team.members,
         builder: (context, snapshot) {
-          if (snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              return Text('err');
+            }
+
             List<Member?> membs = snapshot.data as List<Member?>;
+            membs = membs.where((element) => element != null).toList();
             membs.sort((a, b) => a!.name.compareTo(b!.name));
 
         
