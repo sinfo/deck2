@@ -299,7 +299,7 @@ class SearchResultWidget extends StatelessWidget {
     } else if (this.speaker != null) {
       return this.speaker!.name;
     } else if (this.member != null) {
-      return this.member!.name!;
+      return this.member!.name;
     } else {
       //ERROR case
       return "";
