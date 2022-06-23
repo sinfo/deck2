@@ -498,7 +498,7 @@ class _MailsTextFieldsState extends State<MailsTextFields> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _mailController.text = _MyFormState.mailsList[widget.index] ?? '';
     });
     return Column(
@@ -566,7 +566,7 @@ class _PhonesTextFieldsState extends State<PhonesTextFields> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       _phoneController.text = _MyFormState.phonesList[widget.index] ?? '';
     });
     return Column(
