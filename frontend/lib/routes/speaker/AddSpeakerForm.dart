@@ -245,7 +245,9 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
   @override
   Widget build(BuildContext context) {
     bool warning = _image != null && _size != null && _size! > 102400;
-    CustomAppBar appBar = CustomAppBar(disableEventChange: false);
+    CustomAppBar appBar = CustomAppBar(
+      disableEventChange: true,
+    );
     return Scaffold(
       body: Stack(children: [
         Container(

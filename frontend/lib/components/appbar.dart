@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/event.dart';
@@ -76,18 +77,17 @@ class _CustomAppBarState extends State<CustomAppBar> {
             child: SizedBox(
               height: kToolbarHeight,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                padding: const EdgeInsets.fromLTRB(0, 4, 4, 4),
                 child: Image.asset(
-                  'assets/logo.png',
-                  color: Colors.grey[400],
-                  fit: BoxFit.cover,
+                  'assets/logo_deck.png',
+                  fit: BoxFit.fill,
                 ),
               ),
             ),
           ),
           if (!disableEventChange)
             Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 8.0, 24.0, 8.0),
+              padding: const EdgeInsets.fromLTRB(4.0, 8.0, 24.0, 8.0),
               child: FutureBuilder(
                 future: _eventIds,
                 builder: (context, snapshot) {
@@ -137,7 +137,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: Provider.of<ThemeNotifier>(context).isDark
+                        ? Colors.grey[800]
+                        : Colors.white,
                     hintText: 'Search Company, Speaker or Member',
                     prefixIcon: Icon(Icons.search),
                     suffixIcon: _searchController.text.length != 0
@@ -284,7 +286,7 @@ class SearchResultWidget extends StatelessWidget {
     } else if (this.speaker != null) {
       return this.speaker!.imgs!.internal!;
     } else if (this.member != null) {
-      return this.member!.image;
+      return this.member!.image!;
     } else {
       //ERROR case
       return "";
@@ -297,7 +299,7 @@ class SearchResultWidget extends StatelessWidget {
     } else if (this.speaker != null) {
       return this.speaker!.name;
     } else if (this.member != null) {
-      return this.member!.name!;
+      return this.member!.name;
     } else {
       //ERROR case
       return "";

@@ -44,8 +44,19 @@ class ListViewCard extends StatelessWidget {
         _initCompany(event);
       } else if (speaker != null) {
         _initSpeaker(event);
+      } else if (member != null) {
+        _initMember(event);
       }
     }
+  }
+
+  void _initMember(int event) {
+    _tag = member!.id + event.toString();
+    _imageUrl = member!.image!;
+    _title = member!.name;
+    _color = Colors.indigo;
+    _screen = MemberScreen(member: member!);
+    _status = ParticipationStatus.NO_STATUS;
   }
 
   void _initCompany(int event) {
@@ -186,49 +197,7 @@ class ListViewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (member != null) {
-      return InkWell(
-          child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(5),
-                        topRight: Radius.circular(5)),
-                    child: Image(
-                      width: 300,
-                      height: 300,
-                      fit: BoxFit.cover,
-                      image: (member!.image == '')
-                          ? AssetImage("assets/noImage.png") as ImageProvider
-                          : NetworkImage(member!.image),
-                      //image: NetworkImage(member.image),
-                    ),
-                  ),
-                  SizedBox(height: 12.5),
-                  Text(member!.name!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        //fontFamily: 'Inter',
-                        fontWeight: FontWeight.bold,
-                      )),
-                  Text(
-                    'Role',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              )),
-          onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return MemberScreen(member: this.member!);
-            }
-                ));
-          });
-    } else if (company != null || speaker != null) {
+    if (company != null || speaker != null || member != null) {
       Widget body = Stack(
         children: [
           InkWell(

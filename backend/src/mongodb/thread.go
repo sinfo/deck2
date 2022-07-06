@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"time"
 
 	"github.com/sinfo/deck2/src/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -58,6 +59,7 @@ func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error
 		"comments": []primitive.ObjectID{},
 		"status":   models.ThreadStatusPending,
 		"kind":     data.Kind,
+		"posted":   time.Now().UTC(),
 	}
 
 	if data.Meeting != nil {

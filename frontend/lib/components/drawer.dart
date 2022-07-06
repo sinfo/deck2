@@ -80,7 +80,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
   }
 
   Future signOut(BuildContext context) async {
-    await Provider.of<AuthService>(context).signOut();
+    await Provider.of<AuthService>(context, listen: false).signOut();
     Navigator.pushReplacementNamed(context, Routes.LoginRoute);
   }
 
@@ -97,7 +97,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                   if (snapshot.hasData) {
                     Member m = snapshot.data as Member;
                     return CircleAvatar(
-                      backgroundImage: NetworkImage(m.image),
+                      backgroundImage: NetworkImage(m.image!),
                     );
                   } else {
                     return Shimmer.fromColors(

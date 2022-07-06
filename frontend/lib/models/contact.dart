@@ -28,8 +28,8 @@ class Contact {
 }
 
 class ContactPhone {
-  final String? phone;
-  final bool? valid;
+  late final String? phone;
+  late final bool? valid;
 
   ContactPhone({
     this.phone,
@@ -84,9 +84,9 @@ class ContactSocials {
 }
 
 class ContactMail {
-  final String? mail;
-  final bool? valid;
-  final bool? personal;
+  late final String? mail;
+  late final bool? valid;
+  late final bool? personal;
 
   ContactMail({
     this.mail,

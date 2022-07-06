@@ -43,9 +43,9 @@ class ContactService extends Service {
 
   Future<Contact?> updateContact(Contact contact) async {
     var body = {
-      "mails": json.encode(contact.mails),
-      "phones": json.encode(contact.phones),
-      "socials": json.encode(contact.socials),
+      'mails': contact.mails,
+      'phones': contact.phones,
+      'socials': contact.socials,
     };
 
     Response<String> response =
