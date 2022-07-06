@@ -217,7 +217,7 @@ class _DisplayParticipationsState extends State<DisplayParticipations> {
                   body: ListView(
                     padding: EdgeInsets.symmetric(horizontal: 32),
                     physics: BouncingScrollPhysics(),
-                    children: memParticipations
+                    children: memParticipations.reversed
                         .map((e) => MemberPartCard(event: e.event!, role: e.role!, team: e.team!, small: widget.small))
                         .toList(),
                   ),
