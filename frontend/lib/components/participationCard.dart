@@ -1,19 +1,14 @@
 import 'dart:ui';
 
 import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/components/router.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/participation.dart';
-import 'package:frontend/models/speaker.dart';
-import 'package:frontend/routes/member/MemberScreen.dart';
-import 'package:frontend/routes/participation/participationScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:provider/provider.dart';

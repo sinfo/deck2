@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/components/EditableCard.dart';
 import 'package:frontend/components/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
@@ -7,7 +6,6 @@ import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/threadCard.dart';
-import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';

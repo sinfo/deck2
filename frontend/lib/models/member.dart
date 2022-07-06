@@ -73,3 +73,29 @@ class MemberPublic {
         'socials': socials?.toJson(),
       };
 }
+
+class MemberParticipation {
+  final int? event;
+  final String? role;
+  final String? team;
+
+  MemberParticipation({
+    this.event,
+    this.role,
+    this.team,
+  });
+
+  factory MemberParticipation.fromJson(Map<String, dynamic> json) {
+    return MemberParticipation(
+      event: json['event'],
+      role: json['role'],
+      team: json['team'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'event': event,
+        'role': role,
+        'team': team,
+      };
+}

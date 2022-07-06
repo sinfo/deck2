@@ -10,8 +10,6 @@ class TeamMember {
   });
 
   factory TeamMember.fromJson(Map<String, dynamic> json) {
-    print(json['member']);
-    print(json['role']);
     return TeamMember(
       memberID: json['member'],
       role: json['role'],

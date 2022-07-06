@@ -51,11 +51,11 @@ type AuthorizationCredentials struct {
 
 type MemberEventTeam struct {
 	//Number of event where Member was in <Team>
-	Event int
+	Event int `json:"event"`
 
 	//Team of Member on SINFO <Event>
-	Team string
+	Team string `json:"team"`
 
 	// Role on SINFO <Event>
-	Role TeamRole
+	Role TeamRole `json:"role"`
 }

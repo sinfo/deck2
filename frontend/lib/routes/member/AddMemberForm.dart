@@ -37,10 +37,8 @@ class _AddMemberFormState extends State<AddMemberForm> {
         const SnackBar(content: Text('Uploading')),
       );
 
-      print(1);
       Member? m = await _memberService.createMember(
           istid: istid, name: name, sinfoid: sinfoid);
-      print(2);
       // if (m != null && _image != null) {
       //   m = kIsWeb
       //       ? await _memberService.updateInternalImageWeb(

@@ -107,6 +107,26 @@ class MemberService extends Service {
     }
   }
 
+  Future<List<MemberParticipation>> getMemberParticipations(String id) async {
+    Response<String> response =
+        await dio.get("/members/" + id + "/participations");
+    try {
+      if (response.statusCode == 200 && response.data!.isNotEmpty) {
+        final jsonRes = json.decode(response.data!) as List;
+        List<MemberParticipation> data = jsonRes.map((e) => MemberParticipation.fromJson(e)).toList();
+        return data;
+      } else {
+        return [];
+      }
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
   Future<List<Member>> getPublicMembers({String? name, int? event}) async {
     var queryParameters = {
       'name': name,
