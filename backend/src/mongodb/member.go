@@ -333,6 +333,8 @@ func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models
 		return nil, err
 	}
 
+	//Member can only belong to 1 team in each event
+	teamFound := false
 	for _, event := range events {
 		for _, teamID := range event.Teams {
 			team, err := Teams.GetTeam(teamID)
@@ -343,7 +345,13 @@ func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models
 				if teamMember.Member == id {
 					memEvtTeam := models.MemberEventTeam{event.ID, team.Name, teamMember.Role}
 					memberEventTeams = append(memberEventTeams, &memEvtTeam)
+					teamFound = true
+					break
 				}
+			}
+			if teamFound {
+				teamFound = false
+				break
 			}
 		}
 	}
