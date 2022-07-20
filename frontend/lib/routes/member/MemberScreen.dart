@@ -1,17 +1,13 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/EditBox.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/memberPartCard.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/member/DisplayContact2.dart';
 import 'package:frontend/routes/member/EditMemberForm.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
-import 'package:frontend/services/teamService.dart';
 import 'package:provider/provider.dart';
 
 class MemberScreen extends StatefulWidget {
@@ -71,7 +67,7 @@ class _MemberScreen extends State<MemberScreen>
                 controller: _tabController,
                 children: [
                   DisplayContacts(member: widget.member),
-                  DisplayParticipations(member: widget.member),
+                  DisplayParticipations(member: widget.member, small: small),
                 ],
               ))
             ])),
@@ -139,7 +135,7 @@ class _MemberBannerState extends State<MemberBanner> {
     int event = Provider.of<EventNotifier>(context).event.id;
     return LayoutBuilder(builder: (context, constraints) {
       //FIXME: colcocar o código dinàmico em relação ao tamanho do dispositivo
-      //bool small = constraints.maxWidth < App.SIZE;
+      bool small = constraints.maxWidth < App.SIZE;
       return Container(
         width: constraints.maxWidth,
         decoration: BoxDecoration(
@@ -189,7 +185,8 @@ class _MemberBannerState extends State<MemberBanner> {
 
 class DisplayParticipations extends StatefulWidget {
   final Member member;
-  const DisplayParticipations({Key? key, required this.member})
+  final bool small;
+  const DisplayParticipations({Key? key, required this.member, required this.small})
       : super(key: key);
 
   @override
@@ -197,36 +194,31 @@ class DisplayParticipations extends StatefulWidget {
 }
 
 class _DisplayParticipationsState extends State<DisplayParticipations> {
-  TeamService teamService = new TeamService();
-  late Future<List<Team>> teams;
-  List<String> participations = new List<String>.empty(growable: true);
+  MemberService memberService = new MemberService();
+  late Future<List<MemberParticipation>> memberParticipations;
+  List<MemberParticipation> participations = [];
 
   @override
   void initState() {
     super.initState();
-    this.teams = teamService.getTeams(member: widget.member.id);
+    this.memberParticipations = memberService.getMemberParticipations(widget.member.id);
   }
 
   @override
   Widget build(BuildContext conext) => Scaffold(
         body: FutureBuilder(
-            future: teams,
+            future: memberParticipations,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                List<Team> teams = snapshot.data as List<Team>;
+                List<MemberParticipation> memParticipations = snapshot.data as List<MemberParticipation>;
 
                 return Scaffold(
                   backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
                   body: ListView(
                     padding: EdgeInsets.symmetric(horizontal: 32),
                     physics: BouncingScrollPhysics(),
-                    //TODO: preciso de descobrir o evento em que a team está
-                    children: teams.reversed
-                        .map((e) => EditBox(
-                            //FIXME: buscar a equipa em que o membro esteve numa dada edição
-                            title: 'SINFO number',
-                            body: e.name!,
-                            edit: false))
+                    children: memParticipations.reversed
+                        .map((e) => MemberPartCard(event: e.event!, role: e.role!, team: e.team!, small: widget.small))
                         .toList(),
                   ),
                 );

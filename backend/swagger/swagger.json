@@ -285,6 +285,9 @@
     "/members/{id}/role": {
       "$ref": "./members-id-role.json"
     },
+    "/members/{id}/participations": {
+      "$ref": "./members-id-participations.json"
+    },
     "/packages": {
       "$ref": "./packages.json"
     },

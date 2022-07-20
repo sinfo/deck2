@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/models/member.dart';
@@ -8,7 +7,6 @@ import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/threadService.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:timeago/timeago.dart' as timeago;
 import 'package:intl/intl.dart';
 
 final Map<String, Color> THREADCOLOR = {

@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';

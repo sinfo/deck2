@@ -215,7 +215,6 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/meetings/{id}", authCoordinator(removeMeetingFromEvent)).Methods("DELETE")
 	eventRouter.HandleFunc("/sessions", authCoordinator(addSessionToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/teams/{id}", authAdmin(removeTeamFromEvent)).Methods("DELETE")
-	
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
@@ -244,6 +243,8 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("", authCoordinator(createMember)).Methods("POST")
 	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
 	memberRouter.HandleFunc("/{id}/role", authMember(getMemberRole)).Methods("GET")
+	//members_id_participations.json; swagger/swagger.json
+	memberRouter.HandleFunc("/{id}/participations", authMember(getMembersParticipations)).Methods("GET")
 	memberRouter.HandleFunc("/{id}", authAdmin(updateMember)).Methods("PUT")
 	memberRouter.HandleFunc("/{id}", authAdmin(deleteMember)).Methods("DELETE")
 
