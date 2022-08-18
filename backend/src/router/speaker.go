@@ -40,7 +40,7 @@ func deleteSpeaker(w http.ResponseWriter, r *http.Request) {
 
 	deletedSpeaker, err := mongodb.Speakers.DeleteSpeaker(speakerID)
 	if err != nil {
-		http.Error(w, "Error deleting speaker: " +err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error deleting speaker: " +err.Error(), http.StatusNotFound)
 		return
 	}
 
