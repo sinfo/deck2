@@ -177,6 +177,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("", authMember(getSpeakers)).Methods("GET")
 	speakerRouter.HandleFunc("", authMember(createSpeaker)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}", authMember(getSpeaker)).Methods("GET")
+	speakerRouter.HandleFunc("/{id}", authMember(deleteSpeaker)).Methods("DELETE")
 	speakerRouter.HandleFunc("/{id}", authMember(updateSpeaker)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/subscribe", authMember(subscribeToSpeaker)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/unsubscribe", authMember(unsubscribeToSpeaker)).Methods("PUT")
