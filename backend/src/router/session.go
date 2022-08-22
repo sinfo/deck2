@@ -238,5 +238,5 @@ func deleteSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEnconder(w).Encode(deletedSession)
+	json.NewEncoder(w).Encode(deletedSession)
 }
