@@ -36,7 +36,7 @@ func getSpeaker(w http.ResponseWriter, r *http.Request) {
 func deleteSpeaker(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
-	speakerID, _ := primitive(ObjectIDFromHex(params["id"]))
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	deletedSpeaker, err := mongodb.Speakers.DeleteSpeaker(speakerID)
 	if err != nil {
