@@ -296,6 +296,7 @@ func InitializeRouter() {
 	sessionsRouter.HandleFunc("", authMember(getSessions)).Methods("GET")
 	sessionsRouter.HandleFunc("/{id}", authMember(getSession)).Methods("GET")
 	sessionsRouter.HandleFunc("/{id}", authCoordinator(updateSession)).Methods("PUT")
+	sessionsRouter.HandleFunc("/{id}", authAdmin(deleteSession)).Methods("DELETE")
 
 	// billings handlers
 	billingsRouter := r.PathPrefix("/billings").Subrouter()
