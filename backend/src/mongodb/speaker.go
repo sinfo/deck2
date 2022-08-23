@@ -376,6 +376,20 @@ func (s *SpeakersType) GetSpeaker(speakerID primitive.ObjectID) (*models.Speaker
 	return &speaker, nil
 }
 
+// DeleteSpeaker deletes a speaker (public) by its ID.
+func (s *SpeakersType) DeleteSpeaker(speakerID primitive.ObjectID) (*models.Speaker, error) {
+	ctx := context.Background()
+
+	var speaker models.Speaker
+
+	err := s.Collection.FindOneAndDelete(ctx, bson.M{"_id": speakerID}).Decode(&speaker)
+	if err != nil {
+		return nil, err
+	}
+
+	return &speaker, nil
+}
+
 // GetSpeakerPublic gets a speaker (public) by its ID.
 func (s *SpeakersType) GetSpeakerPublic(speakerID primitive.ObjectID) (*models.SpeakerPublic, error) {
 	ctx := context.Background()

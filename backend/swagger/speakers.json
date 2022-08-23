@@ -112,5 +112,48 @@
                 "description": "Unauthorized"
             }
         }
+    },
+    "delete": {
+        "tags": [
+            "speakers"
+        ],
+        "summary": "Delete a specific speaker",
+        "operationId": "deleteSpeaker",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "Id of the speaker",
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "The deleted speaker",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/speaker.json"
+                    }
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Speaker not found"
+            }
+        }
     }
 }
