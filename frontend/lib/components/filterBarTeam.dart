@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
-class FilterBar extends StatefulWidget {
+class FilterBarTeam extends StatefulWidget {
   final Function onSelected;
 
-  FilterBar({Key? key, required this.onSelected}) : super(key: key);
+  FilterBarTeam({Key? key, required this.onSelected}) : super(key: key);
 
   @override
-  FilterBarState createState() => FilterBarState(onSelected: onSelected);
+  FilterBarTeamState createState() => FilterBarTeamState(onSelected: onSelected);
 }
 
-class FilterBarState extends State<FilterBar> {
+class FilterBarTeamState extends State<FilterBarTeam> {
   final Function onSelected;
 
-  FilterBarState({Key? key, required this.onSelected});
+  FilterBarTeamState({Key? key, required this.onSelected});
 
   int _currentIndex = 0;
   List<String> _filters = [
@@ -20,9 +20,9 @@ class FilterBarState extends State<FilterBar> {
     "Coordination",
     "DevTeam",
     "Logistics",
-    "Social Network",
     "Multimedia",
     "Partnerships",
+    "Social Network",
   ];
 
   @override
