@@ -73,10 +73,10 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
           if (snapshot.hasData) {
             List<Company> comp = companiesLoaded + snapshot.data!;
             return LayoutBuilder(builder: (context, constraints) {
-              double cardWidth = 250;
+              double cardWidth = 200;
               bool isSmall = false;
               if (constraints.maxWidth < App.SIZE) {
-                cardWidth = 200;
+                cardWidth = 125;
                 isSmall = true;
               }
               return GridView.builder(
