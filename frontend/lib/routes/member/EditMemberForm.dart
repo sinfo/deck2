@@ -128,13 +128,13 @@ class _EditMemberFormState extends State<EditMemberForm> {
                 child: Text("CANCEL",
                     style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(context).accentColor)),
+                        color: Theme.of(context).colorScheme.secondary)),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    primary: Theme.of(context).accentColor,
+                    primary: Theme.of(context).colorScheme.secondary,
                     padding: EdgeInsets.symmetric(horizontal: 50),
                     elevation: 2,
                     shape: RoundedRectangleBorder(

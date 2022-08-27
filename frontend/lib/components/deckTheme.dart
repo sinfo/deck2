@@ -18,11 +18,13 @@ class LightTheme extends BaseTheme {
       tabBarTheme: TabBarTheme(labelColor: Colors.black),
       primarySwatch: Colors.indigo,
       primaryColor: Colors.indigo,
-      brightness: Brightness.light,
       backgroundColor: const Color(0xFFE5E5E5),
-      accentColor: Color.fromRGBO(92, 127, 242, 1),
+      //secondary: Color.fromRGBO(92, 127, 242, 1)
+      colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo)
+                .copyWith(secondary: Colors.grey,
+                brightness: Brightness.light,),
       cardColor: Color.fromRGBO(241, 241, 241, 1),
-      accentIconTheme: IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: Colors.black),
       dividerColor: Colors.grey,
       disabledColor: Colors.grey,
     );
@@ -34,16 +36,17 @@ class LightTheme extends BaseTheme {
 class DarkTheme extends BaseTheme {
   ThemeData get materialTheme {
     return ThemeData(
-      tabBarTheme: TabBarTheme(labelColor: Colors.white),
+      tabBarTheme: TabBarTheme(labelColor: Colors.white,),
       disabledColor: Colors.grey,
       primarySwatch: Colors.grey,
       primaryColor: Colors.black,
-      brightness: Brightness.dark,
       backgroundColor: Colors.white,
-      accentColor: Colors.white,
+      colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.grey)
+                .copyWith(secondary: Colors.white,
+                brightness: Brightness.dark,),
       cardColor: Color.fromRGBO(0, 0, 0, 0.6),
-      accentIconTheme: IconThemeData(color: Colors.black),
-      dividerColor: Colors.black12,
+      iconTheme: IconThemeData(color: Colors.white),
+      dividerColor: Colors.grey,
     );
   }
 

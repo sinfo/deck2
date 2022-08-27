@@ -23,7 +23,7 @@ class MemberPartCard extends StatelessWidget {
       margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
       padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(5),
         boxShadow: [
           BoxShadow(
@@ -44,7 +44,6 @@ class MemberPartCard extends StatelessWidget {
                     textAlign: TextAlign.left,
                     style: TextStyle(
                         fontSize: 22,
-                        color: Colors.black,
                         fontWeight: FontWeight.bold)),
                 Container(
                   decoration: BoxDecoration(
@@ -60,10 +59,10 @@ class MemberPartCard extends StatelessWidget {
                 ),
               ],
             ),
-            Divider(),
+            Divider(color: Theme.of(context).dividerColor,),
             Text(roles[role]!,
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 18, color: Colors.black))
+                style: TextStyle(fontSize: 18))
           ],
         ),
       ]),
