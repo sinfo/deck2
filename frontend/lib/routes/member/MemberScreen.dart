@@ -6,6 +6,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/member/DisplayContact2.dart';
 import 'package:frontend/routes/member/EditMemberForm.dart';
+import 'package:frontend/routes/member/MemberNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +24,7 @@ class _MemberScreen extends State<MemberScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
-  _MemberScreen({Key? key});
+  //_MemberScreen({Key? key});
 
   @override
   void initState() {
@@ -43,6 +44,22 @@ class _MemberScreen extends State<MemberScreen>
     setState(() {});
   }
 
+  Future<void> memberChangedCallback(BuildContext context,
+      {Future<Member?>? fm, Member? member}) async {
+    Member? m;
+    if (fm != null) {
+      m = await fm;
+    } else if (member != null) {
+      m = member;
+    }
+    if (m != null) {
+      context.read<MemberTableNotifier>().edit(m);
+      setState(() {
+        widget.member = m!;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
@@ -52,7 +69,12 @@ class _MemberScreen extends State<MemberScreen>
         body: DefaultTabController(
             length: 2,
             child: Column(children: <Widget>[
-              MemberBanner(member: widget.member),
+              MemberBanner(
+                member: widget.member,
+                onEdit: (context, _member) {
+                    memberChangedCallback(context, member: _member);
+                  }
+              ),
               TabBar(
                 isScrollable: small,
                 controller: _tabController,
@@ -78,8 +100,24 @@ class _MemberScreen extends State<MemberScreen>
 
 class MemberBanner extends StatefulWidget {
   final Member member;
+  final void Function(BuildContext, Member?) onEdit;
 
-  const MemberBanner({Key? key, required this.member}) : super(key: key);
+  const MemberBanner(
+    {Key? key,
+    required this.member,
+    required this.onEdit})
+    : super(key: key);
+
+  void _editMemberModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: EditMemberForm(member: member, onEdit: this.onEdit),
+        );
+      },
+    );
+  }
 
   @override
   _MemberBannerState createState() => _MemberBannerState();
@@ -92,19 +130,21 @@ class _MemberBannerState extends State<MemberBanner> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             Role r = snapshot.data as Role;
+            Member me = Provider.of<Member?>(context)!;
 
-            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+            if (r == Role.ADMIN || r == Role.COORDINATOR || me.id == widget.member.id) {
               return Positioned(
                   bottom: 15,
                   right: 15,
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                EditMemberForm(member: widget.member)),
-                      );
+                      widget._editMemberModal(context);
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //       builder: (context) =>
+                      //           EditMemberForm(member: widget.member, onEdit: widget.onEdit)),
+                      // );
                     },
                     child: Container(
                       height: 40,

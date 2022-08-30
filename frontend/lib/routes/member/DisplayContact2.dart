@@ -33,8 +33,9 @@ class _DisplayContactsState extends State<DisplayContacts> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             Role r = snapshot.data as Role;
+            Member me = Provider.of<Member?>(context)!;
 
-            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+            if (r == Role.ADMIN || r == Role.COORDINATOR || me.id == widget.member.id) {
               return FloatingActionButton.extended(
                 onPressed: () {
                   Navigator.pushReplacement(

@@ -12,7 +12,12 @@ import 'package:image/image.dart' as img;
 
 class EditMemberForm extends StatefulWidget {
   final Member member;
-  EditMemberForm({Key? key, required this.member}) : super(key: key);
+  final void Function(BuildContext, Member?) onEdit;
+  EditMemberForm(
+    {Key? key, 
+    required this.member, 
+    required this.onEdit}) 
+    : super(key: key);
 
   @override
   _EditMemberFormState createState() => _EditMemberFormState();
@@ -33,7 +38,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.member.name);
-    _istIdController = TextEditingController(text: widget.member.id);
+    _istIdController = TextEditingController(text: widget.member.istId);
     _prevImage = widget.member.image;
   }
 
@@ -42,13 +47,16 @@ class _EditMemberFormState extends State<EditMemberForm> {
       var name = _nameController.text;
       var istId = _istIdController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        //FIXME try to use themes to avoid using style property
+        const SnackBar(content: Text('Uploading', style: TextStyle(color: Colors.white),)),
       );
 
-      print('id = ${widget.member.id}');
-
       Member? m =
-          await _memberService.updateMember(widget.member.id, name, istId);
+          await _memberService.updateMember(
+            id: widget.member.id,
+            name: name,
+            istid: istId);
+
       if (m != null && _image != null) {
         //FIXME: update image
         // m = kIsWeb
@@ -62,16 +70,17 @@ class _EditMemberFormState extends State<EditMemberForm> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Done'),
+            content: Text('Done', style: TextStyle(color: Colors.white),),
             duration: Duration(seconds: 2),
           ),
         );
         Navigator.pop(context);
+        widget.onEdit(context, m);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(content: Text('An error occured.', style: TextStyle(color: Colors.white),)),
         );
       }
     }
@@ -115,37 +124,44 @@ class _EditMemberFormState extends State<EditMemberForm> {
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 50),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                ),
-                onPressed: () => Navigator.pop(context),
-                child: Text("CANCEL",
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).colorScheme.secondary)),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: Theme.of(context).colorScheme.secondary,
-                    padding: EdgeInsets.symmetric(horizontal: 50),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                  ),
-                  onPressed: () => _submit(),
-                  child: const Text('SUBMIT'),
-                ),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: () => _submit(),
+              child: const Text('Submit'),
+            ),
           ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.center,
+          //   children: [
+          //     OutlinedButton(
+          //       style: OutlinedButton.styleFrom(
+          //         padding: EdgeInsets.symmetric(horizontal: 50),
+          //         shape: RoundedRectangleBorder(
+          //             borderRadius: BorderRadius.circular(20)),
+          //       ),
+          //       onPressed: () => Navigator.pop(context),
+          //       child: Text("CANCEL",
+          //           style: TextStyle(
+          //               fontSize: 14,
+          //               color: Theme.of(context).colorScheme.secondary)),
+          //     ),
+          //     Padding(
+          //       padding: const EdgeInsets.all(8.0),
+          //       child: ElevatedButton(
+          //         style: ElevatedButton.styleFrom(
+          //           primary: Theme.of(context).colorScheme.secondary,
+          //           padding: EdgeInsets.symmetric(horizontal: 50),
+          //           elevation: 2,
+          //           shape: RoundedRectangleBorder(
+          //               borderRadius: BorderRadius.circular(20)),
+          //         ),
+          //         onPressed: () => _submit(),
+          //         child: const Text('SUBMIT'),
+          //       ),
+          //     ),
+          //   ],
+          // ),
         ],
       ),
     );
@@ -263,41 +279,41 @@ class _EditMemberFormState extends State<EditMemberForm> {
 
   @override
   Widget build(BuildContext context) {
-    // bool warning = _image != null && _size != null && _size! > 102400;
+    bool warning = _image != null && _size != null && _size! > 102400;
 
-    return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true,),
-        body: LayoutBuilder(builder: (contex, constraints) {
-          return Column(children: [
-            _buildForm(),
-          ]);
-        }));
+    // return Scaffold(
+    //     appBar: CustomAppBar(disableEventChange: true,),
+    //     body: LayoutBuilder(builder: (contex, constraints) {
+    //       return Column(children: [
+    //         _buildForm(),
+    //       ]);
+    //     }));
 
-    // return SingleChildScrollView(
-    //   child: LayoutBuilder(
-    //     builder: (context, constraints) {
-    //       if (constraints.maxWidth < 1000) {
-    //         return Column(
-    //           children: [_buildPicture(constraints.maxWidth / 3), _buildForm()],
-    //         );
-    //       } else {
-    //         return Column(
-    //           children: [
-    //             _buildPicture(constraints.maxWidth / 6),
-    //             warning
-    //                 ? Text(
-    //                     'Image selected is too big!',
-    //                     style: TextStyle(
-    //                       color: Colors.red,
-    //                     ),
-    //                   )
-    //                 : Container(),
-    //             _buildForm()
-    //           ],
-    //         );
-    //       }
-    //     },
-    //   ),
-    // );
+    return SingleChildScrollView(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 1000) {
+            return Column(
+              children: [_buildPicture(constraints.maxWidth / 3), _buildForm()],
+            );
+          } else {
+            return Column(
+              children: [
+                _buildPicture(constraints.maxWidth / 6),
+                warning
+                    ? Text(
+                        'Image selected is too big!',
+                        style: TextStyle(
+                          color: Colors.red,
+                        ),
+                      )
+                    : Container(),
+                _buildForm()
+              ],
+            );
+          }
+        },
+      ),
+    );
   }
 }

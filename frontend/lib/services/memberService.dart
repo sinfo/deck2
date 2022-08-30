@@ -62,15 +62,18 @@ class MemberService extends Service {
     }
   }
 
-  Future<Member?> updateMember(String id, String istid, String name) async {
+  Future<Member?> updateMember(
+    {required String id,
+    String? istid,
+    String? name}) async {
     var body = {
       "istid": istid,
       "name": name,
     };
 
-    Response<String> response = await dio.put("/members/" + id, data: body);
-
     try {
+      Response<String> response = await dio.put("/members/" + id, data: body);
+
       return Member.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
