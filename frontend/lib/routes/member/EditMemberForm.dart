@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -51,19 +52,17 @@ class _EditMemberFormState extends State<EditMemberForm> {
         const SnackBar(content: Text('Uploading', style: TextStyle(color: Colors.white),)),
       );
 
-      Member? m =
-          await _memberService.updateMember(
-            id: widget.member.id,
-            name: name,
-            istid: istId);
+      Member? m = await _memberService.updateMember(
+          id: widget.member.id,
+          name: name,
+          istid: istId);
 
       if (m != null && _image != null) {
-        //FIXME: update image
-        // m = kIsWeb
-        //     ? await _memberService.updateInternalImageWeb(
-        //         id: m.id, image: _image!)
-        //     : await _memberService.updateInternalImage(
-        //         id: m.id, image: File(_image!.path));
+        m = kIsWeb
+            ? await _memberService.updateImageWeb(
+                id: m.id, image: _image!)
+            : await _memberService.updateImage(
+                id: m.id, image: File(_image!.path));
       }
       if (m != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -131,37 +130,6 @@ class _EditMemberFormState extends State<EditMemberForm> {
               child: const Text('Submit'),
             ),
           ),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     OutlinedButton(
-          //       style: OutlinedButton.styleFrom(
-          //         padding: EdgeInsets.symmetric(horizontal: 50),
-          //         shape: RoundedRectangleBorder(
-          //             borderRadius: BorderRadius.circular(20)),
-          //       ),
-          //       onPressed: () => Navigator.pop(context),
-          //       child: Text("CANCEL",
-          //           style: TextStyle(
-          //               fontSize: 14,
-          //               color: Theme.of(context).colorScheme.secondary)),
-          //     ),
-          //     Padding(
-          //       padding: const EdgeInsets.all(8.0),
-          //       child: ElevatedButton(
-          //         style: ElevatedButton.styleFrom(
-          //           primary: Theme.of(context).colorScheme.secondary,
-          //           padding: EdgeInsets.symmetric(horizontal: 50),
-          //           elevation: 2,
-          //           shape: RoundedRectangleBorder(
-          //               borderRadius: BorderRadius.circular(20)),
-          //         ),
-          //         onPressed: () => _submit(),
-          //         child: const Text('SUBMIT'),
-          //       ),
-          //     ),
-          //   ],
-          // ),
         ],
       ),
     );
@@ -193,15 +161,26 @@ class _EditMemberFormState extends State<EditMemberForm> {
     } else {
       String path = _image == null ? _prevImage! : _image!.path;
       inkWellChild = Center(
-        child: kIsWeb
-            ? Image.network(
-                path,
-                fit: BoxFit.fill,
-              )
-            : Image.file(
-                File(path),
-                fit: BoxFit.fill,
-              ),
+        child: 
+            Stack(
+              children: <Widget>[
+                  Center(child: kIsWeb ? 
+                          Image.network(path, fit: BoxFit.fill)
+                          : Image.file(File(path),fit: BoxFit.fill),
+                  ),
+                  ClipRRect( // Clip it cleanly. 
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.5),
+                        alignment: Alignment.center,
+                        child: Text('Change Photo', style: TextStyle(fontWeight: FontWeight.bold),),
+                      ),
+                    ),
+                  ),
+              ]
+            )
+            
       );
     }
 
@@ -280,15 +259,6 @@ class _EditMemberFormState extends State<EditMemberForm> {
   @override
   Widget build(BuildContext context) {
     bool warning = _image != null && _size != null && _size! > 102400;
-
-    // return Scaffold(
-    //     appBar: CustomAppBar(disableEventChange: true,),
-    //     body: LayoutBuilder(builder: (contex, constraints) {
-    //       return Column(children: [
-    //         _buildForm(),
-    //       ]);
-    //     }));
-
     return SingleChildScrollView(
       child: LayoutBuilder(
         builder: (context, constraints) {

@@ -1,16 +1,14 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/my_flutter_app_icons.dart';
-import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/contactService.dart';
 
 class EditContact extends StatefulWidget {
-  Contact contact;
-  Member member;
+  final Contact contact;
+  final Member member;
 
   EditContact({Key? key, required Contact this.contact, required this.member})
       : super(key: key);
@@ -42,12 +40,19 @@ class _MyFormState extends State<EditContact> {
   void initState() {
     super.initState();
 
+    mailsList.clear();
+    mailsPersonalList.clear();
+    mailsValidList.clear();
+
     // Copy mails
     for (int i = 0; i < widget.contact.mails!.length; i++) {
       mailsList.add(widget.contact.mails![i].mail);
       mailsPersonalList.add(widget.contact.mails![i].personal);
       mailsValidList.add(widget.contact.mails![i].valid);
     }
+
+    phonesList.clear();
+    phonesValidList.clear();
 
     // Copy phones
     for (int i = 0; i < widget.contact.phones!.length; i++) {
@@ -70,174 +75,179 @@ class _MyFormState extends State<EditContact> {
     super.dispose();
   }
 
+  Future<bool?> showWarning(BuildContext context) async => showDialog<bool> (
+    context: context, 
+    builder: (context) => AlertDialog(
+      title: Text("Discard changes?"),
+      content: Text("Changes on this page will not be saved"),
+      actions: [
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text("Cancel")
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+          child: Text("Discard")
+        ),
+      ],
+    )
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CustomAppBar(
-        disableEventChange: true,
-      ),
-      body: ListView(
-          padding: EdgeInsets.symmetric(horizontal: 32),
-          physics: BouncingScrollPhysics(),
-          children: [
-            Form(
-              key: _formKey,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      height: 24,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Mails",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        TextButton(
-                            // Add new form field
-                            onPressed: () {
-                              mailsList.add('');
-                              mailsValidList.add(false);
-                              mailsPersonalList.add(false);
-                              setState(() {});
-                            },
-                            child: Text('Add new'))
-                      ],
-                    ),
-                    ..._getMails(),
-                    SizedBox(
-                      height: 24,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("Phones",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        TextButton(
-                            // Add new form field
-                            onPressed: () {
-                              phonesList.add('');
-                              phonesValidList.add(false);
-                              setState(() {});
-                            },
-                            child: Text('Add new'))
-                      ],
-                    ),
-                    ..._getPhones(),
-                    SizedBox(
-                      height: 24,
-                    ),
-
-                    // Socials Section
-                    Text("Socials",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    GetSocials(),
-
-                    SizedBox(height: 40),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: 50),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20)),
-                          ),
-                          onPressed: () {
-                            //Do not remove this, otherwise it will duplicate
-                            mailsList.clear();
-                            mailsValidList.clear();
-                            mailsPersonalList.clear();
-                            phonesList.clear();
-                            phonesValidList.clear();
-
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      MemberScreen(member: widget.member)),
-                            );
-                          },
-                          child: Text("CANCEL",
+    return WillPopScope(
+      onWillPop: () async {
+        final shouldPop = await showWarning(context); 
+        return shouldPop ?? false;
+      },
+      child: Scaffold(
+        appBar: CustomAppBar(
+          disableEventChange: true,
+        ),
+        body: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 32),
+            physics: BouncingScrollPhysics(),
+            children: [
+              Form(
+                key: _formKey,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 24,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Mails",
                               style: TextStyle(
-                                  fontSize: 14,
-                                  color: Theme.of(context).colorScheme.secondary)),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              primary: Theme.of(context).colorScheme.secondary,
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                          TextButton(
+                              // Add new form field
+                              onPressed: () {
+                                mailsList.add('');
+                                mailsValidList.add(false);
+                                mailsPersonalList.add(false);
+                                setState(() {});
+                              },
+                              child: Text('Add new'))
+                        ],
+                      ),
+                      ..._getMails(),
+                      SizedBox(
+                        height: 24,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Phones",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                          TextButton(
+                              // Add new form field
+                              onPressed: () {
+                                phonesList.add('');
+                                phonesValidList.add(false);
+                                setState(() {});
+                              },
+                              child: Text('Add new'))
+                        ],
+                      ),
+                      ..._getPhones(),
+                      SizedBox(
+                        height: 24,
+                      ),
+    
+                      // Socials Section
+                      Text("Socials",
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      GetSocials(),
+    
+                      SizedBox(height: 40),
+    
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(horizontal: 50),
-                              elevation: 2,
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20)),
                             ),
                             onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
-                                // If the form is valid, display a snackbar. In the real world,
-                                // you'd often call a server or save the information in a database.
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Updated Contacts')),
-                                );
-
-                                for (int i = 0; i < mailsList.length; i++) {
-                                  newListContactMail.add(new ContactMail(
-                                      mail: mailsList[i],
-                                      valid: mailsValidList[i],
-                                      personal: mailsPersonalList[i]));
-                                }
-
-                                for (int i = 0; i < phonesList.length; i++) {
-                                  newListContactPhone.add(new ContactPhone(
-                                      phone: phonesList[i],
-                                      valid: phonesValidList[i]));
-                                }
-
-                                await contactService.updateContact(new Contact(
-                                    id: widget.contact.id,
-                                    mails: newListContactMail,
-                                    phones: newListContactPhone,
-                                    socials: new ContactSocials(
-                                        facebook: facebook,
-                                        twitter: twitter,
-                                        github: github,
-                                        skype: skype,
-                                        linkedin: linkedin)));
-
-                                //Do not remove this, otherwise it will duplicate
-                                mailsList.clear();
-                                mailsValidList.clear();
-                                mailsPersonalList.clear();
-                                phonesList.clear();
-                                phonesValidList.clear();
-
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          MemberScreen(member: widget.member)),
-                                );
+                              final shouldPop = await showWarning(context); 
+                              if (shouldPop ?? false){
+                                Navigator.pop(context,false);
                               }
                             },
-                            child: const Text('SUBMIT'),
+                            child: Text("CANCEL",
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    color: Theme.of(context).colorScheme.secondary)),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                primary: Theme.of(context).colorScheme.secondary,
+                                padding: EdgeInsets.symmetric(horizontal: 50),
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20)),
+                              ),
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  // If the form is valid, display a snackbar. In the real world,
+                                  // you'd often call a server or save the information in a database.
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Updated Contacts')),
+                                  );
+    
+                                  for (int i = 0; i < mailsList.length; i++) {
+                                    newListContactMail.add(new ContactMail(
+                                        mail: mailsList[i],
+                                        valid: mailsValidList[i],
+                                        personal: mailsPersonalList[i]));
+                                  }
+    
+                                  for (int i = 0; i < phonesList.length; i++) {
+                                    newListContactPhone.add(new ContactPhone(
+                                        phone: phonesList[i],
+                                        valid: phonesValidList[i]));
+                                  }
+    
+                                  await contactService.updateContact(new Contact(
+                                      id: widget.contact.id,
+                                      mails: newListContactMail,
+                                      phones: newListContactPhone,
+                                      socials: new ContactSocials(
+                                          facebook: facebook,
+                                          twitter: twitter,
+                                          github: github,
+                                          skype: skype,
+                                          linkedin: linkedin)));
+                                          
+                                  Navigator.of(context).pop(true);
+                                }
+                              },
+                              child: const Text('SUBMIT'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ]),
+            ]),
+      ),
     );
   }
 
@@ -514,8 +524,7 @@ class _MailsTextFieldsState extends State<MailsTextFields> {
             ),
           ),
           validator: (value) {
-            //TODO: esta validação pode estar melhor
-            if (value == null || value.isEmpty || !value.contains('@')) {
+            if (value == null || value.isEmpty || !value.isValidEmail()) {
               return 'Please enter a valid mail';
             }
             return null;
@@ -582,8 +591,8 @@ class _PhonesTextFieldsState extends State<PhonesTextFields> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter a phone';
+            if (value == null || value.isEmpty || !value.isValidPhoneNumber()) {
+              return 'Please enter a valid phone number';
             }
             return null;
           },
@@ -601,3 +610,18 @@ class _PhonesTextFieldsState extends State<PhonesTextFields> {
     );
   }
 }
+
+extension EmailValidator on String {
+  bool isValidEmail() {
+    return RegExp(
+            r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$')
+        .hasMatch(this);
+  }
+}
+
+extension PhoneValidator on String {
+  bool isValidPhoneNumber() {
+    return RegExp(r'^[0-9]{9}$').hasMatch(this);
+  }
+}
+

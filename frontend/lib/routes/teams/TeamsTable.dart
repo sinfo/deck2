@@ -1,8 +1,4 @@
-import 'dart:html';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
@@ -111,7 +107,7 @@ class _TeamTableState extends State<TeamTable>
 
 class TeamMemberRow extends StatelessWidget {
   final Team team;
-  MemberService _memberService = MemberService();
+  final MemberService _memberService = MemberService();
   TeamMemberRow({Key? key, required this.team}) : super(key: key);
 
   static Widget fake() {
