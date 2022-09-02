@@ -33,7 +33,7 @@ var (
 
 	// Max size of the images to be uploaded by deck2 (Companies public and private images,
 	// speakers public and private images, etc)
-	// 10 KB
+	// 10 MB
 	ImageMaxSize  int64 = 20 << 10
 	MinuteMaxSize int64 = 500 << 10
 
