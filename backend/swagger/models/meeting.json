@@ -12,11 +12,22 @@
             "type": "string",
             "format": "date-time"
         },
+        "title": {
+            "type": "string"
+        },
         "place": {
             "type": "string"
         },
         "minute": {
             "type": "string"
+        },
+        "kind": {
+            "type": "string",
+            "enum": [
+                "EVENT",
+                "TEAM",
+                "COMPANY"
+            ]
         },
         "participants": {
             "type": "object",

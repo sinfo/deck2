@@ -24,6 +24,8 @@ type MeetingsType struct {
 
 // CreateMeetingData contains data needed to create a new meeting
 type CreateMeetingData struct {
+	Title        *string                     `json:"title" bson:"title"`
+	Kind         *string                     `json:"kind" bson:"kind"`
 	Begin        *time.Time                  `json:"begin"`
 	End          *time.Time                  `json:"end"`
 	Place        *string                     `json:"place"`
@@ -39,6 +41,8 @@ type GetMeetingsOptions struct {
 
 // UpdateMeetingData contains data needed to update a new meeting
 type UpdateMeetingData struct {
+	Title string    `json:"title" bson:"title"`
+	Kind  string    `json:"kind" bson:"kind"`
 	Begin time.Time `json:"begin" bson:"begin"`
 	End   time.Time `json:"end" bson:"end"`
 	Place string    `json:"place" bson:"place"`
@@ -53,6 +57,13 @@ func (umd *UpdateMeetingData) ParseBody(body io.Reader) error {
 	}
 	if len(umd.Place) == 0 {
 		return errors.New("invalid place")
+	}
+	if len(umd.Title) == 0 {
+		return errors.New("invalid title")
+	}
+	var mk = new(models.MeetingKind)
+	if err := mk.Parse(umd.Kind); err != nil {
+		return errors.New("invalid kind")
 	}
 
 	if umd.Begin.After(umd.End) {
@@ -82,6 +93,15 @@ func (cmd *CreateMeetingData) Validate() error {
 		return errors.New("no place given")
 	}
 
+	if cmd.Title == nil {
+		return errors.New("no title given")
+	}
+
+	var mk = new(models.MeetingKind)
+	if err := mk.Parse(*cmd.Kind); err != nil {
+		return errors.New("invalid kind")
+	}
+
 	return nil
 }
 
@@ -107,6 +127,8 @@ func (m *MeetingsType) CreateMeeting(data CreateMeetingData) (*models.Meeting, e
 	var meeting models.Meeting
 
 	var c = bson.M{
+		"title": *data.Title,
+		"kind":  *data.Kind,
 		"begin": *data.Begin,
 		"end":   *data.End,
 		"place": *data.Place,
@@ -263,6 +285,8 @@ func (m *MeetingsType) UpdateMeeting(data UpdateMeetingData, meetingID primitive
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
+			"title": data.Title,
+			"kind":  data.Kind,
 			"begin": data.Begin,
 			"end":   data.End,
 			"place": data.Place,

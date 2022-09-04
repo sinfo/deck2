@@ -1,10 +1,46 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type MeetingKind string
+
+const (
+	EventMeeting   MeetingKind = "EVENT"
+	TeamMeeting    MeetingKind = "TEAM"
+	CompanyMeeting MeetingKind = "COMPANY"
+)
+
+func (mk *MeetingKind) Parse(kind string) error {
+
+	var newMeetingKind MeetingKind
+
+	switch kind {
+
+	case string(EventMeeting):
+		newMeetingKind = EventMeeting
+		break
+
+	case string(TeamMeeting):
+		newMeetingKind = TeamMeeting
+		break
+
+	case string(CompanyMeeting):
+		newMeetingKind = CompanyMeeting
+		break
+
+	default:
+		return errors.New("invalid kind")
+
+	}
+
+	*mk = newMeetingKind
+	return nil
+}
 
 type MeetingParticipants struct {
 
@@ -21,6 +57,12 @@ type Meeting struct {
 
 	// Meeting's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
+
+	// The title of the meeting
+	Title string `json:"title" bson:"title"`
+
+	// Type of the meeting
+	Kind MeetingKind `json:"kind" bson:"kind"`
 
 	Begin time.Time `json:"begin" bson:"begin"`
 	End   time.Time `json:"end" bson:"end"`
