@@ -36,14 +36,6 @@ class _DeckDrawerState extends State<DeckDrawer> {
         padding: EdgeInsets.zero,
         children: <Widget>[
           buildHeader(context),
-          ListTile(
-              leading: Icon(
-                Icons.person,
-              ),
-              title: Text('Logout'),
-              onTap: () async {
-                await signOut(context);
-              }),
           MergeSemantics(
             child: ListTile(
               leading: Icon(
@@ -67,6 +59,21 @@ class _DeckDrawerState extends State<DeckDrawer> {
               },
             ),
           ),
+          ListTile(
+            leading: Icon(
+              Icons.person,
+            ),
+            title: Text('My Profile'),
+            onTap: () async {},
+          ),
+          ListTile(
+              leading: Icon(
+                Icons.logout,
+              ),
+              title: Text('Logout'),
+              onTap: () async {
+                await signOut(context);
+              }),
         ],
       ),
     );
@@ -98,6 +105,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     Member m = snapshot.data as Member;
                     return CircleAvatar(
                       backgroundImage: NetworkImage(m.image!),
+                      radius: 40,
                     );
                   } else {
                     return Shimmer.fromColors(
@@ -107,12 +115,26 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     );
                   }
                 }),
-            Text(
-              "My Account",
-              style: TextStyle(
-                fontSize: 22,
-              ),
-            ),
+            FutureBuilder(
+                future: Provider.of<AuthService>(context).user,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    Member m = snapshot.data as Member;
+                    return Text(
+                      "Hello, " + m.name,
+                      style: TextStyle(
+                        fontSize: 22,
+                      ),
+                    );
+                  } else {
+                    return Text(
+                      "My Account",
+                      style: TextStyle(
+                        fontSize: 22,
+                      ),
+                    );
+                  }
+                }),
           ],
         ));
   }
