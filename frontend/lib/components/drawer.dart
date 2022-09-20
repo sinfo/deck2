@@ -4,6 +4,7 @@ import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -59,13 +60,30 @@ class _DeckDrawerState extends State<DeckDrawer> {
               },
             ),
           ),
-          ListTile(
-            leading: Icon(
-              Icons.person,
-            ),
-            title: Text('My Profile'),
-            onTap: () async {},
-          ),
+          FutureBuilder(
+              future: Provider.of<AuthService>(context).user,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  Member m = snapshot.data as Member;
+                  return ListTile(
+                    leading: Icon(
+                      Icons.person,
+                    ),
+                    title: Text('My Profile'),
+                    onTap: () async {
+                      myProfile(context, m);
+                    },
+                  );
+                } else {
+                  return ListTile(
+                    leading: Icon(
+                      Icons.person,
+                    ),
+                    title: Text('My Profile'),
+                    onTap: () async {},
+                  );
+                }
+              }),
           ListTile(
               leading: Icon(
                 Icons.logout,
@@ -89,6 +107,16 @@ class _DeckDrawerState extends State<DeckDrawer> {
   Future signOut(BuildContext context) async {
     await Provider.of<AuthService>(context, listen: false).signOut();
     Navigator.pushReplacementNamed(context, Routes.LoginRoute);
+  }
+
+  myProfile(BuildContext context, Member member) {
+    Navigator.push(
+        context,
+        PageRouteBuilder(
+          transitionDuration: Duration(milliseconds: 600),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              MemberScreen(member: member),
+        ));
   }
 
   DrawerHeader buildHeader(BuildContext context) {
