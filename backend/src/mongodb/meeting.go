@@ -329,3 +329,52 @@ func (m *MeetingsType) UploadMeetingMinute(meetingID primitive.ObjectID, url str
 
 	return &updatedMeeting, nil
 }
+
+// AddThread adds a models.Thread to a meeting's list of communications.
+func (m *MeetingsType) AddThread(meetingID primitive.ObjectID, threadID primitive.ObjectID) (*models.Meeting, error) {
+	ctx := context.Background()
+
+	var updatedMeeting models.Meeting
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"communications": threadID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": meetingID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		log.Println("Error adding communication to meeting:", err)
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
+}
+
+// FindThread finds a thread in a meeting
+func (m *MeetingsType) FindThread(threadID primitive.ObjectID) (*models.Meeting, error) {
+	ctx := context.Background()
+	filter := bson.M{
+		"communications": threadID,
+	}
+
+	cur, err := m.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var meeting models.Meeting
+
+	if cur.Next(ctx) {
+		if err := cur.Decode(&meeting); err != nil {
+			return nil, err
+		}
+		return &meeting, nil
+	}
+
+	return nil, nil
+}

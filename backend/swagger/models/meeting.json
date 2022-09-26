@@ -29,6 +29,12 @@
                 "COMPANY"
             ]
         },
+        "communications": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
         "participants": {
             "type": "object",
             "properties": {

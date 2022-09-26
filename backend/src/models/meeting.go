@@ -75,5 +75,8 @@ type Meeting struct {
 	// "Ata" in portuguese.
 	Minute string `json:"minute" bson:"minute"`
 
+	// Communications is an array of _id of Communication (see models.Communication).
+	Communications []primitive.ObjectID `json:"communications" bson:"communications"`
+
 	Participants MeetingParticipants `json:"participants" bson:"participants"`
 }
