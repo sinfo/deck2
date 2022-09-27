@@ -10,7 +10,6 @@ import 'package:frontend/services/eventService.dart';
 import 'package:provider/provider.dart';
 import 'components/router.dart' as router;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
 
 Future main() async {
   await start();

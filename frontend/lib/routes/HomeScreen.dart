@@ -4,12 +4,10 @@ import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/models/meeting.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
-import 'package:frontend/routes/meeting/MeetingCard.dart';
+import 'package:frontend/routes/meeting/MeetingPage.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/teams/TeamsTable.dart';
-import 'package:frontend/services/meetingService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
@@ -88,7 +86,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   Center(
                     child: CompanyTable(),
                   ),
-                  Center(child: TeamTable()),
+                  Center(
+                    child: TeamTable(),
+                  ),
+                  Center(
+                    child: MeetingPage(),
+                  ),
                 ],
               ),
             ),
@@ -154,6 +157,20 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.add),
           );
         }
+
+      case 4:
+        {
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                Routes.AddMeeting,
+              );
+            },
+            label: const Text('Create New Meeting'),
+            icon: const Icon(Icons.add),
+          );
+        }
     }
   }
 }
@@ -164,7 +181,7 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: MeetingList(),
+      child: Text("Welcome to deck2! In Progress..."),
     );
   }
 }
@@ -195,55 +212,18 @@ class CustomNavBar extends StatelessWidget {
             icon: Icon(
               Icons.work,
             )),
-        //FIXME: o item aqui em baixo foi colocado apenas para processo de development
         BottomNavigationBarItem(
             label: 'Teams',
             icon: Icon(
               Icons.people,
             )),
+        BottomNavigationBarItem(
+            label: 'Meetings',
+            icon: Icon(
+              Icons.meeting_room,
+            )),
       ],
       onTap: onTapped,
-    );
-  }
-}
-
-class MeetingList extends StatefulWidget {
-  const MeetingList({Key? key}) : super(key: key);
-
-  @override
-  _MeetingListState createState() => _MeetingListState();
-}
-
-class _MeetingListState extends State<MeetingList>
-    with AutomaticKeepAliveClientMixin {
-  final MeetingService _service = MeetingService();
-  late final Future<List<Meeting>> _meetings;
-
-  @override
-  void initState() {
-    _meetings = _service.getMeetings();
-    super.initState();
-  }
-
-  @override
-  // TODO: implement wantKeepAlive
-  bool get wantKeepAlive => true;
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return FutureBuilder(
-      future: _meetings,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Meeting> meets = snapshot.data as List<Meeting>;
-          return ListView(
-            children: meets.map((e) => MeetingCard(meeting: e)).toList(),
-          );
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
     );
   }
 }

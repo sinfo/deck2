@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/participation.dart';
-import 'package:frontend/models/speaker.dart';
 
 class CompanyTableNotifier extends ChangeNotifier {
   List<Company> companies;

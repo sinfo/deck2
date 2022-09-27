@@ -1,13 +1,7 @@
-//import 'dart:io';
-//import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-//import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/memberService.dart';
-//import 'package:image_picker/image_picker.dart';
 
 class AddMemberForm extends StatefulWidget {
   AddMemberForm({Key? key}) : super(key: key);

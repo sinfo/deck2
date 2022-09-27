@@ -28,12 +28,14 @@ class MeetingService extends Service {
   }
 
   Future<Meeting> createMeeting(DateTime begin, DateTime end, String place,
-      MeetingParticipants participants) async {
+      MeetingParticipants participants, String kind, String title) async {
     var body = {
       "begin": begin,
       "end": end,
       "place": place,
-      "participants": participants
+      "participants": participants,
+      "title": title,
+      "kind": kind
     };
 
     Response<String> response = await dio.post("/meetings", data: body);
@@ -81,16 +83,43 @@ class MeetingService extends Service {
     DateTime begin,
     DateTime end,
     String place,
+    String kind,
+    String title
     //, MeetingParticipants participants
   ) async {
     var body = {
       "begin": begin,
       "end": end,
-      "place": place
+      "place": place,
+      "title": title,
+      "kind": kind
       //, "participants" : participants
     };
 
     Response<String> response = await dio.put("/meetings/" + id, data: body);
+    try {
+      return Meeting.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Meeting?> addThread({
+    required String id,
+    required String kind,
+    required String text,
+  }) async {
+    var body = {
+      "kind": kind,
+      "text": text
+    };
+
+    Response<String> response =
+        await dio.post("/meetings/" + id + "/thread", data: body);
     try {
       return Meeting.fromJson(json.decode(response.data!));
     } on SocketException {

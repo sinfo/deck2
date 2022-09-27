@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:intl/intl.dart';
@@ -58,7 +57,7 @@ class MeetingCard extends StatelessWidget {
                   children: <Widget>[
                     Container(
                       child: Text(
-                        meeting.place,
+                        meeting.title,
                         style: TextStyle(color: Colors.black, fontSize: 23.0),
                         textAlign: TextAlign.left,
                       ),

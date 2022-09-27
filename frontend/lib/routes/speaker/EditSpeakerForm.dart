@@ -3,15 +3,10 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
-import 'package:frontend/components/appbar.dart';
-import 'package:frontend/models/company.dart';
 import 'package:frontend/models/speaker.dart';
-import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image/image.dart' as img;
 
 class EditSpeakerForm extends StatefulWidget {
   final Speaker speaker;

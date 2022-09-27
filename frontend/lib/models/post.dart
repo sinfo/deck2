@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/memberService.dart';
 

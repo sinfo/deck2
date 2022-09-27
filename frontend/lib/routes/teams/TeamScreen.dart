@@ -1,7 +1,4 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
