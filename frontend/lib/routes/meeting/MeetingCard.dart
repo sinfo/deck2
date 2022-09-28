@@ -87,9 +87,9 @@ class MeetingCard extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.only(top: 5.0),
                       child: Text(
-                        DateFormat.jm().format(meeting.begin) +
+                        DateFormat.jm().format(meeting.begin.toLocal()) +
                             ' - ' +
-                            DateFormat.jm().format(meeting.end),
+                            DateFormat.jm().format(meeting.end.toLocal()),
                         style: TextStyle(color: Colors.grey, fontSize: 20.0),
                         textAlign: TextAlign.left,
                       ),

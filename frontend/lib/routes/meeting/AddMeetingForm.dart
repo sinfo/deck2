@@ -38,7 +38,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
       );
 
       Meeting? m = await _meetingService.createMeeting(
-          _begin!, _end!, place, _kind, title);
+          _begin!.toUtc(), _end!.toUtc(), place, _kind, title);
       if (m != null) {
         //TODO: Redirect to meeting page
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -86,12 +86,10 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
     if (datePicker != null && timePicker != null) {
       if (isBegin) {
         _begin = DateTime(datePicker.year, datePicker.month, datePicker.day,
-                timePicker.hour, timePicker.minute)
-            .toUtc();
+                timePicker.hour, timePicker.minute);
       } else {
         _end = DateTime(datePicker.year, datePicker.month, datePicker.day,
-                timePicker.hour, timePicker.minute)
-            .toUtc();
+                timePicker.hour, timePicker.minute);
       }
     }
   }

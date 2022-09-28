@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meeting.dart';
-import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/services/meetingService.dart';
-import 'package:provider/provider.dart';
 
 class MeetingPage extends StatelessWidget {
   const MeetingPage({Key? key}) : super(key: key);

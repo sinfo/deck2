@@ -54,7 +54,7 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
       );
 
       Meeting? m = await _meetingService.updateMeeting(
-          widget.meeting.id, _begin, _end, place, _kind, title);
+          widget.meeting.id, _begin.toUtc(), _end.toUtc(), place, _kind, title);
       if (m != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -96,12 +96,10 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
     if (datePicker != null && timePicker != null) {
       if (isBegin) {
         _begin = DateTime(datePicker.year, datePicker.month, datePicker.day,
-                timePicker.hour, timePicker.minute)
-            .toUtc();
+                timePicker.hour, timePicker.minute);
       } else {
         _end = DateTime(datePicker.year, datePicker.month, datePicker.day,
-                timePicker.hour, timePicker.minute)
-            .toUtc();
+                timePicker.hour, timePicker.minute);
       }
     }
   }
