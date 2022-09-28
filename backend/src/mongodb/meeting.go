@@ -127,11 +127,12 @@ func (m *MeetingsType) CreateMeeting(data CreateMeetingData) (*models.Meeting, e
 	var meeting models.Meeting
 
 	var c = bson.M{
-		"title": *data.Title,
-		"kind":  *data.Kind,
-		"begin": *data.Begin,
-		"end":   *data.End,
-		"place": *data.Place,
+		"title":          *data.Title,
+		"kind":           *data.Kind,
+		"begin":          *data.Begin,
+		"end":            *data.End,
+		"place":          *data.Place,
+		"communications": []primitive.ObjectID{},
 	}
 
 	if data.Participants != nil {

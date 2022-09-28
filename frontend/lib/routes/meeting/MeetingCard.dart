@@ -19,23 +19,25 @@ class MeetingCard extends StatelessWidget {
         ),
         margin: EdgeInsets.all(25.0),
         child: Container(
-          height: 100.0,
+          height: 120.0,
           child: Row(
             children: <Widget>[
               Container(
-                height: 100.0,
-                width: 100.0,
+                height: 120.0,
+                width: 120.0,
                 child: Column(
                   children: <Widget>[
                     Container(
-                      margin: EdgeInsets.only(top: 20.0),
+                      margin: EdgeInsets.only(top: 25.0),
                       child: Text(
                         DateFormat.d().format(meeting.begin),
+                        style: TextStyle(color: Colors.white, fontSize: 30.0),
                       ),
                     ),
                     Container(
                       child: Text(
-                        DateFormat.MMM().format(meeting.begin),
+                        DateFormat.MMM().format(meeting.begin).toUpperCase(),
+                        style: TextStyle(color: Colors.white, fontSize: 30.0),
                       ),
                     ),
                   ],
@@ -59,6 +61,13 @@ class MeetingCard extends StatelessWidget {
                       child: Text(
                         meeting.title,
                         style: TextStyle(color: Colors.black, fontSize: 23.0),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    Container(
+                      child: Text(
+                        meeting.place,
+                        style: TextStyle(color: Colors.grey, fontSize: 20.0),
                         textAlign: TextAlign.left,
                       ),
                     ),

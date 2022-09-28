@@ -28,14 +28,13 @@ class MeetingService extends Service {
   }
 
   Future<Meeting> createMeeting(DateTime begin, DateTime end, String place,
-      MeetingParticipants participants, String kind, String title) async {
+      String kind, String title) async {
     var body = {
-      "begin": begin,
-      "end": end,
+      "begin": begin.toIso8601String(),
+      "end": end.toIso8601String(),
       "place": place,
-      "participants": participants,
       "title": title,
-      "kind": kind
+      "kind": kind.toUpperCase()
     };
 
     Response<String> response = await dio.post("/meetings", data: body);
@@ -78,22 +77,15 @@ class MeetingService extends Service {
     }
   }
 
-  Future<Meeting> updateMeeting(
-    String id,
-    DateTime begin,
-    DateTime end,
-    String place,
-    String kind,
-    String title
-    //, MeetingParticipants participants
-  ) async {
+  Future<Meeting> updateMeeting(String id, DateTime begin, DateTime end,
+      String place, String kind, String title
+      ) async {
     var body = {
-      "begin": begin,
-      "end": end,
+      "begin": begin.toIso8601String(),
+      "end": end.toIso8601String(),
       "place": place,
       "title": title,
-      "kind": kind
-      //, "participants" : participants
+      "kind": kind.toUpperCase()
     };
 
     Response<String> response = await dio.put("/meetings/" + id, data: body);
@@ -113,10 +105,7 @@ class MeetingService extends Service {
     required String kind,
     required String text,
   }) async {
-    var body = {
-      "kind": kind,
-      "text": text
-    };
+    var body = {"kind": kind, "text": text};
 
     Response<String> response =
         await dio.post("/meetings/" + id + "/thread", data: body);
