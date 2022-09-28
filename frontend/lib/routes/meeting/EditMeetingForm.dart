@@ -1,34 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:intl/intl.dart';
 
-class AddMeetingForm extends StatefulWidget {
-  AddMeetingForm({Key? key}) : super(key: key);
+class EditMeetingForm extends StatefulWidget {
+  final Meeting meeting;
+  EditMeetingForm({Key? key, required this.meeting})
+      : super(key: key);
 
   @override
-  _AddMeetingFormState createState() => _AddMeetingFormState();
+  _EditMeetingFormState createState() => _EditMeetingFormState();
 }
 
 var kinds = ["Event", "Team", "Company"];
 
-class _AddMeetingFormState extends State<AddMeetingForm> {
+class _EditMeetingFormState extends State<EditMeetingForm> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _placeController = TextEditingController();
-  final _beginDateController = TextEditingController();
-  final _endDateController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _placeController;
+  late TextEditingController _beginDateController;
+  late TextEditingController _endDateController;
   final _meetingService = MeetingService();
 
-  DateTime? dateTime;
-  DateTime? _begin;
-  DateTime? _end;
+  late DateTime _begin;
+  late DateTime _end;
+  late String _kind;
 
-  String _kind = "";
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.meeting.title);
+    _placeController = TextEditingController(text: widget.meeting.place);
+    _beginDateController =
+        TextEditingController(text: getDateTime(widget.meeting.begin));
+    _endDateController =
+        TextEditingController(text: getDateTime(widget.meeting.end));
+    _begin = widget.meeting.begin;
+    _end = widget.meeting.end;
+    _kind = widget.meeting.kind;
+  }
+
+  String getDateTime(DateTime dateTime) {
+    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
+  }
 
   void _submit() async {
-    //TODO: update meeting list (https://stackoverflow.com/questions/51798498/flutter-setstate-to-another-class/51798698#51798698)
     if (_formKey.currentState!.validate()) {
       var title = _titleController.text;
       var place = _placeController.text;
@@ -37,24 +53,18 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
         const SnackBar(content: Text('Uploading')),
       );
 
-      Meeting? m = await _meetingService.createMeeting(
-          _begin!, _end!, place, _kind, title);
+      Meeting? m = await _meetingService.updateMeeting(
+          widget.meeting.id, _begin, _end, place, _kind, title);
       if (m != null) {
-        //TODO: Redirect to meeting page
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Done'),
             duration: Duration(seconds: 2),
-            action: SnackBarAction(
-              label: 'Undo',
-              onPressed: () {
-                _meetingService.deleteMeeting(m.id);
-              },
-            ),
           ),
         );
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -94,10 +104,6 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
             .toUtc();
       }
     }
-  }
-
-  String getDateTime(DateTime dateTime) {
-    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
   }
 
   Widget _buildForm() {
@@ -148,7 +154,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
                 readOnly: true, //prevents editing the date in the form field
                 onTap: () async {
                   await _selectDateTime(context, true);
-                  String formattedDate = getDateTime(_begin!);
+                  String formattedDate = getDateTime(_begin);
 
                   setState(() {
                     _beginDateController.text = formattedDate;
@@ -166,7 +172,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
                 readOnly: true, //prevents editing the date in the form field
                 onTap: () async {
                   await _selectDateTime(context, false);
-                  String formattedDate = getDateTime(_end!);
+                  String formattedDate = getDateTime(_end);
 
                   setState(() {
                     _endDateController.text = formattedDate;
@@ -201,16 +207,6 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
 
   @override
   Widget build(BuildContext context) {
-    CustomAppBar appBar = CustomAppBar(
-      disableEventChange: true,
-    );
-    return Scaffold(
-      body: Stack(children: [
-        Container(
-            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
-            child: _buildForm()),
-        appBar,
-      ]),
-    );
+    return _buildForm();
   }
 }

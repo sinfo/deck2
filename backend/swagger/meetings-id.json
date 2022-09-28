@@ -145,9 +145,6 @@
                         },
                         "local": {
                             "type": "string"
-                        },
-                        "minute": {
-                            "type": "string"
                         }
                     }
                 }

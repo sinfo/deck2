@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:frontend/routes/meeting/EditMeetingForm.dart';
 import 'package:intl/intl.dart';
 
 class MeetingCard extends StatelessWidget {
   final Meeting meeting;
 
-  MeetingCard({Key? key, required this.meeting}) : super(key: key);
+  MeetingCard({Key? key, required this.meeting})
+      : super(key: key);
+
+  void _editMeetingModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: EditMeetingForm(meeting: meeting),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,11 +32,11 @@ class MeetingCard extends StatelessWidget {
         ),
         margin: EdgeInsets.all(25.0),
         child: Container(
-          height: 120.0,
+          height: 150.0,
           child: Row(
             children: <Widget>[
               Container(
-                height: 120.0,
+                height: 150.0,
                 width: 120.0,
                 child: Column(
                   children: <Widget>[
@@ -81,6 +94,12 @@ class MeetingCard extends StatelessWidget {
                         textAlign: TextAlign.left,
                       ),
                     ),
+                    IconButton(
+                      icon: Icon(Icons.edit),
+                      onPressed: () {
+                        _editMeetingModal(context);
+                      },
+                    )
                   ],
                 ),
               ),
