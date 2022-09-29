@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/services/meetingService.dart';
@@ -22,13 +23,15 @@ class MeetingList extends StatefulWidget {
 }
 
 class _MeetingListState extends State<MeetingList>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
   final MeetingService _service = MeetingService();
   late final Future<List<Meeting>> _meetings;
+  late final TabController _tabController;
 
   @override
   void initState() {
     _meetings = _service.getMeetings();
+    _tabController = TabController(length: 2, vsync: this);
     super.initState();
   }
 
@@ -44,9 +47,38 @@ class _MeetingListState extends State<MeetingList>
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           List<Meeting> meets = snapshot.data as List<Meeting>;
-          return ListView(
-            children: meets.map((e) => MeetingCard(meeting: e)).toList(),
-          );
+
+          return LayoutBuilder(builder: (context, constraints) {
+            bool small = constraints.maxWidth < App.SIZE;
+            return Column(
+              children: [
+                TabBar(
+                  isScrollable: small,
+                  controller: _tabController,
+                  tabs: [
+                    Tab(text: 'Upcoming'),
+                    Tab(text: 'Past'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(controller: _tabController, children: [
+                    ListView(
+                      children: meets
+                          .where((m) => DateTime.now().isBefore(m.begin))
+                          .map((e) => MeetingCard(meeting: e))
+                          .toList(),
+                    ),
+                    ListView(
+                      children: meets
+                          .where((m) => DateTime.now().isAfter(m.begin))
+                          .map((e) => MeetingCard(meeting: e))
+                          .toList(),
+                    ),
+                  ]),
+                ),
+              ],
+            );
+          });
         } else {
           return CircularProgressIndicator();
         }

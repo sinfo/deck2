@@ -129,26 +129,31 @@ class MeetingCard extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              _editMeetingModal(context);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              primary: const Color(0xff5c7ff2),
-                            ),
-                            icon: Icon(Icons.edit),
-                            label: const Text("Edit Meeting"),
-                          ),
-                          const SizedBox(height: 15),
-                          ElevatedButton.icon(
-                            onPressed: () =>
-                                _deleteMeeting(context, meeting.id),
-                            style: ElevatedButton.styleFrom(
-                              primary: const Color(0xfff25c5c),
-                            ),
-                            icon: Icon(Icons.delete),
-                            label: const Text("Delete Meeting"),
-                          )
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                    onPressed: () {
+                                      _editMeetingModal(context);
+                                    },
+                                    icon: Icon(Icons.edit),
+                                    color: const Color(0xff5c7ff2)),
+                                IconButton(
+                                    onPressed: () =>
+                                        _deleteMeeting(context, meeting.id),
+                                    icon: Icon(Icons.delete),
+                                    color: Colors.red),
+                              ]),
+                          if (DateTime.now().isAfter(meeting.begin))
+                            ElevatedButton.icon(
+                                //TODO: Do the upload meeting minutes endpoint
+                                onPressed: () => {
+                                      print(
+                                          'TODO: Do the upload meeting minutes endpoint')
+                                    },
+                                icon: Icon(Icons.article),
+                                label: const Text("Add Minutes"))
                         ])),
               ),
             ],
