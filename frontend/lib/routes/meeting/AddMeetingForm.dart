@@ -40,7 +40,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
       Meeting? m = await _meetingService.createMeeting(
           _begin!.toUtc(), _end!.toUtc(), place, _kind, title);
       if (m != null) {
-        //TODO: Redirect to meeting page
+        //TODO: Redirect to meeting page  
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(

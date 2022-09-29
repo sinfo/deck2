@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/routes/meeting/EditMeetingForm.dart';
+import 'package:frontend/services/meetingService.dart';
 import 'package:intl/intl.dart';
 
 class MeetingCard extends StatelessWidget {
   final Meeting meeting;
+  final _meetingService = MeetingService();
 
-  MeetingCard({Key? key, required this.meeting})
-      : super(key: key);
+  MeetingCard({Key? key, required this.meeting}) : super(key: key);
 
   void _editMeetingModal(context) {
     showModalBottomSheet(
@@ -18,6 +19,30 @@ class MeetingCard extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _deleteMeeting(context, id) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Deleting')),
+    );
+
+    Meeting? m = await _meetingService.deleteMeeting(id);
+    if (m != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
   }
 
   @override
@@ -32,7 +57,7 @@ class MeetingCard extends StatelessWidget {
         ),
         margin: EdgeInsets.all(25.0),
         child: Container(
-          height: 150.0,
+          height: 125.0,
           child: Row(
             children: <Widget>[
               Container(
@@ -94,14 +119,37 @@ class MeetingCard extends StatelessWidget {
                         textAlign: TextAlign.left,
                       ),
                     ),
-                    IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () {
-                        _editMeetingModal(context);
-                      },
-                    )
                   ],
                 ),
+              ),
+              Expanded(
+                child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _editMeetingModal(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              primary: const Color(0xff5c7ff2),
+                            ),
+                            icon: Icon(Icons.edit),
+                            label: const Text("Edit Meeting"),
+                          ),
+                          const SizedBox(height: 15),
+                          ElevatedButton.icon(
+                            onPressed: () =>
+                                _deleteMeeting(context, meeting.id),
+                            style: ElevatedButton.styleFrom(
+                              primary: const Color(0xfff25c5c),
+                            ),
+                            icon: Icon(Icons.delete),
+                            label: const Text("Delete Meeting"),
+                          )
+                        ])),
               ),
             ],
           ),
