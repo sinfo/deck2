@@ -8,6 +8,7 @@ import 'package:frontend/routes/company/CompanyTable.dart';
 import 'package:frontend/routes/meeting/MeetingPage.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/teams/TeamsTable.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
@@ -160,16 +161,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
       case 4:
         {
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                Routes.AddMeeting,
-              );
-            },
-            label: const Text('Create New Meeting'),
-            icon: const Icon(Icons.add),
-          );
+          return FutureBuilder(
+              future: Provider.of<AuthService>(context).role,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  Role r = snapshot.data as Role;
+
+                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
+                    return FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          Routes.AddMeeting,
+                        );
+                      },
+                      label: const Text('Create New Meeting'),
+                      icon: const Icon(Icons.add),
+                    );
+                  } else {
+                    return Container();
+                  }
+                } else {
+                  return Container();
+                }
+              });
         }
     }
   }

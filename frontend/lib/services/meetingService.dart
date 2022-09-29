@@ -1,9 +1,15 @@
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/services/service.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:dio/dio.dart';
 import 'package:frontend/components/deckException.dart';
 import 'dart:io';
+
+import 'package:image_picker/image_picker.dart';
 
 class MeetingService extends Service {
   Future<List<Meeting>> getMeetings(
@@ -78,8 +84,7 @@ class MeetingService extends Service {
   }
 
   Future<Meeting> updateMeeting(String id, DateTime begin, DateTime end,
-      String place, String kind, String title
-      ) async {
+      String place, String kind, String title) async {
     var body = {
       "begin": begin.toIso8601String(),
       "end": end.toIso8601String(),
@@ -120,7 +125,35 @@ class MeetingService extends Service {
     }
   }
 
-  // Future<Meeting> uploadMeetingMinute(String id, String minute) async {
-  //   // TODO: Implement : https://pub.dev/packages/dio
-  // }
+  Future<Meeting?> uploadMeetingMinute(
+      {required String id, required PlatformFile minute}) async {
+    FormData formData;
+    if (kIsWeb) {
+      Uint8List file = minute.bytes!;
+      formData = FormData.fromMap(
+        {
+          'minute': MultipartFile.fromBytes(
+            file,
+            filename: minute.name,
+            contentType: MediaType('multipart', 'form-data'),
+          )
+        },
+      );
+    } else {
+      formData = FormData.fromMap(
+          {'minute': await MultipartFile.fromFile(minute.path!)});
+    }
+
+    Response<String> response =
+        await dio.post('/meetings/' + id + '/minute', data: formData);
+    try {
+      return Meeting.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 }
