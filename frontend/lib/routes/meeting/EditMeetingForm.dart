@@ -180,6 +180,8 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
           Padding(
               padding: const EdgeInsets.all(8.0),
               child: DropdownButtonFormField(
+                  // Transforming TEAM or COMPANY or EVENT into Team or Company or Event
+                  value: "${widget.meeting.kind[0].toUpperCase()}${widget.meeting.kind.substring(1).toLowerCase()}",
                   decoration: const InputDecoration(
                     icon: const Icon(Icons.category),
                     labelText: "Kind *",

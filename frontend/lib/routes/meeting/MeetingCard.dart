@@ -11,6 +11,7 @@ class MeetingCard extends StatelessWidget {
   MeetingCard({Key? key, required this.meeting}) : super(key: key);
 
   void _editMeetingModal(context) {
+    //TODO: Update list of meetings after submit
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -28,6 +29,7 @@ class MeetingCard extends StatelessWidget {
 
     Meeting? m = await _meetingService.deleteMeeting(id);
     if (m != null) {
+      //TODO: Update list of meetings
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
