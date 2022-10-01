@@ -1,10 +1,5 @@
-import 'dart:html';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
@@ -110,17 +105,45 @@ class _TeamTableState extends State<TeamTable>
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(
-            context,
-            Routes.AddSpeaker,
-          );
-        },
+        onPressed: showCreateTeamDialog,
         label: const Text('Create New Team'),
         icon: const Icon(Icons.person_add),
         backgroundColor: Colors.indigo,
       ),
     );
+  }
+
+  showCreateTeamDialog() {
+    String name = "";
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text("Create New Team"),
+        content: TextField(
+          onChanged: (value) {
+            name = value;
+          },
+          decoration: const InputDecoration(
+              hintText: "Insert the name of the new team"),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, "Cancel"),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => createTeam(name),
+            child: const Text("Create"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void createTeam(String name) async {
+    await _teamService.createTeam(name);
+    setState(() {});
+    Navigator.pop(context, "Create");
   }
 }
 
