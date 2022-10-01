@@ -57,7 +57,7 @@ class TeamPublic {
 
 class Team {
   final String? id;
-  final String? name;
+  String? name;
   final List<TeamMember>? members;
   final List<String>? meetings;
 
@@ -71,7 +71,7 @@ class Team {
       id: json['id'],
       name: json['name'],
       members: members.map((e) => TeamMember.fromJson(e)).toList(),
-      meetings: meetings.length == 0? [] :  meetings as List<String>,
+      meetings: meetings.length == 0 ? [] : meetings as List<String>,
     );
   }
 

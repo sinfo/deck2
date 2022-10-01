@@ -25,7 +25,7 @@ class TeamScreen extends StatefulWidget {
 class _TeamScreen extends State<TeamScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  TeamService teamService = new TeamService();
+  TeamService _teamService = new TeamService();
 
   _TeamScreen({Key? key});
 
@@ -45,6 +45,97 @@ class _TeamScreen extends State<TeamScreen>
 
   void _handleTabIndex() {
     setState(() {});
+  }
+
+  SpeedDial buildSpeedDial() {
+    return SpeedDial(
+      animatedIcon: AnimatedIcons.menu_close,
+      animatedIconTheme: IconThemeData(size: 28.0),
+      backgroundColor: Color(0xff5C7FF2),
+      visible: true,
+      curve: Curves.bounceInOut,
+      children: [
+        SpeedDialChild(
+          child: Icon(Icons.person_remove, color: Colors.white),
+          backgroundColor: Colors.indigo,
+          // TODO
+          onTap: () => print('Remove Members'),
+          label: 'Remove Members',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.person_add, color: Colors.white),
+          backgroundColor: Colors.indigo,
+          // TODO
+          onTap: () => print('Add Members'),
+          label: 'Add Members',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.delete, color: Colors.white),
+          backgroundColor: Colors.indigo,
+          // TODO
+          onTap: () => print('Delete Team'),
+          label: 'Delete Team',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.edit, color: Colors.white),
+          backgroundColor: Colors.indigo,
+          // TODO
+          onTap: () => showEditTeamDialog(),
+          label: 'Edit Team',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+      ],
+    );
+  }
+
+  showEditTeamDialog() {
+    String name = widget.team.name ?? "";
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text("Edit Team"),
+        content: TextFormField(
+          initialValue: name,
+          onChanged: (value) {
+            name = value;
+          },
+          decoration: const InputDecoration(hintText: "New name for the team"),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, "Cancel"),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => editTeam(widget.team.id, name),
+            child: const Text("Update"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void editTeam(String? id, String name) async {
+    if (id == null) {
+      // TODO do something
+      return;
+    }
+    final response = await _teamService.updateTeam(id, name);
+    setState(() {
+      widget.team.name = response?.name ?? "Empty name";
+    });
+    Navigator.pop(context, "Update");
   }
 
   @override
@@ -83,6 +174,8 @@ class _TeamScreen extends State<TeamScreen>
               ))
             ])),
       ),
+      // TODO should only appear in Members tab?
+      floatingActionButton: buildSpeedDial(),
     );
   }
 }
@@ -155,58 +248,6 @@ class DisplayMembers extends StatelessWidget {
   final List<Member?> members;
   const DisplayMembers({Key? key, required this.members}) : super(key: key);
 
-  SpeedDial buildSpeedDial() {
-    return SpeedDial(
-      animatedIcon: AnimatedIcons.menu_close,
-      animatedIconTheme: IconThemeData(size: 28.0),
-      backgroundColor: Color(0xff5C7FF2),
-      visible: true,
-      curve: Curves.bounceInOut,
-      children: [
-        SpeedDialChild(
-          child: Icon(Icons.person_remove, color: Colors.white),
-          backgroundColor: Colors.indigo,
-          // TODO
-          onTap: () => print('Remove Members'),
-          label: 'Remove Members',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-        SpeedDialChild(
-          child: Icon(Icons.person_add, color: Colors.white),
-          backgroundColor: Colors.indigo,
-          // TODO
-          onTap: () => print('Add Members'),
-          label: 'Add Members',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-        SpeedDialChild(
-          child: Icon(Icons.delete, color: Colors.white),
-          backgroundColor: Colors.indigo,
-          // TODO
-          onTap: () => print('Delete Team'),
-          label: 'Delete Team',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-        SpeedDialChild(
-          child: Icon(Icons.edit, color: Colors.white),
-          backgroundColor: Colors.indigo,
-          // TODO
-          onTap: () => print('Edit Team'),
-          label: 'Edit Team',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,7 +257,6 @@ class DisplayMembers extends StatelessWidget {
           physics: BouncingScrollPhysics(),
           scrollDirection: Axis.vertical,
           children: members.map((e) => ShowMember(member: e!)).toList()),
-      floatingActionButton: buildSpeedDial(),
     );
   }
 }
