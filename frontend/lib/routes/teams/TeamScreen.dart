@@ -159,15 +159,35 @@ class DisplayMembers extends StatelessWidget {
     return SpeedDial(
       animatedIcon: AnimatedIcons.menu_close,
       animatedIconTheme: IconThemeData(size: 28.0),
-      backgroundColor: Colors.indigo,
+      backgroundColor: Color(0xff5C7FF2),
       visible: true,
       curve: Curves.bounceInOut,
       children: [
         SpeedDialChild(
-          child: Icon(Icons.delete, color: Colors.white),
-          backgroundColor: Color(0xff5C7FF2),
+          child: Icon(Icons.person_remove, color: Colors.white),
+          backgroundColor: Colors.indigo,
           // TODO
-          onTap: () => print('Delete this team'),
+          onTap: () => print('Remove Members'),
+          label: 'Remove Members',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.person_add, color: Colors.white),
+          backgroundColor: Colors.indigo,
+          // TODO
+          onTap: () => print('Add Members'),
+          label: 'Add Members',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.delete, color: Colors.white),
+          backgroundColor: Colors.indigo,
+          // TODO
+          onTap: () => print('Delete Team'),
           label: 'Delete Team',
           labelStyle:
               TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
@@ -175,20 +195,10 @@ class DisplayMembers extends StatelessWidget {
         ),
         SpeedDialChild(
           child: Icon(Icons.edit, color: Colors.white),
-          backgroundColor: Color(0xff5C7FF2),
+          backgroundColor: Colors.indigo,
           // TODO
-          onTap: () => print('Edit the name of this team'),
+          onTap: () => print('Edit Team'),
           label: 'Edit Team',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-        SpeedDialChild(
-          child: Icon(Icons.person, color: Colors.white),
-          backgroundColor: Color(0xff5C7FF2),
-          // TODO
-          onTap: () => print('Edit Members of this team'),
-          label: 'Edit Members',
           labelStyle:
               TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
           labelBackgroundColor: Colors.black,
