@@ -78,8 +78,7 @@ class _TeamScreen extends State<TeamScreen>
         SpeedDialChild(
           child: Icon(Icons.delete, color: Colors.white),
           backgroundColor: Colors.indigo,
-          // TODO
-          onTap: () => print('Delete Team'),
+          onTap: () => showDeleteTeamDialog(),
           label: 'Delete Team',
           labelStyle:
               TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
@@ -88,7 +87,6 @@ class _TeamScreen extends State<TeamScreen>
         SpeedDialChild(
           child: Icon(Icons.edit, color: Colors.white),
           backgroundColor: Colors.indigo,
-          // TODO
           onTap: () => showEditTeamDialog(),
           label: 'Edit Team',
           labelStyle:
@@ -126,6 +124,27 @@ class _TeamScreen extends State<TeamScreen>
     );
   }
 
+  showDeleteTeamDialog() {
+    final String name = widget.team.name ?? "team";
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text("Remove Team"),
+        content: Text("Are you sure you want to delete \"$name\"?"),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, "No"),
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () => deleteTeam(widget.team.id),
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
+  }
+
   void editTeam(String? id, String name) async {
     if (id == null) {
       // TODO do something
@@ -136,6 +155,17 @@ class _TeamScreen extends State<TeamScreen>
       widget.team.name = response?.name ?? "Empty name";
     });
     Navigator.pop(context, "Update");
+  }
+
+  void deleteTeam(String? id) async {
+    if (id == null) {
+      // TODO do something
+      return;
+    }
+    final response = await _teamService.deleteTeam(id);
+    Navigator.pop(context, "Update");
+    // TODO when going back to TeamTable, it should be refreshed so that the deleted team is not shown. What is the best option to do this?
+    Navigator.pop(context);
   }
 
   @override
