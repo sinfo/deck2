@@ -9,6 +9,7 @@ import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/teamService.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 class TeamScreen extends StatefulWidget {
   final Team team;
@@ -108,36 +109,38 @@ class _DisplayMeetingState extends State<DisplayMeeting> {
 
   @override
   Widget build(BuildContext context) {
-    List<Future<Meeting?>> _futureMeetings = widget.meetingsIds!
-        .map((m) => _meetingService.getMeeting(m))
-        .toList();
+    List<Future<Meeting?>> _futureMeetings =
+        widget.meetingsIds!.map((m) => _meetingService.getMeeting(m)).toList();
 
     return Scaffold(
       backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-      body: (widget.meetingsIds == null) ? Container() : FutureBuilder(
-        future: Future.wait(_futureMeetings),
-        builder: (context, snapshot){
-          if (snapshot.hasData) {
-            List<Meeting?> meetings = snapshot.data as List<Meeting?>;
+      body: (widget.meetingsIds == null)
+          ? Container()
+          : FutureBuilder(
+              future: Future.wait(_futureMeetings),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<Meeting?> meetings = snapshot.data as List<Meeting?>;
 
-            return ListView(
-                  padding: EdgeInsets.symmetric(horizontal: 32),
-                  physics: BouncingScrollPhysics(),
-                  scrollDirection: Axis.vertical,
-                  children:
-                      meetings.map((e) => MeetingCard(meeting: e!)).toList());
-          } else {
-            return Container(
-            child: Center(
-              child: Container(
-                height: 50,
-                width: 50,
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          );
-          }
-        }),      
+                  return ListView(
+                      padding: EdgeInsets.symmetric(horizontal: 32),
+                      physics: BouncingScrollPhysics(),
+                      scrollDirection: Axis.vertical,
+                      children: meetings
+                          .map((e) => MeetingCard(meeting: e!))
+                          .toList());
+                } else {
+                  return Container(
+                    child: Center(
+                      child: Container(
+                        height: 50,
+                        width: 50,
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                  );
+                }
+              }),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {},
         label: const Text('Add Meetings'),
@@ -152,6 +155,48 @@ class DisplayMembers extends StatelessWidget {
   final List<Member?> members;
   const DisplayMembers({Key? key, required this.members}) : super(key: key);
 
+  SpeedDial buildSpeedDial() {
+    return SpeedDial(
+      animatedIcon: AnimatedIcons.menu_close,
+      animatedIconTheme: IconThemeData(size: 28.0),
+      backgroundColor: Colors.indigo,
+      visible: true,
+      curve: Curves.bounceInOut,
+      children: [
+        SpeedDialChild(
+          child: Icon(Icons.delete, color: Colors.white),
+          backgroundColor: Color(0xff5C7FF2),
+          // TODO
+          onTap: () => print('Delete this team'),
+          label: 'Delete Team',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.edit, color: Colors.white),
+          backgroundColor: Color(0xff5C7FF2),
+          // TODO
+          onTap: () => print('Edit the name of this team'),
+          label: 'Edit Team',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+        SpeedDialChild(
+          child: Icon(Icons.person, color: Colors.white),
+          backgroundColor: Color(0xff5C7FF2),
+          // TODO
+          onTap: () => print('Edit Members of this team'),
+          label: 'Edit Members',
+          labelStyle:
+              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+          labelBackgroundColor: Colors.black,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,12 +206,7 @@ class DisplayMembers extends StatelessWidget {
           physics: BouncingScrollPhysics(),
           scrollDirection: Axis.vertical,
           children: members.map((e) => ShowMember(member: e!)).toList()),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
-        label: const Text('Edit Members'),
-        icon: const Icon(Icons.edit),
-        backgroundColor: Color(0xff5C7FF2),
-      ),
+      floatingActionButton: buildSpeedDial(),
     );
   }
 }

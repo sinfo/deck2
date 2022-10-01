@@ -186,7 +186,8 @@ class _MemberBannerState extends State<MemberBanner> {
 class DisplayParticipations extends StatefulWidget {
   final Member member;
   final bool small;
-  const DisplayParticipations({Key? key, required this.member, required this.small})
+  const DisplayParticipations(
+      {Key? key, required this.member, required this.small})
       : super(key: key);
 
   @override
@@ -201,7 +202,8 @@ class _DisplayParticipationsState extends State<DisplayParticipations> {
   @override
   void initState() {
     super.initState();
-    this.memberParticipations = memberService.getMemberParticipations(widget.member.id);
+    this.memberParticipations =
+        memberService.getMemberParticipations(widget.member.id);
   }
 
   @override
@@ -210,7 +212,8 @@ class _DisplayParticipationsState extends State<DisplayParticipations> {
             future: memberParticipations,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                List<MemberParticipation> memParticipations = snapshot.data as List<MemberParticipation>;
+                List<MemberParticipation> memParticipations =
+                    snapshot.data as List<MemberParticipation>;
 
                 return Scaffold(
                   backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
@@ -218,7 +221,11 @@ class _DisplayParticipationsState extends State<DisplayParticipations> {
                     padding: EdgeInsets.symmetric(horizontal: 32),
                     physics: BouncingScrollPhysics(),
                     children: memParticipations.reversed
-                        .map((e) => MemberPartCard(event: e.event!, role: e.role!, team: e.team!, small: widget.small))
+                        .map((e) => MemberPartCard(
+                            event: e.event!,
+                            role: e.role!,
+                            team: e.team!,
+                            small: widget.small))
                         .toList(),
                   ),
                 );
