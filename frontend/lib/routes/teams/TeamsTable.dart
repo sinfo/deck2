@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
@@ -105,11 +106,12 @@ class _TeamTableState extends State<TeamTable>
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: showCreateTeamDialog,
-        label: const Text('Create New Team'),
-        icon: const Icon(Icons.person_add),
-        backgroundColor: Colors.indigo,
-      ),
+          onPressed: showCreateTeamDialog,
+          label: const Text('Create New Team'),
+          icon: const Icon(Icons.person_add),
+          backgroundColor: Provider.of<ThemeNotifier>(context).isDark
+              ? Colors.grey[500]
+              : Colors.indigo),
     );
   }
 
