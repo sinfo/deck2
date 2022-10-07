@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/routes/meeting/EditMeetingForm.dart';
@@ -26,6 +27,18 @@ class MeetingCard extends StatelessWidget {
             child: Container(
               child: EditMeetingForm(meeting: meeting),
             ));
+      },
+    );
+  }
+
+  void _deleteMeetingDialog(context, id) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog('Warning',
+            'Are you sure you want to delete meeting ${meeting.title}?', () {
+          _deleteMeeting(context, id);
+        });
       },
     );
   }
@@ -82,6 +95,10 @@ class MeetingCard extends StatelessWidget {
             id: meeting.id, minute: minute);
 
         if (m != null) {
+          MeetingsNotifier notifier =
+              Provider.of<MeetingsNotifier>(context, listen: false);
+          notifier.edit(m);
+
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -98,6 +115,42 @@ class MeetingCard extends StatelessWidget {
           );
         }
       }
+    }
+  }
+
+  void _deleteMeetingMinuteDialog(context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog('Warning',
+            'Are you sure you want to delete meeting minutes of ${meeting.title}?', () {
+          _deleteMeetingMinute(context);
+        });
+      },
+    );
+  }
+
+  void _deleteMeetingMinute(context) async {
+    Meeting? m = await _meetingService.deleteMeetingMinute(meeting.id);
+    if (m != null) {
+      MeetingsNotifier notifier =
+          Provider.of<MeetingsNotifier>(context, listen: false);
+      notifier.edit(m);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
     }
   }
 
@@ -231,7 +284,7 @@ class MeetingCard extends StatelessWidget {
                                         if (r == Role.ADMIN ||
                                             r == Role.COORDINATOR) {
                                           return IconButton(
-                                              onPressed: () => _deleteMeeting(
+                                              onPressed: () => _deleteMeetingDialog(
                                                   context, meeting.id),
                                               icon: Icon(Icons.delete),
                                               color: Colors.red);
@@ -250,10 +303,21 @@ class MeetingCard extends StatelessWidget {
                                 style: ElevatedButton.styleFrom(
                                     primary: meeting.minute!.isNotEmpty
                                         ? const Color(0xFF5C7FF2)
-                                        : const Color(0xFFF25C5C)),
+                                        : Colors.green),
                                 label: meeting.minute!.isNotEmpty
                                     ? const Text("Minutes")
-                                    : const Text("Add Minutes"))
+                                    : const Text("Add Minutes")),
+                          if (DateTime.now().isAfter(meeting.begin) &&
+                              meeting.minute!.isNotEmpty)
+                            Container(
+                                margin: const EdgeInsets.only(top: 5.0),
+                                child: ElevatedButton.icon(
+                                    onPressed: () =>
+                                        _deleteMeetingMinuteDialog(context),
+                                    icon: Icon(Icons.article),
+                                    style: ElevatedButton.styleFrom(
+                                        primary: const Color(0xFFF25C5C)),
+                                    label: const Text("Delete Minutes")))
                         ])),
               ),
             ],

@@ -18,5 +18,5 @@ func UploadMeetingMinute(event int, meeting primitive.ObjectID, reader io.Reader
 
 func DeleteMeetingMinute(event int, meeting primitive.ObjectID) error {
 	path := fmt.Sprintf("sinfo-%d/%s/%s", event, meetingPath, meeting.Hex())
-	return deleteObject(path);
+	return deleteObject(path)
 }

@@ -143,7 +143,7 @@ func deleteObject(path string) error {
 
 	path = fmt.Sprintf("%s/%s", basePath, path)
 
-	err := client.RemoveObject(name, path);
+	err := client.RemoveObject(name, path)
 
 	if err != nil {
 		return err

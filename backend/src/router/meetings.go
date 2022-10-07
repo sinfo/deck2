@@ -359,7 +359,7 @@ func deleteMeetingMinute(w http.ResponseWriter, r *http.Request) {
 
 	updatedMeeting, err := mongodb.Meetings.DeleteMeetingMinute(meetingID)
 	if err != nil {
-		http.Error(w, "Couldn't update speaker internal image", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't delete meeting minutes", http.StatusExpectationFailed)
 		return
 	}
 
