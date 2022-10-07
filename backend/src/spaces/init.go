@@ -138,3 +138,16 @@ func uploadImage(path string, reader io.Reader, objectSize int64, MIME string) (
 
 	return &url, nil
 }
+
+func deleteObject(path string) error {
+
+	path = fmt.Sprintf("%s/%s", basePath, path)
+
+	err := client.RemoveObject(name, path);
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

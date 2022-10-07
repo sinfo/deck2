@@ -335,3 +335,41 @@ func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 }
+
+func deleteMeetingMinute(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
+		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		return
+	}
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		return
+	}
+
+	err = spaces.DeleteMeetingMinute(currentEvent.ID, meetingID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
+		return
+	}
+
+	updatedMeeting, err := mongodb.Meetings.DeleteMeetingMinute(meetingID)
+	if err != nil {
+		http.Error(w, "Couldn't update speaker internal image", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedMeeting)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindDeletedMeetingMinute,
+			Meeting: &updatedMeeting.ID,
+		})
+	}
+}

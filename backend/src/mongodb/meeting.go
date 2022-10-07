@@ -331,6 +331,28 @@ func (m *MeetingsType) UploadMeetingMinute(meetingID primitive.ObjectID, url str
 	return &updatedMeeting, nil
 }
 
+func (m *MeetingsType) DeleteMeetingMinute(meetingID primitive.ObjectID) (*models.Meeting, error) {
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"minute": "",
+		},
+	}
+
+	var filterQuery = bson.M{"_id": meetingID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedMeeting models.Meeting
+
+	if err := m.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		log.Println("error updating meeting:", err)
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
+}
+
 // AddThread adds a models.Thread to a meeting's list of communications.
 func (m *MeetingsType) AddThread(meetingID primitive.ObjectID, threadID primitive.ObjectID) (*models.Meeting, error) {
 	ctx := context.Background()
