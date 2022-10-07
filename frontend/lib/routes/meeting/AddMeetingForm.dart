@@ -45,7 +45,6 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
             Provider.of<MeetingsNotifier>(context, listen: false);
         notifier.add(m);
 
-        //TODO: Redirect to meeting page
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -68,6 +67,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
           const SnackBar(content: Text('An error occured.')),
         );
       }
+      Navigator.pop(context);
     }
   }
 
