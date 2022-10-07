@@ -145,6 +145,12 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 controller: _beginDateController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a beggining date';
+                  }
+                  return null;
+                },
                 decoration: const InputDecoration(
                   icon: const Icon(Icons.calendar_today),
                   labelText: "Begin Date *",
@@ -163,6 +169,12 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 controller: _endDateController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an ending date';
+                  }
+                  return null;
+                },
                 decoration: const InputDecoration(
                   icon: const Icon(Icons.calendar_today),
                   labelText: "End Date *",
@@ -180,6 +192,12 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
           Padding(
               padding: const EdgeInsets.all(8.0),
               child: DropdownButtonFormField(
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please enter the kind of the meeting';
+                    }
+                    return null;
+                  },
                   decoration: const InputDecoration(
                     icon: const Icon(Icons.category),
                     labelText: "Kind *",

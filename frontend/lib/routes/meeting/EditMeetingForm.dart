@@ -7,8 +7,7 @@ import 'package:provider/provider.dart';
 
 class EditMeetingForm extends StatefulWidget {
   final Meeting meeting;
-  EditMeetingForm({Key? key, required this.meeting})
-      : super(key: key);
+  EditMeetingForm({Key? key, required this.meeting}) : super(key: key);
 
   @override
   _EditMeetingFormState createState() => _EditMeetingFormState();
@@ -59,9 +58,10 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
           widget.meeting.id, _begin.toUtc(), _end.toUtc(), place, _kind, title);
 
       if (m != null) {
-        MeetingsNotifier notifier = Provider.of<MeetingsNotifier>(context, listen: false);
+        MeetingsNotifier notifier =
+            Provider.of<MeetingsNotifier>(context, listen: false);
         notifier.edit(m);
-        
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,10 +102,10 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
     if (datePicker != null && timePicker != null) {
       if (isBegin) {
         _begin = DateTime(datePicker.year, datePicker.month, datePicker.day,
-                timePicker.hour, timePicker.minute);
+            timePicker.hour, timePicker.minute);
       } else {
         _end = DateTime(datePicker.year, datePicker.month, datePicker.day,
-                timePicker.hour, timePicker.minute);
+            timePicker.hour, timePicker.minute);
       }
     }
   }
@@ -151,6 +151,12 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 controller: _beginDateController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a beggining date';
+                  }
+                  return null;
+                },
                 decoration: const InputDecoration(
                   icon: const Icon(Icons.calendar_today),
                   labelText: "Begin Date *",
@@ -169,6 +175,12 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 controller: _endDateController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an ending date';
+                  }
+                  return null;
+                },
                 decoration: const InputDecoration(
                   icon: const Icon(Icons.calendar_today),
                   labelText: "End Date *",
@@ -186,8 +198,15 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
           Padding(
               padding: const EdgeInsets.all(8.0),
               child: DropdownButtonFormField(
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please enter the kind of the meeting';
+                    }
+                    return null;
+                  },
                   // Transforming TEAM or COMPANY or EVENT into Team or Company or Event
-                  value: "${widget.meeting.kind[0].toUpperCase()}${widget.meeting.kind.substring(1).toLowerCase()}",
+                  value:
+                      "${widget.meeting.kind[0].toUpperCase()}${widget.meeting.kind.substring(1).toLowerCase()}",
                   decoration: const InputDecoration(
                     icon: const Icon(Icons.category),
                     labelText: "Kind *",
