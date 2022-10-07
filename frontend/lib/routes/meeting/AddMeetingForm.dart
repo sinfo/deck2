@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class AddMeetingForm extends StatefulWidget {
   AddMeetingForm({Key? key}) : super(key: key);
@@ -28,7 +30,6 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
   String _kind = "";
 
   void _submit() async {
-    //TODO: update meeting list (https://stackoverflow.com/questions/51798498/flutter-setstate-to-another-class/51798698#51798698)
     if (_formKey.currentState!.validate()) {
       var title = _titleController.text;
       var place = _placeController.text;
@@ -40,7 +41,11 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
       Meeting? m = await _meetingService.createMeeting(
           _begin!.toUtc(), _end!.toUtc(), place, _kind, title);
       if (m != null) {
-        //TODO: Redirect to meeting page  
+        MeetingsNotifier notifier =
+            Provider.of<MeetingsNotifier>(context, listen: false);
+        notifier.add(m);
+
+        //TODO: Redirect to meeting page
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -51,6 +56,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
               label: 'Undo',
               onPressed: () {
                 _meetingService.deleteMeeting(m.id);
+                notifier.remove(m);
               },
             ),
           ),
@@ -86,10 +92,10 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
     if (datePicker != null && timePicker != null) {
       if (isBegin) {
         _begin = DateTime(datePicker.year, datePicker.month, datePicker.day,
-                timePicker.hour, timePicker.minute);
+            timePicker.hour, timePicker.minute);
       } else {
         _end = DateTime(datePicker.year, datePicker.month, datePicker.day,
-                timePicker.hour, timePicker.minute);
+            timePicker.hour, timePicker.minute);
       }
     }
   }

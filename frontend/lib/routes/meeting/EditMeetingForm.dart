@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class EditMeetingForm extends StatefulWidget {
   final Meeting meeting;
@@ -55,7 +57,11 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
 
       Meeting? m = await _meetingService.updateMeeting(
           widget.meeting.id, _begin.toUtc(), _end.toUtc(), place, _kind, title);
+
       if (m != null) {
+        MeetingsNotifier notifier = Provider.of<MeetingsNotifier>(context, listen: false);
+        notifier.edit(m);
+        
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(

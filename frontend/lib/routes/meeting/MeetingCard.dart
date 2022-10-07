@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/routes/meeting/EditMeetingForm.dart';
+import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:intl/intl.dart';
@@ -17,7 +18,6 @@ class MeetingCard extends StatelessWidget {
   MeetingCard({Key? key, required this.meeting}) : super(key: key);
 
   void _editMeetingModal(context) {
-    //TODO: Update list of meetings after submit
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -35,7 +35,10 @@ class MeetingCard extends StatelessWidget {
 
     Meeting? m = await _meetingService.deleteMeeting(id);
     if (m != null) {
-      //TODO: Update list of meetings
+      MeetingsNotifier notifier =
+          Provider.of<MeetingsNotifier>(context, listen: false);
+      notifier.remove(m);
+
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,7 +152,7 @@ class MeetingCard extends StatelessWidget {
                     Container(
                       child: Text(
                         meeting.title,
-                        style: TextStyle(color: Colors.black, fontSize: 23.0),
+                        style: TextStyle(fontSize: 23.0),
                         textAlign: TextAlign.left,
                       ),
                     ),
@@ -214,7 +217,6 @@ class MeetingCard extends StatelessWidget {
                               ]),
                           if (DateTime.now().isAfter(meeting.begin))
                             ElevatedButton.icon(
-                                //TODO: Do the upload meeting minutes endpoint
                                 onPressed: () => _uploadMeetingMinute(context),
                                 icon: Icon(Icons.article),
                                 style: ElevatedButton.styleFrom(

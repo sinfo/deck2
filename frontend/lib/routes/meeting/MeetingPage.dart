@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
+import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/services/meetingService.dart';
+import 'package:provider/provider.dart';
 
 class MeetingPage extends StatelessWidget {
   const MeetingPage({Key? key}) : super(key: key);
@@ -46,7 +48,9 @@ class _MeetingListState extends State<MeetingList>
       future: _meetings,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          List<Meeting> meets = snapshot.data as List<Meeting>;
+          MeetingsNotifier notifier = Provider.of<MeetingsNotifier>(context);
+
+          notifier.meetings = snapshot.data as List<Meeting>;
 
           return LayoutBuilder(builder: (context, constraints) {
             bool small = constraints.maxWidth < App.SIZE;
@@ -60,21 +64,25 @@ class _MeetingListState extends State<MeetingList>
                     Tab(text: 'Past'),
                   ],
                 ),
-                Expanded(
-                  child: TabBarView(controller: _tabController, children: [
-                    ListView(
-                      children: meets
-                          .where((m) => DateTime.now().isBefore(m.begin))
-                          .map((e) => MeetingCard(meeting: e))
-                          .toList(),
-                    ),
-                    ListView(
-                      children: meets
-                          .where((m) => DateTime.now().isAfter(m.begin))
-                          .map((e) => MeetingCard(meeting: e))
-                          .toList(),
-                    ),
-                  ]),
+                Consumer<MeetingsNotifier>(
+                  builder: (context, cart, child) {
+                    return Expanded(
+                      child: TabBarView(controller: _tabController, children: [
+                        ListView(
+                          children: notifier
+                              .getUpcoming()
+                              .map((e) => MeetingCard(meeting: e))
+                              .toList(),
+                        ),
+                        ListView(
+                          children: notifier
+                              .getPast()
+                              .map((e) => MeetingCard(meeting: e))
+                              .toList(),
+                        ),
+                      ]),
+                    );
+                  },
                 ),
               ],
             );
