@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 class Session {
-  final String? id;
+  final String id;
   final DateTime begin;
   final DateTime end;
   final String title;
@@ -14,12 +14,12 @@ class Session {
   final SessionTickets? tickets;
 
   Session({
-    this.id,
+    required this.id,
     required this.begin,
     required this.end,
     required this.title,
     this.description,
-    this.place,
+    required this.place,
     required this.kind,
     this.companyId,
     this.speakersIds,
