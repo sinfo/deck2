@@ -167,37 +167,12 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 Navigator.pushNamed(
                   context,
-                  Routes.ShowAllCompanies,
-                  //Routes.AddMeeting,
+                  Routes.AddSession,
                 );
               },
               label: const Text('Add new session'),
               icon: const Icon(Icons.add),
             );
-/*           return FutureBuilder(
-              future: Provider.of<AuthService>(context).role,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  Role r = snapshot.data as Role;
-
-                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
-                    return FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          Routes.AddMeeting,
-                        );
-                      },
-                      label: const Text('Create New Meeting'),
-                      icon: const Icon(Icons.add),
-                    );
-                  } else {
-                    return Container();
-                  }
-                } else {
-                  return Container();
-                }
-              }); */
         }
     }
   }
