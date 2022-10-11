@@ -36,7 +36,7 @@ class SessionCard extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return BlurryDialog('Warning',
-            'Are you sure you want to delete session ${session.session}?', () {
+            'Are you sure you want to delete session ${session.title}?', () {
           _deleteSession(context, id);
         });
       },

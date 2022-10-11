@@ -6,7 +6,7 @@ class Session {
   final DateTime end;
   final String title;
   final String? description;
-  final String? place;
+  final String place;
   final String kind;
   final String? companyId;
   final List<String>? speakersIds;
