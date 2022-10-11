@@ -10,7 +10,7 @@ class SessionsNotifier extends ChangeNotifier {
     return sessions.where((s) => DateTime.now().isBefore(s.begin)).toList();
   }
 
-  List<Meeting> getPast() {
+  List<Session> getPast() {
     return sessions.where((s) => DateTime.now().isAfter(s.begin)).toList();
   }
 
@@ -24,7 +24,7 @@ class SessionsNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
-  void edit(Meeting s) {
+  void edit(Session s) {
     int index = sessions.indexWhere((session) => s.id == session.id);
     if (index != -1) {
       sessions[index] = s;

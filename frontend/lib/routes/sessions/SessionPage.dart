@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/session.dart';
-import 'package:frontend/routes/meeting/SessionCard.dart';
-import 'package:frontend/routes/meeting/SessionsNotifier.dart';
+import 'package:frontend/routes/sessions/SessionCard.dart';
+import 'package:frontend/routes/sessions/SessionsNotifier.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:provider/provider.dart';
 
