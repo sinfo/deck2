@@ -28,6 +28,29 @@ class SessionService extends Service {
     }
   }
 
+  Future<Session> createSession(DateTime begin, DateTime end, String place,
+      String kind, String title) async {
+    var body = {
+      "begin": begin.toIso8601String(),
+      "end": end.toIso8601String(),
+      "place": place,
+      "title": title,
+      "kind": kind.toUpperCase()
+    };
+
+    Response<String> response = await dio.post("/sessions", data: body);
+
+    try {
+      return Session.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
   Future<Session> getSession(String id) async {
     Response<String> response = await dio.get('/sessions/$id');
 
@@ -42,12 +65,30 @@ class SessionService extends Service {
     }
   }
 
-  Future<Session> updateSession(Session session) async {
-    var body = session.toJson();
+  Future<Session> deleteSession(String id) async {
+    Response<String> response = await dio.delete("/sessions/" + id);
+    try {
+      return Session.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 
-    Response<String> response =
-        await dio.put('/sessions/${session.id}', data: body);
+  Future<Session> updateSession(String id, DateTime begin, DateTime end,
+      String place, String kind, String title) async {
+    var body = {
+      "begin": begin.toIso8601String(),
+      "end": end.toIso8601String(),
+      "place": place,
+      "title": title,
+      "kind": kind.toUpperCase()
+    };
 
+    Response<String> response = await dio.put("/sessions/" + id, data: body);
     try {
       return Session.fromJson(json.decode(response.data!));
     } on SocketException {
