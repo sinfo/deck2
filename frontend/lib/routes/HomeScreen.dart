@@ -9,6 +9,7 @@ import 'package:frontend/routes/company/CompanyTable.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
 import 'package:frontend/routes/teams/TeamsTable.dart';
+import 'package:frontend/routes/sessions/SessionsPage.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
@@ -92,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: TeamTable()
                   ),
                   Center(
-                    child: SpeakerTable()
+                    child: SessionsPage()
                   ),
                 ],
               ),
