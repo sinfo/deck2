@@ -201,6 +201,11 @@ class CustomNavBar extends StatelessWidget {
             icon: Icon(
               Icons.people,
             )),
+        BottomNavigationBarItem(
+            label: 'Sessions',
+            icon: Icon(
+              Icons.co_present,
+            )),
       ],
       onTap: onTapped,
     );
