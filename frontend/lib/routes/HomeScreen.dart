@@ -88,7 +88,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   Center(
                     child: CompanyTable(),
                   ),
-                  Center(child: TeamTable()),
+                  Center(
+                    child: TeamTable()
+                  ),
+                  Center(
+                    child: SpeakerTable()
+                  ),
                 ],
               ),
             ),
@@ -153,6 +158,44 @@ class _HomeScreenState extends State<HomeScreen> {
             label: const Text('Show All Members'),
             icon: const Icon(Icons.add),
           );
+        }
+      case 4:
+        {
+          return FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.pushNamed(
+                  context,
+                  Routes.ShowAllCompanies,
+                  //Routes.AddMeeting,
+                );
+              },
+              label: const Text('Add new session'),
+              icon: const Icon(Icons.add),
+            );
+/*           return FutureBuilder(
+              future: Provider.of<AuthService>(context).role,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  Role r = snapshot.data as Role;
+
+                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
+                    return FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          Routes.AddMeeting,
+                        );
+                      },
+                      label: const Text('Create New Meeting'),
+                      icon: const Icon(Icons.add),
+                    );
+                  } else {
+                    return Container();
+                  }
+                } else {
+                  return Container();
+                }
+              }); */
         }
     }
   }
