@@ -29,12 +29,13 @@ class SessionService extends Service {
   }
 
   Future<Session> createSession(DateTime begin, DateTime end, String place,
-      String kind, String title) async {
+      String kind, String title, String description) async {
     var body = {
       "begin": begin.toIso8601String(),
       "end": end.toIso8601String(),
       "place": place,
       "title": title,
+      "description": description,
       "kind": kind.toUpperCase()
     };
 

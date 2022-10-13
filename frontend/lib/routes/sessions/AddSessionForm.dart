@@ -18,6 +18,7 @@ var kinds = ["Talk", "Presentation", "Workshop"];
 class _AddSessionFormState extends State<AddSessionForm> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _placeController = TextEditingController();
   final _beginDateController = TextEditingController();
   final _endDateController = TextEditingController();
@@ -33,13 +34,15 @@ class _AddSessionFormState extends State<AddSessionForm> {
     if (_formKey.currentState!.validate()) {
       var title = _titleController.text;
       var place = _placeController.text;
+      var description = _descriptionController.text;
+
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
       Session? s = await _sessionService.createSession(
-          _begin!.toUtc(), _end!.toUtc(), place, _kind, title);
+          _begin!.toUtc(), _end!.toUtc(), place, _kind, title, description);
       if (s != null) {
         SessionsNotifier notifier =
             Provider.of<SessionsNotifier>(context, listen: false);
@@ -122,6 +125,22 @@ class _AddSessionFormState extends State<AddSessionForm> {
               decoration: const InputDecoration(
                 icon: const Icon(Icons.title),
                 labelText: "Title *",
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _descriptionController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a description';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.description),
+                labelText: "Description *",
               ),
             ),
           ),
