@@ -13,7 +13,7 @@ class EditMeetingForm extends StatefulWidget {
   _EditMeetingFormState createState() => _EditMeetingFormState();
 }
 
-var kinds = ["Event", "Team", "Company"];
+const kinds = ["Event", "Team", "Company"];
 
 class _EditMeetingFormState extends State<EditMeetingForm> {
   final _formKey = GlobalKey<FormState>();

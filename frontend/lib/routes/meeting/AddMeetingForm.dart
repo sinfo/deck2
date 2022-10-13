@@ -13,7 +13,7 @@ class AddMeetingForm extends StatefulWidget {
   _AddMeetingFormState createState() => _AddMeetingFormState();
 }
 
-var kinds = ["Event", "Team", "Company"];
+const kinds = ["Event", "Team", "Company"];
 
 class _AddMeetingFormState extends State<AddMeetingForm> {
   final _formKey = GlobalKey<FormState>();
