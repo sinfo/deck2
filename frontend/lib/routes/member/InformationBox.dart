@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/my_flutter_app_icons.dart';

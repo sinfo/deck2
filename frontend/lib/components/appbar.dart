@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/main.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';

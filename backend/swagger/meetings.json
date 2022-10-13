@@ -25,11 +25,24 @@
                 "schema": {
                     "type": "object",
                     "required": [
+                        "title",
+                        "kind",
                         "begin",
                         "end",
-                        "local"
+                        "place"
                     ],
                     "properties": {
+                        "title": {
+                            "type": "string"
+                        },
+                        "kind": {
+                            "type": "string",
+                            "enum": [
+                                "EVENT",
+                                "TEAM",
+                                "COMPANY"
+                            ]
+                        },
                         "begin": {
                             "type": "string",
                             "format": "date-time"
@@ -38,7 +51,7 @@
                             "type": "string",
                             "format": "date-time"
                         },
-                        "local": {
+                        "place": {
                             "type": "string"
                         }
                     }

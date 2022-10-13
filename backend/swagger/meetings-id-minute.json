@@ -51,5 +51,49 @@
                 "description": "Invalid minute data"
             }
         }
+    },
+    "delete": {
+        "tags": [
+            "meetings"
+        ],
+        "summary": "Delete meeting's minute by ID",
+        "operationId": "deleteMeetingMinute",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the meeting",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "meeting with the updated data",
+                "schema": {
+                    "$ref": "./models/meeting.json"
+                }
+            },
+            "417": {
+                "description": "Unable to perform operation"
+            },
+            "404": {
+                "description": "Meeting not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/Wrapper.dart';
 import 'package:frontend/routes/company/AddCompanyForm.dart';
 import 'package:frontend/routes/company/CompanyListWidget.dart';
+import 'package:frontend/routes/meeting/AddMeetingForm.dart';
 import 'package:frontend/routes/member/AddMemberForm.dart';
 import 'package:frontend/routes/member/MemberListWidget.dart';
 import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
@@ -20,6 +21,7 @@ class Routes {
   static const String AddSpeaker = '/add/speaker';
   static const String ShowAllMembers = '/all/members';
   static const String AddMember = '/add/member';
+  static const String AddMeeting = '/add/meeting';
 }
 
 Route<dynamic> generateRoute(RouteSettings settings) {
@@ -42,6 +44,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => MemberListWidget());
     case Routes.AddMember:
       return SlideRoute(page: AddMemberForm());
+    case Routes.AddMeeting:
+      return SlideRoute(page: AddMeetingForm());
     default:
       return MaterialPageRoute(builder: (context) => UnknownScreen());
   }
