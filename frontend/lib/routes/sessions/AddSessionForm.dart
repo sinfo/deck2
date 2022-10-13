@@ -23,6 +23,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _beginDateController = TextEditingController();
   final _endDateController = TextEditingController();
   final _sessionService = SessionService();
+  final _speakerController = TextEditingController();
 
   DateTime? dateTime;
   DateTime? _begin;
@@ -228,6 +229,24 @@ class _AddSessionFormState extends State<AddSessionForm> {
                     // do other stuff with _category
                     setState(() => _kind = newValue.toString());
                   })),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _speakerController,
+              validator: (value) {
+                if(_kind == "Talk"){
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a speaker';
+                  }
+                  return null;
+                }
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.place),
+                labelText: "Speaker *",
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
