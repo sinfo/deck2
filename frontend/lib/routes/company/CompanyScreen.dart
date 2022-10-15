@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/EditableCard.dart';
 import 'package:frontend/components/addThreadForm.dart';
+import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
@@ -120,6 +121,7 @@ class _CompanyScreenState extends State<CompanyScreen>
       bool small = constraints.maxWidth < App.SIZE;
       return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
+          appBar: CustomAppBar(disableEventChange: true),
           body: DefaultTabController(
             length: 4,
             child: Column(
