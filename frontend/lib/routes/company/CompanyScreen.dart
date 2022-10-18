@@ -187,6 +187,7 @@ class _CompanyScreenState extends State<CompanyScreen>
               ],
             ),
           ),
+          floatingActionButton: _fabAtIndex(context)
         );
       });
     });
