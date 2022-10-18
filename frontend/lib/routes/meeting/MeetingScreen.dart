@@ -380,6 +380,19 @@ class MeetingBanner extends StatelessWidget {
                                                 fontSize: _infoFontSize),
                                           ),
                                         ])),
+                                        RichText(
+                                            text: TextSpan(children: [
+                                          WidgetSpan(
+                                            child: Icon(Icons.format_list_numbered,
+                                                color: Colors.white),
+                                          ),
+                                          TextSpan(
+                                            text: ' ' + meeting.kind.toLowerCase(),
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: _infoFontSize),
+                                          ),
+                                        ])),
                                       ],
                                     ),
                                     Expanded(
