@@ -97,7 +97,7 @@ class TeamService extends Service {
     }
   }
 
-  Future<Team?> addTeamMember(String id, String member, String role) async {
+  Future<Team?> addTeamMember(String id, Member member, String role) async {
     var body = {
       "member": member,
       "role": role,

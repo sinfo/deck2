@@ -9,7 +9,15 @@ import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/teamService.dart';
+import 'package:frontend/services/memberService.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+
+final Map<String, String> roles = {
+  "MEMBER": "Member",
+  "TEAMLEADER": "Team Leader",
+  "COORDINATOR": "Coordinator",
+  "ADMIN": "Administrator"
+};
 
 class TeamScreen extends StatefulWidget {
   final Team team;
@@ -58,8 +66,7 @@ class _TeamScreen extends State<TeamScreen>
         SpeedDialChild(
           child: Icon(Icons.person_remove, color: Colors.white),
           backgroundColor: Colors.indigo,
-          // TODO
-          onTap: () => print('Remove Members'),
+          onTap: () => showRemoveMemberDialog(),
           label: 'Remove Members',
           labelStyle:
               TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
@@ -68,9 +75,8 @@ class _TeamScreen extends State<TeamScreen>
         SpeedDialChild(
           child: Icon(Icons.person_add, color: Colors.white),
           backgroundColor: Colors.indigo,
-          // TODO
-          onTap: () => print('Add Members'),
-          label: 'Add Members',
+          onTap: () => showAddMemberDialog(),
+          label: 'Add Member',
           labelStyle:
               TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
           labelBackgroundColor: Colors.black,
@@ -143,6 +149,136 @@ class _TeamScreen extends State<TeamScreen>
         ],
       ),
     );
+  }
+
+  showRemoveMemberDialog() {
+    String memberId = "";
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text("Remove Team Member"),
+        content: TextFormField(
+          validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a Id';
+                        }
+                        return null;
+                      },
+                      onChanged: (value) {
+                        memberId = value;
+                      },
+          decoration: const InputDecoration(hintText: "Team Member Id"),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, "Cancel"),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => removeTeamMember(widget.team.id, memberId),
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  showAddMemberDialog() {
+    String memberId = "";
+    String memberRole="";
+    return showDialog(
+      context: context,
+      builder: (BuildContext context){ 
+        return AlertDialog(
+          title: Text("Add Member"),
+          content: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: Form(
+              child: Column(
+                children:<Widget>[
+                  DropdownButtonFormField(
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please enter the kind of the meeting';
+                        }
+                        return null;
+                      },
+                      decoration: const InputDecoration(
+                        icon: const Icon(Icons.category),
+                        labelText: "MemberId *",
+                      ),
+                      items: members.map((Member member) {
+                        return new DropdownMenuItem(value: member.id, child: Text(member.name));
+                      }).toList(),
+                      onChanged: (newValue) {
+                        // do other stuff with _category
+                        setState(() => memberId = newValue.toString());
+                  }),
+                   DropdownButtonFormField(
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please enter the kind of the meeting';
+                        }
+                        return null;
+                      },
+                      decoration: const InputDecoration(
+                        icon: const Icon(Icons.category),
+                        labelText: "Role *",
+                      ),
+                      items: roles.keys.map((String role) {
+                        return new DropdownMenuItem(value: role, child: Text(role));
+                      }).toList(),
+                      onChanged: (newValue) {
+                        // do other stuff with _category
+                        setState(() => memberRole = newValue.toString());
+                  }),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, "Cancel"),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () => addMember(widget.team.id, memberId, memberRole),
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      }
+    );
+  }
+
+
+  void addMember(String? id, String memberId, String memberRole) async {
+    if (id == null) {
+      // TODO do something
+      return;
+    }
+
+    MemberService _memberService = MemberService();
+    Member? _member;
+
+     _member = await _memberService.getMember(memberId);
+
+
+    final response = await _teamService.addTeamMember(id, _member, memberRole);
+    setState(() {
+     widget.members = response?.members;
+    });
+    Navigator.pop(context, "Add");
+  }
+
+  void removeTeamMember(String? id, String memberId) async {
+    if (id == null) {
+      // TODO do something
+      return;
+    }
+    final response = await _teamService.deleteTeamMember(id, memberId);
+    Navigator.pop(context, "Delete");
+    Navigator.pop(context);
   }
 
   void editTeam(String? id, String name) async {
