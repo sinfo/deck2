@@ -1,10 +1,13 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/threadCard.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/services/meetingService.dart';
@@ -65,13 +68,13 @@ class _MeetingScreenState extends State<MeetingScreen>
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return Container(child: Text("In Progress...")
-            // child: AddThreadForm(
-            //     meeting: widget.meeting,
-            //     onEditMeeting: (context, _meeting) {
-            //       meetingChangedCallback(context, meeting: _meeting);
-            //     }),
-            );
+        return Container(
+          child: AddThreadForm(
+              meeting: widget.meeting,
+              onEditMeeting: (context, _meeting) {
+                meetingChangedCallback(context, meeting: _meeting);
+              }),
+        );
       },
     );
   }
@@ -102,7 +105,6 @@ class _MeetingScreenState extends State<MeetingScreen>
           },
           label: const Text('Add New Member'),
           icon: const Icon(Icons.edit),
-          backgroundColor: Color(0xff5C7FF2),
         );
       case 1:
         {
@@ -147,9 +149,9 @@ class _MeetingScreenState extends State<MeetingScreen>
                       Container(
                         child: Center(child: Text('Work in progress :)')),
                       ),
-                      Container(
-                        child: Center(child: Text('Work in progress :)')),
-                      ),
+                      MeetingsCommunications(
+                          communications: widget.meeting.communications,
+                          small: small),
                     ]),
                   ),
                 ],
@@ -158,6 +160,51 @@ class _MeetingScreenState extends State<MeetingScreen>
             floatingActionButton: _fabAtIndex(context));
       });
     });
+  }
+}
+
+class MeetingsCommunications extends StatelessWidget {
+  final Future<List<Thread>?> communications;
+  final bool small;
+
+  MeetingsCommunications(
+      {Key? key, required this.communications, required this.small});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FutureBuilder(
+        future: communications,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text('Error');
+          }
+          if (snapshot.connectionState == ConnectionState.done) {
+            List<Thread>? threads = snapshot.data as List<Thread>?;
+            if (threads == null) {
+              threads = [];
+            }
+            threads.sort((a, b) => b.posted.compareTo(a.posted));
+            return ListView(controller: ScrollController(), children: [
+              ...threads
+                  .map(
+                    (thread) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ThreadCard(
+                        thread: thread,
+                        small: small,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ]);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+    );
   }
 }
 
@@ -343,6 +390,10 @@ class MeetingBanner extends StatelessWidget {
                                                 ' ' +
                                                 DateFormat.MMMM()
                                                     .format(meeting.begin)
+                                                    .toUpperCase() +
+                                                ' ' +
+                                                DateFormat.y()
+                                                    .format(meeting.begin)
                                                     .toUpperCase(),
                                             style: TextStyle(
                                                 color: Colors.white,
@@ -383,11 +434,13 @@ class MeetingBanner extends StatelessWidget {
                                         RichText(
                                             text: TextSpan(children: [
                                           WidgetSpan(
-                                            child: Icon(Icons.format_list_numbered,
+                                            child: Icon(
+                                                Icons.format_list_numbered,
                                                 color: Colors.white),
                                           ),
                                           TextSpan(
-                                            text: ' ' + meeting.kind.toLowerCase(),
+                                            text: ' ' +
+                                                meeting.kind.toLowerCase(),
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: _infoFontSize),

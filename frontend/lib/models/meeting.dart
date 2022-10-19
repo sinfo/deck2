@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:frontend/models/thread.dart';
+import 'package:frontend/services/threadService.dart';
+
 class Meeting {
   final String id;
   final DateTime begin;
@@ -10,6 +13,24 @@ class Meeting {
   final List<String> communicationsId;
   final String? minute;
   final MeetingParticipants participants;
+  List<Thread>? _communications;
+
+  Future<List<Thread>?> get communications async {
+    ThreadService _threadService = ThreadService();
+
+    if (_communications != null && _communications!.length == 0) {
+      return _communications;
+    }
+
+    _communications = [];
+    for (String element in communicationsId) {
+      Thread? t = await _threadService.getThread(element);
+      if (t != null) {
+        _communications!.add(t);
+      }
+    }
+    return _communications;
+  }
 
   Meeting(
       {required this.id,
