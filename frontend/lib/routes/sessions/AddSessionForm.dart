@@ -24,6 +24,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _endDateController = TextEditingController();
   final _sessionService = SessionService();
   final _speakerController = TextEditingController();
+  final _videoURLController = TextEditingController();
 
   DateTime? dateTime;
   DateTime? _begin;
@@ -247,7 +248,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _placeController,
+              controller: _videoURLController,
               decoration: const InputDecoration(
                 icon: const Icon(Icons.place),
                 labelText: "VideoURL ",
