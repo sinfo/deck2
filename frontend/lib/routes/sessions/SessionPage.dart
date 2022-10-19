@@ -48,9 +48,9 @@ class _SessionListState extends State<SessionList>
       future: _sessions,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          SessionsNotifier notifier = Provider.of<SessionsNotifier>(context);
+          // SessionsNotifier notifier = Provider.of<SessionsNotifier>(context);
 
-          notifier.sessions = snapshot.data as List<Session>;
+          // notifier.sessions = snapshot.data as List<Session>;
 
           return LayoutBuilder(builder: (context, constraints) {
             bool small = constraints.maxWidth < App.SIZE;
@@ -64,26 +64,26 @@ class _SessionListState extends State<SessionList>
                     Tab(text: 'Past'),
                   ],
                 ),
-                Consumer<SessionsNotifier>(
-                  builder: (context, cart, child) {
-                    return Expanded(
-                      child: TabBarView(controller: _tabController, children: [
-                        ListView(
-                          children: notifier
-                              .getUpcoming()
-                              .map((e) => SessionCard(session: e))
-                              .toList(),
-                        ),
-                        ListView(
-                          children: notifier
-                              .getPast()
-                              .map((e) => SessionCard(session: e))
-                              .toList(),
-                        ),
-                      ]),
-                    );
-                  },
-                ),
+                // Consumer<SessionsNotifier>(
+                //   builder: (context, cart, child) {
+                //     return Expanded(
+                //       child: TabBarView(controller: _tabController, children: [
+                //         ListView(
+                //           children: notifier
+                //               .getUpcoming()
+                //               .map((e) => SessionCard(session: e))
+                //               .toList(),
+                //         ),
+                //         ListView(
+                //           children: notifier
+                //               .getPast()
+                //               .map((e) => SessionCard(session: e))
+                //               .toList(),
+                //         ),
+                //       ]),
+                //     );
+                //   },
+                // ),
               ],
             );
           });
