@@ -32,3 +32,4 @@ class SessionsNotifier extends ChangeNotifier {
     }
   }
 }
+
