@@ -149,15 +149,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
               controller: _placeController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a place';
-                }
-                return null;
-              },
               decoration: const InputDecoration(
                 icon: const Icon(Icons.place),
-                labelText: "Place *",
+                labelText: "Place ",
               ),
             ),
           ),
@@ -228,6 +222,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
                   onChanged: (newValue) {
                     // do other stuff with _category
                     setState(() => _kind = newValue.toString());
+                    if(_kind == "Talk"){
+                      
+                    }
                   })),
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -244,6 +241,16 @@ class _AddSessionFormState extends State<AddSessionForm> {
               decoration: const InputDecoration(
                 icon: const Icon(Icons.place),
                 labelText: "Speaker *",
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _placeController,
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.place),
+                labelText: "VideoURL ",
               ),
             ),
           ),
