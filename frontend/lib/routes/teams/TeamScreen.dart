@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
@@ -21,7 +22,7 @@ final Map<String, String> roles = {
 
 class TeamScreen extends StatefulWidget {
   final Team team;
-  final List<Member?> members;
+  List<Member?> members;
 
   TeamScreen({Key? key, required this.team, required this.members})
       : super(key: key);
@@ -159,14 +160,14 @@ class _TeamScreen extends State<TeamScreen>
         title: const Text("Remove Team Member"),
         content: TextFormField(
           validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a Id';
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        memberId = value;
-                      },
+            if (value == null || value.isEmpty) {
+              return 'Please enter a Id';
+            }
+            return null;
+          },
+          onChanged: (value) {
+            memberId = value;
+          },
           decoration: const InputDecoration(hintText: "Team Member Id"),
         ),
         actions: <Widget>[
@@ -185,72 +186,72 @@ class _TeamScreen extends State<TeamScreen>
 
   showAddMemberDialog() {
     String memberId = "";
-    String memberRole="";
+    String memberRole = "";
     return showDialog(
-      context: context,
-      builder: (BuildContext context){ 
-        return AlertDialog(
-          title: Text("Add Member"),
-          content: Padding(
-            padding: const EdgeInsets.all(4.0),
-            child: Form(
-              child: Column(
-                children:<Widget>[
-                  DropdownButtonFormField(
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please enter the kind of the meeting';
-                        }
-                        return null;
-                      },
-                      decoration: const InputDecoration(
-                        icon: const Icon(Icons.category),
-                        labelText: "MemberId *",
-                      ),
-                      items: members.map((Member member) {
-                        return new DropdownMenuItem(value: member.id, child: Text(member.name));
-                      }).toList(),
-                      onChanged: (newValue) {
-                        // do other stuff with _category
-                        setState(() => memberId = newValue.toString());
-                  }),
-                   DropdownButtonFormField(
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please enter the kind of the meeting';
-                        }
-                        return null;
-                      },
-                      decoration: const InputDecoration(
-                        icon: const Icon(Icons.category),
-                        labelText: "Role *",
-                      ),
-                      items: roles.keys.map((String role) {
-                        return new DropdownMenuItem(value: role, child: Text(role));
-                      }).toList(),
-                      onChanged: (newValue) {
-                        // do other stuff with _category
-                        setState(() => memberRole = newValue.toString());
-                  }),
-                ],
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Add Member"),
+            content: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Form(
+                child: Column(
+                  children: <Widget>[
+                    DropdownButtonFormField(
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select one member';
+                          }
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          icon: const Icon(Icons.category),
+                          labelText: "MemberId *",
+                        ),
+                        items: widget.members.map((Member? member) {
+                          return new DropdownMenuItem(
+                              value: member!.id, child: Text(member.name));
+                        }).toList(),
+                        onChanged: (newValue) {
+                          // do other stuff with _category
+                          setState(() => memberId = newValue.toString());
+                        }),
+                    DropdownButtonFormField(
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select one role';
+                          }
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          icon: const Icon(Icons.category),
+                          labelText: "Role *",
+                        ),
+                        items: roles.keys.map((String role) {
+                          return new DropdownMenuItem(
+                              value: role, child: Text(role));
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() => memberRole = newValue.toString());
+                        }),
+                  ],
+                ),
               ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(context, "Cancel"),
-              child: const Text("Cancel"),
-            ),
-            TextButton(
-              onPressed: () => addMember(widget.team.id, memberId, memberRole),
-              child: const Text("Add"),
-            ),
-          ],
-        );
-      }
-    );
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.pop(context, "Cancel"),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () =>
+                    addMember(widget.team.id, memberId, memberRole),
+                child: const Text("Add"),
+              ),
+            ],
+          );
+        });
   }
-
 
   void addMember(String? id, String memberId, String memberRole) async {
     if (id == null) {
@@ -259,14 +260,11 @@ class _TeamScreen extends State<TeamScreen>
     }
 
     MemberService _memberService = MemberService();
-    Member? _member;
-
-     _member = await _memberService.getMember(memberId);
-
-
-    final response = await _teamService.addTeamMember(id, _member, memberRole);
+    await _teamService.addTeamMember(id, memberId, memberRole);
+    var members = await _memberService.getMembers(
+        event: App.localStorage.getInt("event"));
     setState(() {
-     widget.members = response?.members;
+      widget.members = members;
     });
     Navigator.pop(context, "Add");
   }
