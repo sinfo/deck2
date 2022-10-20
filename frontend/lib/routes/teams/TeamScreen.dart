@@ -213,7 +213,6 @@ class _TeamScreen extends State<TeamScreen>
                               value: member!.id, child: Text(member.name));
                         }).toList(),
                         onChanged: (newValue) {
-                          // do other stuff with _category
                           setState(() => memberId = newValue.toString());
                         }),
                     DropdownButtonFormField(
