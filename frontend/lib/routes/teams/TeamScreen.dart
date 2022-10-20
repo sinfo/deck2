@@ -208,6 +208,7 @@ class _TeamScreen extends State<TeamScreen>
                           icon: const Icon(Icons.category),
                           labelText: "MemberId *",
                         ),
+                        // TODO: We need to fetch the event members somewhere and then see which of those are not part of the team already.
                         items: widget.members.map((Member? member) {
                           return new DropdownMenuItem(
                               value: member!.id, child: Text(member.name));
