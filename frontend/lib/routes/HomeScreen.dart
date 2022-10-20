@@ -11,6 +11,8 @@ import 'package:frontend/routes/teams/TeamsTable.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
+import 'package:frontend/routes/session/SessionPage.dart';
+
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key? key}) : super(key: key);
@@ -93,6 +95,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Center(
                     child: MeetingPage(),
                   ),
+                  Center(
+                    child: SessionPage(),
+                  )
                 ],
               ),
             ),
@@ -186,6 +191,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               });
         }
+
+      case 5:
+        {
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                Routes.AddMeeting,
+              );
+            },
+            label: const Text('Create New Session'),
+            icon: const Icon(Icons.add),
+          );
+        }
     }
   }
 }
@@ -236,6 +255,11 @@ class CustomNavBar extends StatelessWidget {
             label: 'Meetings',
             icon: Icon(
               Icons.meeting_room,
+            )),
+        BottomNavigationBarItem(
+            label: 'Sessions',
+            icon: Icon(
+              Icons.co_present,
             )),
       ],
       onTap: onTapped,
