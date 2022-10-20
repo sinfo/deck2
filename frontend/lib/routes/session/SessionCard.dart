@@ -153,7 +153,7 @@ class SessionCard extends StatelessWidget {
                       ),
                       Container(
                         child: Text(
-                          session.place,
+                          session.place ?? 'another value',
                           style: TextStyle(
                               color: Colors.grey, fontSize: _placeDateFontSize),
                           textAlign: TextAlign.left,
