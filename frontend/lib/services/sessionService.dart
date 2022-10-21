@@ -52,7 +52,7 @@ class SessionService extends Service {
       "kind": kind.toUpperCase()
     };
 
-    Response<String> response = await dio.post("/sessions", data: body);
+    Response<String> response = await dio.post("/events/sessions", data: body);
 
     try {
       return Session.fromJson(json.decode(response.data!));

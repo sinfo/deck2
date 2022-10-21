@@ -198,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pushNamed(
                 context,
-                Routes.AddMeeting,
+                Routes.AddSession,
               );
             },
             label: const Text('Create New Session'),

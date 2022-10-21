@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 class Session {
-  final String? id;
+  final String id;
   final DateTime begin;
   final DateTime end;
   final String title;
@@ -9,12 +9,12 @@ class Session {
   final String? place;
   final String kind;
   final String? companyId;
-  final List<String>? speakersIds;
+  final String? speaker;
   final String? videoURL;
   final SessionTickets? tickets;
 
   Session({
-    this.id,
+    required this.id,
     required this.begin,
     required this.end,
     required this.title,
@@ -22,7 +22,7 @@ class Session {
     this.place,
     required this.kind,
     this.companyId,
-    this.speakersIds,
+    this.speaker,
     this.videoURL,
     this.tickets,
   });
@@ -37,7 +37,7 @@ class Session {
       place: json['place'],
       kind: json['kind'],
       companyId: json['company'],
-      speakersIds: json['speaker'],
+      speaker: json['speaker'],
       videoURL: json['videoURL'],
       tickets: SessionTickets.fromJson(json['tickets']),
     );
@@ -52,7 +52,7 @@ class Session {
         'place': place,
         'kind': kind,
         'company': companyId,
-        'speaker': speakersIds,
+        'speaker': speaker,
         'videoURL': videoURL,
         'tickets': tickets?.toJson(),
       };

@@ -281,7 +281,7 @@ class EventService extends Service {
     };
 
     if (s.kind == 'TALK') {
-      body['speaker'] = json.encode(s.speakersIds);
+      body['speaker'] = json.encode(s.speaker);
     } else {
       body['company'] = s.companyId;
     }

@@ -21,6 +21,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _placeController = TextEditingController();
   final _beginDateController = TextEditingController();
   final _endDateController = TextEditingController();
+  final _speakerController = TextEditingController();
   final _sessionService = SessionService();
 
   DateTime? dateTime;
@@ -33,6 +34,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
     if (_formKey.currentState!.validate()) {
       var title = _titleController.text;
       var place = _placeController.text;
+      var speaker = _speakerController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
@@ -41,6 +43,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
       Session? s = await _sessionService.createSession(
           _begin!.toUtc(), _end!.toUtc(), place, _kind, title);
       if (s != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('HERE')),
+        );
         SessionsNotifier notifier =
             Provider.of<SessionsNotifier>(context, listen: false);
         notifier.add(s);
@@ -61,6 +66,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
           ),
         );
       } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('BL')),
+        );
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -209,6 +217,22 @@ class _AddSessionFormState extends State<AddSessionForm> {
                     // do other stuff with _category
                     setState(() => _kind = newValue.toString());
                   })),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _speakerController,
+              validator: (value) {
+                if ((value == null || value.isEmpty) && _kind == "TALK") {
+                  return 'Please enter a speaker';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.star),
+                labelText: "Speaker *",
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
