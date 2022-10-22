@@ -39,13 +39,14 @@ class _AddSessionFormState extends State<AddSessionForm> {
       var place = _placeController.text;
       var speaker = _speakerController.text;
       var description = _descriptionController.text;
+      var company = _companyController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
       Session? s = await _sessionService.createSession(_begin!.toUtc(),
-          _end!.toUtc(), place, _kind, title, description, speaker);
+          _end!.toUtc(), place, _kind, title, description, speaker, company);
       if (s != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('HERE')),
@@ -234,7 +235,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       }
                     },
                     decoration: const InputDecoration(
-                      icon: const Icon(Icons.place),
+                      icon: const Icon(Icons.speaker),
                       labelText: "Speaker *",
                     ),
                   )
@@ -256,12 +257,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
               controller: _placeController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a place';
-                }
-                return null;
-              },
               decoration: const InputDecoration(
                 icon: const Icon(Icons.place),
                 labelText: "Place ",

@@ -42,17 +42,34 @@ class SessionService extends Service {
     }
   }
 
-  Future<Session> createSession(DateTime begin, DateTime end, String place,
-      String kind, String title, String description, String speaker) async {
-    var body = {
-      "begin": begin.toIso8601String(),
-      "end": end.toIso8601String(),
-      "place": place,
-      "title": title,
-      "kind": kind.toUpperCase(),
-      "description": description,
-      "speaker": speaker
-    };
+  Future<Session> createSession(
+      DateTime begin,
+      DateTime end,
+      String place,
+      String kind,
+      String title,
+      String description,
+      String? speaker,
+      String? company) async {
+    var body = kind == "TALK"
+        ? {
+            "begin": begin.toIso8601String(),
+            "end": end.toIso8601String(),
+            "place": place,
+            "title": title,
+            "kind": kind.toUpperCase(),
+            "description": description,
+            "speaker": speaker
+          }
+        : {
+            "begin": begin.toIso8601String(),
+            "end": end.toIso8601String(),
+            "place": place,
+            "title": title,
+            "kind": kind.toUpperCase(),
+            "description": description,
+            "company": speaker
+          };
 
     Response<String> response = await dio.post("/events/sessions", data: body);
 
