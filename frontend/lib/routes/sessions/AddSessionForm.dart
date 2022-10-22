@@ -38,7 +38,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
       var place = _placeController.text;
       var description = _descriptionController.text;
 
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
@@ -223,37 +222,43 @@ class _AddSessionFormState extends State<AddSessionForm> {
                   onChanged: (newValue) {
                     // do other stuff with _category
                     setState(() => _kind = newValue.toString());
-                    if(_kind == "Talk"){
-                      
+                    if (_kind == "Talk") {
+                      setState(() {
+                        _kind = "Talk";
+                      });
                     }
                   })),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _speakerController,
-              validator: (value) {
-                if(_kind == "Talk"){
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a speaker';
-                  }
-                  return null;
-                }
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.place),
-                labelText: "Speaker *",
-              ),
-            ),
+            child: (_kind == "Talk")
+                ? TextFormField(
+                    controller: _speakerController,
+                    validator: (value) {
+                      if (_kind == "Talk") {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a speaker';
+                        }
+                        return null;
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.place),
+                      labelText: "Speaker *",
+                    ),
+                  )
+                : null,
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _videoURLController,
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.place),
-                labelText: "VideoURL ",
-              ),
-            ),
+            child: (_kind == "Talk")
+                ? TextFormField(
+                    controller: _videoURLController,
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.place),
+                      labelText: "VideoURL ",
+                    ),
+                  )
+                : null,
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
