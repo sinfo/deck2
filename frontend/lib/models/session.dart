@@ -5,7 +5,7 @@ class Session {
   final DateTime begin;
   final DateTime end;
   final String title;
-  final String? description;
+  final String description;
   final String? place;
   final String kind;
   final String? companyId;
@@ -18,7 +18,7 @@ class Session {
     required this.begin,
     required this.end,
     required this.title,
-    this.description,
+    required this.description,
     this.place,
     required this.kind,
     this.companyId,
