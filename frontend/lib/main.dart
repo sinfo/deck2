@@ -4,6 +4,7 @@ import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
+import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/services/authService.dart';
@@ -34,6 +35,9 @@ Future main() async {
       ),
       ChangeNotifierProvider<MeetingsNotifier>(
         create: (_) => MeetingsNotifier(meetings: []),
+      ),
+      ChangeNotifierProvider<SessionsNotifier>(
+        create: (_) => SessionsNotifier(sessions: []),
       ),
       ChangeNotifierProvider<AuthService>(
         create: (_) => AuthService(),

@@ -13,7 +13,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/routes/session/SessionPage.dart';
 
-
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key? key}) : super(key: key);
 
@@ -194,16 +193,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
       case 5:
         {
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                Routes.AddSession,
-              );
-            },
-            label: const Text('Create New Session'),
-            icon: const Icon(Icons.add),
-          );
+          return FutureBuilder(
+              future: Provider.of<AuthService>(context).role,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  Role r = snapshot.data as Role;
+
+                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
+                    return FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          Routes.AddSession,
+                        );
+                      },
+                      label: const Text('Create New Session'),
+                      icon: const Icon(Icons.add),
+                    );
+                  } else {
+                    return Container();
+                  }
+                } else {
+                  return Container();
+                }
+              });
         }
     }
   }
