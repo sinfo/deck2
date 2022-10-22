@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/session.dart';
+import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/services/sessionService.dart';
+import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +28,10 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _companyController = TextEditingController();
   final _videoURLController = TextEditingController();
   final _sessionService = SessionService();
+
+  late Future<List<Speaker>> speakers;
+
+  SpeakerService speakerService = new SpeakerService();
 
   DateTime? dateTime;
   DateTime? _begin;
@@ -120,169 +126,220 @@ class _AddSessionFormState extends State<AddSessionForm> {
   Widget _buildForm() {
     return Form(
       key: _formKey,
-      child: Column(
-        children: [
-          Padding(
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextFormField(
+            controller: _titleController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a title';
+              }
+              return null;
+            },
+            decoration: const InputDecoration(
+              icon: const Icon(Icons.title),
+              labelText: "Title *",
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextFormField(
+            controller: _descriptionController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a description';
+              }
+              return null;
+            },
+            decoration: const InputDecoration(
+              icon: const Icon(Icons.description),
+              labelText: "Description *",
+            ),
+          ),
+        ),
+        Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _titleController,
+              controller: _beginDateController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a title';
+                  return 'Please enter a beggining date';
                 }
                 return null;
               },
               decoration: const InputDecoration(
-                icon: const Icon(Icons.title),
-                labelText: "Title *",
+                icon: const Icon(Icons.calendar_today),
+                labelText: "Begin Date *",
               ),
-            ),
-          ),
-          Padding(
+              readOnly: true, //prevents editing the date in the form field
+              onTap: () async {
+                await _selectDateTime(context, true);
+                String formattedDate = getDateTime(_begin!);
+
+                setState(() {
+                  _beginDateController.text = formattedDate;
+                });
+              },
+            )),
+        Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _descriptionController,
+              controller: _endDateController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a description';
+                  return 'Please enter an ending date';
                 }
                 return null;
               },
               decoration: const InputDecoration(
-                icon: const Icon(Icons.description),
-                labelText: "Description *",
+                icon: const Icon(Icons.calendar_today),
+                labelText: "End Date *",
               ),
-            ),
-          ),
-          Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextFormField(
-                controller: _beginDateController,
+              readOnly: true, //prevents editing the date in the form field
+              onTap: () async {
+                await _selectDateTime(context, false);
+                String formattedDate = getDateTime(_end!);
+
+                setState(() {
+                  _endDateController.text = formattedDate;
+                });
+              },
+            )),
+        Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: DropdownButtonFormField(
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a beggining date';
+                  if (value == null) {
+                    return 'Please enter the kind of session';
                   }
                   return null;
                 },
                 decoration: const InputDecoration(
-                  icon: const Icon(Icons.calendar_today),
-                  labelText: "Begin Date *",
+                  icon: const Icon(Icons.category),
+                  labelText: "Kind *",
                 ),
-                readOnly: true, //prevents editing the date in the form field
-                onTap: () async {
-                  await _selectDateTime(context, true);
-                  String formattedDate = getDateTime(_begin!);
-
-                  setState(() {
-                    _beginDateController.text = formattedDate;
-                  });
-                },
-              )),
-          Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextFormField(
-                controller: _endDateController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an ending date';
-                  }
-                  return null;
-                },
-                decoration: const InputDecoration(
-                  icon: const Icon(Icons.calendar_today),
-                  labelText: "End Date *",
-                ),
-                readOnly: true, //prevents editing the date in the form field
-                onTap: () async {
-                  await _selectDateTime(context, false);
-                  String formattedDate = getDateTime(_end!);
-
-                  setState(() {
-                    _endDateController.text = formattedDate;
-                  });
-                },
-              )),
-          Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: DropdownButtonFormField(
+                items: kinds.map((String kind) {
+                  return new DropdownMenuItem(value: kind, child: Text(kind));
+                }).toList(),
+                onChanged: (newValue) {
+                  setState(() => _kind = newValue.toString());
+                })),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: (_kind == "Talk")
+              ? TextFormField(
+                  controller: _speakerController,
                   validator: (value) {
-                    if (value == null) {
-                      return 'Please enter the kind of session';
+                    if (_kind == "Talk") {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a speaker';
+                      }
+                      return null;
                     }
-                    return null;
                   },
                   decoration: const InputDecoration(
-                    icon: const Icon(Icons.category),
-                    labelText: "Kind *",
+                    icon: const Icon(Icons.star),
+                    labelText: "Speaker *",
                   ),
-                  items: kinds.map((String kind) {
-                    return new DropdownMenuItem(value: kind, child: Text(kind));
-                  }).toList(),
-                  onChanged: (newValue) {
-                    setState(() => _kind = newValue.toString());
-                  })),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: (_kind == "Talk")
-                ? TextFormField(
-                    controller: _speakerController,
-                    validator: (value) {
-                      if (_kind == "Talk") {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a speaker';
-                        }
-                        return null;
-                      }
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.speaker),
-                      labelText: "Speaker *",
-                    ),
-                  )
-                : null,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: (_kind == "Workshop" || _kind == "Presentation")
-                ? TextFormField(
-                    controller: _companyController,
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.business),
-                      labelText: "Company *",
-                    ),
-                  )
-                : null,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _placeController,
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.place),
-                labelText: "Place ",
-              ),
+                  onChanged: (newQuery) {
+                    setState(() {});
+                    if (_speakerController.text.length > 1) {
+                      this.speakers = speakerService.getSpeakers(
+                          name: _speakerController.text);
+                    }
+                  })
+              : null,
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: (_kind == "Workshop" || _kind == "Presentation")
+              ? TextFormField(
+                  controller: _companyController,
+                  decoration: const InputDecoration(
+                    icon: const Icon(Icons.business),
+                    labelText: "Company *",
+                  ),
+                )
+              : null,
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextFormField(
+            controller: _placeController,
+            decoration: const InputDecoration(
+              icon: const Icon(Icons.place),
+              labelText: "Place ",
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _videoURLController,
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.video_call),
-                labelText: "VideoURL",
-              ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextFormField(
+            controller: _videoURLController,
+            decoration: const InputDecoration(
+              icon: const Icon(Icons.video_call),
+              labelText: "VideoURL",
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () => _submit(),
-              child: const Text('Submit'),
-            ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: ElevatedButton(
+            onPressed: () => _submit(),
+            child: const Text('Submit'),
           ),
-        ],
-      ),
+        ),
+        ...getResults(MediaQuery.of(context).size.height / 2)
+      ]),
     );
+  }
+
+  List<Widget> getResults(double height) {
+    if (_speakerController.text.length > 1) {
+      return [
+        Container(
+            decoration: new BoxDecoration(
+              color: Theme.of(context).cardColor,
+            ),
+            child: FutureBuilder(
+                future: Future.wait([this.speakers]),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    List<dynamic> data = snapshot.data as List<dynamic>;
+
+                    List<Speaker> speaksMatched = data[0] as List<Speaker>;
+                    return searchResults(speaksMatched, height);
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                }))
+      ];
+    } else {
+      return [];
+    }
+  }
+
+  Widget searchResults(List<Speaker> speakers, double listHeight) {
+    List<Widget> results = getListCards(speakers);
+    return Container(
+        constraints: BoxConstraints(maxHeight: listHeight),
+        child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: results.length,
+            itemBuilder: (BuildContext context, int index) {
+              return results[index];
+            }));
+  }
+
+  List<Widget> getListCards(List<Speaker> speakers) {
+    List<Widget> results = [];
+    if (speakers.length != 0) {
+      results.addAll(speakers.map(
+          (e) => SearchResultWidget(speaker: e, index: speakers.indexOf(e))));
+    }
+    return results;
   }
 
   @override
