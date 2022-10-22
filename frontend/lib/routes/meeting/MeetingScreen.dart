@@ -27,12 +27,10 @@ class MeetingScreen extends StatefulWidget {
 class _MeetingScreenState extends State<MeetingScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  late final MeetingService _meetingService;
 
   @override
   void initState() {
     super.initState();
-    _meetingService = MeetingService();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabIndex);
   }

@@ -242,18 +242,19 @@ class ThreadCardHeader extends StatelessWidget {
                 ),
                 Row(
                   children: [
-                    if (owner)
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: IconButton(
-                            onPressed: () {}, icon: Icon(Icons.delete)),
-                      ),
-                    if (owner)
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: IconButton(
-                            onPressed: () {}, icon: Icon(Icons.edit)),
-                      ),
+                    // TODO: Implement edit and delete thread
+                    // if (owner)
+                    //   Padding(
+                    //     padding: const EdgeInsets.all(8.0),
+                    //     child: IconButton(
+                    //         onPressed: () {}, icon: Icon(Icons.delete)),
+                    //   ),
+                    // if (owner)
+                    //   Padding(
+                    //     padding: const EdgeInsets.all(8.0),
+                    //     child: IconButton(
+                    //         onPressed: () {}, icon: Icon(Icons.edit)),
+                    //   ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Text(

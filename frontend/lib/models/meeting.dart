@@ -18,17 +18,23 @@ class Meeting {
   Future<List<Thread>?> get communications async {
     ThreadService _threadService = ThreadService();
 
-    if (_communications != null && _communications!.length == 0) {
+    if (communicationsId.isEmpty) {
+      return [];
+    }
+
+    if (_communications != null && _communications!.length != 0) {
       return _communications;
     }
 
-    _communications = [];
+    List<Thread> l = [];
     for (String element in communicationsId) {
       Thread? t = await _threadService.getThread(element);
       if (t != null) {
-        _communications!.add(t);
+        l.add(t);
       }
     }
+
+    _communications = l;
     return _communications;
   }
 
