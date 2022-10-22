@@ -13,7 +13,7 @@ class AddSessionForm extends StatefulWidget {
   _AddSessionFormState createState() => _AddSessionFormState();
 }
 
-const kinds = ["TALK", "PRESENTATION", "WORKSHOP"];
+const kinds = ["Talk", "Presentation", "Workshop"];
 
 class _AddSessionFormState extends State<AddSessionForm> {
   final _formKey = GlobalKey<FormState>();
@@ -23,6 +23,8 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _endDateController = TextEditingController();
   final _speakerController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _companyController = TextEditingController();
+  final _videoURLController = TextEditingController();
   final _sessionService = SessionService();
 
   DateTime? dateTime;
@@ -248,6 +250,26 @@ class _AddSessionFormState extends State<AddSessionForm> {
               decoration: const InputDecoration(
                 icon: const Icon(Icons.star),
                 labelText: "Speaker *",
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _companyController,
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.business),
+                labelText: "Company *",
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _videoURLController,
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.video_call),
+                labelText: "VideoURL *",
               ),
             ),
           ),
