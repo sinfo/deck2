@@ -146,7 +146,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                 return null;
               },
               decoration: const InputDecoration(
-                icon: const Icon(Icons.title),
+                icon: const Icon(Icons.description),
                 labelText: "Description *",
               ),
             ),
