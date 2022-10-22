@@ -154,22 +154,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _placeController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a place';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.place),
-                labelText: "Place *",
-              ),
-            ),
-          ),
-          Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 controller: _beginDateController,
@@ -234,32 +218,53 @@ class _AddSessionFormState extends State<AddSessionForm> {
                     return new DropdownMenuItem(value: kind, child: Text(kind));
                   }).toList(),
                   onChanged: (newValue) {
-                    // do other stuff with _category
                     setState(() => _kind = newValue.toString());
                   })),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _speakerController,
-              validator: (value) {
-                if ((value == null || value.isEmpty) && _kind == "TALK") {
-                  return 'Please enter a speaker';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.star),
-                labelText: "Speaker *",
-              ),
-            ),
+            child: (_kind == "Talk")
+                ? TextFormField(
+                    controller: _speakerController,
+                    validator: (value) {
+                      if (_kind == "Talk") {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a speaker';
+                        }
+                        return null;
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.place),
+                      labelText: "Speaker *",
+                    ),
+                  )
+                : null,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: (_kind == "Workshop" || _kind == "Presentation")
+                ? TextFormField(
+                    controller: _companyController,
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.business),
+                      labelText: "Company *",
+                    ),
+                  )
+                : null,
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _companyController,
+              controller: _placeController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a place';
+                }
+                return null;
+              },
               decoration: const InputDecoration(
-                icon: const Icon(Icons.business),
-                labelText: "Company *",
+                icon: const Icon(Icons.place),
+                labelText: "Place ",
               ),
             ),
           ),
@@ -269,7 +274,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
               controller: _videoURLController,
               decoration: const InputDecoration(
                 icon: const Icon(Icons.video_call),
-                labelText: "VideoURL *",
+                labelText: "VideoURL",
               ),
             ),
           ),
