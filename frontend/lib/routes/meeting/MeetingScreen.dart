@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
@@ -7,10 +8,12 @@ import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/threadCard.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:frontend/models/member.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/services/meetingService.dart';
+import 'package:frontend/services/memberService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -144,9 +147,8 @@ class _MeetingScreenState extends State<MeetingScreen>
                   ),
                   Expanded(
                     child: TabBarView(controller: _tabController, children: [
-                      Container(
-                        child: Center(child: Text('Work in progress :)')),
-                      ),
+                      MeetingParticipants(
+                          meeting: widget.meeting, small: small),
                       MeetingsCommunications(
                           communications: widget.meeting.communications,
                           small: small),
@@ -158,6 +160,99 @@ class _MeetingScreenState extends State<MeetingScreen>
             floatingActionButton: _fabAtIndex(context));
       });
     });
+  }
+}
+
+class MeetingParticipants extends StatelessWidget {
+  final Meeting meeting;
+  final bool small;
+  double cardWidth = 200;
+  MemberService _memberService = MemberService();
+  ScrollController _controller = ScrollController();
+
+  MeetingParticipants({Key? key, required this.meeting, required this.small})
+      : super(key: key);
+
+  Widget MeetingMembersGrid(_members) {
+    if (_members != null) {
+      return FutureBuilder(
+          future: Future.wait(_members),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              List<Member?> membs = snapshot.data as List<Member?>;
+              membs.sort((a, b) => a!.name.compareTo(b!.name));
+
+              cardWidth = small ? 125 : 200;
+
+              return GridView.builder(
+                  controller: _controller,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount:
+                        MediaQuery.of(context).size.width ~/ cardWidth,
+                    crossAxisSpacing: 5,
+                    mainAxisSpacing: 5,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemCount: membs.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    return ListViewCard(small: small, member: membs[index]);
+                  });
+            } else {
+              return Center(child: CircularProgressIndicator());
+            }
+          });
+    } else {
+      return Text("Meeting without this kind of members");
+    }
+  }
+
+  Widget Separator(_text) {
+    return Column(
+      children: [
+        Container(
+          alignment: Alignment.centerLeft,
+          child: Text(_text, style: TextStyle(fontSize: small ? 14 : 18)),
+          margin: EdgeInsets.fromLTRB(0, 8, 8, 0),
+        ),
+        Divider(
+          color: Colors.grey,
+          thickness: 1,
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Future<Member?>>? _futureMembers = null;
+    if (meeting.participants.membersIds != null) {
+      List<Future<Member?>> _futureMembers = meeting.participants.membersIds!
+          .map((memberID) => _memberService.getMember(memberID))
+          .toList();
+    }
+
+    List<Future<Member?>>? _futureCompanyReps = null;
+    if (meeting.participants.companyRepIds != null) {
+      List<Future<Member?>> _futureCompanyReps = meeting
+          .participants.companyRepIds!
+          .map((memberID) => _memberService.getMember(memberID))
+          .toList();
+    }
+
+    return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Container(
+            color: Color(0xffF1F1F1),
+            child: Column(children: [
+              Separator("Members"),
+              Expanded(
+                child: Center(child: MeetingMembersGrid(_futureMembers)),
+              ),
+              Separator("Company Reps"),
+              Expanded(
+                child: Center(child: MeetingMembersGrid(_futureCompanyReps)),
+              ),
+            ])));
   }
 }
 
