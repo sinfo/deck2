@@ -23,7 +23,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _placeController = TextEditingController();
   final _beginDateController = TextEditingController();
   final _endDateController = TextEditingController();
-  final _speakerController = TextEditingController();
+  var _speakerController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _companyController = TextEditingController();
   final _videoURLController = TextEditingController();
@@ -252,6 +252,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                   })
               : null,
         ),
+        ...getResults(MediaQuery.of(context).size.height / 3),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: (_kind == "Workshop" || _kind == "Presentation")
@@ -291,7 +292,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
             child: const Text('Submit'),
           ),
         ),
-        ...getResults(MediaQuery.of(context).size.height / 2)
       ]),
     );
   }
@@ -336,10 +336,47 @@ class _AddSessionFormState extends State<AddSessionForm> {
   List<Widget> getListCards(List<Speaker> speakers) {
     List<Widget> results = [];
     if (speakers.length != 0) {
-      results.addAll(speakers.map(
-          (e) => SearchResultWidget(speaker: e, index: speakers.indexOf(e))));
+      results.addAll(speakers
+          .map((e) => SpeakerSearch(speaker: e, index: speakers.indexOf(e))));
     }
     return results;
+  }
+
+  SpeakerSearch({required Speaker speaker, required int index}) {
+    return InkWell(
+        onTap: () {
+          _speakerController.text = speaker.id;
+          setState(() {});
+        },
+        child: Center(
+          child: ListTile(
+            leading: CircleAvatar(
+              foregroundImage: NetworkImage(getImageURL(speaker)),
+              backgroundImage: AssetImage(
+                'assets/noImage.png',
+              ),
+            ),
+            title: Text(getName(speaker)),
+          ),
+        ));
+  }
+
+  String getImageURL(Speaker speaker) {
+    if (speaker != null) {
+      return speaker!.imgs!.internal!;
+    } else {
+      //ERROR case
+      return "";
+    }
+  }
+
+  String getName(Speaker speaker) {
+    if (speaker != null) {
+      return speaker!.name;
+    } else {
+      //ERROR case
+      return "";
+    }
   }
 
   @override
