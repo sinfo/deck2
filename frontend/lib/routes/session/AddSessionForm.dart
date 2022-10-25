@@ -46,6 +46,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final List<bool> _ticketSelection = <bool>[false, true];
   bool _yes = false;
   double _currentSliderValue = 0;
+  bool _ticketsOn = false;
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
@@ -292,77 +293,84 @@ class _AddSessionFormState extends State<AddSessionForm> {
             ),
           ),
         ),
+        // Padding(
+        //   padding: const EdgeInsets.all(8.0),
+        //   child: Column(
+        //     children: [
+        //       TextField(
+        //         decoration: const InputDecoration(
+        //             icon: const Icon(Icons.airplane_ticket),
+        //             labelText: "Add tickets to this session"),
+        //       ),
+        //       Text('Add tickets'),
+        //       const SizedBox(height: 5),
+        //       ToggleButtons(
+        //         onPressed: (int index) {
+        //           setState(() {
+        //             // The button that is tapped is set to true, and the others to false.
+        //             for (int i = 0; i < _ticketSelection.length; i++) {
+        //               _ticketSelection[i] = i == index;
+        //               _yes = i != index;
+        //             }
+        //           });
+        //         },
+        //         borderRadius: const BorderRadius.all(Radius.circular(8)),
+        //         selectedBorderColor: Color.fromARGB(255, 63, 81, 181),
+        //         selectedColor: Color.fromARGB(255, 63, 81, 181),
+        //         fillColor: Color.fromARGB(255, 150, 164, 243),
+        //         color: Color.fromARGB(255, 0, 0, 0),
+        //         constraints: const BoxConstraints(
+        //           minHeight: 40.0,
+        //           minWidth: 80.0,
+        //         ),
+        //         isSelected: _ticketSelection,
+        //         children: ticketOptions,
+        //       ),
+        //       Text(
+        //         'Add tickets to this session',
+        //         //style: TextStyle(fontSize: 17.0),
+        //       ),
+        //       // SizedBox(width: 10), //SizedBox
+        //       Checkbox(
+        //         value: this.value,
+        //         onChanged: (value) {
+        //           setState(() {
+        //             this.value = value!;
+        //           });
+        //         },
+        //       ),
+        //     ],
+        //   ),
+        // ),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              TextField(
-                decoration: const InputDecoration(
-                    icon: const Icon(Icons.airplane_ticket),
-                    labelText: "Add tickets to this session"),
-              ),
-              Text('Add tickets'),
-              const SizedBox(height: 5),
-              ToggleButtons(
-                onPressed: (int index) {
-                  setState(() {
-                    // The button that is tapped is set to true, and the others to false.
-                    for (int i = 0; i < _ticketSelection.length; i++) {
-                      _ticketSelection[i] = i == index;
-                      _yes = i != index;
-                    }
-                  });
-                },
-                borderRadius: const BorderRadius.all(Radius.circular(8)),
-                selectedBorderColor: Color.fromARGB(255, 63, 81, 181),
-                selectedColor: Color.fromARGB(255, 63, 81, 181),
-                fillColor: Color.fromARGB(255, 150, 164, 243),
-                color: Color.fromARGB(255, 0, 0, 0),
-                constraints: const BoxConstraints(
-                  minHeight: 40.0,
-                  minWidth: 80.0,
-                ),
-                isSelected: _ticketSelection,
-                children: ticketOptions,
-              ),
-              IconButton(
-                icon: const Icon(Icons.airplane_ticket),
-                tooltip: 'Add tickets to this session',
-                onPressed: () {
-                  setState(() {});
-                },
-              ),
-              Text(
-                'Add tickets to this session',
-                //style: TextStyle(fontSize: 17.0),
-              ),
-              // SizedBox(width: 10), //SizedBox
-              Checkbox(
-                value: this.value,
-                onChanged: (value) {
-                  setState(() {
-                    this.value = value!;
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: (_yes == true)
-              ? TextFormField(
-                  controller: _maxTicketsController,
-                  decoration: const InputDecoration(
-                    icon: const Icon(Icons.airplane_ticket),
-                    labelText: "Maximum number of tickets *",
-                  ),
+          child: (_ticketsOn == true)
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Maximum number of tickets *",
+                      style: TextStyle(fontSize: 17.0),
+                      textAlign: TextAlign.right,
+                    ),
+                    Slider(
+                      value: _currentSliderValue,
+                      max: 100,
+                      divisions: 100,
+                      label: _currentSliderValue.round().toString(),
+                      onChanged: (double value) {
+                        setState(() {
+                          _currentSliderValue = value;
+                        });
+                      },
+                    ),
+                  ],
                 )
               : null,
         ),
         Padding(
             padding: const EdgeInsets.all(8.0),
-            child: (_yes == true)
+            child: (_ticketsOn == true)
                 ? TextFormField(
                     controller: _ticketBeginDateController,
                     validator: (value) {
@@ -388,7 +396,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                 : null),
         Padding(
             padding: const EdgeInsets.all(8.0),
-            child: (_yes == true)
+            child: (_ticketsOn == true)
                 ? TextFormField(
                     controller: _ticketBeginDateController,
                     validator: (value) {
@@ -413,19 +421,28 @@ class _AddSessionFormState extends State<AddSessionForm> {
                   )
                 : null),
         Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Slider(
-            value: _currentSliderValue,
-            max: 100,
-            divisions: 5,
-            label: _currentSliderValue.round().toString(),
-            onChanged: (double value) {
-              setState(() {
-                _currentSliderValue = value;
-              });
-            },
-          ),
-        ),
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Text(
+                  "Add tickets *",
+                  style: TextStyle(fontSize: 17.0),
+                  textAlign: TextAlign.right,
+                ),
+                Switch(
+                  onChanged: (bool value) {
+                    setState(() {
+                      _ticketsOn = value;
+                    });
+                  },
+                  value: _ticketsOn,
+                  activeColor: Color.fromARGB(255, 19, 214, 77),
+                  activeTrackColor: Color.fromARGB(255, 97, 233, 138),
+                  inactiveThumbColor: Color.fromARGB(255, 216, 30, 30),
+                  inactiveTrackColor: Color.fromARGB(255, 245, 139, 139),
+                ),
+              ],
+            )),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: ElevatedButton(
