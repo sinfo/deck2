@@ -16,6 +16,7 @@ class AddSessionForm extends StatefulWidget {
 }
 
 const kinds = ["Talk", "Presentation", "Workshop"];
+const List<Widget> ticketOptions = <Widget>[Text('Yes'), Text('No')];
 
 class _AddSessionFormState extends State<AddSessionForm> {
   final _formKey = GlobalKey<FormState>();
@@ -27,6 +28,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _descriptionController = TextEditingController();
   final _companyController = TextEditingController();
   final _videoURLController = TextEditingController();
+  final _maxTicketsController = TextEditingController();
+  final _ticketBeginDateController = TextEditingController();
+  final _ticketEndDateController = TextEditingController();
   final _sessionService = SessionService();
 
   late Future<List<Speaker>> speakers;
@@ -39,6 +43,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
 
   String _kind = "";
   bool value = false;
+  final List<bool> _ticketSelection = <bool>[false, true];
+  bool _yes = false;
+  double _currentSliderValue = 0;
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
@@ -287,17 +294,49 @@ class _AddSessionFormState extends State<AddSessionForm> {
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: <Widget>[
-              SizedBox(
-                width: 10,
-              ), //SizedBox
+          child: Column(
+            children: [
+              TextField(
+                decoration: const InputDecoration(
+                    icon: const Icon(Icons.airplane_ticket),
+                    labelText: "Add tickets to this session"),
+              ),
+              Text('Add tickets'),
+              const SizedBox(height: 5),
+              ToggleButtons(
+                onPressed: (int index) {
+                  setState(() {
+                    // The button that is tapped is set to true, and the others to false.
+                    for (int i = 0; i < _ticketSelection.length; i++) {
+                      _ticketSelection[i] = i == index;
+                      _yes = i != index;
+                    }
+                  });
+                },
+                borderRadius: const BorderRadius.all(Radius.circular(8)),
+                selectedBorderColor: Color.fromARGB(255, 63, 81, 181),
+                selectedColor: Color.fromARGB(255, 63, 81, 181),
+                fillColor: Color.fromARGB(255, 150, 164, 243),
+                color: Color.fromARGB(255, 0, 0, 0),
+                constraints: const BoxConstraints(
+                  minHeight: 40.0,
+                  minWidth: 80.0,
+                ),
+                isSelected: _ticketSelection,
+                children: ticketOptions,
+              ),
+              IconButton(
+                icon: const Icon(Icons.airplane_ticket),
+                tooltip: 'Add tickets to this session',
+                onPressed: () {
+                  setState(() {});
+                },
+              ),
               Text(
                 'Add tickets to this session',
                 //style: TextStyle(fontSize: 17.0),
-              ), //Text
-              SizedBox(width: 10), //SizedBox
-              /** Checkbox Widget **/
+              ),
+              // SizedBox(width: 10), //SizedBox
               Checkbox(
                 value: this.value,
                 onChanged: (value) {
@@ -305,8 +344,86 @@ class _AddSessionFormState extends State<AddSessionForm> {
                     this.value = value!;
                   });
                 },
-              ), //Checkbox
-            ], //<Widget>[]
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: (_yes == true)
+              ? TextFormField(
+                  controller: _maxTicketsController,
+                  decoration: const InputDecoration(
+                    icon: const Icon(Icons.airplane_ticket),
+                    labelText: "Maximum number of tickets *",
+                  ),
+                )
+              : null,
+        ),
+        Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: (_yes == true)
+                ? TextFormField(
+                    controller: _ticketBeginDateController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a beggining date for ticket availability *';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.calendar_today),
+                      labelText: "Ticket availability begin date *",
+                    ),
+                    readOnly:
+                        true, //prevents editing the date in the form field
+                    onTap: () async {
+                      await _selectDateTime(context, true);
+                      String formattedDate = getDateTime(_begin!);
+                      setState(() {
+                        _beginDateController.text = formattedDate;
+                      });
+                    },
+                  )
+                : null),
+        Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: (_yes == true)
+                ? TextFormField(
+                    controller: _ticketBeginDateController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter an end date for ticket availability *';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.calendar_today),
+                      labelText: "Ticket availability end date *",
+                    ),
+                    readOnly:
+                        true, //prevents editing the date in the form field
+                    onTap: () async {
+                      await _selectDateTime(context, true);
+                      String formattedDate = getDateTime(_begin!);
+                      setState(() {
+                        _beginDateController.text = formattedDate;
+                      });
+                    },
+                  )
+                : null),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Slider(
+            value: _currentSliderValue,
+            max: 100,
+            divisions: 5,
+            label: _currentSliderValue.round().toString(),
+            onChanged: (double value) {
+              setState(() {
+                _currentSliderValue = value;
+              });
+            },
           ),
         ),
         Padding(
