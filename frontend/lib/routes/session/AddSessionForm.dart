@@ -16,7 +16,6 @@ class AddSessionForm extends StatefulWidget {
 }
 
 const kinds = ["Talk", "Presentation", "Workshop"];
-const List<Widget> ticketOptions = <Widget>[Text('Yes'), Text('No')];
 
 class _AddSessionFormState extends State<AddSessionForm> {
   final _formKey = GlobalKey<FormState>();
@@ -40,21 +39,22 @@ class _AddSessionFormState extends State<AddSessionForm> {
   DateTime? dateTime;
   DateTime? _begin;
   DateTime? _end;
+  DateTime? _beginTicket;
+  DateTime? _endTicket;
 
   String _kind = "";
   bool value = false;
-  final List<bool> _ticketSelection = <bool>[false, true];
-  bool _yes = false;
-  double _currentSliderValue = 0;
+  double _currentTicketsValue = 0;
   bool _ticketsOn = false;
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var title = _titleController.text;
+      var description = _descriptionController.text;
       var place = _placeController.text;
       var speaker = _speakerController.text;
-      var description = _descriptionController.text;
       var company = _companyController.text;
+      var maxTickets = _currentTicketsValue;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
@@ -108,7 +108,8 @@ class _AddSessionFormState extends State<AddSessionForm> {
     }
   }
 
-  Future _selectDateTime(BuildContext context, bool isBegin) async {
+  Future _selectDateTime(
+      BuildContext context, bool isBegin, bool isTicket) async {
     final datePicker = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -127,11 +128,17 @@ class _AddSessionFormState extends State<AddSessionForm> {
         });
 
     if (datePicker != null && timePicker != null) {
-      if (isBegin) {
+      if (isBegin && !isTicket) {
         _begin = DateTime(datePicker.year, datePicker.month, datePicker.day,
             timePicker.hour, timePicker.minute);
-      } else {
+      } else if (isBegin && isTicket) {
+        _beginTicket = DateTime(datePicker.year, datePicker.month,
+            datePicker.day, timePicker.hour, timePicker.minute);
+      } else if (!isBegin && !isTicket) {
         _end = DateTime(datePicker.year, datePicker.month, datePicker.day,
+            timePicker.hour, timePicker.minute);
+      } else {
+        _endTicket = DateTime(datePicker.year, datePicker.month, datePicker.day,
             timePicker.hour, timePicker.minute);
       }
     }
@@ -193,7 +200,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
               ),
               readOnly: true, //prevents editing the date in the form field
               onTap: () async {
-                await _selectDateTime(context, true);
+                await _selectDateTime(context, true, false);
                 String formattedDate = getDateTime(_begin!);
 
                 setState(() {
@@ -217,7 +224,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
               ),
               readOnly: true, //prevents editing the date in the form field
               onTap: () async {
-                await _selectDateTime(context, false);
+                await _selectDateTime(context, false, false);
                 String formattedDate = getDateTime(_end!);
 
                 setState(() {
@@ -302,16 +309,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
                   color: Color.fromARGB(255, 124, 123, 123),
                   size: 25.0,
                 ),
-                // Container(
-                //   child: Text(
-                //     "Session Ticket",
-                //     style: TextStyle(fontSize: 32),
-                //   ),
-                //   decoration: BoxDecoration(
-                //     color: Color.fromARGB(255, 124, 123, 123),
-                //     borderRadius: BorderRadius.circular(100),
-                //   ),
-                // ),
                 Text(
                   "Add tickets ",
                   style: TextStyle(
@@ -346,13 +343,13 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       textAlign: TextAlign.right,
                     ),
                     Slider(
-                      value: _currentSliderValue,
+                      value: _currentTicketsValue,
                       max: 100,
                       divisions: 100,
-                      label: _currentSliderValue.round().toString(),
+                      label: _currentTicketsValue.round().toString(),
                       onChanged: (double value) {
                         setState(() {
-                          _currentSliderValue = value;
+                          _currentTicketsValue = value;
                         });
                       },
                     ),
@@ -378,8 +375,8 @@ class _AddSessionFormState extends State<AddSessionForm> {
                     readOnly:
                         true, //prevents editing the date in the form field
                     onTap: () async {
-                      await _selectDateTime(context, true);
-                      String formattedDate = getDateTime(_begin!);
+                      await _selectDateTime(context, true, true);
+                      String formattedDate = getDateTime(_beginTicket!);
                       setState(() {
                         _ticketBeginDateController.text = formattedDate;
                       });
@@ -404,8 +401,8 @@ class _AddSessionFormState extends State<AddSessionForm> {
                     readOnly:
                         true, //prevents editing the date in the form field
                     onTap: () async {
-                      await _selectDateTime(context, true);
-                      String formattedDate = getDateTime(_begin!);
+                      await _selectDateTime(context, false, true);
+                      String formattedDate = getDateTime(_endTicket!);
                       setState(() {
                         _ticketEndDateController.text = formattedDate;
                       });
