@@ -49,9 +49,9 @@ class SessionService extends Service {
       String kind,
       String title,
       String description,
-      String? speaker,
+      List<String>? speakersIds,
       String? company) async {
-    var body = kind == "TALK"
+    var body = kind == "Talk"
         ? {
             "begin": begin.toIso8601String(),
             "end": end.toIso8601String(),
@@ -59,7 +59,7 @@ class SessionService extends Service {
             "title": title,
             "kind": kind.toUpperCase(),
             "description": description,
-            "speaker": speaker
+            "speaker": speakersIds
           }
         : {
             "begin": begin.toIso8601String(),
@@ -68,7 +68,7 @@ class SessionService extends Service {
             "title": title,
             "kind": kind.toUpperCase(),
             "description": description,
-            "company": speaker
+            "company": "62eb938a34a18caadf832709"
           };
 
     Response<String> response = await dio.post("/events/sessions", data: body);

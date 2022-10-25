@@ -38,6 +38,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   DateTime? _end;
 
   String _kind = "";
+  bool value = false;
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
@@ -51,8 +52,17 @@ class _AddSessionFormState extends State<AddSessionForm> {
         const SnackBar(content: Text('Uploading')),
       );
 
-      Session? s = await _sessionService.createSession(_begin!.toUtc(),
-          _end!.toUtc(), place, _kind, title, description, speaker, company);
+      List<String> speakersIds = [speaker];
+
+      Session? s = await _sessionService.createSession(
+          _begin!.toUtc(),
+          _end!.toUtc(),
+          place,
+          _kind,
+          title,
+          description,
+          speakersIds,
+          company);
       if (s != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('HERE')),
@@ -277,12 +287,26 @@ class _AddSessionFormState extends State<AddSessionForm> {
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: TextFormField(
-            controller: _videoURLController,
-            decoration: const InputDecoration(
-              icon: const Icon(Icons.video_call),
-              labelText: "VideoURL",
-            ),
+          child: Row(
+            children: <Widget>[
+              SizedBox(
+                width: 10,
+              ), //SizedBox
+              Text(
+                'Add tickets to this session',
+                //style: TextStyle(fontSize: 17.0),
+              ), //Text
+              SizedBox(width: 10), //SizedBox
+              /** Checkbox Widget **/
+              Checkbox(
+                value: this.value,
+                onChanged: (value) {
+                  setState(() {
+                    this.value = value!;
+                  });
+                },
+              ), //Checkbox
+            ], //<Widget>[]
           ),
         ),
         Padding(

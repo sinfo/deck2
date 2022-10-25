@@ -9,7 +9,7 @@ class Session {
   final String? place;
   final String kind;
   final String? companyId;
-  final String? speaker;
+  final List<String>? speakersIds;
   final String? videoURL;
   final SessionTickets? tickets;
 
@@ -22,7 +22,7 @@ class Session {
     this.place,
     required this.kind,
     this.companyId,
-    this.speaker,
+    this.speakersIds,
     this.videoURL,
     this.tickets,
   });
@@ -37,7 +37,7 @@ class Session {
       place: json['place'],
       kind: json['kind'],
       companyId: json['company'],
-      speaker: json['speaker'],
+      speakersIds: json['speaker'],
       videoURL: json['videoURL'],
       tickets: SessionTickets.fromJson(json['tickets']),
     );
@@ -52,7 +52,7 @@ class Session {
         'place': place,
         'kind': kind,
         'company': companyId,
-        'speaker': speaker,
+        'speaker': speakersIds,
         'videoURL': videoURL,
         'tickets': tickets?.toJson(),
       };
