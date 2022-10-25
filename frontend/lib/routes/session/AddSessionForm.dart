@@ -293,64 +293,56 @@ class _AddSessionFormState extends State<AddSessionForm> {
             ),
           ),
         ),
-        // Padding(
-        //   padding: const EdgeInsets.all(8.0),
-        //   child: Column(
-        //     children: [
-        //       TextField(
-        //         decoration: const InputDecoration(
-        //             icon: const Icon(Icons.airplane_ticket),
-        //             labelText: "Add tickets to this session"),
-        //       ),
-        //       Text('Add tickets'),
-        //       const SizedBox(height: 5),
-        //       ToggleButtons(
-        //         onPressed: (int index) {
-        //           setState(() {
-        //             // The button that is tapped is set to true, and the others to false.
-        //             for (int i = 0; i < _ticketSelection.length; i++) {
-        //               _ticketSelection[i] = i == index;
-        //               _yes = i != index;
-        //             }
-        //           });
-        //         },
-        //         borderRadius: const BorderRadius.all(Radius.circular(8)),
-        //         selectedBorderColor: Color.fromARGB(255, 63, 81, 181),
-        //         selectedColor: Color.fromARGB(255, 63, 81, 181),
-        //         fillColor: Color.fromARGB(255, 150, 164, 243),
-        //         color: Color.fromARGB(255, 0, 0, 0),
-        //         constraints: const BoxConstraints(
-        //           minHeight: 40.0,
-        //           minWidth: 80.0,
-        //         ),
-        //         isSelected: _ticketSelection,
-        //         children: ticketOptions,
-        //       ),
-        //       Text(
-        //         'Add tickets to this session',
-        //         //style: TextStyle(fontSize: 17.0),
-        //       ),
-        //       // SizedBox(width: 10), //SizedBox
-        //       Checkbox(
-        //         value: this.value,
-        //         onChanged: (value) {
-        //           setState(() {
-        //             this.value = value!;
-        //           });
-        //         },
-        //       ),
-        //     ],
-        //   ),
-        // ),
+        Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.receipt,
+                  color: Color.fromARGB(255, 124, 123, 123),
+                  size: 25.0,
+                ),
+                // Container(
+                //   child: Text(
+                //     "Session Ticket",
+                //     style: TextStyle(fontSize: 32),
+                //   ),
+                //   decoration: BoxDecoration(
+                //     color: Color.fromARGB(255, 124, 123, 123),
+                //     borderRadius: BorderRadius.circular(100),
+                //   ),
+                // ),
+                Text(
+                  "Add tickets ",
+                  style: TextStyle(
+                      fontSize: 17.0,
+                      color: Color.fromARGB(255, 102, 101, 101)),
+                  textAlign: TextAlign.right,
+                ),
+                Switch(
+                  onChanged: (bool value) {
+                    setState(() {
+                      _ticketsOn = value;
+                    });
+                  },
+                  value: _ticketsOn,
+                  activeColor: Color.fromARGB(255, 19, 214, 77),
+                  activeTrackColor: Color.fromARGB(255, 97, 233, 138),
+                  inactiveThumbColor: Color.fromARGB(255, 216, 30, 30),
+                  inactiveTrackColor: Color.fromARGB(255, 245, 139, 139),
+                ),
+              ],
+            )),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: (_ticketsOn == true)
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ? Row(
                   children: [
                     Text(
                       "Maximum number of tickets *",
-                      style: TextStyle(fontSize: 17.0),
+                      style: TextStyle(
+                          fontSize: 17.0,
+                          color: Color.fromARGB(255, 102, 101, 101)),
                       textAlign: TextAlign.right,
                     ),
                     Slider(
@@ -389,7 +381,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       await _selectDateTime(context, true);
                       String formattedDate = getDateTime(_begin!);
                       setState(() {
-                        _beginDateController.text = formattedDate;
+                        _ticketBeginDateController.text = formattedDate;
                       });
                     },
                   )
@@ -398,7 +390,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
             padding: const EdgeInsets.all(8.0),
             child: (_ticketsOn == true)
                 ? TextFormField(
-                    controller: _ticketBeginDateController,
+                    controller: _ticketEndDateController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter an end date for ticket availability *';
@@ -415,34 +407,11 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       await _selectDateTime(context, true);
                       String formattedDate = getDateTime(_begin!);
                       setState(() {
-                        _beginDateController.text = formattedDate;
+                        _ticketEndDateController.text = formattedDate;
                       });
                     },
                   )
                 : null),
-        Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Text(
-                  "Add tickets *",
-                  style: TextStyle(fontSize: 17.0),
-                  textAlign: TextAlign.right,
-                ),
-                Switch(
-                  onChanged: (bool value) {
-                    setState(() {
-                      _ticketsOn = value;
-                    });
-                  },
-                  value: _ticketsOn,
-                  activeColor: Color.fromARGB(255, 19, 214, 77),
-                  activeTrackColor: Color.fromARGB(255, 97, 233, 138),
-                  inactiveThumbColor: Color.fromARGB(255, 216, 30, 30),
-                  inactiveTrackColor: Color.fromARGB(255, 245, 139, 139),
-                ),
-              ],
-            )),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: ElevatedButton(
