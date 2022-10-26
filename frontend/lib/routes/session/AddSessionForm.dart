@@ -57,6 +57,10 @@ class _AddSessionFormState extends State<AddSessionForm> {
       var speaker = _speakerController.text;
       var company = _companyController.text;
       var maxTickets = _currentTicketsValue;
+      var videoURL = _videoURLController.text;
+
+      var sessionTickets = new SessionTickets(
+          max: maxTickets as int, start: _beginTicket, end: _endTicket);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
@@ -72,7 +76,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
           title,
           description,
           speakersIds,
-          company);
+          company,
+          videoURL,
+          sessionTickets);
 
       if (s != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +88,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
             Provider.of<SessionsNotifier>(context, listen: false);
         notifier.add(s);
 
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        // ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
