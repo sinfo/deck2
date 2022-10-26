@@ -81,14 +81,11 @@ class _AddSessionFormState extends State<AddSessionForm> {
           sessionTickets);
 
       if (s != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('HERE')),
-        );
         SessionsNotifier notifier =
             Provider.of<SessionsNotifier>(context, listen: false);
         notifier.add(s);
 
-        // ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -104,9 +101,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('BL')),
-        );
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
