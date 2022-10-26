@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/ListViewCard.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
@@ -9,14 +7,13 @@ import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
+import 'package:frontend/routes/teams/AddTeamMemberForm.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:provider/provider.dart';
-
-import '../../components/deckTheme.dart';
 
 final Map<String, String> roles = {
   "MEMBER": "Member",
@@ -40,10 +37,6 @@ class _TeamScreen extends State<TeamScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   TeamService _teamService = new TeamService();
-  MemberService _memberService = new MemberService();
-  final _searchMembersController = TextEditingController();
-
-  late Future<List<Member>> membs;
 
   _TeamScreen({Key? key});
 
@@ -63,6 +56,20 @@ class _TeamScreen extends State<TeamScreen>
 
   void _handleTabIndex() {
     setState(() {});
+  }
+
+  void _addTeamMember(context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+            heightFactor: 0.7,
+            child: Container(
+              child: AddTeamMemberForm(),
+            ));
+      },
+    );
   }
 
   buildSpeedDial() {
@@ -92,7 +99,7 @@ class _TeamScreen extends State<TeamScreen>
                   SpeedDialChild(
                     child: Icon(Icons.person_add, color: Colors.white),
                     backgroundColor: Colors.indigo,
-                    onTap: () => showAddMemberDialog(),
+                    onTap: () => _addTeamMember(context),
                     label: 'Add Member',
                     labelStyle: TextStyle(
                         fontWeight: FontWeight.w500, color: Colors.white),
@@ -213,145 +220,6 @@ class _TeamScreen extends State<TeamScreen>
       ),
     );
   }
-
-  List<Widget> getResults(double height) {
-    if (_searchMembersController.text.length > 1) {
-      return [
-        Container(
-            decoration: new BoxDecoration(
-              color: Theme.of(context).cardColor,
-            ),
-            child: FutureBuilder(
-                future: this.membs,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    List<Member> membsMatched = snapshot.data as List<Member>;
-                    return searchResults(membsMatched, height);
-                  } else {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                }))
-      ];
-    } else {
-      return [];
-    }
-  }
-
-  Widget searchResults(List<Member> members, double listHeight) {
-    List<Widget> results = getListCards(members);
-    return Container(
-        constraints: BoxConstraints(maxHeight: listHeight),
-        child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: results.length,
-            itemBuilder: (BuildContext context, int index) {
-              return results[index];
-            }));
-  }
-
-  List<Widget> getListCards(List<Member> members) {
-    List<Widget> results = [];
-    if (members.length != 0) {
-      results.add(getDivider("Members"));
-      results.addAll(members.map((e) => SearchResultWidget(member: e)));
-    }
-    return results;
-  }
-
-  Widget getDivider(String name) {
-    return Card(
-        margin: EdgeInsets.zero,
-        child: Column(
-          children: [
-            Container(
-              child: Text(name, style: TextStyle(fontSize: 18)),
-              margin: EdgeInsets.fromLTRB(0, 8, 0, 4),
-            ),
-          ],
-        ));
-  }
-
-  showAddMemberDialog() {
-    String memberId = "";
-    String memberRole = "";
-
-    return showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Add Member"),
-            content: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Form(
-                child: Column(
-                  children: <Widget>[
-                    TextFormField(
-                        controller: _searchMembersController,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                          ),
-                          filled: true,
-                          fillColor: Provider.of<ThemeNotifier>(context).isDark
-                              ? Colors.grey[800]
-                              : Colors.white,
-                          hintText: 'Search Member',
-                          prefixIcon: Icon(Icons.search),
-                          suffixIcon: _searchMembersController.text.length != 0
-                              ? IconButton(
-                                  onPressed: () {
-                                    _searchMembersController.clear();
-                                    setState(() {});
-                                  },
-                                  icon: Icon(Icons.clear),
-                                )
-                              : null,
-                        ),
-                        onChanged: (newQuery) {
-                          setState(() {});
-                          if (_searchMembersController.text.length > 1) {
-                            membs = _memberService.getMembers(
-                                name: _searchMembersController.text);
-                          }
-                        }),
-                    ...getResults(MediaQuery.of(context).size.height / 2),
-                    DropdownButtonFormField(
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select one role';
-                          }
-                          return null;
-                        },
-                        decoration: const InputDecoration(
-                          icon: const Icon(Icons.person),
-                          labelText: "Role *",
-                        ),
-                        items: roles.keys.map((String role) {
-                          return new DropdownMenuItem(
-                              value: role, child: Text(role));
-                        }).toList(),
-                        onChanged: (newValue) {
-                          setState(() => memberRole = newValue.toString());
-                        }),
-                  ],
-                ),
-              ),
-            ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.pop(context, "Cancel"),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () =>
-                    addMember(widget.team.id, memberId, memberRole),
-                child: const Text("Add"),
-              ),
-            ],
-          );
-        });
-  }
-
 /*
   void _submit() async {
       ScaffoldMessenger.of(context).showSnackBar(
