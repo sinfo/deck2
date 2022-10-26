@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/session.dart';
 import 'package:frontend/models/speaker.dart';
@@ -7,6 +8,7 @@ import 'package:frontend/services/sessionService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AddSessionForm extends StatefulWidget {
   AddSessionForm({Key? key}) : super(key: key);
@@ -71,6 +73,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
           description,
           speakersIds,
           company);
+
       if (s != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('HERE')),
@@ -150,274 +153,277 @@ class _AddSessionFormState extends State<AddSessionForm> {
 
   Widget _buildForm() {
     return Form(
-      key: _formKey,
-      child: Column(children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextFormField(
-            controller: _titleController,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a title';
-              }
-              return null;
-            },
-            decoration: const InputDecoration(
-              icon: const Icon(Icons.title),
-              labelText: "Title *",
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextFormField(
-            controller: _descriptionController,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a description';
-              }
-              return null;
-            },
-            decoration: const InputDecoration(
-              icon: const Icon(Icons.description),
-              labelText: "Description *",
-            ),
-          ),
-        ),
-        Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _beginDateController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a beggining date';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.calendar_today),
-                labelText: "Begin Date *",
-              ),
-              readOnly: true, //prevents editing the date in the form field
-              onTap: () async {
-                await _selectDateTime(context, true, false);
-                String formattedDate = getDateTime(_begin!);
-
-                setState(() {
-                  _beginDateController.text = formattedDate;
-                });
-              },
-            )),
-        Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _endDateController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter an ending date';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.calendar_today),
-                labelText: "End Date *",
-              ),
-              readOnly: true, //prevents editing the date in the form field
-              onTap: () async {
-                await _selectDateTime(context, false, false);
-                String formattedDate = getDateTime(_end!);
-
-                setState(() {
-                  _endDateController.text = formattedDate;
-                });
-              },
-            )),
-        Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: DropdownButtonFormField(
+        key: _formKey,
+        child: SingleChildScrollView(
+          physics: BouncingScrollPhysics(),
+          child: Column(children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextFormField(
+                controller: _titleController,
                 validator: (value) {
-                  if (value == null) {
-                    return 'Please enter the kind of session';
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a title';
                   }
                   return null;
                 },
                 decoration: const InputDecoration(
-                  icon: const Icon(Icons.category),
-                  labelText: "Kind *",
+                  icon: const Icon(Icons.title),
+                  labelText: "Title *",
                 ),
-                items: kinds.map((String kind) {
-                  return new DropdownMenuItem(value: kind, child: Text(kind));
-                }).toList(),
-                onChanged: (newValue) {
-                  setState(() => _kind = newValue.toString());
-                })),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: (_kind == "Talk")
-              ? TextFormField(
-                  controller: _speakerController,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextFormField(
+                controller: _descriptionController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                  icon: const Icon(Icons.description),
+                  labelText: "Description *",
+                ),
+              ),
+            ),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  controller: _beginDateController,
                   validator: (value) {
-                    if (_kind == "Talk") {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a speaker';
-                      }
-                      return null;
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a beggining date';
                     }
+                    return null;
                   },
                   decoration: const InputDecoration(
-                    icon: const Icon(Icons.star),
-                    labelText: "Speaker *",
+                    icon: const Icon(Icons.calendar_today),
+                    labelText: "Begin Date *",
                   ),
-                  onChanged: (newQuery) {
-                    setState(() {});
-                    if (_speakerController.text.length > 1) {
-                      this.speakers = speakerService.getSpeakers(
-                          name: _speakerController.text);
-                    }
-                  })
-              : null,
-        ),
-        ...getResults(MediaQuery.of(context).size.height / 3),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: (_kind == "Workshop" || _kind == "Presentation")
-              ? TextFormField(
-                  controller: _companyController,
-                  decoration: const InputDecoration(
-                    icon: const Icon(Icons.business),
-                    labelText: "Company *",
-                  ),
-                )
-              : null,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextFormField(
-            controller: _placeController,
-            decoration: const InputDecoration(
-              icon: const Icon(Icons.place),
-              labelText: "Place ",
-            ),
-          ),
-        ),
-        Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.receipt,
-                  color: Color.fromARGB(255, 124, 123, 123),
-                  size: 25.0,
-                ),
-                Text(
-                  "Add tickets ",
-                  style: TextStyle(
-                      fontSize: 17.0,
-                      color: Color.fromARGB(255, 102, 101, 101)),
-                  textAlign: TextAlign.right,
-                ),
-                Switch(
-                  onChanged: (bool value) {
+                  readOnly: true, //prevents editing the date in the form field
+                  onTap: () async {
+                    await _selectDateTime(context, true, false);
+                    String formattedDate = getDateTime(_begin!);
+
                     setState(() {
-                      _ticketsOn = value;
+                      _beginDateController.text = formattedDate;
                     });
                   },
-                  value: _ticketsOn,
-                  activeColor: Color.fromARGB(255, 19, 214, 77),
-                  activeTrackColor: Color.fromARGB(255, 97, 233, 138),
-                  inactiveThumbColor: Color.fromARGB(255, 216, 30, 30),
-                  inactiveTrackColor: Color.fromARGB(255, 245, 139, 139),
+                )),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  controller: _endDateController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter an ending date';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    icon: const Icon(Icons.calendar_today),
+                    labelText: "End Date *",
+                  ),
+                  readOnly: true, //prevents editing the date in the form field
+                  onTap: () async {
+                    await _selectDateTime(context, false, false);
+                    String formattedDate = getDateTime(_end!);
+
+                    setState(() {
+                      _endDateController.text = formattedDate;
+                    });
+                  },
+                )),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: DropdownButtonFormField(
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please enter the kind of session';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.category),
+                      labelText: "Kind *",
+                    ),
+                    items: kinds.map((String kind) {
+                      return new DropdownMenuItem(
+                          value: kind, child: Text(kind));
+                    }).toList(),
+                    onChanged: (newValue) {
+                      setState(() => _kind = newValue.toString());
+                    })),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: (_kind == "Talk")
+                  ? TextFormField(
+                      controller: _speakerController,
+                      validator: (value) {
+                        if (_kind == "Talk") {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a speaker';
+                          }
+                          return null;
+                        }
+                      },
+                      decoration: const InputDecoration(
+                        icon: const Icon(Icons.star),
+                        labelText: "Speaker *",
+                      ),
+                      onChanged: (newQuery) {
+                        setState(() {});
+                        if (_speakerController.text.length > 1) {
+                          this.speakers = speakerService.getSpeakers(
+                              name: _speakerController.text);
+                        }
+                      })
+                  : null,
+            ),
+            ...getResults(MediaQuery.of(context).size.height / 3),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: (_kind == "Workshop" || _kind == "Presentation")
+                  ? TextFormField(
+                      controller: _companyController,
+                      decoration: const InputDecoration(
+                        icon: const Icon(Icons.business),
+                        labelText: "Company *",
+                      ),
+                    )
+                  : null,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextFormField(
+                controller: _placeController,
+                decoration: const InputDecoration(
+                  icon: const Icon(Icons.place),
+                  labelText: "Place ",
                 ),
-              ],
-            )),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: (_ticketsOn == true)
-              ? Row(
+              ),
+            ),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
                   children: [
+                    Icon(
+                      Icons.receipt,
+                      color: Color.fromARGB(255, 124, 123, 123),
+                      size: 25.0,
+                    ),
                     Text(
-                      "Maximum number of tickets *",
+                      "Add tickets ",
                       style: TextStyle(
                           fontSize: 17.0,
                           color: Color.fromARGB(255, 102, 101, 101)),
                       textAlign: TextAlign.right,
                     ),
-                    Slider(
-                      value: _currentTicketsValue,
-                      max: 100,
-                      divisions: 100,
-                      label: _currentTicketsValue.round().toString(),
-                      onChanged: (double value) {
+                    Switch(
+                      onChanged: (bool value) {
                         setState(() {
-                          _currentTicketsValue = value;
+                          _ticketsOn = value;
                         });
                       },
+                      value: _ticketsOn,
+                      activeColor: Color.fromARGB(255, 19, 214, 77),
+                      activeTrackColor: Color.fromARGB(255, 97, 233, 138),
+                      inactiveThumbColor: Color.fromARGB(255, 216, 30, 30),
+                      inactiveTrackColor: Color.fromARGB(255, 245, 139, 139),
                     ),
                   ],
-                )
-              : null,
-        ),
-        Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: (_ticketsOn == true)
-                ? TextFormField(
-                    controller: _ticketBeginDateController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a beggining date for ticket availability *';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.calendar_today),
-                      labelText: "Ticket availability begin date *",
-                    ),
-                    readOnly:
-                        true, //prevents editing the date in the form field
-                    onTap: () async {
-                      await _selectDateTime(context, true, true);
-                      String formattedDate = getDateTime(_beginTicket!);
-                      setState(() {
-                        _ticketBeginDateController.text = formattedDate;
-                      });
-                    },
-                  )
-                : null),
-        Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: (_ticketsOn == true)
-                ? TextFormField(
-                    controller: _ticketEndDateController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter an end date for ticket availability *';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.calendar_today),
-                      labelText: "Ticket availability end date *",
-                    ),
-                    readOnly:
-                        true, //prevents editing the date in the form field
-                    onTap: () async {
-                      await _selectDateTime(context, false, true);
-                      String formattedDate = getDateTime(_endTicket!);
-                      setState(() {
-                        _ticketEndDateController.text = formattedDate;
-                      });
-                    },
-                  )
-                : null),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: ElevatedButton(
-            onPressed: () => _submit(),
-            child: const Text('Submit'),
-          ),
-        ),
-      ]),
-    );
+                )),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: (_ticketsOn == true)
+                  ? Row(
+                      children: [
+                        Text(
+                          "Maximum number of tickets *",
+                          style: TextStyle(
+                              fontSize: 17.0,
+                              color: Color.fromARGB(255, 102, 101, 101)),
+                          textAlign: TextAlign.right,
+                        ),
+                        Slider(
+                          value: _currentTicketsValue,
+                          max: 100,
+                          divisions: 100,
+                          label: _currentTicketsValue.round().toString(),
+                          onChanged: (double value) {
+                            setState(() {
+                              _currentTicketsValue = value;
+                            });
+                          },
+                        ),
+                      ],
+                    )
+                  : null,
+            ),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: (_ticketsOn == true)
+                    ? TextFormField(
+                        controller: _ticketBeginDateController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a beggining date for ticket availability *';
+                          }
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          icon: const Icon(Icons.calendar_today),
+                          labelText: "Ticket availability begin date *",
+                        ),
+                        readOnly:
+                            true, //prevents editing the date in the form field
+                        onTap: () async {
+                          await _selectDateTime(context, true, true);
+                          String formattedDate = getDateTime(_beginTicket!);
+                          setState(() {
+                            _ticketBeginDateController.text = formattedDate;
+                          });
+                        },
+                      )
+                    : null),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: (_ticketsOn == true)
+                    ? TextFormField(
+                        controller: _ticketEndDateController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter an end date for ticket availability *';
+                          }
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          icon: const Icon(Icons.calendar_today),
+                          labelText: "Ticket availability end date *",
+                        ),
+                        readOnly:
+                            true, //prevents editing the date in the form field
+                        onTap: () async {
+                          await _selectDateTime(context, false, true);
+                          String formattedDate = getDateTime(_endTicket!);
+                          setState(() {
+                            _ticketEndDateController.text = formattedDate;
+                          });
+                        },
+                      )
+                    : null),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                onPressed: () => _submit(),
+                child: const Text('Submit'),
+              ),
+            ),
+          ]),
+        ));
   }
 
   List<Widget> getResults(double height) {
@@ -467,22 +473,21 @@ class _AddSessionFormState extends State<AddSessionForm> {
   }
 
   SpeakerSearch({required Speaker speaker, required int index}) {
-    return InkWell(
-        onTap: () {
-          _speakerController.text = speaker.id;
-          setState(() {});
-        },
-        child: Center(
-          child: ListTile(
-            leading: CircleAvatar(
-              foregroundImage: NetworkImage(getImageURL(speaker)),
-              backgroundImage: AssetImage(
-                'assets/noImage.png',
-              ),
+    var canShow = true;
+    return Card(
+      child: ListTile(
+          leading: CircleAvatar(
+            foregroundImage: NetworkImage(getImageURL(speaker)),
+            backgroundImage: AssetImage(
+              'assets/noImage.png',
             ),
-            title: Text(getName(speaker)),
           ),
-        ));
+          title: Text(getName(speaker)),
+          onTap: () {
+            _speakerController.text = speaker.id;
+            canShow = false;
+          }),
+    );
   }
 
   String getImageURL(Speaker speaker) {
