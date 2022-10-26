@@ -88,7 +88,8 @@ class MeetingParticipants {
 
   factory MeetingParticipants.fromJson(Map<String, dynamic> json) {
     return MeetingParticipants(
-        membersIds: json['members'], companyRepIds: json['companyReps']);
+        membersIds: List.from(json['members']),
+        companyRepIds: List.from(json['companyReps']));
   }
 
   Map<String, dynamic> toJson() =>

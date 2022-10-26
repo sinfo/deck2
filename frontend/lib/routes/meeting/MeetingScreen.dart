@@ -10,6 +10,7 @@ import 'package:frontend/components/threadCard.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/thread.dart';
+import 'package:frontend/routes/meeting/AddMeetingMemberForm.dart';
 import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/services/meetingService.dart';
@@ -84,13 +85,13 @@ class _MeetingScreenState extends State<MeetingScreen>
     showModalBottomSheet(
       context: context,
       builder: (context) {
-        return Container(child: Text("In Progress...")
-            // child: AddThreadForm(
-            //     meeting: widget.meeting,
-            //     onEditMeeting: (context, _meeting) {
-            //       meetingChangedCallback(context, meeting: _meeting);
-            //     }),
-            );
+        return Container(
+          child: AddMeetingMemberForm(
+              meeting: widget.meeting,
+              onEditMeeting: (context, _meeting) {
+                meetingChangedCallback(context, meeting: _meeting);
+              }),
+        );
       },
     );
   }
@@ -173,8 +174,8 @@ class MeetingParticipants extends StatelessWidget {
   MeetingParticipants({Key? key, required this.meeting, required this.small})
       : super(key: key);
 
-  Widget MeetingMembersGrid(_members) {
-    if (_members != null) {
+  Widget MeetingMembersGrid(List<Future<Member?>> _members) {
+    if (_members != []) {
       return FutureBuilder(
           future: Future.wait(_members),
           builder: (context, snapshot) {
@@ -186,6 +187,7 @@ class MeetingParticipants extends StatelessWidget {
 
               return GridView.builder(
                   controller: _controller,
+                  shrinkWrap: true,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount:
                         MediaQuery.of(context).size.width ~/ cardWidth,
@@ -224,35 +226,34 @@ class MeetingParticipants extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Future<Member?>>? _futureMembers = null;
-    if (meeting.participants.membersIds != null) {
-      List<Future<Member?>> _futureMembers = meeting.participants.membersIds!
+    List<Future<Member?>> _futureMembers = [];
+    if (meeting.participants.membersIds != []) {
+      _futureMembers = meeting.participants.membersIds!
           .map((memberID) => _memberService.getMember(memberID))
           .toList();
     }
 
-    List<Future<Member?>>? _futureCompanyReps = null;
-    if (meeting.participants.companyRepIds != null) {
-      List<Future<Member?>> _futureCompanyReps = meeting
-          .participants.companyRepIds!
+    List<Future<Member?>> _futureCompanyReps = [];
+    if (meeting.participants.companyRepIds != []) {
+      _futureCompanyReps = meeting.participants.companyRepIds!
           .map((memberID) => _memberService.getMember(memberID))
           .toList();
     }
 
-    return Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Container(
-            color: Color(0xffF1F1F1),
-            child: Column(children: [
-              Separator("Members"),
-              Expanded(
-                child: Center(child: MeetingMembersGrid(_futureMembers)),
-              ),
-              Separator("Company Reps"),
-              Expanded(
-                child: Center(child: MeetingMembersGrid(_futureCompanyReps)),
-              ),
-            ])));
+    return SingleChildScrollView(
+        child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Container(
+                color: Color(0xffF1F1F1),
+                child: Column(children: [
+                  Separator("Members"),
+                  Container(
+                      child: Center(child: MeetingMembersGrid(_futureMembers))),
+                  Separator("Company Reps"),
+                  Container(
+                      child: Center(
+                          child: MeetingMembersGrid(_futureCompanyReps))),
+                ]))));
   }
 }
 
