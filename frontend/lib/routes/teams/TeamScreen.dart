@@ -6,12 +6,17 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
+import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:provider/provider.dart';
+
+import '../../components/deckTheme.dart';
 
 final Map<String, String> roles = {
   "MEMBER": "Member",
@@ -35,6 +40,10 @@ class _TeamScreen extends State<TeamScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   TeamService _teamService = new TeamService();
+  MemberService _memberService = new MemberService();
+  final _searchMembersController = TextEditingController();
+
+  late Future<List<Member>> membs;
 
   _TeamScreen({Key? key});
 
@@ -56,52 +65,66 @@ class _TeamScreen extends State<TeamScreen>
     setState(() {});
   }
 
-  SpeedDial buildSpeedDial() {
-    return SpeedDial(
-      animatedIcon: AnimatedIcons.menu_close,
-      animatedIconTheme: IconThemeData(size: 28.0),
-      backgroundColor: Color(0xff5C7FF2),
-      visible: true,
-      curve: Curves.bounceInOut,
-      children: [
-        SpeedDialChild(
-          child: Icon(Icons.person_remove, color: Colors.white),
-          backgroundColor: Colors.indigo,
-          onTap: () => showRemoveMemberDialog(),
-          label: 'Remove Members',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-        SpeedDialChild(
-          child: Icon(Icons.person_add, color: Colors.white),
-          backgroundColor: Colors.indigo,
-          onTap: () => showAddMemberDialog(),
-          label: 'Add Member',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-        SpeedDialChild(
-          child: Icon(Icons.delete, color: Colors.white),
-          backgroundColor: Colors.indigo,
-          onTap: () => showDeleteTeamDialog(),
-          label: 'Delete Team',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-        SpeedDialChild(
-          child: Icon(Icons.edit, color: Colors.white),
-          backgroundColor: Colors.indigo,
-          onTap: () => showEditTeamDialog(),
-          label: 'Edit Team',
-          labelStyle:
-              TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
-          labelBackgroundColor: Colors.black,
-        ),
-      ],
-    );
+  buildSpeedDial() {
+    return FutureBuilder(
+        future: Provider.of<AuthService>(context).role,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Role r = snapshot.data as Role;
+
+            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+              return SpeedDial(
+                animatedIcon: AnimatedIcons.menu_close,
+                animatedIconTheme: IconThemeData(size: 28.0),
+                backgroundColor: Color(0xff5C7FF2),
+                visible: true,
+                curve: Curves.bounceInOut,
+                children: [
+                  SpeedDialChild(
+                    child: Icon(Icons.person_remove, color: Colors.white),
+                    backgroundColor: Colors.indigo,
+                    onTap: () => showRemoveMemberDialog(),
+                    label: 'Remove Members',
+                    labelStyle: TextStyle(
+                        fontWeight: FontWeight.w500, color: Colors.white),
+                    labelBackgroundColor: Colors.black,
+                  ),
+                  SpeedDialChild(
+                    child: Icon(Icons.person_add, color: Colors.white),
+                    backgroundColor: Colors.indigo,
+                    onTap: () => showAddMemberDialog(),
+                    label: 'Add Member',
+                    labelStyle: TextStyle(
+                        fontWeight: FontWeight.w500, color: Colors.white),
+                    labelBackgroundColor: Colors.black,
+                  ),
+                  SpeedDialChild(
+                    child: Icon(Icons.delete, color: Colors.white),
+                    backgroundColor: Colors.indigo,
+                    onTap: () => showDeleteTeamDialog(),
+                    label: 'Delete Team',
+                    labelStyle: TextStyle(
+                        fontWeight: FontWeight.w500, color: Colors.white),
+                    labelBackgroundColor: Colors.black,
+                  ),
+                  SpeedDialChild(
+                    child: Icon(Icons.edit, color: Colors.white),
+                    backgroundColor: Colors.indigo,
+                    onTap: () => showEditTeamDialog(),
+                    label: 'Edit Team',
+                    labelStyle: TextStyle(
+                        fontWeight: FontWeight.w500, color: Colors.white),
+                    labelBackgroundColor: Colors.black,
+                  ),
+                ],
+              );
+            } else {
+              return Container(); //CONFIRMAR
+            }
+          } else {
+            return Container();
+          }
+        });
   }
 
   showEditTeamDialog() {
@@ -158,18 +181,25 @@ class _TeamScreen extends State<TeamScreen>
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: const Text("Remove Team Member"),
-        content: TextFormField(
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter a Id';
-            }
-            return null;
-          },
-          onChanged: (value) {
-            memberId = value;
-          },
-          decoration: const InputDecoration(hintText: "Team Member Id"),
-        ),
+        content: DropdownButtonFormField(
+            validator: (value) {
+              if (value == null) {
+                return 'Please select one member';
+              }
+              return null;
+            },
+            decoration: const InputDecoration(
+              icon: const Icon(Icons.grid_3x3),
+              labelText: "MemberId *",
+            ),
+            // TODO: We need to fetch the event members somewhere and then see which of those are not part of the team already.
+            items: widget.members.map((Member? member) {
+              return new DropdownMenuItem(
+                  value: member!.id, child: Text(member.name));
+            }).toList(),
+            onChanged: (newValue) {
+              setState(() => memberId = newValue.toString());
+            }),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(context, "Cancel"),
@@ -184,9 +214,67 @@ class _TeamScreen extends State<TeamScreen>
     );
   }
 
+  List<Widget> getResults(double height) {
+    if (_searchMembersController.text.length > 1) {
+      return [
+        Container(
+            decoration: new BoxDecoration(
+              color: Theme.of(context).cardColor,
+            ),
+            child: FutureBuilder(
+                future: this.membs,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    List<Member> membsMatched = snapshot.data as List<Member>;
+                    return searchResults(membsMatched, height);
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                }))
+      ];
+    } else {
+      return [];
+    }
+  }
+
+  Widget searchResults(List<Member> members, double listHeight) {
+    List<Widget> results = getListCards(members);
+    return Container(
+        constraints: BoxConstraints(maxHeight: listHeight),
+        child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: results.length,
+            itemBuilder: (BuildContext context, int index) {
+              return results[index];
+            }));
+  }
+
+  List<Widget> getListCards(List<Member> members) {
+    List<Widget> results = [];
+    if (members.length != 0) {
+      results.add(getDivider("Members"));
+      results.addAll(members.map((e) => SearchResultWidget(member: e)));
+    }
+    return results;
+  }
+
+  Widget getDivider(String name) {
+    return Card(
+        margin: EdgeInsets.zero,
+        child: Column(
+          children: [
+            Container(
+              child: Text(name, style: TextStyle(fontSize: 18)),
+              margin: EdgeInsets.fromLTRB(0, 8, 0, 4),
+            ),
+          ],
+        ));
+  }
+
   showAddMemberDialog() {
     String memberId = "";
     String memberRole = "";
+
     return showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -197,25 +285,36 @@ class _TeamScreen extends State<TeamScreen>
               child: Form(
                 child: Column(
                   children: <Widget>[
-                    DropdownButtonFormField(
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Please select one member';
-                          }
-                          return null;
-                        },
-                        decoration: const InputDecoration(
-                          icon: const Icon(Icons.category),
-                          labelText: "MemberId *",
+                    TextFormField(
+                        controller: _searchMembersController,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          filled: true,
+                          fillColor: Provider.of<ThemeNotifier>(context).isDark
+                              ? Colors.grey[800]
+                              : Colors.white,
+                          hintText: 'Search Member',
+                          prefixIcon: Icon(Icons.search),
+                          suffixIcon: _searchMembersController.text.length != 0
+                              ? IconButton(
+                                  onPressed: () {
+                                    _searchMembersController.clear();
+                                    setState(() {});
+                                  },
+                                  icon: Icon(Icons.clear),
+                                )
+                              : null,
                         ),
-                        // TODO: We need to fetch the event members somewhere and then see which of those are not part of the team already.
-                        items: widget.members.map((Member? member) {
-                          return new DropdownMenuItem(
-                              value: member!.id, child: Text(member.name));
-                        }).toList(),
-                        onChanged: (newValue) {
-                          setState(() => memberId = newValue.toString());
+                        onChanged: (newQuery) {
+                          setState(() {});
+                          if (_searchMembersController.text.length > 1) {
+                            membs = _memberService.getMembers(
+                                name: _searchMembersController.text);
+                          }
                         }),
+                    ...getResults(MediaQuery.of(context).size.height / 2),
                     DropdownButtonFormField(
                         validator: (value) {
                           if (value == null) {
@@ -224,7 +323,7 @@ class _TeamScreen extends State<TeamScreen>
                           return null;
                         },
                         decoration: const InputDecoration(
-                          icon: const Icon(Icons.category),
+                          icon: const Icon(Icons.person),
                           labelText: "Role *",
                         ),
                         items: roles.keys.map((String role) {
@@ -253,19 +352,53 @@ class _TeamScreen extends State<TeamScreen>
         });
   }
 
+/*
+  void _submit() async {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Uploading')),
+      );
+
+      Member? m = await _memberService.createMember(
+          istid: istid, name: name, sinfoid: sinfoid);
+      if (m != null) {
+        TODO: Redirect to members page
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Done'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occured.')),
+        );
+
+        Navigator.pop(context);
+      }
+  }
+*/
+
   void addMember(String? id, String memberId, String memberRole) async {
     if (id == null) {
-      // TODO do something
+      // TODO ?
       return;
     }
 
     MemberService _memberService = MemberService();
+
     await _teamService.addTeamMember(id, memberId, memberRole);
+
     var members = await _memberService.getMembers(
         event: App.localStorage.getInt("event"));
+
     setState(() {
       widget.members = members;
     });
+
     Navigator.pop(context, "Add");
   }
 
@@ -341,6 +474,50 @@ class _TeamScreen extends State<TeamScreen>
       // TODO should only appear in Members tab?
       floatingActionButton: buildSpeedDial(),
     );
+  }
+}
+
+class SearchResultWidget extends StatelessWidget {
+  final Member? member;
+  const SearchResultWidget({Key? key, this.member});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return UnknownScreen();
+          }));
+        },
+        child: Center(
+          child: ListTile(
+            leading: CircleAvatar(
+              foregroundImage: NetworkImage(getImageURL()),
+              backgroundImage: AssetImage(
+                'assets/noImage.png',
+              ),
+            ),
+            title: Text(getName()),
+          ),
+        ));
+  }
+
+  String getImageURL() {
+    if (this.member != null) {
+      return this.member!.image!;
+    } else {
+      //ERROR case
+      return "";
+    }
+  }
+
+  String getName() {
+    if (this.member != null) {
+      return this.member!.name;
+    } else {
+      //ERROR case
+      return "";
+    }
   }
 }
 

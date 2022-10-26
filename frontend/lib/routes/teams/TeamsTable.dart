@@ -21,7 +21,10 @@ class TeamTable extends StatefulWidget {
 class _TeamTableState extends State<TeamTable>
     with AutomaticKeepAliveClientMixin {
   final TeamService _teamService = TeamService();
+
   late Future<List<Team>> teams;
+
+  late Future<List<Member>> members;
 
   bool get wantKeepAlive => true;
 
@@ -68,9 +71,9 @@ class _TeamTableState extends State<TeamTable>
                 ));
               }
 
-              List<List<Object>> data = snapshot.data as List<List<Object>>;
+              List<List<Object>> dataTeam = snapshot.data as List<List<Object>>;
 
-              List<Team> tms = data[0] as List<Team>;
+              List<Team> tms = dataTeam[0] as List<Team>;
 
               tms.sort((a, b) => a.name!.compareTo(b.name!));
 
@@ -83,7 +86,7 @@ class _TeamTableState extends State<TeamTable>
                 child: ListView.builder(
                   itemCount: tms.length,
                   itemBuilder: (context, index) =>
-                      TeamMemberRow(team: tms[index]),
+                      TeamMemberRow(team: tms[index], teams: tms),
                   addAutomaticKeepAlives: true,
                   physics: const AlwaysScrollableScrollPhysics(),
                 ),
@@ -151,8 +154,11 @@ class _TeamTableState extends State<TeamTable>
 
 class TeamMemberRow extends StatelessWidget {
   final Team team;
+  final List<Team> teams;
+
   MemberService _memberService = MemberService();
-  TeamMemberRow({Key? key, required this.team}) : super(key: key);
+  TeamMemberRow({Key? key, required this.team, required this.teams})
+      : super(key: key);
 
   static Widget fake() {
     return Container(
@@ -210,8 +216,19 @@ class TeamMemberRow extends StatelessWidget {
         .map((m) => _memberService.getMember(m.memberID!))
         .toList();
 
+    List<Future<Member?>> _possiblefutureMembers;
+
+    for (var i = 0; i < teams.length; i++) {
+      _possiblefutureMembers = teams[i]
+          .members!
+          .map((m) => _memberService.getMember(m.memberID!))
+          .toList();
+    }
+
     return FutureBuilder(
-        future: Future.wait(_futureMembers),
+        future: Future.wait(_futureMembers
+            //  _possiblefutureMembers
+            ),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<Member?> membs = snapshot.data as List<Member?>;
