@@ -244,7 +244,6 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("", authCoordinator(createMember)).Methods("POST")
 	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
 	memberRouter.HandleFunc("/{id}/role", authMember(getMemberRole)).Methods("GET")
-	//members_id_participations.json; swagger/swagger.json
 	memberRouter.HandleFunc("/{id}/participations", authMember(getMembersParticipations)).Methods("GET")
 	memberRouter.HandleFunc("/{id}", authAdmin(updateMember)).Methods("PUT")
 	memberRouter.HandleFunc("/{id}", authAdmin(deleteMember)).Methods("DELETE")
@@ -281,6 +280,8 @@ func InitializeRouter() {
 	meetingRouter.HandleFunc("/{id}/thread", authMember(addMeetingThread)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}/minute", authMember(uploadMeetingMinute)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}/minute", authMember(deleteMeetingMinute)).Methods("DELETE")
+	meetingRouter.HandleFunc("/{id}/participants", authMember(addMeetingParticipant)).Methods("POST")
+	meetingRouter.HandleFunc("/{id}/participants", authMember(deleteMeetingParticipant)).Methods("DELETE")
 
 	// threads handlers
 	threadRouter := r.PathPrefix("/threads").Subrouter()
