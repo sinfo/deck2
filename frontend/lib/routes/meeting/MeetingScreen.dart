@@ -149,7 +149,11 @@ class _MeetingScreenState extends State<MeetingScreen>
                   Expanded(
                     child: TabBarView(controller: _tabController, children: [
                       MeetingParticipants(
-                          meeting: widget.meeting, small: small),
+                          meeting: widget.meeting,
+                          small: small,
+                          onEditMeeting: (context, _meeting) {
+                            meetingChangedCallback(context, meeting: _meeting);
+                          }),
                       MeetingsCommunications(
                           communications: widget.meeting.communications,
                           small: small),
@@ -165,16 +169,59 @@ class _MeetingScreenState extends State<MeetingScreen>
 }
 
 class MeetingParticipants extends StatelessWidget {
-  final Meeting meeting;
+  Meeting meeting;
   final bool small;
-  double cardWidth = 200;
-  MemberService _memberService = MemberService();
-  ScrollController _controller = ScrollController();
+  final void Function(BuildContext, Meeting?)? onEditMeeting;
 
-  MeetingParticipants({Key? key, required this.meeting, required this.small})
+  MeetingParticipants(
+      {Key? key,
+      required this.meeting,
+      required this.small,
+      required this.onEditMeeting})
       : super(key: key);
 
-  Widget MeetingMembersGrid(List<Future<Member?>> _members) {
+  double cardWidth = 200;
+  MemberService _memberService = MemberService();
+  MeetingService _meetingService = MeetingService();
+  ScrollController _controller = ScrollController();
+
+  void _deleteMeetingParticipant(context, id, type, name) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog('Warning',
+            'Are you sure you want to delete ${name} from meeting ${meeting.title}?',
+            () async {
+          Meeting? m = await _meetingService.deleteMeetingParticipant(
+              id: meeting.id, memberID: id, type: type);
+          if (m != null) {
+            MeetingsNotifier notifier =
+                Provider.of<MeetingsNotifier>(context, listen: false);
+            notifier.edit(m);
+
+            onEditMeeting!(context, m);
+
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Done'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('An error occured.')),
+            );
+          }
+        });
+      },
+    );
+  }
+
+  Widget MeetingMembersGrid(List<Future<Member?>> _members, String type) {
     if (_members != []) {
       return FutureBuilder(
           future: Future.wait(_members),
@@ -193,11 +240,19 @@ class MeetingParticipants extends StatelessWidget {
                         MediaQuery.of(context).size.width ~/ cardWidth,
                     crossAxisSpacing: 5,
                     mainAxisSpacing: 5,
-                    childAspectRatio: 0.75,
+                    childAspectRatio: 0.70,
                   ),
                   itemCount: membs.length,
                   itemBuilder: (BuildContext context, int index) {
-                    return ListViewCard(small: small, member: membs[index]);
+                    return Column(children: [
+                      ListViewCard(small: small, member: membs[index]),
+                      ElevatedButton.icon(
+                          onPressed: () => _deleteMeetingParticipant(context,
+                              membs[index]!.id, type, membs[index]!.name),
+                          icon: Icon(Icons.delete),
+                          style: ElevatedButton.styleFrom(primary: Colors.red),
+                          label: const Text("Delete participant")),
+                    ]);
                   });
             } else {
               return Center(child: CircularProgressIndicator());
@@ -248,11 +303,13 @@ class MeetingParticipants extends StatelessWidget {
                 child: Column(children: [
                   Separator("Members"),
                   Container(
-                      child: Center(child: MeetingMembersGrid(_futureMembers))),
+                      child: Center(
+                          child: MeetingMembersGrid(_futureMembers, "MEMBER"))),
                   Separator("Company Reps"),
                   Container(
                       child: Center(
-                          child: MeetingMembersGrid(_futureCompanyReps))),
+                          child: MeetingMembersGrid(
+                              _futureCompanyReps, "COMPANYREP"))),
                 ]))));
   }
 }
