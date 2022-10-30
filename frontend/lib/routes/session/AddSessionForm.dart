@@ -9,6 +9,9 @@ import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:dropdown_search/dropdown_search.dart';
+import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
 
 class AddSessionForm extends StatefulWidget {
   AddSessionForm({Key? key}) : super(key: key);
@@ -190,74 +193,90 @@ class _AddSessionFormState extends State<AddSessionForm> {
               ),
             ),
             Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  controller: _beginDateController,
+              padding: const EdgeInsets.all(8.0),
+              child: FormBuilderDateTimePicker(
+                name: 'beginDate',
+                controller: _beginDateController,
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please enter a beggining date';
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                  icon: const Icon(Icons.calendar_today),
+                  labelText: "Begin Date *",
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: FormBuilderDateTimePicker(
+                name: 'endDate',
+                controller: _endDateController,
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please enter an ending date';
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                  icon: const Icon(Icons.calendar_today),
+                  labelText: "End Date *",
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: FormBuilderDropdown(
+                  name: 'kind',
                   validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a beggining date';
+                    if (value == null) {
+                      return 'Please enter the kind of session';
                     }
                     return null;
                   },
                   decoration: const InputDecoration(
-                    icon: const Icon(Icons.calendar_today),
-                    labelText: "Begin Date *",
+                    icon: const Icon(Icons.category),
+                    labelText: "Kind *",
                   ),
-                  readOnly: true, //prevents editing the date in the form field
-                  onTap: () async {
-                    await _selectDateTime(context, true, false);
-                    String formattedDate = getDateTime(_begin!);
-
-                    setState(() {
-                      _beginDateController.text = formattedDate;
-                    });
-                  },
-                )),
+                  items: kinds.map((String kind) {
+                    return new DropdownMenuItem(value: kind, child: Text(kind));
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() => _kind = newValue.toString());
+                  }),
+            ),
             Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  controller: _endDateController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter an ending date';
-                    }
-                    return null;
-                  },
-                  decoration: const InputDecoration(
-                    icon: const Icon(Icons.calendar_today),
-                    labelText: "End Date *",
-                  ),
-                  readOnly: true, //prevents editing the date in the form field
-                  onTap: () async {
-                    await _selectDateTime(context, false, false);
-                    String formattedDate = getDateTime(_end!);
-
-                    setState(() {
-                      _endDateController.text = formattedDate;
-                    });
-                  },
-                )),
-            Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: DropdownButtonFormField(
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please enter the kind of session';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.category),
-                      labelText: "Kind *",
-                    ),
-                    items: kinds.map((String kind) {
-                      return new DropdownMenuItem(
-                          value: kind, child: Text(kind));
-                    }).toList(),
-                    onChanged: (newValue) {
-                      setState(() => _kind = newValue.toString());
-                    })),
-            Padding(
+              padding: (_kind == "Talk")
+                  ? const EdgeInsets.all(8.0)
+                  : EdgeInsets.all(0),
+              child: (_kind == "Talk")
+                  ? DropdownSearch<Speaker>.multiSelection(
+                      asyncItems: (String) => speakerService.getSpeakers(),
+                      itemAsString: (Speaker u) => u.speakerAsString(),
+                      popupProps: PopupPropsMultiSelection.menu(
+                        showSearchBox: true,
+                      ),
+                      dropdownDecoratorProps: DropDownDecoratorProps(
+                        dropdownSearchDecoration: const InputDecoration(
+                          icon: const Icon(Icons.star),
+                          labelText: "Speaker *",
+                        ),
+                      ),
+                      validator: (value) {
+                        if (_kind == "Talk") {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a speaker';
+                          }
+                          return null;
+                        }
+                        return null;
+                      },
+                    )
+                  : null,
+            ),
+            /*Padding( //Dont know if my solution is good so I'll keep this
               padding: const EdgeInsets.all(8.0),
               child: (_kind == "Talk")
                   ? TextFormField(
@@ -283,9 +302,11 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       })
                   : null,
             ),
-            ...getResults(MediaQuery.of(context).size.height / 3),
+            ...getResults(MediaQuery.of(context).size.height / 3),*/
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: (_kind == "Workshop" || _kind == "Presentation")
+                  ? const EdgeInsets.all(8.0)
+                  : EdgeInsets.all(0),
               child: (_kind == "Workshop" || _kind == "Presentation")
                   ? TextFormField(
                       controller: _companyController,
@@ -366,11 +387,12 @@ class _AddSessionFormState extends State<AddSessionForm> {
             Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: (_ticketsOn == true)
-                    ? TextFormField(
+                    ? FormBuilderDateTimePicker(
+                        name: 'ticketBeginDate',
                         controller: _ticketBeginDateController,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a beggining date for ticket availability *';
+                          if (value == null) {
+                            return 'Please enter a beggining date for ticket availability';
                           }
                           return null;
                         },
@@ -378,25 +400,17 @@ class _AddSessionFormState extends State<AddSessionForm> {
                           icon: const Icon(Icons.calendar_today),
                           labelText: "Ticket availability begin date *",
                         ),
-                        readOnly:
-                            true, //prevents editing the date in the form field
-                        onTap: () async {
-                          await _selectDateTime(context, true, true);
-                          String formattedDate = getDateTime(_beginTicket!);
-                          setState(() {
-                            _ticketBeginDateController.text = formattedDate;
-                          });
-                        },
                       )
                     : null),
             Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: (_ticketsOn == true)
-                    ? TextFormField(
+                    ? FormBuilderDateTimePicker(
+                        name: 'ticketEndDate',
                         controller: _ticketEndDateController,
                         validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter an end date for ticket availability *';
+                          if (value == null) {
+                            return 'Please enter an end date for ticket availability ';
                           }
                           return null;
                         },
@@ -404,15 +418,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
                           icon: const Icon(Icons.calendar_today),
                           labelText: "Ticket availability end date *",
                         ),
-                        readOnly:
-                            true, //prevents editing the date in the form field
-                        onTap: () async {
-                          await _selectDateTime(context, false, true);
-                          String formattedDate = getDateTime(_endTicket!);
-                          setState(() {
-                            _ticketEndDateController.text = formattedDate;
-                          });
-                        },
                       )
                     : null),
             Padding(
@@ -492,7 +497,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
 
   String getImageURL(Speaker speaker) {
     if (speaker != null) {
-      return speaker!.imgs!.internal!;
+      return speaker.imgs!.internal!;
     } else {
       //ERROR case
       return "";
@@ -501,7 +506,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
 
   String getName(Speaker speaker) {
     if (speaker != null) {
-      return speaker!.name;
+      return speaker.name;
     } else {
       //ERROR case
       return "";
