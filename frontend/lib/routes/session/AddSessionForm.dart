@@ -46,6 +46,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   DateTime? _end;
   DateTime? _beginTicket;
   DateTime? _endTicket;
+  List<String> speakersIds = [];
 
   String _kind = "";
   bool value = false;
@@ -69,7 +70,16 @@ class _AddSessionFormState extends State<AddSessionForm> {
         const SnackBar(content: Text('Uploading')),
       );
 
-      List<String> speakersIds = [speaker];
+      print(_begin?.toUtc());
+      print(_end?.toUtc());
+      print(place);
+      print(_kind);
+      print(title);
+      print(description);
+      print(speakersIds);
+      print(company);
+      print(videoURL);
+      print(sessionTickets);
 
       Session? s = await _sessionService.createSession(
           _begin!.toUtc(),
@@ -207,6 +217,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                   icon: const Icon(Icons.calendar_today),
                   labelText: "Begin Date *",
                 ),
+                onChanged: (value) => {_begin = value},
               ),
             ),
             Padding(
@@ -224,6 +235,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                   icon: const Icon(Icons.calendar_today),
                   labelText: "End Date *",
                 ),
+                onChanged: (value) => {_end = value},
               ),
             ),
             Padding(
@@ -272,6 +284,14 @@ class _AddSessionFormState extends State<AddSessionForm> {
                           return null;
                         }
                         return null;
+                      },
+                      onChanged: (List<Speaker> speakers) {
+                        print(speakers);
+                        speakersIds.clear();
+                        for (var speaker in speakers) {
+                          speakersIds.add(speaker.id);
+                        }
+                        print(speakersIds);
                       },
                     )
                   : null,
