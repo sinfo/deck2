@@ -293,6 +293,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                         }
                         print(speakersIds);
                       },
+                      clearButtonProps: ClearButtonProps(isVisible: true),
                     )
                   : null,
             ),
@@ -420,6 +421,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                           icon: const Icon(Icons.calendar_today),
                           labelText: "Ticket availability begin date *",
                         ),
+                        onChanged: (value) => {_beginTicket = value},
                       )
                     : null),
             Padding(
@@ -438,6 +440,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
                           icon: const Icon(Icons.calendar_today),
                           labelText: "Ticket availability end date *",
                         ),
+                        onChanged: (value) => {_endTicket = value},
                       )
                     : null),
             Padding(
