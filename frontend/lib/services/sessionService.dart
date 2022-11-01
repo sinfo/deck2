@@ -6,6 +6,8 @@ import 'package:frontend/models/session.dart';
 import 'package:frontend/services/service.dart';
 import 'package:frontend/components/deckException.dart';
 
+import '../models/event.dart';
+
 class SessionService extends Service {
   Future<List<Session>> getSessions(
       {int? event, String? company, String? kind}) async {
@@ -63,7 +65,7 @@ class SessionService extends Service {
             "description": description,
             "speaker": speakersIds,
             "videoURL": videoURL,
-            "tickets": sessionTickets.max == 0 ? null : sessionTickets
+            "tickets": sessionTickets.toJson()
           }
         : {
             "begin": begin.toIso8601String(),
@@ -74,13 +76,18 @@ class SessionService extends Service {
             "description": description,
             "company": company,
             "videoURL": videoURL,
-            "tickets": sessionTickets.max == 0 ? null : sessionTickets
+            "tickets": sessionTickets.max == 0 ? null : sessionTickets.toJson()
           };
 
     Response<String> response = await dio.post("/events/sessions", data: body);
 
     try {
-      return Session.fromJson(json.decode(response.data!));
+      int eventId = Event.fromJson(json.decode(response.data!)).id;
+      Future<List<Session>> _futureSessions = getSessions(event: eventId);
+      List<Session> sessions = await _futureSessions;
+      Session s = sessions.elementAt(0);
+
+      return s;
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {

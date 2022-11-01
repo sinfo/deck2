@@ -60,7 +60,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
       var place = _placeController.text;
       var speaker = _speakerController.text;
       var company = _companyController.text;
-      var maxTickets = _currentTicketsValue;
+      var maxTickets = _currentTicketsValue as int;
       var videoURL = _videoURLController.text;
 
       var sessionTickets = new SessionTickets(
@@ -70,16 +70,16 @@ class _AddSessionFormState extends State<AddSessionForm> {
         const SnackBar(content: Text('Uploading')),
       );
 
-      print(_begin?.toUtc());
-      print(_end?.toUtc());
-      print(place);
-      print(_kind);
-      print(title);
-      print(description);
-      print(speakersIds);
-      print(company);
-      print(videoURL);
-      print(sessionTickets);
+      // print(_begin?.toUtc());
+      // print(_end?.toUtc());
+      // print(place);
+      // print(_kind);
+      // print(title);
+      // print(description);
+      // print(speakersIds);
+      // print(company);
+      // print(videoURL);
+      // print(sessionTickets);
 
       Session? s = await _sessionService.createSession(
           _begin!.toUtc(),
