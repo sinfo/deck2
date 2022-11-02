@@ -63,6 +63,8 @@ class _AddSessionFormState extends State<AddSessionForm> {
       var maxTickets = _currentTicketsValue as int;
       var videoURL = _videoURLController.text;
 
+      print(maxTickets);
+
       var sessionTickets = new SessionTickets(
           max: maxTickets as int, start: _beginTicket, end: _endTicket);
 
@@ -79,7 +81,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
       // print(speakersIds);
       // print(company);
       // print(videoURL);
-      // print(sessionTickets);
+      //print(sessionTickets);
 
       Session? s = await _sessionService.createSession(
           _begin!.toUtc(),

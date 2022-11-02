@@ -146,8 +146,8 @@ class SessionTickets {
   }
 
   Map<String, dynamic> toJson() => {
-        'start': start,
-        'end': end,
+        'start': start?.toUtc().toIso8601String(),
+        'end': end?.toUtc().toIso8601String(),
         'max': max,
       };
 
