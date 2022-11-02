@@ -5,6 +5,8 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/memberService.dart';
 
+enum MemberType { MEMBER, COMPANYREP }
+
 class AddMeetingMemberForm extends StatefulWidget {
   final Meeting? meeting;
   final void Function(BuildContext, Meeting?)? onEditMeeting;
@@ -23,10 +25,21 @@ class _AddMeetingMemberForm extends State<AddMeetingMemberForm> {
   MemberService _memberService = MemberService();
   late Future<List<Member>> membs;
   TextEditingController _searchMembersController = TextEditingController();
-  String type = '';
+  late MemberType type;
   String _memberID = '';
   String _memberName = '';
   bool disappearSearchResults = false;
+
+  String _convertMemberType(MemberType mt) {
+    switch (mt) {
+      case MemberType.MEMBER:
+        return "MEMBER";
+      case MemberType.COMPANYREP:
+        return "COMPANYREP";
+      default:
+        return "";
+    }
+  }
 
   void _submit(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
@@ -34,7 +47,9 @@ class _AddMeetingMemberForm extends State<AddMeetingMemberForm> {
         const SnackBar(content: Text('Adding member...')),
       );
       Meeting? m = await service.addMeetingParticipant(
-          id: widget.meeting!.id, memberID: _memberID, type: type);
+          id: widget.meeting!.id,
+          memberID: _memberID,
+          type: _convertMemberType(type));
       if (m != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -175,10 +190,10 @@ class _AddMeetingMemberForm extends State<AddMeetingMemberForm> {
                 },
                 onChanged: (next) {
                   setState(() {
-                    if (next == "Company Representative") {
-                      type = "COMPANYREP";
-                    } else if (next == "Member") {
-                      type = "MEMBER";
+                    if (next == types[1]) {
+                      type = MemberType.COMPANYREP;
+                    } else if (next == types[0]) {
+                      type = MemberType.MEMBER;
                     }
                   });
                 },
