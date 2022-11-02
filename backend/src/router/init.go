@@ -246,8 +246,6 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("/{id}/role", authMember(getMemberRole)).Methods("GET")
 	//members_id_participations.json; swagger/swagger.json
 	memberRouter.HandleFunc("/{id}/participations", authMember(getMembersParticipations)).Methods("GET")
-	// memberRouter.HandleFunc("/{id}/participations", authMember(addMemberParticipation)).Methods("POST")
-	//memberRouter.HandleFunc("/{id}/participations", authAdmin(removeMemberParticipation)).Methods("DELETE")
 	memberRouter.HandleFunc("/{id}", authAdmin(updateMember)).Methods("PUT")
 	memberRouter.HandleFunc("/{id}", authAdmin(deleteMember)).Methods("DELETE")
 	memberRouter.HandleFunc("/{id}/image", authMember(setMemberImage)).Methods("POST")
