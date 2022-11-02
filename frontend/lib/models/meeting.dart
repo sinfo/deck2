@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:frontend/models/thread.dart';
+import 'package:frontend/services/threadService.dart';
+
 class Meeting {
   final String id;
   final DateTime begin;
@@ -10,6 +13,30 @@ class Meeting {
   final List<String> communicationsId;
   final String? minute;
   final MeetingParticipants participants;
+  List<Thread>? _communications;
+
+  Future<List<Thread>?> get communications async {
+    ThreadService _threadService = ThreadService();
+
+    if (communicationsId.isEmpty) {
+      return [];
+    }
+
+    if (_communications != null && _communications!.length != 0) {
+      return _communications;
+    }
+
+    List<Thread> l = [];
+    for (String element in communicationsId) {
+      Thread? t = await _threadService.getThread(element);
+      if (t != null) {
+        l.add(t);
+      }
+    }
+
+    _communications = l;
+    return _communications;
+  }
 
   Meeting(
       {required this.id,
@@ -61,7 +88,8 @@ class MeetingParticipants {
 
   factory MeetingParticipants.fromJson(Map<String, dynamic> json) {
     return MeetingParticipants(
-        membersIds: json['members'], companyRepIds: json['companyReps']);
+        membersIds: List.from(json['members']),
+        companyRepIds: List.from(json['companyReps']));
   }
 
   Map<String, dynamic> toJson() =>

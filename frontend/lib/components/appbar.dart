@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/SearchResultWidget.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/event.dart';
@@ -242,66 +243,5 @@ class _CustomAppBarState extends State<CustomAppBar> {
             ),
           ],
         ));
-  }
-}
-
-class SearchResultWidget extends StatelessWidget {
-  final Company? company;
-  final Speaker? speaker;
-  final Member? member;
-  final int? index;
-  const SearchResultWidget(
-      {Key? key, this.company, this.speaker, this.member, this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-        onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            if (company != null) {
-              return CompanyScreen(company: company!);
-            } else if (speaker != null) {
-              return SpeakerScreen(speaker: speaker!);
-            }
-            return MemberScreen(member: member!);
-          }));
-        },
-        child: Center(
-          child: ListTile(
-            leading: CircleAvatar(
-              foregroundImage: NetworkImage(getImageURL()),
-              backgroundImage: AssetImage(
-                'assets/noImage.png',
-              ),
-            ),
-            title: Text(getName()),
-          ),
-        ));
-  }
-
-  String getImageURL() {
-    if (this.company != null) {
-      return this.company!.companyImages.internal;
-    } else if (this.speaker != null) {
-      return this.speaker!.imgs!.internal!;
-    } else if (this.member != null) {
-      return this.member!.image!;
-    } else {
-      //ERROR case
-      return "";
-    }
-  }
-
-  String getName() {
-    if (this.company != null) {
-      return this.company!.name;
-    } else if (this.speaker != null) {
-      return this.speaker!.name;
-    } else if (this.member != null) {
-      return this.member!.name;
-    } else {
-      //ERROR case
-      return "";
-    }
   }
 }
