@@ -157,5 +157,49 @@
                 "description": "Valid authorization, but not enough credentials"
             }
         }
+    },
+    "delete": {
+        "tags": [
+            "sessions"
+        ],
+        "summary": "Delete a specific session",
+        "operationId": "deleteSession",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "Id of the session to be deleted.",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Session deleted successfully",
+                "schema": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./models/session.json"
+                    }
+                }
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Session not found."
+            }
+        }
     }
 }

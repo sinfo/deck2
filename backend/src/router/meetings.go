@@ -83,6 +83,100 @@ func createMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func addMeetingThread(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
+		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		return
+	}
+
+	var atd = &addThreadData{}
+
+	if err := atd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		return
+	}
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	// create the post first
+	var cpd = mongodb.CreatePostData{
+		Member: credentials.ID,
+		Text:   *atd.Text,
+	}
+
+	newPost, err := mongodb.Posts.CreatePost(cpd)
+
+	if err != nil {
+		http.Error(w, "Could not create post", http.StatusExpectationFailed)
+		return
+	}
+
+	// assuming that meeting is already created
+	if *atd.Kind != models.ThreadKindMeeting {
+		http.Error(w, "Kind of thread must be meeting", http.StatusInternalServerError)
+		return
+	}
+
+	// create the thread
+	var ctd = mongodb.CreateThreadData{
+		Entry: newPost.ID,
+		Kind:  *atd.Kind,
+	}
+
+	newThread, err := mongodb.Threads.CreateThread(ctd)
+
+	if err != nil {
+		http.Error(w, "Could not create thread", http.StatusExpectationFailed)
+
+		// clean up the created post
+		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
+			log.Printf("error deleting post: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	// and finally update the meeting participation with the created thread
+	updatedMeeting, err := mongodb.Meetings.AddThread(meetingID, newThread.ID)
+
+	if err != nil {
+		http.Error(w, "Could not add thread to meeting", http.StatusExpectationFailed)
+
+		// clean up the created post and thread
+		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
+			log.Printf("error deleting post: %s\n", err.Error())
+		}
+
+		if _, err := mongodb.Threads.DeleteThread(newThread.ID); err != nil {
+			log.Printf("error deleting thread: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedMeeting)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreated,
+			Speaker: &updatedMeeting.ID,
+			Thread:  &newThread.ID,
+		})
+	}
+}
+
 func getMeetings(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
@@ -237,6 +331,44 @@ func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
 		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 			Kind:    models.NotificationKindUploadedMeetingMinute,
+			Meeting: &updatedMeeting.ID,
+		})
+	}
+}
+
+func deleteMeetingMinute(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
+		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		return
+	}
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		return
+	}
+
+	err = spaces.DeleteMeetingMinute(currentEvent.ID, meetingID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
+		return
+	}
+
+	updatedMeeting, err := mongodb.Meetings.DeleteMeetingMinute(meetingID)
+	if err != nil {
+		http.Error(w, "Couldn't delete meeting minutes", http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedMeeting)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindDeletedMeetingMinute,
 			Meeting: &updatedMeeting.ID,
 		})
 	}

@@ -4,6 +4,7 @@ import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -36,14 +37,6 @@ class _DeckDrawerState extends State<DeckDrawer> {
         padding: EdgeInsets.zero,
         children: <Widget>[
           buildHeader(context),
-          ListTile(
-              leading: Icon(
-                Icons.person,
-              ),
-              title: Text('Logout'),
-              onTap: () async {
-                await signOut(context);
-              }),
           MergeSemantics(
             child: ListTile(
               leading: Icon(
@@ -67,6 +60,38 @@ class _DeckDrawerState extends State<DeckDrawer> {
               },
             ),
           ),
+          FutureBuilder(
+              future: Provider.of<AuthService>(context).user,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  Member m = snapshot.data as Member;
+                  return ListTile(
+                    leading: Icon(
+                      Icons.person,
+                    ),
+                    title: Text('My Profile'),
+                    onTap: () async {
+                      myProfile(context, m);
+                    },
+                  );
+                } else {
+                  return ListTile(
+                    leading: Icon(
+                      Icons.person,
+                    ),
+                    title: Text('My Profile'),
+                    onTap: () async {},
+                  );
+                }
+              }),
+          ListTile(
+              leading: Icon(
+                Icons.logout,
+              ),
+              title: Text('Logout'),
+              onTap: () async {
+                await signOut(context);
+              }),
         ],
       ),
     );
@@ -84,6 +109,16 @@ class _DeckDrawerState extends State<DeckDrawer> {
     Navigator.pushReplacementNamed(context, Routes.LoginRoute);
   }
 
+  myProfile(BuildContext context, Member member) {
+    Navigator.push(
+        context,
+        PageRouteBuilder(
+          transitionDuration: Duration(milliseconds: 600),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              MemberScreen(member: member),
+        ));
+  }
+
   DrawerHeader buildHeader(BuildContext context) {
     return DrawerHeader(
         margin: EdgeInsets.zero,
@@ -98,6 +133,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     Member m = snapshot.data as Member;
                     return CircleAvatar(
                       backgroundImage: NetworkImage(m.image!),
+                      radius: 40,
                     );
                   } else {
                     return Shimmer.fromColors(
@@ -107,12 +143,26 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     );
                   }
                 }),
-            Text(
-              "My Account",
-              style: TextStyle(
-                fontSize: 22,
-              ),
-            ),
+            FutureBuilder(
+                future: Provider.of<AuthService>(context).user,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    Member m = snapshot.data as Member;
+                    return Text(
+                      "Hello, " + m.name,
+                      style: TextStyle(
+                        fontSize: 22,
+                      ),
+                    );
+                  } else {
+                    return Text(
+                      "My Account",
+                      style: TextStyle(
+                        fontSize: 22,
+                      ),
+                    );
+                  }
+                }),
           ],
         ));
   }

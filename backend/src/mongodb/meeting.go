@@ -24,6 +24,8 @@ type MeetingsType struct {
 
 // CreateMeetingData contains data needed to create a new meeting
 type CreateMeetingData struct {
+	Title        *string                     `json:"title" bson:"title"`
+	Kind         *string                     `json:"kind" bson:"kind"`
 	Begin        *time.Time                  `json:"begin"`
 	End          *time.Time                  `json:"end"`
 	Place        *string                     `json:"place"`
@@ -39,6 +41,8 @@ type GetMeetingsOptions struct {
 
 // UpdateMeetingData contains data needed to update a new meeting
 type UpdateMeetingData struct {
+	Title string    `json:"title" bson:"title"`
+	Kind  string    `json:"kind" bson:"kind"`
 	Begin time.Time `json:"begin" bson:"begin"`
 	End   time.Time `json:"end" bson:"end"`
 	Place string    `json:"place" bson:"place"`
@@ -53,6 +57,13 @@ func (umd *UpdateMeetingData) ParseBody(body io.Reader) error {
 	}
 	if len(umd.Place) == 0 {
 		return errors.New("invalid place")
+	}
+	if len(umd.Title) == 0 {
+		return errors.New("invalid title")
+	}
+	var mk = new(models.MeetingKind)
+	if err := mk.Parse(umd.Kind); err != nil {
+		return errors.New("invalid kind")
 	}
 
 	if umd.Begin.After(umd.End) {
@@ -82,6 +93,15 @@ func (cmd *CreateMeetingData) Validate() error {
 		return errors.New("no place given")
 	}
 
+	if cmd.Title == nil {
+		return errors.New("no title given")
+	}
+
+	var mk = new(models.MeetingKind)
+	if err := mk.Parse(*cmd.Kind); err != nil {
+		return errors.New("invalid kind")
+	}
+
 	return nil
 }
 
@@ -107,9 +127,12 @@ func (m *MeetingsType) CreateMeeting(data CreateMeetingData) (*models.Meeting, e
 	var meeting models.Meeting
 
 	var c = bson.M{
-		"begin": *data.Begin,
-		"end":   *data.End,
-		"place": *data.Place,
+		"title":          *data.Title,
+		"kind":           *data.Kind,
+		"begin":          *data.Begin,
+		"end":            *data.End,
+		"place":          *data.Place,
+		"communications": []primitive.ObjectID{},
 	}
 
 	if data.Participants != nil {
@@ -263,6 +286,8 @@ func (m *MeetingsType) UpdateMeeting(data UpdateMeetingData, meetingID primitive
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
+			"title": data.Title,
+			"kind":  data.Kind,
 			"begin": data.Begin,
 			"end":   data.End,
 			"place": data.Place,
@@ -304,4 +329,75 @@ func (m *MeetingsType) UploadMeetingMinute(meetingID primitive.ObjectID, url str
 	}
 
 	return &updatedMeeting, nil
+}
+
+func (m *MeetingsType) DeleteMeetingMinute(meetingID primitive.ObjectID) (*models.Meeting, error) {
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"minute": "",
+		},
+	}
+
+	var filterQuery = bson.M{"_id": meetingID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedMeeting models.Meeting
+
+	if err := m.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		log.Println("error updating meeting:", err)
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
+}
+
+// AddThread adds a models.Thread to a meeting's list of communications.
+func (m *MeetingsType) AddThread(meetingID primitive.ObjectID, threadID primitive.ObjectID) (*models.Meeting, error) {
+	ctx := context.Background()
+
+	var updatedMeeting models.Meeting
+
+	var updateQuery = bson.M{
+		"$addToSet": bson.M{
+			"communications": threadID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": meetingID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		log.Println("Error adding communication to meeting:", err)
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
+}
+
+// FindThread finds a thread in a meeting
+func (m *MeetingsType) FindThread(threadID primitive.ObjectID) (*models.Meeting, error) {
+	ctx := context.Background()
+	filter := bson.M{
+		"communications": threadID,
+	}
+
+	cur, err := m.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	var meeting models.Meeting
+
+	if cur.Next(ctx) {
+		if err := cur.Decode(&meeting); err != nil {
+			return nil, err
+		}
+		return &meeting, nil
+	}
+
+	return nil, nil
 }

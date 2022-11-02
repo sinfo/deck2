@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:frontend/components/deckException.dart';
-import 'package:frontend/models/member.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/service.dart';
 import 'package:dio/dio.dart';
