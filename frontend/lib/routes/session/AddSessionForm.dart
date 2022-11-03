@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/models/company.dart';
 import 'package:frontend/models/session.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
+import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
@@ -40,6 +42,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   late Future<List<Speaker>> speakers;
 
   SpeakerService speakerService = new SpeakerService();
+  CompanyService companyService = new CompanyService();
 
   DateTime? dateTime;
   DateTime? _begin;
@@ -47,6 +50,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   DateTime? _beginTicket;
   DateTime? _endTicket;
   List<String> speakersIds = [];
+  List<String> companiesIds = [];
 
   String _kind = "";
   bool value = false;
@@ -299,44 +303,39 @@ class _AddSessionFormState extends State<AddSessionForm> {
                     )
                   : null,
             ),
-            /*Padding( //Dont know if my solution is good so I'll keep this
-              padding: const EdgeInsets.all(8.0),
-              child: (_kind == "Talk")
-                  ? TextFormField(
-                      controller: _speakerController,
-                      validator: (value) {
-                        if (_kind == "Talk") {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a speaker';
-                          }
-                          return null;
-                        }
-                      },
-                      decoration: const InputDecoration(
-                        icon: const Icon(Icons.star),
-                        labelText: "Speaker *",
-                      ),
-                      onChanged: (newQuery) {
-                        setState(() {});
-                        if (_speakerController.text.length > 1) {
-                          this.speakers = speakerService.getSpeakers(
-                              name: _speakerController.text);
-                        }
-                      })
-                  : null,
-            ),
-            ...getResults(MediaQuery.of(context).size.height / 3),*/
             Padding(
               padding: (_kind == "Workshop" || _kind == "Presentation")
                   ? const EdgeInsets.all(8.0)
                   : EdgeInsets.all(0),
               child: (_kind == "Workshop" || _kind == "Presentation")
-                  ? TextFormField(
-                      controller: _companyController,
-                      decoration: const InputDecoration(
-                        icon: const Icon(Icons.business),
-                        labelText: "Company *",
+                  ? DropdownSearch<Company>.multiSelection(
+                      asyncItems: (String) => companyService.getCompanies(),
+                      itemAsString: (Company u) => u.companyAsString(),
+                      popupProps: PopupPropsMultiSelection.menu(
+                        showSearchBox: true,
                       ),
+                      dropdownDecoratorProps: DropDownDecoratorProps(
+                        dropdownSearchDecoration: const InputDecoration(
+                          icon: const Icon(Icons.business),
+                          labelText: "Company *",
+                        ),
+                      ),
+                      validator: (value) {
+                        if (_kind == "Workshop" || _kind == "Presentation") {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a company';
+                          }
+                          return null;
+                        }
+                        return null;
+                      },
+                      onChanged: (List<Company> companies) {
+                        companiesIds.clear();
+                        for (var company in companies) {
+                          companiesIds.add(company.id);
+                        }
+                      },
+                      clearButtonProps: ClearButtonProps(isVisible: true),
                     )
                   : null,
             ),
@@ -347,6 +346,16 @@ class _AddSessionFormState extends State<AddSessionForm> {
                 decoration: const InputDecoration(
                   icon: const Icon(Icons.place),
                   labelText: "Place ",
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextFormField(
+                controller: _videoURLController,
+                decoration: const InputDecoration(
+                  icon: const Icon(Icons.video_call),
+                  labelText: "VideoURL ",
                 ),
               ),
             ),

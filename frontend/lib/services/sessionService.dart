@@ -17,7 +17,11 @@ class SessionService extends Service {
         await dio.get("/sessions", queryParameters: queryParameters);
 
     try {
+      print("Response data");
+      print(response.data);
       final responseJson = json.decode(response.data!) as List;
+      print("Response json");
+      print(responseJson);
       List<Session> sessions =
           responseJson.map((e) => Session.fromJson(e)).toList();
       return sessions;
@@ -65,7 +69,8 @@ class SessionService extends Service {
             "description": description,
             "speaker": speakersIds,
             "videoURL": videoURL,
-            "tickets": sessionTickets.toJson()
+            "tickets": sessionTickets.toJson(),
+            "company": ""
           }
         : {
             "begin": begin.toIso8601String(),
@@ -83,6 +88,7 @@ class SessionService extends Service {
 
     try {
       int eventId = Event.fromJson(json.decode(response.data!)).id;
+      print("Event id " + eventId.toString());
       Future<List<Session>> _futureSessions = getSessions(event: eventId);
       List<Session> sessions = await _futureSessions;
       Session s = sessions.elementAt(0);
