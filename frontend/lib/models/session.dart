@@ -30,14 +30,14 @@ class Session {
   factory Session.fromJson(Map<String, dynamic> json) {
     return Session(
       id: json['id'],
-      begin: DateTime(json['begin']),
-      end: DateTime(json['end']),
+      begin: DateTime.parse(json['begin']),
+      end: DateTime.parse(json['begin']),
       title: json['title'],
       description: json['description'],
       place: json['place'],
       kind: json['kind'],
       companyId: json['company'],
-      speakersIds: json['speaker'],
+      speakersIds: List.from(json['speaker']),
       videoURL: json['videoURL'],
       tickets: SessionTickets.fromJson(json['tickets']),
     );
@@ -139,8 +139,8 @@ class SessionTickets {
 
   factory SessionTickets.fromJson(Map<String, dynamic> json) {
     return SessionTickets(
-      start: DateTime(json['start']),
-      end: DateTime(json['end']),
+      start: DateTime.parse(json['start']),
+      end: DateTime.parse(json['end']),
       max: json['max'],
     );
   }
