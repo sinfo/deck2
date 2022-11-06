@@ -70,13 +70,13 @@ class _AddSessionFormState extends State<AddSessionForm> {
       print("Max tickets:");
       print(maxTickets);
 
-      // var sessionTickets = maxTickets != 0
-      //     ? new SessionTickets(
-      //         max: maxTickets, start: _beginTicket, end: _endTicket)
-      //     : new SessionTickets(max: 0, start: _beginTicket, end: _endTicket);
+      var sessionTickets = maxTickets != 0
+          ? new SessionTickets(
+              max: maxTickets, start: _beginTicket, end: _endTicket)
+          : new SessionTickets(max: 0, start: null, end: null);
 
-      var sessionTickets = new SessionTickets(
-          max: maxTickets, start: _beginTicket, end: _endTicket);
+      // var sessionTickets = new SessionTickets(
+      //     max: maxTickets, start: _beginTicket, end: _endTicket);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),

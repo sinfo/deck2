@@ -201,8 +201,9 @@ class SessionCard extends StatelessWidget {
                                         if (r == Role.ADMIN ||
                                             r == Role.COORDINATOR) {
                                           return IconButton(
-                                              onPressed: () => _deleteSessionDialog(
-                                                  context, session.id),
+                                              onPressed: () =>
+                                                  _deleteSessionDialog(
+                                                      context, session.id),
                                               icon: Icon(Icons.delete),
                                               color: Colors.red);
                                         } else {

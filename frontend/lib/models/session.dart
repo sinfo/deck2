@@ -39,7 +39,9 @@ class Session {
       companyId: json['company'],
       speakersIds: List.from(json['speaker']),
       videoURL: json['videoURL'],
-      tickets: SessionTickets.fromJson(json['tickets']),
+      tickets: json['tickets'] == null
+          ? null
+          : SessionTickets.fromJson(json['tickets']),
     );
   }
 

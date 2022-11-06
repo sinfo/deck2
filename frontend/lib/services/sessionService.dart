@@ -17,8 +17,6 @@ class SessionService extends Service {
         await dio.get("/sessions", queryParameters: queryParameters);
 
     try {
-      print("Response data");
-      print(response.data);
       final responseJson = json.decode(response.data!) as List;
       print("Response json");
       print(responseJson);
