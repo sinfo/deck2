@@ -8,6 +8,7 @@ import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/teams/AddTeamMemberForm.dart';
+import 'package:frontend/routes/teams/TeamsNotifier.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:frontend/services/memberService.dart';
@@ -23,7 +24,7 @@ final Map<String, String> roles = {
 };
 
 class TeamScreen extends StatefulWidget {
-  final Team team;
+  Team team;
   List<Member?> members;
 
   TeamScreen({Key? key, required this.team, required this.members})
@@ -58,16 +59,37 @@ class _TeamScreen extends State<TeamScreen>
     setState(() {});
   }
 
+  Future<void> teamChangedCallback(BuildContext context,
+      {Future<Team?>? fm, Team? team}) async {
+    Team? m;
+    if (fm != null) {
+      m = await fm;
+    } else if (team != null) {
+      m = team;
+    }
+    if (m != null) {
+      Provider.of<TeamsNotifier>(context, listen: false).edit(m);
+      setState(() {
+        widget.team = m!;
+      });
+    }
+  }
+
   void _addTeamMember(context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (context) {
         return FractionallySizedBox(
-            heightFactor: 0.7,
-            child: Container(
-              child: AddTeamMemberForm(),
-            ));
+          heightFactor: 0.7,
+          child: Container(
+            child: AddTeamMemberForm(
+                team: widget.team,
+                onEditTeam: (context, _team) {
+                  teamChangedCallback(context, team: _team);
+                }),
+          ),
+        );
       },
     );
   }
@@ -87,6 +109,15 @@ class _TeamScreen extends State<TeamScreen>
                 visible: true,
                 curve: Curves.bounceInOut,
                 children: [
+                  SpeedDialChild(
+                    child: Icon(Icons.groups, color: Colors.white),
+                    backgroundColor: Colors.indigo,
+                    onTap: () => {},
+                    label: 'Add Meetings',
+                    labelStyle: TextStyle(
+                        fontWeight: FontWeight.w500, color: Colors.white),
+                    labelBackgroundColor: Colors.black,
+                  ),
                   SpeedDialChild(
                     child: Icon(Icons.person_remove, color: Colors.white),
                     backgroundColor: Colors.indigo,
@@ -199,7 +230,6 @@ class _TeamScreen extends State<TeamScreen>
               icon: const Icon(Icons.grid_3x3),
               labelText: "MemberId *",
             ),
-            // TODO: We need to fetch the event members somewhere and then see which of those are not part of the team already.
             items: widget.members.map((Member? member) {
               return new DropdownMenuItem(
                   value: member!.id, child: Text(member.name));
@@ -220,72 +250,15 @@ class _TeamScreen extends State<TeamScreen>
       ),
     );
   }
-/*
-  void _submit() async {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
-      );
-
-      Member? m = await _memberService.createMember(
-          istid: istid, name: name, sinfoid: sinfoid);
-      if (m != null) {
-        TODO: Redirect to members page
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
-        );
-
-        Navigator.pop(context);
-      }
-  }
-*/
-
-  void addMember(String? id, String memberId, String memberRole) async {
-    if (id == null) {
-      // TODO ?
-      return;
-    }
-
-    MemberService _memberService = MemberService();
-
-    await _teamService.addTeamMember(id, memberId, memberRole);
-
-    var members = await _memberService.getMembers(
-        event: App.localStorage.getInt("event"));
-
-    setState(() {
-      widget.members = members;
-    });
-
-    Navigator.pop(context, "Add");
-  }
 
   void removeTeamMember(String? id, String memberId) async {
-    if (id == null) {
-      // TODO do something
-      return;
-    }
-    final response = await _teamService.deleteTeamMember(id, memberId);
+    final response = await _teamService.deleteTeamMember(id!, memberId);
     Navigator.pop(context, "Delete");
     Navigator.pop(context);
   }
 
   void editTeam(String? id, String name) async {
-    if (id == null) {
-      // TODO do something
-      return;
-    }
-    final response = await _teamService.updateTeam(id, name);
+    final response = await _teamService.updateTeam(id!, name);
     setState(() {
       widget.team.name = response?.name ?? "Empty name";
     });
@@ -293,11 +266,7 @@ class _TeamScreen extends State<TeamScreen>
   }
 
   void deleteTeam(String? id) async {
-    if (id == null) {
-      // TODO do something
-      return;
-    }
-    final response = await _teamService.deleteTeam(id);
+    final response = await _teamService.deleteTeam(id!);
     Navigator.pop(context, "Update");
     // TODO when going back to TeamTable, it should be refreshed so that the deleted team is not shown. What is the best option to do this?
     Navigator.pop(context);
@@ -443,12 +412,6 @@ class _DisplayMeetingState extends State<DisplayMeeting> {
                   );
                 }
               }),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
-        label: const Text('Add Meetings'),
-        icon: const Icon(Icons.edit),
-        backgroundColor: Color(0xff5C7FF2),
-      ),
     );
   }
 }

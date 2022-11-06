@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/SearchResultWidget.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/models/team.dart';
+import 'package:frontend/services/teamService.dart';
 import 'package:frontend/services/memberService.dart';
 
+final Map<String, String> roles = {
+  "MEMBER": "Member",
+  "TEAMLEADER": "Team Leader",
+  "COORDINATOR": "Coordinator",
+  "ADMIN": "Administrator"
+};
+
 class AddTeamMemberForm extends StatefulWidget {
-  AddTeamMemberForm({Key? key}) : super(key: key);
+  final Team? team;
+  final void Function(BuildContext, Team?)? onEditTeam;
+
+  AddTeamMemberForm({Key? key, this.team, this.onEditTeam}) : super(key: key);
 
   @override
   _AddTeamMemberFormState createState() => _AddTeamMemberFormState();
@@ -13,16 +26,55 @@ class AddTeamMemberForm extends StatefulWidget {
 class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
   final _formKey = GlobalKey<FormState>();
   MemberService _memberService = new MemberService();
+  final _textController = TextEditingController();
   final _searchMembersController = TextEditingController();
+  final _teamroleController = TextEditingController();
+  TeamService service = TeamService();
   late Future<List<Member>> membs;
   String memberRole = "";
+  String _memberID = '';
+  String _memberName = '';
+  bool disappearSearchResults = false;
+  String role = "";
+
+  void _submit(BuildContext context) async {
+    if (_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Adding member...')),
+      );
+      memberRole = _teamroleController.text;
+      Team? m = await service.addTeamMember(
+          id: widget.team!.id, memberId: _memberID, role: role);
+      if (m != null) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Done'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        widget.onEditTeam!(context, m);
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occured.')),
+        );
+
+        Navigator.pop(context);
+      }
+    }
+  }
 
   Widget _buildForm() {
     return Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          physics: BouncingScrollPhysics(),
-          child: Column(children: [
+      key: _formKey,
+      child: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
+        child: Column(
+          children: [
             Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: TextFormField(
@@ -34,7 +86,7 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
                       return null;
                     },
                     decoration: const InputDecoration(
-                      icon: const Icon(Icons.groups),
+                      icon: const Icon(Icons.person_add),
                       labelText: "Member *",
                     ),
                     onChanged: (newQuery) {
@@ -45,19 +97,48 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
                       }
                     })),
             ...getResults(MediaQuery.of(context).size.height * 0.7),
-            // Padding(
-            //   padding: const EdgeInsets.all(8.0),
-            //   child: ElevatedButton(
-            //     onPressed: () => _submit(),
-            //     child: const Text('Submit'),
-            //   ),
-            // ),
-          ]),
-        ));
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: DropdownButtonFormField(
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select a role';
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    icon: const Icon(Icons.grid_3x3),
+                    labelText: "Role *",
+                  ),
+                  items: roles.values.map((e) {
+                    return new DropdownMenuItem(value: e, child: Text(e));
+                  }).toList(),
+                  onChanged: (newValue) {
+                    setState(() => role = newValue.toString());
+                  }),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  padding: EdgeInsets.symmetric(horizontal: 50),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                ),
+                onPressed: () => _submit(context),
+                child: const Text('SUBMIT'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   List<Widget> getResults(double height) {
-    if (_searchMembersController.text.length > 1) {
+    if (_searchMembersController.text.length > 1 && !disappearSearchResults) {
       return [
         Container(
             decoration: new BoxDecoration(
@@ -93,11 +174,22 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
             }));
   }
 
+  void _getMemberData(String id, String name) {
+    _memberID = id;
+    _memberName = name;
+    _searchMembersController.text = name;
+    disappearSearchResults = true;
+    setState(() {});
+  }
+
   List<Widget> getListCards(List<Member> members) {
     List<Widget> results = [];
     if (members.length != 0) {
       results.add(getDivider("Members"));
-      results.addAll(members.map((e) => SearchResultWidget(member: e)));
+      results.addAll(members.map((e) => SearchResultWidget(
+            member: e,
+            getMemberData: _getMemberData,
+          )));
     }
     return results;
   }
