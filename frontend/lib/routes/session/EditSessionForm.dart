@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:frontend/models/session.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/services/sessionService.dart';
@@ -14,7 +13,7 @@ class EditSessionForm extends StatefulWidget {
   _EditSessionFormState createState() => _EditSessionFormState();
 }
 
-const kinds = ["Talk", "Presentation", "Workshop"];
+const kinds = ["TALK", "PRESENTATION", "WORKSHOP"];
 
 class _EditSessionFormState extends State<EditSessionForm> {
   final _formKey = GlobalKey<FormState>();
@@ -55,29 +54,30 @@ class _EditSessionFormState extends State<EditSessionForm> {
         const SnackBar(content: Text('Uploading')),
       );
 
-      Session? s = await _sessionService.updateSession(widget.session);
+      // Session? s = await _sessionService.updateSession(
+      //     widget.session.id, _begin.toUtc(), _end.toUtc(), place, _kind, title);
 
-      if (s != null) {
-        SessionsNotifier notifier =
-            Provider.of<SessionsNotifier>(context, listen: false);
-        notifier.edit(s);
+      // if (s != null) {
+      //   SessionsNotifier notifier =
+      //       Provider.of<SessionsNotifier>(context, listen: false);
+      //   notifier.edit(s);
 
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      //   ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     SnackBar(
+      //       content: Text('Done'),
+      //       duration: Duration(seconds: 2),
+      //     ),
+      //   );
+      //   Navigator.pop(context);
+      // } else {
+      //   ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
-        );
-      }
+      //   ScaffoldMessenger.of(context).showSnackBar(
+      //     const SnackBar(content: Text('An error occured.')),
+      //   );
+      // }
     }
   }
 
@@ -148,23 +148,29 @@ class _EditSessionFormState extends State<EditSessionForm> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: FormBuilderDateTimePicker(
-              name: 'beginDate',
-              controller: _beginDateController,
-              validator: (value) {
-                if (value == null) {
-                  return 'Please enter a beggining date';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.calendar_today),
-                labelText: "Begin Date *",
-              ),
-              onChanged: (value) => {_begin = value},
-            ),
-          ),
+              padding: const EdgeInsets.all(8.0),
+              child: TextFormField(
+                controller: _beginDateController,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a beggining date';
+                  }
+                  return null;
+                },
+                decoration: const InputDecoration(
+                  icon: const Icon(Icons.calendar_today),
+                  labelText: "Begin Date *",
+                ),
+                readOnly: true, //prevents editing the date in the form field
+                onTap: () async {
+                  await _selectDateTime(context, true);
+                  String formattedDate = getDateTime(_begin);
+
+                  setState(() {
+                    _beginDateController.text = formattedDate;
+                  });
+                },
+              )),
           Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
