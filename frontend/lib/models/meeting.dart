@@ -5,6 +5,9 @@ class Meeting {
   final DateTime begin;
   final DateTime end;
   final String place;
+  final String title;
+  final String kind;
+  final List<String> communicationsId;
   final String? minute;
   final MeetingParticipants participants;
 
@@ -13,6 +16,9 @@ class Meeting {
       required this.begin,
       required this.end,
       required this.place,
+      required this.title,
+      required this.kind,
+      required this.communicationsId,
       this.minute,
       required this.participants});
 
@@ -23,6 +29,9 @@ class Meeting {
         end: DateTime.parse(json['end']),
         place: json['place'],
         minute: json['minute'],
+        title: json['title'],
+        kind: json['kind'],
+        communicationsId: List.from(json['communications']),
         participants: MeetingParticipants.fromJson(json['participants']));
   }
 
@@ -32,6 +41,9 @@ class Meeting {
         'end': end,
         'place': place,
         'minute': minute,
+        'title': title,
+        'kind': kind,
+        'communications': communicationsId,
         'participants': participants.toJson()
       };
 

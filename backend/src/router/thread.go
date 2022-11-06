@@ -104,21 +104,31 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("error finding thread: " + err.Error())
 		return
+	} else if speaker != nil {
+		cnd.Speaker = &speaker.ID
+		mongodb.Notifications.Notify(credentials.ID, cnd)
+		return
 	}
 
-	if speaker == nil {
-		company, err := mongodb.Companies.FindThread(threadID)
-		if err != nil {
-			log.Println("error finding thread: " + err.Error())
-			return
-		}
-		if company != nil {
-			cnd.Company = &company.ID
-		}
-	} else {
-		cnd.Speaker = &speaker.ID
+	company, err := mongodb.Companies.FindThread(threadID)
+	if err != nil {
+		log.Println("error finding thread: " + err.Error())
+		return
+	} else if company != nil {
+		cnd.Company = &company.ID
+		mongodb.Notifications.Notify(credentials.ID, cnd)
+		return
 	}
-	mongodb.Notifications.Notify(credentials.ID, cnd)
+
+	meeting, err := mongodb.Meetings.FindThread(threadID)
+	if err != nil {
+		log.Println("error finding thread: " + err.Error())
+		return
+	} else if meeting != nil {
+		cnd.Meeting = &meeting.ID
+		mongodb.Notifications.Notify(credentials.ID, cnd)
+		return
+	}
 }
 
 func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
