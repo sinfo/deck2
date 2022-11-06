@@ -169,4 +169,42 @@ class MeetingService extends Service {
       throw DeckException('Wrong format');
     }
   }
+
+  Future<Meeting?> addMeetingParticipant(
+      {required String id,
+      required String memberID,
+      required String type}) async {
+    var body = {"type": type, "memberID": memberID};
+
+    Response<String> response =
+        await dio.post('/meetings/' + id + '/participants', data: body);
+    try {
+      return Meeting.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Meeting?> deleteMeetingParticipant(
+      {required String id,
+      required String memberID,
+      required String type}) async {
+    var body = {"type": type, "memberID": memberID};
+
+    Response<String> response =
+        await dio.delete('/meetings/' + id + '/participants', data: body);
+    try {
+      return Meeting.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 }

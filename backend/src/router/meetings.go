@@ -373,3 +373,72 @@ func deleteMeetingMinute(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 }
+
+func addMeetingParticipant(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
+		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		return
+	}
+
+	var cmd = mongodb.MeetingParticipantData{}
+
+	if err := cmd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	meeting, err := mongodb.Meetings.AddMeetingParticipant(meetingID, cmd)
+	if err != nil {
+		http.Error(w, "Could not add participant to meeting", http.StatusExpectationFailed)
+	}
+
+	json.NewEncoder(w).Encode(meeting)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreated,
+			Meeting: &meeting.ID,
+		})
+	}
+}
+
+func deleteMeetingParticipant(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
+		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		return
+	}
+
+	var cmd = mongodb.MeetingParticipantData{}
+
+	if err := cmd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	meeting, err := mongodb.Meetings.DeleteMeetingParticipant(meetingID, cmd)
+	if err != nil {
+		http.Error(w, "Could not add participant to meeting", http.StatusExpectationFailed)
+	}
+
+	json.NewEncoder(w).Encode(meeting)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreated,
+			Meeting: &meeting.ID,
+		})
+	}
+}

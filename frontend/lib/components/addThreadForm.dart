@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/companyService.dart';
+import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/speakerService.dart';
 
 class AddThreadForm extends StatefulWidget {
   final Speaker? speaker;
   final Company? company;
+  final Meeting? meeting;
   final void Function(BuildContext, Speaker?)? onEditSpeaker;
   final void Function(BuildContext, Company?)? onEditCompany;
+  final void Function(BuildContext, Meeting?)? onEditMeeting;
   AddThreadForm(
       {Key? key,
       this.speaker,
       this.company,
+      this.meeting,
       this.onEditSpeaker,
-      this.onEditCompany})
+      this.onEditCompany,
+      this.onEditMeeting})
       : super(key: key);
 
   @override
@@ -74,6 +80,31 @@ class _AddThreadFormState extends State<AddThreadForm> {
             const SnackBar(content: Text('An error occured.')),
           );
         }
+      } else if (widget.meeting != null && widget.onEditMeeting != null) {
+        MeetingService service = MeetingService();
+        Meeting? m = await service.addThread(
+            id: widget.meeting!.id, kind: 'MEETING', text: text);
+        if (m != null) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Done'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          widget.onEditMeeting!(context, m);
+
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('An error occured.')),
+          );
+
+          Navigator.pop(context);
+        }
       }
     }
   }
@@ -103,30 +134,31 @@ class _AddThreadFormState extends State<AddThreadForm> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: DropdownButtonFormField<String>(
-              icon: Icon(Icons.tag),
-              items: kinds
-                  .map(
-                      (e) => DropdownMenuItem<String>(value: e, child: Text(e)))
-                  .toList(),
-              value: kinds[0],
-              selectedItemBuilder: (BuildContext context) {
-                return kinds.map((e) {
-                  return Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Container(child: Text(e)),
-                  );
-                }).toList();
-              },
-              onChanged: (next) {
-                setState(() {
-                  kind = next!;
-                });
-              },
+          if (widget.meeting == null && widget.onEditMeeting == null)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: DropdownButtonFormField<String>(
+                icon: Icon(Icons.tag),
+                items: kinds
+                    .map((e) =>
+                        DropdownMenuItem<String>(value: e, child: Text(e)))
+                    .toList(),
+                value: kinds[0],
+                selectedItemBuilder: (BuildContext context) {
+                  return kinds.map((e) {
+                    return Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Container(child: Text(e)),
+                    );
+                  }).toList();
+                },
+                onChanged: (next) {
+                  setState(() {
+                    kind = next!;
+                  });
+                },
+              ),
             ),
-          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(

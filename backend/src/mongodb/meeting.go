@@ -48,6 +48,12 @@ type UpdateMeetingData struct {
 	Place string    `json:"place" bson:"place"`
 }
 
+// MeetingParticipantData contains data needed to add a meeting participant
+type MeetingParticipantData struct {
+	Member primitive.ObjectID `json:"memberID"`
+	Type   string             `json:"type"`
+}
+
 //ParseBody fills an UpdateMeetingData from a body
 func (umd *UpdateMeetingData) ParseBody(body io.Reader) error {
 	ctx = context.Background()
@@ -105,6 +111,37 @@ func (cmd *CreateMeetingData) Validate() error {
 	return nil
 }
 
+// ParseBody fills the CreateMeetingParticipantData from a body
+func (cmd *MeetingParticipantData) ParseBody(body io.Reader) error {
+	ctx = context.Background()
+
+	if err := json.NewDecoder(body).Decode(cmd); err != nil {
+		return err
+	}
+
+	if err := cmd.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Validate the data for adding a meeting participant
+func (cmd *MeetingParticipantData) Validate() error {
+	ctx = context.Background()
+
+	if len(cmd.Member) == 0 {
+		return errors.New("no participant given")
+	}
+
+	var mk = new(models.MeetingParticipantKind)
+	if err := mk.Parse(cmd.Type); err != nil {
+		return errors.New("invalid type of participant")
+	}
+
+	return nil
+}
+
 // ParseBody fills the CreateMeetingData from a body
 func (cmd *CreateMeetingData) ParseBody(body io.Reader) error {
 	ctx = context.Background()
@@ -133,6 +170,7 @@ func (m *MeetingsType) CreateMeeting(data CreateMeetingData) (*models.Meeting, e
 		"end":            *data.End,
 		"place":          *data.Place,
 		"communications": []primitive.ObjectID{},
+		"participants":   models.MeetingParticipants{Members: []primitive.ObjectID{}, CompanyReps: []primitive.ObjectID{}},
 	}
 
 	if data.Participants != nil {
@@ -336,6 +374,72 @@ func (m *MeetingsType) DeleteMeetingMinute(meetingID primitive.ObjectID) (*model
 		"$set": bson.M{
 			"minute": "",
 		},
+	}
+
+	var filterQuery = bson.M{"_id": meetingID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedMeeting models.Meeting
+
+	if err := m.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		log.Println("error updating meeting:", err)
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
+}
+
+func (m *MeetingsType) AddMeetingParticipant(meetingID primitive.ObjectID, data MeetingParticipantData) (*models.Meeting, error) {
+	var updateQuery primitive.M
+	if data.Type == "MEMBER" {
+		updateQuery = bson.M{
+			"$addToSet": bson.M{
+				"participants.members": data.Member,
+			},
+		}
+	} else if data.Type == "COMPANYREP" {
+		updateQuery = bson.M{
+			"$addToSet": bson.M{
+				"participants.companyReps": data.Member,
+			},
+		}
+	} else {
+		return nil, errors.New("Invalid type of participant")
+	}
+
+	var filterQuery = bson.M{"_id": meetingID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedMeeting models.Meeting
+
+	if err := m.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		log.Println("error updating meeting:", err)
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
+}
+
+func (m *MeetingsType) DeleteMeetingParticipant(meetingID primitive.ObjectID, data MeetingParticipantData) (*models.Meeting, error) {
+	var updateQuery primitive.M
+	if data.Type == "MEMBER" {
+		updateQuery = bson.M{
+			"$pull": bson.M{
+				"participants.members": data.Member,
+			},
+		}
+	} else if data.Type == "COMPANYREP" {
+		updateQuery = bson.M{
+			"$pull": bson.M{
+				"participants.companyReps": data.Member,
+			},
+		}
+	} else {
+		return nil, errors.New("Invalid type of participant")
 	}
 
 	var filterQuery = bson.M{"_id": meetingID}

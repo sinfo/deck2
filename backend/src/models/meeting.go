@@ -8,11 +8,17 @@ import (
 )
 
 type MeetingKind string
+type MeetingParticipantKind string
 
 const (
 	EventMeeting   MeetingKind = "EVENT"
 	TeamMeeting    MeetingKind = "TEAM"
 	CompanyMeeting MeetingKind = "COMPANY"
+)
+
+const (
+	MemberParticipant     MeetingParticipantKind = "MEMBER"
+	CompanyRepParticipant MeetingParticipantKind = "COMPANYREP"
 )
 
 func (mk *MeetingKind) Parse(kind string) error {
@@ -39,6 +45,29 @@ func (mk *MeetingKind) Parse(kind string) error {
 	}
 
 	*mk = newMeetingKind
+	return nil
+}
+
+func (mk *MeetingParticipantKind) Parse(participantKind string) error {
+
+	var newMeetingParticipantKind MeetingParticipantKind
+
+	switch participantKind {
+
+	case string(MemberParticipant):
+		newMeetingParticipantKind = MemberParticipant
+		break
+
+	case string(CompanyRepParticipant):
+		newMeetingParticipantKind = CompanyRepParticipant
+		break
+
+	default:
+		return errors.New("invalid type of participant")
+
+	}
+
+	*mk = newMeetingParticipantKind
 	return nil
 }
 
