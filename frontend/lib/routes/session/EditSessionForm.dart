@@ -4,6 +4,9 @@ import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:dropdown_search/dropdown_search.dart';
+import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
 
 class EditSessionForm extends StatefulWidget {
   final Session session;
@@ -18,9 +21,11 @@ const kinds = ["Talk", "Presentation", "Workshop"];
 class _EditSessionFormState extends State<EditSessionForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
   late TextEditingController _placeController;
   late TextEditingController _beginDateController;
   late TextEditingController _endDateController;
+  late TextEditingController _videoURLController;
   final _sessionService = SessionService();
 
   late DateTime _begin;
@@ -31,7 +36,10 @@ class _EditSessionFormState extends State<EditSessionForm> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.session.title);
+    _descriptionController =
+        TextEditingController(text: widget.session.description);
     _placeController = TextEditingController(text: widget.session.place);
+    _videoURLController = TextEditingController(text: widget.session.videoURL);
     _beginDateController =
         TextEditingController(text: getDateTime(widget.session.begin));
     _endDateController =
@@ -48,6 +56,7 @@ class _EditSessionFormState extends State<EditSessionForm> {
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var title = _titleController.text;
+      var description = _descriptionController.text;
       var place = _placeController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -134,90 +143,77 @@ class _EditSessionFormState extends State<EditSessionForm> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
-              controller: _placeController,
+              controller: _descriptionController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter a place';
+                  return 'Please enter a description';
                 }
                 return null;
               },
               decoration: const InputDecoration(
-                icon: const Icon(Icons.place),
-                labelText: "Place *",
+                icon: const Icon(Icons.description),
+                labelText: "Description *",
               ),
             ),
           ),
           Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextFormField(
-                controller: _beginDateController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a beggining date';
-                  }
-                  return null;
-                },
-                decoration: const InputDecoration(
-                  icon: const Icon(Icons.calendar_today),
-                  labelText: "Begin Date *",
-                ),
-                readOnly: true, //prevents editing the date in the form field
-                onTap: () async {
-                  await _selectDateTime(context, true);
-                  String formattedDate = getDateTime(_begin);
-
-                  setState(() {
-                    _beginDateController.text = formattedDate;
-                  });
-                },
-              )),
+            padding: const EdgeInsets.all(8.0),
+            child: FormBuilderDateTimePicker(
+              name: 'beginDate',
+              controller: _beginDateController,
+              initialValue: widget.session.begin,
+              validator: (value) {
+                if (value == null) {
+                  return 'Please enter a beggining date';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.calendar_today),
+                labelText: "Begin Date *",
+              ),
+              onChanged: (value) => {_begin = value!},
+            ),
+          ),
           Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextFormField(
-                controller: _endDateController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an ending date';
-                  }
-                  return null;
-                },
-                decoration: const InputDecoration(
-                  icon: const Icon(Icons.calendar_today),
-                  labelText: "End Date *",
-                ),
-                readOnly: true, //prevents editing the date in the form field
-                onTap: () async {
-                  await _selectDateTime(context, false);
-                  String formattedDate = getDateTime(_end);
-
-                  setState(() {
-                    _endDateController.text = formattedDate;
-                  });
-                },
-              )),
+            padding: const EdgeInsets.all(8.0),
+            child: FormBuilderDateTimePicker(
+              name: 'endDate',
+              initialValue: widget.session.end,
+              controller: _endDateController,
+              validator: (value) {
+                if (value == null) {
+                  return 'Please enter an ending date';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.calendar_today),
+                labelText: "End Date *",
+              ),
+              onChanged: (value) => {_end = value!},
+            ),
+          ),
           Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: DropdownButtonFormField(
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Please enter the kind of session';
-                    }
-                    return null;
-                  },
-                  // Transforming TEAM or COMPANY or EVENT into Team or Company or Event
-                  value:
-                      "${widget.session.kind[0].toUpperCase()}${widget.session.kind.substring(1).toLowerCase()}",
-                  decoration: const InputDecoration(
-                    icon: const Icon(Icons.category),
-                    labelText: "Kind *",
-                  ),
-                  items: kinds.map((String kind) {
-                    return new DropdownMenuItem(value: kind, child: Text(kind));
-                  }).toList(),
-                  onChanged: (newValue) {
-                    // do other stuff with _category
-                    setState(() => _kind = newValue.toString());
-                  })),
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _placeController,
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.place),
+                labelText: "Place ",
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _videoURLController,
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.video_call),
+                labelText: "VideoURL ",
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(

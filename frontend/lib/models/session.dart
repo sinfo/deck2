@@ -31,7 +31,7 @@ class Session {
     return Session(
       id: json['id'],
       begin: DateTime.parse(json['begin']),
-      end: DateTime.parse(json['begin']),
+      end: DateTime.parse(json['end']),
       title: json['title'],
       description: json['description'],
       place: json['place'],
