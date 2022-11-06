@@ -22,7 +22,7 @@ class InformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -40,9 +40,8 @@ class InformationBox extends StatelessWidget {
                   textAlign: TextAlign.left,
                   style: TextStyle(
                       fontSize: 22,
-                      color: Colors.black,
                       fontWeight: FontWeight.bold)),
-              Divider(),
+              Divider(color: Theme.of(context).dividerColor,),
               for (int i = 0; i < contact.mails!.length; i++)
                 showMail(mail: contact.mails![i]),
             ],
@@ -54,7 +53,7 @@ class InformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -72,9 +71,8 @@ class InformationBox extends StatelessWidget {
                   textAlign: TextAlign.left,
                   style: TextStyle(
                       fontSize: 22,
-                      color: Colors.black,
                       fontWeight: FontWeight.bold)),
-              Divider(),
+              Divider(color: Theme.of(context).dividerColor,),
               for (int i = 0; i < contact.phones!.length; i++)
                 showPhone(phone: contact.phones![i]),
             ],
@@ -86,7 +84,7 @@ class InformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -103,9 +101,8 @@ class InformationBox extends StatelessWidget {
                   textAlign: TextAlign.left,
                   style: TextStyle(
                       fontSize: 22,
-                      color: Colors.black,
                       fontWeight: FontWeight.bold)),
-              Divider(),
+              Divider(color: Theme.of(context).dividerColor,),
               Row(
                 children: [
                   (contact.socials!.facebook != null)
@@ -183,7 +180,7 @@ class InformationBox extends StatelessWidget {
         SelectableText(
           phone.phone!,
           textAlign: TextAlign.left,
-          style: TextStyle(fontSize: 18, color: Colors.black),
+          style: TextStyle(fontSize: 18),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -207,7 +204,7 @@ class InformationBox extends StatelessWidget {
         SelectableText(
           mail.mail!,
           textAlign: TextAlign.left,
-          style: TextStyle(fontSize: 18, color: Colors.black),
+          style: TextStyle(fontSize: 18),
         ),
         Row(
           children: [
@@ -233,9 +230,10 @@ class InformationBox extends StatelessWidget {
   }
 }
 
-_launchURL(String url) async {
-  if (await canLaunch(url)) {
-    await launch(url, forceWebView: true);
+_launchURL(String string) async {
+  Uri url = Uri.parse(string);
+  if (await canLaunchUrl(url)) {
+    await launchUrl(url);
   } else {
     throw 'Could not launch $url';
   }

@@ -187,7 +187,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 
 		// filter by name first
 		{{
-			"$match", bson.M{
+			Key: "$match", Value: bson.M{
 				"name": bson.M{
 					"$regex":   fmt.Sprintf(".*%s.*", nameFilter),
 					"$options": "i",
@@ -198,49 +198,49 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 		// get all the teams on which each member is participating,
 		// and add them to each member correspondingly
 		{{
-			"$lookup", bson.D{
-				{"from", Teams.Collection.Name()},
-				{"localField", "_id"},
-				{"foreignField", "members.member"},
-				{"as", "team"},
+			Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: Teams.Collection.Name()},
+				{Key: "localField", Value: "_id"},
+				{Key: "foreignField", Value: "members.member"},
+				{Key: "as", Value: "team"},
 			},
 		}},
 
 		// get an instance of each member for every team he/she belonged to
 		{{
-			"$unwind", "$team",
+			Key: "$unwind", Value: "$team",
 		}},
 
 		// get the event associated with each team on each member
 		{{
-			"$lookup", bson.D{
-				{"from", Events.Collection.Name()},
-				{"localField", "team._id"},
-				{"foreignField", "teams"},
-				{"as", "event"},
+			Key: "$lookup", Value: bson.D{
+				{Key: "from", Value: Events.Collection.Name()},
+				{Key: "localField", Value: "team._id"},
+				{Key: "foreignField", Value: "teams"},
+				{Key: "as", Value: "event"},
 			},
 		}},
 
 		// get an instance of each member for every event he/she belonged to
 		{{
-			"$unwind", "$event",
+			Key: "$unwind", Value: "$event",
 		}},
 	}
 
 	if options.Event != nil {
 		query = append(query, bson.D{
-			{"$match", bson.M{"event._id": *options.Event}},
+			{Key: "$match", Value: bson.M{"event._id": *options.Event}},
 		})
 	}
 
 	query = append(query, bson.D{
-		{"$group", bson.D{
-			{"_id", "$_id"},
-			{"name", bson.M{"$first": "$name"}},
-			{"sinfoid", bson.M{"$first": "$sinfoid"}},
-			{"img", bson.M{"$first": "$img"}},
-			{"istid", bson.M{"$first": "$istid"}},
-			{"contact", bson.M{"$first": "$contact"}},
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$_id"},
+			{Key: "name", Value: bson.M{"$first": "$name"}},
+			{Key: "sinfoid", Value: bson.M{"$first": "$sinfoid"}},
+			{Key: "img", Value: bson.M{"$first": "$img"}},
+			{Key: "istid", Value: bson.M{"$first": "$istid"}},
+			{Key: "contact", Value: bson.M{"$first": "$contact"}},
 		}},
 	})
 
@@ -343,7 +343,7 @@ func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models
 			}
 			for _, teamMember := range team.Members {
 				if teamMember.Member == id {
-					memEvtTeam := models.MemberEventTeam{event.ID, team.Name, teamMember.Role}
+					memEvtTeam := models.MemberEventTeam{Event: event.ID, Team: team.Name, Role: teamMember.Role}
 					memberEventTeams = append(memberEventTeams, &memEvtTeam)
 					teamFound = true
 					break

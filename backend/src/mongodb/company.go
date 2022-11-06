@@ -158,25 +158,25 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 		case string(NumberParticipations):
 			query := mongo.Pipeline{
 				{
-					{"$match", filter},
+					{Key: "$match", Value: filter},
 				},
 				{
-					{"$addFields", bson.D{
-						{"numParticipations", bson.D{
-							{"$size", "$participations"},
+					{Key: "$addFields", Value: bson.D{
+						{Key: "numParticipations", Value: bson.D{
+							{Key: "$size", Value: "$participations"},
 						}},
 					}},
 				},
 				{
-					{"$sort", bson.D{
-						{"numParticipations", -1},
+					{Key: "$sort", Value: bson.D{
+						{Key: "numParticipations", Value: -1},
 					}},
 				},
 				{
-					{"$skip", (*compOptions.NumRequests * (*compOptions.MaxCompInRequest))},
+					{Key: "$skip", Value: (*compOptions.NumRequests * (*compOptions.MaxCompInRequest))},
 				},
 				{
-					{"$limit", *compOptions.MaxCompInRequest},
+					{Key: "$limit", Value: *compOptions.MaxCompInRequest},
 				},
 			}
 			cur, err = c.Collection.Aggregate(ctx, query)
@@ -187,18 +187,18 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 		case string(LastParticipation):
 			query := mongo.Pipeline{
 				{
-					{"$match", filter},
+					{Key: "$match", Value: filter},
 				},
 				{
-					{"$sort", bson.D{
-						{"participations.event", -1},
+					{Key: "$sort", Value: bson.D{
+						{Key: "participations.event", Value: -1},
 					}},
 				},
 				{
-					{"$skip", (*compOptions.NumRequests * (*compOptions.MaxCompInRequest))},
+					{Key: "$skip", Value: (*compOptions.NumRequests * (*compOptions.MaxCompInRequest))},
 				},
 				{
-					{"$limit", *compOptions.MaxCompInRequest},
+					{Key: "$limit", Value: *compOptions.MaxCompInRequest},
 				},
 			}
 			cur, err = c.Collection.Aggregate(ctx, query)
