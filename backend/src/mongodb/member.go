@@ -184,7 +184,7 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 	var members []*models.Member = make([]*models.Member, 0)
 
 	var query mongo.Pipeline
-	if len(*options.Name) > 0 {
+	if len(nameFilter) > 0 {
 		query = mongo.Pipeline{
 			{{
 				"$match", bson.M{
