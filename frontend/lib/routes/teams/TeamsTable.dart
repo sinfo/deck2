@@ -24,7 +24,7 @@ class TeamTable extends StatefulWidget {
 class _TeamTableState extends State<TeamTable>
     with AutomaticKeepAliveClientMixin {
   final TeamService _teamService = TeamService();
-  String filter = ALL;
+  String filter = "";
   late List<Team> teams = [];
 
   bool get wantKeepAlive => true;
@@ -32,6 +32,7 @@ class _TeamTableState extends State<TeamTable>
   @override
   void initState() {
     super.initState();
+    filter = ALL;
   }
 
   @override
@@ -39,19 +40,7 @@ class _TeamTableState extends State<TeamTable>
     super.build(context);
 
     return Scaffold(
-      body: NestedScrollView(
-        floatHeaderSlivers: true,
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverToBoxAdapter(
-            child: Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
-                child: FilterBarTeam(
-                  teamFilters: getTeamsFilter(),
-                  onSelected: (value) => onSelected(value),
-                )),
-          ),
-        ],
-        body: FutureBuilder(
+      body: FutureBuilder(
           future: Future.wait([
             _teamService.getTeams(
                 event: Provider.of<EventNotifier>(context).event.id)
@@ -59,34 +48,12 @@ class _TeamTableState extends State<TeamTable>
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.hasError) {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content:
-                        Text('An error has occured. Please contact the admins'),
-                    duration: Duration(seconds: 4),
-                  ),
-                );
-                return Center(
-                    child: Icon(
-                  Icons.error,
-                  size: 200,
-                ));
+                return showError();
               } else if (snapshot.hasData) {
                 List<List<Object>> data = snapshot.data as List<List<Object>>;
-
                 teams = data[0] as List<Team>;
                 teams.sort((a, b) => a.name!.compareTo(b.name!));
-
-                return RefreshIndicator(
-                  onRefresh: () {
-                    return Future.delayed(Duration.zero, () {
-                      setState(() {});
-                    });
-                  },
-                  child: buildTeamsList(),
-                );
+                return showTeams();
               } else {
                 return Center(child: CircularProgressIndicator());
               }
@@ -103,9 +70,7 @@ class _TeamTableState extends State<TeamTable>
                 ),
               );
             }
-          },
-        ),
-      ),
+          }),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       floatingActionButton: FloatingActionButton.extended(
           onPressed: showCreateTeamDialog,
@@ -121,7 +86,6 @@ class _TeamTableState extends State<TeamTable>
     setState(() {
       filter = value;
     });
-    print("The filter value is $value");
   }
 
   buildTeamsList() {
@@ -138,6 +102,47 @@ class _TeamTableState extends State<TeamTable>
             TeamMemberRow(team: filteredTeams[index]),
         addAutomaticKeepAlives: true,
         physics: const AlwaysScrollableScrollPhysics());
+  }
+
+  showError() {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('An error has occured. Please contact the admins'),
+        duration: Duration(seconds: 4),
+      ),
+    );
+    return Center(
+        child: Icon(
+      Icons.error,
+      size: 200,
+    ));
+  }
+
+  showTeams() {
+    return NestedScrollView(
+      floatHeaderSlivers: true,
+      headerSliverBuilder: (context, innerBoxIsScrolled) => [
+        SliverToBoxAdapter(
+          child: Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+              child: FilterBarTeam(
+                currentFilter: filter,
+                teamFilters: getTeamsFilter(),
+                onSelected: (value) => onSelected(value),
+              )),
+        ),
+      ],
+      body: RefreshIndicator(
+        onRefresh: () {
+          return Future.delayed(Duration.zero, () {
+            setState(() {});
+          });
+        },
+        child: buildTeamsList(),
+      ),
+    );
   }
 
   showCreateTeamDialog() {
@@ -174,12 +179,9 @@ class _TeamTableState extends State<TeamTable>
   }
 
   getTeamsFilter() {
-    print("List of teams: $teams");
     List<String> filters =
         teams.map((team) => team.name).whereType<String>().toList();
-    filters.add(ALL);
-    filters.add("SINFO 30 team");
-    filters.add("SINFO 31 team");
+    filters.insert(0, ALL);
     return filters;
   }
 }
