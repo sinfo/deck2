@@ -50,7 +50,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
   DateTime? _beginTicket;
   DateTime? _endTicket;
   List<String> speakersIds = [];
-  List<String> companiesIds = [];
+  String? companyId;
 
   String _kind = "";
   bool value = false;
@@ -62,21 +62,21 @@ class _AddSessionFormState extends State<AddSessionForm> {
       var title = _titleController.text;
       var description = _descriptionController.text;
       var place = _placeController.text;
-      var speaker = _speakerController.text;
-      var company = _companyController.text;
+      //var speaker = _speakerController.text;
+      //var company = _companyController.text;
       var maxTickets = _currentTicketsValue as int;
       var videoURL = _videoURLController.text;
 
       print("Max tickets:");
       print(maxTickets);
 
-      var sessionTickets = maxTickets != 0
-          ? new SessionTickets(
-              max: maxTickets, start: _beginTicket, end: _endTicket)
-          : new SessionTickets(max: 0, start: null, end: null);
+      // var sessionTickets = maxTickets != 0
+      //     ? new SessionTickets(
+      //         max: maxTickets, start: _beginTicket, end: _endTicket)
+      //     : new SessionTickets(max: 0, start: null, end: null);
 
-      // var sessionTickets = new SessionTickets(
-      //     max: maxTickets, start: _beginTicket, end: _endTicket);
+      var sessionTickets = new SessionTickets(
+          max: maxTickets, start: _beginTicket, end: _endTicket);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
@@ -101,7 +101,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
           title,
           description,
           speakersIds,
-          company,
+          companyId,
           videoURL,
           sessionTickets);
 
@@ -314,10 +314,10 @@ class _AddSessionFormState extends State<AddSessionForm> {
                   ? const EdgeInsets.all(8.0)
                   : EdgeInsets.all(0),
               child: (_kind == "Workshop" || _kind == "Presentation")
-                  ? DropdownSearch<Company>.multiSelection(
+                  ? DropdownSearch<Company>(
                       asyncItems: (String) => companyService.getCompanies(),
                       itemAsString: (Company u) => u.companyAsString(),
-                      popupProps: PopupPropsMultiSelection.menu(
+                      popupProps: PopupProps.menu(
                         showSearchBox: true,
                       ),
                       dropdownDecoratorProps: DropDownDecoratorProps(
@@ -328,18 +328,15 @@ class _AddSessionFormState extends State<AddSessionForm> {
                       ),
                       validator: (value) {
                         if (_kind == "Workshop" || _kind == "Presentation") {
-                          if (value == null || value.isEmpty) {
+                          if (value == null) {
                             return 'Please enter a company';
                           }
                           return null;
                         }
                         return null;
                       },
-                      onChanged: (List<Company> companies) {
-                        companiesIds.clear();
-                        for (var company in companies) {
-                          companiesIds.add(company.id);
-                        }
+                      onChanged: (Company? company) {
+                        companyId = company!.id;
                       },
                       clearButtonProps: ClearButtonProps(isVisible: true),
                     )

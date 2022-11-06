@@ -77,6 +77,7 @@ class SessionService extends Service {
             "title": title,
             "kind": kind.toUpperCase(),
             "description": description,
+            "speaker": [],
             "company": company,
             "videoURL": videoURL,
             "tickets": sessionTickets.max == 0 ? null : sessionTickets.toJson()
