@@ -67,7 +67,7 @@ class SessionService extends Service {
             "description": description,
             "speaker": speakersIds,
             "videoURL": videoURL,
-            "tickets": sessionTickets.toJson(),
+            // "tickets": sessionTickets.toJson(),
             "company": ""
           }
         : {
@@ -80,8 +80,12 @@ class SessionService extends Service {
             "speaker": [],
             "company": company,
             "videoURL": videoURL,
-            "tickets": sessionTickets.max == 0 ? null : sessionTickets.toJson()
+            // "tickets": sessionTickets.max == 0 ? null : sessionTickets.toJson()
           };
+
+    if (sessionTickets.max != 0) {
+      body["tickets"] = sessionTickets.toJson();
+    }
 
     Response<String> response = await dio.post("/events/sessions", data: body);
 
