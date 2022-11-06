@@ -47,8 +47,8 @@ class Session {
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'begin': begin,
-        'end': end,
+        'begin': begin.toIso8601String(),
+        'end': end.toIso8601String(),
         'title': title,
         'description': description,
         'place': place,

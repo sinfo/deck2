@@ -90,7 +90,7 @@ class SessionService extends Service {
       print("Event id " + eventId.toString());
       Future<List<Session>> _futureSessions = getSessions(event: eventId);
       List<Session> sessions = await _futureSessions;
-      Session s = sessions.elementAt(0);
+      Session s = sessions.last;
 
       return s;
     } on SocketException {

@@ -58,35 +58,46 @@ class _EditSessionFormState extends State<EditSessionForm> {
       var title = _titleController.text;
       var description = _descriptionController.text;
       var place = _placeController.text;
+      var videoURL = _videoURLController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Uploading')),
       );
 
-      // Session? s = await _sessionService.updateSession(
-      //     widget.session.id, _begin.toUtc(), _end.toUtc(), place, _kind, title);
+      Session? s = await _sessionService.updateSession(Session(
+          id: widget.session.id,
+          begin: _begin,
+          end: _end,
+          title: title,
+          description: description,
+          place: place,
+          kind: widget.session.kind,
+          companyId: widget.session.companyId,
+          speakersIds: widget.session.speakersIds,
+          videoURL: videoURL,
+          tickets: widget.session.tickets));
 
-      // if (s != null) {
-      //   SessionsNotifier notifier =
-      //       Provider.of<SessionsNotifier>(context, listen: false);
-      //   notifier.edit(s);
+      if (s != null) {
+        SessionsNotifier notifier =
+            Provider.of<SessionsNotifier>(context, listen: false);
+        notifier.edit(s);
 
-      //   ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(
-      //       content: Text('Done'),
-      //       duration: Duration(seconds: 2),
-      //     ),
-      //   );
-      //   Navigator.pop(context);
-      // } else {
-      //   ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Done'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(content: Text('An error occured.')),
-      //   );
-      // }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occured.')),
+        );
+      }
     }
   }
 

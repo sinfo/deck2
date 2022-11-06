@@ -82,17 +82,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
         const SnackBar(content: Text('Uploading')),
       );
 
-      // print(_begin?.toUtc());
-      // print(_end?.toUtc());
-      // print(place);
-      // print(_kind);
-      // print(title);
-      // print(description);
-      // print(speakersIds);
-      // print(company);
-      // print(videoURL);
-      //print(sessionTickets);
-
       Session? s = await _sessionService.createSession(
           _begin!.toUtc(),
           _end!.toUtc(),
