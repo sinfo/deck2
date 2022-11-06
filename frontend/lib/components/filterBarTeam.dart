@@ -2,28 +2,24 @@ import 'package:flutter/material.dart';
 
 class FilterBarTeam extends StatefulWidget {
   final Function onSelected;
+  final List<String> teamFilters;
 
-  FilterBarTeam({Key? key, required this.onSelected}) : super(key: key);
+  FilterBarTeam({Key? key, required this.teamFilters, required this.onSelected})
+      : super(key: key);
 
   @override
-  FilterBarTeamState createState() => FilterBarTeamState(onSelected: onSelected);
+  FilterBarTeamState createState() =>
+      FilterBarTeamState(teamFilters: teamFilters, onSelected: onSelected);
 }
 
 class FilterBarTeamState extends State<FilterBarTeam> {
   final Function onSelected;
+  final List<String> teamFilters;
 
-  FilterBarTeamState({Key? key, required this.onSelected});
+  FilterBarTeamState(
+      {Key? key, required this.teamFilters, required this.onSelected});
 
   int _currentIndex = 0;
-  List<String> _filters = [
-    "All",
-    "Coordination",
-    "DevTeam",
-    "Logistics",
-    "Multimedia",
-    "Partnerships",
-    "Social Network",
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +31,8 @@ class FilterBarTeamState extends State<FilterBarTeam> {
 
   rowChips() {
     List<Widget> filters = [];
-    for (int i = 0; i < _filters.length; i++) {
-      filters.add(createChip(_filters[i], i));
+    for (int i = 0; i < teamFilters.length; i++) {
+      filters.add(createChip(teamFilters[i], i));
     }
     return Row(children: filters);
   }
@@ -58,7 +54,7 @@ class FilterBarTeamState extends State<FilterBarTeam> {
         onSelected: (bool selected) {
           setState(() {
             _currentIndex = selected ? index : _currentIndex;
-            onSelected(_filters[_currentIndex].toUpperCase());
+            onSelected(teamFilters[_currentIndex].toUpperCase());
           });
         },
         label: Text(label),

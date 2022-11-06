@@ -8,8 +8,11 @@ import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
+import 'package:frontend/components/filterBarTeam.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+
+const ALL = "All";
 
 class TeamTable extends StatefulWidget {
   TeamTable({Key? key}) : super(key: key);
@@ -21,7 +24,8 @@ class TeamTable extends StatefulWidget {
 class _TeamTableState extends State<TeamTable>
     with AutomaticKeepAliveClientMixin {
   final TeamService _teamService = TeamService();
-  late Future<List<Team>> teams;
+  String filter = ALL;
+  late List<Team> teams = [];
 
   bool get wantKeepAlive => true;
 
@@ -40,8 +44,11 @@ class _TeamTableState extends State<TeamTable>
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
-            ),
+                padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+                child: FilterBarTeam(
+                  teamFilters: getTeamsFilter(),
+                  onSelected: (value) => onSelected(value),
+                )),
           ),
         ],
         body: FutureBuilder(
@@ -66,28 +73,23 @@ class _TeamTableState extends State<TeamTable>
                   Icons.error,
                   size: 200,
                 ));
+              } else if (snapshot.hasData) {
+                List<List<Object>> data = snapshot.data as List<List<Object>>;
+
+                teams = data[0] as List<Team>;
+                teams.sort((a, b) => a.name!.compareTo(b.name!));
+
+                return RefreshIndicator(
+                  onRefresh: () {
+                    return Future.delayed(Duration.zero, () {
+                      setState(() {});
+                    });
+                  },
+                  child: buildTeamsList(),
+                );
+              } else {
+                return Center(child: CircularProgressIndicator());
               }
-
-              List<List<Object>> data = snapshot.data as List<List<Object>>;
-
-              List<Team> tms = data[0] as List<Team>;
-
-              tms.sort((a, b) => a.name!.compareTo(b.name!));
-
-              return RefreshIndicator(
-                onRefresh: () {
-                  return Future.delayed(Duration.zero, () {
-                    setState(() {});
-                  });
-                },
-                child: ListView.builder(
-                  itemCount: tms.length,
-                  itemBuilder: (context, index) =>
-                      TeamMemberRow(team: tms[index]),
-                  addAutomaticKeepAlives: true,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                ),
-              );
             } else {
               return Shimmer.fromColors(
                 baseColor: Colors.grey[400]!,
@@ -113,6 +115,29 @@ class _TeamTableState extends State<TeamTable>
               ? Colors.grey[500]
               : Colors.indigo),
     );
+  }
+
+  onSelected(String value) {
+    setState(() {
+      filter = value;
+    });
+    print("The filter value is $value");
+  }
+
+  buildTeamsList() {
+    List<Team> filteredTeams;
+    if (filter.toLowerCase() == ALL.toLowerCase())
+      filteredTeams = teams;
+    else
+      filteredTeams = teams
+          .where((team) => team.name?.toLowerCase() == filter.toLowerCase())
+          .toList();
+    return ListView.builder(
+        itemCount: filteredTeams.length,
+        itemBuilder: (context, index) =>
+            TeamMemberRow(team: filteredTeams[index]),
+        addAutomaticKeepAlives: true,
+        physics: const AlwaysScrollableScrollPhysics());
   }
 
   showCreateTeamDialog() {
@@ -146,6 +171,16 @@ class _TeamTableState extends State<TeamTable>
     await _teamService.createTeam(name);
     setState(() {});
     Navigator.pop(context, "Create");
+  }
+
+  getTeamsFilter() {
+    print("List of teams: $teams");
+    List<String> filters =
+        teams.map((team) => team.name).whereType<String>().toList();
+    filters.add(ALL);
+    filters.add("SINFO 30 team");
+    filters.add("SINFO 31 team");
+    return filters;
   }
 }
 
