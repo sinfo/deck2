@@ -67,7 +67,13 @@ class _AddSessionFormState extends State<AddSessionForm> {
       var maxTickets = _currentTicketsValue as int;
       var videoURL = _videoURLController.text;
 
+      print("Max tickets:");
       print(maxTickets);
+
+      // var sessionTickets = maxTickets != 0
+      //     ? new SessionTickets(
+      //         max: maxTickets, start: _beginTicket, end: _endTicket)
+      //     : new SessionTickets(max: 0, start: _beginTicket, end: _endTicket);
 
       var sessionTickets = new SessionTickets(
           max: maxTickets, start: _beginTicket, end: _endTicket);

@@ -19,7 +19,7 @@ class SessionService extends Service {
     try {
       print("Response data");
       print(response.data);
-      final responseJson = json.decode(response.data!);
+      final responseJson = json.decode(response.data!) as List;
       print("Response json");
       print(responseJson);
       List<Session> sessions =
