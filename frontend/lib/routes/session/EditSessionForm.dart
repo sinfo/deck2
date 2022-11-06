@@ -13,7 +13,7 @@ class EditSessionForm extends StatefulWidget {
   _EditSessionFormState createState() => _EditSessionFormState();
 }
 
-const kinds = ["TALK", "PRESENTATION", "WORKSHOP"];
+const kinds = ["Talk", "Presentation", "Workshop"];
 
 class _EditSessionFormState extends State<EditSessionForm> {
   final _formKey = GlobalKey<FormState>();
