@@ -145,25 +145,42 @@ class _TeamScreen extends State<TeamScreen>
     );
   }
 
+  showError() {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('An error has occured. Please contact the admins'),
+        duration: Duration(seconds: 4),
+      ),
+    );
+    return Center(
+        child: Icon(
+      Icons.error,
+      size: 200,
+    ));
+  }
+
   void editTeam(String? id, String name) async {
     if (id == null) {
-      // TODO do something
-      return;
+      showError();
+    } else {
+      final response = await _teamService.updateTeam(id, name);
+      setState(() {
+        widget.team.name = response?.name ?? "Empty name";
+      });
     }
-    final response = await _teamService.updateTeam(id, name);
-    setState(() {
-      widget.team.name = response?.name ?? "Empty name";
-    });
     Navigator.pop(context, "Update");
   }
 
   void deleteTeam(String? id) async {
     if (id == null) {
-      // TODO do something
+      showError();
       return;
+    } else {
+      final response = await _teamService.deleteTeam(id);
+      Navigator.pop(context, "Update");
     }
-    final response = await _teamService.deleteTeam(id);
-    Navigator.pop(context, "Update");
     // TODO when going back to TeamTable, it should be refreshed so that the deleted team is not shown. What is the best option to do this?
     Navigator.pop(context);
   }
