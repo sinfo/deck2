@@ -7,6 +7,7 @@ import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class EditMemberForm extends StatefulWidget {
   final Member member;
@@ -55,11 +56,20 @@ class _EditMemberFormState extends State<EditMemberForm> {
           istid: istId);
 
       if (m != null && _image != null) {
-        m = kIsWeb
+        Member me = Provider.of<Member?>(context)!;
+
+        if(me.id == widget.member.id){
+          m = kIsWeb
+            ? await _memberService.updateMyImageWeb(image: _image!)
+            : await _memberService.updateMyImage(image: File(_image!.path));
+        }
+        else{
+          m = kIsWeb
             ? await _memberService.updateImageWeb(
                 id: m.id, image: _image!)
             : await _memberService.updateImage(
                 id: m.id, image: File(_image!.path));
+        }
       }
       if (m != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
