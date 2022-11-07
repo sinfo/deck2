@@ -18,11 +18,12 @@ class SessionCard extends StatelessWidget {
   double _dateCardWidth = 120.0,
       _dateFontSize = 30.0,
       _titleFontSize = 23.0,
+      _descriptionFontSize = 15.0,
       _placeDateFontSize = 20.0,
       _cardMargin = 25.0,
       _dateMargins = 25.0,
       _iconsMargin = 8.0,
-      _titleUpBottomMargin = 20.0,
+      _titleUpBottomMargin = 5.0,
       _titleLeftMargin = 15.0;
 
   SessionCard({Key? key, required this.session}) : super(key: key);
@@ -148,17 +149,16 @@ class SessionCard extends StatelessWidget {
     final String? _maxTickets = session.tickets?.max.toString();
 
     return ExpansionTile(
-      childrenPadding: EdgeInsets.all(16),
+      // childrenPadding: EdgeInsets.all(16),
       title: Text(
         session.title,
         style: TextStyle(fontSize: _titleFontSize),
         textAlign: TextAlign.left,
       ),
       children: [
-        Stack(children: [
+        Stack(alignment: AlignmentDirectional.topStart, children: [
           Row(
             children: <Widget>[
-              SizedBox(width: _dateCardWidth),
               Expanded(
                 child: Container(
                   margin: EdgeInsets.only(
@@ -169,6 +169,7 @@ class SessionCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Container(
+                        margin: EdgeInsets.only(bottom: _titleUpBottomMargin),
                         child: Text(
                           session.kind,
                           style: TextStyle(fontSize: _titleFontSize),
@@ -176,17 +177,22 @@ class SessionCard extends StatelessWidget {
                         ),
                       ),
                       Container(
+                        margin: EdgeInsets.only(
+                            top: _titleUpBottomMargin,
+                            bottom: _titleUpBottomMargin),
                         child: Text(
                           session.description,
-                          style: TextStyle(fontSize: _titleFontSize),
+                          style: TextStyle(fontSize: _descriptionFontSize),
                           textAlign: TextAlign.left,
                         ),
                       ),
                       Container(
+                        margin: EdgeInsets.only(
+                            top: _titleUpBottomMargin,
+                            bottom: _titleUpBottomMargin),
                         child: Text(
                           session.place ?? 'No place available yet',
-                          style: TextStyle(
-                              color: Colors.grey, fontSize: _placeDateFontSize),
+                          style: TextStyle(fontSize: _placeDateFontSize),
                           textAlign: TextAlign.left,
                         ),
                       ),
@@ -196,49 +202,50 @@ class SessionCard extends StatelessWidget {
                           DateFormat.jm().format(session.begin.toLocal()) +
                               ' - ' +
                               DateFormat.jm().format(session.end.toLocal()),
-                          style: TextStyle(
-                              color: Colors.grey, fontSize: _placeDateFontSize),
+                          style: TextStyle(fontSize: _placeDateFontSize),
                           textAlign: TextAlign.left,
                         ),
                       ),
                       Container(
                         child: Text(
                           session.videoURL ?? 'No video available yet',
-                          style: TextStyle(
-                              color: Colors.grey, fontSize: _placeDateFontSize),
+                          style: TextStyle(fontSize: _placeDateFontSize),
                           textAlign: TextAlign.left,
                         ),
                       ),
                       Container(
                         child: (session.tickets != null)
-                            ? Column(
-                                children: [
-                                  Container(
-                                      padding: EdgeInsets.only(top: 5.0),
-                                      child: Column(
-                                        children: [
-                                          Text('Tickets'),
-                                          Text(
-                                            'Available from ' +
-                                                DateFormat.yMd()
-                                                    .add_jm()
-                                                    .format(_beginTicket!
-                                                        .toLocal()) +
-                                                ' to ' +
-                                                DateFormat.yMd()
-                                                    .add_jm()
-                                                    .format(
-                                                        _endTicket!.toLocal()),
-                                            style: TextStyle(
-                                                color: Colors.grey,
-                                                fontSize: _placeDateFontSize),
-                                            textAlign: TextAlign.left,
-                                          ),
-                                          Text('Quantity: ' + _maxTickets!),
-                                        ],
-                                      )),
-                                ],
-                              )
+                            ? Container(
+                                padding:
+                                    EdgeInsets.only(top: 5.0, bottom: 10.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Tickets',
+                                      style: TextStyle(
+                                          fontSize: _placeDateFontSize),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                    Text(
+                                      'Available from ' +
+                                          DateFormat.yMd()
+                                              .add_jm()
+                                              .format(_beginTicket!.toLocal()) +
+                                          ' to ' +
+                                          DateFormat.yMd()
+                                              .add_jm()
+                                              .format(_endTicket!.toLocal()),
+                                      style: TextStyle(fontSize: 15.0),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                    Text(
+                                      'Quantity: ' + _maxTickets!,
+                                      style: TextStyle(fontSize: 15.0),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ],
+                                ))
                             : null,
                       ),
                     ],
