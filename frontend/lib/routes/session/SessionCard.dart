@@ -15,6 +15,16 @@ class SessionCard extends StatelessWidget {
   final Session session;
   final _sessionService = SessionService();
 
+  double _dateCardWidth = 120.0,
+      _dateFontSize = 30.0,
+      _titleFontSize = 23.0,
+      _placeDateFontSize = 20.0,
+      _cardMargin = 25.0,
+      _dateMargins = 25.0,
+      _iconsMargin = 8.0,
+      _titleUpBottomMargin = 20.0,
+      _titleLeftMargin = 15.0;
+
   SessionCard({Key? key, required this.session}) : super(key: key);
 
   void _editSessionModal(context) {
@@ -72,15 +82,6 @@ class SessionCard extends StatelessWidget {
   }
 
   Widget _buildSessionCard(BuildContext context) {
-    double _dateCardWidth = 120.0,
-        _dateFontSize = 30.0,
-        _titleFontSize = 23.0,
-        _placeDateFontSize = 20.0,
-        _cardMargin = 25.0,
-        _dateMargins = 25.0,
-        _iconsMargin = 8.0,
-        _titleUpBottomMargin = 20.0,
-        _titleLeftMargin = 15.0;
     return LayoutBuilder(builder: (context, constraints) {
       if (constraints.maxWidth < App.SIZE) {
         _dateCardWidth = 50.0;
@@ -90,48 +91,71 @@ class SessionCard extends StatelessWidget {
       }
       return Card(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(5.0),
-        ),
+            borderRadius: BorderRadius.circular(5.0),
+            side: BorderSide(color: Colors.indigo, width: 2)),
         margin: EdgeInsets.all(_cardMargin),
-        child: Stack(children: [
-          Positioned.fill(
-            child: Container(
-              alignment: Alignment.centerLeft,
-              // This child will fill full height, replace it with your leading widget
-              child: Container(
-                width: _dateCardWidth,
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      margin: EdgeInsets.only(top: _dateMargins),
-                      child: Text(
-                        DateFormat.d().format(session.begin),
-                        style: TextStyle(
-                            color: Colors.white, fontSize: _dateFontSize),
+        child: SingleChildScrollView(
+            physics: BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    width: _dateCardWidth,
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          margin: EdgeInsets.only(top: _dateMargins),
+                          child: Text(
+                            DateFormat.d().format(session.begin),
+                            style: TextStyle(
+                                color: Colors.white, fontSize: _dateFontSize),
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(bottom: _dateMargins),
+                          child: Text(
+                            DateFormat.MMM()
+                                .format(session.begin)
+                                .toUpperCase(),
+                            style: TextStyle(
+                                color: Colors.white, fontSize: _dateFontSize),
+                          ),
+                        ),
+                      ],
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(5.0),
+                          topLeft: Radius.circular(5.0)),
+                      image: DecorationImage(
+                        image: AssetImage("assets/banner_background.png"),
+                        fit: BoxFit.fill,
                       ),
                     ),
-                    Container(
-                      margin: EdgeInsets.only(bottom: _dateMargins),
-                      child: Text(
-                        DateFormat.MMM().format(session.begin).toUpperCase(),
-                        style: TextStyle(
-                            color: Colors.white, fontSize: _dateFontSize),
-                      ),
-                    ),
-                  ],
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(5.0),
-                      topLeft: Radius.circular(5.0)),
-                  image: DecorationImage(
-                    image: AssetImage("assets/banner_background.png"),
-                    fit: BoxFit.fill,
                   ),
                 ),
-              ),
-            ),
-          ),
+                buildText(context)
+              ],
+            )),
+      );
+    });
+  }
+
+  Widget buildText(BuildContext context) {
+    final DateTime? _beginTicket = session.tickets?.start;
+    final DateTime? _endTicket = session.tickets?.end;
+    final String? _maxTickets = session.tickets?.max.toString();
+
+    return ExpansionTile(
+      childrenPadding: EdgeInsets.all(16),
+      title: Text(
+        session.title,
+        style: TextStyle(fontSize: _titleFontSize),
+        textAlign: TextAlign.left,
+      ),
+      children: [
+        Stack(children: [
           Row(
             children: <Widget>[
               SizedBox(width: _dateCardWidth),
@@ -146,14 +170,21 @@ class SessionCard extends StatelessWidget {
                     children: <Widget>[
                       Container(
                         child: Text(
-                          session.title,
+                          session.kind,
                           style: TextStyle(fontSize: _titleFontSize),
                           textAlign: TextAlign.left,
                         ),
                       ),
                       Container(
                         child: Text(
-                          session.place ?? 'another value',
+                          session.description,
+                          style: TextStyle(fontSize: _titleFontSize),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                      Container(
+                        child: Text(
+                          session.place ?? 'No place available yet',
                           style: TextStyle(
                               color: Colors.grey, fontSize: _placeDateFontSize),
                           textAlign: TextAlign.left,
@@ -169,6 +200,46 @@ class SessionCard extends StatelessWidget {
                               color: Colors.grey, fontSize: _placeDateFontSize),
                           textAlign: TextAlign.left,
                         ),
+                      ),
+                      Container(
+                        child: Text(
+                          session.videoURL ?? 'No video available yet',
+                          style: TextStyle(
+                              color: Colors.grey, fontSize: _placeDateFontSize),
+                          textAlign: TextAlign.left,
+                        ),
+                      ),
+                      Container(
+                        child: (session.tickets != null)
+                            ? Column(
+                                children: [
+                                  Container(
+                                      padding: EdgeInsets.only(top: 5.0),
+                                      child: Column(
+                                        children: [
+                                          Text('Tickets'),
+                                          Text(
+                                            'Available from ' +
+                                                DateFormat.yMd()
+                                                    .add_jm()
+                                                    .format(_beginTicket!
+                                                        .toLocal()) +
+                                                ' to ' +
+                                                DateFormat.yMd()
+                                                    .add_jm()
+                                                    .format(
+                                                        _endTicket!.toLocal()),
+                                            style: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: _placeDateFontSize),
+                                            textAlign: TextAlign.left,
+                                          ),
+                                          Text('Quantity: ' + _maxTickets!),
+                                        ],
+                                      )),
+                                ],
+                              )
+                            : null,
                       ),
                     ],
                   ),
@@ -219,8 +290,8 @@ class SessionCard extends StatelessWidget {
             ],
           ),
         ]),
-      );
-    });
+      ],
+    );
   }
 
   @override
