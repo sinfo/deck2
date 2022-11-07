@@ -9,8 +9,6 @@ import 'package:frontend/services/memberService.dart';
 final Map<String, String> roles = {
   "MEMBER": "Member",
   "TEAMLEADER": "Team Leader",
-  "COORDINATOR": "Coordinator",
-  "ADMIN": "Administrator"
 };
 
 class AddTeamMemberForm extends StatefulWidget {
@@ -26,14 +24,11 @@ class AddTeamMemberForm extends StatefulWidget {
 class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
   final _formKey = GlobalKey<FormState>();
   MemberService _memberService = new MemberService();
-  final _textController = TextEditingController();
   final _searchMembersController = TextEditingController();
-  final _teamroleController = TextEditingController();
   TeamService service = TeamService();
   late Future<List<Member>> membs;
   String memberRole = "";
   String _memberID = '';
-  String _memberName = '';
   bool disappearSearchResults = false;
   String role = "";
 
@@ -42,7 +37,8 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Adding member...')),
       );
-      memberRole = _teamroleController.text;
+      // print(widget.team!.id);
+      // print(_memberID);
       Team? m = await service.addTeamMember(
           id: widget.team!.id, memberId: _memberID, role: role);
       if (m != null) {
@@ -110,8 +106,9 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
                     icon: const Icon(Icons.grid_3x3),
                     labelText: "Role *",
                   ),
-                  items: roles.values.map((e) {
-                    return new DropdownMenuItem(value: e, child: Text(e));
+                  items: roles.keys.map((e) {
+                    return new DropdownMenuItem(
+                        value: e, child: Text(roles[e]!));
                   }).toList(),
                   onChanged: (newValue) {
                     setState(() => role = newValue.toString());
@@ -176,7 +173,6 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
 
   void _getMemberData(String id, String name) {
     _memberID = id;
-    _memberName = name;
     _searchMembersController.text = name;
     disappearSearchResults = true;
     setState(() {});

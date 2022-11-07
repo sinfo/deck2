@@ -216,19 +216,8 @@ class TeamMemberRow extends StatelessWidget {
         .map((m) => _memberService.getMember(m.memberID!))
         .toList();
 
-    List<Future<Member?>> _possiblefutureMembers;
-
-    for (var i = 0; i < teams.length; i++) {
-      _possiblefutureMembers = teams[i]
-          .members!
-          .map((m) => _memberService.getMember(m.memberID!))
-          .toList();
-    }
-
     return FutureBuilder(
-        future: Future.wait(_futureMembers
-            //  _possiblefutureMembers
-            ),
+        future: Future.wait(_futureMembers),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             List<Member?> membs = snapshot.data as List<Member?>;

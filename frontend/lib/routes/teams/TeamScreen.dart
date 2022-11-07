@@ -16,12 +16,16 @@ import 'package:frontend/services/authService.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:provider/provider.dart';
 
+import '../../components/blurryDialog.dart';
+
 final Map<String, String> roles = {
   "MEMBER": "Member",
   "TEAMLEADER": "Team Leader",
   "COORDINATOR": "Coordinator",
   "ADMIN": "Administrator"
 };
+
+bool membersPage = true;
 
 class TeamScreen extends StatefulWidget {
   Team team;
@@ -94,7 +98,7 @@ class _TeamScreen extends State<TeamScreen>
     );
   }
 
-  buildSpeedDial() {
+  buildSpeedDial(BuildContext context) {
     return FutureBuilder(
         future: Provider.of<AuthService>(context).role,
         builder: (context, snapshot) {
@@ -102,60 +106,92 @@ class _TeamScreen extends State<TeamScreen>
             Role r = snapshot.data as Role;
 
             if (r == Role.ADMIN || r == Role.COORDINATOR) {
-              return SpeedDial(
-                animatedIcon: AnimatedIcons.menu_close,
-                animatedIconTheme: IconThemeData(size: 28.0),
-                backgroundColor: Color(0xff5C7FF2),
-                visible: true,
-                curve: Curves.bounceInOut,
-                children: [
-                  SpeedDialChild(
-                    child: Icon(Icons.groups, color: Colors.white),
-                    backgroundColor: Colors.indigo,
-                    onTap: () => {},
-                    label: 'Add Meetings',
-                    labelStyle: TextStyle(
-                        fontWeight: FontWeight.w500, color: Colors.white),
-                    labelBackgroundColor: Colors.black,
-                  ),
-                  SpeedDialChild(
-                    child: Icon(Icons.person_remove, color: Colors.white),
-                    backgroundColor: Colors.indigo,
-                    onTap: () => showRemoveMemberDialog(),
-                    label: 'Remove Members',
-                    labelStyle: TextStyle(
-                        fontWeight: FontWeight.w500, color: Colors.white),
-                    labelBackgroundColor: Colors.black,
-                  ),
-                  SpeedDialChild(
-                    child: Icon(Icons.person_add, color: Colors.white),
-                    backgroundColor: Colors.indigo,
-                    onTap: () => _addTeamMember(context),
-                    label: 'Add Member',
-                    labelStyle: TextStyle(
-                        fontWeight: FontWeight.w500, color: Colors.white),
-                    labelBackgroundColor: Colors.black,
-                  ),
-                  SpeedDialChild(
-                    child: Icon(Icons.delete, color: Colors.white),
-                    backgroundColor: Colors.indigo,
-                    onTap: () => showDeleteTeamDialog(),
-                    label: 'Delete Team',
-                    labelStyle: TextStyle(
-                        fontWeight: FontWeight.w500, color: Colors.white),
-                    labelBackgroundColor: Colors.black,
-                  ),
-                  SpeedDialChild(
-                    child: Icon(Icons.edit, color: Colors.white),
-                    backgroundColor: Colors.indigo,
-                    onTap: () => showEditTeamDialog(),
-                    label: 'Edit Team',
-                    labelStyle: TextStyle(
-                        fontWeight: FontWeight.w500, color: Colors.white),
-                    labelBackgroundColor: Colors.black,
-                  ),
-                ],
-              );
+              if (membersPage) {
+                return SpeedDial(
+                  animatedIcon: AnimatedIcons.menu_close,
+                  animatedIconTheme: IconThemeData(size: 28.0),
+                  backgroundColor: Color(0xff5C7FF2),
+                  visible: true,
+                  curve: Curves.bounceInOut,
+                  children: [
+                    SpeedDialChild(
+                      child: Icon(Icons.person_remove, color: Colors.white),
+                      backgroundColor: Colors.indigo,
+                      onTap: () => showRemoveMemberDialog(context),
+                      label: 'Remove Members',
+                      labelStyle: TextStyle(
+                          fontWeight: FontWeight.w500, color: Colors.white),
+                      labelBackgroundColor: Colors.black,
+                    ),
+                    SpeedDialChild(
+                      child: Icon(Icons.person_add, color: Colors.white),
+                      backgroundColor: Colors.indigo,
+                      onTap: () => _addTeamMember(context),
+                      label: 'Add Member',
+                      labelStyle: TextStyle(
+                          fontWeight: FontWeight.w500, color: Colors.white),
+                      labelBackgroundColor: Colors.black,
+                    ),
+                    SpeedDialChild(
+                      child: Icon(Icons.delete, color: Colors.white),
+                      backgroundColor: Colors.indigo,
+                      onTap: () =>
+                          showDeleteTeamDialog(context, widget.team.id),
+                      label: 'Delete Team',
+                      labelStyle: TextStyle(
+                          fontWeight: FontWeight.w500, color: Colors.white),
+                      labelBackgroundColor: Colors.black,
+                    ),
+                    SpeedDialChild(
+                      child: Icon(Icons.edit, color: Colors.white),
+                      backgroundColor: Colors.indigo,
+                      onTap: () => showEditTeamDialog(),
+                      label: 'Edit Team',
+                      labelStyle: TextStyle(
+                          fontWeight: FontWeight.w500, color: Colors.white),
+                      labelBackgroundColor: Colors.black,
+                    ),
+                  ],
+                );
+              } else {
+                return SpeedDial(
+                  animatedIcon: AnimatedIcons.menu_close,
+                  animatedIconTheme: IconThemeData(size: 28.0),
+                  backgroundColor: Color(0xff5C7FF2),
+                  visible: true,
+                  curve: Curves.bounceInOut,
+                  children: [
+                    SpeedDialChild(
+                      child: Icon(Icons.groups, color: Colors.white),
+                      backgroundColor: Colors.indigo,
+                      onTap: () => {},
+                      label: 'Add Meetings',
+                      labelStyle: TextStyle(
+                          fontWeight: FontWeight.w500, color: Colors.white),
+                      labelBackgroundColor: Colors.black,
+                    ),
+                    SpeedDialChild(
+                      child: Icon(Icons.delete, color: Colors.white),
+                      backgroundColor: Colors.indigo,
+                      onTap: () =>
+                          showDeleteTeamDialog(context, widget.team.id),
+                      label: 'Delete Team',
+                      labelStyle: TextStyle(
+                          fontWeight: FontWeight.w500, color: Colors.white),
+                      labelBackgroundColor: Colors.black,
+                    ),
+                    SpeedDialChild(
+                      child: Icon(Icons.edit, color: Colors.white),
+                      backgroundColor: Colors.indigo,
+                      onTap: () => showEditTeamDialog(),
+                      label: 'Edit Team',
+                      labelStyle: TextStyle(
+                          fontWeight: FontWeight.w500, color: Colors.white),
+                      labelBackgroundColor: Colors.black,
+                    ),
+                  ],
+                );
+              }
             } else {
               return Container(); //CONFIRMAR
             }
@@ -192,11 +228,18 @@ class _TeamScreen extends State<TeamScreen>
     );
   }
 
-  showDeleteTeamDialog() {
+  showDeleteTeamDialog(context, id) {
     final String name = widget.team.name ?? "team";
     return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return BlurryDialog(
+              'Warning', 'Are you sure you want to delete meeting $name?', () {
+            deleteTeam(context, id);
+          });
+        }
+        /* =>
+          AlertDialog(
         title: const Text("Remove Team"),
         content: Text("Are you sure you want to delete \"$name\"?"),
         actions: <Widget>[
@@ -205,15 +248,15 @@ class _TeamScreen extends State<TeamScreen>
             child: const Text("No"),
           ),
           TextButton(
-            onPressed: () => deleteTeam(widget.team.id),
+            onPressed: () => deleteTeam(context, widget.team.id),
             child: const Text("Yes"),
           ),
         ],
-      ),
-    );
+      ),*/
+        );
   }
 
-  showRemoveMemberDialog() {
+  showRemoveMemberDialog(context) {
     String memberId = "";
     return showDialog<String>(
       context: context,
@@ -243,7 +286,8 @@ class _TeamScreen extends State<TeamScreen>
             child: const Text("Cancel"),
           ),
           TextButton(
-            onPressed: () => removeTeamMember(widget.team.id, memberId),
+            onPressed: () =>
+                removeTeamMember(context, widget.team.id, memberId),
             child: const Text("Delete"),
           ),
         ],
@@ -251,10 +295,39 @@ class _TeamScreen extends State<TeamScreen>
     );
   }
 
-  void removeTeamMember(String? id, String memberId) async {
-    final response = await _teamService.deleteTeamMember(id!, memberId);
-    Navigator.pop(context, "Delete");
-    Navigator.pop(context);
+  void removeTeamMember(context, String? id, String memberId) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog(
+            'Warning', 'Are you sure you want to delete this member?',
+            () async {
+          Team? team = await _teamService.deleteTeamMember(id!, memberId);
+          if (team != null) {
+            TeamsNotifier notifier =
+                Provider.of<TeamsNotifier>(context, listen: false);
+            notifier.edit(team);
+
+            teamChangedCallback(context, team: team);
+
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Done'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('An error occured.')),
+            );
+          }
+        });
+      },
+    );
   }
 
   void editTeam(String? id, String name) async {
@@ -265,11 +338,32 @@ class _TeamScreen extends State<TeamScreen>
     Navigator.pop(context, "Update");
   }
 
-  void deleteTeam(String? id) async {
-    final response = await _teamService.deleteTeam(id!);
-    Navigator.pop(context, "Update");
-    // TODO when going back to TeamTable, it should be refreshed so that the deleted team is not shown. What is the best option to do this?
-    Navigator.pop(context);
+  void deleteTeam(context, String? id) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Deleting')),
+    );
+    Team? team = await _teamService.deleteTeam(id!);
+    if (team != null) {
+      TeamsNotifier notifier =
+          Provider.of<TeamsNotifier>(context, listen: false);
+      notifier.remove(team);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
   }
 
   @override
@@ -309,7 +403,7 @@ class _TeamScreen extends State<TeamScreen>
             ])),
       ),
       // TODO should only appear in Members tab?
-      floatingActionButton: buildSpeedDial(),
+      floatingActionButton: buildSpeedDial(context),
     );
   }
 }
@@ -383,6 +477,8 @@ class _DisplayMeetingState extends State<DisplayMeeting> {
     List<Future<Meeting?>> _futureMeetings =
         widget.meetingsIds!.map((m) => _meetingService.getMeeting(m)).toList();
 
+    membersPage = false;
+
     return Scaffold(
       backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
       body: (widget.meetingsIds == null)
@@ -422,6 +518,7 @@ class DisplayMembers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    membersPage = true;
     return Scaffold(
       backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
       body: ListView(
@@ -444,7 +541,7 @@ class ShowMember extends StatelessWidget {
         Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => MemberScreen(member: member))); //TODO
+                builder: (context) => MemberScreen(member: member)));
       },
       child: Card(
         color: Colors.white,

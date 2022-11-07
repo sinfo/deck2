@@ -2,24 +2,24 @@ import 'package:flutter/cupertino.dart';
 import 'package:frontend/models/team.dart';
 
 class TeamsNotifier extends ChangeNotifier {
-  List<Team> team;
+  List<Team> teams;
 
-  TeamsNotifier({required this.team});
+  TeamsNotifier({required this.teams});
 
   void add(Team s) {
-    team.add(s);
+    teams.add(s);
     notifyListeners();
   }
 
-  void remove(Team s) {
-    team.remove(s);
+  void remove(Team t) {
+    teams.removeWhere((team) => t.id == team.id);
     notifyListeners();
   }
 
-  void edit(Team s) {
-    int index = team.indexOf(s);
+  void edit(Team t) {
+    int index = teams.indexWhere((team) => t.id == team.id);
     if (index != -1) {
-      team[index] = s;
+      teams[index] = t;
       notifyListeners();
     }
   }
