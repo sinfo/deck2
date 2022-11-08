@@ -218,3 +218,41 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(thread)
 }
+
+func deleteThread(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		t, err := mongodb.Threads.GetThread(id)
+		if err != nil {
+			http.Error(w, "Thread not found", http.StatusNotFound)
+			return
+		}
+		
+		for _, commentID := range t.Comments {
+			_, err = mongodb.Posts.DeletePost(commentID)
+			if err != nil {
+				http.Error(w, "Post not found. Thread was not deleted.", http.StatusNotFound)
+				return
+			}
+		}
+
+		if credentials.Role.AccessLevel() != 0 {
+			http.Error(w, "Unauthorized", http.StatusForbidden)
+			return
+		}
+	} else {
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		return
+	}
+
+	thread, err := mongodb.Threads.DeleteThread(id)
+
+	if err != nil {
+		http.Error(w, "Could not find thread", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(thread)
+}

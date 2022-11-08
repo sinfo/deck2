@@ -290,6 +290,7 @@ func InitializeRouter() {
 	threadRouter.HandleFunc("/{id}/comments", authMember(addCommentToThread)).Methods("POST")
 	threadRouter.HandleFunc("/{threadID}/comments/{postID}", authMember(removeCommentFromThread)).Methods("DELETE")
 	threadRouter.HandleFunc("/{id}", authMember(updateThread)).Methods("PUT")
+	threadRouter.HandleFunc("/{id}", authMember(deleteThread)).Methods("DELETE")
 
 	// posts handlers
 	postRouter := r.PathPrefix("/posts").Subrouter()
