@@ -5,6 +5,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threadCard.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -155,8 +156,18 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     int index = _tabController.index;
     switch (index) {
       case 0:
-      case 1:
         return null;
+      case 1:
+        return FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.pushNamed(
+              context,
+              Routes.AddFlightInfo,
+            );
+          },
+          label: const Text('Add Flight Information'),
+          icon: const Icon(Icons.add),
+        );
       case 2:
         {
           if (widget.speaker.lastParticipation != latestEvent) {
