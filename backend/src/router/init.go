@@ -279,6 +279,7 @@ func InitializeRouter() {
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(updateMeeting)).Methods("PUT")
 	meetingRouter.HandleFunc("/{id}/thread", authMember(addMeetingThread)).Methods("POST")
+	meetingRouter.HandleFunc("/{id}/thread/{threadID}", authMember(deleteMeetingThread)).Methods("DELETE")
 	meetingRouter.HandleFunc("/{id}/minute", authMember(uploadMeetingMinute)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}/minute", authMember(deleteMeetingMinute)).Methods("DELETE")
 	meetingRouter.HandleFunc("/{id}/participants", authMember(addMeetingParticipant)).Methods("POST")

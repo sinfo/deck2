@@ -366,6 +366,9 @@
     "/meetings/{id}/thread": {
       "$ref": "./meetings-id-thread.json"
     },
+    "/meetings/{id}/thread/{threadID}": {
+      "$ref": "./meetings-id-thread-threadid.json"
+    },
     "/meetings/{id}/participants": {
       "$ref": "./meetings-id-participants.json"
     }

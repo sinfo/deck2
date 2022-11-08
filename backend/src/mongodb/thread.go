@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// ThreadsType contains important database information on Meetings
+// ThreadsType contains important database information on Threads
 type ThreadsType struct {
 	Collection *mongo.Collection
 }
