@@ -8,7 +8,7 @@ import 'package:frontend/services/memberService.dart';
 
 final Map<String, String> roles = {
   "MEMBER": "Member",
-  "TEAMLEADER": "Team Leader",
+  "TEAMLEADER": "Team Leader"
 };
 
 class AddTeamMemberForm extends StatefulWidget {
