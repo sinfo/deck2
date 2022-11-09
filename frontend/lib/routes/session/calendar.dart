@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/routes/session/EditSessionForm.dart';
+import 'package:frontend/routes/session/SessionsNotifier.dart';
+import 'package:frontend/services/sessionService.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../models/session.dart';
+import '../../services/authService.dart';
 
 class CustomTableCalendar extends StatefulWidget {
   final List<Session> sessions;
@@ -23,6 +29,7 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
   final titleController = TextEditingController();
   final descpController = TextEditingController();
   final List<Session> sessions;
+  final _sessionService = SessionService();
 
   late Map<DateTime, List<Session>> mySelectedEvents;
 
@@ -71,6 +78,62 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
     print(mySelectedEvents);
 
     return mySelectedEvents[dateTime] ?? [];
+  }
+
+  void _deleteSessionDialog(context, id) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog(
+            'Warning', 'Are you sure you want to delete session?', () {
+          _deleteSession(context, id);
+        });
+      },
+    );
+  }
+
+  void _deleteSession(context, id) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Deleting')),
+    );
+
+    Session? s = await _sessionService.deleteSession(id);
+    if (s != null) {
+      SessionsNotifier notifier =
+          Provider.of<SessionsNotifier>(context, listen: false);
+      notifier.remove(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
+  }
+
+  Future<void> _editSessionModal(context, id) async {
+    Future<Session> sessionFuture = _sessionService.getSession(id);
+    Session session = await sessionFuture;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+            heightFactor: 0.7,
+            child: Container(
+              child: EditSessionForm(session: session),
+            ));
+      },
+    );
   }
 
   // _showAddEventDialog() async {
@@ -162,154 +225,186 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Custom Calendar'),
-      ),
-      // floatingActionButton: FloatingActionButton.extended(
-      //   onPressed: () => _showAddEventDialog(),
-      //   label: const Text('Add Event'),
-      // ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Card(
-              margin: const EdgeInsets.all(8.0),
-              elevation: 5.0,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(10),
+            TableCalendar(
+              focusedDay: _focusedCalendarDate,
+              firstDay: _initialCalendarDate,
+              lastDay: _lastCalendarDate,
+              calendarFormat: CalendarFormat.month,
+              weekendDays: const [DateTime.sunday, 6],
+              startingDayOfWeek: StartingDayOfWeek.monday,
+              daysOfWeekHeight: 40.0,
+              rowHeight: 60.0,
+              eventLoader: _listOfDayEvents,
+              headerStyle: const HeaderStyle(
+                titleTextStyle: TextStyle(
+                    color: Color.fromARGB(255, 63, 81, 181), fontSize: 25.0),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10))),
+                formatButtonTextStyle:
+                    TextStyle(color: Colors.white, fontSize: 16.0),
+                formatButtonDecoration: BoxDecoration(
+                  color: Color.fromARGB(255, 63, 81, 181),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(5.0),
+                  ),
                 ),
-                side: BorderSide(color: Colors.blueAccent, width: 2.0),
+                leftChevronIcon: Icon(
+                  Icons.chevron_left,
+                  color: Color.fromARGB(255, 63, 81, 181),
+                  size: 28,
+                ),
+                rightChevronIcon: Icon(
+                  Icons.chevron_right,
+                  color: Color.fromARGB(255, 63, 81, 181),
+                  size: 28,
+                ),
               ),
-              child: TableCalendar(
-                focusedDay: _focusedCalendarDate,
-                // today's date
-                firstDay: _initialCalendarDate,
-                // earliest possible date
-                lastDay: _lastCalendarDate,
-                // latest allowed date
-                calendarFormat: CalendarFormat.month,
-                // default view when displayed
-                // default is Saturday & Sunday but can be set to any day.
-                // instead of day number can be mentioned as well.
-                weekendDays: const [DateTime.sunday, 6],
-                // default is Sunday but can be changed according to locale
-                startingDayOfWeek: StartingDayOfWeek.monday,
-                // height between the day row and 1st date row, default is 16.0
-                daysOfWeekHeight: 40.0,
-                // height between the date rows, default is 52.0
-                rowHeight: 60.0,
-                // this property needs to be added if we want to show events
-                eventLoader: _listOfDayEvents,
-                // Calendar Header Styling
-                headerStyle: const HeaderStyle(
-                  titleTextStyle:
-                      TextStyle(color: Colors.lightBlue, fontSize: 20.0),
-                  decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          topRight: Radius.circular(10))),
-                  formatButtonTextStyle:
-                      TextStyle(color: Colors.blueAccent, fontSize: 16.0),
-                  formatButtonDecoration: BoxDecoration(
-                    color: Colors.lightBlue,
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(5.0),
-                    ),
-                  ),
-                  leftChevronIcon: Icon(
-                    Icons.chevron_left,
-                    color: Colors.lightBlue,
-                    size: 28,
-                  ),
-                  rightChevronIcon: Icon(
-                    Icons.chevron_right,
-                    color: Colors.lightBlue,
-                    size: 28,
-                  ),
-                ),
-                // Calendar Days Styling
-                daysOfWeekStyle: const DaysOfWeekStyle(
-                  // Weekend days color (Sat,Sun)
-                  weekendStyle: TextStyle(color: Colors.blueAccent),
-                ),
-                // Calendar Dates styling
-                calendarStyle: const CalendarStyle(
-                  // Weekend dates color (Sat & Sun Column)
-                  weekendTextStyle: TextStyle(color: Colors.blueAccent),
-                  // highlighted color for today
-                  todayDecoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  // highlighted color for selected day
-                  selectedDecoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  markerDecoration:
-                      BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                ),
-                selectedDayPredicate: (currentSelectedDate) {
-                  // as per the documentation 'selectedDayPredicate' needs to determine
-                  // current selected day
-                  return (isSameDay(
-                      selectedCalendarDate!, currentSelectedDate));
-                },
-                onDaySelected: (selectedDay, focusedDay) {
-                  // as per the documentation
-                  if (!isSameDay(selectedCalendarDate, selectedDay)) {
-                    setState(() {
-                      selectedCalendarDate = selectedDay;
-                      _focusedCalendarDate = focusedDay;
-                    });
-                  }
-                },
+              // Calendar Days Styling
+              daysOfWeekStyle: const DaysOfWeekStyle(
+                // Weekend days color (Sat,Sun)
+                weekendStyle:
+                    TextStyle(color: Color.fromARGB(255, 63, 81, 181)),
               ),
+              // Calendar Dates styling
+              calendarStyle: const CalendarStyle(
+                // Weekend dates color (Sat & Sun Column)
+                weekendTextStyle:
+                    TextStyle(color: Color.fromARGB(255, 63, 81, 181)),
+                // highlighted color for today
+                todayDecoration: BoxDecoration(
+                  color: Colors.blueAccent,
+                  shape: BoxShape.circle,
+                ),
+                // highlighted color for selected day
+                selectedDecoration: BoxDecoration(
+                  color: Color.fromARGB(255, 63, 81, 181),
+                  shape: BoxShape.circle,
+                ),
+                markerDecoration: BoxDecoration(
+                    color: Color.fromARGB(255, 247, 172, 42),
+                    shape: BoxShape.circle),
+              ),
+              selectedDayPredicate: (currentSelectedDate) {
+                // as per the documentation 'selectedDayPredicate' needs to determine
+                // current selected day
+                return (isSameDay(selectedCalendarDate!, currentSelectedDate));
+              },
+              onDaySelected: (selectedDay, focusedDay) {
+                // as per the documentation
+                if (!isSameDay(selectedCalendarDate, selectedDay)) {
+                  setState(() {
+                    selectedCalendarDate = selectedDay;
+                    _focusedCalendarDate = focusedDay;
+                  });
+                }
+              },
             ),
             ..._listOfDayEvents(selectedCalendarDate!).map(
-              (myEvents) => ListTile(
-                leading: const Icon(
-                  Icons.done,
-                  color: Colors.blue,
-                ),
-                title: Padding(
-                  padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text(
-                      myEvents.kind.toUpperCase() + ' - ' + myEvents.title),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              (myEvents) => ExpansionTile(
+                  childrenPadding: const EdgeInsets.all(8.0),
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  expandedAlignment: Alignment.topLeft,
+                  leading: const Icon(
+                    Icons.done,
+                    color: Colors.blue,
+                  ),
+                  title: Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Text(
+                        myEvents.kind.toUpperCase() + ' - ' + myEvents.title),
+                  ),
                   children: [
-                    Text('Description: ' + myEvents.description),
-                    Text('From ' +
-                        DateFormat.jm().format(myEvents.begin.toLocal()) +
-                        ' to ' +
-                        DateFormat.jm().format(myEvents.end.toLocal())),
-                    Text(myEvents.place ?? 'No place available yet'),
-                    Text(myEvents.videoURL ?? 'No video available yet'),
-                    (myEvents.tickets != null)
-                        ? Text('Tickets\n' +
-                            '*Quantity: ' +
-                            myEvents.tickets!.max.toString() +
-                            '\n*Available from ' +
-                            DateFormat.yMd()
-                                .format(myEvents.tickets!.start!.toLocal()) +
-                            ' at ' +
-                            DateFormat.jm()
-                                .format(myEvents.tickets!.start!.toLocal()) +
-                            ' to ' +
-                            DateFormat.yMd()
-                                .format(myEvents.tickets!.end!.toLocal()) +
-                            myEvents.tickets!.start!.month.toString() +
-                            ' at ' +
-                            DateFormat.jm()
-                                .format(myEvents.tickets!.start!.toLocal()))
-                        : Text('No tickets available for this session'),
-                  ],
-                ),
-              ),
+                    Row(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Description: ' + myEvents.description),
+                            Text('From ' +
+                                DateFormat.jm()
+                                    .format(myEvents.begin.toLocal()) +
+                                ' to ' +
+                                DateFormat.jm().format(myEvents.end.toLocal())),
+                            Text(myEvents.place ?? 'No place available yet'),
+                            Text(myEvents.videoURL ?? 'No video available yet'),
+                            (myEvents.tickets != null)
+                                ? Text('Tickets\n' +
+                                    '*Quantity: ' +
+                                    myEvents.tickets!.max.toString() +
+                                    '\n*Available from ' +
+                                    DateFormat.yMd().format(
+                                        myEvents.tickets!.start!.toLocal()) +
+                                    ' at ' +
+                                    DateFormat.jm().format(
+                                        myEvents.tickets!.start!.toLocal()) +
+                                    ' to ' +
+                                    DateFormat.yMd().format(
+                                        myEvents.tickets!.end!.toLocal()) +
+                                    myEvents.tickets!.start!.month.toString() +
+                                    ' at ' +
+                                    DateFormat.jm().format(
+                                        myEvents.tickets!.start!.toLocal()))
+                                : Text('No tickets available for this session'),
+                          ],
+                        ),
+                        Expanded(
+                          child: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          IconButton(
+                                              onPressed: () {
+                                                _editSessionModal(
+                                                    context, myEvents.id);
+                                              },
+                                              icon: Icon(Icons.edit),
+                                              color: const Color(0xff5c7ff2)),
+                                          FutureBuilder(
+                                              future: Provider.of<AuthService>(
+                                                      context)
+                                                  .role,
+                                              builder: (context, snapshot) {
+                                                if (snapshot.hasData) {
+                                                  Role r =
+                                                      snapshot.data as Role;
+
+                                                  if (r == Role.ADMIN ||
+                                                      r == Role.COORDINATOR) {
+                                                    return IconButton(
+                                                        onPressed: () =>
+                                                            _deleteSessionDialog(
+                                                                context,
+                                                                myEvents.id),
+                                                        icon:
+                                                            Icon(Icons.delete),
+                                                        color: Colors.red);
+                                                  } else {
+                                                    return Container();
+                                                  }
+                                                } else {
+                                                  return Container();
+                                                }
+                                              })
+                                        ]),
+                                  ])),
+                        ),
+                      ],
+                    )
+                  ]),
             ),
           ],
         ),
