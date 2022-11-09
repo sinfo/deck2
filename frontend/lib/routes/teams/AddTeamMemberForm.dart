@@ -37,11 +37,13 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Adding member...')),
       );
-      // print(widget.team!.id);
+      //print(widget.team!.id);
       // print(_memberID);
-      Team? m = await service.addTeamMember(
+      //print(widget.team!.members!);
+
+      Team? t = await service.addTeamMember(
           id: widget.team!.id, memberId: _memberID, role: role);
-      if (m != null) {
+      if (t != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -50,8 +52,8 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
             duration: Duration(seconds: 2),
           ),
         );
-        widget.onEditTeam!(context, m);
         Navigator.pop(context);
+        widget.onEditTeam!(context, t);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -172,6 +174,29 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
   }
 
   void _getMemberData(String id, String name) {
+    widget.team!.members!.map((memberteam) {
+      if (id == memberteam.memberID) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text("Member already exist"),
+              content: Text("Can't add again"),
+              actions: [
+                TextButton(
+                  child: Text("OK"),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          },
+        );
+        return;
+      }
+    }).toList();
     _memberID = id;
     _searchMembersController.text = name;
     disappearSearchResults = true;
