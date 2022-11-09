@@ -58,11 +58,8 @@ class _SessionListState extends State<SessionList>
           notifier.sessions = snapshot.data as List<Session>;
 
           var upcomingSessions = notifier.getUpcoming().toList();
-          // print("Upciming Sessions size:");
-          // print(upcomingSessions.length);
-          // print(upcomingSessions.toString());
 
-          return CustomTableCalendar(sessions: upcomingSessions);
+          return Calendar(sessions: upcomingSessions);
         } else {
           return CircularProgressIndicator();
         }

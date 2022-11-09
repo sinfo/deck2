@@ -90,7 +90,6 @@ class SessionService extends Service {
 
     try {
       int eventId = Event.fromJson(json.decode(response.data!)).id;
-      print("Event id " + eventId.toString());
       Future<List<Session>> _futureSessions = getSessions(event: eventId);
       List<Session> sessions = await _futureSessions;
       Session s = sessions.last;

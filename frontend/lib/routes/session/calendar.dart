@@ -10,17 +10,15 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../models/session.dart';
 import '../../services/authService.dart';
 
-class CustomTableCalendar extends StatefulWidget {
+class Calendar extends StatefulWidget {
   final List<Session> sessions;
-  const CustomTableCalendar({Key? key, required this.sessions})
-      : super(key: key);
+  const Calendar({Key? key, required this.sessions}) : super(key: key);
 
   @override
-  _CustomTableCalendarState createState() =>
-      _CustomTableCalendarState(sessions: sessions);
+  _CalendarState createState() => _CalendarState(sessions: sessions);
 }
 
-class _CustomTableCalendarState extends State<CustomTableCalendar> {
+class _CalendarState extends State<Calendar> {
   final todaysDate = DateTime.now();
   var _focusedCalendarDate = DateTime.now();
   final _initialCalendarDate = DateTime(2000);
@@ -32,30 +30,28 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
   final _sessionService = SessionService();
   CalendarFormat format = CalendarFormat.month;
 
-  late Map<DateTime, List<Session>> mySelectedEvents;
+  late Map<DateTime, List<Session>> calendarSessions;
 
-  _CustomTableCalendarState({required this.sessions});
+  _CalendarState({required this.sessions});
 
   @override
   void initState() {
     selectedCalendarDate = _focusedCalendarDate;
-    mySelectedEvents = {};
-    fillMySelectedEvents();
+    calendarSessions = {};
+    fillCalendarSessions();
     super.initState();
   }
 
-  void fillMySelectedEvents() {
+  void fillCalendarSessions() {
     for (var session in sessions) {
       DateTime dateForCalendar =
           DateTime(session.begin.year, session.begin.month, session.begin.day);
 
       setState(() {
-        if (mySelectedEvents[dateForCalendar.toUtc()] != null) {
-          print("1");
-          mySelectedEvents[dateForCalendar.toUtc()]!.add(session);
+        if (calendarSessions[dateForCalendar.toUtc()] != null) {
+          calendarSessions[dateForCalendar.toUtc()]!.add(session);
         } else {
-          print("2");
-          mySelectedEvents[dateForCalendar!.toUtc()] = [session];
+          calendarSessions[dateForCalendar!.toUtc()] = [session];
         }
       });
     }
@@ -68,13 +64,8 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
     super.dispose();
   }
 
-  List<Session> _listOfDayEvents(DateTime dateTime) {
-    // print("Sessions");
-    // print(sessions);
-    // print("mySelectedEvents");
-    // print(mySelectedEvents);
-
-    return mySelectedEvents[dateTime] ?? [];
+  List<Session> _listOfDaySessions(DateTime dateTime) {
+    return calendarSessions[dateTime] ?? [];
   }
 
   void _deleteSessionDialog(context, id) {
@@ -176,7 +167,7 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
               startingDayOfWeek: StartingDayOfWeek.monday,
               daysOfWeekHeight: 40.0,
               rowHeight: 60.0,
-              eventLoader: _listOfDayEvents,
+              eventLoader: _listOfDaySessions,
               headerStyle: const HeaderStyle(
                 titleTextStyle: TextStyle(
                     color: Color.fromARGB(255, 63, 81, 181), fontSize: 25.0),
@@ -205,23 +196,17 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                   size: 28,
                 ),
               ),
-              // Calendar Days Styling
               daysOfWeekStyle: const DaysOfWeekStyle(
-                // Weekend days color (Sat,Sun)
                 weekendStyle:
                     TextStyle(color: Color.fromARGB(255, 63, 81, 181)),
               ),
-              // Calendar Dates styling
               calendarStyle: const CalendarStyle(
-                // Weekend dates color (Sat & Sun Column)
                 weekendTextStyle:
                     TextStyle(color: Color.fromARGB(255, 63, 81, 181)),
-                // highlighted color for today
                 todayDecoration: BoxDecoration(
                   color: Colors.blueAccent,
                   shape: BoxShape.circle,
                 ),
-                // highlighted color for selected day
                 selectedDecoration: BoxDecoration(
                   color: Color.fromARGB(255, 63, 81, 181),
                   shape: BoxShape.circle,
@@ -231,12 +216,9 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                     shape: BoxShape.circle),
               ),
               selectedDayPredicate: (currentSelectedDate) {
-                // as per the documentation 'selectedDayPredicate' needs to determine
-                // current selected day
                 return (isSameDay(selectedCalendarDate!, currentSelectedDate));
               },
               onDaySelected: (selectedDay, focusedDay) {
-                // as per the documentation
                 if (!isSameDay(selectedCalendarDate, selectedDay)) {
                   setState(() {
                     selectedCalendarDate = selectedDay;
@@ -245,8 +227,8 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                 }
               },
             ),
-            ..._listOfDayEvents(selectedCalendarDate!).map(
-              (myEvents) => ExpansionTile(
+            ..._listOfDaySessions(selectedCalendarDate!).map(
+              (calSessions) => ExpansionTile(
                   childrenPadding: const EdgeInsets.all(8.0),
                   expandedCrossAxisAlignment: CrossAxisAlignment.start,
                   expandedAlignment: Alignment.topLeft,
@@ -255,9 +237,10 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                     color: Colors.blue,
                   ),
                   title: Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                        myEvents.kind.toUpperCase() + ' - ' + myEvents.title),
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(calSessions.kind.toUpperCase() +
+                        ' - ' +
+                        calSessions.title),
                   ),
                   children: [
                     Row(
@@ -265,33 +248,48 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Description: ' + myEvents.description),
+                            Text('Description: ' + calSessions.description),
                             Text('From ' +
                                 DateFormat.jm()
-                                    .format(myEvents.begin.toLocal()) +
+                                    .format(calSessions.begin.toLocal()) +
                                 ' to ' +
-                                DateFormat.jm().format(myEvents.end.toLocal())),
-                            Text(myEvents.place ?? 'No place available yet'),
-                            Text(myEvents.videoURL ?? 'No video available yet'),
-                            (myEvents.tickets != null)
+                                DateFormat.jm()
+                                    .format(calSessions.end.toLocal())),
+                            Text(calSessions.place ?? 'No place available yet'),
+                            Text(calSessions.videoURL ??
+                                'No video available yet'),
+                            (calSessions.tickets != null)
                                 ? Text('Tickets\n' +
                                     '*Quantity: ' +
-                                    myEvents.tickets!.max.toString() +
+                                    calSessions.tickets!.max.toString() +
                                     '\n*Available from ' +
                                     DateFormat.yMd().format(
-                                        myEvents.tickets!.start!.toLocal()) +
+                                        calSessions.tickets!.start!.toLocal()) +
                                     ' at ' +
                                     DateFormat.jm().format(
-                                        myEvents.tickets!.start!.toLocal()) +
+                                        calSessions.tickets!.start!.toLocal()) +
                                     ' to ' +
                                     DateFormat.yMd().format(
-                                        myEvents.tickets!.end!.toLocal()) +
-                                    myEvents.tickets!.start!.month.toString() +
+                                        calSessions.tickets!.end!.toLocal()) +
+                                    calSessions.tickets!.start!.month
+                                        .toString() +
                                     ' at ' +
                                     DateFormat.jm().format(
-                                        myEvents.tickets!.start!.toLocal()))
+                                        calSessions.tickets!.start!.toLocal()))
                                 : Text('No tickets available for this session'),
                           ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(40.0),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                (calSessions.kind == 'TALK')
+                                    ? Text('Speakers: ' +
+                                        calSessions.speakersIds.toString())
+                                    : Text('Company: ' +
+                                        calSessions.companyId.toString())
+                              ]),
                         ),
                         Expanded(
                           child: Padding(
@@ -309,7 +307,7 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                                           IconButton(
                                               onPressed: () {
                                                 _editSessionModal(
-                                                    context, myEvents.id);
+                                                    context, calSessions.id);
                                               },
                                               icon: Icon(Icons.edit),
                                               color: const Color(0xff5c7ff2)),
@@ -328,7 +326,7 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                                                         onPressed: () =>
                                                             _deleteSessionDialog(
                                                                 context,
-                                                                myEvents.id),
+                                                                calSessions.id),
                                                         icon:
                                                             Icon(Icons.delete),
                                                         color: Colors.red);
@@ -351,14 +349,4 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
       ),
     );
   }
-}
-
-class MyEvents {
-  final String eventTitle;
-  final String eventDescp;
-
-  MyEvents({required this.eventTitle, required this.eventDescp});
-
-  @override
-  String toString() => eventTitle;
 }

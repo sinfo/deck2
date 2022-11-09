@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/session.dart';
@@ -8,9 +7,7 @@ import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:frontend/services/speakerService.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
@@ -30,11 +27,8 @@ class _AddSessionFormState extends State<AddSessionForm> {
   final _placeController = TextEditingController();
   final _beginDateController = TextEditingController();
   final _endDateController = TextEditingController();
-  var _speakerController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _companyController = TextEditingController();
   final _videoURLController = TextEditingController();
-  final _maxTicketsController = TextEditingController();
   final _ticketBeginDateController = TextEditingController();
   final _ticketEndDateController = TextEditingController();
   final _sessionService = SessionService();
@@ -62,18 +56,8 @@ class _AddSessionFormState extends State<AddSessionForm> {
       var title = _titleController.text;
       var description = _descriptionController.text;
       var place = _placeController.text;
-      //var speaker = _speakerController.text;
-      //var company = _companyController.text;
       var maxTickets = _currentTicketsValue;
       var videoURL = _videoURLController.text;
-
-      print("Max tickets:");
-      print(maxTickets);
-
-      // var sessionTickets = maxTickets != 0
-      //     ? new SessionTickets(
-      //         max: maxTickets, start: _beginTicket, end: _endTicket)
-      //     : new SessionTickets(max: 0, start: null, end: null);
 
       var sessionTickets = new SessionTickets(
           max: maxTickets as int, start: _beginTicket, end: _endTicket);
@@ -123,46 +107,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
       }
       Navigator.pop(context);
     }
-  }
-
-  Future _selectDateTime(
-      BuildContext context, bool isBegin, bool isTicket) async {
-    final datePicker = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
-    );
-
-    final timePicker = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
-        builder: (BuildContext context, Widget? child) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-            child: child!,
-          );
-        });
-
-    if (datePicker != null && timePicker != null) {
-      if (isBegin && !isTicket) {
-        _begin = DateTime(datePicker.year, datePicker.month, datePicker.day,
-            timePicker.hour, timePicker.minute);
-      } else if (isBegin && isTicket) {
-        _beginTicket = DateTime(datePicker.year, datePicker.month,
-            datePicker.day, timePicker.hour, timePicker.minute);
-      } else if (!isBegin && !isTicket) {
-        _end = DateTime(datePicker.year, datePicker.month, datePicker.day,
-            timePicker.hour, timePicker.minute);
-      } else {
-        _endTicket = DateTime(datePicker.year, datePicker.month, datePicker.day,
-            timePicker.hour, timePicker.minute);
-      }
-    }
-  }
-
-  String getDateTime(DateTime dateTime) {
-    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
   }
 
   Widget _buildForm() {
@@ -287,12 +231,10 @@ class _AddSessionFormState extends State<AddSessionForm> {
                         return null;
                       },
                       onChanged: (List<Speaker> speakers) {
-                        print(speakers);
                         speakersIds.clear();
                         for (var speaker in speakers) {
                           speakersIds.add(speaker.id);
                         }
-                        print(speakersIds);
                       },
                       clearButtonProps: ClearButtonProps(isVisible: true),
                     )
@@ -455,88 +397,6 @@ class _AddSessionFormState extends State<AddSessionForm> {
             ),
           ]),
         ));
-  }
-
-  List<Widget> getResults(double height) {
-    if (_speakerController.text.length > 1) {
-      return [
-        Container(
-            decoration: new BoxDecoration(
-              color: Theme.of(context).cardColor,
-            ),
-            child: FutureBuilder(
-                future: Future.wait([this.speakers]),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    List<dynamic> data = snapshot.data as List<dynamic>;
-
-                    List<Speaker> speaksMatched = data[0] as List<Speaker>;
-                    return searchResults(speaksMatched, height);
-                  } else {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                }))
-      ];
-    } else {
-      return [];
-    }
-  }
-
-  Widget searchResults(List<Speaker> speakers, double listHeight) {
-    List<Widget> results = getListCards(speakers);
-    return Container(
-        constraints: BoxConstraints(maxHeight: listHeight),
-        child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: results.length,
-            itemBuilder: (BuildContext context, int index) {
-              return results[index];
-            }));
-  }
-
-  List<Widget> getListCards(List<Speaker> speakers) {
-    List<Widget> results = [];
-    if (speakers.length != 0) {
-      results.addAll(speakers
-          .map((e) => SpeakerSearch(speaker: e, index: speakers.indexOf(e))));
-    }
-    return results;
-  }
-
-  SpeakerSearch({required Speaker speaker, required int index}) {
-    var canShow = true;
-    return Card(
-      child: ListTile(
-          leading: CircleAvatar(
-            foregroundImage: NetworkImage(getImageURL(speaker)),
-            backgroundImage: AssetImage(
-              'assets/noImage.png',
-            ),
-          ),
-          title: Text(getName(speaker)),
-          onTap: () {
-            _speakerController.text = speaker.id;
-            canShow = false;
-          }),
-    );
-  }
-
-  String getImageURL(Speaker speaker) {
-    if (speaker != null) {
-      return speaker.imgs!.internal!;
-    } else {
-      //ERROR case
-      return "";
-    }
-  }
-
-  String getName(Speaker speaker) {
-    if (speaker != null) {
-      return speaker.name;
-    } else {
-      //ERROR case
-      return "";
-    }
   }
 
   @override
