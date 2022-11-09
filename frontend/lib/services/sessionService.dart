@@ -18,8 +18,7 @@ class SessionService extends Service {
 
     try {
       final responseJson = json.decode(response.data!) as List;
-      print("Response json");
-      print(responseJson);
+
       List<Session> sessions =
           responseJson.map((e) => Session.fromJson(e)).toList();
       return sessions;

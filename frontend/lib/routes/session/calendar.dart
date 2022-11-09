@@ -42,22 +42,19 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
     mySelectedEvents = {};
     fillMySelectedEvents();
     super.initState();
-    // print("Sessions no calendar state");
-    // print(sessions);
   }
 
   void fillMySelectedEvents() {
     for (var session in sessions) {
       DateTime dateForCalendar =
           DateTime(session.begin.year, session.begin.month, session.begin.day);
-      print("New date for calendar");
-      print(dateForCalendar.toUtc());
+
       setState(() {
         if (mySelectedEvents[dateForCalendar.toUtc()] != null) {
-          print(
-              "HEREEEEE****************************************************+");
-          mySelectedEvents[session.begin]?.add(session);
+          print("1");
+          mySelectedEvents[dateForCalendar.toUtc()]!.add(session);
         } else {
+          print("2");
           mySelectedEvents[dateForCalendar!.toUtc()] = [session];
         }
       });
@@ -72,11 +69,10 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
   }
 
   List<Session> _listOfDayEvents(DateTime dateTime) {
-    // mySelectedEvents[selectedCalendarDate!] = [
-    //   MyEvents(eventTitle: 'titulo', eventDescp: 'descpController.text')
-    // ];
-    //print(mySelectedEvents);
-    print(mySelectedEvents);
+    // print("Sessions");
+    // print(sessions);
+    // print("mySelectedEvents");
+    // print(mySelectedEvents);
 
     return mySelectedEvents[dateTime] ?? [];
   }
