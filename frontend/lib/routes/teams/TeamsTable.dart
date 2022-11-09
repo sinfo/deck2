@@ -6,6 +6,7 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
+import 'package:frontend/routes/teams/TeamsNotifier.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:provider/provider.dart';
@@ -37,85 +38,92 @@ class _TeamTableState extends State<TeamTable>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scaffold(
-      body: NestedScrollView(
-        floatHeaderSlivers: true,
-        headerSliverBuilder: (context, innerBoxIsScrolled) => [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+    return Consumer<TeamsNotifier>(builder: (context, notif, child) {
+      return Scaffold(
+        body: NestedScrollView(
+          floatHeaderSlivers: true,
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+              ),
             ),
-          ),
-        ],
-        body: FutureBuilder(
-          future: Future.wait([
-            _teamService.getTeams(
-                event: Provider.of<EventNotifier>(context).event.id)
-          ]),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ],
+          body: FutureBuilder(
+            future: Future.wait([
+              _teamService.getTeams(
+                  event: Provider.of<EventNotifier>(context).event.id)
+            ]),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasError) {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content:
-                        Text('An error has occured. Please contact the admins'),
-                    duration: Duration(seconds: 4),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'An error has occured. Please contact the admins'),
+                      duration: Duration(seconds: 4),
+                    ),
+                  );
+                  return Center(
+                      child: Icon(
+                    Icons.error,
+                    size: 200,
+                  ));
+                }
+
+                TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
+
+                List<List<Object>> dataTeam =
+                    snapshot.data as List<List<Object>>;
+
+                List<Team> tms = dataTeam[0] as List<Team>;
+
+                notifier.teams = tms;
+
+                tms.sort((a, b) => a.name!.compareTo(b.name!));
+
+                return RefreshIndicator(
+                  onRefresh: () {
+                    return Future.delayed(Duration.zero, () {
+                      setState(() {});
+                    });
+                  },
+                  child: ListView.builder(
+                    itemCount: tms.length,
+                    itemBuilder: (context, index) =>
+                        TeamMemberRow(team: tms[index], teams: tms),
+                    addAutomaticKeepAlives: true,
+                    physics: const AlwaysScrollableScrollPhysics(),
                   ),
                 );
-                return Center(
-                    child: Icon(
-                  Icons.error,
-                  size: 200,
-                ));
+              } else {
+                return Shimmer.fromColors(
+                  baseColor: Colors.grey[400]!,
+                  highlightColor: Colors.white,
+                  child: ListView.builder(
+                    itemCount: 5,
+                    itemBuilder: (context, index) => TeamMemberRow.fake(),
+                    addAutomaticKeepAlives: true,
+                    physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics()),
+                  ),
+                );
               }
-
-              List<List<Object>> dataTeam = snapshot.data as List<List<Object>>;
-
-              List<Team> tms = dataTeam[0] as List<Team>;
-
-              tms.sort((a, b) => a.name!.compareTo(b.name!));
-
-              return RefreshIndicator(
-                onRefresh: () {
-                  return Future.delayed(Duration.zero, () {
-                    setState(() {});
-                  });
-                },
-                child: ListView.builder(
-                  itemCount: tms.length,
-                  itemBuilder: (context, index) =>
-                      TeamMemberRow(team: tms[index], teams: tms),
-                  addAutomaticKeepAlives: true,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                ),
-              );
-            } else {
-              return Shimmer.fromColors(
-                baseColor: Colors.grey[400]!,
-                highlightColor: Colors.white,
-                child: ListView.builder(
-                  itemCount: 5,
-                  itemBuilder: (context, index) => TeamMemberRow.fake(),
-                  addAutomaticKeepAlives: true,
-                  physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics()),
-                ),
-              );
-            }
-          },
+            },
+          ),
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: FloatingActionButton.extended(
-          onPressed: showCreateTeamDialog,
-          label: const Text('Create New Team'),
-          icon: const Icon(Icons.person_add),
-          backgroundColor: Provider.of<ThemeNotifier>(context).isDark
-              ? Colors.grey[500]
-              : Colors.indigo),
-    );
+        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+        floatingActionButton: FloatingActionButton.extended(
+            onPressed: showCreateTeamDialog,
+            label: const Text('Create New Team'),
+            icon: const Icon(Icons.person_add),
+            backgroundColor: Provider.of<ThemeNotifier>(context).isDark
+                ? Colors.grey[500]
+                : Colors.indigo),
+      );
+    });
   }
 
   showCreateTeamDialog() {
@@ -146,8 +154,29 @@ class _TeamTableState extends State<TeamTable>
   }
 
   void createTeam(String name) async {
-    await _teamService.createTeam(name);
-    setState(() {});
+    Team? t = await _teamService.createTeam(name);
+    if (t != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      TeamsNotifier notifier =
+          Provider.of<TeamsNotifier>(context, listen: false);
+      notifier.add(t);
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+
+      Navigator.pop(context);
+    }
     Navigator.pop(context, "Create");
   }
 }
@@ -237,8 +266,7 @@ class TeamMemberRow extends StatelessWidget {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => TeamScreen(
-                                        team: team, members: membs)));
+                                    builder: (context) => TeamScreen(team: team)));
                           },
                           child: Column(
                             children: [
