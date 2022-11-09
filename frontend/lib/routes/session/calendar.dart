@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/routes/session/event.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../models/session.dart';
@@ -24,7 +23,7 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
   final descpController = TextEditingController();
   final List<Session> sessions;
 
-  late Map<DateTime, List<MyEvents>> mySelectedEvents;
+  late Map<DateTime, List<Session>> mySelectedEvents;
 
   _CustomTableCalendarState({required this.sessions});
 
@@ -48,12 +47,9 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
         if (mySelectedEvents[dateForCalendar.toUtc()] != null) {
           print(
               "HEREEEEE****************************************************+");
-          mySelectedEvents[session.begin]?.add(MyEvents(
-              eventTitle: session.title, eventDescp: session.description));
+          mySelectedEvents[session.begin]?.add(session);
         } else {
-          mySelectedEvents[dateForCalendar!.toUtc()] = [
-            MyEvents(eventTitle: session.title, eventDescp: session.description)
-          ];
+          mySelectedEvents[dateForCalendar!.toUtc()] = [session];
         }
       });
     }
@@ -66,7 +62,7 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
     super.dispose();
   }
 
-  List<MyEvents> _listOfDayEvents(DateTime dateTime) {
+  List<Session> _listOfDayEvents(DateTime dateTime) {
     // mySelectedEvents[selectedCalendarDate!] = [
     //   MyEvents(eventTitle: 'titulo', eventDescp: 'descpController.text')
     // ];
@@ -76,68 +72,68 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
     return mySelectedEvents[dateTime] ?? [];
   }
 
-  _showAddEventDialog() async {
-    await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: const Text('New Event'),
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  buildTextField(
-                      controller: titleController, hint: 'Enter Title'),
-                  const SizedBox(
-                    height: 20.0,
-                  ),
-                  buildTextField(
-                      controller: descpController, hint: 'Enter Description'),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    if (titleController.text.isEmpty &&
-                        descpController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please enter title & description'),
-                          duration: Duration(seconds: 3),
-                        ),
-                      );
-                      //Navigator.pop(context);
-                      return;
-                    } else {
-                      setState(() {
-                        if (mySelectedEvents[selectedCalendarDate] != null) {
-                          mySelectedEvents[selectedCalendarDate]?.add(MyEvents(
-                              eventTitle: titleController.text,
-                              eventDescp: descpController.text));
-                        } else {
-                          mySelectedEvents[selectedCalendarDate!] = [
-                            MyEvents(
-                                eventTitle: titleController.text,
-                                eventDescp: descpController.text)
-                          ];
-                        }
-                      });
+  // _showAddEventDialog() async {
+  //   await showDialog(
+  //       context: context,
+  //       builder: (context) => AlertDialog(
+  //             title: const Text('New Event'),
+  //             content: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.stretch,
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: [
+  //                 buildTextField(
+  //                     controller: titleController, hint: 'Enter Title'),
+  //                 const SizedBox(
+  //                   height: 20.0,
+  //                 ),
+  //                 buildTextField(
+  //                     controller: descpController, hint: 'Enter Description'),
+  //               ],
+  //             ),
+  //             actions: [
+  //               TextButton(
+  //                 onPressed: () => Navigator.pop(context),
+  //                 child: const Text('Cancel'),
+  //               ),
+  //               TextButton(
+  //                 onPressed: () {
+  //                   if (titleController.text.isEmpty &&
+  //                       descpController.text.isEmpty) {
+  //                     ScaffoldMessenger.of(context).showSnackBar(
+  //                       const SnackBar(
+  //                         content: Text('Please enter title & description'),
+  //                         duration: Duration(seconds: 3),
+  //                       ),
+  //                     );
+  //                     //Navigator.pop(context);
+  //                     return;
+  //                   } else {
+  //                     setState(() {
+  //                       if (mySelectedEvents[selectedCalendarDate] != null) {
+  //                         mySelectedEvents[selectedCalendarDate]?.add(MyEvents(
+  //                             eventTitle: titleController.text,
+  //                             eventDescp: descpController.text));
+  //                       } else {
+  //                         mySelectedEvents[selectedCalendarDate!] = [
+  //                           MyEvents(
+  //                               eventTitle: titleController.text,
+  //                               eventDescp: descpController.text)
+  //                         ];
+  //                       }
+  //                     });
 
-                      titleController.clear();
-                      descpController.clear();
+  //                     titleController.clear();
+  //                     descpController.clear();
 
-                      Navigator.pop(context);
-                      return;
-                    }
-                  },
-                  child: const Text('Add'),
-                ),
-              ],
-            ));
-  }
+  //                     Navigator.pop(context);
+  //                     return;
+  //                   }
+  //                 },
+  //                 child: const Text('Add'),
+  //               ),
+  //             ],
+  //           ));
+  // }
 
   Widget buildTextField(
       {String? hint, required TextEditingController controller}) {
@@ -279,9 +275,23 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                 ),
                 title: Padding(
                   padding: const EdgeInsets.only(bottom: 8.0),
-                  child: Text('Event Title:   ${myEvents.eventTitle}'),
+                  child: Text(
+                      myEvents.kind.toUpperCase() + ' - ' + myEvents.title),
                 ),
-                subtitle: Text('Description:   ${myEvents.eventDescp}'),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Description: ' + myEvents.description),
+                    Text('From ' +
+                        myEvents.begin.hour.toString() +
+                        ':' +
+                        myEvents.begin.minute.toString() +
+                        ' to ' +
+                        myEvents.end.hour.toString() +
+                        ':' +
+                        myEvents.end.minute.toString()),
+                  ],
+                ),
               ),
             ),
           ],
