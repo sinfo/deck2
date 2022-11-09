@@ -183,48 +183,62 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 
 	var members []*models.Member = make([]*models.Member, 0)
 
-	query := mongo.Pipeline{
-
-		// filter by name first
-		{{
-			"$match", bson.M{
-				"name": bson.M{
-					"$regex":   fmt.Sprintf(".*%s.*", nameFilter),
-					"$options": "i",
+	var query mongo.Pipeline
+	if len(nameFilter) > 0 {
+		query = mongo.Pipeline{
+			{{
+				"$match", bson.M{
+					"name": bson.M{
+						"$regex":   fmt.Sprintf(".*%s.*", nameFilter),
+						"$options": "i",
+					},
 				},
-			},
-		}},
+			}},
+		}
+	} else {
+		query = mongo.Pipeline{
 
-		// get all the teams on which each member is participating,
-		// and add them to each member correspondingly
-		{{
-			"$lookup", bson.D{
-				{"from", Teams.Collection.Name()},
-				{"localField", "_id"},
-				{"foreignField", "members.member"},
-				{"as", "team"},
-			},
-		}},
+			// filter by name first
+			{{
+				"$match", bson.M{
+					"name": bson.M{
+						"$regex":   fmt.Sprintf(".*%s.*", nameFilter),
+						"$options": "i",
+					},
+				},
+			}},
 
-		// get an instance of each member for every team he/she belonged to
-		{{
-			"$unwind", "$team",
-		}},
+			// get all the teams on which each member is participating,
+			// and add them to each member correspondingly
+			{{
+				"$lookup", bson.D{
+					{"from", Teams.Collection.Name()},
+					{"localField", "_id"},
+					{"foreignField", "members.member"},
+					{"as", "team"},
+				},
+			}},
 
-		// get the event associated with each team on each member
-		{{
-			"$lookup", bson.D{
-				{"from", Events.Collection.Name()},
-				{"localField", "team._id"},
-				{"foreignField", "teams"},
-				{"as", "event"},
-			},
-		}},
+			// get an instance of each member for every team he/she belonged to
+			{{
+				"$unwind", "$team",
+			}},
 
-		// get an instance of each member for every event he/she belonged to
-		{{
-			"$unwind", "$event",
-		}},
+			// get the event associated with each team on each member
+			{{
+				"$lookup", bson.D{
+					{"from", Events.Collection.Name()},
+					{"localField", "team._id"},
+					{"foreignField", "teams"},
+					{"as", "event"},
+				},
+			}},
+
+			// get an instance of each member for every event he/she belonged to
+			{{
+				"$unwind", "$event",
+			}},
+		}
 	}
 
 	if options.Event != nil {
@@ -330,6 +344,7 @@ func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models
 	options := GetEventsOptions{}
 	events, err := Events.GetEvents(options)
 	if err != nil {
+		print("ERROR #1", err)
 		return nil, err
 	}
 
@@ -339,6 +354,9 @@ func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models
 		for _, teamID := range event.Teams {
 			team, err := Teams.GetTeam(teamID)
 			if err != nil {
+				print("TEAM ID: ", teamID.Hex())
+				print("EVENT: ", event)
+				print("ERROR #2", err)
 				return nil, err
 			}
 			for _, teamMember := range team.Members {

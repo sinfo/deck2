@@ -6,6 +6,7 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
+import 'package:frontend/routes/teams/TeamsNotifier.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:frontend/components/filterBarTeam.dart';
@@ -27,6 +28,10 @@ class _TeamTableState extends State<TeamTable>
   String filter = "";
   late List<Team> teams = [];
 
+  late Future<List<Team>> futureTeams;
+
+  late Future<List<Member>> members;
+
   bool get wantKeepAlive => true;
 
   @override
@@ -38,48 +43,69 @@ class _TeamTableState extends State<TeamTable>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    
+    return Consumer<TeamsNotifier>(builder: (context, notif, child) {
+      return Scaffold(
+        body: NestedScrollView(
+          floatHeaderSlivers: true,
+          headerSliverBuilder: (context, innerBoxIsScrolled) => [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+              ),
+            ),
+          ],
+          body: FutureBuilder(
+            future: Future.wait([
+              _teamService.getTeams(
+                  event: Provider.of<EventNotifier>(context).event.id)
+            ]),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasError) {
+                  return showError();
+                } else if (snapshot.hasData) {
+                  TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
 
-    return Scaffold(
-      body: FutureBuilder(
-          future: Future.wait([
-            _teamService.getTeams(
-                event: Provider.of<EventNotifier>(context).event.id)
-          ]),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                return showError();
-              } else if (snapshot.hasData) {
-                List<List<Object>> data = snapshot.data as List<List<Object>>;
-                teams = data[0] as List<Team>;
-                teams.sort((a, b) => a.name!.compareTo(b.name!));
-                return showTeams();
+                  List<List<Object>> dataTeam =
+                      snapshot.data as List<List<Object>>;
+
+                  teams = dataTeam[0] as List<Team>;
+
+                  notifier.teams = teams;
+
+                  teams.sort((a, b) => a.name!.compareTo(b.name!));
+
+                  return showTeams();
+                } else {
+                  return Center(child: CircularProgressIndicator());
+                }
               } else {
-                return Center(child: CircularProgressIndicator());
+                return Shimmer.fromColors(
+                  baseColor: Colors.grey[400]!,
+                  highlightColor: Colors.white,
+                  child: ListView.builder(
+                    itemCount: 5,
+                    itemBuilder: (context, index) => TeamMemberRow.fake(),
+                    addAutomaticKeepAlives: true,
+                    physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics()),
+                  ),
+                );
               }
-            } else {
-              return Shimmer.fromColors(
-                baseColor: Colors.grey[400]!,
-                highlightColor: Colors.white,
-                child: ListView.builder(
-                  itemCount: 5,
-                  itemBuilder: (context, index) => TeamMemberRow.fake(),
-                  addAutomaticKeepAlives: true,
-                  physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics()),
-                ),
-              );
-            }
-          }),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: FloatingActionButton.extended(
-          onPressed: showCreateTeamDialog,
-          label: const Text('Create New Team'),
-          icon: const Icon(Icons.person_add),
-          backgroundColor: Provider.of<ThemeNotifier>(context).isDark
-              ? Colors.grey[500]
-              : Colors.indigo),
-    );
+            },
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+        floatingActionButton: FloatingActionButton.extended(
+            onPressed: showCreateTeamDialog,
+            label: const Text('Create New Team'),
+            icon: const Icon(Icons.person_add),
+            backgroundColor: Provider.of<ThemeNotifier>(context).isDark
+                ? Colors.grey[500]
+                : Colors.indigo),
+      );
+    });
   }
 
   onSelected(String value) {
@@ -173,8 +199,29 @@ class _TeamTableState extends State<TeamTable>
   }
 
   void createTeam(String name) async {
-    await _teamService.createTeam(name);
-    setState(() {});
+    Team? t = await _teamService.createTeam(name);
+    if (t != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      TeamsNotifier notifier =
+          Provider.of<TeamsNotifier>(context, listen: false);
+      notifier.add(t);
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+
+      Navigator.pop(context);
+    }
     Navigator.pop(context, "Create");
   }
 
@@ -188,6 +235,7 @@ class _TeamTableState extends State<TeamTable>
 
 class TeamMemberRow extends StatelessWidget {
   final Team team;
+
   MemberService _memberService = MemberService();
   TeamMemberRow({Key? key, required this.team}) : super(key: key);
 
@@ -268,8 +316,8 @@ class TeamMemberRow extends StatelessWidget {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => TeamScreen(
-                                        team: team, members: membs)));
+                                    builder: (context) =>
+                                        TeamScreen(team: team)));
                           },
                           child: Column(
                             children: [

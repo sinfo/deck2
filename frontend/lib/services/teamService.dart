@@ -97,9 +97,12 @@ class TeamService extends Service {
     }
   }
 
-  Future<Team?> addTeamMember(String id, String member, String role) async {
+  Future<Team?> addTeamMember(
+      {required String? id,
+      required String memberId,
+      required String role}) async {
     var body = {
-      "member": member,
+      "member": memberId,
       "role": role,
     };
 
@@ -118,14 +121,14 @@ class TeamService extends Service {
   }
 
   Future<Team?> updateTeamMemberRole(
-      String id, String memberID, Member member, String role) async {
+      String id, String memberId, String role) async {
     var body = {
-      "member": member,
+      "member": memberId,
       "role": role,
     };
 
     Response<String> response =
-        await dio.put(baseURL + '/$id' + '/members' + '/$memberID', data: body);
+        await dio.put(baseURL + '/$id' + '/members' + '/$memberId', data: body);
 
     try {
       return Team.fromJson(json.decode(response.data!));
