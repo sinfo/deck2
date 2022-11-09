@@ -26,9 +26,7 @@ class _TeamTableState extends State<TeamTable>
     with AutomaticKeepAliveClientMixin {
   final TeamService _teamService = TeamService();
   String filter = "";
-  late List<Team> teams = [];
-
-  late Future<List<Team>> futureTeams;
+  late List<Team> teams;
 
   late Future<List<Member>> members;
 
@@ -43,58 +41,48 @@ class _TeamTableState extends State<TeamTable>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    
+
     return Consumer<TeamsNotifier>(builder: (context, notif, child) {
       return Scaffold(
-        body: NestedScrollView(
-          floatHeaderSlivers: true,
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
-              ),
-            ),
-          ],
-          body: FutureBuilder(
-            future: Future.wait([
-              _teamService.getTeams(
-                  event: Provider.of<EventNotifier>(context).event.id)
-            ]),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.hasError) {
-                  return showError();
-                } else if (snapshot.hasData) {
-                  TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
+        body: FutureBuilder(
+          future: Future.wait([
+            _teamService.getTeams(
+                event: Provider.of<EventNotifier>(context).event.id)
+          ]),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                return showError();
+              } else if (snapshot.hasData) {
+                TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
 
-                  List<List<Object>> dataTeam =
-                      snapshot.data as List<List<Object>>;
+                List<List<Object>> dataTeam =
+                    snapshot.data as List<List<Object>>;
 
-                  teams = dataTeam[0] as List<Team>;
+                teams = dataTeam[0] as List<Team>;
 
-                  notifier.teams = teams;
+                notifier.teams = teams;
 
-                  teams.sort((a, b) => a.name!.compareTo(b.name!));
+                teams.sort((a, b) => a.name!.compareTo(b.name!));
 
-                  return showTeams();
-                } else {
-                  return Center(child: CircularProgressIndicator());
-                }
+                return showTeams();
               } else {
-                return Shimmer.fromColors(
-                  baseColor: Colors.grey[400]!,
-                  highlightColor: Colors.white,
-                  child: ListView.builder(
-                    itemCount: 5,
-                    itemBuilder: (context, index) => TeamMemberRow.fake(),
-                    addAutomaticKeepAlives: true,
-                    physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics()),
-                  ),
-                );
+                return Center(child: CircularProgressIndicator());
               }
-            },
-          ),
+            } else {
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[400]!,
+                highlightColor: Colors.white,
+                child: ListView.builder(
+                  itemCount: 5,
+                  itemBuilder: (context, index) => TeamMemberRow.fake(),
+                  addAutomaticKeepAlives: true,
+                  physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics()),
+                ),
+              );
+            }
+          },
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
         floatingActionButton: FloatingActionButton.extended(
