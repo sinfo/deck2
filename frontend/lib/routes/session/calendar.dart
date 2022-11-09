@@ -30,6 +30,7 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
   final descpController = TextEditingController();
   final List<Session> sessions;
   final _sessionService = SessionService();
+  CalendarFormat format = CalendarFormat.month;
 
   late Map<DateTime, List<Session>> mySelectedEvents;
 
@@ -136,69 +137,6 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
     );
   }
 
-  // _showAddEventDialog() async {
-  //   await showDialog(
-  //       context: context,
-  //       builder: (context) => AlertDialog(
-  //             title: const Text('New Event'),
-  //             content: Column(
-  //               crossAxisAlignment: CrossAxisAlignment.stretch,
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: [
-  //                 buildTextField(
-  //                     controller: titleController, hint: 'Enter Title'),
-  //                 const SizedBox(
-  //                   height: 20.0,
-  //                 ),
-  //                 buildTextField(
-  //                     controller: descpController, hint: 'Enter Description'),
-  //               ],
-  //             ),
-  //             actions: [
-  //               TextButton(
-  //                 onPressed: () => Navigator.pop(context),
-  //                 child: const Text('Cancel'),
-  //               ),
-  //               TextButton(
-  //                 onPressed: () {
-  //                   if (titleController.text.isEmpty &&
-  //                       descpController.text.isEmpty) {
-  //                     ScaffoldMessenger.of(context).showSnackBar(
-  //                       const SnackBar(
-  //                         content: Text('Please enter title & description'),
-  //                         duration: Duration(seconds: 3),
-  //                       ),
-  //                     );
-  //                     //Navigator.pop(context);
-  //                     return;
-  //                   } else {
-  //                     setState(() {
-  //                       if (mySelectedEvents[selectedCalendarDate] != null) {
-  //                         mySelectedEvents[selectedCalendarDate]?.add(MyEvents(
-  //                             eventTitle: titleController.text,
-  //                             eventDescp: descpController.text));
-  //                       } else {
-  //                         mySelectedEvents[selectedCalendarDate!] = [
-  //                           MyEvents(
-  //                               eventTitle: titleController.text,
-  //                               eventDescp: descpController.text)
-  //                         ];
-  //                       }
-  //                     });
-
-  //                     titleController.clear();
-  //                     descpController.clear();
-
-  //                     Navigator.pop(context);
-  //                     return;
-  //                   }
-  //                 },
-  //                 child: const Text('Add'),
-  //               ),
-  //             ],
-  //           ));
-  // }
-
   Widget buildTextField(
       {String? hint, required TextEditingController controller}) {
     return TextField(
@@ -232,7 +170,12 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
               focusedDay: _focusedCalendarDate,
               firstDay: _initialCalendarDate,
               lastDay: _lastCalendarDate,
-              calendarFormat: CalendarFormat.month,
+              calendarFormat: format,
+              onFormatChanged: (CalendarFormat _format) {
+                setState(() {
+                  format = _format;
+                });
+              },
               weekendDays: const [DateTime.sunday, 6],
               startingDayOfWeek: StartingDayOfWeek.monday,
               daysOfWeekHeight: 40.0,
@@ -246,6 +189,7 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                     borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10))),
+                formatButtonShowsNext: false,
                 formatButtonTextStyle:
                     TextStyle(color: Colors.white, fontSize: 16.0),
                 formatButtonDecoration: BoxDecoration(
