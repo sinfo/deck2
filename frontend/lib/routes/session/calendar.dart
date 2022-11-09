@@ -290,6 +290,33 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                         myEvents.end.hour.toString() +
                         ':' +
                         myEvents.end.minute.toString()),
+                    Text(myEvents.place ?? 'No place available yet'),
+                    Text(myEvents.videoURL ?? 'No video available yet'),
+                    (myEvents.tickets != null)
+                        ? Text('Tickets\n' +
+                            '*Quantity: ' +
+                            myEvents.tickets!.max.toString() +
+                            '\n*Available from ' +
+                            myEvents.tickets!.start!.day.toString() +
+                            '/' +
+                            myEvents.tickets!.start!.month.toString() +
+                            '/' +
+                            myEvents.tickets!.start!.year.toString() +
+                            ' at ' +
+                            myEvents.tickets!.start!.hour.toString() +
+                            ':' +
+                            myEvents.tickets!.start!.minute.toString() +
+                            ' to ' +
+                            myEvents.tickets!.start!.day.toString() +
+                            '/' +
+                            myEvents.tickets!.start!.month.toString() +
+                            '/' +
+                            myEvents.tickets!.start!.year.toString() +
+                            ' at ' +
+                            myEvents.tickets!.end!.hour.toString() +
+                            ':' +
+                            myEvents.tickets!.end!.minute.toString())
+                        : Text('No tickets available for this session'),
                   ],
                 ),
               ),
