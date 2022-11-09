@@ -3,8 +3,10 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/session.dart';
 import 'package:frontend/routes/session/SessionCard.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
+import 'package:frontend/routes/session/calendar.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class SessionPage extends StatelessWidget {
   const SessionPage({Key? key}) : super(key: key);
@@ -48,45 +50,19 @@ class _SessionListState extends State<SessionList>
       future: _sessions,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          CalendarFormat format = CalendarFormat.month;
+          DateTime selectedDay = DateTime.now();
+          DateTime focusedDay = DateTime.now();
           SessionsNotifier notifier = Provider.of<SessionsNotifier>(context);
 
           notifier.sessions = snapshot.data as List<Session>;
 
-          return LayoutBuilder(builder: (context, constraints) {
-            bool small = constraints.maxWidth < App.SIZE;
-            return Column(
-              children: [
-                TabBar(
-                  isScrollable: small,
-                  controller: _tabController,
-                  tabs: [
-                    Tab(text: 'Upcoming'),
-                    Tab(text: 'Past'),
-                  ],
-                ),
-                Consumer<SessionsNotifier>(
-                  builder: (context, cart, child) {
-                    return Expanded(
-                      child: TabBarView(controller: _tabController, children: [
-                        ListView(
-                          children: notifier
-                              .getUpcoming()
-                              .map((e) => SessionCard(session: e))
-                              .toList(),
-                        ),
-                        ListView(
-                          children: notifier
-                              .getPast()
-                              .map((e) => SessionCard(session: e))
-                              .toList(),
-                        ),
-                      ]),
-                    );
-                  },
-                ),
-              ],
-            );
-          });
+          var upcomingSessions = notifier.getUpcoming().toList();
+          // print("Upciming Sessions size:");
+          // print(upcomingSessions.length);
+          // print(upcomingSessions.toString());
+
+          return CustomTableCalendar(sessions: upcomingSessions);
         } else {
           return CircularProgressIndicator();
         }

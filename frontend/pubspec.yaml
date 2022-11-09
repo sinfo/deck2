@@ -50,7 +50,7 @@ dependencies:
   flutter_form_builder: ^7.7.0
   dropdown_search: ^5.0.3
   form_builder_extra_fields: ^8.3.0
-  syncfusion_flutter_calendar: ^20.3.52 
+  table_calendar: ^3.0.8
 
 dev_dependencies:
   flutter_test:
