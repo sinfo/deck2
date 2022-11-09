@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../models/session.dart';
@@ -283,13 +284,9 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                   children: [
                     Text('Description: ' + myEvents.description),
                     Text('From ' +
-                        myEvents.begin.hour.toString() +
-                        ':' +
-                        myEvents.begin.minute.toString() +
+                        DateFormat.jm().format(myEvents.begin.toLocal()) +
                         ' to ' +
-                        myEvents.end.hour.toString() +
-                        ':' +
-                        myEvents.end.minute.toString()),
+                        DateFormat.jm().format(myEvents.end.toLocal())),
                     Text(myEvents.place ?? 'No place available yet'),
                     Text(myEvents.videoURL ?? 'No video available yet'),
                     (myEvents.tickets != null)
@@ -297,25 +294,18 @@ class _CustomTableCalendarState extends State<CustomTableCalendar> {
                             '*Quantity: ' +
                             myEvents.tickets!.max.toString() +
                             '\n*Available from ' +
-                            myEvents.tickets!.start!.day.toString() +
-                            '/' +
-                            myEvents.tickets!.start!.month.toString() +
-                            '/' +
-                            myEvents.tickets!.start!.year.toString() +
+                            DateFormat.yMd()
+                                .format(myEvents.tickets!.start!.toLocal()) +
                             ' at ' +
-                            myEvents.tickets!.start!.hour.toString() +
-                            ':' +
-                            myEvents.tickets!.start!.minute.toString() +
+                            DateFormat.jm()
+                                .format(myEvents.tickets!.start!.toLocal()) +
                             ' to ' +
-                            myEvents.tickets!.start!.day.toString() +
-                            '/' +
+                            DateFormat.yMd()
+                                .format(myEvents.tickets!.end!.toLocal()) +
                             myEvents.tickets!.start!.month.toString() +
-                            '/' +
-                            myEvents.tickets!.start!.year.toString() +
                             ' at ' +
-                            myEvents.tickets!.end!.hour.toString() +
-                            ':' +
-                            myEvents.tickets!.end!.minute.toString())
+                            DateFormat.jm()
+                                .format(myEvents.tickets!.start!.toLocal()))
                         : Text('No tickets available for this session'),
                   ],
                 ),
