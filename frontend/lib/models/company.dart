@@ -131,6 +131,10 @@ class Company {
         (element) => element.event == this.lastParticipation)!;
   }
 
+  String companyAsString() {
+    return '${this.name}';
+  }
+
   bool operator ==(o) => o is Company && id == o.id;
   int get hashCode => id.hashCode;
 }

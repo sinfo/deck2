@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 class Session {
-  final String? id;
+  final String id;
   final DateTime begin;
   final DateTime end;
   final String title;
-  final String? description;
+  final String description;
   final String? place;
   final String kind;
   final String? companyId;
@@ -14,11 +14,11 @@ class Session {
   final SessionTickets? tickets;
 
   Session({
-    this.id,
+    required this.id,
     required this.begin,
     required this.end,
     required this.title,
-    this.description,
+    required this.description,
     this.place,
     required this.kind,
     this.companyId,
@@ -30,23 +30,25 @@ class Session {
   factory Session.fromJson(Map<String, dynamic> json) {
     return Session(
       id: json['id'],
-      begin: DateTime(json['begin']),
-      end: DateTime(json['end']),
+      begin: DateTime.parse(json['begin']),
+      end: DateTime.parse(json['end']),
       title: json['title'],
       description: json['description'],
       place: json['place'],
       kind: json['kind'],
       companyId: json['company'],
-      speakersIds: json['speaker'],
+      speakersIds: List.from(json['speaker']),
       videoURL: json['videoURL'],
-      tickets: SessionTickets.fromJson(json['tickets']),
+      tickets: json['tickets'] == null
+          ? null
+          : SessionTickets.fromJson(json['tickets']),
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'begin': begin,
-        'end': end,
+        'begin': begin.toIso8601String(),
+        'end': end.toIso8601String(),
         'title': title,
         'description': description,
         'place': place,
@@ -139,15 +141,15 @@ class SessionTickets {
 
   factory SessionTickets.fromJson(Map<String, dynamic> json) {
     return SessionTickets(
-      start: DateTime(json['start']),
-      end: DateTime(json['end']),
+      start: DateTime.parse(json['start']),
+      end: DateTime.parse(json['end']),
       max: json['max'],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'start': start,
-        'end': end,
+        'start': start?.toUtc().toIso8601String(),
+        'end': end?.toUtc().toIso8601String(),
         'max': max,
       };
 
