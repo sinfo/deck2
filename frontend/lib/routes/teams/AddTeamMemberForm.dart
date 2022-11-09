@@ -118,7 +118,7 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
               padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  // backgroundColor: Theme.of(context).colorScheme.secondary,
                   padding: EdgeInsets.symmetric(horizontal: 50),
                   elevation: 2,
                   shape: RoundedRectangleBorder(

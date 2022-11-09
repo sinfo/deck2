@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/router.dart';
-import 'package:frontend/main.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
@@ -10,8 +8,8 @@ import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/teams/AddTeamMemberForm.dart';
 import 'package:frontend/routes/teams/TeamsNotifier.dart';
 import 'package:frontend/services/meetingService.dart';
-import 'package:frontend/services/teamService.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:frontend/services/teamService.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:provider/provider.dart';
@@ -29,10 +27,8 @@ bool membersPage = true;
 
 class TeamScreen extends StatefulWidget {
   Team team;
-  List<Member?> members;
 
-  TeamScreen({Key? key, required this.team, required this.members})
-      : super(key: key);
+  TeamScreen({Key? key, required this.team}) : super(key: key);
 
   @override
   _TeamScreen createState() => _TeamScreen();
@@ -42,14 +38,15 @@ class _TeamScreen extends State<TeamScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   TeamService _teamService = new TeamService();
-
-  _TeamScreen({Key? key});
+  MemberService _memberService = new MemberService();
+  late List<Future<Member?>> _members;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabIndex);
+    _getTeamMembers(widget.team);
   }
 
   @override
@@ -61,6 +58,12 @@ class _TeamScreen extends State<TeamScreen>
 
   void _handleTabIndex() {
     setState(() {});
+  }
+
+  void _getTeamMembers(Team t) {
+    _members = t.members!
+        .map((teamMember) => _memberService.getMember(teamMember.memberID!))
+        .toList();
   }
 
   Future<void> teamChangedCallback(BuildContext context,
@@ -75,6 +78,7 @@ class _TeamScreen extends State<TeamScreen>
       Provider.of<TeamsNotifier>(context, listen: false).edit(m);
       setState(() {
         widget.team = m!;
+        _getTeamMembers(m);
       });
     }
   }
@@ -256,8 +260,9 @@ class _TeamScreen extends State<TeamScreen>
         );
   }
 
-  showRemoveMemberDialog(context) {
+  showRemoveMemberDialog(context) async {
     String memberId = "";
+    List<Member?> _membs = await Future.wait(_members);
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
@@ -273,7 +278,7 @@ class _TeamScreen extends State<TeamScreen>
               icon: const Icon(Icons.grid_3x3),
               labelText: "MemberId *",
             ),
-            items: widget.members.map((Member? member) {
+            items: _membs.map((Member? member) {
               return new DropdownMenuItem(
                   value: member!.id, child: Text(member.name));
             }).toList(),
@@ -318,6 +323,8 @@ class _TeamScreen extends State<TeamScreen>
                 duration: Duration(seconds: 2),
               ),
             );
+
+            Navigator.pop(context);
           } else {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -331,10 +338,27 @@ class _TeamScreen extends State<TeamScreen>
   }
 
   void editTeam(String? id, String name) async {
-    final response = await _teamService.updateTeam(id!, name);
-    setState(() {
-      widget.team.name = response?.name ?? "Empty name";
-    });
+    Team? t = await _teamService.updateTeam(id!, name);
+    if (t != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      teamChangedCallback(context, team: t);
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+
+      Navigator.pop(context);
+    }
     Navigator.pop(context, "Update");
   }
 
@@ -368,43 +392,45 @@ class _TeamScreen extends State<TeamScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: GestureDetector(
-            child: Image.asset(
-          'assets/logo-branco2.png',
-          height: 100,
-          width: 100,
-        )),
-      ),
-      body: Container(
-        child: DefaultTabController(
-            length: 2,
-            child: Column(children: <Widget>[
-              TeamBanner(team: widget.team),
-              TabBar(
-                controller: _tabController,
-                labelColor: Colors.black,
-                tabs: [
-                  Tab(
-                    text: 'Members',
-                  ),
-                  Tab(text: 'Meetings'),
-                ],
-              ),
-              Expanded(
-                  child: TabBarView(
-                controller: _tabController,
-                children: [
-                  DisplayMembers(members: widget.members),
-                  DisplayMeeting(meetingsIds: widget.team.meetings),
-                ],
-              ))
-            ])),
-      ),
-      // TODO should only appear in Members tab?
-      floatingActionButton: buildSpeedDial(context),
-    );
+    return Consumer<TeamsNotifier>(builder: (context, notif, child) {
+      return Scaffold(
+        appBar: AppBar(
+          title: GestureDetector(
+              child: Image.asset(
+            'assets/logo-branco2.png',
+            height: 100,
+            width: 100,
+          )),
+        ),
+        body: Container(
+          child: DefaultTabController(
+              length: 2,
+              child: Column(children: <Widget>[
+                TeamBanner(team: widget.team),
+                TabBar(
+                  controller: _tabController,
+                  labelColor: Colors.black,
+                  tabs: [
+                    Tab(
+                      text: 'Members',
+                    ),
+                    Tab(text: 'Meetings'),
+                  ],
+                ),
+                Expanded(
+                    child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    DisplayMembers(members: _members),
+                    DisplayMeeting(meetingsIds: widget.team.meetings),
+                  ],
+                ))
+              ])),
+        ),
+        // TODO should only appear in Members tab?
+        floatingActionButton: buildSpeedDial(context),
+      );
+    });
   }
 }
 
@@ -513,20 +539,29 @@ class _DisplayMeetingState extends State<DisplayMeeting> {
 }
 
 class DisplayMembers extends StatelessWidget {
-  final List<Member?> members;
+  final List<Future<Member?>> members;
   const DisplayMembers({Key? key, required this.members}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    membersPage = true;
     return Scaffold(
-      backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-      body: ListView(
-          padding: EdgeInsets.symmetric(horizontal: 32),
-          physics: BouncingScrollPhysics(),
-          scrollDirection: Axis.vertical,
-          children: members.map((e) => ShowMember(member: e!)).toList()),
-    );
+        backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
+        body: FutureBuilder<List<Member?>>(
+            future: Future.wait(members),
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                List<Member?> membs = snapshot.data as List<Member?>;
+
+                return ListView(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    physics: BouncingScrollPhysics(),
+                    scrollDirection: Axis.vertical,
+                    children:
+                        membs.map((e) => ShowMember(member: e!)).toList());
+              } else {
+                return CircularProgressIndicator();
+              }
+            }));
   }
 }
 
