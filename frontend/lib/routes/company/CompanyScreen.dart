@@ -121,74 +121,73 @@ class _CompanyScreenState extends State<CompanyScreen>
       bool small = constraints.maxWidth < App.SIZE;
       return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
-          appBar: CustomAppBar(disableEventChange: true),
-          body: DefaultTabController(
-            length: 4,
-            child: Column(
-              children: [
-                CompanyBanner(
-                  company: widget.company,
-                  statusChangeCallback: (step, context) {
-                    companyChangedCallback(
-                      context,
-                      fs: _companyService.stepParticipationStatus(
-                          id: widget.company.id, step: step),
-                    );
-                  },
-                  onEdit: (context, _comp) {
-                    companyChangedCallback(context, company: _comp);
-                  },
-                ),
-                TabBar(
-                  isScrollable: small,
-                  controller: _tabController,
-                  tabs: [
-                    Tab(text: 'Details'),
-                    Tab(text: 'BillingInfo'),
-                    Tab(text: 'Participations'),
-                    Tab(text: 'Communications'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(controller: _tabController, children: [
-                    DetailsScreen(
-                      company: widget.company,
-                    ),
-                    Container(
-                      child: Center(child: Text('Work in progress :)')),
-                    ),
-                    ParticipationList(
-                      company: widget.company,
-                      onParticipationChanged:
-                          (Map<String, dynamic> body) async {
-                        await companyChangedCallback(
-                          context,
-                          fs: _companyService.updateParticipation(
-                            id: widget.company.id,
-                            notes: body['notes'],
-                            member: body['member'],
-                            partner: body['partner'],
-                            confirmed: body['confirmed'],
-                          ),
-                        );
-                      },
-                      onParticipationAdded: () =>
-                          companyChangedCallback(context,
-                              fs: _companyService.addParticipation(
-                                id: widget.company.id,
-                                partner: false,
-                              )),
-                    ),
-                    CommunicationsList(
-                        participations: widget.company.participations ?? [],
-                        small: small),
-                  ]),
-                ),
-              ],
+            appBar: CustomAppBar(disableEventChange: true),
+            body: DefaultTabController(
+              length: 4,
+              child: Column(
+                children: [
+                  CompanyBanner(
+                    company: widget.company,
+                    statusChangeCallback: (step, context) {
+                      companyChangedCallback(
+                        context,
+                        fs: _companyService.stepParticipationStatus(
+                            id: widget.company.id, step: step),
+                      );
+                    },
+                    onEdit: (context, _comp) {
+                      companyChangedCallback(context, company: _comp);
+                    },
+                  ),
+                  TabBar(
+                    isScrollable: small,
+                    controller: _tabController,
+                    tabs: [
+                      Tab(text: 'Details'),
+                      Tab(text: 'BillingInfo'),
+                      Tab(text: 'Participations'),
+                      Tab(text: 'Communications'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(controller: _tabController, children: [
+                      DetailsScreen(
+                        company: widget.company,
+                      ),
+                      Container(
+                        child: Center(child: Text('Work in progress :)')),
+                      ),
+                      ParticipationList(
+                        company: widget.company,
+                        onParticipationChanged:
+                            (Map<String, dynamic> body) async {
+                          await companyChangedCallback(
+                            context,
+                            fs: _companyService.updateParticipation(
+                              id: widget.company.id,
+                              notes: body['notes'],
+                              member: body['member'],
+                              partner: body['partner'],
+                              confirmed: body['confirmed'],
+                            ),
+                          );
+                        },
+                        onParticipationAdded: () =>
+                            companyChangedCallback(context,
+                                fs: _companyService.addParticipation(
+                                  id: widget.company.id,
+                                  partner: false,
+                                )),
+                      ),
+                      CommunicationsList(
+                          participations: widget.company.participations ?? [],
+                          small: small),
+                    ]),
+                  ),
+                ],
+              ),
             ),
-          ),
-          floatingActionButton: _fabAtIndex(context)
-        );
+            floatingActionButton: _fabAtIndex(context));
       });
     });
   }
