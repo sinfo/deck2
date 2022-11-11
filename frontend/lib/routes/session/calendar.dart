@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/session/EditSessionForm.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/services/sessionService.dart';
+import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -29,6 +31,18 @@ class _CalendarState extends State<Calendar> {
   final List<Session> sessions;
   final _sessionService = SessionService();
   CalendarFormat format = CalendarFormat.month;
+  SpeakerService speakerService = SpeakerService();
+  List<Speaker> speakers30 = [];
+  List<Speaker> speakers29 = [];
+  List<Speaker> speakers28 = [];
+  List<Speaker> speakers27 = [];
+  List<Speaker> speakers26 = [];
+  List<Speaker> speakers25 = [];
+  List<Speaker> speakers24 = [];
+  List<Speaker> speakers23 = [];
+  List<Speaker> speakers22 = [];
+  List<Speaker> speakers21 = [];
+  List<Speaker> allSpeakers = [];
 
   late Map<DateTime, List<Session>> calendarSessions;
 
@@ -39,7 +53,56 @@ class _CalendarState extends State<Calendar> {
     selectedCalendarDate = _focusedCalendarDate;
     calendarSessions = {};
     fillCalendarSessions();
+    fillSpeakers();
     super.initState();
+  }
+
+  Future<void> fillSpeakers() async {
+    Future<List<Speaker>> speakersFuture30 =
+        speakerService.getSpeakers(eventId: 30);
+    // for (int i = 22; i < 30; i++){
+    //   speakersFuture.
+    // }
+    Future<List<Speaker>> speakersFuture29 =
+        speakerService.getSpeakers(eventId: 29);
+    Future<List<Speaker>> speakersFuture28 =
+        speakerService.getSpeakers(eventId: 28);
+    Future<List<Speaker>> speakersFuture27 =
+        speakerService.getSpeakers(eventId: 27);
+    Future<List<Speaker>> speakersFuture26 =
+        speakerService.getSpeakers(eventId: 26);
+    Future<List<Speaker>> speakersFuture25 =
+        speakerService.getSpeakers(eventId: 25);
+    Future<List<Speaker>> speakersFuture24 =
+        speakerService.getSpeakers(eventId: 24);
+    Future<List<Speaker>> speakersFuture23 =
+        speakerService.getSpeakers(eventId: 23);
+    Future<List<Speaker>> speakersFuture22 =
+        speakerService.getSpeakers(eventId: 22);
+    Future<List<Speaker>> speakersFuture21 =
+        speakerService.getSpeakers(eventId: 21);
+    speakers30 = await speakersFuture30;
+    speakers29 = await speakersFuture29;
+    speakers28 = await speakersFuture28;
+    speakers27 = await speakersFuture27;
+    speakers26 = await speakersFuture26;
+    speakers25 = await speakersFuture25;
+    speakers24 = await speakersFuture24;
+    speakers23 = await speakersFuture23;
+    speakers22 = await speakersFuture22;
+    speakers21 = await speakersFuture21;
+    allSpeakers = speakers30;
+    allSpeakers.addAll(speakers29);
+    allSpeakers.addAll(speakers28);
+    allSpeakers.addAll(speakers27);
+    allSpeakers.addAll(speakers26);
+    allSpeakers.addAll(speakers25);
+    allSpeakers.addAll(speakers24);
+    allSpeakers.addAll(speakers23);
+    allSpeakers.addAll(speakers22);
+    allSpeakers.addAll(speakers21);
+
+    print(allSpeakers);
   }
 
   void fillCalendarSessions() {
@@ -66,6 +129,19 @@ class _CalendarState extends State<Calendar> {
 
   List<Session> _listOfDaySessions(DateTime dateTime) {
     return calendarSessions[dateTime] ?? [];
+  }
+
+  List<String> _getSpeakers(List<String>? ids) {
+    List<String> speakersNames = [];
+    for (var speaker in allSpeakers) {
+      for (var id in ids!) {
+        if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
+          speakersNames.add(speaker.name);
+        }
+      }
+    }
+    // print("Speakers names " + speakersNames.toString());
+    return speakersNames;
   }
 
   void _deleteSessionDialog(context, id) {
@@ -286,11 +362,19 @@ class _CalendarState extends State<Calendar> {
                               children: [
                                 (calSessions.kind == 'TALK')
                                     ? Text('Speakers: ' +
-                                        calSessions.speakersIds.toString())
+                                        _getSpeakers(calSessions.speakersIds)
+                                            .toString())
                                     : Text('Company: ' +
-                                        calSessions.companyId.toString())
+                                        calSessions.companyId.toString()),
                               ]),
                         ),
+                        // ..._getSpeakers(calSessions.speakersIds)
+                        //     .map((name) => ListTile(
+                        //           title: Padding(
+                        //             padding: const EdgeInsets.all(8.0),
+                        //             child: Text(name),
+                        //           ),
+                        //         )),
                         Expanded(
                           child: Padding(
                               padding: EdgeInsets.all(8.0),
