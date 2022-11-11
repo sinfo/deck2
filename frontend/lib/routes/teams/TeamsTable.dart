@@ -223,8 +223,7 @@ class _TeamTableState extends State<TeamTable>
 
 class TeamMemberRow extends StatelessWidget {
   final Team team;
-
-  MemberService _memberService = MemberService();
+  final MemberService _memberService = MemberService();
   TeamMemberRow({Key? key, required this.team}) : super(key: key);
 
   static Widget fake() {

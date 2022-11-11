@@ -1,18 +1,51 @@
 import 'dart:convert';
 
+import 'package:frontend/models/thread.dart';
+import 'package:frontend/services/threadService.dart';
+
 class Meeting {
   final String id;
   final DateTime begin;
   final DateTime end;
   final String place;
+  final String title;
+  final String kind;
+  final List<String> communicationsId;
   final String? minute;
   final MeetingParticipants participants;
+  List<Thread>? _communications;
+
+  Future<List<Thread>?> get communications async {
+    ThreadService _threadService = ThreadService();
+
+    if (communicationsId.isEmpty) {
+      return [];
+    }
+
+    if (_communications != null && _communications!.length != 0) {
+      return _communications;
+    }
+
+    List<Thread> l = [];
+    for (String element in communicationsId) {
+      Thread? t = await _threadService.getThread(element);
+      if (t != null) {
+        l.add(t);
+      }
+    }
+
+    _communications = l;
+    return _communications;
+  }
 
   Meeting(
       {required this.id,
       required this.begin,
       required this.end,
       required this.place,
+      required this.title,
+      required this.kind,
+      required this.communicationsId,
       this.minute,
       required this.participants});
 
@@ -23,6 +56,9 @@ class Meeting {
         end: DateTime.parse(json['end']),
         place: json['place'],
         minute: json['minute'],
+        title: json['title'],
+        kind: json['kind'],
+        communicationsId: List.from(json['communications']),
         participants: MeetingParticipants.fromJson(json['participants']));
   }
 
@@ -32,6 +68,9 @@ class Meeting {
         'end': end,
         'place': place,
         'minute': minute,
+        'title': title,
+        'kind': kind,
+        'communications': communicationsId,
         'participants': participants.toJson()
       };
 
@@ -49,7 +88,8 @@ class MeetingParticipants {
 
   factory MeetingParticipants.fromJson(Map<String, dynamic> json) {
     return MeetingParticipants(
-        membersIds: json['members'], companyRepIds: json['companyReps']);
+        membersIds: List.from(json['members']),
+        companyRepIds: List.from(json['companyReps']));
   }
 
   Map<String, dynamic> toJson() =>

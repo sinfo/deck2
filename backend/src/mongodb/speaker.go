@@ -150,12 +150,12 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 // The field is non-existent if it has a nil value.
 // This filter will behave like a logical *and*.
 type GetSpeakersOptions struct {
-	EventID  			*int
-	MemberID 			*primitive.ObjectID
-	Name     			*string
-	NumRequests      	*int64
-	MaxSpeaksInRequest 	*int64
-	SortingMethod    	*string
+	EventID            *int
+	MemberID           *primitive.ObjectID
+	Name               *string
+	NumRequests        *int64
+	MaxSpeaksInRequest *int64
+	SortingMethod      *string
 }
 
 // GetSpeakers gets all speakers specified with a query
@@ -201,25 +201,25 @@ func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.S
 		case string(NumberParticipations):
 			query := mongo.Pipeline{
 				{
-					{"$match", filter},
+					{Key: "$match", Value: filter},
 				},
 				{
-					{"$addFields", bson.D{
-						{"numParticipations", bson.D{
-							{"$size", "$participations"},
+					{Key: "$addFields", Value: bson.D{
+						{Key: "numParticipations", Value: bson.D{
+							{Key: "$size", Value: "$participations"},
 						}},
 					}},
 				},
 				{
-					{"$sort", bson.D{
-						{"numParticipations", -1},
+					{Key: "$sort", Value: bson.D{
+						{Key: "numParticipations", Value: -1},
 					}},
 				},
 				{
-					{"$skip", (*speakOptions.NumRequests * (*speakOptions.MaxSpeaksInRequest))},
+					{Key: "$skip", Value: (*speakOptions.NumRequests * (*speakOptions.MaxSpeaksInRequest))},
 				},
 				{
-					{"$limit", *speakOptions.MaxSpeaksInRequest},
+					{Key: "$limit", Value: *speakOptions.MaxSpeaksInRequest},
 				},
 			}
 			cur, err = s.Collection.Aggregate(ctx, query)
@@ -230,18 +230,18 @@ func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.S
 		case string(LastParticipation):
 			query := mongo.Pipeline{
 				{
-					{"$match", filter},
+					{Key: "$match", Value: filter},
 				},
 				{
-					{"$sort", bson.D{
-						{"participations.event", -1},
+					{Key: "$sort", Value: bson.D{
+						{Key: "participations.event", Value: -1},
 					}},
 				},
 				{
-					{"$skip", (*speakOptions.NumRequests * (*speakOptions.MaxSpeaksInRequest))},
+					{Key: "$skip", Value: (*speakOptions.NumRequests * (*speakOptions.MaxSpeaksInRequest))},
 				},
 				{
-					{"$limit", *speakOptions.MaxSpeaksInRequest},
+					{Key: "$limit", Value: *speakOptions.MaxSpeaksInRequest},
 				},
 			}
 			cur, err = s.Collection.Aggregate(ctx, query)

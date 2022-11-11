@@ -95,6 +95,13 @@ class Speaker {
         (element) => element.event == this.lastParticipation)!;
   }
 
+  String speakerAsString() {
+    return '${this.name}';
+  }
+
+  @override
+  String toString() => name;
+
   bool operator ==(o) => o is Speaker && id == o.id;
   int get hashCode => id.hashCode;
 }

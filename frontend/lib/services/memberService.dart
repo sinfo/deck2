@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/service.dart';
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
 
 class MemberService extends Service {
   Future<List<Member>> getMembers({String? name, int? event}) async {
@@ -62,15 +65,69 @@ class MemberService extends Service {
     }
   }
 
-  Future<Member?> updateMember(String id, String istid, String name) async {
+  Future<Member?> updateMember(
+    {required String id,
+    String? istid,
+    String? name}) async {
     var body = {
       "istid": istid,
       "name": name,
     };
 
-    Response<String> response = await dio.put("/members/" + id, data: body);
+    try {
+      Response<String> response = await dio.put("/members/" + id, data: body);
+
+      return Member.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Member?> updateImageWeb(
+      {required String id, required XFile image}) async {
+    Uint8List file = await image.readAsBytes();
+    FormData formData = FormData.fromMap(
+      {
+        'image': MultipartFile.fromBytes(
+          file,
+          filename: image.path,
+          contentType: MediaType('multipart', 'form-data'),
+        )
+      },
+    );
+    try {
+      Response<String> response = await dio.post(
+        '/members/' + id + '/image',
+        data: formData,
+      );
+
+      return Member.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    } catch (e) {
+      if (e is DioError) {
+        print(e.response);
+      }
+    }
+  }
+
+  Future<Member?> updateImage(
+      {required String id, required File image}) async {
+    FormData formData =
+        FormData.fromMap({'image': await MultipartFile.fromFile(image.path)});
 
     try {
+      Response<String> response =
+          await dio.post('/members/' + id + '/image', data: formData);
+
       return Member.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');

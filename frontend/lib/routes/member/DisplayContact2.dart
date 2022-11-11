@@ -1,5 +1,3 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
@@ -33,16 +31,21 @@ class _DisplayContactsState extends State<DisplayContacts> {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             Role r = snapshot.data as Role;
+            Member me = Provider.of<Member?>(context)!;
 
-            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+            if (r == Role.ADMIN || r == Role.COORDINATOR || me.id == widget.member.id) {
               return FloatingActionButton.extended(
-                onPressed: () {
-                  Navigator.pushReplacement(
+                onPressed: () async {
+                  final bool? shouldRefresh = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
                             EditContact(contact: cont, member: widget.member)),
                   );
+                  if (shouldRefresh ?? false) {
+                    this.contact = contactService.getContact(widget.member.contact!);
+                    setState(() {});
+                  }
                 },
                 label: const Text('Edit Contacts'),
                 icon: const Icon(Icons.edit),

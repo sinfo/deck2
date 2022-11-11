@@ -1,0 +1,143 @@
+{
+    "post": {
+        "tags": [
+            "meetings"
+        ],
+        "summary": "Add a participant to a meeting",
+        "operationId": "addMeetingParticipant",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the meeting",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "New participant data",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "memberID",
+                        "type"
+                    ],
+                    "properties": {
+                        "memberID": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "MEMBER",
+                                "COMPANYREP"
+                            ]
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "meeting with the updated data",
+                "schema": {
+                    "$ref": "./models/meeting.json"
+                }
+            },
+            "417": {
+                "description": "Unable to perform operation"
+            },
+            "404": {
+                "description": "Meeting not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "400": {
+                "description": "Invalid minute data"
+            }
+        }
+    },
+    "delete": {
+        "tags": [
+            "meetings"
+        ],
+        "summary": "Delete a participant from a meeting",
+        "operationId": "deleteMeetingParticipant",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the meeting",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "New participant data",
+                "required": true,
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "memberID",
+                        "type"
+                    ],
+                    "properties": {
+                        "memberID": {
+                            "type": "string"
+                        },
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "MEMBER",
+                                "COMPANYREP"
+                            ]
+                        }
+                    }
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "meeting with the updated data",
+                "schema": {
+                    "$ref": "./models/meeting.json"
+                }
+            },
+            "417": {
+                "description": "Unable to perform operation"
+            },
+            "404": {
+                "description": "Meeting not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    }
+}

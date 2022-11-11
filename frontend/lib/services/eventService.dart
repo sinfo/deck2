@@ -280,7 +280,7 @@ class EventService extends Service {
       'place': s.place,
     };
 
-    if (s.kind == 'TALK') {
+    if (s.kind == 'Talk') {
       body['speaker'] = json.encode(s.speakersIds);
     } else {
       body['company'] = s.companyId;

@@ -1,13 +1,7 @@
-//import 'dart:io';
-//import 'package:dotted_border/dotted_border.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-//import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/services/memberService.dart';
-//import 'package:image_picker/image_picker.dart';
 
 class AddMemberForm extends StatefulWidget {
   AddMemberForm({Key? key}) : super(key: key);
@@ -140,13 +134,13 @@ class _AddMemberFormState extends State<AddMemberForm> {
                 child: Text("CANCEL",
                     style: TextStyle(
                         fontSize: 14,
-                        color: Theme.of(context).accentColor)),
+                        color: Theme.of(context).colorScheme.secondary)),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    primary: Theme.of(context).accentColor,
+                    primary: Theme.of(context).colorScheme.secondary,
                     padding: EdgeInsets.symmetric(horizontal: 50),
                     elevation: 2,
                     shape: RoundedRectangleBorder(

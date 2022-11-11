@@ -362,6 +362,12 @@
     },
     "/meetings/{id}/minute": {
       "$ref": "./meetings-id-minute.json"
+    },
+    "/meetings/{id}/thread": {
+      "$ref": "./meetings-id-thread.json"
+    },
+    "/meetings/{id}/participants": {
+      "$ref": "./meetings-id-participants.json"
     }
   },
   "externalDocs": {

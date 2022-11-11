@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/SearchResultWidget.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/SearchResultWidget.dart';
@@ -72,6 +73,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
     int current = notifier.event.id;
     return Column(children: [
       AppBar(
+        backgroundColor: Theme.of(context).primaryColor,
+        iconTheme: IconThemeData(color: Colors.white),
         actions: actions,
         title: Row(children: [
           InkWell(

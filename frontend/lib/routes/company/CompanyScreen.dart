@@ -1,25 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/components/EditableCard.dart';
 import 'package:frontend/components/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
-import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threadCard.dart';
 import 'package:frontend/models/company.dart';
-import 'package:frontend/models/thread.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/EditCompanyForm.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/participation.dart';
-import 'package:frontend/routes/speaker/EditSpeakerForm.dart';
 import 'package:frontend/services/companyService.dart';
-import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
 
@@ -127,72 +121,73 @@ class _CompanyScreenState extends State<CompanyScreen>
       bool small = constraints.maxWidth < App.SIZE;
       return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
-          body: DefaultTabController(
-            length: 4,
-            child: Column(
-              children: [
-                CompanyBanner(
-                  company: widget.company,
-                  statusChangeCallback: (step, context) {
-                    companyChangedCallback(
-                      context,
-                      fs: _companyService.stepParticipationStatus(
-                          id: widget.company.id, step: step),
-                    );
-                  },
-                  onEdit: (context, _comp) {
-                    companyChangedCallback(context, company: _comp);
-                  },
-                ),
-                TabBar(
-                  isScrollable: small,
-                  controller: _tabController,
-                  tabs: [
-                    Tab(text: 'Details'),
-                    Tab(text: 'BillingInfo'),
-                    Tab(text: 'Participations'),
-                    Tab(text: 'Communications'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(controller: _tabController, children: [
-                    DetailsScreen(
-                      company: widget.company,
-                    ),
-                    Container(
-                      child: Center(child: Text('Work in progress :)')),
-                    ),
-                    ParticipationList(
-                      company: widget.company,
-                      onParticipationChanged:
-                          (Map<String, dynamic> body) async {
-                        await companyChangedCallback(
-                          context,
-                          fs: _companyService.updateParticipation(
-                            id: widget.company.id,
-                            notes: body['notes'],
-                            member: body['member'],
-                            partner: body['partner'],
-                            confirmed: body['confirmed'],
-                          ),
-                        );
-                      },
-                      onParticipationAdded: () =>
-                          companyChangedCallback(context,
-                              fs: _companyService.addParticipation(
-                                id: widget.company.id,
-                                partner: false,
-                              )),
-                    ),
-                    CommunicationsList(
-                        participations: widget.company.participations ?? [],
-                        small: small),
-                  ]),
-                ),
-              ],
+            appBar: CustomAppBar(disableEventChange: true),
+            body: DefaultTabController(
+              length: 4,
+              child: Column(
+                children: [
+                  CompanyBanner(
+                    company: widget.company,
+                    statusChangeCallback: (step, context) {
+                      companyChangedCallback(
+                        context,
+                        fs: _companyService.stepParticipationStatus(
+                            id: widget.company.id, step: step),
+                      );
+                    },
+                    onEdit: (context, _comp) {
+                      companyChangedCallback(context, company: _comp);
+                    },
+                  ),
+                  TabBar(
+                    isScrollable: small,
+                    controller: _tabController,
+                    tabs: [
+                      Tab(text: 'Details'),
+                      Tab(text: 'BillingInfo'),
+                      Tab(text: 'Participations'),
+                      Tab(text: 'Communications'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(controller: _tabController, children: [
+                      DetailsScreen(
+                        company: widget.company,
+                      ),
+                      Container(
+                        child: Center(child: Text('Work in progress :)')),
+                      ),
+                      ParticipationList(
+                        company: widget.company,
+                        onParticipationChanged:
+                            (Map<String, dynamic> body) async {
+                          await companyChangedCallback(
+                            context,
+                            fs: _companyService.updateParticipation(
+                              id: widget.company.id,
+                              notes: body['notes'],
+                              member: body['member'],
+                              partner: body['partner'],
+                              confirmed: body['confirmed'],
+                            ),
+                          );
+                        },
+                        onParticipationAdded: () =>
+                            companyChangedCallback(context,
+                                fs: _companyService.addParticipation(
+                                  id: widget.company.id,
+                                  partner: false,
+                                )),
+                      ),
+                      CommunicationsList(
+                          participations: widget.company.participations ?? [],
+                          small: small),
+                    ]),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
+            floatingActionButton: _fabAtIndex(context));
       });
     });
   }
