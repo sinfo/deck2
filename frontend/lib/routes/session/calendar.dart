@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/models/company.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/session/EditSessionForm.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
+import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
@@ -32,6 +34,7 @@ class _CalendarState extends State<Calendar> {
   final _sessionService = SessionService();
   CalendarFormat format = CalendarFormat.month;
   SpeakerService speakerService = SpeakerService();
+  CompanyService companyService = CompanyService();
   List<Speaker> speakers30 = [];
   List<Speaker> speakers29 = [];
   List<Speaker> speakers28 = [];
@@ -44,6 +47,18 @@ class _CalendarState extends State<Calendar> {
   List<Speaker> speakers21 = [];
   List<Speaker> allSpeakers = [];
 
+  List<Company> companies30 = [];
+  List<Company> companies29 = [];
+  List<Company> companies28 = [];
+  List<Company> companies27 = [];
+  List<Company> companies26 = [];
+  List<Company> companies25 = [];
+  List<Company> companies24 = [];
+  List<Company> companies23 = [];
+  List<Company> companies22 = [];
+  List<Company> companies21 = [];
+  List<Company> allCompanies = [];
+
   late Map<DateTime, List<Session>> calendarSessions;
 
   _CalendarState({required this.sessions});
@@ -54,6 +69,7 @@ class _CalendarState extends State<Calendar> {
     calendarSessions = {};
     fillCalendarSessions();
     fillSpeakers();
+    fillCompanies();
     super.initState();
   }
 
@@ -105,6 +121,50 @@ class _CalendarState extends State<Calendar> {
     print(allSpeakers);
   }
 
+  Future<void> fillCompanies() async {
+    Future<List<Company>> companiesFuture30 =
+        companyService.getCompanies(event: 30);
+
+    Future<List<Company>> companiesFuture29 =
+        companyService.getCompanies(event: 29);
+    Future<List<Company>> companiesFuture28 =
+        companyService.getCompanies(event: 28);
+    Future<List<Company>> companiesFuture27 =
+        companyService.getCompanies(event: 27);
+    Future<List<Company>> companiesFuture26 =
+        companyService.getCompanies(event: 26);
+    Future<List<Company>> companiesFuture25 =
+        companyService.getCompanies(event: 25);
+    Future<List<Company>> companiesFuture24 =
+        companyService.getCompanies(event: 24);
+    Future<List<Company>> companiesFuture23 =
+        companyService.getCompanies(event: 23);
+    Future<List<Company>> companiesFuture22 =
+        companyService.getCompanies(event: 22);
+    Future<List<Company>> companiesFuture21 =
+        companyService.getCompanies(event: 21);
+    companies30 = await companiesFuture30;
+    companies29 = await companiesFuture29;
+    companies28 = await companiesFuture28;
+    companies27 = await companiesFuture27;
+    companies26 = await companiesFuture26;
+    companies25 = await companiesFuture25;
+    companies24 = await companiesFuture24;
+    companies23 = await companiesFuture23;
+    companies22 = await companiesFuture22;
+    companies21 = await companiesFuture21;
+    allCompanies = companies30;
+    allCompanies.addAll(companies29);
+    allCompanies.addAll(companies28);
+    allCompanies.addAll(companies27);
+    allCompanies.addAll(companies26);
+    allCompanies.addAll(companies25);
+    allCompanies.addAll(companies24);
+    allCompanies.addAll(companies23);
+    allCompanies.addAll(companies22);
+    allCompanies.addAll(companies21);
+  }
+
   void fillCalendarSessions() {
     for (var session in sessions) {
       DateTime dateForCalendar =
@@ -142,6 +202,16 @@ class _CalendarState extends State<Calendar> {
     }
     // print("Speakers names " + speakersNames.toString());
     return speakersNames;
+  }
+
+  String _getCompanies(String? id) {
+    String companyName = "default";
+    for (var company in allCompanies) {
+      if (company.id == id) {
+        companyName = company.name;
+      }
+    }
+    return companyName;
   }
 
   void _deleteSessionDialog(context, id) {
@@ -361,11 +431,63 @@ class _CalendarState extends State<Calendar> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 (calSessions.kind == 'TALK')
-                                    ? Text('Speakers: ' +
-                                        _getSpeakers(calSessions.speakersIds)
-                                            .toString())
-                                    : Text('Company: ' +
-                                        calSessions.companyId.toString()),
+                                    ? SizedBox(
+                                        width: 500.0,
+                                        height: 220.0,
+                                        child: Card(
+                                          child: Column(children: [
+                                            Text(
+                                              "Speakers",
+                                              style: TextStyle(
+                                                fontSize: 20.0,
+                                                color: Color.fromARGB(
+                                                    255, 63, 81, 181),
+                                              ),
+                                              textAlign: TextAlign.right,
+                                            ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.all(16.0),
+                                              child: Text(
+                                                _getSpeakers(
+                                                        calSessions.speakersIds)
+                                                    .toString(),
+                                                style: TextStyle(
+                                                  fontSize: 25.0,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            )
+                                          ]),
+                                        ))
+                                    : SizedBox(
+                                        width: 250.0,
+                                        height: 120.0,
+                                        child: Card(
+                                          child: Column(children: [
+                                            Text(
+                                              "Company",
+                                              style: TextStyle(
+                                                fontSize: 20.0,
+                                                color: Color.fromARGB(
+                                                    255, 63, 81, 181),
+                                              ),
+                                              textAlign: TextAlign.right,
+                                            ),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.all(16.0),
+                                              child: Text(
+                                                _getCompanies(
+                                                    calSessions.companyId),
+                                                style: TextStyle(
+                                                  fontSize: 25.0,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            )
+                                          ]),
+                                        ))
                               ]),
                         ),
                         // ..._getSpeakers(calSessions.speakersIds)
