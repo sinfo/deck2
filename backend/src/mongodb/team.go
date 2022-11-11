@@ -42,7 +42,7 @@ type UpdateTeamMemberData struct {
 
 // CreateTeamMemberData contains data needed to create a team member
 type CreateTeamMemberData struct {
-	Member primitive.ObjectID `json:"id"`
+	Member primitive.ObjectID `json:"member"`
 	Role   models.TeamRole    `json:"role"`
 }
 

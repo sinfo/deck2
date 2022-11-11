@@ -8,6 +8,7 @@ import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/models/event.dart';
+import 'package:frontend/routes/teams/TeamsNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:provider/provider.dart';
@@ -48,6 +49,9 @@ Future main() async {
       ),
       ChangeNotifierProvider<BottomNavigationBarProvider>(
         create: (_) => BottomNavigationBarProvider(),
+      ),
+      ChangeNotifierProvider<TeamsNotifier>(
+        create: (_) => TeamsNotifier(teams: []),
       ),
     ],
     child: App(),

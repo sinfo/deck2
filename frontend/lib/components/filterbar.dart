@@ -17,16 +17,6 @@ class FilterBarState extends State<FilterBar> {
   FilterBarState({Key? key, required this.onSelected});
 
   int _currentIndex = 0;
-  List<String> _filters = [
-    "All",
-    "Suggested",
-    "Contacted",
-    "Rejected",
-    "Give Up",
-    "Announced",
-    "In Conversations",
-    "In Negotiations"
-  ];
 
   @override
   Widget build(BuildContext context) {

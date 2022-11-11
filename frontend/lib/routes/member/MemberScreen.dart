@@ -71,11 +71,10 @@ class _MemberScreen extends State<MemberScreen>
             length: 2,
             child: Column(children: <Widget>[
               MemberBanner(
-                member: widget.member,
-                onEdit: (context, _member) {
+                  member: widget.member,
+                  onEdit: (context, _member) {
                     memberChangedCallback(context, member: _member);
-                  }
-              ),
+                  }),
               TabBar(
                 isScrollable: small,
                 controller: _tabController,
@@ -103,11 +102,8 @@ class MemberBanner extends StatefulWidget {
   final Member member;
   final void Function(BuildContext, Member?) onEdit;
 
-  const MemberBanner(
-    {Key? key,
-    required this.member,
-    required this.onEdit})
-    : super(key: key);
+  const MemberBanner({Key? key, required this.member, required this.onEdit})
+      : super(key: key);
 
   void _editMemberModal(context) {
     showModalBottomSheet(
@@ -133,7 +129,9 @@ class _MemberBannerState extends State<MemberBanner> {
             Role r = snapshot.data as Role;
             Member me = Provider.of<Member?>(context)!;
 
-            if (r == Role.ADMIN || r == Role.COORDINATOR || me.id == widget.member.id) {
+            if (r == Role.ADMIN ||
+                r == Role.COORDINATOR ||
+                me.id == widget.member.id) {
               return Positioned(
                   bottom: 15,
                   right: 15,
@@ -221,7 +219,8 @@ class _MemberBannerState extends State<MemberBanner> {
 class DisplayParticipations extends StatefulWidget {
   final Member member;
   final bool small;
-  const DisplayParticipations({Key? key, required this.member, required this.small})
+  const DisplayParticipations(
+      {Key? key, required this.member, required this.small})
       : super(key: key);
 
   @override
@@ -238,63 +237,77 @@ class _DisplayParticipationsState extends State<DisplayParticipations> {
   @override
   void initState() {
     super.initState();
-    this.memberParticipations = memberService.getMemberParticipations(widget.member.id);
+    this.memberParticipations =
+        memberService.getMemberParticipations(widget.member.id);
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
         body: FutureBuilder(
-            future: Future.wait([memberParticipations, Provider.of<AuthService>(context).role]),
+            future: Future.wait(
+                [memberParticipations, Provider.of<AuthService>(context).role]),
             builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
               if (snapshot.hasData) {
-                List<MemberParticipation> memParticipations = snapshot.data![0] as List<MemberParticipation>;
+                List<MemberParticipation> memParticipations =
+                    snapshot.data![0] as List<MemberParticipation>;
                 Role r = snapshot.data![1] as Role;
                 Member me = Provider.of<Member?>(context)!;
                 return Scaffold(
                   backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-                  body: 
-                  ListView(
-                   padding: EdgeInsets.symmetric(horizontal: 32),
-                   children: <Widget>[
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: BouncingScrollPhysics(),
-                      itemCount: memParticipations.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        var e = memParticipations.reversed.elementAt(index);
-                        return MemberPartCard(
-                          event: e.event!, cardRole: e.role!, myRole: r.name, team: e.team!, small: widget.small, 
-                          canEdit: (authService.convert(e.role!) == Role.ADMIN) ?
-                            (r == Role.ADMIN)
-                            : (r == Role.ADMIN || r == Role.COORDINATOR)
-                          ,
-                          onChanged: (role) async {
-                            List<Team> teamsByName = await teamService.getTeams(name: e.team);
-                            Team? team = await teamService.updateTeamMemberRole(teamsByName[0].id!, widget.member.id, widget.member, role);
-                            if (team==null)
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text('Unable to change that role',
-                                      style: TextStyle(color: Colors.white,
-                                                      backgroundColor: Colors.red))),
-                                );
-                            else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Updated member role',
-                                    style: TextStyle(color: Colors.white),)),
-                                );
-                                if(me.id == widget.member.id){
-                                  await authService.signOut();
-                                  Navigator.pushReplacementNamed(context, Routes.LoginRoute);
+                  body: ListView(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    children: <Widget>[
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: BouncingScrollPhysics(),
+                        itemCount: memParticipations.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          var e = memParticipations.reversed.elementAt(index);
+                          return MemberPartCard(
+                              event: e.event!,
+                              cardRole: e.role!,
+                              myRole: r.name,
+                              team: e.team!,
+                              small: widget.small,
+                              canEdit: (authService.convert(e.role!) ==
+                                      Role.ADMIN)
+                                  ? (r == Role.ADMIN)
+                                  : (r == Role.ADMIN || r == Role.COORDINATOR),
+                              onChanged: (role) async {
+                                List<Team> teamsByName =
+                                    await teamService.getTeams(name: e.team);
+                                Team? team =
+                                    await teamService.updateTeamMemberRole(
+                                        teamsByName[0].id!,
+                                        widget.member.id,
+                                        role);
+                                if (team == null)
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Unable to change that role',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                backgroundColor: Colors.red))),
+                                  );
+                                else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                      'Updated member role',
+                                      style: TextStyle(color: Colors.white),
+                                    )),
+                                  );
+                                  if (me.id == widget.member.id) {
+                                    await authService.signOut();
+                                    Navigator.pushReplacementNamed(
+                                        context, Routes.LoginRoute);
+                                  }
                                 }
-                            }
-                                
-                          }
-                        );
-                      },
-                    ),
-                   ],
+                              });
+                        },
+                      ),
+                    ],
                   ),
                 );
               } else {
