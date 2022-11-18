@@ -1,11 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/router.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/speakerService.dart';
-import 'package:frontend/main.dart';
 
 final Map<SortingMethod, String> SORT_STRING = {
   SortingMethod.NUM_PARTICIPATIONS: 'Sort By Number Of Participations',
@@ -106,7 +105,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
   Widget build(BuildContext context) {
     List<Widget> popUpMenuButton = popUpMenuBtn();
     CustomAppBar appBar =
-        CustomAppBar(actions: popUpMenuButton, disableEventChange: false);
+        CustomAppBar(actions: popUpMenuButton, disableEventChange: true);
     return Scaffold(
       body: Stack(children: [
         Container(

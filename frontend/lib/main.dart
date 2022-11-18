@@ -3,8 +3,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
+import 'package:frontend/routes/member/MemberNotifier.dart';
+import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
+import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/models/event.dart';
+import 'package:frontend/routes/teams/TeamsNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:provider/provider.dart';
@@ -15,12 +19,6 @@ Future main() async {
   await start();
   EventService service = EventService();
   Event latest = await service.getLatestEvent();
-  Event e;
-  if (App.localStorage.containsKey('event')) {
-    e = await service.getEvent(eventId: App.localStorage.getInt('event')!);
-  } else {
-    e = latest;
-  }
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider<ThemeNotifier>(
@@ -29,7 +27,7 @@ Future main() async {
         ),
       ),
       ChangeNotifierProvider<EventNotifier>(
-        create: (_) => EventNotifier(e, latest),
+        create: (_) => EventNotifier(latest, latest),
       ),
       ChangeNotifierProvider<SpeakerTableNotifier>(
         create: (_) => SpeakerTableNotifier(speakers: []),
@@ -37,11 +35,23 @@ Future main() async {
       ChangeNotifierProvider<CompanyTableNotifier>(
         create: (_) => CompanyTableNotifier(companies: []),
       ),
+      ChangeNotifierProvider<MemberTableNotifier>(
+        create: (_) => MemberTableNotifier(members: []),
+      ),
+      ChangeNotifierProvider<MeetingsNotifier>(
+        create: (_) => MeetingsNotifier(meetings: []),
+      ),
+      ChangeNotifierProvider<SessionsNotifier>(
+        create: (_) => SessionsNotifier(sessions: []),
+      ),
       ChangeNotifierProvider<AuthService>(
         create: (_) => AuthService(),
       ),
       ChangeNotifierProvider<BottomNavigationBarProvider>(
         create: (_) => BottomNavigationBarProvider(),
+      ),
+      ChangeNotifierProvider<TeamsNotifier>(
+        create: (_) => TeamsNotifier(teams: []),
       ),
     ],
     child: App(),
@@ -55,7 +65,7 @@ Future start() async {
 
 class App extends StatelessWidget {
   static late SharedPreferences localStorage;
-  static final SIZE = 600;
+  static const SIZE = 600;
   static Future init() async {
     localStorage = await SharedPreferences.getInstance();
     if (!localStorage.containsKey('darkTheme')) {

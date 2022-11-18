@@ -1,0 +1,20 @@
+{
+    "type": "object",
+    "properties": {
+        "event": {
+            "type": "integer"
+        },
+        "team": {
+            "type": "string"
+        },
+        "role": {
+            "type": "string",
+            "enum": [
+                "MEMBER",
+                "TEAMLEADER",
+                "COORDINATOR",
+                "ADMIN"
+            ]
+        }
+    }
+}

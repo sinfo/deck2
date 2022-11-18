@@ -117,11 +117,24 @@
                 "schema": {
                     "type": "object",
                     "required": [
+                        "title",
+                        "kind",
                         "begin",
                         "end",
                         "local"
                     ],
                     "properties": {
+                        "title": {
+                            "type": "string"
+                        },
+                        "kind": {
+                            "type": "string",
+                            "enum": [
+                                "EVENT",
+                                "TEAM",
+                                "COMPANY"
+                            ]
+                        },
                         "begin": {
                             "type": "string",
                             "format": "date-time"
@@ -131,9 +144,6 @@
                             "format": "date-time"
                         },
                         "local": {
-                            "type": "string"
-                        },
-                        "minute": {
                             "type": "string"
                         }
                     }

@@ -57,24 +57,21 @@ class TeamPublic {
 
 class Team {
   final String? id;
-  final String? name;
+  String? name;
   final List<TeamMember>? members;
   final List<String>? meetings;
 
-  Team({
-    this.id,
-    this.name,
-    this.members,
-    this.meetings
-  });
+  Team({this.id, this.name, this.members, this.meetings});
 
   factory Team.fromJson(Map<String, dynamic> json) {
     var members = json['members'] as List;
+    var meetings = json['meetings'] as List;
+
     return Team(
       id: json['id'],
       name: json['name'],
       members: members.map((e) => TeamMember.fromJson(e)).toList(),
-      meetings: json['meetings'],
+      meetings: meetings.length == 0 ? [] : meetings as List<String>,
     );
   }
 

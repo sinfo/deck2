@@ -3,12 +3,9 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/models/company.dart';
 import 'package:frontend/models/speaker.dart';
-import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -245,7 +242,9 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
   @override
   Widget build(BuildContext context) {
     bool warning = _image != null && _size != null && _size! > 102400;
-    CustomAppBar appBar = CustomAppBar(disableEventChange: false);
+    CustomAppBar appBar = CustomAppBar(
+      disableEventChange: true,
+    );
     return Scaffold(
       body: Stack(children: [
         Container(

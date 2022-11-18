@@ -183,64 +183,78 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 
 	var members []*models.Member = make([]*models.Member, 0)
 
-	query := mongo.Pipeline{
-
-		// filter by name first
-		{{
-			"$match", bson.M{
-				"name": bson.M{
-					"$regex":   fmt.Sprintf(".*%s.*", nameFilter),
-					"$options": "i",
+	var query mongo.Pipeline
+	if len(nameFilter) > 0 {
+		query = mongo.Pipeline{
+			{{
+				"$match", bson.M{
+					"name": bson.M{
+						"$regex":   fmt.Sprintf(".*%s.*", nameFilter),
+						"$options": "i",
+					},
 				},
-			},
-		}},
+			}},
+		}
+	} else {
+		query = mongo.Pipeline{
 
-		// get all the teams on which each member is participating,
-		// and add them to each member correspondingly
-		{{
-			"$lookup", bson.D{
-				{"from", Teams.Collection.Name()},
-				{"localField", "_id"},
-				{"foreignField", "members.member"},
-				{"as", "team"},
-			},
-		}},
+			// filter by name first
+			{{
+				"$match", bson.M{
+					"name": bson.M{
+						"$regex":   fmt.Sprintf(".*%s.*", nameFilter),
+						"$options": "i",
+					},
+				},
+			}},
 
-		// get an instance of each member for every team he/she belonged to
-		{{
-			"$unwind", "$team",
-		}},
+			// get all the teams on which each member is participating,
+			// and add them to each member correspondingly
+			{{
+				"$lookup", bson.D{
+					{"from", Teams.Collection.Name()},
+					{"localField", "_id"},
+					{"foreignField", "members.member"},
+					{"as", "team"},
+				},
+			}},
 
-		// get the event associated with each team on each member
-		{{
-			"$lookup", bson.D{
-				{"from", Events.Collection.Name()},
-				{"localField", "team._id"},
-				{"foreignField", "teams"},
-				{"as", "event"},
-			},
-		}},
+			// get an instance of each member for every team he/she belonged to
+			{{
+				"$unwind", "$team",
+			}},
 
-		// get an instance of each member for every event he/she belonged to
-		{{
-			"$unwind", "$event",
-		}},
+			// get the event associated with each team on each member
+			{{
+				"$lookup", bson.D{
+					{"from", Events.Collection.Name()},
+					{"localField", "team._id"},
+					{"foreignField", "teams"},
+					{"as", "event"},
+				},
+			}},
+
+			// get an instance of each member for every event he/she belonged to
+			{{
+				"$unwind", "$event",
+			}},
+		}
 	}
 
 	if options.Event != nil {
 		query = append(query, bson.D{
-			{"$match", bson.M{"event._id": *options.Event}},
+			{Key: "$match", Value: bson.M{"event._id": *options.Event}},
 		})
 	}
 
 	query = append(query, bson.D{
-		{"$group", bson.D{
-			{"_id", "$_id"},
-			{"name", bson.M{"$first": "$name"}},
-			{"sinfoid", bson.M{"$first": "$sinfoid"}},
-			{"img", bson.M{"$first": "$img"}},
-			{"istid", bson.M{"$first": "$istid"}},
-			{"contact", bson.M{"$first": "$contact"}},
+		{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$_id"},
+			{Key: "name", Value: bson.M{"$first": "$name"}},
+			{Key: "sinfoid", Value: bson.M{"$first": "$sinfoid"}},
+			{Key: "img", Value: bson.M{"$first": "$img"}},
+			{Key: "istid", Value: bson.M{"$first": "$istid"}},
+			{Key: "contact", Value: bson.M{"$first": "$contact"}},
 		}},
 	})
 
@@ -323,6 +337,43 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 	result.Role = role
 
 	return &result, nil
+}
+
+func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models.MemberEventTeam, error) {
+	memberEventTeams := make([]*models.MemberEventTeam, 0)
+	options := GetEventsOptions{}
+	events, err := Events.GetEvents(options)
+	if err != nil {
+		print("ERROR #1", err)
+		return nil, err
+	}
+
+	//Member can only belong to 1 team in each event
+	teamFound := false
+	for _, event := range events {
+		for _, teamID := range event.Teams {
+			team, err := Teams.GetTeam(teamID)
+			if err != nil {
+				print("TEAM ID: ", teamID.Hex())
+				print("EVENT: ", event)
+				print("ERROR #2", err)
+				return nil, err
+			}
+			for _, teamMember := range team.Members {
+				if teamMember.Member == id {
+					memEvtTeam := models.MemberEventTeam{Event: event.ID, Team: team.Name, Role: teamMember.Role}
+					memberEventTeams = append(memberEventTeams, &memEvtTeam)
+					teamFound = true
+					break
+				}
+			}
+			if teamFound {
+				teamFound = false
+				break
+			}
+		}
+	}
+	return memberEventTeams, nil
 }
 
 // CreateMember creates a new member

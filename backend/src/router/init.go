@@ -177,6 +177,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("", authMember(getSpeakers)).Methods("GET")
 	speakerRouter.HandleFunc("", authMember(createSpeaker)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}", authMember(getSpeaker)).Methods("GET")
+	speakerRouter.HandleFunc("/{id}", authAdmin(deleteSpeaker)).Methods("DELETE")
 	speakerRouter.HandleFunc("/{id}", authMember(updateSpeaker)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/subscribe", authMember(subscribeToSpeaker)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/unsubscribe", authMember(unsubscribeToSpeaker)).Methods("PUT")
@@ -215,7 +216,6 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/meetings/{id}", authCoordinator(removeMeetingFromEvent)).Methods("DELETE")
 	eventRouter.HandleFunc("/sessions", authCoordinator(addSessionToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/teams/{id}", authAdmin(removeTeamFromEvent)).Methods("DELETE")
-	
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
@@ -244,8 +244,10 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("", authCoordinator(createMember)).Methods("POST")
 	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
 	memberRouter.HandleFunc("/{id}/role", authMember(getMemberRole)).Methods("GET")
+	memberRouter.HandleFunc("/{id}/participations", authMember(getMembersParticipations)).Methods("GET")
 	memberRouter.HandleFunc("/{id}", authAdmin(updateMember)).Methods("PUT")
 	memberRouter.HandleFunc("/{id}", authAdmin(deleteMember)).Methods("DELETE")
+	memberRouter.HandleFunc("/{id}/image", authMember(setMemberImage)).Methods("POST")
 
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
@@ -276,7 +278,11 @@ func InitializeRouter() {
 	meetingRouter.HandleFunc("/{id}", authMember(getMeeting)).Methods("GET")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(updateMeeting)).Methods("PUT")
+	meetingRouter.HandleFunc("/{id}/thread", authMember(addMeetingThread)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}/minute", authMember(uploadMeetingMinute)).Methods("POST")
+	meetingRouter.HandleFunc("/{id}/minute", authMember(deleteMeetingMinute)).Methods("DELETE")
+	meetingRouter.HandleFunc("/{id}/participants", authMember(addMeetingParticipant)).Methods("POST")
+	meetingRouter.HandleFunc("/{id}/participants", authMember(deleteMeetingParticipant)).Methods("DELETE")
 
 	// threads handlers
 	threadRouter := r.PathPrefix("/threads").Subrouter()
@@ -295,6 +301,7 @@ func InitializeRouter() {
 	sessionsRouter.HandleFunc("", authMember(getSessions)).Methods("GET")
 	sessionsRouter.HandleFunc("/{id}", authMember(getSession)).Methods("GET")
 	sessionsRouter.HandleFunc("/{id}", authCoordinator(updateSession)).Methods("PUT")
+	sessionsRouter.HandleFunc("/{id}", authAdmin(deleteSession)).Methods("DELETE")
 
 	// billings handlers
 	billingsRouter := r.PathPrefix("/billings").Subrouter()

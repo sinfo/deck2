@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/contact.dart';
-import 'package:frontend/models/member.dart';
 import 'package:frontend/services/service.dart';
 import 'package:dio/dio.dart';
 
@@ -43,9 +42,9 @@ class ContactService extends Service {
 
   Future<Contact?> updateContact(Contact contact) async {
     var body = {
-      "mails": json.encode(contact.mails),
-      "phones": json.encode(contact.phones),
-      "socials": json.encode(contact.socials),
+      'mails': contact.mails,
+      'phones': contact.phones,
+      'socials': contact.socials,
     };
 
     Response<String> response =

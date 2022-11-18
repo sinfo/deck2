@@ -4,13 +4,13 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/models/meeting.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/item.dart';
 import 'package:frontend/models/participation.dart';
-import 'package:frontend/models/thread.dart';
 import 'package:frontend/services/service.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -328,9 +328,10 @@ class CompanyService extends Service {
     Response<String> response =
         await dio.get("/companies/" + id + "/participation/status/next");
     try {
-      final responseJson = json.decode(response.data!) as List;
+      final responseJson = json.decode(response.data!)['steps'] as List;
       List<ParticipationStep> participationSteps =
           responseJson.map((e) => ParticipationStep.fromJson(e)).toList();
+
       return participationSteps;
     } on SocketException {
       throw DeckException('No Internet connection');
@@ -399,10 +400,20 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> addThread(
-      {required String id, required Thread thread}) async {
+  Future<Company?> addThread({
+    required String id,
+    required String kind,
+    required String text,
+    Meeting? meeting,
+  }) async {
+    var body = {
+      "kind": kind,
+      "text": text,
+      "meeting": meeting != null ? meeting.toJson() : null
+    };
+
     Response<String> response =
-        await dio.put("/speakers/" + id + "/thread", data: thread.toJson());
+        await dio.post("/companies/" + id + "/thread", data: body);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {

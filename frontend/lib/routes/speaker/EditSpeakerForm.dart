@@ -3,19 +3,17 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/models/company.dart';
 import 'package:frontend/models/speaker.dart';
-import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image/image.dart' as img;
 
 class EditSpeakerForm extends StatefulWidget {
   final Speaker speaker;
-  EditSpeakerForm({Key? key, required this.speaker}) : super(key: key);
+  final void Function(BuildContext, Speaker?) onEdit;
+  EditSpeakerForm({Key? key, required this.speaker, required this.onEdit})
+      : super(key: key);
 
   @override
   _EditSpeakerFormState createState() => _EditSpeakerFormState();
@@ -29,6 +27,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
   final _imagePicker = ImagePicker();
   XFile? _image;
   int? _size;
+  String? _prevImage;
   late DropzoneViewController _controller;
 
   @override
@@ -36,7 +35,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
     super.initState();
     _nameController = TextEditingController(text: widget.speaker.name);
     _titleController = TextEditingController(text: widget.speaker.title);
-    var i = NetworkImage(widget.speaker.imgs!.internal!);
+    _prevImage = widget.speaker.imgs!.speaker;
   }
 
   void _submit() async {
@@ -48,7 +47,11 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
       );
 
       Speaker? s = await _speakerService.updateSpeaker(
-          id: widget.speaker.id, name: name, title: title);
+          id: widget.speaker.id,
+          name: name,
+          title: title,
+          bio: widget.speaker.bio,
+          notes: widget.speaker.notes);
       if (s != null && _image != null) {
         s = kIsWeb
             ? await _speakerService.updateInternalImageWeb(
@@ -66,6 +69,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
           ),
         );
         Navigator.pop(context);
+        widget.onEdit(context, s);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -129,7 +133,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
   Widget _buildPicture(double size) {
     Widget inkWellChild;
 
-    if (_image == null) {
+    if (_image == null && _prevImage == null) {
       inkWellChild = Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -150,14 +154,15 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
         ),
       );
     } else {
+      String path = _image == null ? _prevImage! : _image!.path;
       inkWellChild = Center(
         child: kIsWeb
             ? Image.network(
-                _image!.path,
+                path,
                 fit: BoxFit.fill,
               )
             : Image.file(
-                File(_image!.path),
+                File(path),
                 fit: BoxFit.fill,
               ),
       );
@@ -238,36 +243,31 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
   @override
   Widget build(BuildContext context) {
     bool warning = _image != null && _size != null && _size! > 102400;
-    return Scaffold(
-        appBar: CustomAppBar(
-          disableEventChange: true,
-        ),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < 1000) {
-              return Column(
-                children: [
-                  _buildPicture(constraints.maxWidth / 3),
-                  _buildForm()
-                ],
-              );
-            } else {
-              return Column(
-                children: [
-                  _buildPicture(constraints.maxWidth / 6),
-                  warning
-                      ? Text(
-                          'Image selected is too big!',
-                          style: TextStyle(
-                            color: Colors.red,
-                          ),
-                        )
-                      : Container(),
-                  _buildForm()
-                ],
-              );
-            }
-          },
-        ));
+    return SingleChildScrollView(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 1000) {
+            return Column(
+              children: [_buildPicture(constraints.maxWidth / 3), _buildForm()],
+            );
+          } else {
+            return Column(
+              children: [
+                _buildPicture(constraints.maxWidth / 6),
+                warning
+                    ? Text(
+                        'Image selected is too big!',
+                        style: TextStyle(
+                          color: Colors.red,
+                        ),
+                      )
+                    : Container(),
+                _buildForm()
+              ],
+            );
+          }
+        },
+      ),
+    );
   }
 }

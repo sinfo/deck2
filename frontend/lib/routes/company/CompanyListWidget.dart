@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
@@ -73,10 +72,10 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
           if (snapshot.hasData) {
             List<Company> comp = companiesLoaded + snapshot.data!;
             return LayoutBuilder(builder: (context, constraints) {
-              double cardWidth = 250;
+              double cardWidth = 200;
               bool isSmall = false;
               if (constraints.maxWidth < App.SIZE) {
-                cardWidth = 200;
+                cardWidth = 125;
                 isSmall = true;
               }
               return GridView.builder(
@@ -106,7 +105,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
   Widget build(BuildContext context) {
     List<Widget> popupMenuBtn = popUpMenuButton();
     CustomAppBar appBar =
-        CustomAppBar(actions: popupMenuBtn, disableEventChange: false);
+        CustomAppBar(actions: popupMenuBtn, disableEventChange: true);
     return Scaffold(
       body: Stack(children: [
         Container(

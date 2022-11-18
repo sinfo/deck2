@@ -3,18 +3,15 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
-import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/models/meeting.dart';
 import 'package:frontend/routes/company/CompanyTable.dart';
-import 'package:frontend/routes/MemberListWidget.dart';
-import 'package:frontend/routes/meeting/MeetingCard.dart';
+import 'package:frontend/routes/meeting/MeetingPage.dart';
 import 'package:frontend/routes/speaker/SpeakerTable.dart';
-import 'package:frontend/services/companyService.dart';
-import 'package:frontend/services/meetingService.dart';
-import 'package:frontend/services/speakerService.dart';
+import 'package:frontend/routes/teams/TeamsTable.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
+import 'package:frontend/routes/session/SessionPage.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key? key}) : super(key: key);
@@ -49,9 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
     CustomAppBar appBar = CustomAppBar(disableEventChange: false);
 
     return Scaffold(
-      appBar: CustomAppBar(
-        disableEventChange: false,
-      ),
       bottomNavigationBar: CustomNavBar(
         onTapped: (newIndex) {
           Provider.of<BottomNavigationBarProvider>(context, listen: false)
@@ -60,8 +54,21 @@ class _HomeScreenState extends State<HomeScreen> {
               duration: Duration(milliseconds: 800), curve: Curves.ease);
         },
       ),
-      body: Stack(children: [
-        Container(
+      body: Stack(
+        children: [
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  colorFilter: ColorFilter.mode(
+                      Colors.grey.withOpacity(0.1), BlendMode.srcATop),
+                  fit: BoxFit.contain,
+                  image: AssetImage('assets/logo_deck.png'),
+                ),
+              ),
+            ),
+          ),
+          Container(
             margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
             child: SizedBox.expand(
               child: PageView(
@@ -81,17 +88,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   Center(
                     child: CompanyTable(),
                   ),
-                  Center(child: MemberListWidget()),
+                  Center(
+                    child: TeamTable(),
+                  ),
+                  Center(
+                    child: MeetingPage(),
+                  ),
+                  Center(
+                    child: SessionPage(),
+                  )
                 ],
               ),
-            )),
-        appBar,
-      ]),
+            ),
+          ),
+          appBar,
+        ],
+      ),
       drawer: DeckDrawer(),
-      floatingActionButton: _fabAtIndex(
-          context,
-          Provider.of<BottomNavigationBarProvider>(context, listen: false)
-              .currentIndex),
+      floatingActionButton: _fabAtIndex(context,
+          Provider.of<BottomNavigationBarProvider>(context).currentIndex),
     );
   }
 
@@ -133,6 +148,76 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.add),
           );
         }
+
+      case 3:
+        {
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                Routes.ShowAllMembers,
+              );
+            },
+            label: const Text('Show All Members'),
+            icon: const Icon(Icons.add),
+          );
+        }
+
+      case 4:
+        {
+          return FutureBuilder(
+              future: Provider.of<AuthService>(context).role,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  Role r = snapshot.data as Role;
+
+                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
+                    return FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          Routes.AddMeeting,
+                        );
+                      },
+                      label: const Text('Create New Meeting'),
+                      icon: const Icon(Icons.add),
+                    );
+                  } else {
+                    return Container();
+                  }
+                } else {
+                  return Container();
+                }
+              });
+        }
+
+      case 5:
+        {
+          return FutureBuilder(
+              future: Provider.of<AuthService>(context).role,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  Role r = snapshot.data as Role;
+
+                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
+                    return FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          Routes.AddSession,
+                        );
+                      },
+                      label: const Text('Create New Session'),
+                      icon: const Icon(Icons.add),
+                    );
+                  } else {
+                    return Container();
+                  }
+                } else {
+                  return Container();
+                }
+              });
+        }
     }
   }
 }
@@ -143,15 +228,7 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          colorFilter:
-              ColorFilter.mode(Colors.grey.withOpacity(0.1), BlendMode.srcATop),
-          fit: BoxFit.fitWidth,
-          image: AssetImage('assets/logo-branco2.png'),
-        ),
-      ),
-      child: MeetingList(),
+      child: Text("Welcome to deck2! In Progress..."),
     );
   }
 }
@@ -182,55 +259,23 @@ class CustomNavBar extends StatelessWidget {
             icon: Icon(
               Icons.work,
             )),
-        //FIXME: o item aqui em baixo foi colocado apenas para processo de development
         BottomNavigationBarItem(
-            label: 'Members',
+            label: 'Teams',
             icon: Icon(
               Icons.people,
             )),
+        BottomNavigationBarItem(
+            label: 'Meetings',
+            icon: Icon(
+              Icons.meeting_room,
+            )),
+        BottomNavigationBarItem(
+            label: 'Sessions',
+            icon: Icon(
+              Icons.co_present,
+            )),
       ],
       onTap: onTapped,
-    );
-  }
-}
-
-class MeetingList extends StatefulWidget {
-  const MeetingList({Key? key}) : super(key: key);
-
-  @override
-  _MeetingListState createState() => _MeetingListState();
-}
-
-class _MeetingListState extends State<MeetingList>
-    with AutomaticKeepAliveClientMixin {
-  final MeetingService _service = MeetingService();
-  late final Future<List<Meeting>> _meetings;
-
-  @override
-  void initState() {
-    _meetings = _service.getMeetings();
-    super.initState();
-  }
-
-  @override
-  // TODO: implement wantKeepAlive
-  bool get wantKeepAlive => true;
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return FutureBuilder(
-      future: _meetings,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Meeting> meets = snapshot.data as List<Meeting>;
-          return ListView(
-            children: meets.map((e) => MeetingCard(meeting: e)).toList(),
-          );
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
     );
   }
 }

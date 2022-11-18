@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/SearchResultWidget.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/SearchResultWidget.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/event.dart';
+import 'package:frontend/routes/company/CompanyScreen.dart';
+import 'package:frontend/routes/member/MemberScreen.dart';
+import 'package:frontend/routes/speaker/SpeakerScreen.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/models/company.dart';
@@ -67,24 +73,25 @@ class _CustomAppBarState extends State<CustomAppBar> {
     int current = notifier.event.id;
     return Column(children: [
       AppBar(
+        backgroundColor: Theme.of(context).primaryColor,
+        iconTheme: IconThemeData(color: Colors.white),
         actions: actions,
         title: Row(children: [
           InkWell(
             child: SizedBox(
               height: kToolbarHeight,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                padding: const EdgeInsets.fromLTRB(0, 4, 4, 4),
                 child: Image.asset(
-                  'assets/logo.png',
-                  color: Colors.grey[400],
-                  fit: BoxFit.cover,
+                  'assets/logo_deck.png',
+                  fit: BoxFit.fill,
                 ),
               ),
             ),
           ),
           if (!disableEventChange)
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.fromLTRB(4.0, 8.0, 24.0, 8.0),
               child: FutureBuilder(
                 future: _eventIds,
                 builder: (context, snapshot) {
@@ -126,36 +133,40 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 },
               ),
             ),
-          TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                hintText: 'Search Company, Speaker or Member',
-                prefixIcon: Icon(Icons.search),
-                suffixIcon: _searchController.text.length != 0
-                    ? IconButton(
-                        onPressed: () {
-                          _searchController.clear();
-                        },
-                        icon: Icon(Icons.clear),
-                      )
-                    : null,
-              ),
-              onChanged: (newQuery) {
-                setState(() {});
-                if (_searchController.text.length > 1) {
-                  this.companies =
-                      companyService.getCompanies(name: _searchController.text);
-                  this.speakers =
-                      speakerService.getSpeakers(name: _searchController.text);
-                  this.members =
-                      memberService.getMembers(name: _searchController.text);
-                }
-              }),
+          Expanded(
+              child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    filled: true,
+                    fillColor: Provider.of<ThemeNotifier>(context).isDark
+                        ? Colors.grey[800]
+                        : Colors.white,
+                    hintText: 'Search Company, Speaker or Member',
+                    prefixIcon: Icon(Icons.search),
+                    suffixIcon: _searchController.text.length != 0
+                        ? IconButton(
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {});
+                            },
+                            icon: Icon(Icons.clear),
+                          )
+                        : null,
+                  ),
+                  onChanged: (newQuery) {
+                    setState(() {});
+                    if (_searchController.text.length > 1) {
+                      this.companies = companyService.getCompanies(
+                          name: _searchController.text);
+                      this.speakers = speakerService.getSpeakers(
+                          name: _searchController.text);
+                      this.members = memberService.getMembers(
+                          name: _searchController.text);
+                    }
+                  })),
         ]),
       ),
       ...getResults(MediaQuery.of(context).size.height / 2)
@@ -165,21 +176,26 @@ class _CustomAppBarState extends State<CustomAppBar> {
   List<Widget> getResults(double height) {
     if (_searchController.text.length > 1) {
       return [
-        FutureBuilder(
-            future: Future.wait([this.speakers, this.companies, this.members]),
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                List<dynamic> data = snapshot.data as List<dynamic>;
+        Container(
+            decoration: new BoxDecoration(
+              color: Theme.of(context).cardColor,
+            ),
+            child: FutureBuilder(
+                future:
+                    Future.wait([this.speakers, this.companies, this.members]),
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    List<dynamic> data = snapshot.data as List<dynamic>;
 
-                List<Speaker> speaksMatched = data[0] as List<Speaker>;
-                List<Company> compsMatched = data[1] as List<Company>;
-                List<Member> membsMatched = data[2] as List<Member>;
-                return searchResults(
-                    speaksMatched, compsMatched, membsMatched, height);
-              } else {
-                return Center(child: CircularProgressIndicator());
-              }
-            })
+                    List<Speaker> speaksMatched = data[0] as List<Speaker>;
+                    List<Company> compsMatched = data[1] as List<Company>;
+                    List<Member> membsMatched = data[2] as List<Member>;
+                    return searchResults(
+                        speaksMatched, compsMatched, membsMatched, height);
+                  } else {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                }))
       ];
     } else {
       return [];
@@ -204,15 +220,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
     List<Widget> results = [];
     if (speakers.length != 0) {
       results.add(getDivider("Speakers"));
-      results.addAll(speakers.map((e) => SearchResultWidget(speaker: e)));
+      results.addAll(speakers.map(
+          (e) => SearchResultWidget(speaker: e, index: speakers.indexOf(e))));
     }
     if (companies.length != 0) {
       results.add(getDivider("Companies"));
-      results.addAll(companies.map((e) => SearchResultWidget(company: e)));
+      results.addAll(companies.map(
+          (e) => SearchResultWidget(company: e, index: companies.indexOf(e))));
     }
     if (members.length != 0) {
       results.add(getDivider("Members"));
-      results.addAll(members.map((e) => SearchResultWidget(member: e)));
+      results.addAll(members.map(
+          (e) => SearchResultWidget(member: e, index: members.indexOf(e))));
     }
     return results;
   }
@@ -224,70 +243,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
           children: [
             Container(
               child: Text(name, style: TextStyle(fontSize: 18)),
-              margin: EdgeInsets.fromLTRB(0, 8, 0, 0),
-            ),
-            Divider(
-              color: Colors.grey,
-              thickness: 1,
+              margin: EdgeInsets.fromLTRB(0, 8, 0, 4),
             ),
           ],
         ));
-  }
-}
-
-class SearchResultWidget extends StatelessWidget {
-  final Company? company;
-  final Speaker? speaker;
-  final Member? member;
-  const SearchResultWidget({Key? key, this.company, this.speaker, this.member})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-        onTap: () {
-          print("HIIII");
-          // Navigator.push(context, MaterialPageRoute(builder: (context) {
-          //   return UnknownScreen();
-          // })); // TODO: Company, Speaker or Member screen
-        },
-        child: Center(
-          child: ListTile(
-            tileColor: Theme.of(context).cardColor,
-            leading: CircleAvatar(
-              foregroundImage: NetworkImage(getImageURL()),
-              backgroundImage: AssetImage(
-                'assets/noImage.png',
-              ),
-            ),
-            title: Text(getName()),
-          ),
-        ));
-  }
-
-  String getImageURL() {
-    if (this.company != null) {
-      return this.company!.companyImages.internal;
-    } else if (this.speaker != null) {
-      return this.speaker!.imgs!.internal!;
-    } else if (this.member != null) {
-      return this.member!.image;
-    } else {
-      //ERROR case
-      return "";
-    }
-  }
-
-  String getName() {
-    if (this.company != null) {
-      return this.company!.name;
-    } else if (this.speaker != null) {
-      return this.speaker!.name;
-    } else if (this.member != null) {
-      return this.member!.name!;
-    } else {
-      //ERROR case
-      return "";
-    }
   }
 }

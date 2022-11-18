@@ -1,27 +1,28 @@
 import 'dart:convert';
 
 import 'package:frontend/models/contact.dart';
+import 'package:frontend/models/team.dart';
 
 class Member {
-  final String? id;
-  final String? name;
-  final String image;
-  final String? istId;
-  final String? sinfoId;
+  final String id;
+  final String name;
+  final String? image;
+  final String istId;
+  final String sinfoId;
   final String? contact;
 
   Member({
-    this.id,
-    this.name,
-    required this.image,
-    this.istId,
-    this.sinfoId,
+    required this.id,
+    required this.name,
+    this.image,
+    required this.istId,
+    required this.sinfoId,
     this.contact,
   });
 
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
-      id: json["id"],
+      id: json['id'],
       name: json['name'],
       image: json['img'],
       istId: json['istid'],
@@ -71,5 +72,31 @@ class MemberPublic {
         'name': name,
         'img': image,
         'socials': socials?.toJson(),
+      };
+}
+
+class MemberParticipation {
+  final int? event;
+  final String? role;
+  final String? team;
+
+  MemberParticipation({
+    this.event,
+    this.role,
+    this.team,
+  });
+
+  factory MemberParticipation.fromJson(Map<String, dynamic> json) {
+    return MemberParticipation(
+      event: json['event'],
+      role: json['role'],
+      team: json['team'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'event': event,
+        'role': role,
+        'team': team,
       };
 }

@@ -1,11 +1,6 @@
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
-import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
@@ -85,10 +80,9 @@ class _SpeakerTableState extends State<SpeakerTable>
             notifier.speakers = data[1] as List<Speaker>;
             List<Member> membs = data[0] as List<Member>;
 
-            Member me =
-                Member.fromJson(json.decode(App.localStorage.getString('me')!));
+            Member me = Provider.of<Member?>(context)!;
 
-            membs.sort((a, b) => a.name!.compareTo(b.name!));
+            membs.sort((a, b) => a.name.compareTo(b.name));
             int index = membs.indexWhere((element) => element.id == me.id);
             if (index != -1) {
               membs.insert(0, membs.removeAt(index));
@@ -194,7 +188,7 @@ class MemberSpeakerRow extends StatelessWidget {
     int event = Provider.of<EventNotifier>(context).event.id;
 
     List<Speaker> speakers = Provider.of<SpeakerTableNotifier>(context)
-        .getByMember(member.id!, event, filter);
+        .getByMember(member.id, event, filter);
     return Container(
       margin: EdgeInsets.all(10),
       child: Theme(
@@ -207,7 +201,7 @@ class MemberSpeakerRow extends StatelessWidget {
                   leading: ClipRRect(
                       borderRadius: BorderRadius.all(Radius.circular(5.0)),
                       child: Image.network(
-                        this.member.image,
+                        this.member.image!,
                         width: small ? 40 : 50,
                         height: small ? 40 : 50,
                         errorBuilder: (BuildContext context, Object exception,
@@ -220,7 +214,7 @@ class MemberSpeakerRow extends StatelessWidget {
                         },
                       )),
                   title: Text(
-                    this.member.name!,
+                    this.member.name,
                     style: TextStyle(fontSize: small ? 14 : 18),
                   ),
                   subtitle: Divider(

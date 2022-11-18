@@ -33,6 +33,20 @@ func getSpeaker(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(speaker)
 }
 
+func deleteSpeaker(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	deletedSpeaker, err := mongodb.Speakers.DeleteSpeaker(speakerID)
+	if err != nil {
+		http.Error(w, "Error deleting speaker: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(deletedSpeaker)
+}
+
 func getSpeakerPublic(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)

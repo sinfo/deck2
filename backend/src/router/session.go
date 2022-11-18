@@ -226,3 +226,17 @@ func updateSession(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 }
+
+func deleteSession(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	sessionID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	deletedSession, err := mongodb.Sessions.DeleteSession(sessionID)
+	if err != nil {
+		http.Error(w, "Error deleting session: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(deletedSession)
+}
