@@ -63,7 +63,11 @@ class _DisplayGeneralInformation extends State<DisplayGeneralInformation> {
         padding: EdgeInsets.symmetric(horizontal: 32),
         physics: BouncingScrollPhysics(),
         children: [
+          SessionInformationBox(session: widget.session, type: "kind"),
           SessionInformationBox(session: widget.session, type: "description"),
+          SessionInformationBox(session: widget.session, type: "place"),
+          SessionInformationBox(session: widget.session, type: "videoURL"),
+
           // InformationBox(title: "Phones", contact: cont, type: "phone"),
           // InformationBox(
           //     title: "Socials",

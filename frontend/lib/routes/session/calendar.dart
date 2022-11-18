@@ -275,14 +275,14 @@ class _CalendarState extends State<Calendar> {
                       },
                       child: Card(
                         color: Colors.white,
-                        shadowColor: Colors.grey.withOpacity(0.3),
-                        elevation: 10,
+                        shadowColor: Colors.grey.withOpacity(0.7),
+                        elevation: 20,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5.0),
                         ),
                         margin: EdgeInsets.only(top: 15),
                         child: Container(
-                          height: 100.0,
+                          height: 80.0,
                           child: Row(
                             children: <Widget>[
                               // Container(
@@ -302,11 +302,21 @@ class _CalendarState extends State<Calendar> {
                               //   ),
                               // ),
                               Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  calSessions.kind,
+                                  style: TextStyle(
+                                      color: Color.fromARGB(255, 63, 81, 181),
+                                      fontSize: 14.0),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                              Padding(
                                 padding: const EdgeInsets.only(left: 20),
                                 child: Text(
                                   calSessions.title,
                                   style: TextStyle(
-                                      color: Colors.black, fontSize: 23.0),
+                                      color: Colors.black, fontSize: 18.0),
                                   textAlign: TextAlign.left,
                                 ),
                               ),

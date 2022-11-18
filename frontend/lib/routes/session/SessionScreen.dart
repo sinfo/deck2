@@ -8,6 +8,8 @@ import 'package:frontend/models/session.dart';
 import 'package:frontend/routes/member/DisplayContact2.dart';
 import 'package:frontend/routes/member/EditMemberForm.dart';
 import 'package:frontend/routes/session/DisplayGeneralInformation.dart';
+import 'package:frontend/routes/session/EditSessionForm.dart';
+import 'package:frontend/routes/session/SessionInformationBox.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:provider/provider.dart';
@@ -54,13 +56,16 @@ class _SessionScreen extends State<SessionScreen>
         body: DefaultTabController(
             length: 2,
             child: Column(children: <Widget>[
-              // MemberBanner(member: widget.session),
+              SessionBanner(session: widget.session),
               TabBar(
                 isScrollable: small,
                 controller: _tabController,
                 //FIXME: penso que as label Colors deviam ficam a preto
                 tabs: [
                   Tab(text: 'General Information'),
+                  (widget.session.kind == 'TALK')
+                      ? Tab(text: 'Speakers')
+                      : Tab(text: 'Company'),
                   Tab(text: 'Tickets'),
                 ],
               ),
@@ -71,7 +76,8 @@ class _SessionScreen extends State<SessionScreen>
                   DisplayGeneralInformation(
                     session: widget.session,
                   ),
-                  // DisplayParticipations(member: widget.member, small: small),
+                  // DisplaySpeakers(),
+                  DisplayTickets(session: widget.session, small: small),
                 ],
               ))
             ])),
@@ -80,16 +86,16 @@ class _SessionScreen extends State<SessionScreen>
   }
 }
 
-class MemberBanner extends StatefulWidget {
-  final Member member;
+class SessionBanner extends StatefulWidget {
+  final Session session;
 
-  const MemberBanner({Key? key, required this.member}) : super(key: key);
+  const SessionBanner({Key? key, required this.session}) : super(key: key);
 
   @override
-  _MemberBannerState createState() => _MemberBannerState();
+  _SessionBannerState createState() => _SessionBannerState();
 }
 
-class _MemberBannerState extends State<MemberBanner> {
+class _SessionBannerState extends State<SessionBanner> {
   editMember() {
     return FutureBuilder(
         future: Provider.of<AuthService>(context).role,
@@ -107,7 +113,7 @@ class _MemberBannerState extends State<MemberBanner> {
                         context,
                         MaterialPageRoute(
                             builder: (context) =>
-                                EditMemberForm(member: widget.member)),
+                                EditSessionForm(session: widget.session)),
                       );
                     },
                     child: Container(
@@ -138,7 +144,6 @@ class _MemberBannerState extends State<MemberBanner> {
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
     return LayoutBuilder(builder: (context, constraints) {
-      //FIXME: colcocar o código dinàmico em relação ao tamanho do dispositivo
       bool small = constraints.maxWidth < App.SIZE;
       return Container(
         width: constraints.maxWidth,
@@ -152,28 +157,28 @@ class _MemberBannerState extends State<MemberBanner> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             SizedBox(height: 30),
-            Stack(children: [
-              Container(
-                width: 210,
-                height: 210,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white30),
-                ),
-                padding: const EdgeInsets.all(5),
-                child: Hero(
-                  tag: widget.member.id + event.toString(),
-                  child: ClipOval(
-                    child: (widget.member.image == '')
-                        ? Image.asset("assets/noImage.png")
-                        : Image.network(widget.member.image!),
-                  ),
-                ),
-              ),
-              editMember(),
-            ]),
+            // Stack(children: [
+            //   Container(
+            //     width: 210,
+            //     height: 210,
+            //     decoration: BoxDecoration(
+            //       shape: BoxShape.circle,
+            //       border: Border.all(color: Colors.white30),
+            //     ),
+            //     padding: const EdgeInsets.all(5),
+            //     // child: Hero(
+            //     //   tag: widget.member.id + event.toString(),
+            //     //   child: ClipOval(
+            //     //     child: (widget.member.image == '')
+            //     //         ? Image.asset("assets/noImage.png")
+            //     //         : Image.network(widget.member.image!),
+            //     //   ),
+            //     // ),
+            //   ),
+            //   // editMember(),
+            // ]),
             SizedBox(height: 20),
-            Text(widget.member.name,
+            Text(widget.session.title,
                 style: TextStyle(
                     fontSize: 25,
                     color: Colors.white,
@@ -187,63 +192,39 @@ class _MemberBannerState extends State<MemberBanner> {
   }
 }
 
-class DisplayParticipations extends StatefulWidget {
-  final Member member;
+class DisplayTickets extends StatefulWidget {
+  final Session session;
   final bool small;
-  const DisplayParticipations(
-      {Key? key, required this.member, required this.small})
+  const DisplayTickets({Key? key, required this.session, required this.small})
       : super(key: key);
 
   @override
-  _DisplayParticipationsState createState() => _DisplayParticipationsState();
+  _DisplayTicketsState createState() => _DisplayTicketsState();
 }
 
-class _DisplayParticipationsState extends State<DisplayParticipations> {
-  MemberService memberService = new MemberService();
-  late Future<List<MemberParticipation>> memberParticipations;
-  List<MemberParticipation> participations = [];
-
+class _DisplayTicketsState extends State<DisplayTickets> {
   @override
   void initState() {
     super.initState();
-    this.memberParticipations =
-        memberService.getMemberParticipations(widget.member.id);
   }
 
   @override
-  Widget build(BuildContext conext) => Scaffold(
-        body: FutureBuilder(
-            future: memberParticipations,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                List<MemberParticipation> memParticipations =
-                    snapshot.data as List<MemberParticipation>;
-
-                return Scaffold(
-                  backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-                  body: ListView(
-                    padding: EdgeInsets.symmetric(horizontal: 32),
-                    physics: BouncingScrollPhysics(),
-                    children: memParticipations.reversed
-                        .map((e) => MemberPartCard(
-                            event: e.event!,
-                            role: e.role!,
-                            team: e.team!,
-                            small: widget.small))
-                        .toList(),
-                  ),
-                );
-              } else {
-                return Container(
-                  child: Center(
-                    child: Container(
-                      height: 50,
-                      width: 50,
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                );
-              }
-            }),
-      );
+  Widget build(BuildContext conext) {
+    return Scaffold(
+      backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
+      body: ListView(
+        padding: EdgeInsets.symmetric(horizontal: 32),
+        physics: BouncingScrollPhysics(),
+        children: [
+          SessionInformationBox(session: widget.session, type: "description"),
+          // InformationBox(title: "Phones", contact: cont, type: "phone"),
+          // InformationBox(
+          //     title: "Socials",
+          //     contact: cont,
+          //     type: "social"), //SizedBox(height: 24,),
+        ],
+      ),
+      // floatingActionButton: _isEditable(cont),
+    );
+  }
 }
