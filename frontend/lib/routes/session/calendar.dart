@@ -35,29 +35,8 @@ class _CalendarState extends State<Calendar> {
   CalendarFormat format = CalendarFormat.month;
   SpeakerService speakerService = SpeakerService();
   CompanyService companyService = CompanyService();
-  List<Speaker> speakers30 = [];
-  List<Speaker> speakers29 = [];
-  List<Speaker> speakers28 = [];
-  List<Speaker> speakers27 = [];
-  List<Speaker> speakers26 = [];
-  List<Speaker> speakers25 = [];
-  List<Speaker> speakers24 = [];
-  List<Speaker> speakers23 = [];
-  List<Speaker> speakers22 = [];
-  List<Speaker> speakers21 = [];
-  List<Speaker> allSpeakers = [];
 
-  List<Company> companies30 = [];
-  List<Company> companies29 = [];
-  List<Company> companies28 = [];
-  List<Company> companies27 = [];
-  List<Company> companies26 = [];
-  List<Company> companies25 = [];
-  List<Company> companies24 = [];
-  List<Company> companies23 = [];
-  List<Company> companies22 = [];
-  List<Company> companies21 = [];
-  List<Company> allCompanies = [];
+  List<Speaker> allSpeakers = [];
 
   late Map<DateTime, List<Session>> calendarSessions;
 
@@ -69,100 +48,13 @@ class _CalendarState extends State<Calendar> {
     calendarSessions = {};
     fillCalendarSessions();
     fillSpeakers();
-    fillCompanies();
     super.initState();
   }
 
   Future<void> fillSpeakers() async {
-    Future<List<Speaker>> speakersFuture30 =
-        speakerService.getSpeakers(eventId: 30);
-    // for (int i = 22; i < 30; i++){
-    //   speakersFuture.
-    // }
-    Future<List<Speaker>> speakersFuture29 =
-        speakerService.getSpeakers(eventId: 29);
-    Future<List<Speaker>> speakersFuture28 =
-        speakerService.getSpeakers(eventId: 28);
-    Future<List<Speaker>> speakersFuture27 =
-        speakerService.getSpeakers(eventId: 27);
-    Future<List<Speaker>> speakersFuture26 =
-        speakerService.getSpeakers(eventId: 26);
-    Future<List<Speaker>> speakersFuture25 =
-        speakerService.getSpeakers(eventId: 25);
-    Future<List<Speaker>> speakersFuture24 =
-        speakerService.getSpeakers(eventId: 24);
-    Future<List<Speaker>> speakersFuture23 =
-        speakerService.getSpeakers(eventId: 23);
-    Future<List<Speaker>> speakersFuture22 =
-        speakerService.getSpeakers(eventId: 22);
-    Future<List<Speaker>> speakersFuture21 =
-        speakerService.getSpeakers(eventId: 21);
-    speakers30 = await speakersFuture30;
-    speakers29 = await speakersFuture29;
-    speakers28 = await speakersFuture28;
-    speakers27 = await speakersFuture27;
-    speakers26 = await speakersFuture26;
-    speakers25 = await speakersFuture25;
-    speakers24 = await speakersFuture24;
-    speakers23 = await speakersFuture23;
-    speakers22 = await speakersFuture22;
-    speakers21 = await speakersFuture21;
-    allSpeakers = speakers30;
-    allSpeakers.addAll(speakers29);
-    allSpeakers.addAll(speakers28);
-    allSpeakers.addAll(speakers27);
-    allSpeakers.addAll(speakers26);
-    allSpeakers.addAll(speakers25);
-    allSpeakers.addAll(speakers24);
-    allSpeakers.addAll(speakers23);
-    allSpeakers.addAll(speakers22);
-    allSpeakers.addAll(speakers21);
+    Future<List<Speaker>> speakersFuture = speakerService.getSpeakers();
 
-    print(allSpeakers);
-  }
-
-  Future<void> fillCompanies() async {
-    Future<List<Company>> companiesFuture30 =
-        companyService.getCompanies(event: 30);
-
-    Future<List<Company>> companiesFuture29 =
-        companyService.getCompanies(event: 29);
-    Future<List<Company>> companiesFuture28 =
-        companyService.getCompanies(event: 28);
-    Future<List<Company>> companiesFuture27 =
-        companyService.getCompanies(event: 27);
-    Future<List<Company>> companiesFuture26 =
-        companyService.getCompanies(event: 26);
-    Future<List<Company>> companiesFuture25 =
-        companyService.getCompanies(event: 25);
-    Future<List<Company>> companiesFuture24 =
-        companyService.getCompanies(event: 24);
-    Future<List<Company>> companiesFuture23 =
-        companyService.getCompanies(event: 23);
-    Future<List<Company>> companiesFuture22 =
-        companyService.getCompanies(event: 22);
-    Future<List<Company>> companiesFuture21 =
-        companyService.getCompanies(event: 21);
-    companies30 = await companiesFuture30;
-    companies29 = await companiesFuture29;
-    companies28 = await companiesFuture28;
-    companies27 = await companiesFuture27;
-    companies26 = await companiesFuture26;
-    companies25 = await companiesFuture25;
-    companies24 = await companiesFuture24;
-    companies23 = await companiesFuture23;
-    companies22 = await companiesFuture22;
-    companies21 = await companiesFuture21;
-    allCompanies = companies30;
-    allCompanies.addAll(companies29);
-    allCompanies.addAll(companies28);
-    allCompanies.addAll(companies27);
-    allCompanies.addAll(companies26);
-    allCompanies.addAll(companies25);
-    allCompanies.addAll(companies24);
-    allCompanies.addAll(companies23);
-    allCompanies.addAll(companies22);
-    allCompanies.addAll(companies21);
+    allSpeakers = await speakersFuture;
   }
 
   void fillCalendarSessions() {
@@ -200,7 +92,6 @@ class _CalendarState extends State<Calendar> {
         }
       }
     }
-    // print("Speakers names " + speakersNames.toString());
     return speakersNames;
   }
 
@@ -208,12 +99,6 @@ class _CalendarState extends State<Calendar> {
     Future<Company?> companyFuture = companyService.getCompany(id: id!);
     Company? company = await companyFuture;
     String? companyName = company!.name;
-    // String companyName = "default";
-    for (var company in allCompanies) {
-      if (company.id == id) {
-        // companyName = company.name;
-      }
-    }
     return companyName;
   }
 
