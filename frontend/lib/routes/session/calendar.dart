@@ -204,11 +204,14 @@ class _CalendarState extends State<Calendar> {
     return speakersNames;
   }
 
-  String _getCompanies(String? id) {
-    String companyName = "default";
+  Future<String> _getCompanies(String? id) async {
+    Future<Company?> companyFuture = companyService.getCompany(id: id!);
+    Company? company = await companyFuture;
+    String? companyName = company!.name;
+    // String companyName = "default";
     for (var company in allCompanies) {
       if (company.id == id) {
-        companyName = company.name;
+        // companyName = company.name;
       }
     }
     return companyName;
@@ -475,17 +478,23 @@ class _CalendarState extends State<Calendar> {
                                               textAlign: TextAlign.right,
                                             ),
                                             Padding(
-                                              padding:
-                                                  const EdgeInsets.all(16.0),
-                                              child: Text(
-                                                _getCompanies(
-                                                    calSessions.companyId),
-                                                style: TextStyle(
-                                                  fontSize: 25.0,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            )
+                                                padding:
+                                                    const EdgeInsets.all(16.0),
+                                                child: FutureBuilder(
+                                                    future: _getCompanies(
+                                                        calSessions.companyId),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot.hasData) {
+                                                        final companyName =
+                                                            snapshot.data;
+                                                        return Text(companyName
+                                                            .toString());
+                                                      } else {
+                                                        return Text(
+                                                            "Loading...");
+                                                      }
+                                                    }))
                                           ]),
                                         ))
                               ]),
