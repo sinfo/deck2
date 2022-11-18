@@ -49,7 +49,7 @@ class _SessionListState extends State<SessionList>
 
           notifier.sessions = snapshot.data as List<Session>;
 
-          var upcomingSessions = notifier.getUpcoming().toList();
+          var upcomingSessions = notifier.getAll().toList();
 
           return Calendar(sessions: upcomingSessions);
         } else {

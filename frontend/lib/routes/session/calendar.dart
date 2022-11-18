@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/speaker.dart';
+import 'package:frontend/routes/session/AddSessionForm.dart';
 import 'package:frontend/routes/session/EditSessionForm.dart';
+import 'package:frontend/routes/session/SessionScreen.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/sessionService.dart';
@@ -261,189 +263,58 @@ class _CalendarState extends State<Calendar> {
                 }
               },
             ),
-            ..._listOfDaySessions(selectedCalendarDate!).map(
-              (calSessions) => ExpansionTile(
-                  childrenPadding: const EdgeInsets.all(8.0),
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  expandedAlignment: Alignment.topLeft,
-                  leading: const Icon(
-                    Icons.done,
-                    color: Colors.blue,
-                  ),
-                  title: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(calSessions.kind.toUpperCase() +
-                        ' - ' +
-                        calSessions.title),
-                  ),
-                  children: [
-                    Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Description: ' + calSessions.description),
-                            Text('From ' +
-                                DateFormat.jm()
-                                    .format(calSessions.begin.toLocal()) +
-                                ' to ' +
-                                DateFormat.jm()
-                                    .format(calSessions.end.toLocal())),
-                            Text(calSessions.place ?? 'No place available yet'),
-                            Text(calSessions.videoURL ??
-                                'No video available yet'),
-                            (calSessions.tickets != null)
-                                ? Text('Tickets\n' +
-                                    '*Quantity: ' +
-                                    calSessions.tickets!.max.toString() +
-                                    '\n*Available from ' +
-                                    DateFormat.yMd().format(
-                                        calSessions.tickets!.start!.toLocal()) +
-                                    ' at ' +
-                                    DateFormat.jm().format(
-                                        calSessions.tickets!.start!.toLocal()) +
-                                    ' to ' +
-                                    DateFormat.yMd().format(
-                                        calSessions.tickets!.end!.toLocal()) +
-                                    calSessions.tickets!.start!.month
-                                        .toString() +
-                                    ' at ' +
-                                    DateFormat.jm().format(
-                                        calSessions.tickets!.start!.toLocal()))
-                                : Text('No tickets available for this session'),
-                          ],
+            ..._listOfDaySessions(selectedCalendarDate!)
+                .map((calSessions) => InkWell(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SessionScreen(
+                                      session: calSessions,
+                                    ))); //TODO
+                      },
+                      child: Card(
+                        color: Colors.white,
+                        shadowColor: Colors.grey.withOpacity(0.3),
+                        elevation: 10,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5.0),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(40.0),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                (calSessions.kind == 'TALK')
-                                    ? SizedBox(
-                                        width: 500.0,
-                                        height: 220.0,
-                                        child: Card(
-                                          child: Column(children: [
-                                            Text(
-                                              "Speakers",
-                                              style: TextStyle(
-                                                fontSize: 20.0,
-                                                color: Color.fromARGB(
-                                                    255, 63, 81, 181),
-                                              ),
-                                              textAlign: TextAlign.right,
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.all(16.0),
-                                              child: Text(
-                                                _getSpeakers(
-                                                        calSessions.speakersIds)
-                                                    .toString(),
-                                                style: TextStyle(
-                                                  fontSize: 25.0,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            )
-                                          ]),
-                                        ))
-                                    : SizedBox(
-                                        width: 250.0,
-                                        height: 120.0,
-                                        child: Card(
-                                          child: Column(children: [
-                                            Text(
-                                              "Company",
-                                              style: TextStyle(
-                                                fontSize: 20.0,
-                                                color: Color.fromARGB(
-                                                    255, 63, 81, 181),
-                                              ),
-                                              textAlign: TextAlign.right,
-                                            ),
-                                            Padding(
-                                                padding:
-                                                    const EdgeInsets.all(16.0),
-                                                child: FutureBuilder(
-                                                    future: _getCompanies(
-                                                        calSessions.companyId),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot.hasData) {
-                                                        final companyName =
-                                                            snapshot.data;
-                                                        return Text(companyName
-                                                            .toString());
-                                                      } else {
-                                                        return Text(
-                                                            "Loading...");
-                                                      }
-                                                    }))
-                                          ]),
-                                        ))
-                              ]),
+                        margin: EdgeInsets.only(top: 15),
+                        child: Container(
+                          height: 100.0,
+                          child: Row(
+                            children: <Widget>[
+                              // Container(
+                              //   height: 100.0,
+                              //   width: 100.0,
+                              //   child: (calSessions.image == '')
+                              //       ? Image.asset("assets/noImage.png")
+                              //       : Image.network(member.image!),
+                              //   decoration: BoxDecoration(
+                              //     borderRadius: BorderRadius.only(
+                              //         bottomLeft: Radius.circular(5.0),
+                              //         topLeft: Radius.circular(5.0)),
+                              //     image: DecorationImage(
+                              //       image: AssetImage("assets/banner_background.png"),
+                              //       fit: BoxFit.fill,
+                              //     ),
+                              //   ),
+                              // ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 20),
+                                child: Text(
+                                  calSessions.title,
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 23.0),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        // ..._getSpeakers(calSessions.speakersIds)
-                        //     .map((name) => ListTile(
-                        //           title: Padding(
-                        //             padding: const EdgeInsets.all(8.0),
-                        //             child: Text(name),
-                        //           ),
-                        //         )),
-                        Expanded(
-                          child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          IconButton(
-                                              onPressed: () {
-                                                _editSessionModal(
-                                                    context, calSessions.id);
-                                              },
-                                              icon: Icon(Icons.edit),
-                                              color: const Color(0xff5c7ff2)),
-                                          FutureBuilder(
-                                              future: Provider.of<AuthService>(
-                                                      context)
-                                                  .role,
-                                              builder: (context, snapshot) {
-                                                if (snapshot.hasData) {
-                                                  Role r =
-                                                      snapshot.data as Role;
-
-                                                  if (r == Role.ADMIN ||
-                                                      r == Role.COORDINATOR) {
-                                                    return IconButton(
-                                                        onPressed: () =>
-                                                            _deleteSessionDialog(
-                                                                context,
-                                                                calSessions.id),
-                                                        icon:
-                                                            Icon(Icons.delete),
-                                                        color: Colors.red);
-                                                  } else {
-                                                    return Container();
-                                                  }
-                                                } else {
-                                                  return Container();
-                                                }
-                                              })
-                                        ]),
-                                  ])),
-                        ),
-                      ],
-                    )
-                  ]),
-            ),
+                      ),
+                    )),
           ],
         ),
       ),
