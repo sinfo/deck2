@@ -1,12 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
-import 'package:frontend/components/addThreadForm.dart';
+import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/components/threadCard.dart';
+import 'package:frontend/components/threads/threadCard.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/thread.dart';
@@ -156,7 +156,8 @@ class _MeetingScreenState extends State<MeetingScreen>
                           }),
                       MeetingsCommunications(
                           communications: widget.meeting.communications,
-                          small: small),
+                          small: small,
+                          id: widget.meeting.id),
                     ]),
                   ),
                 ],
@@ -317,9 +318,13 @@ class MeetingParticipants extends StatelessWidget {
 class MeetingsCommunications extends StatelessWidget {
   final Future<List<Thread>?> communications;
   final bool small;
+  final String id;
 
   MeetingsCommunications(
-      {Key? key, required this.communications, required this.small});
+      {Key? key,
+      required this.communications,
+      required this.small,
+      required this.id});
 
   @override
   Widget build(BuildContext context) {
@@ -344,6 +349,8 @@ class MeetingsCommunications extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       child: ThreadCard(
                         thread: thread,
+                        type: CommunicationType.MEETING,
+                        id: id,
                         small: small,
                       ),
                     ),

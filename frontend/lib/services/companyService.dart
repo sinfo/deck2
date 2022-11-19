@@ -424,4 +424,19 @@ class CompanyService extends Service {
       throw DeckException('Wrong format');
     }
   }
+
+  Future<Company?> deleteThread(
+      {required String id, required String threadID}) async {
+    Response<String> response = await dio
+        .delete("/companies/" + id + "/participation/thread/" + threadID);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 }

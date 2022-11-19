@@ -30,7 +30,7 @@ class AddThreadForm extends StatefulWidget {
 class _AddThreadFormState extends State<AddThreadForm> {
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
-  String kind = '';
+  String kind = 'TEMPLATE';
 
   void _submit(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
@@ -52,18 +52,22 @@ class _AddThreadFormState extends State<AddThreadForm> {
             ),
           );
           widget.onEditSpeaker!(context, s);
+
+          Navigator.pop(context);
         } else {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('An error occured.')),
           );
+
+          Navigator.pop(context);
         }
       } else if (widget.company != null && widget.onEditCompany != null) {
         CompanyService service = CompanyService();
-        Company? s = await service.addThread(
-            id: widget.speaker!.id, text: text, kind: kind);
-        if (s != null) {
+        Company? c = await service.addThread(
+            id: widget.company!.id, text: text, kind: kind);
+        if (c != null) {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -72,13 +76,17 @@ class _AddThreadFormState extends State<AddThreadForm> {
               duration: Duration(seconds: 2),
             ),
           );
-          widget.onEditCompany!(context, s);
+          widget.onEditCompany!(context, c);
+
+          Navigator.pop(context);
         } else {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('An error occured.')),
           );
+
+          Navigator.pop(context);
         }
       } else if (widget.meeting != null && widget.onEditMeeting != null) {
         MeetingService service = MeetingService();

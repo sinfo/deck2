@@ -207,4 +207,19 @@ class MeetingService extends Service {
       throw DeckException('Wrong format');
     }
   }
+
+  Future<Meeting?> deleteThread(
+      {required String id, required String threadID}) async {
+    Response<String> response =
+        await dio.delete('/meetings/' + id + '/thread/' + threadID);
+    try {
+      return Meeting.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 }

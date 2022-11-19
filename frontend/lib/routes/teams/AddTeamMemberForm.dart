@@ -144,7 +144,6 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     List<Member> membsMatched = snapshot.data as List<Member>;
-                    print("membs matched:" + membsMatched.toString());
                     return searchResults(membsMatched, height);
                   } else {
                     return Center(child: CircularProgressIndicator());
