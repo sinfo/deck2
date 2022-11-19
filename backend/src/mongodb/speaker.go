@@ -618,7 +618,7 @@ func (uspd *UpdateSpeakerParticipationData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-// UpdateSpeakerParticipation updates a company's participation data
+// UpdateSpeakerParticipation updates a speaker's participation data
 // related to the current event.
 func (s *SpeakersType) UpdateSpeakerParticipation(speakerID primitive.ObjectID, data UpdateSpeakerParticipationData) (*models.Speaker, error) {
 	ctx := context.Background()
@@ -851,6 +851,31 @@ func (s *SpeakersType) UpdateSpeakerPublicImage(speakerID primitive.ObjectID, ur
 	return &updatedSpeaker, nil
 }
 
+// DeleteSpeakerThread deletes a thread from a speaker participation
+func (s *SpeakersType) DeleteSpeakerThread(id, threadID primitive.ObjectID) (*models.Speaker, error) {
+	_, err := s.GetSpeaker(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.communications": threadID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
+
 // AddSpeakerFlightInfo stores a flightInfo on the speaker's participation.
 func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, flightInfo primitive.ObjectID) (*models.Speaker, error) {
 	ctx := context.Background()
@@ -911,7 +936,7 @@ func (s *SpeakersType) RemoveSpeakerFlightInfo(speakerID primitive.ObjectID, fli
 	return &updatedSpeaker, nil
 }
 
-// AddThread adds a models.Thread to a company's participation's list of communications (related to the current event).
+// AddThread adds a models.Thread to a speaker's participation's list of communications (related to the current event).
 func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitive.ObjectID) (*models.Speaker, error) {
 	ctx := context.Background()
 

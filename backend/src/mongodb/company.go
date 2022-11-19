@@ -740,6 +740,31 @@ func (c *CompaniesType) UpdateCompanyParticipation(companyID primitive.ObjectID,
 	return &updatedCompany, nil
 }
 
+// DeleteCompanyThread deletes a thread from a company participation
+func (c *CompaniesType) DeleteCompanyThread(id, threadID primitive.ObjectID) (*models.Company, error) {
+	_, err := c.GetCompany(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.communications": threadID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
 // UpdateCompanyParticipationStatus updates a company's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.

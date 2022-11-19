@@ -267,6 +267,36 @@ func updateCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
+
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+	
+	company, err := mongodb.Companies.DeleteCompanyThread(id, threadID)
+	if err != nil {
+		http.Error(w, "Company or thread not found", http.StatusNotFound)
+		return
+	}
+	
+	// Delete thread and posts (comments) associated to it - only if 
+	// thread was deleted sucessfully from speaker participation
+	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
+		http.Error(w, "Thread not found", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(company)
+}
+
 func addCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
