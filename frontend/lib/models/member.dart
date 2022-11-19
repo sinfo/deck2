@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:frontend/models/contact.dart';
+import 'package:frontend/models/team.dart';
 
 class Member {
   final String id;

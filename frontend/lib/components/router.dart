@@ -11,6 +11,8 @@ import 'package:frontend/routes/member/MemberListWidget.dart';
 import 'package:frontend/routes/speaker/AddFlightInfoForm.dart';
 import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/routes/speaker/AddSpeakerForm.dart';
+import 'package:frontend/routes/teams/AddTeamMemberForm.dart';
+import 'package:frontend/routes/session/AddSessionForm.dart';
 
 class Routes {
   static const String BaseRoute = '/';
@@ -22,8 +24,10 @@ class Routes {
   static const String AddSpeaker = '/add/speaker';
   static const String ShowAllMembers = '/all/members';
   static const String AddMember = '/add/member';
+  static const String AddTeamMember = '/add/teamMember';
   static const String AddMeeting = '/add/meeting';
   static const String AddFlightInfo = '/add/flightinfo';
+  static const String AddSession = '/add/session';
 }
 
 Route<dynamic> generateRoute(RouteSettings settings) {
@@ -44,12 +48,16 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return SlideRoute(page: AddSpeakerForm());
     case Routes.ShowAllMembers:
       return MaterialPageRoute(builder: (context) => MemberListWidget());
+    case Routes.AddTeamMember:
+      return MaterialPageRoute(builder: (context) => AddTeamMemberForm());
     case Routes.AddMember:
       return SlideRoute(page: AddMemberForm());
     case Routes.AddMeeting:
       return SlideRoute(page: AddMeetingForm());
     case Routes.AddFlightInfo:
       return SlideRoute(page: AddFlightInfoForm());
+    case Routes.AddSession:
+      return SlideRoute(page: AddSessionForm());
     default:
       return MaterialPageRoute(builder: (context) => UnknownScreen());
   }

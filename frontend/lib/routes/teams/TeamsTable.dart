@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
+import 'package:frontend/routes/teams/TeamsNotifier.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
+import 'package:frontend/components/filterBarTeam.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+
+const ALL = "All";
 
 class TeamTable extends StatefulWidget {
   TeamTable({Key? key}) : super(key: key);
@@ -20,88 +25,199 @@ class TeamTable extends StatefulWidget {
 class _TeamTableState extends State<TeamTable>
     with AutomaticKeepAliveClientMixin {
   final TeamService _teamService = TeamService();
-  late Future<List<Team>> teams;
+  String filter = "";
+  late List<Team> teams;
+
+  late Future<List<Member>> members;
 
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    filter = ALL;
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
 
+    return Consumer<TeamsNotifier>(builder: (context, notif, child) {
+      return Scaffold(
+        body: FutureBuilder(
+          future: Future.wait([
+            _teamService.getTeams(
+                event: Provider.of<EventNotifier>(context).event.id)
+          ]),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                return showError();
+              } else if (snapshot.hasData) {
+                TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
+
+                List<List<Object>> dataTeam =
+                    snapshot.data as List<List<Object>>;
+
+                teams = dataTeam[0] as List<Team>;
+
+                notifier.teams = teams;
+
+                teams.sort((a, b) => a.name!.compareTo(b.name!));
+
+                return showTeams();
+              } else {
+                return Center(child: CircularProgressIndicator());
+              }
+            } else {
+              return Shimmer.fromColors(
+                baseColor: Colors.grey[400]!,
+                highlightColor: Colors.white,
+                child: ListView.builder(
+                  itemCount: 5,
+                  itemBuilder: (context, index) => TeamMemberRow.fake(),
+                  addAutomaticKeepAlives: true,
+                  physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics()),
+                ),
+              );
+            }
+          },
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+        floatingActionButton: FloatingActionButton.extended(
+            onPressed: showCreateTeamDialog,
+            label: const Text('Create New Team'),
+            icon: const Icon(Icons.person_add),
+            backgroundColor: Provider.of<ThemeNotifier>(context).isDark
+                ? Colors.grey[500]
+                : Colors.indigo),
+      );
+    });
+  }
+
+  onSelected(String value) {
+    setState(() {
+      filter = value;
+    });
+  }
+
+  buildTeamsList() {
+    List<Team> filteredTeams;
+    if (filter.toLowerCase() == ALL.toLowerCase())
+      filteredTeams = teams;
+    else
+      filteredTeams = teams
+          .where((team) => team.name?.toLowerCase() == filter.toLowerCase())
+          .toList();
+    return ListView.builder(
+        itemCount: filteredTeams.length,
+        itemBuilder: (context, index) =>
+            TeamMemberRow(team: filteredTeams[index]),
+        addAutomaticKeepAlives: true,
+        physics: const AlwaysScrollableScrollPhysics());
+  }
+
+  showError() {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('An error has occured. Please contact the admins'),
+        duration: Duration(seconds: 4),
+      ),
+    );
+    return Center(
+        child: Icon(
+      Icons.error,
+      size: 200,
+    ));
+  }
+
+  showTeams() {
     return NestedScrollView(
       floatHeaderSlivers: true,
       headerSliverBuilder: (context, innerBoxIsScrolled) => [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
-          ),
+              padding: const EdgeInsets.fromLTRB(8.0, 0, 0, 0),
+              child: FilterBarTeam(
+                currentFilter: filter,
+                teamFilters: getTeamsFilter(),
+                onSelected: (value) => onSelected(value),
+              )),
         ),
       ],
-      body: FutureBuilder(
-        future: Future.wait([
-          _teamService.getTeams(
-              event: Provider.of<EventNotifier>(context).event.id)
-        ]),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content:
-                      Text('An error has occured. Please contact the admins'),
-                  duration: Duration(seconds: 4),
-                ),
-              );
-              return Center(
-                  child: Icon(
-                Icons.error,
-                size: 200,
-              ));
-            }
-
-            List<List<Object>> data = snapshot.data as List<List<Object>>;
-
-            List<Team> tms = data[0] as List<Team>;
-
-            tms.sort((a, b) => a.name!.compareTo(b.name!));
-
-            return RefreshIndicator(
-              onRefresh: () {
-                return Future.delayed(Duration.zero, () {
-                  setState(() {});
-                });
-              },
-              child: ListView.builder(
-                itemCount: tms.length,
-                itemBuilder: (context, index) =>
-                    TeamMemberRow(team: tms[index]),
-                addAutomaticKeepAlives: true,
-                physics: const AlwaysScrollableScrollPhysics(),
-              ),
-            );
-          } else {
-            return Shimmer.fromColors(
-              baseColor: Colors.grey[400]!,
-              highlightColor: Colors.white,
-              child: ListView.builder(
-                itemCount: 5,
-                itemBuilder: (context, index) => TeamMemberRow.fake(),
-                addAutomaticKeepAlives: true,
-                physics: const BouncingScrollPhysics(
-                    parent: AlwaysScrollableScrollPhysics()),
-              ),
-            );
-          }
+      body: RefreshIndicator(
+        onRefresh: () {
+          return Future.delayed(Duration.zero, () {
+            setState(() {});
+          });
         },
+        child: buildTeamsList(),
       ),
     );
+  }
+
+  showCreateTeamDialog() {
+    String name = "";
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text("Create New Team"),
+        content: TextField(
+          onChanged: (value) {
+            name = value;
+          },
+          decoration: const InputDecoration(
+              hintText: "Insert the name of the new team"),
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, "Cancel"),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () => createTeam(name),
+            child: const Text("Create"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void createTeam(String name) async {
+    Team? t = await _teamService.createTeam(name);
+    if (t != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      TeamsNotifier notifier =
+          Provider.of<TeamsNotifier>(context, listen: false);
+      notifier.add(t);
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+
+      Navigator.pop(context);
+    }
+    Navigator.pop(context, "Create");
+  }
+
+  getTeamsFilter() {
+    List<String> filters =
+        teams.map((team) => team.name).whereType<String>().toList();
+    filters.insert(0, ALL);
+    return filters;
   }
 }
 
@@ -187,8 +303,8 @@ class TeamMemberRow extends StatelessWidget {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => TeamScreen(
-                                        team: team, members: membs)));
+                                    builder: (context) =>
+                                        TeamScreen(team: team)));
                           },
                           child: Column(
                             children: [

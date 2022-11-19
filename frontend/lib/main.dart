@@ -5,8 +5,10 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/member/MemberNotifier.dart';
 import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
+import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/models/event.dart';
+import 'package:frontend/routes/teams/TeamsNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:provider/provider.dart';
@@ -39,11 +41,17 @@ Future main() async {
       ChangeNotifierProvider<MeetingsNotifier>(
         create: (_) => MeetingsNotifier(meetings: []),
       ),
+      ChangeNotifierProvider<SessionsNotifier>(
+        create: (_) => SessionsNotifier(sessions: []),
+      ),
       ChangeNotifierProvider<AuthService>(
         create: (_) => AuthService(),
       ),
       ChangeNotifierProvider<BottomNavigationBarProvider>(
         create: (_) => BottomNavigationBarProvider(),
+      ),
+      ChangeNotifierProvider<TeamsNotifier>(
+        create: (_) => TeamsNotifier(teams: []),
       ),
     ],
     child: App(),

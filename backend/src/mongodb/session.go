@@ -79,6 +79,7 @@ type CreateSessionData struct {
 	Description *string                `json:"description"`
 	Place       *string                `json:"place"`
 	Kind        *string                `json:"kind"`
+	VideoURL 	*string				   `json:"videoURL"`
 	Company     *primitive.ObjectID    `json:"company"`
 	Speakers    *[]primitive.ObjectID  `json:"speaker"`
 	Tickets     *models.SessionTickets `json:"tickets"`
@@ -197,6 +198,10 @@ func (s *SessionsType) CreateSession(data CreateSessionData) (*models.Session, e
 
 	if data.Speakers != nil {
 		c["speaker"] = data.Speakers
+	}
+
+	if data.VideoURL != nil {
+		c["videoURL"] = data.VideoURL
 	}
 
 	if data.Tickets != nil {

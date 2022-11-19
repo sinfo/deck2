@@ -328,9 +328,10 @@ class CompanyService extends Service {
     Response<String> response =
         await dio.get("/companies/" + id + "/participation/status/next");
     try {
-      final responseJson = json.decode(response.data!) as List;
+      final responseJson = json.decode(response.data!)['steps'] as List;
       List<ParticipationStep> participationSteps =
           responseJson.map((e) => ParticipationStep.fromJson(e)).toList();
+
       return participationSteps;
     } on SocketException {
       throw DeckException('No Internet connection');
