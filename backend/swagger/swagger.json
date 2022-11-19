@@ -371,6 +371,12 @@
     },
     "/meetings/{id}/participants": {
       "$ref": "./meetings-id-participants.json"
+    },
+    "/companies/{id}/participation/thread/{threadID}": {
+      "$ref": "./companies-id-participation-thread-threadID.json"
+    },
+    "/speakers/{id}/participation/thread/{threadID}": {
+      "$ref": "./speakers-id-participation-thread-threadID.json"
     }
   },
   "externalDocs": {
