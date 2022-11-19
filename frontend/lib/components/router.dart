@@ -26,7 +26,6 @@ class Routes {
   static const String AddMember = '/add/member';
   static const String AddTeamMember = '/add/teamMember';
   static const String AddMeeting = '/add/meeting';
-  static const String AddFlightInfo = '/add/flightinfo';
   static const String AddSession = '/add/session';
 }
 
@@ -54,8 +53,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return SlideRoute(page: AddMemberForm());
     case Routes.AddMeeting:
       return SlideRoute(page: AddMeetingForm());
-    case Routes.AddFlightInfo:
-      return SlideRoute(page: AddFlightInfoForm());
     case Routes.AddSession:
       return SlideRoute(page: AddSessionForm());
     default:

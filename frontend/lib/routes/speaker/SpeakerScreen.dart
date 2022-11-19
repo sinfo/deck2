@@ -8,6 +8,8 @@ import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/components/threads/threadCard/threadCard.dart';
+import 'package:frontend/models/flightInfo.dart';
+import 'package:frontend/routes/speaker/AddFlightInfoForm.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
@@ -103,9 +105,9 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                   DetailsScreen(
                     speaker: widget.speaker,
                   ),
-                  Container(
-                    child: Center(child: Text('Work in progress :)')),
-                  ),
+                  FlightInfoScreen(
+                      lastParticipation: widget.speaker.participations![
+                          widget.speaker.participations!.length - 1]),
                   ParticipationList(
                     speaker: widget.speaker,
                     onParticipationChanged: (Map<String, dynamic> body) async {
@@ -163,9 +165,11 @@ class _SpeakerScreenState extends State<SpeakerScreen>
       case 1:
         return FloatingActionButton.extended(
           onPressed: () {
-            Navigator.pushNamed(
+            Navigator.push(
               context,
-              Routes.AddFlightInfo,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      AddFlightInfoForm(id: widget.speaker.id)),
             );
           },
           label: const Text('Add Flight Information'),
@@ -505,6 +509,54 @@ class DetailsScreen extends StatelessWidget {
           ),
         ],
       )),
+    );
+  }
+}
+
+class FlightInfoScreen extends StatelessWidget {
+  final SpeakerParticipation lastParticipation;
+  const FlightInfoScreen({Key? key, required this.lastParticipation})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FutureBuilder(
+        future: lastParticipation.flights,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text('Error');
+          }
+          if (snapshot.connectionState == ConnectionState.done) {
+            List<FlightInfo>? flightInfos = snapshot.data as List<FlightInfo>?;
+            if (flightInfos == null) {
+              flightInfos = [];
+            }
+            flightInfos.sort((a, b) => b.inbound.compareTo(a.inbound));
+            return Column(children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text('SINFO ${lastParticipation.event}'),
+                ),
+              ),
+              Divider(),
+              ...flightInfos
+                  .map(
+                    (flightInfo) => Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text("In Progress - " + flightInfo.notes),
+                    ),
+                  )
+                  .toList(),
+            ]);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     );
   }
 }

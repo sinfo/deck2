@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/models/speaker.dart';
+import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class AddFlightInfoForm extends StatefulWidget {
-  AddFlightInfoForm({Key? key}) : super(key: key);
+  final String id;
+
+  AddFlightInfoForm({Key? key, required this.id}) : super(key: key);
 
   @override
   _AddFlightInfoFormState createState() => _AddFlightInfoFormState();
@@ -20,7 +25,8 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
   final _toController = TextEditingController();
   final _linkController = TextEditingController();
   final _notesController = TextEditingController();
-  final _costController = TextEditingController();
+  final _costEurosController = TextEditingController();
+  final _costCentsController = TextEditingController();
   bool flightBought = false;
 
   final _speakerService = SpeakerService();
@@ -30,45 +36,51 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
   DateTime? _outbound;
 
   void _submit() async {
-    // if (_formKey.currentState!.validate()) {
-    //   var title = _titleController.text;
-    //   var place = _placeController.text;
+    if (_formKey.currentState!.validate()) {
+      var from = _fromController.text;
+      var to = _toController.text;
+      var link = _linkController.text;
+      var notes = _notesController.text;
+      var cost = int.parse(_costEurosController.text) * 100 +
+          int.parse(_costCentsController.text);
 
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text('Uploading')),
-    //   );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Creating Flight...')),
+      );
 
-    //   Meeting? m = await _meetingService.createMeeting(
-    //       _begin!.toUtc(), _end!.toUtc(), place, _kind, title);
-    //   if (m != null) {
-    //     MeetingsNotifier notifier =
-    //         Provider.of<MeetingsNotifier>(context, listen: false);
-    //     notifier.add(m);
+      Speaker? s = await _speakerService.addFlightInfo(
+          id: widget.id,
+          bought: flightBought,
+          cost: cost,
+          from: from,
+          to: to,
+          inbound: _inbound!.toUtc(),
+          outbound: _outbound!.toUtc(),
+          link: link,
+          notes: notes);
 
-    //     ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (s != null) {
+        SpeakerTableNotifier notifier =
+            Provider.of<SpeakerTableNotifier>(context, listen: false);
+        notifier.edit(s);
 
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(
-    //         content: Text('Done'),
-    //         duration: Duration(seconds: 2),
-    //         action: SnackBarAction(
-    //           label: 'Undo',
-    //           onPressed: () {
-    //             _meetingService.deleteMeeting(m.id);
-    //             notifier.remove(m);
-    //           },
-    //         ),
-    //       ),
-    //     );
-    //   } else {
-    //     ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       const SnackBar(content: Text('An error occured.')),
-    //     );
-    //   }
-    //   Navigator.pop(context);
-    // }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Done'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('An error occured.')),
+        );
+      }
+      Navigator.pop(context);
+    }
   }
 
   Future _selectDateTime(BuildContext context, bool isInbound) async {
@@ -128,7 +140,7 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
           Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
-                controller: _inboundController,
+                controller: _outboundController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a departure date of the flight';
@@ -141,11 +153,11 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
                 ),
                 readOnly: true, //prevents editing the date in the form field
                 onTap: () async {
-                  await _selectDateTime(context, true);
-                  String formattedDate = getDateTime(_inbound!);
+                  await _selectDateTime(context, false);
+                  String formattedDate = getDateTime(_outbound!);
 
                   setState(() {
-                    _inboundController.text = formattedDate;
+                    _outboundController.text = formattedDate;
                   });
                 },
               )),
@@ -168,7 +180,7 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
           Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
-                controller: _outboundController,
+                controller: _inboundController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter an arrival date of the flight';
@@ -181,11 +193,11 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
                 ),
                 readOnly: true, //prevents editing the date in the form field
                 onTap: () async {
-                  await _selectDateTime(context, false);
-                  String formattedDate = getDateTime(_outbound!);
+                  await _selectDateTime(context, true);
+                  String formattedDate = getDateTime(_inbound!);
 
                   setState(() {
-                    _outboundController.text = formattedDate;
+                    _inboundController.text = formattedDate;
                   });
                 },
               )),
@@ -205,25 +217,53 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _costController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter the cost of the flight';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.money),
-                labelText: "Cost of flight *",
+          Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    controller: _costEurosController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the cost of the flight';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.money),
+                      labelText: "Cost of flight (only euros) *",
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly
+                    ],
+                  ),
+                ),
               ),
-              keyboardType: TextInputType.number,
-              inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.digitsOnly
-              ],
-            ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    controller: _costCentsController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the cost of the flight';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.money),
+                      labelText: "Cost of flight (only cents) *",
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

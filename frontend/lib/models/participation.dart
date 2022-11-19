@@ -1,6 +1,8 @@
+import 'package:frontend/models/flightInfo.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/thread.dart';
+import 'package:frontend/services/flightInfoService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/packageService.dart';
 import 'package:frontend/services/threadService.dart';
@@ -144,8 +146,28 @@ class Participation {
 
 class SpeakerParticipation extends Participation {
   final String? feedback;
-  final List<String>? flights; //TODO: Lazy load
+  final List<String>? flightsId;
+  List<FlightInfo>? _flights;
   final Room? room;
+
+  Future<List<FlightInfo>?> get flights async {
+    if (_flights != null && _flights!.length == 0) {
+      return _flights;
+    }
+    if (flightsId == null) {
+      return [];
+    }
+
+    List<FlightInfo> l = [];
+    FlightInfoService _flightInfoService = FlightInfoService();
+    for (String element in flightsId!) {
+      FlightInfo? fi = await _flightInfoService.getFlightInfo(element);
+      l.add(fi);
+    }
+
+    _flights = l;
+    return _flights;
+  }
 
   SpeakerParticipation({
     required int event,
@@ -153,7 +175,7 @@ class SpeakerParticipation extends Participation {
     required List<String> communicationIds,
     required ParticipationStatus status,
     this.feedback,
-    this.flights,
+    this.flightsId,
     this.room,
   }) : super(
           communicationsId: communicationIds,
@@ -167,7 +189,7 @@ class SpeakerParticipation extends Participation {
       communicationIds: List.from(json['communications']),
       event: json['event'],
       feedback: json['feedback'],
-      flights: List.from(json['flights']),
+      flightsId: List.from(json['flights']),
       member: json['member'],
       status: Participation.convert(json['status']),
       room: Room.fromJson(json['room']),
@@ -178,7 +200,7 @@ class SpeakerParticipation extends Participation {
         'communications': communicationsId,
         'event': event,
         'feedback': feedback,
-        'flights': flights,
+        'flights': flightsId,
         'member': memberId,
         'status': Participation.statusToString(status),
         'room': room?.toJson()

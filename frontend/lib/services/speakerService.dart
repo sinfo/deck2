@@ -296,8 +296,8 @@ class SpeakerService extends Service {
       "cost": cost,
       "from": from,
       "to": to,
-      "inbound": inbound,
-      "outbound": outbound,
+      "inbound": inbound.toIso8601String(),
+      "outbound": outbound.toIso8601String(),
       "link": link,
       "notes": notes
     };
