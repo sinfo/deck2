@@ -73,8 +73,7 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "kind",
-                        "meeting (optional)"
+                        "kind"
                     ],
                     "properties": {
                         "kind": {
