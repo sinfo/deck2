@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/threads/threadCard.dart';
+import 'package:frontend/components/threads/threadCard/threadCard.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/thread.dart';
 
@@ -20,7 +20,6 @@ class ParticipationThreadsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('Getting ${participation.event}');
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: FutureBuilder(

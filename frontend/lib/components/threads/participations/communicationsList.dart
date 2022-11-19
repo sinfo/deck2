@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/threads/participations/participationThreadsWidget.dart';
-import 'package:frontend/components/threads/threadCard.dart';
+import 'package:frontend/components/threads/threadCard/threadCard.dart';
 import 'package:frontend/models/participation.dart';
 
 class CommunicationsList extends StatelessWidget {

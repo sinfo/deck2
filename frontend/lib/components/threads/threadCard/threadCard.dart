@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/threads/threadCardBody.dart';
-import 'package:frontend/components/threads/threadCardHeader.dart';
+import 'package:frontend/components/threads/threadCard/threadCardBody.dart';
+import 'package:frontend/components/threads/threadCard/threadCardHeader.dart';
 import 'package:frontend/models/post.dart';
 import 'package:frontend/models/thread.dart';
 import 'package:shimmer/shimmer.dart';

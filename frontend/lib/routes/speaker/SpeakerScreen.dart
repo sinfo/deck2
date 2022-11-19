@@ -7,7 +7,7 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
-import 'package:frontend/components/threads/threadCard.dart';
+import 'package:frontend/components/threads/threadCard/threadCard.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';

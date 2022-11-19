@@ -6,7 +6,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/components/threads/threadCard.dart';
+import 'package:frontend/components/threads/threadCard/threadCard.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/thread.dart';

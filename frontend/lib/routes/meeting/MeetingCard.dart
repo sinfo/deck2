@@ -325,9 +325,10 @@ class MeetingCard extends StatelessWidget {
                                         _uploadMeetingMinute(context),
                                     icon: Icon(Icons.article),
                                     style: ElevatedButton.styleFrom(
-                                        primary: meeting.minute!.isNotEmpty
-                                            ? const Color(0xFF5C7FF2)
-                                            : Colors.green),
+                                        backgroundColor:
+                                            meeting.minute!.isNotEmpty
+                                                ? const Color(0xFF5C7FF2)
+                                                : Colors.green),
                                     label: meeting.minute!.isNotEmpty
                                         ? const Text("Minutes")
                                         : const Text("Add Minutes")),
@@ -340,7 +341,8 @@ class MeetingCard extends StatelessWidget {
                                             _deleteMeetingMinuteDialog(context),
                                         icon: Icon(Icons.article),
                                         style: ElevatedButton.styleFrom(
-                                            primary: const Color(0xFFF25C5C)),
+                                            backgroundColor:
+                                                const Color(0xFFF25C5C)),
                                         label: const Text("Delete Minutes")))
                             ])),
                   ),

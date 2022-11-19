@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/threads/threadCard.dart';
+import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/components/threads/threadCard/threadCard.dart';
+import 'package:frontend/models/company.dart';
+import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/post.dart';
+import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/thread.dart';
+import 'package:frontend/routes/company/CompanyTableNotifier.dart';
+import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
+import 'package:frontend/routes/speaker/speakerNotifier.dart';
+import 'package:frontend/services/companyService.dart';
+import 'package:frontend/services/meetingService.dart';
+import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +31,82 @@ class ThreadCardHeader extends StatelessWidget {
       required this.id,
       required this.type})
       : super(key: key);
+
+  void _deleteThread(context) async {
+    bool isThreadDeleted = false;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Deleting')),
+    );
+
+    if (type == CommunicationType.COMPANY) {
+      CompanyService _companyService = CompanyService();
+      Company? c =
+          await _companyService.deleteThread(id: id, threadID: thread.id);
+      if (c != null) {
+        // FIXME: notifier not working well
+        // CompanyTableNotifier notifier =
+        //     Provider.of<CompanyTableNotifier>(context, listen: false);
+        // notifier.edit(c);
+
+        isThreadDeleted = true;
+      }
+    } else if (type == CommunicationType.SPEAKER) {
+      SpeakerService _speakerService = SpeakerService();
+      Speaker? s =
+          await _speakerService.deleteThread(id: id, threadID: thread.id);
+      if (s != null) {
+        // FIXME: notifier not working well
+        // SpeakerTableNotifier notifier =
+        //     Provider.of<SpeakerTableNotifier>(context, listen: false);
+        // notifier.edit(s);
+
+        isThreadDeleted = true;
+      }
+    } else if (type == CommunicationType.MEETING) {
+      MeetingService _meetingService = MeetingService();
+      Meeting? m =
+          await _meetingService.deleteThread(id: id, threadID: thread.id);
+      if (m != null) {
+        // FIXME: notifier not working well
+        // MeetingsNotifier notifier =
+        //     Provider.of<MeetingsNotifier>(context, listen: false);
+        // notifier.edit(m);
+
+        isThreadDeleted = true;
+      }
+    }
+
+    if (isThreadDeleted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
+  }
+
+  void _deleteThreadDialog(context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog('Warning',
+            'Are you sure you want to delete thread with content ${p.text} (and all of its comments)?',
+            () {
+          _deleteThread(context);
+        });
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +169,7 @@ class ThreadCardHeader extends StatelessWidget {
                         padding: const EdgeInsets.all(8.0),
                         child: IconButton(
                             onPressed: () {
-                              print("Delete thread");
+                              _deleteThreadDialog(context);
                             },
                             icon: Icon(Icons.delete)),
                       ),
