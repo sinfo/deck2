@@ -8,6 +8,7 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/models/post.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/thread.dart';
+import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/speakerService.dart';
@@ -21,13 +22,16 @@ class ThreadCardHeader extends StatelessWidget {
   final String id;
   final CommunicationType type;
   final bool small;
+  final void Function(BuildContext, Thread?) onEditThread;
+
   const ThreadCardHeader(
       {Key? key,
       required this.p,
       required this.thread,
       required this.small,
       required this.id,
-      required this.type})
+      required this.type,
+      required this.onEditThread})
       : super(key: key);
 
   void _deleteThread(context) async {
@@ -66,10 +70,9 @@ class ThreadCardHeader extends StatelessWidget {
       Meeting? m =
           await _meetingService.deleteThread(id: id, threadID: thread.id);
       if (m != null) {
-        // FIXME: notifier not working well
-        // MeetingsNotifier notifier =
-        //     Provider.of<MeetingsNotifier>(context, listen: false);
-        // notifier.edit(m);
+        MeetingsNotifier notifier =
+            Provider.of<MeetingsNotifier>(context, listen: false);
+        notifier.edit(m);
 
         isThreadDeleted = true;
       }
@@ -111,7 +114,8 @@ class ThreadCardHeader extends StatelessWidget {
       context: context,
       builder: (context) {
         return Container(
-          child: EditThreadForm(thread: thread, post: p),
+          child: EditThreadForm(
+              thread: thread, post: p, onEditThread: onEditThread),
         );
       },
     );

@@ -14,12 +14,12 @@ final Map<String, Color> THREADCOLOR = {
 enum CommunicationType { COMPANY, MEETING, SPEAKER }
 
 class ThreadCard extends StatefulWidget {
-  final Thread thread;
+  Thread thread;
   // ID of the meeting/company/speaker
   final String id;
   final CommunicationType type;
   final bool small;
-  const ThreadCard(
+  ThreadCard(
       {Key? key,
       required this.thread,
       required this.small,
@@ -34,6 +34,13 @@ class ThreadCard extends StatefulWidget {
 class ThreadCardState extends State<ThreadCard>
     with AutomaticKeepAliveClientMixin {
   bool get wantKeepAlive => true;
+
+  Future<void> threadChangedCallback(BuildContext context,
+      {Thread? thread}) async {
+    setState(() {
+      widget.thread = thread!;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +69,10 @@ class ThreadCardState extends State<ThreadCard>
                       thread: widget.thread,
                       small: widget.small,
                       id: widget.id,
-                      type: widget.type),
+                      type: widget.type,
+                      onEditThread: (context, _thread) {
+                        threadChangedCallback(context, thread: _thread);
+                      }),
                   SizedBox(
                     height: 16,
                   ),

@@ -7,7 +7,10 @@ import 'package:frontend/services/threadService.dart';
 class EditThreadForm extends StatefulWidget {
   final Thread? thread;
   final Post? post;
-  EditThreadForm({Key? key, this.thread, this.post}) : super(key: key);
+  final void Function(BuildContext, Thread?)? onEditThread;
+
+  EditThreadForm({Key? key, this.thread, this.post, this.onEditThread})
+      : super(key: key);
 
   @override
   _EditThreadFormState createState() => _EditThreadFormState();
@@ -39,6 +42,8 @@ class _EditThreadFormState extends State<EditThreadForm> {
           await _threadService.updateThread(id: widget.thread!.id, kind: kind);
 
       if (p != null && t != null) {
+        widget.onEditThread!(context, t);
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
