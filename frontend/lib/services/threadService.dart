@@ -52,7 +52,7 @@ class ThreadService extends Service {
     }
   }
 
-  Future<Thread?> updateThread(String id, String meetingId, String kind) async { //TODO are meetingId or kind nullable?
+  Future<Thread?> updateThread({required String id, String? meetingId, required String kind}) async {
     var body = {
       "meeting": meetingId,
       "kind": kind,

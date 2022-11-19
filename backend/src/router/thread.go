@@ -229,7 +229,7 @@ func deleteThread(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Thread not found", http.StatusNotFound)
 			return
 		}
-		
+
 		for _, commentID := range t.Comments {
 			_, err = mongodb.Posts.DeletePost(commentID)
 			if err != nil {

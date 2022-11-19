@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/components/threads/editThreadForm.dart';
 import 'package:frontend/components/threads/threadCard/threadCard.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/meeting.dart';
@@ -7,9 +8,6 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/models/post.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/thread.dart';
-import 'package:frontend/routes/company/CompanyTableNotifier.dart';
-import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
-import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/speakerService.dart';
@@ -108,6 +106,17 @@ class ThreadCardHeader extends StatelessWidget {
     );
   }
 
+  void _editThreadModal(context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Container(
+          child: EditThreadForm(thread: thread, post: p),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -178,7 +187,7 @@ class ThreadCardHeader extends StatelessWidget {
                         padding: const EdgeInsets.all(8.0),
                         child: IconButton(
                             onPressed: () {
-                              print("Edit thread");
+                              _editThreadModal(context);
                             },
                             icon: Icon(Icons.edit)),
                       ),

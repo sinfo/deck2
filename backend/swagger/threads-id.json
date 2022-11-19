@@ -74,7 +74,7 @@
                     "type": "object",
                     "required": [
                         "kind",
-                        "meeting"
+                        "meeting (optional)"
                     ],
                     "properties": {
                         "kind": {
