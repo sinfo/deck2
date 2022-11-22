@@ -51,7 +51,10 @@ class _SessionListState extends State<SessionList>
 
           var upcomingSessions = notifier.getAll().toList();
 
-          return Calendar(sessions: upcomingSessions);
+          return Calendar(
+            sessions: upcomingSessions,
+            key: UniqueKey(),
+          );
         } else {
           return CircularProgressIndicator();
         }
