@@ -42,13 +42,10 @@ class ParticipationFlightsWidget extends StatelessWidget {
               Divider(),
               ...flightInfos
                   .map(
-                    (flightInfo) => Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: FlightCard(
-                        flight: flightInfo,
-                        id: id,
-                        small: small,
-                      ),
+                    (flightInfo) => FlightCard(
+                      flight: flightInfo,
+                      id: id,
+                      small: small,
                     ),
                   )
                   .toList(),
