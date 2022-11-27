@@ -26,7 +26,7 @@ class ListViewCard extends StatelessWidget {
   late final int? _numParticipations;
   late final int? _lastParticipation;
   late final String _tag;
-  late Widget _screen;
+  late final Widget _screen;
 
   ListViewCard(
       {Key? key,
@@ -83,7 +83,8 @@ class ListViewCard extends StatelessWidget {
     _status = participation != null
         ? participation.status
         : ParticipationStatus.NO_STATUS;
-    _imageUrl = speaker!.imgs!.speaker!;
+        
+    _imageUrl = speaker!.imgs!.internal!;
     _title = speaker!.name;
     _color = STATUSCOLOR[_status]!;
 

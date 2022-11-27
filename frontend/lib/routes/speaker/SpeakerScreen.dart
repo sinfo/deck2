@@ -17,7 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
 
 class SpeakerScreen extends StatefulWidget {
-  Speaker speaker;
+  late final Speaker speaker;
 
   SpeakerScreen({Key? key, required this.speaker}) : super(key: key);
 
@@ -180,6 +180,8 @@ class _SpeakerScreenState extends State<SpeakerScreen>
             icon: const Icon(Icons.add),
           );
         }
+      default:
+        return null;
     }
   }
 }
@@ -322,9 +324,8 @@ class SpeakerBanner extends StatelessWidget {
                                 )),
                             child: CircleAvatar(
                               foregroundImage: NetworkImage(
-                                speaker.imgs!.speaker ??
-                                    (speaker.imgs!.internal ??
-                                        (speaker.imgs!.company ?? "")),
+                                speaker.imgs!.internal ?? 
+                                  (speaker.imgs!.company ?? ""),
                               ),
                               backgroundImage: AssetImage('assets/noImage.png'),
                             ),

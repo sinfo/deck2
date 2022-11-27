@@ -4,7 +4,6 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
-import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,7 +34,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
     super.initState();
     _nameController = TextEditingController(text: widget.speaker.name);
     _titleController = TextEditingController(text: widget.speaker.title);
-    _prevImage = widget.speaker.imgs!.speaker;
+    _prevImage = widget.speaker.imgs!.internal;
   }
 
   void _submit() async {
@@ -242,7 +241,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
 
   @override
   Widget build(BuildContext context) {
-    bool warning = _image != null && _size != null && _size! > 102400;
+    bool warning = _image != null && _size != null && _size! > 10485760;
     return SingleChildScrollView(
       child: LayoutBuilder(
         builder: (context, constraints) {

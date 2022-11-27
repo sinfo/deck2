@@ -112,7 +112,6 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
 
   Widget _buildPicture(double size) {
     Widget inkWellChild;
-
     if (_image == null && _prevImage == null) {
       inkWellChild = Center(
         child: Column(
@@ -137,14 +136,26 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
       String path = _image == null ? _prevImage! : _image!.path;
       inkWellChild = Center(
         child: kIsWeb
-            ? Image.network(
-                path,
-                fit: BoxFit.fill,
-              )
-            : Image.file(
-                File(path),
-                fit: BoxFit.fill,
-              ),
+          ? Image.network(
+              path,
+              fit: BoxFit.fill,
+              errorBuilder: (BuildContext context, Object exception,
+                StackTrace? stackTrace) {
+              return Image.asset(
+                'assets/noImage.png'
+              );
+            },
+            )
+          : Image.file(
+              File(path),
+              fit: BoxFit.fill,
+              errorBuilder: (BuildContext context, Object exception,
+                StackTrace? stackTrace) {
+              return Image.asset(
+                'assets/noImage.png'
+              );
+            },
+            ),
       );
     }
 
@@ -222,7 +233,7 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
 
   @override
   Widget build(BuildContext context) {
-    bool warning = _image != null && _size != null && _size! > 102400;
+    bool warning = _image != null && _size != null && _size! > 10485760;
     return SingleChildScrollView(
       child: LayoutBuilder(
         builder: (context, constraints) {

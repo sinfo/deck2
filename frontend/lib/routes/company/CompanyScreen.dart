@@ -9,7 +9,6 @@ import 'package:frontend/components/threadCard.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/EditCompanyForm.dart';
-import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/participation.dart';
@@ -18,7 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
 
 class CompanyScreen extends StatefulWidget {
-  Company company;
+  late final Company company;
 
   CompanyScreen({Key? key, required this.company}) : super(key: key);
 
@@ -112,6 +111,8 @@ class _CompanyScreenState extends State<CompanyScreen>
             icon: const Icon(Icons.add),
           );
         }
+      default:
+        return null;
     }
   }
 
@@ -119,7 +120,7 @@ class _CompanyScreenState extends State<CompanyScreen>
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       bool small = constraints.maxWidth < App.SIZE;
-      return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
+      return Consumer<CompanyTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
           appBar: CustomAppBar(disableEventChange: true),
           body: DefaultTabController(
@@ -357,10 +358,15 @@ class CompanyBanner extends StatelessWidget {
                                   color: STATUSCOLOR[companyStatus]!,
                                 )),
                             child: CircleAvatar(
-                              foregroundImage: NetworkImage(
+                              backgroundImage: Image.network(
                                 company.companyImages.internal,
-                              ),
-                              backgroundImage: AssetImage('assets/noImage.png'),
+                                  fit: BoxFit.fill,
+                                  errorBuilder: (BuildContext context, Object exception,
+                                    StackTrace? stackTrace) {
+                                  return Image.asset('assets/noImage.png');
+                                  },
+                              ).image,
+                              backgroundColor: Colors.white,
                             ),
                           ),
                         ),
