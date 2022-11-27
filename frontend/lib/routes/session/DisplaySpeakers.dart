@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/status.dart';
-import 'package:frontend/models/contact.dart';
-import 'package:frontend/models/member.dart';
 import 'package:frontend/models/session.dart';
 import 'package:frontend/models/speaker.dart';
-import 'package:frontend/routes/member/EditContact.dart';
-import 'package:frontend/routes/session/SessionInformationBox.dart';
 import 'package:frontend/routes/speaker/SpeakerScreen.dart';
-import 'package:frontend/services/authService.dart';
-import 'package:frontend/services/sessionService.dart';
 import 'package:frontend/services/speakerService.dart';
-import 'package:provider/provider.dart';
 
 class DisplaySpeakers extends StatefulWidget {
   final Session session;
@@ -201,57 +193,6 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
               ),
             ); */
           }),
-    );
-  }
-
-  Widget NoTicketsAvailable(Session session) {
-    return Container(
-      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-      padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(5),
-          boxShadow: [
-            BoxShadow(
-                blurRadius: 7.0,
-                color: Colors.grey.withOpacity(0.3),
-                offset: new Offset(0, 3),
-                spreadRadius: 4.0),
-          ]),
-      child: Stack(children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Not Available",
-                textAlign: TextAlign.left,
-                style: TextStyle(
-                    fontSize: 22,
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold)),
-            Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "No tickets were made available for this session.",
-                  textAlign: TextAlign.left,
-                  style: TextStyle(fontSize: 16, color: Colors.black),
-                ),
-              ],
-            )
-          ],
-        ),
-      ]),
-    );
-  }
-
-  Widget TicketsAvailable(Session session) {
-    return Column(
-      children: [
-        SessionInformationBox(session: widget.session, type: "Max Tickets"),
-        SessionInformationBox(session: widget.session, type: "Start Tickets"),
-        SessionInformationBox(session: widget.session, type: "End Tickets"),
-      ],
     );
   }
 }

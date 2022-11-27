@@ -1,19 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/status.dart';
 import 'package:frontend/models/company.dart';
-import 'package:frontend/models/contact.dart';
-import 'package:frontend/models/member.dart';
 import 'package:frontend/models/session.dart';
-import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
-import 'package:frontend/routes/member/EditContact.dart';
-import 'package:frontend/routes/session/SessionInformationBox.dart';
-import 'package:frontend/routes/speaker/SpeakerScreen.dart';
-import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/companyService.dart';
-import 'package:frontend/services/sessionService.dart';
-import 'package:frontend/services/speakerService.dart';
-import 'package:provider/provider.dart';
 
 class DisplayCompany extends StatefulWidget {
   final Session session;
@@ -57,26 +46,41 @@ class _DisplayCompanyState extends State<DisplayCompany> {
         padding: EdgeInsets.symmetric(horizontal: 32),
         physics: BouncingScrollPhysics(),
         children: [
-          ListTile(
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => CompanyScreen(
-                            company: company!,
-                          )));
-            },
-            title: Text(companyName,
-                textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 18, color: Colors.black)),
-            subtitle: Text(companySite!),
-            leading: CircleAvatar(
-              radius: 26.0,
-              foregroundImage: NetworkImage(
-                companyImage!.internal,
+          Container(
+            margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+            padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5),
+                boxShadow: [
+                  BoxShadow(
+                      blurRadius: 7.0,
+                      color: Colors.grey.withOpacity(0.3),
+                      offset: new Offset(0, 3),
+                      spreadRadius: 4.0),
+                ]),
+            child: ListTile(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => CompanyScreen(
+                              company: company!,
+                            )));
+              },
+              title: Text(companyName,
+                  textAlign: TextAlign.left,
+                  style: TextStyle(fontSize: 18, color: Colors.black)),
+              subtitle: Text(companySite!),
+              leading: CircleAvatar(
+                radius: 26.0,
+                foregroundImage: NetworkImage(
+                  companyImage!.internal,
+                ),
+                backgroundImage: AssetImage('assets/noImage.png'),
               ),
             ),
-          ),
+          )
         ],
       ),
     );
