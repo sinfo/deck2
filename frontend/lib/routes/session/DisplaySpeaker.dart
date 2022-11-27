@@ -10,17 +10,17 @@ import 'package:frontend/services/contactService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
 
-class DisplaySpeaker extends StatefulWidget {
+class DisplaySpeakers extends StatefulWidget {
   final Session session;
-  const DisplaySpeaker({Key? key, required this.session}) : super(key: key);
+  const DisplaySpeakers({Key? key, required this.session}) : super(key: key);
 
   @override
-  _DisplaySpeaker createState() => _DisplaySpeaker();
+  _DisplayTicketsState createState() => _DisplayTicketsState();
 }
 
-class _DisplaySpeaker extends State<DisplaySpeaker> {
+class _DisplayTicketsState extends State<DisplaySpeakers> {
   ContactService contactService = new ContactService();
-  SpeakerService speakerService = SpeakerService();
+  SpeakerService speakerService = new SpeakerService();
   List<Speaker> allSpeakers = [];
 
   // late Future<Contact?> contact;
@@ -29,12 +29,26 @@ class _DisplaySpeaker extends State<DisplaySpeaker> {
   void initState() {
     super.initState();
     fillSpeakers();
+
+    // this.contact = contactService.getContact(widget.member.contact!);
   }
 
   Future<void> fillSpeakers() async {
     Future<List<Speaker>> speakersFuture = speakerService.getSpeakers();
 
     allSpeakers = await speakersFuture;
+  }
+
+  List<String> _getSpeakers(List<String>? ids) {
+    List<String> speakersNames = [];
+    for (var speaker in allSpeakers) {
+      for (var id in ids!) {
+        if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
+          speakersNames.add(speaker.name);
+        }
+      }
+    }
+    return speakersNames;
   }
 
   @override
@@ -45,56 +59,69 @@ class _DisplaySpeaker extends State<DisplaySpeaker> {
         padding: EdgeInsets.symmetric(horizontal: 32),
         physics: BouncingScrollPhysics(),
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Speakers",
-                  textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
-              Divider(),
-              showSpeakers(session: widget.session),
-            ],
-          ),
+          (widget.session.tickets == null)
+              ? NoTicketsAvailable(widget.session)
+              : TicketsAvailable(widget.session),
+
+          // InformationBox(title: "Phones", contact: cont, type: "phone"),
+          // InformationBox(
+          //     title: "Socials",
+          //     contact: cont,
+          //     type: "social"), //SizedBox(height: 24,),
         ],
       ),
       // floatingActionButton: _isEditable(cont),
     );
   }
 
-  Widget showSpeakers({required Session session}) {
-    List<String> speakersNames = [];
-    for (var speaker in allSpeakers) {
-      for (var id in session.speakersIds!) {
-        if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
-          speakersNames.add(speaker.name);
-        }
-      }
-    }
-    return ListView.separated(
-        itemBuilder: (BuildContext context, index) {
-          return CircleAvatar(
-            backgroundImage: NetworkImage(
-                'https://media-exp1.licdn.com/dms/image/C4D03AQFgZBilNtPUMA/profile-displayphoto-shrink_800_800/0/1604728137407?e=1632960000&v=beta&t=QKa1Nq3WKWQGEGaiKdZ1ovp1h6uAbwPZfihdqY2_pNU'),
-          );
-        },
-        separatorBuilder: (BuildContext context, int index) {
-          return SizedBox(
-            width: 10,
-          );
-        },
-        itemCount: speakersNames.length);
-    // return Row(
-    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //   children: [
-    //     Text(
-    //       info,
-    //       textAlign: TextAlign.left,
-    //       style: TextStyle(fontSize: 16, color: Colors.black),
-    //     ),
-    //   ],
-    // );
+  Widget NoTicketsAvailable(Session session) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+      padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(5),
+          boxShadow: [
+            BoxShadow(
+                blurRadius: 7.0,
+                color: Colors.grey.withOpacity(0.3),
+                offset: new Offset(0, 3),
+                spreadRadius: 4.0),
+          ]),
+      child: Stack(children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Not Available",
+                textAlign: TextAlign.left,
+                style: TextStyle(
+                    fontSize: 22,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold)),
+            Divider(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "No tickets were made available for this session.",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ],
+            )
+          ],
+        ),
+      ]),
+    );
+  }
+
+  Widget TicketsAvailable(Session session) {
+    return Column(
+      children: [
+        SessionInformationBox(session: widget.session, type: "Max Tickets"),
+        SessionInformationBox(session: widget.session, type: "Start Tickets"),
+        SessionInformationBox(session: widget.session, type: "End Tickets"),
+      ],
+    );
   }
 }
