@@ -23,6 +23,7 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
   SpeakerService speakerService = new SpeakerService();
   List<Speaker> allSpeakers = [];
   List<String> speakersNames = [];
+  List<Images?> speakersImages = [];
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
           print(speaker.name);
           setState(() {
             speakersNames.add(speaker.name);
+            speakersImages.add(speaker.imgs);
           });
         } else {
           print("Ids are different.");
@@ -98,32 +100,55 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
           itemCount: widget.session.speakersIds!.length,
           itemBuilder: (BuildContext context, int index) {
             return Card(
+                child: ListTile(
+              title: Text(speakersNames![index]),
+              // subtitle: Text(subtitles[index]),
+              leading: CircleAvatar(
+                foregroundImage: NetworkImage(
+                  speakersImages[index]!.speaker ??
+                      (speakersImages[index]!.internal ??
+                          (speakersImages[index]!.company ?? "")),
+                ),
+                backgroundImage: AssetImage('assets/noImage.png'),
+              ),
+            ));
+            /* Card(
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: Column(
                   children: [
-                    Text(speakersNames![index]),
-                    // Container(
-                    //   decoration: BoxDecoration(
-                    //       shape: BoxShape.circle,
-                    //     ),
-                    //   child: CircleAvatar(
-                    //     foregroundImage: NetworkImage(
-                    //       speaker.imgs!.speaker ??
-                    //           (speaker.imgs!.internal ??
-                    //               (speaker.imgs!.company ?? "")),
-                    //     ),
-                    //     backgroundImage: AssetImage('assets/noImage.png'),
-                    //   ),
-                    // ),
-                    // Text("${movieTitle[index].title}"),
-                    // Text("${movieTitle[index].shortDescription}>"),
+                    Container(
+                      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                      padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                          boxShadow: [
+                            BoxShadow(
+                                blurRadius: 7.0,
+                                color: Colors.grey.withOpacity(0.3),
+                                offset: new Offset(0, 3),
+                                spreadRadius: 4.0),
+                          ]),
+                      child: Stack(children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(speakersNames![index],
+                                textAlign: TextAlign.left,
+                                style: TextStyle(
+                                    fontSize: 22,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ]),
+                    ),
                   ],
                 ),
               ),
-            );
+            ); */
           }),
-      // floatingActionButton: _isEditable(cont),
     );
   }
 
