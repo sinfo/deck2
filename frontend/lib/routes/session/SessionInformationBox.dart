@@ -344,6 +344,13 @@ class SessionInformationBox extends StatelessWidget {
   }
 
   Widget showInfo({required String info}) {
+    if (info == "TALK") {
+      info = "Talk";
+    } else if (info == "WORKSHOP") {
+      info = "Workshop";
+    } else if (info == "PRESENTATION") {
+      info = "Presentation";
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
