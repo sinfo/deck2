@@ -7,6 +7,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/session.dart';
 import 'package:frontend/routes/member/EditMemberForm.dart';
+import 'package:frontend/routes/session/DisplayCompany.dart';
 import 'package:frontend/routes/session/DisplaySpeakers.dart';
 import 'package:frontend/routes/session/DisplayGeneralInformation.dart';
 import 'package:frontend/routes/session/DisplayTickets.dart';
@@ -80,9 +81,11 @@ class _SessionScreen extends State<SessionScreen>
                   DisplayGeneralInformation(
                     session: widget.session,
                   ),
-                  DisplaySpeakers(
-                    session: widget.session,
-                  ),
+                  (widget.session.kind == 'TALK')
+                      ? DisplaySpeakers(
+                          session: widget.session,
+                        )
+                      : DisplayCompany(session: widget.session),
                   DisplayTickets(session: widget.session),
                 ],
               ))
