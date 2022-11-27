@@ -6,6 +6,7 @@ import 'package:frontend/models/session.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/member/EditContact.dart';
 import 'package:frontend/routes/session/SessionInformationBox.dart';
+import 'package:frontend/routes/speaker/SpeakerScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:frontend/services/speakerService.dart';
@@ -24,6 +25,8 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
   List<Speaker> allSpeakers = [];
   List<String> speakersNames = [];
   List<Images?> speakersImages = [];
+  List<String?> speakersTitle = [];
+  List<Speaker> speakers = [];
 
   @override
   void initState() {
@@ -52,6 +55,8 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
           setState(() {
             speakersNames.add(speaker.name);
             speakersImages.add(speaker.imgs);
+            speakersTitle.add(speaker.title);
+            speakers.add(speaker);
           });
         } else {
           print("Ids are different.");
@@ -101,8 +106,16 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
           itemBuilder: (BuildContext context, int index) {
             return Card(
                 child: ListTile(
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => SpeakerScreen(
+                              speaker: speakers[index],
+                            ))); //TODO
+              },
               title: Text(speakersNames![index]),
-              // subtitle: Text(subtitles[index]),
+              subtitle: Text(speakersTitle[index]!),
               leading: CircleAvatar(
                 foregroundImage: NetworkImage(
                   speakersImages[index]!.speaker ??
