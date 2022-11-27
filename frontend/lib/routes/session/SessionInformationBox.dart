@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/session.dart';
 import 'package:frontend/my_flutter_app_icons.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SessionInformationBox extends StatelessWidget {
@@ -131,6 +132,73 @@ class SessionInformationBox extends StatelessWidget {
                       fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(info: session.place!),
+            ],
+          ),
+        ]),
+      );
+    } else if (type == "Max Tickets") {
+      return Container(
+        margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+        padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(5),
+            boxShadow: [
+              BoxShadow(
+                  blurRadius: 7.0,
+                  color: Colors.grey.withOpacity(0.3),
+                  offset: new Offset(0, 3),
+                  spreadRadius: 4.0),
+            ]),
+        child: Stack(children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Max Tickets",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                      fontSize: 22,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold)),
+              Divider(),
+              showInfo(info: session.tickets!.max.toString()),
+            ],
+          ),
+        ]),
+      );
+    } else if (type == "Start Tickets") {
+      return Container(
+        margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+        padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(5),
+            boxShadow: [
+              BoxShadow(
+                  blurRadius: 7.0,
+                  color: Colors.grey.withOpacity(0.3),
+                  offset: new Offset(0, 3),
+                  spreadRadius: 4.0),
+            ]),
+        child: Stack(children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Start",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                      fontSize: 22,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold)),
+              Divider(),
+              showInfo(
+                  info: DateFormat.yMd()
+                          .format(session.tickets!.start!.toLocal())
+                          .toString() +
+                      ' at ' +
+                      DateFormat.jm()
+                          .format(session.tickets!.start!.toLocal())
+                          .toString()),
             ],
           ),
         ]),

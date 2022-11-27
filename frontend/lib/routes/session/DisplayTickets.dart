@@ -64,10 +64,7 @@ class _DisplayTickets extends State<DisplayTickets> {
         children: [
           (widget.session.tickets == null)
               ? NoTicketsAvailable(widget.session)
-              : SessionInformationBox(session: widget.session, type: "kind"),
-          SessionInformationBox(session: widget.session, type: "description"),
-          SessionInformationBox(session: widget.session, type: "place"),
-          SessionInformationBox(session: widget.session, type: "videoURL"),
+              : TicketsAvailable(widget.session),
 
           // InformationBox(title: "Phones", contact: cont, type: "phone"),
           // InformationBox(
@@ -118,6 +115,15 @@ class _DisplayTickets extends State<DisplayTickets> {
           ],
         ),
       ]),
+    );
+  }
+
+  Widget TicketsAvailable(Session session) {
+    return Column(
+      children: [
+        SessionInformationBox(session: widget.session, type: "Max Tickets"),
+        SessionInformationBox(session: widget.session, type: "Start Tickets"),
+      ],
     );
   }
 }
