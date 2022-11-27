@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -50,15 +51,22 @@ class _EditMemberFormState extends State<EditMemberForm> {
         const SnackBar(content: Text('Uploading', style: TextStyle(color: Colors.white),)),
       );
 
-      Member? m = await _memberService.updateMember(
+      Member me = Provider.of<Member?>(context, listen: false)!;
+      Member? m;
+      var role = Provider.of<AuthService>(context, listen: false).role;
+
+      if(role==Role.ADMIN || role == Role.COORDINATOR){
+        m = await _memberService.updateMember(
           id: widget.member.id,
           name: name,
           istid: istId);
+      }
+      else{
+        m = widget.member;
+      }
 
       if (m != null && _image != null) {
-        Member me = Provider.of<Member?>(context)!;
-
-        if(me.id == widget.member.id){
+        if(me.id == m.id){
           m = kIsWeb
             ? await _memberService.updateMyImageWeb(image: _image!)
             : await _memberService.updateMyImage(image: File(_image!.path));
@@ -93,52 +101,67 @@ class _EditMemberFormState extends State<EditMemberForm> {
   }
 
   Widget _buildForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _nameController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a name';
-                }
-                return null;
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.person),
-                labelText: "Name *",
-              ),
+    return FutureBuilder(
+      future: Provider.of<AuthService>(context).role,
+      builder:(context, snapshot) {
+        if(snapshot.hasData){
+          Role role = snapshot.data as Role;
+          var adminOrCoord = role==Role.ADMIN || role == Role.COORDINATOR;
+          return Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    readOnly: !adminOrCoord,
+                    controller: _nameController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a name';
+                      }
+                      return null;
+                    },
+                    decoration: InputDecoration(
+                      icon: const Icon(Icons.person),
+                      labelText: "Name *",
+                      border: adminOrCoord ? null : InputBorder.none,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    readOnly: !adminOrCoord,
+                    controller: _istIdController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter ist id';
+                      } else {
+                        return null;
+                      }
+                    },
+                    decoration: InputDecoration(
+                      icon: const Icon(Icons.school),
+                      labelText: "IstId *",
+                      border: adminOrCoord ? null : InputBorder.none,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () => _submit(),
+                    child: const Text('Submit'),
+                  ),
+                ),
+              ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextFormField(
-              controller: _istIdController,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter ist id';
-                } else {
-                  return null;
-                }
-              },
-              decoration: const InputDecoration(
-                icon: const Icon(Icons.school),
-                labelText: "IstId *",
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () => _submit(),
-              child: const Text('Submit'),
-            ),
-          ),
-        ],
-      ),
+          );
+        }else {
+          return Container();
+        }
+      },
     );
   }
 
@@ -187,7 +210,6 @@ class _EditMemberFormState extends State<EditMemberForm> {
                   ),
               ]
             )
-            
       );
     }
 
@@ -265,27 +287,36 @@ class _EditMemberFormState extends State<EditMemberForm> {
 
   @override
   Widget build(BuildContext context) {
-    bool warning = _image != null && _size != null && _size! > 102400;
+    bool warning = _image != null && _size != null && _size! > 10485760;
     return SingleChildScrollView(
       child: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth < 1000) {
             return Column(
-              children: [_buildPicture(constraints.maxWidth / 3), _buildForm()],
+              children: [_buildPicture(constraints.maxWidth / 3),
+              warning
+                ? Text(
+                    'Image selected is too big!',
+                    style: TextStyle(
+                      color: Colors.red,
+                    ),
+                  )
+                : Container(),
+               _buildForm()],
             );
           } else {
             return Column(
               children: [
                 _buildPicture(constraints.maxWidth / 6),
                 warning
-                    ? Text(
-                        'Image selected is too big!',
-                        style: TextStyle(
-                          color: Colors.red,
-                        ),
-                      )
-                    : Container(),
-                _buildForm()
+                  ? Text(
+                      'Image selected is too big!',
+                      style: TextStyle(
+                        color: Colors.red,
+                      ),
+                    )
+                  : Container(),
+                  _buildForm()
               ],
             );
           }
