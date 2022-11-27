@@ -64,6 +64,8 @@ class _DisplayGeneralInformation extends State<DisplayGeneralInformation> {
         physics: BouncingScrollPhysics(),
         children: [
           SessionInformationBox(session: widget.session, type: "kind"),
+          SessionInformationBox(session: widget.session, type: "Begin Session"),
+          SessionInformationBox(session: widget.session, type: "End Session"),
           SessionInformationBox(session: widget.session, type: "description"),
           SessionInformationBox(session: widget.session, type: "place"),
           SessionInformationBox(session: widget.session, type: "videoURL"),

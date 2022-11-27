@@ -123,6 +123,7 @@ class _DisplayTickets extends State<DisplayTickets> {
       children: [
         SessionInformationBox(session: widget.session, type: "Max Tickets"),
         SessionInformationBox(session: widget.session, type: "Start Tickets"),
+        SessionInformationBox(session: widget.session, type: "End Tickets"),
       ],
     );
   }

@@ -101,7 +101,9 @@ class SessionInformationBox extends StatelessWidget {
                       color: Colors.black,
                       fontWeight: FontWeight.bold)),
               Divider(),
-              showInfo(info: session.videoURL!),
+              (session.videoURL == "")
+                  ? Text("No video available yet.")
+                  : showInfo(info: session.videoURL!),
             ],
           ),
         ]),
@@ -203,8 +205,117 @@ class SessionInformationBox extends StatelessWidget {
           ),
         ]),
       );
+    } else if (type == "End Tickets") {
+      return Container(
+        margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+        padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(5),
+            boxShadow: [
+              BoxShadow(
+                  blurRadius: 7.0,
+                  color: Colors.grey.withOpacity(0.3),
+                  offset: new Offset(0, 3),
+                  spreadRadius: 4.0),
+            ]),
+        child: Stack(children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("End",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                      fontSize: 22,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold)),
+              Divider(),
+              showInfo(
+                  info: DateFormat.yMd()
+                          .format(session.tickets!.end!.toLocal())
+                          .toString() +
+                      ' at ' +
+                      DateFormat.jm()
+                          .format(session.tickets!.end!.toLocal())
+                          .toString()),
+            ],
+          ),
+        ]),
+      );
+    } else if (type == "Begin Session") {
+      return Container(
+        margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+        padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(5),
+            boxShadow: [
+              BoxShadow(
+                  blurRadius: 7.0,
+                  color: Colors.grey.withOpacity(0.3),
+                  offset: new Offset(0, 3),
+                  spreadRadius: 4.0),
+            ]),
+        child: Stack(children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Begin",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                      fontSize: 22,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold)),
+              Divider(),
+              showInfo(
+                  info: DateFormat.yMd()
+                          .format(session.begin.toLocal())
+                          .toString() +
+                      ' at ' +
+                      DateFormat.jm()
+                          .format(session.begin.toLocal())
+                          .toString()),
+            ],
+          ),
+        ]),
+      );
+    } else if (type == "End Session") {
+      return Container(
+        margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+        padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+        decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(5),
+            boxShadow: [
+              BoxShadow(
+                  blurRadius: 7.0,
+                  color: Colors.grey.withOpacity(0.3),
+                  offset: new Offset(0, 3),
+                  spreadRadius: 4.0),
+            ]),
+        child: Stack(children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("End",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                      fontSize: 22,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold)),
+              Divider(),
+              showInfo(
+                  info: DateFormat.yMd()
+                          .format(session.end.toLocal())
+                          .toString() +
+                      ' at ' +
+                      DateFormat.jm().format(session.end.toLocal()).toString()),
+            ],
+          ),
+        ]),
+      );
     } else {
-      return Container();
+      return Text("Something went wrong");
     }
   }
 
