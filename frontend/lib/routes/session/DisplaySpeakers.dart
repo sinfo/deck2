@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/session.dart';
@@ -6,7 +7,7 @@ import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/member/EditContact.dart';
 import 'package:frontend/routes/session/SessionInformationBox.dart';
 import 'package:frontend/services/authService.dart';
-import 'package:frontend/services/contactService.dart';
+import 'package:frontend/services/sessionService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
 
@@ -15,61 +16,113 @@ class DisplaySpeakers extends StatefulWidget {
   const DisplaySpeakers({Key? key, required this.session}) : super(key: key);
 
   @override
-  _DisplayTicketsState createState() => _DisplayTicketsState();
+  _DisplaySpeakersState createState() => _DisplaySpeakersState();
 }
 
-class _DisplayTicketsState extends State<DisplaySpeakers> {
-  ContactService contactService = new ContactService();
+class _DisplaySpeakersState extends State<DisplaySpeakers> {
   SpeakerService speakerService = new SpeakerService();
   List<Speaker> allSpeakers = [];
-
-  // late Future<Contact?> contact;
+  List<String> speakersNames = [];
 
   @override
   void initState() {
     super.initState();
     fillSpeakers();
+    // speakersNames = _getSpeakers(widget.session.speakersIds);
+    print("22222222");
 
-    // this.contact = contactService.getContact(widget.member.contact!);
+    print(speakersNames);
   }
 
   Future<void> fillSpeakers() async {
     Future<List<Speaker>> speakersFuture = speakerService.getSpeakers();
 
     allSpeakers = await speakersFuture;
-  }
+    print("ALL SPEAKERS");
+    print(allSpeakers);
 
-  List<String> _getSpeakers(List<String>? ids) {
-    List<String> speakersNames = [];
     for (var speaker in allSpeakers) {
-      for (var id in ids!) {
+      print("Here");
+      for (var id in widget.session.speakersIds!) {
+        print("There");
         if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
-          speakersNames.add(speaker.name);
+          print("ADDED");
+          print(speaker.name);
+          setState(() {
+            speakersNames.add(speaker.name);
+          });
+        } else {
+          print("Ids are different.");
+          print("Id from session: " + id);
+          print("Id from speaker: " + speaker.id);
         }
       }
     }
+  }
+
+  List<String> _getSpeakers(List<String>? ids) {
+    print("IDS");
+    print(ids);
+    print(allSpeakers);
+
+    for (var speaker in allSpeakers) {
+      print("Here");
+      for (var id in ids!) {
+        print("There");
+        if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
+          print("ADDED");
+          print(speaker.name);
+          setState(() {
+            speakersNames.add(speaker.name);
+          });
+        } else {
+          print("Ids are different.");
+          print("Id from session: " + id);
+          print("Id from speaker: " + speaker.id);
+        }
+      }
+    }
+    print("11111");
+
+    print(speakersNames);
     return speakersNames;
   }
 
   @override
   Widget build(BuildContext context) {
+    print("##########################################");
+    print(speakersNames);
     return Scaffold(
       backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-      body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: 32),
-        physics: BouncingScrollPhysics(),
-        children: [
-          (widget.session.tickets == null)
-              ? NoTicketsAvailable(widget.session)
-              : TicketsAvailable(widget.session),
-
-          // InformationBox(title: "Phones", contact: cont, type: "phone"),
-          // InformationBox(
-          //     title: "Socials",
-          //     contact: cont,
-          //     type: "social"), //SizedBox(height: 24,),
-        ],
-      ),
+      body: new ListView.builder(
+          itemCount: widget.session.speakersIds!.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Card(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  children: [
+                    Text(speakersNames![index]),
+                    // Container(
+                    //   decoration: BoxDecoration(
+                    //       shape: BoxShape.circle,
+                    //     ),
+                    //   child: CircleAvatar(
+                    //     foregroundImage: NetworkImage(
+                    //       speaker.imgs!.speaker ??
+                    //           (speaker.imgs!.internal ??
+                    //               (speaker.imgs!.company ?? "")),
+                    //     ),
+                    //     backgroundImage: AssetImage('assets/noImage.png'),
+                    //   ),
+                    // ),
+                    // Text("${movieTitle[index].title}"),
+                    // Text("${movieTitle[index].shortDescription}>"),
+                  ],
+                ),
+              ),
+            );
+          }),
       // floatingActionButton: _isEditable(cont),
     );
   }
