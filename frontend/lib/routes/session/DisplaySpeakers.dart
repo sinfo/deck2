@@ -47,7 +47,7 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
           setState(() {
             speakersNames.add(speaker.name);
             speakersImages.add(speaker.imgs);
-            speakersTitle.add(speaker.title);
+            speakersTitle.add(speaker.title ?? "");
             print("Speaker title: " + speaker.title!);
             speakers.add(speaker);
           });
@@ -122,7 +122,9 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
                   title: Text(speakersNames[index],
                       textAlign: TextAlign.left,
                       style: TextStyle(fontSize: 18, color: Colors.black)),
-                  subtitle: Text(speakersTitle[index]!),
+                  subtitle: (speakersTitle[index] != "")
+                      ? Text(speakersTitle[index]!)
+                      : Text("No titles avaible for this speaker."),
                   leading: CircleAvatar(
                     radius: 26.0,
                     foregroundImage: NetworkImage(
