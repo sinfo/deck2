@@ -104,27 +104,63 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
       body: new ListView.builder(
           itemCount: widget.session.speakersIds!.length,
           itemBuilder: (BuildContext context, int index) {
-            return Card(
+            return Container(
+                margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(5),
+                    boxShadow: [
+                      BoxShadow(
+                          blurRadius: 7.0,
+                          color: Colors.grey.withOpacity(0.3),
+                          offset: new Offset(0, 3),
+                          spreadRadius: 4.0),
+                    ]),
                 child: ListTile(
-              onTap: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => SpeakerScreen(
-                              speaker: speakers[index],
-                            ))); //TODO
-              },
-              title: Text(speakersNames![index]),
-              subtitle: Text(speakersTitle[index]!),
-              leading: CircleAvatar(
-                foregroundImage: NetworkImage(
-                  speakersImages[index]!.speaker ??
-                      (speakersImages[index]!.internal ??
-                          (speakersImages[index]!.company ?? "")),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => SpeakerScreen(
+                                  speaker: speakers[index],
+                                ))); //TODO
+                  },
+                  title: Text(speakersNames[index]),
+                  subtitle: Text(speakersTitle[index]!),
+                  leading: CircleAvatar(
+                    radius: 26.0,
+                    foregroundImage: NetworkImage(
+                      speakersImages[index]!.speaker ??
+                          (speakersImages[index]!.internal ??
+                              (speakersImages[index]!.company ?? "")),
+                    ),
+                    backgroundImage: AssetImage('assets/noImage.png'),
+                  ), /* ClipRRect(
+                borderRadius: BorderRadius.circular(15.0), //or 15.0
+                child: Container(
+                  height: 70.0,
+                  width: 70.0,
+                  color: Color(0xffFF0E58),
+                  child: /* Image.network(
+                    speakersImages[index]!.speaker ??
+                        (speakersImages[index]!.internal ??
+                            (speakersImages[index]!.company ?? "")),
+                    height: 170.0,
+                    width: 70.0,
+                  ), */
+                      CircleAvatar(
+                    radius: 36.0,
+                    foregroundImage: NetworkImage(
+                      speakersImages[index]!.speaker ??
+                          (speakersImages[index]!.internal ??
+                              (speakersImages[index]!.company ?? "")),
+                    ),
+                    backgroundImage: AssetImage('assets/noImage.png'),
+                  ),
                 ),
-                backgroundImage: AssetImage('assets/noImage.png'),
-              ),
-            ));
+              ), */
+                ));
             /* Card(
               child: Padding(
                 padding: const EdgeInsets.all(10.0),
