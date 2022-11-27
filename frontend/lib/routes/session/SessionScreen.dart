@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/memberPartCard.dart';
 import 'package:frontend/main.dart';
@@ -11,8 +12,10 @@ import 'package:frontend/routes/session/DisplayGeneralInformation.dart';
 import 'package:frontend/routes/session/DisplayTickets.dart';
 import 'package:frontend/routes/session/EditSessionForm.dart';
 import 'package:frontend/routes/session/SessionInformationBox.dart';
+import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:frontend/services/sessionService.dart';
 import 'package:provider/provider.dart';
 
 class SessionScreen extends StatefulWidget {
@@ -98,6 +101,7 @@ class SessionBanner extends StatefulWidget {
 }
 
 class _SessionBannerState extends State<SessionBanner> {
+  SessionService _sessionService = SessionService();
   editMember() {
     return FutureBuilder(
         future: Provider.of<AuthService>(context).role,
@@ -140,6 +144,63 @@ class _SessionBannerState extends State<SessionBanner> {
           } else
             return Container(width: 0);
         });
+  }
+
+  void _deleteSessionDialog(context, id) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog(
+            'Warning', 'Are you sure you want to delete session?', () {
+          _deleteSession(context, id);
+        });
+      },
+    );
+  }
+
+  void _deleteSession(context, id) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Deleting')),
+    );
+
+    Session? s = await _sessionService.deleteSession(id);
+    if (s != null) {
+      SessionsNotifier notifier =
+          Provider.of<SessionsNotifier>(context, listen: false);
+      notifier.remove(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
+  }
+
+  Future<void> _editSessionModal(context, id) async {
+    Future<Session> sessionFuture = _sessionService.getSession(id);
+    Session session = await sessionFuture;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+            heightFactor: 0.7,
+            child: Container(
+              child: EditSessionForm(session: session),
+            ));
+      },
+    );
+    setState(() {});
   }
 
   @override
@@ -186,6 +247,31 @@ class _SessionBannerState extends State<SessionBanner> {
                     color: Colors.white,
                     fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
+            IconButton(
+                onPressed: () {
+                  _editSessionModal(context, widget.session.id);
+                },
+                icon: Icon(Icons.edit),
+                color: const Color(0xff5c7ff2)),
+            FutureBuilder(
+                future: Provider.of<AuthService>(context).role,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    Role r = snapshot.data as Role;
+
+                    if (r == Role.ADMIN || r == Role.COORDINATOR) {
+                      return IconButton(
+                          onPressed: () =>
+                              _deleteSessionDialog(context, widget.session.id),
+                          icon: Icon(Icons.delete),
+                          color: Colors.red);
+                    } else {
+                      return Container();
+                    }
+                  } else {
+                    return Container();
+                  }
+                }),
             SizedBox(height: 20),
           ],
         ),
