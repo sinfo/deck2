@@ -46,9 +46,9 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
     print(allSpeakers);
 
     for (var speaker in allSpeakers) {
-      print("Here");
+      // print("Here");
       for (var id in widget.session.speakersIds!) {
-        print("There");
+        // print("There");
         if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
           print("ADDED");
           print(speaker.name);
@@ -56,13 +56,14 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
             speakersNames.add(speaker.name);
             speakersImages.add(speaker.imgs);
             speakersTitle.add(speaker.title);
+            print("Speaker title: " + speaker.title!);
             speakers.add(speaker);
           });
-        } else {
+        } /* else {
           print("Ids are different.");
           print("Id from session: " + id);
           print("Id from speaker: " + speaker.id);
-        }
+        } */
       }
     }
   }
@@ -126,7 +127,9 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
                                   speaker: speakers[index],
                                 ))); //TODO
                   },
-                  title: Text(speakersNames[index]),
+                  title: Text(speakersNames[index],
+                      textAlign: TextAlign.left,
+                      style: TextStyle(fontSize: 18, color: Colors.black)),
                   subtitle: Text(speakersTitle[index]!),
                   leading: CircleAvatar(
                     radius: 26.0,
