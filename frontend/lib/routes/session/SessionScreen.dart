@@ -5,9 +5,10 @@ import 'package:frontend/components/memberPartCard.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/session.dart';
-import 'package:frontend/routes/member/DisplayContact2.dart';
+import 'package:frontend/routes/session/DisplaySpeaker.dart';
 import 'package:frontend/routes/member/EditMemberForm.dart';
 import 'package:frontend/routes/session/DisplayGeneralInformation.dart';
+import 'package:frontend/routes/session/DisplayTickets.dart';
 import 'package:frontend/routes/session/EditSessionForm.dart';
 import 'package:frontend/routes/session/SessionInformationBox.dart';
 import 'package:frontend/services/authService.dart';
@@ -32,7 +33,7 @@ class _SessionScreen extends State<SessionScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_handleTabIndex);
   }
 
@@ -54,13 +55,12 @@ class _SessionScreen extends State<SessionScreen>
       return Scaffold(
         appBar: CustomAppBar(disableEventChange: true),
         body: DefaultTabController(
-            length: 2,
+            length: 3,
             child: Column(children: <Widget>[
               SessionBanner(session: widget.session),
               TabBar(
                 isScrollable: small,
                 controller: _tabController,
-                //FIXME: penso que as label Colors deviam ficam a preto
                 tabs: [
                   Tab(text: 'General Information'),
                   (widget.session.kind == 'TALK')
@@ -76,8 +76,10 @@ class _SessionScreen extends State<SessionScreen>
                   DisplayGeneralInformation(
                     session: widget.session,
                   ),
-                  // DisplaySpeakers(),
-                  DisplayTickets(session: widget.session, small: small),
+                  DisplaySpeaker(
+                    session: widget.session,
+                  ),
+                  DisplayTickets(session: widget.session),
                 ],
               ))
             ])),
@@ -192,39 +194,83 @@ class _SessionBannerState extends State<SessionBanner> {
   }
 }
 
-class DisplayTickets extends StatefulWidget {
-  final Session session;
-  final bool small;
-  const DisplayTickets({Key? key, required this.session, required this.small})
-      : super(key: key);
+// class DisplayTickets extends StatefulWidget {
+//   final Session session;
+//   final bool small;
+//   const DisplayTickets({Key? key, required this.session, required this.small})
+//       : super(key: key);
 
-  @override
-  _DisplayTicketsState createState() => _DisplayTicketsState();
-}
+//   @override
+//   _DisplayTicketsState createState() => _DisplayTicketsState();
+// }
 
-class _DisplayTicketsState extends State<DisplayTickets> {
-  @override
-  void initState() {
-    super.initState();
-  }
+// class _DisplayTicketsState extends State<DisplayTickets> {
+//   @override
+//   void initState() {
+//     super.initState();
+//   }
 
-  @override
-  Widget build(BuildContext conext) {
-    return Scaffold(
-      backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-      body: ListView(
-        padding: EdgeInsets.symmetric(horizontal: 32),
-        physics: BouncingScrollPhysics(),
-        children: [
-          SessionInformationBox(session: widget.session, type: "description"),
-          // InformationBox(title: "Phones", contact: cont, type: "phone"),
-          // InformationBox(
-          //     title: "Socials",
-          //     contact: cont,
-          //     type: "social"), //SizedBox(height: 24,),
-        ],
-      ),
-      // floatingActionButton: _isEditable(cont),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext conext) {
+//     return Scaffold(
+//       backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
+//       body: ListView(
+//         padding: EdgeInsets.symmetric(horizontal: 32),
+//         physics: BouncingScrollPhysics(),
+//         children: [
+//           (widget.session.tickets!.max == 0)
+//               ? Text("There") //NoTicketsAvailable(widget.session)
+//               : Text("Here"),
+//           // SessionInformationBox(session: widget.session, type: "description"),
+//           // InformationBox(title: "Phones", contact: cont, type: "phone"),
+//           // InformationBox(
+//           //     title: "Socials",
+//           //     contact: cont,
+//           //     type: "social"), //SizedBox(height: 24,),
+//         ],
+//       ),
+//       // floatingActionButton: _isEditable(cont),
+//     );
+//   }
+
+//   Widget NoTicketsAvailable(Session session) {
+//     return Container(
+//       margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+//       padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+//       decoration: BoxDecoration(
+//           color: Colors.white,
+//           borderRadius: BorderRadius.circular(5),
+//           boxShadow: [
+//             BoxShadow(
+//                 blurRadius: 7.0,
+//                 color: Colors.grey.withOpacity(0.3),
+//                 offset: new Offset(0, 3),
+//                 spreadRadius: 4.0),
+//           ]),
+//       child: Stack(children: [
+//         Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Text("Info on tickets",
+//                 textAlign: TextAlign.left,
+//                 style: TextStyle(
+//                     fontSize: 22,
+//                     color: Colors.black,
+//                     fontWeight: FontWeight.bold)),
+//             Divider(),
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 Text(
+//                   "No tickets available for this session.",
+//                   textAlign: TextAlign.left,
+//                   style: TextStyle(fontSize: 16, color: Colors.black),
+//                 ),
+//               ],
+//             )
+//           ],
+//         ),
+//       ]),
+//     );
+//   }
+// }
