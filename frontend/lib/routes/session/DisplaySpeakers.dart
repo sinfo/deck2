@@ -6,7 +6,18 @@ import 'package:frontend/services/speakerService.dart';
 
 class DisplaySpeakers extends StatefulWidget {
   final Session session;
-  const DisplaySpeakers({Key? key, required this.session}) : super(key: key);
+  final List<String> speakersNames;
+  final List<Images?> speakersImages;
+  final List<String?> speakersTitle;
+  final List<Speaker> speakers;
+  const DisplaySpeakers(
+      {Key? key,
+      required this.session,
+      required this.speakersNames,
+      required this.speakersImages,
+      required this.speakersTitle,
+      required this.speakers})
+      : super(key: key);
 
   @override
   _DisplaySpeakersState createState() => _DisplaySpeakersState();
@@ -14,84 +25,85 @@ class DisplaySpeakers extends StatefulWidget {
 
 class _DisplaySpeakersState extends State<DisplaySpeakers> {
   SpeakerService speakerService = new SpeakerService();
-  List<Speaker> allSpeakers = [];
-  List<String> speakersNames = [];
-  List<Images?> speakersImages = [];
-  List<String?> speakersTitle = [];
-  List<Speaker> speakers = [];
+  // List<Speaker> allSpeakers = [];
+  // List<String> speakersNames = [];
+  // List<Images?> speakersImages = [];
+  // List<String?> speakersTitle = [];
+  // List<Speaker> speakers = [];
 
   @override
   void initState() {
     super.initState();
-    fillSpeakers();
+    //fillSpeakers();
     // speakersNames = _getSpeakers(widget.session.speakersIds);
     print("22222222");
 
-    print(speakersNames);
+    // print(speakersNames);
   }
 
-  Future<void> fillSpeakers() async {
-    Future<List<Speaker>> speakersFuture = speakerService.getSpeakers();
+  // Future<void> fillSpeakers() async {
+  //   Future<List<Speaker>> speakersFuture = speakerService.getSpeakers();
 
-    allSpeakers = await speakersFuture;
-    print("ALL SPEAKERS");
-    print(allSpeakers);
+  //   allSpeakers = await speakersFuture;
+  //   print("ALL SPEAKERS");
+  //   print(allSpeakers);
 
-    for (var speaker in allSpeakers) {
-      // print("Here");
-      for (var id in widget.session.speakersIds!) {
-        // print("There");
-        if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
-          print("ADDED");
-          print(speaker.name);
-          setState(() {
-            speakersNames.add(speaker.name);
-            speakersImages.add(speaker.imgs);
-            speakersTitle.add(speaker.title ?? "");
-            print("Speaker title: " + speaker.title!);
-            speakers.add(speaker);
-          });
-        } /* else {
-          print("Ids are different.");
-          print("Id from session: " + id);
-          print("Id from speaker: " + speaker.id);
-        } */
-      }
-    }
-  }
+  //   for (var speaker in allSpeakers) {
+  //     // print("Here");
+  //     for (var id in widget.session.speakersIds!) {
+  //       // print("There");
+  //       if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
+  //         print("ADDED");
+  //         print(speaker.name);
+  //         setState(() {
+  //           speakersNames.add(speaker.name);
+  //           speakersImages.add(speaker.imgs);
+  //           speakersTitle.add(speaker.title ?? "");
+  //           print("Speaker title: " + speaker.title!);
+  //           speakers.add(speaker);
+  //         });
+  //       } /* else {
+  //         print("Ids are different.");
+  //         print("Id from session: " + id);
+  //         print("Id from speaker: " + speaker.id);
+  //       } */
+  //     }
+  //   }
+  // }
 
-  List<String> _getSpeakers(List<String>? ids) {
-    print("IDS");
-    print(ids);
-    print(allSpeakers);
+  // List<String> _getSpeakers(List<String>? ids) {
+  //   print("IDS");
+  //   print(ids);
+  //   print(allSpeakers);
 
-    for (var speaker in allSpeakers) {
-      print("Here");
-      for (var id in ids!) {
-        print("There");
-        if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
-          print("ADDED");
-          print(speaker.name);
-          setState(() {
-            speakersNames.add(speaker.name);
-          });
-        } else {
-          print("Ids are different.");
-          print("Id from session: " + id);
-          print("Id from speaker: " + speaker.id);
-        }
-      }
-    }
-    print("11111");
+  //   for (var speaker in allSpeakers) {
+  //     print("Here");
+  //     for (var id in ids!) {
+  //       print("There");
+  //       if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
+  //         print("ADDED");
+  //         print(speaker.name);
+  //         setState(() {
+  //           speakersNames.add(speaker.name);
+  //         });
+  //       } else {
+  //         print("Ids are different.");
+  //         print("Id from session: " + id);
+  //         print("Id from speaker: " + speaker.id);
+  //       }
+  //     }
+  //   }
+  //   print("11111");
 
-    print(speakersNames);
-    return speakersNames;
-  }
+  //   print(speakersNames);
+  //   return speakersNames;
+  // }
 
   @override
   Widget build(BuildContext context) {
-    print("##########################################");
-    print(speakersNames);
+    print("LALALALALA");
+    // print("##########################################");
+    // print(speakersNames);
     return Scaffold(
       backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
       body: new ListView.builder(
@@ -116,21 +128,21 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => SpeakerScreen(
-                                  speaker: speakers[index],
+                                  speaker: widget.speakers[index],
                                 ))); //TODO
                   },
-                  title: Text(speakersNames[index],
+                  title: Text(widget.speakersNames[index],
                       textAlign: TextAlign.left,
                       style: TextStyle(fontSize: 18, color: Colors.black)),
-                  subtitle: (speakersTitle[index] != "")
-                      ? Text(speakersTitle[index]!)
+                  subtitle: (widget.speakersTitle[index] != "")
+                      ? Text(widget.speakersTitle[index]!)
                       : Text("No titles avaible for this speaker."),
                   leading: CircleAvatar(
                     radius: 26.0,
                     foregroundImage: NetworkImage(
-                      speakersImages[index]!.speaker ??
-                          (speakersImages[index]!.internal ??
-                              (speakersImages[index]!.company ?? "")),
+                      widget.speakersImages[index]!.speaker ??
+                          (widget.speakersImages[index]!.internal ??
+                              (widget.speakersImages[index]!.company ?? "")),
                     ),
                     backgroundImage: AssetImage('assets/noImage.png'),
                   ), /* ClipRRect(
