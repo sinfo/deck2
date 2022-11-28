@@ -101,112 +101,67 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
 
   @override
   Widget build(BuildContext context) {
-    print("LALALALALA");
-    // print("##########################################");
-    // print(speakersNames);
-    return Scaffold(
-      backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-      body: new ListView.builder(
-          itemCount: widget.session.speakersIds!.length,
-          itemBuilder: (BuildContext context, int index) {
-            return Container(
-                margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
-                decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5),
-                    boxShadow: [
-                      BoxShadow(
-                          blurRadius: 7.0,
-                          color: Colors.grey.withOpacity(0.3),
-                          offset: new Offset(0, 3),
-                          spreadRadius: 4.0),
-                    ]),
-                child: ListTile(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => SpeakerScreen(
-                                  speaker: widget.speakers[index],
-                                ))); //TODO
-                  },
-                  title: Text(widget.speakersNames[index],
-                      textAlign: TextAlign.left,
-                      style: TextStyle(fontSize: 18, color: Colors.black)),
-                  subtitle: (widget.speakersTitle[index] != "")
-                      ? Text(widget.speakersTitle[index]!)
-                      : Text("No titles avaible for this speaker."),
-                  leading: CircleAvatar(
-                    radius: 26.0,
-                    foregroundImage: NetworkImage(
-                      widget.speakersImages[index]!.speaker ??
-                          (widget.speakersImages[index]!.internal ??
-                              (widget.speakersImages[index]!.company ?? "")),
-                    ),
-                    backgroundImage: AssetImage('assets/noImage.png'),
-                  ), /* ClipRRect(
-                borderRadius: BorderRadius.circular(15.0), //or 15.0
-                child: Container(
-                  height: 70.0,
-                  width: 70.0,
-                  color: Color(0xffFF0E58),
-                  child: /* Image.network(
-                    speakersImages[index]!.speaker ??
-                        (speakersImages[index]!.internal ??
-                            (speakersImages[index]!.company ?? "")),
-                    height: 170.0,
-                    width: 70.0,
-                  ), */
-                      CircleAvatar(
-                    radius: 36.0,
-                    foregroundImage: NetworkImage(
-                      speakersImages[index]!.speaker ??
-                          (speakersImages[index]!.internal ??
-                              (speakersImages[index]!.company ?? "")),
-                    ),
-                    backgroundImage: AssetImage('assets/noImage.png'),
-                  ),
-                ),
-              ), */
-                ));
-            /* Card(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  children: [
-                    Container(
-                      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                      padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
-                      decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(5),
-                          boxShadow: [
-                            BoxShadow(
-                                blurRadius: 7.0,
-                                color: Colors.grey.withOpacity(0.3),
-                                offset: new Offset(0, 3),
-                                spreadRadius: 4.0),
-                          ]),
-                      child: Stack(children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(speakersNames![index],
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                    fontSize: 22,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
+    if (widget.speakers.length != 0) {
+      return Scaffold(
+        backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
+        body: new ListView.builder(
+            itemCount: widget.session.speakersIds!.length,
+            itemBuilder: (BuildContext context, int index) {
+              return Container(
+                  margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+                  padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+                  decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(5),
+                      boxShadow: [
+                        BoxShadow(
+                            blurRadius: 7.0,
+                            color: Colors.grey.withOpacity(0.3),
+                            offset: new Offset(0, 3),
+                            spreadRadius: 4.0),
                       ]),
+                  child: ListTile(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SpeakerScreen(
+                                    speaker: widget.speakers[index],
+                                  ))); //TODO
+                    },
+                    title: Text(widget.speakersNames[index],
+                        textAlign: TextAlign.left,
+                        style: TextStyle(fontSize: 18, color: Colors.black)),
+                    subtitle: (widget.speakersTitle[index] != "")
+                        ? Text(widget.speakersTitle[index]!)
+                        : Text("No titles avaible for this speaker."),
+                    leading: CircleAvatar(
+                      radius: 26.0,
+                      foregroundImage: NetworkImage(
+                        widget.speakersImages[index]!.speaker ??
+                            (widget.speakersImages[index]!.internal ??
+                                (widget.speakersImages[index]!.company ?? "")),
+                      ),
+                      backgroundImage: AssetImage('assets/noImage.png'),
                     ),
-                  ],
-                ),
-              ),
-            ); */
-          }),
-    );
+                  ));
+            }),
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Center(
+            child: Container(
+              height: 40,
+              width: 40,
+              margin: EdgeInsets.all(5),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ],
+      );
+    }
   }
 }
