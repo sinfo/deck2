@@ -35,10 +35,6 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
   void initState() {
     super.initState();
     //fillSpeakers();
-    // speakersNames = _getSpeakers(widget.session.speakersIds);
-    print("22222222");
-
-    // print(speakersNames);
   }
 
   // Future<void> fillSpeakers() async {

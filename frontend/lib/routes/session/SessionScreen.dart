@@ -101,7 +101,7 @@ class _SessionScreen extends State<SessionScreen>
         body: DefaultTabController(
             length: 3,
             child: Column(children: <Widget>[
-              SessionBanner(session: widget.session),
+              SessionBanner(session: widget.session /* , key: UniqueKey() */),
               TabBar(
                 isScrollable: small,
                 controller: _tabController,

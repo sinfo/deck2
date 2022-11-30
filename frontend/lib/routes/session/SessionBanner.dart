@@ -21,6 +21,25 @@ class SessionBanner extends StatefulWidget {
 
 class _SessionBannerState extends State<SessionBanner> {
   SessionService _sessionService = SessionService();
+  String kind = "";
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.session.kind == "TALK") {
+      setState(() {
+        kind = "Talk";
+      });
+    } else if (widget.session.kind == "PRESENTATION") {
+      setState(() {
+        kind = "Presentation";
+      });
+    } else if (widget.session.kind == "WORKSHOP") {
+      setState(() {
+        kind = "Workshop";
+      });
+    }
+  }
 
   void _deleteSessionDialog(context, id) {
     showDialog(
@@ -97,10 +116,15 @@ class _SessionBannerState extends State<SessionBanner> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
             SizedBox(height: 30),
-            SizedBox(height: 20),
+            Text(kind,
+                style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
             Text(widget.session.title,
                 style: TextStyle(
-                    fontSize: 25,
+                    fontSize: 35,
                     color: Colors.white,
                     fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
