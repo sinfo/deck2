@@ -23,8 +23,6 @@ class _DisplayCompanyState extends State<DisplayCompany> {
   void initState() {
     super.initState();
     _getCompanies(widget.session.companyId);
-    print("Company name: " + companyName);
-    // speakersNames = _getSpeakers(widget.session.speakersIds);
   }
 
   Future<String> _getCompanies(String? id) async {

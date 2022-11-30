@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/blurryDialog.dart';
-import 'package:frontend/models/company.dart';
+import 'package:frontend/models/session.dart';
 import 'package:frontend/models/speaker.dart';
-import 'package:frontend/routes/session/AddSessionForm.dart';
-import 'package:frontend/routes/session/EditSessionForm.dart';
 import 'package:frontend/routes/session/SessionScreen.dart';
-import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/services/companyService.dart';
-import 'package:frontend/services/sessionService.dart';
 import 'package:frontend/services/speakerService.dart';
-import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-
-import '../../models/session.dart';
-import '../../services/authService.dart';
 
 class Calendar extends StatefulWidget {
   final List<Session> sessions;
@@ -33,7 +23,6 @@ class _CalendarState extends State<Calendar> {
   final titleController = TextEditingController();
   final descpController = TextEditingController();
   final List<Session> sessions;
-  final _sessionService = SessionService();
   CalendarFormat format = CalendarFormat.month;
   SpeakerService speakerService = SpeakerService();
   CompanyService companyService = CompanyService();
@@ -95,92 +84,6 @@ class _CalendarState extends State<Calendar> {
       }
     }
     return speakersNames;
-  }
-
-  Future<String> _getCompanies(String? id) async {
-    Future<Company?> companyFuture = companyService.getCompany(id: id!);
-    Company? company = await companyFuture;
-    String? companyName = company!.name;
-    return companyName;
-  }
-
-  void _deleteSessionDialog(context, id) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return BlurryDialog(
-            'Warning', 'Are you sure you want to delete session?', () {
-          _deleteSession(context, id);
-        });
-      },
-    );
-  }
-
-  void _deleteSession(context, id) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleting')),
-    );
-
-    Session? s = await _sessionService.deleteSession(id);
-    if (s != null) {
-      SessionsNotifier notifier =
-          Provider.of<SessionsNotifier>(context, listen: false);
-      notifier.remove(s);
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
-      );
-    }
-  }
-
-  Future<void> _editSessionModal(context, id) async {
-    Future<Session> sessionFuture = _sessionService.getSession(id);
-    Session session = await sessionFuture;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return FractionallySizedBox(
-            heightFactor: 0.7,
-            child: Container(
-              child: EditSessionForm(session: session),
-            ));
-      },
-    );
-  }
-
-  Widget buildTextField(
-      {String? hint, required TextEditingController controller}) {
-    return TextField(
-      controller: controller,
-      textCapitalization: TextCapitalization.words,
-      decoration: InputDecoration(
-        labelText: hint ?? '',
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blue, width: 1.5),
-          borderRadius: BorderRadius.circular(
-            10.0,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blue, width: 1.5),
-          borderRadius: BorderRadius.circular(
-            10.0,
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -271,7 +174,7 @@ class _CalendarState extends State<Calendar> {
                             MaterialPageRoute(
                                 builder: (context) => SessionScreen(
                                       session: calSessions,
-                                    ))); //TODO
+                                    )));
                       },
                       child: Card(
                         color: Colors.white,
@@ -285,22 +188,6 @@ class _CalendarState extends State<Calendar> {
                           height: 80.0,
                           child: Row(
                             children: <Widget>[
-                              // Container(
-                              //   height: 100.0,
-                              //   width: 100.0,
-                              //   child: (calSessions.image == '')
-                              //       ? Image.asset("assets/noImage.png")
-                              //       : Image.network(member.image!),
-                              //   decoration: BoxDecoration(
-                              //     borderRadius: BorderRadius.only(
-                              //         bottomLeft: Radius.circular(5.0),
-                              //         topLeft: Radius.circular(5.0)),
-                              //     image: DecorationImage(
-                              //       image: AssetImage("assets/banner_background.png"),
-                              //       fit: BoxFit.fill,
-                              //     ),
-                              //   ),
-                              // ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Text(

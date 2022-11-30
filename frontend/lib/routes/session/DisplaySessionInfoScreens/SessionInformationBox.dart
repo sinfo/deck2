@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/session.dart';
-import 'package:frontend/my_flutter_app_icons.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class SessionInformationBox extends StatelessWidget {
   // final String title;
@@ -361,13 +359,5 @@ class SessionInformationBox extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-_launchURL(String url) async {
-  if (await canLaunch(url)) {
-    await launch(url, forceWebView: true);
-  } else {
-    throw 'Could not launch $url';
   }
 }

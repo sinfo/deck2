@@ -25,75 +25,11 @@ class DisplaySpeakers extends StatefulWidget {
 
 class _DisplaySpeakersState extends State<DisplaySpeakers> {
   SpeakerService speakerService = new SpeakerService();
-  // List<Speaker> allSpeakers = [];
-  // List<String> speakersNames = [];
-  // List<Images?> speakersImages = [];
-  // List<String?> speakersTitle = [];
-  // List<Speaker> speakers = [];
 
   @override
   void initState() {
     super.initState();
-    //fillSpeakers();
   }
-
-  // Future<void> fillSpeakers() async {
-  //   Future<List<Speaker>> speakersFuture = speakerService.getSpeakers();
-
-  //   allSpeakers = await speakersFuture;
-  //   print("ALL SPEAKERS");
-  //   print(allSpeakers);
-
-  //   for (var speaker in allSpeakers) {
-  //     // print("Here");
-  //     for (var id in widget.session.speakersIds!) {
-  //       // print("There");
-  //       if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
-  //         print("ADDED");
-  //         print(speaker.name);
-  //         setState(() {
-  //           speakersNames.add(speaker.name);
-  //           speakersImages.add(speaker.imgs);
-  //           speakersTitle.add(speaker.title ?? "");
-  //           print("Speaker title: " + speaker.title!);
-  //           speakers.add(speaker);
-  //         });
-  //       } /* else {
-  //         print("Ids are different.");
-  //         print("Id from session: " + id);
-  //         print("Id from speaker: " + speaker.id);
-  //       } */
-  //     }
-  //   }
-  // }
-
-  // List<String> _getSpeakers(List<String>? ids) {
-  //   print("IDS");
-  //   print(ids);
-  //   print(allSpeakers);
-
-  //   for (var speaker in allSpeakers) {
-  //     print("Here");
-  //     for (var id in ids!) {
-  //       print("There");
-  //       if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
-  //         print("ADDED");
-  //         print(speaker.name);
-  //         setState(() {
-  //           speakersNames.add(speaker.name);
-  //         });
-  //       } else {
-  //         print("Ids are different.");
-  //         print("Id from session: " + id);
-  //         print("Id from speaker: " + speaker.id);
-  //       }
-  //     }
-  //   }
-  //   print("11111");
-
-  //   print(speakersNames);
-  //   return speakersNames;
-  // }
 
   @override
   Widget build(BuildContext context) {
