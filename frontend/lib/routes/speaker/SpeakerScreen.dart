@@ -5,10 +5,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
-import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
-import 'package:frontend/components/threads/threadCard/threadCard.dart';
-import 'package:frontend/models/flightInfo.dart';
 import 'package:frontend/routes/speaker/flights/AddFlightInfoForm.dart';
 import 'package:frontend/routes/speaker/flights/flightInfoScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
@@ -67,6 +64,17 @@ class _SpeakerScreenState extends State<SpeakerScreen>
       setState(() {
         widget.speaker = s!;
       });
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
     }
   }
 
@@ -158,10 +166,15 @@ class _SpeakerScreenState extends State<SpeakerScreen>
       builder: (context) {
         return Container(
           child: AddThreadForm(
-              speaker: widget.speaker,
-              onEditSpeaker: (context, _speaker) {
-                speakerChangedCallback(context, speaker: _speaker);
-              }),
+            speaker: widget.speaker,
+            onAddSpeaker: (thread_text, thread_kind) {
+              speakerChangedCallback(context,
+                  fs: _speakerService.addThread(
+                      id: widget.speaker.id,
+                      kind: thread_kind,
+                      text: thread_text));
+            },
+          ),
         );
       },
     );

@@ -56,10 +56,9 @@ class Participation {
   }
 
   Future<List<Thread>?> get communications async {
-    if (_communications != null && _communications!.length == 0) {
+    if (_communications != null && _communications!.length > 0) {
       return _communications;
-    }
-    if (communicationsId == null) {
+    } else if (communicationsId == null || communicationsId == []) {
       return [];
     }
 

@@ -58,11 +58,23 @@ class _CompanyScreenState extends State<CompanyScreen>
     } else if (company != null) {
       s = company;
     }
+
     if (s != null) {
       Provider.of<CompanyTableNotifier>(context, listen: false).edit(s);
       setState(() {
         widget.company = s!;
       });
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
     }
   }
 
@@ -73,8 +85,12 @@ class _CompanyScreenState extends State<CompanyScreen>
         return Container(
           child: AddThreadForm(
               company: widget.company,
-              onEditCompany: (context, _company) {
-                companyChangedCallback(context, company: _company);
+              onAddCompany: (thread_text, thread_kind) {
+                companyChangedCallback(context,
+                    fs: _companyService.addThread(
+                        id: widget.company.id,
+                        kind: thread_kind,
+                        text: thread_text));
               }),
         );
       },

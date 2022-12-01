@@ -64,6 +64,18 @@ class _MeetingScreenState extends State<MeetingScreen>
       setState(() {
         widget.meeting = m!;
       });
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
     }
   }
 
@@ -73,10 +85,15 @@ class _MeetingScreenState extends State<MeetingScreen>
       builder: (context) {
         return Container(
           child: AddThreadForm(
-              meeting: widget.meeting,
-              onEditMeeting: (context, _meeting) {
-                meetingChangedCallback(context, meeting: _meeting);
-              }),
+            meeting: widget.meeting,
+            onAddMeeting: (thread_text) {
+              meetingChangedCallback(context,
+                  fm: _meetingService.addThread(
+                      id: widget.meeting.id,
+                      kind: 'MEETING',
+                      text: thread_text));
+            },
+          ),
         );
       },
     );
