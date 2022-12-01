@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/models/flightInfo.dart';
-import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/speaker/flights/editFlightForm.dart';
-import 'package:frontend/routes/speaker/speakerNotifier.dart';
-import 'package:frontend/services/speakerService.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class FlightCard extends StatefulWidget {
   FlightInfo flight;
@@ -28,6 +24,8 @@ class FlightCard extends StatefulWidget {
 
 class _FlightCardState extends State<FlightCard>
     with AutomaticKeepAliveClientMixin {
+  
+  @override
   bool get wantKeepAlive => true;
 
   Future<void> flightChangedCallback(BuildContext context,
@@ -66,36 +64,6 @@ class _FlightCardState extends State<FlightCard>
         });
       },
     );
-  }
-
-  void _deleteFlight(context) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleting')),
-    );
-
-    SpeakerService _speakerService = SpeakerService();
-    Speaker? s = await _speakerService.removeFlightInfo(
-        id: widget.id, flightInfoId: widget.flight.id);
-    if (s != null) {
-      SpeakerTableNotifier notifier =
-          Provider.of<SpeakerTableNotifier>(context, listen: false);
-      notifier.edit(s);
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
-      );
-    }
   }
 
   @override

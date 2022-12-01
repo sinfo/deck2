@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/SearchResultWidget.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';

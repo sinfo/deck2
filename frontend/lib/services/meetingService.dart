@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:frontend/models/meeting.dart';
@@ -8,8 +7,6 @@ import 'package:http_parser/http_parser.dart';
 import 'package:dio/dio.dart';
 import 'package:frontend/components/deckException.dart';
 import 'dart:io';
-
-import 'package:image_picker/image_picker.dart';
 
 class MeetingService extends Service {
   Future<List<Meeting>> getMeetings(

@@ -274,7 +274,7 @@ class MeetingParticipants extends StatelessWidget {
                           onPressed: () => _deleteMeetingParticipant(context,
                               membs[index]!.id, type, membs[index]!.name),
                           icon: Icon(Icons.delete),
-                          style: ElevatedButton.styleFrom(primary: Colors.red),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                           label: const Text("Delete participant")),
                     ]);
                   });
@@ -643,7 +643,7 @@ class MeetingBanner extends StatelessWidget {
                                                         context),
                                                 icon: Icon(Icons.article),
                                                 style: ElevatedButton.styleFrom(
-                                                    primary: meeting
+                                                    backgroundColor: meeting
                                                             .minute!.isNotEmpty
                                                         ? const Color(
                                                             0xFF5C7FF2)
@@ -666,7 +666,7 @@ class MeetingBanner extends StatelessWidget {
                                                     icon: Icon(Icons.article),
                                                     style: ElevatedButton
                                                         .styleFrom(
-                                                            primary: const Color(
+                                                            backgroundColor: const Color(
                                                                 0xFFF25C5C)),
                                                     label: const Text(
                                                         "Delete Minutes")))

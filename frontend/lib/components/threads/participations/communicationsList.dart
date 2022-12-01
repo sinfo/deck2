@@ -19,7 +19,7 @@ class CommunicationsList extends StatefulWidget {
 }
 
 class _CommunicationsListState extends State<CommunicationsList>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
   late final TabController _tabController;
 
   @override
@@ -47,7 +47,11 @@ class _CommunicationsListState extends State<CommunicationsList>
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return LayoutBuilder(builder: (context, constraints) {
       return Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),

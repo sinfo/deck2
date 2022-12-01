@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/meeting.dart';
-import 'package:frontend/models/member.dart';
 import 'package:frontend/services/service.dart';
 import 'package:frontend/models/team.dart';
 

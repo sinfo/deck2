@@ -8,7 +8,6 @@ import 'package:frontend/routes/company/CompanyListWidget.dart';
 import 'package:frontend/routes/meeting/AddMeetingForm.dart';
 import 'package:frontend/routes/member/AddMemberForm.dart';
 import 'package:frontend/routes/member/MemberListWidget.dart';
-import 'package:frontend/routes/speaker/flights/AddFlightInfoForm.dart';
 import 'package:frontend/routes/speaker/SpeakerListWidget.dart';
 import 'package:frontend/routes/speaker/AddSpeakerForm.dart';
 import 'package:frontend/routes/teams/AddTeamMemberForm.dart';

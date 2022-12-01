@@ -5,8 +5,6 @@ import 'package:frontend/services/sessionService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:dropdown_search/dropdown_search.dart';
-import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
 
 class EditSessionForm extends StatefulWidget {
   final Session session;

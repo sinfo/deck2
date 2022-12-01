@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/main.dart';
 import 'package:frontend/models/session.dart';
-import 'package:frontend/routes/session/SessionCard.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/routes/session/calendar.dart';
 import 'package:frontend/services/sessionService.dart';
@@ -40,7 +38,6 @@ class _SessionListState extends State<SessionList>
   }
 
   @override
-  // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 
   @override

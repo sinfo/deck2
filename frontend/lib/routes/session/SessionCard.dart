@@ -1,4 +1,3 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/main.dart';
@@ -9,7 +8,6 @@ import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class SessionCard extends StatelessWidget {
   final Session session;
