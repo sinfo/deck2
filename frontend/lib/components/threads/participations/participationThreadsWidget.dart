@@ -31,28 +31,20 @@ class ParticipationThreadsWidget extends StatelessWidget {
               threads = [];
             }
             threads.sort((a, b) => b.posted.compareTo(a.posted));
-            return Column(children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
+            return ListView.builder(
+              controller: ScrollController(),
+              itemCount: threads.length,
+              itemBuilder: (context, index) {
+                return Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text('SINFO ${participation.event}'),
-                ),
-              ),
-              Divider(),
-              ...threads
-                  .map(
-                    (thread) => Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ThreadCard(
-                        thread: thread,
-                        small: small,
-                        onCommunicationDeleted: onCommunicationDeleted,
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ]);
+                  child: ThreadCard(
+                    thread: threads![index],
+                    small: small,
+                    onCommunicationDeleted: onCommunicationDeleted,
+                  ),
+                );
+              },
+            );
           } else {
             return Center(child: CircularProgressIndicator());
           }

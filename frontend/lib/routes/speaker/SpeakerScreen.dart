@@ -133,7 +133,9 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                             id: widget.speaker.id)),
                   ),
                   CommunicationsList(
-                    participations: widget.speaker.participations ?? [],
+                    participations: widget.speaker.participations != null
+                        ? widget.speaker.participations!.reversed.toList()
+                        : [],
                     small: small,
                     onCommunicationDeleted: (thread_ID) =>
                         speakerChangedCallback(context,
