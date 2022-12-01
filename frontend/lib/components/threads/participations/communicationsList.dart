@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/threads/participations/participationThreadsWidget.dart';
-import 'package:frontend/components/threads/threadCard/threadCard.dart';
 import 'package:frontend/models/participation.dart';
 
 class CommunicationsList extends StatelessWidget {
   final List<Participation> participations;
-  // ID of the meeting/company/speaker
-  final String id;
-  final CommunicationType type;
   final bool small;
+  final void Function(String) onCommunicationDeleted;
 
   CommunicationsList(
       {Key? key,
       required this.participations,
       required this.small,
-      required this.type,
-      required this.id})
+      required this.onCommunicationDeleted})
       : super(key: key);
 
   @override
@@ -32,9 +28,8 @@ class CommunicationsList extends StatelessWidget {
                 .map(
                   (participation) => ParticipationThreadsWidget(
                     participation: participation,
-                    id: id,
-                    type: type,
                     small: small,
+                    onCommunicationDeleted: onCommunicationDeleted,
                   ),
                 )
                 .toList()),

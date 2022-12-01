@@ -182,8 +182,11 @@ class _CompanyScreenState extends State<CompanyScreen>
                       ),
                       CommunicationsList(
                           participations: widget.company.participations ?? [],
-                          id: widget.company.id,
-                          type: CommunicationType.COMPANY,
+                          onCommunicationDeleted: (thread_ID) =>
+                              companyChangedCallback(context,
+                                  fs: _companyService.deleteThread(
+                                      id: widget.company.id,
+                                      threadID: thread_ID)),
                           small: small),
                     ]),
                   ),

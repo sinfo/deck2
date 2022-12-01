@@ -1,39 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/components/appbar.dart';
-import 'package:frontend/models/speaker.dart';
-import 'package:frontend/routes/speaker/speakerNotifier.dart';
-import 'package:frontend/services/speakerService.dart';
+import 'package:frontend/models/flightInfo.dart';
+import 'package:frontend/services/flightInfoService.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
-class AddFlightInfoForm extends StatefulWidget {
-  final String id;
-
-  AddFlightInfoForm({Key? key, required this.id}) : super(key: key);
+class EditFlightForm extends StatefulWidget {
+  final FlightInfo flight;
+  final void Function(BuildContext, FlightInfo?)? onFlightEdit;
+  EditFlightForm({Key? key, required this.flight, required this.onFlightEdit})
+      : super(key: key);
 
   @override
-  _AddFlightInfoFormState createState() => _AddFlightInfoFormState();
+  _EditFlightFormState createState() => _EditFlightFormState();
 }
 
-class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
+class _EditFlightFormState extends State<EditFlightForm> {
   final _formKey = GlobalKey<FormState>();
+  late TextEditingController _inboundController;
+  late TextEditingController _outboundController;
+  late TextEditingController _fromController;
+  late TextEditingController _toController;
+  late TextEditingController _linkController;
+  late TextEditingController _notesController;
+  late TextEditingController _costEurosController;
+  late TextEditingController _costCentsController;
+  late bool flightBought;
 
-  final _inboundController = TextEditingController();
-  final _outboundController = TextEditingController();
-  final _fromController = TextEditingController();
-  final _toController = TextEditingController();
-  final _linkController = TextEditingController();
-  final _notesController = TextEditingController();
-  final _costEurosController = TextEditingController();
-  final _costCentsController = TextEditingController();
-  bool flightBought = false;
+  final _flightService = FlightInfoService();
 
-  final _speakerService = SpeakerService();
+  late DateTime _inbound;
+  late DateTime _outbound;
 
-  DateTime? dateTime;
-  DateTime? _inbound;
-  DateTime? _outbound;
+  @override
+  void initState() {
+    super.initState();
+    _fromController = TextEditingController(text: widget.flight.from);
+    _toController = TextEditingController(text: widget.flight.to);
+    _inboundController =
+        TextEditingController(text: getDateTime(widget.flight.inbound));
+    _outboundController =
+        TextEditingController(text: getDateTime(widget.flight.outbound));
+    _linkController = TextEditingController(text: widget.flight.link);
+    _notesController = TextEditingController(text: widget.flight.notes);
+    _costEurosController =
+        TextEditingController(text: (widget.flight.cost ~/ 100).toString());
+    _costCentsController =
+        TextEditingController(text: (widget.flight.cost % 100).toString());
+    _inbound = widget.flight.inbound;
+    _outbound = widget.flight.outbound;
+    flightBought = widget.flight.bought;
+  }
+
+  String getDateTime(DateTime dateTime) {
+    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
+  }
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
@@ -45,26 +65,24 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
           int.parse(_costCentsController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creating Flight...')),
+        const SnackBar(content: Text('Updating Flight...')),
       );
 
-      Speaker? s = await _speakerService.addFlightInfo(
-          id: widget.id,
-          bought: flightBought,
-          cost: cost,
-          from: from,
-          to: to,
-          inbound: _inbound!.toUtc(),
-          outbound: _outbound!.toUtc(),
-          link: link,
-          notes: notes);
+      FlightInfo f = await _flightService.updateFlightInfo(
+          widget.flight.id,
+          _inbound.toUtc(),
+          _outbound.toUtc(),
+          from,
+          to,
+          link,
+          flightBought,
+          cost,
+          notes);
 
-      if (s != null) {
-        SpeakerTableNotifier notifier =
-            Provider.of<SpeakerTableNotifier>(context, listen: false);
-        notifier.edit(s);
-
+      if (f != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        widget.onFlightEdit!(context, f);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -72,6 +90,7 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
             duration: Duration(seconds: 2),
           ),
         );
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -79,7 +98,6 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
           const SnackBar(content: Text('An error occured.')),
         );
       }
-      Navigator.pop(context);
     }
   }
 
@@ -112,10 +130,6 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
     }
   }
 
-  String getDateTime(DateTime dateTime) {
-    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
-  }
-
   Widget _buildForm() {
     return Form(
       key: _formKey,
@@ -138,29 +152,30 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
             ),
           ),
           Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextFormField(
-                controller: _outboundController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a departure date of the flight';
-                  }
-                  return null;
-                },
-                decoration: const InputDecoration(
-                  icon: const Icon(Icons.calendar_today),
-                  labelText: "Departure Date *",
-                ),
-                readOnly: true, //prevents editing the date in the form field
-                onTap: () async {
-                  await _selectDateTime(context, false);
-                  String formattedDate = getDateTime(_outbound!);
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _outboundController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a departure date of the flight';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.calendar_today),
+                labelText: "Departure Date *",
+              ),
+              readOnly: true, //prevents editing the date in the form field
+              onTap: () async {
+                await _selectDateTime(context, false);
+                String formattedDate = getDateTime(_outbound);
 
-                  setState(() {
-                    _outboundController.text = formattedDate;
-                  });
-                },
-              )),
+                setState(() {
+                  _outboundController.text = formattedDate;
+                });
+              },
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
@@ -178,29 +193,30 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
             ),
           ),
           Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextFormField(
-                controller: _inboundController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter an arrival date of the flight';
-                  }
-                  return null;
-                },
-                decoration: const InputDecoration(
-                  icon: const Icon(Icons.calendar_today),
-                  labelText: "Arrival Date *",
-                ),
-                readOnly: true, //prevents editing the date in the form field
-                onTap: () async {
-                  await _selectDateTime(context, true);
-                  String formattedDate = getDateTime(_inbound!);
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _inboundController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter an arrival date of the flight';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.calendar_today),
+                labelText: "Arrival Date *",
+              ),
+              readOnly: true, //prevents editing the date in the form field
+              onTap: () async {
+                await _selectDateTime(context, true);
+                String formattedDate = getDateTime(_inbound!);
 
-                  setState(() {
-                    _inboundController.text = formattedDate;
-                  });
-                },
-              )),
+                setState(() {
+                  _inboundController.text = formattedDate;
+                });
+              },
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextFormField(
@@ -300,16 +316,6 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
 
   @override
   Widget build(BuildContext context) {
-    CustomAppBar appBar = CustomAppBar(
-      disableEventChange: true,
-    );
-    return Scaffold(
-      body: Stack(children: [
-        Container(
-            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
-            child: _buildForm()),
-        appBar,
-      ]),
-    );
+    return _buildForm();
   }
 }

@@ -5,17 +5,14 @@ import 'package:frontend/models/thread.dart';
 
 class ParticipationThreadsWidget extends StatelessWidget {
   final Participation participation;
-  // ID of the meeting/company/speaker
-  final String id;
-  final CommunicationType type;
   final bool small;
+  final void Function(String) onCommunicationDeleted;
 
   ParticipationThreadsWidget(
       {Key? key,
       required this.participation,
       required this.small,
-      required this.type,
-      required this.id})
+      required this.onCommunicationDeleted})
       : super(key: key);
 
   @override
@@ -49,9 +46,8 @@ class ParticipationThreadsWidget extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       child: ThreadCard(
                         thread: thread,
-                        id: id,
-                        type: type,
                         small: small,
+                        onCommunicationDeleted: onCommunicationDeleted,
                       ),
                     ),
                   )

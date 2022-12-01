@@ -9,7 +9,7 @@ import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/components/threads/threadCard/threadCard.dart';
 import 'package:frontend/models/flightInfo.dart';
-import 'package:frontend/routes/speaker/AddFlightInfoForm.dart';
+import 'package:frontend/routes/speaker/flights/AddFlightInfoForm.dart';
 import 'package:frontend/routes/speaker/flights/flightInfoScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -109,7 +109,11 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                   FlightInfoScreen(
                       participations: widget.speaker.participations ?? [],
                       id: widget.speaker.id,
-                      small: small),
+                      small: small,
+                      onFlightDeleted: (flightId) => speakerChangedCallback(
+                          context,
+                          fs: _speakerService.removeFlightInfo(
+                              flightInfoId: flightId, id: widget.speaker.id))),
                   ParticipationList(
                     speaker: widget.speaker,
                     onParticipationChanged: (Map<String, dynamic> body) async {
@@ -129,10 +133,13 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                             id: widget.speaker.id)),
                   ),
                   CommunicationsList(
-                      participations: widget.speaker.participations ?? [],
-                      id: widget.speaker.id,
-                      type: CommunicationType.SPEAKER,
-                      small: small),
+                    participations: widget.speaker.participations ?? [],
+                    small: small,
+                    onCommunicationDeleted: (thread_ID) =>
+                        speakerChangedCallback(context,
+                            fs: _speakerService.deleteThread(
+                                id: widget.speaker.id, threadID: thread_ID)),
+                  ),
                 ]),
               ),
             ],
@@ -168,11 +175,14 @@ class _SpeakerScreenState extends State<SpeakerScreen>
         return FloatingActionButton.extended(
           onPressed: () {
             Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      AddFlightInfoForm(id: widget.speaker.id)),
-            );
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddFlightInfoForm(
+                      id: widget.speaker.id,
+                      onEditSpeaker: (context, _speaker) {
+                        speakerChangedCallback(context, speaker: _speaker);
+                      }),
+                ));
           },
           label: const Text('Add Flight Information'),
           icon: const Icon(Icons.add),

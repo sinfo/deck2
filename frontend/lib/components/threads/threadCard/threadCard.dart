@@ -11,20 +11,16 @@ final Map<String, Color> THREADCOLOR = {
   "PENDING": Colors.yellow,
 };
 
-enum CommunicationType { COMPANY, MEETING, SPEAKER }
-
 class ThreadCard extends StatefulWidget {
   Thread thread;
-  // ID of the meeting/company/speaker
-  final String id;
-  final CommunicationType type;
   final bool small;
+  final void Function(String) onCommunicationDeleted;
+
   ThreadCard(
       {Key? key,
       required this.thread,
       required this.small,
-      required this.id,
-      required this.type})
+      required this.onCommunicationDeleted})
       : super(key: key);
 
   @override
@@ -68,8 +64,7 @@ class ThreadCardState extends State<ThreadCard>
                       p: p,
                       thread: widget.thread,
                       small: widget.small,
-                      id: widget.id,
-                      type: widget.type,
+                      onCommunicationDeleted: widget.onCommunicationDeleted,
                       onEditThread: (context, _thread) {
                         threadChangedCallback(context, thread: _thread);
                       }),

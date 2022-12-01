@@ -31,6 +31,7 @@ class MeetingScreen extends StatefulWidget {
 class _MeetingScreenState extends State<MeetingScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  MeetingService _meetingService = MeetingService();
 
   @override
   void initState() {
@@ -155,9 +156,14 @@ class _MeetingScreenState extends State<MeetingScreen>
                             meetingChangedCallback(context, meeting: _meeting);
                           }),
                       MeetingsCommunications(
-                          communications: widget.meeting.communications,
-                          small: small,
-                          id: widget.meeting.id),
+                        communications: widget.meeting.communications,
+                        small: small,
+                        onCommunicationDeleted: (thread_ID) =>
+                            meetingChangedCallback(context,
+                                fm: _meetingService.deleteThread(
+                                    id: widget.meeting.id,
+                                    threadID: thread_ID)),
+                      ),
                     ]),
                   ),
                 ],
@@ -318,13 +324,13 @@ class MeetingParticipants extends StatelessWidget {
 class MeetingsCommunications extends StatelessWidget {
   final Future<List<Thread>?> communications;
   final bool small;
-  final String id;
+  final void Function(String) onCommunicationDeleted;
 
   MeetingsCommunications(
       {Key? key,
       required this.communications,
       required this.small,
-      required this.id});
+      required this.onCommunicationDeleted});
 
   @override
   Widget build(BuildContext context) {
@@ -349,9 +355,8 @@ class MeetingsCommunications extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       child: ThreadCard(
                         thread: thread,
-                        type: CommunicationType.MEETING,
-                        id: id,
                         small: small,
+                        onCommunicationDeleted: onCommunicationDeleted,
                       ),
                     ),
                   )

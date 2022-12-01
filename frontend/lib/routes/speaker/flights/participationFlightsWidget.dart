@@ -7,12 +7,14 @@ class ParticipationFlightsWidget extends StatelessWidget {
   final SpeakerParticipation participation;
   final String id;
   final bool small;
+  final void Function(String) onDelete;
 
   ParticipationFlightsWidget(
       {Key? key,
       required this.participation,
       required this.small,
-      required this.id})
+      required this.id,
+      required this.onDelete})
       : super(key: key);
 
   @override
@@ -46,6 +48,7 @@ class ParticipationFlightsWidget extends StatelessWidget {
                       flight: flightInfo,
                       id: id,
                       small: small,
+                      onDelete: onDelete,
                     ),
                   )
                   .toList(),

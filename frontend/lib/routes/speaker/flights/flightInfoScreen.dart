@@ -6,10 +6,12 @@ class FlightInfoScreen extends StatelessWidget {
   final List<SpeakerParticipation> participations;
   final String id;
   final bool small;
+  final void Function(String) onFlightDeleted;
   const FlightInfoScreen(
       {Key? key,
       required this.participations,
       required this.small,
+      required this.onFlightDeleted,
       required this.id})
       : super(key: key);
 
@@ -28,6 +30,7 @@ class FlightInfoScreen extends StatelessWidget {
                     participation: participation,
                     id: id,
                     small: small,
+                    onDelete: onFlightDeleted,
                   ),
                 )
                 .toList()),

@@ -318,7 +318,7 @@ class SpeakerService extends Service {
   Future<Speaker?> removeFlightInfo(
       {required String id, required String flightInfoId}) async {
     Response<String> response = await dio
-        .delete("/speakers/" + id + "participation/flightInfo" + flightInfoId);
+        .delete("/speakers/" + id + "/participation/flightInfo/" + flightInfoId);
     try {
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
