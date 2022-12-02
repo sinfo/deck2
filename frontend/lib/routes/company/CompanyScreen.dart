@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/models/company.dart';
-import 'package:frontend/routes/company/BillingInfoScreen.dart';
+import 'package:frontend/routes/company/billing/AddBillingInfoForm.dart';
+import 'package:frontend/routes/company/billing/BillingScreen.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/DetailsScreen.dart';
 import 'package:frontend/routes/company/ParticipationList.dart';
@@ -99,19 +101,8 @@ class _CompanyScreenState extends State<CompanyScreen>
     int index = _tabController.index;
     switch (index) {
       case 0:
-        return null;
       case 1:
-        return FloatingActionButton.extended(
-          onPressed: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        Container(child: Text("In Progress..."))));
-          },
-          label: const Text('Add Billing Info'),
-          icon: const Icon(Icons.add),
-        );
+        return null;
       case 2:
         {
           if (widget.company.lastParticipation != latestEvent) {
@@ -168,7 +159,7 @@ class _CompanyScreenState extends State<CompanyScreen>
                     controller: _tabController,
                     tabs: [
                       Tab(text: 'Details'),
-                      Tab(text: 'BillingInfo'),
+                      Tab(text: 'Billing'),
                       Tab(text: 'Participations'),
                       Tab(text: 'Communications'),
                     ],
@@ -178,7 +169,11 @@ class _CompanyScreenState extends State<CompanyScreen>
                       DetailsScreen(
                         company: widget.company,
                       ),
-                      BillingInfoScreen(),
+                      BillingScreen(
+                        participations: widget.company.participations,
+                        billingInfo: widget.company.billingInfo,
+                        id: widget.company.id,
+                      ),
                       ParticipationList(
                         company: widget.company,
                         onParticipationChanged:

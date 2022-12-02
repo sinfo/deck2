@@ -122,7 +122,7 @@ class CompanyService extends Service {
       String? name,
       String? site}) async {
     var body = {
-      'billingInfo': billingInfo?.toJson(),
+      'billingInfo': billingInfo!.toJson(),
       'description': description,
       'name': name,
       'site': site

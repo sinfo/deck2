@@ -1110,11 +1110,15 @@ func TestUpdateCompany(t *testing.T) {
 	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
 	assert.NilError(t, err)
 
+	name := "some other name"
+	description := "some other description"
+	site := "some other site"
+
 	ucd := &mongodb.UpdateCompanyData{
-		Name:        "some other name",
-		Description: "some other description",
-		Site:        "some site",
-		BillingInfo: models.CompanyBillingInfo{
+		Name:        &name,
+		Description: &description,
+		Site:        &site,
+		BillingInfo: &models.CompanyBillingInfo{
 			Name:    "some billing name",
 			Address: "some billing address",
 			TIN:     "some billing tin",
@@ -1161,10 +1165,13 @@ func TestUpdateCompanyInvalidPayload(t *testing.T) {
 	newCompany, err := mongodb.Companies.CreateCompany(createCompanyData)
 	assert.NilError(t, err)
 
+	description := "some other description"
+	site := "some other site"
+
 	ucd := &mongodb.UpdateCompanyData{
-		Description: "some other description",
-		Site:        "some site",
-		BillingInfo: models.CompanyBillingInfo{
+		Description: &description,
+		Site:        &site,
+		BillingInfo: &models.CompanyBillingInfo{
 			Name:    "some billing name",
 			Address: "some billing address",
 			TIN:     "some billing tin",
@@ -1190,11 +1197,15 @@ func TestUpdateCompanyNotFound(t *testing.T) {
 		log.Fatal(err)
 	}
 
+	name := "some other name"
+	description := "some other description"
+	site := "some other site"
+
 	ucd := &mongodb.UpdateCompanyData{
-		Name:        "some other name",
-		Description: "some other description",
-		Site:        "some site",
-		BillingInfo: models.CompanyBillingInfo{
+		Name:        &name,
+		Description: &description,
+		Site:        &site,
+		BillingInfo: &models.CompanyBillingInfo{
 			Name:    "some billing name",
 			Address: "some billing address",
 			TIN:     "some billing tin",

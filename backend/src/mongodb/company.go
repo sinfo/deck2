@@ -801,10 +801,10 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
 type UpdateCompanyData struct {
-	Name        string
-	Description string
-	Site        string
-	BillingInfo models.CompanyBillingInfo
+	Name        *string
+	Description *string
+	Site        *string
+	BillingInfo *models.CompanyBillingInfo
 }
 
 // ParseBody fills the UpdateCompanyData from a body
@@ -812,10 +812,6 @@ func (ucd *UpdateCompanyData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(ucd); err != nil {
 		return err
-	}
-
-	if len(ucd.Name) == 0 {
-		return errors.New("Invalid name")
 	}
 
 	return nil
@@ -827,15 +823,26 @@ func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateC
 	ctx := context.Background()
 	var updatedCompany models.Company
 
+	updateFields := bson.M{}
+
+	if data.Name != nil {
+		updateFields["name"] = *data.Name
+	}
+	if data.Description != nil {
+		updateFields["description"] = *data.Description
+	}
+	if data.Site != nil {
+		updateFields["site"] = *data.Site
+	}
+	if data.BillingInfo != nil {
+		billingInfo := *data.BillingInfo
+		updateFields["billingInfo.name"] = billingInfo.Name
+		updateFields["billingInfo.address"] = billingInfo.Address
+		updateFields["billingInfo.tin"] = billingInfo.TIN
+	}
+
 	var updateQuery = bson.M{
-		"$set": bson.M{
-			"name":                data.Name,
-			"description":         data.Description,
-			"site":                data.Site,
-			"billingInfo.name":    data.BillingInfo.Name,
-			"billingInfo.address": data.BillingInfo.Address,
-			"billingInfo.tin":     data.BillingInfo.TIN,
-		},
+		"$set": updateFields,
 	}
 
 	var filterQuery = bson.M{"_id": companyID}
