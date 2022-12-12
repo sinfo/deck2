@@ -5,8 +5,6 @@ import 'package:frontend/services/sessionService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:dropdown_search/dropdown_search.dart';
-import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
 
 class EditSessionForm extends StatefulWidget {
   final Session session;
@@ -97,35 +95,6 @@ class _EditSessionFormState extends State<EditSessionForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('An error occured.')),
         );
-      }
-    }
-  }
-
-  Future _selectDateTime(BuildContext context, bool isBegin) async {
-    final datePicker = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
-    );
-
-    final timePicker = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
-        builder: (BuildContext context, Widget? child) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-            child: child!,
-          );
-        });
-
-    if (datePicker != null && timePicker != null) {
-      if (isBegin) {
-        _begin = DateTime(datePicker.year, datePicker.month, datePicker.day,
-            timePicker.hour, timePicker.minute);
-      } else {
-        _end = DateTime(datePicker.year, datePicker.month, datePicker.day,
-            timePicker.hour, timePicker.minute);
       }
     }
   }

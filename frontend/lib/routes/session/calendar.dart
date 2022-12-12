@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/blurryDialog.dart';
-import 'package:frontend/routes/session/EditSessionForm.dart';
-import 'package:frontend/routes/session/SessionsNotifier.dart';
-import 'package:frontend/services/sessionService.dart';
-import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
+import 'package:frontend/models/session.dart';
+import 'package:frontend/models/speaker.dart';
+import 'package:frontend/routes/session/SessionScreen.dart';
+import 'package:frontend/services/companyService.dart';
+import 'package:frontend/services/speakerService.dart';
 import 'package:table_calendar/table_calendar.dart';
-
-import '../../models/session.dart';
-import '../../services/authService.dart';
 
 class Calendar extends StatefulWidget {
   final List<Session> sessions;
@@ -27,8 +23,11 @@ class _CalendarState extends State<Calendar> {
   final titleController = TextEditingController();
   final descpController = TextEditingController();
   final List<Session> sessions;
-  final _sessionService = SessionService();
   CalendarFormat format = CalendarFormat.month;
+  SpeakerService speakerService = SpeakerService();
+  CompanyService companyService = CompanyService();
+
+  List<Speaker> allSpeakers = [];
 
   late Map<DateTime, List<Session>> calendarSessions;
 
@@ -39,7 +38,14 @@ class _CalendarState extends State<Calendar> {
     selectedCalendarDate = _focusedCalendarDate;
     calendarSessions = {};
     fillCalendarSessions();
+    fillSpeakers();
     super.initState();
+  }
+
+  Future<void> fillSpeakers() async {
+    Future<List<Speaker>> speakersFuture = speakerService.getSpeakers();
+
+    allSpeakers = await speakersFuture;
   }
 
   void fillCalendarSessions() {
@@ -68,83 +74,16 @@ class _CalendarState extends State<Calendar> {
     return calendarSessions[dateTime] ?? [];
   }
 
-  void _deleteSessionDialog(context, id) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return BlurryDialog(
-            'Warning', 'Are you sure you want to delete session?', () {
-          _deleteSession(context, id);
-        });
-      },
-    );
-  }
-
-  void _deleteSession(context, id) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleting')),
-    );
-
-    Session? s = await _sessionService.deleteSession(id);
-    if (s != null) {
-      SessionsNotifier notifier =
-          Provider.of<SessionsNotifier>(context, listen: false);
-      notifier.remove(s);
-
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
-      );
+  List<String> _getSpeakers(List<String>? ids) {
+    List<String> speakersNames = [];
+    for (var speaker in allSpeakers) {
+      for (var id in ids!) {
+        if (speaker.id == id && (!speakersNames.contains(speaker.name))) {
+          speakersNames.add(speaker.name);
+        }
+      }
     }
-  }
-
-  Future<void> _editSessionModal(context, id) async {
-    Future<Session> sessionFuture = _sessionService.getSession(id);
-    Session session = await sessionFuture;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-        return FractionallySizedBox(
-            heightFactor: 0.7,
-            child: Container(
-              child: EditSessionForm(session: session),
-            ));
-      },
-    );
-  }
-
-  Widget buildTextField(
-      {String? hint, required TextEditingController controller}) {
-    return TextField(
-      controller: controller,
-      textCapitalization: TextCapitalization.words,
-      decoration: InputDecoration(
-        labelText: hint ?? '',
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blue, width: 1.5),
-          borderRadius: BorderRadius.circular(
-            10.0,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Colors.blue, width: 1.5),
-          borderRadius: BorderRadius.circular(
-            10.0,
-          ),
-        ),
-      ),
-    );
+    return speakersNames;
   }
 
   @override
@@ -227,123 +166,52 @@ class _CalendarState extends State<Calendar> {
                 }
               },
             ),
-            ..._listOfDaySessions(selectedCalendarDate!).map(
-              (calSessions) => ExpansionTile(
-                  childrenPadding: const EdgeInsets.all(8.0),
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  expandedAlignment: Alignment.topLeft,
-                  leading: const Icon(
-                    Icons.done,
-                    color: Colors.blue,
-                  ),
-                  title: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(calSessions.kind.toUpperCase() +
-                        ' - ' +
-                        calSessions.title),
-                  ),
-                  children: [
-                    Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Description: ' + calSessions.description),
-                            Text('From ' +
-                                DateFormat.jm()
-                                    .format(calSessions.begin.toLocal()) +
-                                ' to ' +
-                                DateFormat.jm()
-                                    .format(calSessions.end.toLocal())),
-                            Text(calSessions.place ?? 'No place available yet'),
-                            Text(calSessions.videoURL ??
-                                'No video available yet'),
-                            (calSessions.tickets != null)
-                                ? Text('Tickets\n' +
-                                    '*Quantity: ' +
-                                    calSessions.tickets!.max.toString() +
-                                    '\n*Available from ' +
-                                    DateFormat.yMd().format(
-                                        calSessions.tickets!.start!.toLocal()) +
-                                    ' at ' +
-                                    DateFormat.jm().format(
-                                        calSessions.tickets!.start!.toLocal()) +
-                                    ' to ' +
-                                    DateFormat.yMd().format(
-                                        calSessions.tickets!.end!.toLocal()) +
-                                    calSessions.tickets!.start!.month
-                                        .toString() +
-                                    ' at ' +
-                                    DateFormat.jm().format(
-                                        calSessions.tickets!.start!.toLocal()))
-                                : Text('No tickets available for this session'),
-                          ],
+            ..._listOfDaySessions(selectedCalendarDate!)
+                .map((calSessions) => InkWell(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SessionScreen(
+                                      session: calSessions,
+                                    )));
+                      },
+                      child: Card(
+                        color: Colors.white,
+                        shadowColor: Colors.grey.withOpacity(0.7),
+                        elevation: 20,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5.0),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(40.0),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                (calSessions.kind == 'TALK')
-                                    ? Text('Speakers: ' +
-                                        calSessions.speakersIds.toString())
-                                    : Text('Company: ' +
-                                        calSessions.companyId.toString())
-                              ]),
+                        margin: EdgeInsets.only(top: 15),
+                        child: Container(
+                          height: 80.0,
+                          child: Row(
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  calSessions.kind,
+                                  style: TextStyle(
+                                      color: Color.fromARGB(255, 63, 81, 181),
+                                      fontSize: 14.0),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 20),
+                                child: Text(
+                                  calSessions.title,
+                                  style: TextStyle(
+                                      color: Colors.black, fontSize: 18.0),
+                                  textAlign: TextAlign.left,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        Expanded(
-                          child: Padding(
-                              padding: EdgeInsets.all(8.0),
-                              child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          IconButton(
-                                              onPressed: () {
-                                                _editSessionModal(
-                                                    context, calSessions.id);
-                                              },
-                                              icon: Icon(Icons.edit),
-                                              color: const Color(0xff5c7ff2)),
-                                          FutureBuilder(
-                                              future: Provider.of<AuthService>(
-                                                      context)
-                                                  .role,
-                                              builder: (context, snapshot) {
-                                                if (snapshot.hasData) {
-                                                  Role r =
-                                                      snapshot.data as Role;
-
-                                                  if (r == Role.ADMIN ||
-                                                      r == Role.COORDINATOR) {
-                                                    return IconButton(
-                                                        onPressed: () =>
-                                                            _deleteSessionDialog(
-                                                                context,
-                                                                calSessions.id),
-                                                        icon:
-                                                            Icon(Icons.delete),
-                                                        color: Colors.red);
-                                                  } else {
-                                                    return Container();
-                                                  }
-                                                } else {
-                                                  return Container();
-                                                }
-                                              })
-                                        ]),
-                                  ])),
-                        ),
-                      ],
-                    )
-                  ]),
-            ),
+                      ),
+                    )),
           ],
         ),
       ),
