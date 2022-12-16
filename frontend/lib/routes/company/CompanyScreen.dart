@@ -17,7 +17,7 @@ import 'package:provider/provider.dart';
 import 'package:collection/collection.dart';
 
 class CompanyScreen extends StatefulWidget {
-  late final Company company;
+  Company company;
 
   CompanyScreen({Key? key, required this.company}) : super(key: key);
 
@@ -352,22 +352,26 @@ class CompanyBanner extends StatelessWidget {
                           tag: company.id + event.toString(),
                           child: Container(
                             decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  width: small ? 2 : 4,
-                                  color: STATUSCOLOR[companyStatus]!,
-                                )),
-                            child: CircleAvatar(
-                              backgroundImage: Image.network(
-                                company.companyImages.internal,
-                                  fit: BoxFit.fill,
-                                  errorBuilder: (BuildContext context, Object exception,
-                                    StackTrace? stackTrace) {
-                                  return Image.asset('assets/noImage.png');
-                                  },
-                              ).image,
-                              backgroundColor: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                width: small ? 2 : 4,
+                                color: STATUSCOLOR[companyStatus]!,
+                              ),
+                              color: Colors.white,
                             ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(300.0),
+                              child: Image.network(
+                                company.companyImages.internal,
+                                fit: BoxFit.cover,
+                                errorBuilder: (BuildContext context, Object exception,
+                                  StackTrace? stackTrace) {
+                                    return Image.asset(
+                                      'assets/noImage.png'
+                                    );
+                                }
+                              ),
+                            )
                           ),
                         ),
                       ),

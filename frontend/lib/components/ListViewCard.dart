@@ -26,7 +26,7 @@ class ListViewCard extends StatelessWidget {
   late final int? _numParticipations;
   late final int? _lastParticipation;
   late final String _tag;
-  late final Widget _screen;
+  late Widget _screen;
 
   ListViewCard(
       {Key? key,

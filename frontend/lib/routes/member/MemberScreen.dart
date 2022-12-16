@@ -15,7 +15,7 @@ import 'package:frontend/components/router.dart';
 import 'package:frontend/models/team.dart';
 
 class MemberScreen extends StatefulWidget {
-  late final Member member;
+  Member member;
 
   MemberScreen({Key? key, required this.member}) : super(key: key);
 

@@ -159,10 +159,22 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
             ? Image.network(
                 path,
                 fit: BoxFit.fill,
+                errorBuilder: (BuildContext context, Object exception,
+                  StackTrace? stackTrace) {
+                  return Image.asset(
+                    'assets/noImage.png'
+                  );
+                }
               )
             : Image.file(
                 File(path),
                 fit: BoxFit.fill,
+                errorBuilder: (BuildContext context, Object exception,
+                  StackTrace? stackTrace) {
+                  return Image.asset(
+                    'assets/noImage.png'
+                  );
+                }
               ),
       );
     }
