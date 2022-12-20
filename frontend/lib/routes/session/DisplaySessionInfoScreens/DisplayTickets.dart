@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/session.dart';
-import 'package:frontend/routes/session/SessionInformationBox.dart';
+import 'package:frontend/routes/session/DisplaySessionInfoScreens/SessionInformationBox.dart';
 
 class DisplayTickets extends StatefulWidget {
   final Session session;
