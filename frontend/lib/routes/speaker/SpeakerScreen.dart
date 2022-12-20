@@ -180,6 +180,8 @@ class _SpeakerScreenState extends State<SpeakerScreen>
             icon: const Icon(Icons.add),
           );
         }
+      default:
+        return null;
     }
   }
 }
@@ -315,19 +317,26 @@ class SpeakerBanner extends StatelessWidget {
                           tag: speaker.id + event.toString(),
                           child: Container(
                             decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  width: small ? 2 : 4,
-                                  color: STATUSCOLOR[speakerStatus]!,
-                                )),
-                            child: CircleAvatar(
-                              foregroundImage: NetworkImage(
-                                speaker.imgs!.speaker ??
-                                    (speaker.imgs!.internal ??
-                                        (speaker.imgs!.company ?? "")),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                width: small ? 2 : 4,
+                                color: STATUSCOLOR[speakerStatus]!,
                               ),
-                              backgroundImage: AssetImage('assets/noImage.png'),
+                              color: Colors.white,
                             ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(300.0),
+                              child: Image.network(
+                                speaker.imgs!.internal!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (BuildContext context, Object exception,
+                                  StackTrace? stackTrace) {
+                                    return Image.asset(
+                                      'assets/noImage.png'
+                                    );
+                                }
+                              ),
+                            )
                           ),
                         ),
                       ),

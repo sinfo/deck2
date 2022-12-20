@@ -9,7 +9,6 @@ import 'package:frontend/components/threadCard.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/EditCompanyForm.dart';
-import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/participation.dart';
@@ -112,6 +111,8 @@ class _CompanyScreenState extends State<CompanyScreen>
             icon: const Icon(Icons.add),
           );
         }
+      default:
+        return null;
     }
   }
 
@@ -119,7 +120,7 @@ class _CompanyScreenState extends State<CompanyScreen>
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       bool small = constraints.maxWidth < App.SIZE;
-      return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
+      return Consumer<CompanyTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
             appBar: CustomAppBar(disableEventChange: true),
             body: DefaultTabController(
@@ -350,17 +351,26 @@ class CompanyBanner extends StatelessWidget {
                           tag: company.id + event.toString(),
                           child: Container(
                             decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  width: small ? 2 : 4,
-                                  color: STATUSCOLOR[companyStatus]!,
-                                )),
-                            child: CircleAvatar(
-                              foregroundImage: NetworkImage(
-                                company.companyImages.internal,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                width: small ? 2 : 4,
+                                color: STATUSCOLOR[companyStatus]!,
                               ),
-                              backgroundImage: AssetImage('assets/noImage.png'),
+                              color: Colors.white,
                             ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(300.0),
+                              child: Image.network(
+                                company.companyImages.internal,
+                                fit: BoxFit.cover,
+                                errorBuilder: (BuildContext context, Object exception,
+                                  StackTrace? stackTrace) {
+                                    return Image.asset(
+                                      'assets/noImage.png'
+                                    );
+                                }
+                              ),
+                            )
                           ),
                         ),
                       ),
