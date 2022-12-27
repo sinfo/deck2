@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/EditableCard.dart';
 import 'package:frontend/models/speaker.dart';
+import 'package:frontend/services/speakerService.dart';
 
 class DetailsScreen extends StatefulWidget {
   final Speaker speaker;
@@ -12,9 +13,45 @@ class DetailsScreen extends StatefulWidget {
 
 class _DetailsScreenState extends State<DetailsScreen>
     with AutomaticKeepAliveClientMixin {
+  final _speakerService = SpeakerService();
 
   @override
   bool get wantKeepAlive => true;
+
+  Future<void> _editSpeaker(
+      BuildContext context, String updatedValue, bool isBio) async {
+    Speaker? s;
+    if (isBio) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Updating Bio...')),
+      );
+      s = await _speakerService.updateSpeaker(
+          id: widget.speaker.id, bio: updatedValue);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Updating Notes...')),
+      );
+      s = await _speakerService.updateSpeaker(
+          id: widget.speaker.id, notes: updatedValue);
+    }
+
+    if (s != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +66,7 @@ class _DetailsScreenState extends State<DetailsScreen>
             child: EditableCard(
               title: 'Bio',
               body: widget.speaker.bio ?? "",
-              bodyEditedCallback: (newBio) {
-                //speaker.bio = newBio;
-                //TODO replace bio with service call to change bio
-                print('replaced bio');
-                return Future.delayed(Duration.zero);
-              },
+              bodyEditedCallback: (newBio) => _editSpeaker(context, newBio, true),
               isSingleline: false,
               textInputType: TextInputType.multiline,
             ),
@@ -44,12 +76,7 @@ class _DetailsScreenState extends State<DetailsScreen>
             child: EditableCard(
               title: 'Notes',
               body: widget.speaker.notes ?? "",
-              bodyEditedCallback: (newNotes) {
-                //speaker.bio = newBio;
-                //TODO replace bio with service call to change bio
-                print('replaced notes');
-                return Future.delayed(Duration.zero);
-              },
+              bodyEditedCallback: (newNotes) => _editSpeaker(context, newNotes, false),
               isSingleline: false,
               textInputType: TextInputType.multiline,
             ),

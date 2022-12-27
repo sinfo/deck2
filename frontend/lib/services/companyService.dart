@@ -121,12 +121,11 @@ class CompanyService extends Service {
       String? description,
       String? name,
       String? site}) async {
-    var body = {
-      'billingInfo': billingInfo!.toJson(),
-      'description': description,
-      'name': name,
-      'site': site
-    };
+    final Map<String, dynamic> body = {'description': description, 'name': name, 'site': site};
+
+    if (billingInfo != null) {
+      body['billingInfo'] = billingInfo.toJson();
+    }
 
     Response<String> response = await dio.put('/companies/' + id, data: body);
     try {

@@ -423,22 +423,6 @@ func (usd *UpdateSpeakerData) ParseBody(body io.Reader) error {
 		return err
 	}
 
-	if usd.Name == nil || len(*usd.Name) == 0 {
-		return errors.New("Invalid name")
-	}
-
-	if usd.Bio == nil {
-		return errors.New("Invalid bio")
-	}
-
-	if usd.Title == nil {
-		return errors.New("Invalid title")
-	}
-
-	if usd.Notes == nil {
-		return errors.New("Invalid notes")
-	}
-
 	return nil
 }
 
@@ -448,13 +432,23 @@ func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSp
 
 	var updatedSpeaker models.Speaker
 
+	updateFields := bson.M{}
+
+	if data.Name != nil {
+		updateFields["name"] = *data.Name
+	}
+	if data.Bio != nil {
+		updateFields["bio"] = *data.Bio
+	}
+	if data.Title != nil {
+		updateFields["title"] = *data.Title
+	}
+	if data.Notes != nil {
+		updateFields["notes"] = *data.Notes
+	}
+
 	var updateQuery = bson.M{
-		"$set": bson.M{
-			"name":  data.Name,
-			"bio":   data.Bio,
-			"title": data.Title,
-			"notes": data.Notes,
-		},
+		"$set": updateFields,
 	}
 
 	var filterQuery = bson.M{"_id": speakerID}

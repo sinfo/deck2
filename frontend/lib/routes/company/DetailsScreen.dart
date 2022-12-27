@@ -1,10 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/EditableCard.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/services/companyService.dart';
 
 class DetailsScreen extends StatelessWidget {
   final Company company;
-  const DetailsScreen({Key? key, required this.company}) : super(key: key);
+  final _companyService = CompanyService();
+
+  DetailsScreen({Key? key, required this.company}) : super(key: key);
+
+  Future<void> _editCompany(
+      BuildContext context, String updatedValue, bool isDescription) async {
+    Company? c;
+    if (isDescription) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Updating Description...')),
+      );
+      c = await _companyService.updateCompany(
+          id: company.id, description: updatedValue);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Updating Site...')),
+      );
+      c = await _companyService.updateCompany(
+          id: company.id, site: updatedValue);
+    }
+
+    if (c != null) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Done'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,12 +56,8 @@ class DetailsScreen extends StatelessWidget {
             child: EditableCard(
               title: 'Description',
               body: company.description ?? "",
-              bodyEditedCallback: (newBio) {
-                //speaker.bio = newBio;
-                //TODO replace bio with service call to change bio
-                print('replaced bio');
-                return Future.delayed(Duration.zero);
-              },
+              bodyEditedCallback: (newDescription) =>
+                  _editCompany(context, newDescription, true),
               isSingleline: false,
               textInputType: TextInputType.multiline,
             ),
@@ -33,12 +67,8 @@ class DetailsScreen extends StatelessWidget {
             child: EditableCard(
               title: 'Site',
               body: company.site ?? "",
-              bodyEditedCallback: (newNotes) {
-                //speaker.bio = newBio;
-                //TODO replace bio with service call to change bio
-                print('replaced notes');
-                return Future.delayed(Duration.zero);
-              },
+              bodyEditedCallback: (newSite) =>
+                  _editCompany(context, newSite, false),
               isSingleline: false,
               textInputType: TextInputType.multiline,
             ),
