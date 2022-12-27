@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/models/company.dart';
-import 'package:frontend/routes/company/billing/AddBillingInfoForm.dart';
 import 'package:frontend/routes/company/billing/BillingScreen.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/DetailsScreen.dart';
 import 'package:frontend/routes/company/ParticipationList.dart';
 import 'package:frontend/routes/company/banner/CompanyBanner.dart';
-import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:provider/provider.dart';
@@ -127,6 +124,8 @@ class _CompanyScreenState extends State<CompanyScreen>
             icon: const Icon(Icons.add),
           );
         }
+      default:
+        return null;
     }
   }
 
@@ -134,7 +133,7 @@ class _CompanyScreenState extends State<CompanyScreen>
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       bool small = constraints.maxWidth < App.SIZE;
-      return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
+      return Consumer<CompanyTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
             appBar: CustomAppBar(disableEventChange: true),
             body: DefaultTabController(

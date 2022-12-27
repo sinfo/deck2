@@ -95,19 +95,24 @@ class CompanyBanner extends StatelessWidget {
                         child: Hero(
                           tag: company.id + event.toString(),
                           child: Container(
-                            decoration: BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   width: small ? 2 : 4,
                                   color: STATUSCOLOR[companyStatus]!,
-                                )),
-                            child: CircleAvatar(
-                              foregroundImage: NetworkImage(
-                                company.companyImages.internal,
+                                ),
+                                color: Colors.white,
                               ),
-                              backgroundImage: AssetImage('assets/noImage.png'),
-                            ),
-                          ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(300.0),
+                                child: Image.network(
+                                    company.companyImages.internal,
+                                    fit: BoxFit.cover, errorBuilder:
+                                        (BuildContext context, Object exception,
+                                            StackTrace? stackTrace) {
+                                  return Image.asset('assets/noImage.png');
+                                }),
+                              )),
                         ),
                       ),
                     ),

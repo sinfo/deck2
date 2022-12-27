@@ -99,35 +99,6 @@ class _EditSessionFormState extends State<EditSessionForm> {
     }
   }
 
-  Future _selectDateTime(BuildContext context, bool isBegin) async {
-    final datePicker = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
-    );
-
-    final timePicker = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
-        builder: (BuildContext context, Widget? child) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-            child: child!,
-          );
-        });
-
-    if (datePicker != null && timePicker != null) {
-      if (isBegin) {
-        _begin = DateTime(datePicker.year, datePicker.month, datePicker.day,
-            timePicker.hour, timePicker.minute);
-      } else {
-        _end = DateTime(datePicker.year, datePicker.month, datePicker.day,
-            timePicker.hour, timePicker.minute);
-      }
-    }
-  }
-
   Widget _buildForm() {
     return Form(
       key: _formKey,

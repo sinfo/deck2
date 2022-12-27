@@ -95,21 +95,23 @@ class SpeakerBanner extends StatelessWidget {
                         child: Hero(
                           tag: speaker.id + event.toString(),
                           child: Container(
-                            decoration: BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   width: small ? 2 : 4,
                                   color: STATUSCOLOR[speakerStatus]!,
-                                )),
-                            child: CircleAvatar(
-                              foregroundImage: NetworkImage(
-                                speaker.imgs!.speaker ??
-                                    (speaker.imgs!.internal ??
-                                        (speaker.imgs!.company ?? "")),
+                                ),
+                                color: Colors.white,
                               ),
-                              backgroundImage: AssetImage('assets/noImage.png'),
-                            ),
-                          ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(300.0),
+                                child: Image.network(speaker.imgs!.internal!,
+                                    fit: BoxFit.cover, errorBuilder:
+                                        (BuildContext context, Object exception,
+                                            StackTrace? stackTrace) {
+                                  return Image.asset('assets/noImage.png');
+                                }),
+                              )),
                         ),
                       ),
                     ),

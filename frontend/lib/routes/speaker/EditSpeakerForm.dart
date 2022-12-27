@@ -34,7 +34,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
     super.initState();
     _nameController = TextEditingController(text: widget.speaker.name);
     _titleController = TextEditingController(text: widget.speaker.title);
-    _prevImage = widget.speaker.imgs!.speaker;
+    _prevImage = widget.speaker.imgs!.internal;
   }
 
   void _submit() async {
@@ -159,10 +159,22 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
             ? Image.network(
                 path,
                 fit: BoxFit.fill,
+                errorBuilder: (BuildContext context, Object exception,
+                  StackTrace? stackTrace) {
+                  return Image.asset(
+                    'assets/noImage.png'
+                  );
+                }
               )
             : Image.file(
                 File(path),
                 fit: BoxFit.fill,
+                errorBuilder: (BuildContext context, Object exception,
+                  StackTrace? stackTrace) {
+                  return Image.asset(
+                    'assets/noImage.png'
+                  );
+                }
               ),
       );
     }
@@ -241,7 +253,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
 
   @override
   Widget build(BuildContext context) {
-    bool warning = _image != null && _size != null && _size! > 102400;
+    bool warning = _image != null && _size != null && _size! > 10485760;
     return SingleChildScrollView(
       child: LayoutBuilder(
         builder: (context, constraints) {

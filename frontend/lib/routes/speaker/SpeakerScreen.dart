@@ -221,6 +221,8 @@ class _SpeakerScreenState extends State<SpeakerScreen>
             icon: const Icon(Icons.add),
           );
         }
+      default:
+        return null;
     }
   }
 }
