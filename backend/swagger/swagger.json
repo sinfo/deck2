@@ -180,6 +180,12 @@
     "/companies/{id}/participation/package": {
       "$ref": "./companies-id-participation-package.json"
     },
+    "/companies/{id}/participation/billing": {
+      "$ref": "./companies-id-participation-billing.json"
+    },
+    "/companies/{id}/participation/billing/{billingID}": {
+      "$ref": "./companies-id-participation-billing-billingid.json"
+    },
     "/companies/{id}/thread": {
       "$ref": "./companies-id-thread.json"
     },

@@ -49,37 +49,48 @@ class _CommunicationsListState extends State<CommunicationsList>
   @override
   bool get wantKeepAlive => true;
 
+  List<Widget> getCommunicationList() {
+    if (widget.participations
+            .where((part) =>
+                part.communicationsId != null &&
+                part.communicationsId!.length != 0)
+            .length > 0) {
+      return [
+        TabBar(
+          isScrollable: true,
+          controller: _tabController,
+          tabs: widget.participations
+              .where((part) =>
+                  part.communicationsId != null &&
+                  part.communicationsId!.length != 0)
+              .map((part) => Tab(text: "SINFO ${part.event}"))
+              .toList(),
+        ),
+        Expanded(
+            child: TabBarView(
+                controller: _tabController,
+                children: widget.participations
+                    .where((part) =>
+                        part.communicationsId != null &&
+                        part.communicationsId!.length != 0)
+                    .map((part) => ParticipationThreadsWidget(
+                        participation: part,
+                        small: widget.small,
+                        onCommunicationDeleted: widget.onCommunicationDeleted))
+                    .toList())),
+      ];
+    } else {
+      return [Container()];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
     return LayoutBuilder(builder: (context, constraints) {
       return Padding(
           padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-          child: Column(children: [
-            TabBar(
-              isScrollable: true,
-              controller: _tabController,
-              tabs: widget.participations
-                  .where((part) =>
-                      part.communicationsId != null &&
-                      part.communicationsId!.length != 0)
-                  .map((part) => Tab(text: "SINFO ${part.event}"))
-                  .toList(),
-            ),
-            Expanded(
-                child: TabBarView(
-                    controller: _tabController,
-                    children: widget.participations
-                        .where((part) =>
-                            part.communicationsId != null &&
-                            part.communicationsId!.length != 0)
-                        .map((part) => ParticipationThreadsWidget(
-                            participation: part,
-                            small: widget.small,
-                            onCommunicationDeleted:
-                                widget.onCommunicationDeleted))
-                        .toList())),
-          ]));
+          child: Column(children: getCommunicationList()));
     });
   }
 }

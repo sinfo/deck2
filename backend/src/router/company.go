@@ -537,6 +537,105 @@ func addCompanyPackage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func addCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	var cbd = &mongodb.CreateBillingData{}
+
+	if err := cbd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	newBilling, err := mongodb.Billings.CreateBilling(*cbd)
+	if err != nil {
+		http.Error(w, "Error finding created billing: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateBilling(companyID, newBilling.ID)
+	if err != nil {
+		http.Error(w, "Could not update company's billing", http.StatusExpectationFailed)
+
+		// delete created billing
+		if _, err := mongodb.Packages.DeletePackage(newBilling.ID); err != nil {
+			log.Printf("error deleting billing: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreatedParticipationBilling,
+			Company: &updatedCompany.ID,
+		})
+	}
+}
+
+func deleteCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+	billingID, _ := primitive.ObjectIDFromHex(params["billingID"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		return
+	}
+
+	backupBilling, _ := mongodb.Billings.GetBilling(billingID)
+
+	updatedCompany, err := mongodb.Companies.RemoveCompanyParticipationBilling(companyID)
+	if err != nil {
+		http.Error(w, "Could not remove billing from company participation", http.StatusExpectationFailed)
+		return
+	}
+
+	_, err = mongodb.Billings.DeleteBilling(billingID)
+	if err != nil {
+		http.Error(w, "Billing not found"+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		http.Error(w, "Could not delete billing", http.StatusExpectationFailed)
+
+		if backupBilling == nil {
+			log.Printf("no backup billing to compensate the failed deletion of the billing: %s\n", err.Error())
+		}
+
+		// create deleted billing
+		if _, err := mongodb.Companies.UpdateBilling(companyID, billingID); err != nil {
+			log.Printf("error adding billing to company participation: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindDeletedParticipationBilling,
+			Speaker: &updatedCompany.ID,
+		})
+	}
+}
+
 func deleteCompany(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)

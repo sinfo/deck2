@@ -1154,6 +1154,70 @@ func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID pr
 	return &updatedCompany, nil
 }
 
+// UpdateBilling updates the billing of a company's participation related to the current event.
+// Uses a models.Billing ID to store this information.
+func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID primitive.ObjectID) (*models.Company, error) {
+
+	ctx := context.Background()
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.billing": billingID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating company's participation's billing:", err)
+		return nil, err
+	}
+
+	ResetCurrentPublicCompanies()
+
+	return &updatedCompany, nil
+}
+
+// RemoveCompanyParticipationBilling removes a billing on the company participation.
+func (c *CompaniesType) RemoveCompanyParticipationBilling(companyID primitive.ObjectID) (*models.Company, error) {
+	ctx := context.Background()
+
+	var updatedCompany models.Company
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.billing": "",
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("error updating company's participation billing:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
 // FindThread finds a thread in a company
 func (c *CompaniesType) FindThread(threadID primitive.ObjectID) (*models.Company, error) {
 

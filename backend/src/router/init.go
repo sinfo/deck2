@@ -169,6 +169,8 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setCompanyStatus)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/billing", authCoordinator(addCompanyParticipationBilling)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/billing/{billingID}", authCoordinator(deleteCompanyParticipationBilling)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
@@ -311,9 +313,7 @@ func InitializeRouter() {
 	billingsRouter := r.PathPrefix("/billings").Subrouter()
 	billingsRouter.HandleFunc("", authMember(getBillings)).Methods("GET")
 	billingsRouter.HandleFunc("/{id}", authCoordinator(getBilling)).Methods("GET")
-	billingsRouter.HandleFunc("", authCoordinator(createBilling)).Methods("POST")
 	billingsRouter.HandleFunc("/{id}", authCoordinator(updateBilling)).Methods("PUT")
-	billingsRouter.HandleFunc("/{id}", authCoordinator(deleteBilling)).Methods("DELETE")
 
 	// companyReps handlers
 	repsRouter := r.PathPrefix("/companyReps").Subrouter()
