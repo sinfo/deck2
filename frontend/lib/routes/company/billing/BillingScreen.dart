@@ -99,7 +99,7 @@ class _BillingScreenState extends State<BillingScreen>
   Widget getBillingInfo() {
     return Container(
       width: 450,
-      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+      margin: EdgeInsets.fromLTRB(0, 20, 0, 20),
       padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
       decoration: BoxDecoration(
           color: Theme.of(context).cardColor,

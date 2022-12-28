@@ -17,39 +17,27 @@ class ParticipationBillingWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: FutureBuilder(
-        future: participation.billing,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Text('Error' + snapshot.error.toString());
-          }
-          if (snapshot.connectionState == ConnectionState.done) {
-            Billing? bill = snapshot.data as Billing?;
+    return FutureBuilder(
+      future: participation.billing,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Text('Error' + snapshot.error.toString());
+        }
+        if (snapshot.connectionState == ConnectionState.done) {
+          Billing? bill = snapshot.data as Billing?;
 
-            if (bill == null) {
-              return Container();
-            }
-            return Column(children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text('SINFO ${participation.event}'),
-                ),
-              ),
-              Divider(),
-              BillingCard(
-                billing: bill,
-                id: id,
-              ),
-            ]);
-          } else {
-            return Center(child: CircularProgressIndicator());
+          if (bill == null) {
+            return Container();
           }
-        },
-      ),
+          return BillingCard(
+            billing: bill,
+            small: small,
+            id: id,
+          );
+        } else {
+          return Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
 }

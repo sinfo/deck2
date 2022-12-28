@@ -24,7 +24,6 @@ class FlightCard extends StatefulWidget {
 
 class _FlightCardState extends State<FlightCard>
     with AutomaticKeepAliveClientMixin {
-  
   @override
   bool get wantKeepAlive => true;
 
