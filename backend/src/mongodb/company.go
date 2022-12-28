@@ -274,7 +274,7 @@ func companyToPublic(company models.Company, eventID *int) (*models.CompanyPubli
 				Package: models.PackagePublic{},
 			}
 
-			pack, err := Packages.GetPackage(participation.Package)
+			pack, err := Packages.GetPackage(*participation.Package)
 			if err == nil {
 				participationObj.Package = models.PackagePublic{
 					Name:  pack.Name,

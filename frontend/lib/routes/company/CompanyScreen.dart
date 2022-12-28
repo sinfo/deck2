@@ -172,6 +172,7 @@ class _CompanyScreenState extends State<CompanyScreen>
                         participations: widget.company.participations,
                         billingInfo: widget.company.billingInfo,
                         id: widget.company.id,
+                        small: small,
                       ),
                       ParticipationList(
                         company: widget.company,

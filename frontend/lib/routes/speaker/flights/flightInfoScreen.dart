@@ -27,24 +27,22 @@ class _FlightInfoScreenState extends State<FlightInfoScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return LayoutBuilder(builder: (context, constraints) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
-        child: ListView(
-            controller: ScrollController(),
-            children: widget.participations.reversed
-                .where((element) =>
-                    element.flightsId != null && element.flightsId!.length != 0)
-                .map(
-                  (participation) => ParticipationFlightsWidget(
-                    participation: participation,
-                    id: widget.id,
-                    small: widget.small,
-                    onDelete: widget.onFlightDeleted,
-                  ),
-                )
-                .toList()),
-      );
-    });
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+      child: ListView(
+          controller: ScrollController(),
+          children: widget.participations.reversed
+              .where((element) =>
+                  element.flightsId != null && element.flightsId!.length != 0)
+              .map(
+                (participation) => ParticipationFlightsWidget(
+                  participation: participation,
+                  id: widget.id,
+                  small: widget.small,
+                  onDelete: widget.onFlightDeleted,
+                ),
+              )
+              .toList()),
+    );
   }
 }

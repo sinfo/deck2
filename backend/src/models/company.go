@@ -26,10 +26,10 @@ type CompanyParticipation struct {
 	Subscribers []primitive.ObjectID `json:"subscribers" bson:"subscribers"`
 
 	// Participation's package is a Package _id (see models.Package).
-	Package primitive.ObjectID `json:"package" bson:"package"`
+	Package *primitive.ObjectID `json:"package" bson:"package"`
 
 	// Participation's billing is a billing _id (see models.Billing).
-	Billing primitive.ObjectID `json:"billing" bson:"billing"`
+	Billing *primitive.ObjectID `json:"billing" bson:"billing"`
 
 	Confirmed time.Time `json:"confirmed" bson:"confirmed"`
 

@@ -3,16 +3,19 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/billing/AddBillingInfoForm.dart';
 import 'package:frontend/routes/company/billing/EditBillingInfoForm.dart';
+import 'package:frontend/routes/company/billing/participationBillingWidget.dart';
 
 class BillingScreen extends StatefulWidget {
   final List<CompanyParticipation>? participations;
   final String id;
+  final bool small;
   CompanyBillingInfo? billingInfo;
 
   BillingScreen(
       {Key? key,
       this.billingInfo,
       required this.participations,
+      required this.small,
       required this.id})
       : super(key: key);
 
@@ -72,7 +75,7 @@ class _BillingScreenState extends State<BillingScreen>
           color: const Color(0xff5c7ff2),
           icon: Icon(Icons.edit));
     } else {
-      return IconButton(
+      return ElevatedButton.icon(
           onPressed: () {
             Navigator.push(
                 context,
@@ -86,9 +89,57 @@ class _BillingScreenState extends State<BillingScreen>
                       }),
                 ));
           },
-          color: const Color(0xff5c7ff2),
-          icon: Icon(Icons.add));
+          style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xff5c7ff2)),
+          icon: Icon(Icons.add_circle_outline),
+          label: Text("Add Billing Info"));
     }
+  }
+
+  Widget getBillingInfo() {
+    return Container(
+      width: 450,
+      margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
+      padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
+      decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(5)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text("Billing Information (Dados de faturação)",
+                textAlign: TextAlign.left,
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: getBillingInfoAction()),
+          ],
+        ),
+        Divider(
+          color: Colors.grey[600],
+        ),
+        Text(getBillingInfoRepr(),
+            textAlign: TextAlign.left, style: TextStyle(fontSize: 18)),
+      ]),
+    );
+  }
+
+  Widget getBillings() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
+      child: Column(
+          children: widget.participations!.reversed
+              .where((element) =>
+                  element.billingId != null && element.packageId != null)
+              .map(
+                (participation) => ParticipationBillingWidget(
+                    participation: participation,
+                    id: widget.id,
+                    small: widget.small),
+              )
+              .toList()),
+    );
   }
 
   @override
@@ -96,38 +147,8 @@ class _BillingScreenState extends State<BillingScreen>
     super.build(context);
     return Padding(
         padding: const EdgeInsets.all(8),
-        child:
-            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Container(
-            width: 450,
-            margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
-            padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
-            decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(5)),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Billing Information (Dados de faturação)",
-                          textAlign: TextAlign.left,
-                          style: TextStyle(
-                              fontSize: 22, fontWeight: FontWeight.bold)),
-                      Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: getBillingInfoAction()),
-                    ],
-                  ),
-                  Divider(
-                    color: Colors.grey[600],
-                  ),
-                  Text(getBillingInfoRepr(),
-                      textAlign: TextAlign.left,
-                      style: TextStyle(fontSize: 18)),
-                ]),
-          )
-        ]));
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [getBillingInfo(), getBillings()]));
   }
 }

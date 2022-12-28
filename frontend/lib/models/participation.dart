@@ -1,7 +1,9 @@
+import 'package:frontend/models/billing.dart';
 import 'package:frontend/models/flightInfo.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/thread.dart';
+import 'package:frontend/services/billingService.dart';
 import 'package:frontend/services/flightInfoService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/packageService.dart';
@@ -234,9 +236,12 @@ class ParticipationStep {
 
 class CompanyParticipation extends Participation {
   PackageService _packageService = PackageService();
+  BillingService _billingService = BillingService();
 
   final String? packageId;
   Package? _package;
+  final String? billingId;
+  Billing? _billing;
 
   final DateTime? confirmed;
   final bool? partner;
@@ -251,6 +256,7 @@ class CompanyParticipation extends Participation {
     this.confirmed,
     this.partner,
     this.notes,
+    this.billingId,
   }) : super(
           event: event,
           memberId: memberId,
@@ -265,6 +271,7 @@ class CompanyParticipation extends Participation {
       status: Participation.convert(json['status']),
       communicationsId: List.from(json['communications']),
       packageId: json['package'],
+      billingId: json['billing'],
       confirmed: DateTime.parse(json['confirmed']),
       partner: json['partner'],
       notes: json['notes'],
@@ -279,12 +286,21 @@ class CompanyParticipation extends Participation {
     return _package;
   }
 
+  Future<Billing?> get billing async {
+    if (_billing != null) return _billing;
+    if (billingId == null) return null;
+
+    _billing = await _billingService.getBilling(billingId!);
+    return _billing;
+  }
+
   Map<String, dynamic> toJson() => {
         'event': event,
         'member': memberId,
         'status': Participation.statusToString(status),
         'communications': communicationsId,
         'package': packageId,
+        'billing': billingId,
         'confirmed': confirmed != null ? confirmed!.toIso8601String() : '',
         'partner': partner,
         'notes': notes,
