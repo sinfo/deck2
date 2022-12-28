@@ -562,7 +562,7 @@ func addCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedCompany, err := mongodb.Companies.UpdateBilling(companyID, newBilling.ID)
+	updatedCompany, err := mongodb.Companies.UpdateBilling(companyID, newBilling.ID, newBilling.Event)
 	if err != nil {
 		http.Error(w, "Could not update company's billing", http.StatusExpectationFailed)
 
@@ -604,7 +604,7 @@ func deleteCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = mongodb.Billings.DeleteBilling(billingID)
+	bill, err := mongodb.Billings.DeleteBilling(billingID)
 	if err != nil {
 		http.Error(w, "Billing not found"+err.Error(), http.StatusNotFound)
 		return
@@ -618,7 +618,7 @@ func deleteCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// create deleted billing
-		if _, err := mongodb.Companies.UpdateBilling(companyID, billingID); err != nil {
+		if _, err := mongodb.Companies.UpdateBilling(companyID, billingID, bill.Event); err != nil {
 			log.Printf("error adding billing to company participation: %s\n", err.Error())
 		}
 

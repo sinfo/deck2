@@ -4,6 +4,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/routes/company/billing/AddBillingForm.dart';
 import 'package:frontend/routes/company/billing/BillingScreen.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/DetailsScreen.dart';
@@ -98,8 +99,22 @@ class _CompanyScreenState extends State<CompanyScreen>
     int index = _tabController.index;
     switch (index) {
       case 0:
-      case 1:
         return null;
+      case 1:
+        return FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AddBillingForm(
+                        id: widget.company.id,
+                        onEditCompany: (context, _company) {
+                          companyChangedCallback(context, company: _company);
+                        })));
+          },
+          label: const Text('Add new Billing'),
+          icon: const Icon(Icons.add),
+        );
       case 2:
         {
           if (widget.company.lastParticipation != latestEvent) {

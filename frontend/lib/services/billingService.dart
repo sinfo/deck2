@@ -39,40 +39,11 @@ class BillingService extends Service {
     }
   }
 
-  Future<Billing?> createBilling(Billing billing) async {
-    var body = billing.toJson();
-
-    Response<String> response = await dio.post("/billings", data: body);
-
-    try {
-      return Billing.fromJson(json.decode(response.data!));
-    } on SocketException {
-      throw DeckException('No Internet connection');
-    } on HttpException {
-      throw DeckException('Not found');
-    } on FormatException {
-      throw DeckException('Wrong format');
-    }
-  }
-
   Future<Billing?> updateBilling(Billing billing) async {
     var body = billing.toJson();
 
     Response<String> response = await dio.put('/billings/${billing.id}', data: body);
 
-    try {
-      return Billing.fromJson(json.decode(response.data!));
-    } on SocketException {
-      throw DeckException('No Internet connection');
-    } on HttpException {
-      throw DeckException('Not found');
-    } on FormatException {
-      throw DeckException('Wrong format');
-    }
-  }
-
-  Future<Billing?> deleteBilling(String id) async {
-    Response<String> response = await dio.delete('/billings/$id');
     try {
       return Billing.fromJson(json.decode(response.data!));
     } on SocketException {

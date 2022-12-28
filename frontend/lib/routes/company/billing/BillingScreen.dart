@@ -129,9 +129,9 @@ class _BillingScreenState extends State<BillingScreen>
     return Padding(
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 20),
       child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: widget.participations!.reversed
-              .where((element) =>
-                  element.billingId != null && element.packageId != null)
+              .where((element) => element.billingId != null)
               .map(
                 (participation) => ParticipationBillingWidget(
                     participation: participation,
@@ -147,8 +147,6 @@ class _BillingScreenState extends State<BillingScreen>
     super.build(context);
     return Padding(
         padding: const EdgeInsets.all(8),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [getBillingInfo(), getBillings()]));
+        child: ListView(children: [getBillingInfo(), getBillings()]));
   }
 }

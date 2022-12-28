@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:intl/intl.dart';
+
 class BillingStatus {
   final bool proForma;
   final bool invoice;
@@ -64,7 +66,7 @@ class Billing {
       company: json['company'],
       value: json['value'],
       invoiceNumber: json['invoiceNumber'],
-      emission: DateTime(json['emission']),
+      emission: DateTime.parse(json['emission']),
       notes: json['notes'],
       visible: json['visible'],
     );
@@ -84,6 +86,17 @@ class Billing {
 
   @override
   String toString() {
-    return json.encode(this.toJson());
+    String repr = "";
+    Map<String, dynamic> bill = this.toJson();
+    bill.forEach((key, value) {
+      repr += key + ' ';
+      if (value != DateTime) {
+        repr += value.toString();
+      } else {
+        repr += DateFormat('yyyy-MM-dd HH:mm').format(value);
+      }
+      repr += '\n';
+    });
+    return repr;
   }
 }

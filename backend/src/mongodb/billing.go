@@ -93,10 +93,6 @@ func (cbd *CreateBillingData) ParseBody(body io.Reader) error {
 		return errors.New("invalid emission time")
 	}
 
-	if cbd.Notes == nil {
-		return errors.New("invalid notes")
-	}
-
 	if cbd.Event == nil {
 		return errors.New("invalid event")
 	}
@@ -271,16 +267,16 @@ func (b *BillingsType) DeleteBilling(id primitive.ObjectID) (*models.Billing, er
 
 	billing, err := b.GetBilling(id)
 	if err != nil {
-		return nil, err
+		return billing, err
 	}
 
 	deleteResult, err := b.Collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
-		return nil, err
+		return billing, err
 	}
 
 	if deleteResult.DeletedCount != 1 {
-		return nil, fmt.Errorf("should have deleted 1 billing, deleted %v", deleteResult.DeletedCount)
+		return billing, fmt.Errorf("should have deleted 1 billing, deleted %v", deleteResult.DeletedCount)
 	}
 
 	return billing, nil

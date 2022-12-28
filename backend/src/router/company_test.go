@@ -896,7 +896,7 @@ func TestAddCompanyPackage(t *testing.T) {
 
 	var packageID = updatedCompany.Participations[0].Package
 
-	createdPackage, err := mongodb.Packages.GetPackage(packageID)
+	createdPackage, err := mongodb.Packages.GetPackage(*packageID)
 	assert.NilError(t, err)
 
 	assert.Equal(t, createdPackage.Name, name)

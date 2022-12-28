@@ -1156,14 +1156,9 @@ func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID pr
 
 // UpdateBilling updates the billing of a company's participation related to the current event.
 // Uses a models.Billing ID to store this information.
-func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID primitive.ObjectID) (*models.Company, error) {
+func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID primitive.ObjectID, event int) (*models.Company, error) {
 
 	ctx := context.Background()
-	currentEvent, err := Events.GetCurrentEvent()
-
-	if err != nil {
-		return nil, err
-	}
 
 	var updatedCompany models.Company
 
@@ -1173,7 +1168,7 @@ func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID pr
 		},
 	}
 
-	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+	var filterQuery = bson.M{"_id": companyID, "participations.event": event}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)

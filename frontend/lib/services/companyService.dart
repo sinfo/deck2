@@ -121,7 +121,11 @@ class CompanyService extends Service {
       String? description,
       String? name,
       String? site}) async {
-    final Map<String, dynamic> body = {'description': description, 'name': name, 'site': site};
+    final Map<String, dynamic> body = {
+      'description': description,
+      'name': name,
+      'site': site
+    };
 
     if (billingInfo != null) {
       body['billingInfo'] = billingInfo.toJson();
@@ -428,6 +432,63 @@ class CompanyService extends Service {
       {required String id, required String threadID}) async {
     Response<String> response = await dio
         .delete("/companies/" + id + "/participation/thread/" + threadID);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> createBilling(
+      {required String id,
+      required DateTime emission,
+      required int event,
+      required String invoiceNumber,
+      String? notes,
+      required bool invoice,
+      required bool paid,
+      required bool proForma,
+      required bool receipt,
+      required int value,
+      bool? visible}) async {
+    var body = {
+      "emission": emission.toIso8601String(),
+      "event": event,
+      "invoiceNumber": invoiceNumber,
+      "notes": notes,
+      "status": {
+        "invoice": invoice,
+        "paid": paid,
+        "proForma": proForma,
+        "receipt": receipt
+      },
+      "value": value,
+      "company": id,
+      "visible": visible
+    };
+
+    Response<String> response = await dio
+        .post("/companies/" + id + "/participation/billing", data: body);
+
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> deleteBilling(String id, String billingID) async {
+    Response<String> response = await dio
+        .delete("/companies/" + id + "/participation/billing/" + billingID);
+
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
