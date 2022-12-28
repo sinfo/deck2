@@ -280,14 +280,14 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
 		return
 	}
-	
+
 	company, err := mongodb.Companies.DeleteCompanyThread(id, threadID)
 	if err != nil {
 		http.Error(w, "Company or thread not found", http.StatusNotFound)
 		return
 	}
-	
-	// Delete thread and posts (comments) associated to it - only if 
+
+	// Delete thread and posts (comments) associated to it - only if
 	// thread was deleted sucessfully from speaker participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found", http.StatusNotFound)
@@ -598,7 +598,7 @@ func deleteCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
 
 	backupBilling, _ := mongodb.Billings.GetBilling(billingID)
 
-	updatedCompany, err := mongodb.Companies.RemoveCompanyParticipationBilling(companyID)
+	updatedCompany, err := mongodb.Companies.RemoveCompanyParticipationBilling(companyID, backupBilling.Event)
 	if err != nil {
 		http.Error(w, "Could not remove billing from company participation", http.StatusExpectationFailed)
 		return

@@ -7,12 +7,14 @@ class ParticipationBillingWidget extends StatelessWidget {
   final CompanyParticipation participation;
   final String id;
   final bool small;
+  final void Function(String) onDelete;
 
   ParticipationBillingWidget(
       {Key? key,
       required this.participation,
       required this.small,
-      required this.id})
+      required this.id,
+      required this.onDelete})
       : super(key: key);
 
   @override
@@ -33,6 +35,7 @@ class ParticipationBillingWidget extends StatelessWidget {
             billing: bill,
             small: small,
             id: id,
+            onDelete: onDelete,
           );
         } else {
           return Center(child: CircularProgressIndicator());

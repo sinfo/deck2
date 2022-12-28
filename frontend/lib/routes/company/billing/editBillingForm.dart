@@ -1,68 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/models/company.dart';
-import 'package:frontend/routes/company/CompanyTableNotifier.dart';
-import 'package:frontend/services/companyService.dart';
+import 'package:frontend/models/billing.dart';
+import 'package:frontend/services/billingService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
-class AddBillingForm extends StatefulWidget {
-  final String id;
-  final void Function(BuildContext, Company?)? onEditCompany;
-
-  AddBillingForm({Key? key, required this.id, required this.onEditCompany})
+class EditBillingForm extends StatefulWidget {
+  final Billing billing;
+  final void Function(BuildContext, Billing?)? onBillingEdit;
+  EditBillingForm(
+      {Key? key, required this.billing, required this.onBillingEdit})
       : super(key: key);
 
   @override
-  _AddBillingFormState createState() => _AddBillingFormState();
+  _EditBillingFormState createState() => _EditBillingFormState();
 }
 
-class _AddBillingFormState extends State<AddBillingForm> {
+class _EditBillingFormState extends State<EditBillingForm> {
   final _formKey = GlobalKey<FormState>();
 
-  final _emissionController = TextEditingController();
-  final _eventController = TextEditingController();
-  final _invoiceNumberController = TextEditingController();
-  final _notesController = TextEditingController();
-  final _valueEurosController = TextEditingController();
-  final _valueCentsController = TextEditingController();
+  late TextEditingController _emissionController;
+  late TextEditingController _eventController;
+  late TextEditingController _invoiceNumberController;
+  late TextEditingController _notesController;
+  late TextEditingController _valueEurosController;
+  late TextEditingController _valueCentsController;
 
-  bool invoice = false;
-  bool paid = false;
-  bool proForma = false;
-  bool receipt = false;
-  bool visible = false;
+  late bool invoice;
+  late bool paid;
+  late bool proForma;
+  late bool receipt;
+  late bool visible;
 
-  final _companyService = CompanyService();
+  final _billingService = BillingService();
 
-  DateTime? dateTime;
-  DateTime? _emission;
+  late DateTime _emission;
 
-  Future _selectDateTime(BuildContext context) async {
-    final datePicker = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2025),
-    );
+  @override
+  void initState() {
+    super.initState();
 
-    final timePicker = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.now(),
-        builder: (BuildContext context, Widget? child) {
-          return MediaQuery(
-            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-            child: child!,
-          );
-        });
+    _emissionController =
+        TextEditingController(text: getDateTime(widget.billing.emission));
+    _eventController =
+        TextEditingController(text: widget.billing.event.toString());
+    _invoiceNumberController =
+        TextEditingController(text: widget.billing.invoiceNumber);
+    _notesController = TextEditingController(text: widget.billing.notes);
+    _valueEurosController =
+        TextEditingController(text: (widget.billing.value ~/ 100).toString());
+    _valueCentsController =
+        TextEditingController(text: (widget.billing.value % 100).toString());
 
-    if (datePicker != null && timePicker != null) {
-      _emission = DateTime(datePicker.year, datePicker.month, datePicker.day,
-          timePicker.hour, timePicker.minute);
-    }
+    invoice = widget.billing.status.invoice;
+    paid = widget.billing.status.paid;
+    proForma = widget.billing.status.proForma;
+    receipt = widget.billing.status.receipt;
+    visible = widget.billing.visible;
+
+    _emission = widget.billing.emission;
   }
 
   String getDateTime(DateTime dateTime) {
@@ -102,12 +100,12 @@ class _AddBillingFormState extends State<AddBillingForm> {
           int.parse(_valueCentsController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creating Billing...')),
+        const SnackBar(content: Text('Updating Billing...')),
       );
 
-      Company? c = await _companyService.createBilling(
-          id: widget.id,
-          emission: _emission!.toUtc(),
+      Billing? b = await _billingService.updateBilling(
+          id: widget.billing.id,
+          emission: _emission.toUtc(),
           event: event,
           invoiceNumber: invoiceNumber,
           notes: notes,
@@ -118,14 +116,10 @@ class _AddBillingFormState extends State<AddBillingForm> {
           value: value,
           visible: visible);
 
-      if (c != null) {
-        CompanyTableNotifier notifier =
-            Provider.of<CompanyTableNotifier>(context, listen: false);
-        notifier.edit(c);
-
-        widget.onEditCompany!(context, c);
-
+      if (b != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        widget.onBillingEdit!(context, b);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -133,6 +127,7 @@ class _AddBillingFormState extends State<AddBillingForm> {
             duration: Duration(seconds: 2),
           ),
         );
+        Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -140,7 +135,30 @@ class _AddBillingFormState extends State<AddBillingForm> {
           const SnackBar(content: Text('An error occured.')),
         );
       }
-      Navigator.pop(context);
+    }
+  }
+
+  Future _selectDateTime(BuildContext context) async {
+    final datePicker = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2025),
+    );
+
+    final timePicker = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        });
+
+    if (datePicker != null && timePicker != null) {
+      _emission = DateTime(datePicker.year, datePicker.month, datePicker.day,
+          timePicker.hour, timePicker.minute);
     }
   }
 
@@ -330,16 +348,6 @@ class _AddBillingFormState extends State<AddBillingForm> {
 
   @override
   Widget build(BuildContext context) {
-    CustomAppBar appBar = CustomAppBar(
-      disableEventChange: true,
-    );
-    return Scaffold(
-      body: Stack(children: [
-        Container(
-            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
-            child: _buildForm()),
-        appBar,
-      ]),
-    );
+    return _buildForm();
   }
 }

@@ -39,10 +39,35 @@ class BillingService extends Service {
     }
   }
 
-  Future<Billing?> updateBilling(Billing billing) async {
-    var body = billing.toJson();
+  Future<Billing?> updateBilling(
+      {required String id,
+      required DateTime emission,
+      required int event,
+      required String invoiceNumber,
+      String? notes,
+      required bool invoice,
+      required bool paid,
+      required bool proForma,
+      required bool receipt,
+      required int value,
+      bool? visible}) async {
+    var body = {
+      "emission": emission.toIso8601String(),
+      "event": event,
+      "invoiceNumber": invoiceNumber,
+      "notes": notes,
+      "status": {
+        "invoice": invoice,
+        "paid": paid,
+        "proForma": proForma,
+        "receipt": receipt
+      },
+      "value": value,
+      "company": id,
+      "visible": visible
+    };
 
-    Response<String> response = await dio.put('/billings/${billing.id}', data: body);
+    Response<String> response = await dio.put('/billings/' + id, data: body);
 
     try {
       return Billing.fromJson(json.decode(response.data!));

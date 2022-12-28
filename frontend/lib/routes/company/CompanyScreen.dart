@@ -184,11 +184,14 @@ class _CompanyScreenState extends State<CompanyScreen>
                         company: widget.company,
                       ),
                       BillingScreen(
-                        participations: widget.company.participations,
-                        billingInfo: widget.company.billingInfo,
-                        id: widget.company.id,
-                        small: small,
-                      ),
+                          participations: widget.company.participations,
+                          billingInfo: widget.company.billingInfo,
+                          id: widget.company.id,
+                          small: small,
+                          onBillingDeleted: (billingId) =>
+                              companyChangedCallback(context,
+                                  fs: _companyService.deleteBilling(
+                                      widget.company.id, billingId))),
                       ParticipationList(
                         company: widget.company,
                         onParticipationChanged:

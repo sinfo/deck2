@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/models/billing.dart';
+import 'package:frontend/routes/company/billing/editBillingForm.dart';
 import 'package:intl/intl.dart';
 
 class BillingCard extends StatefulWidget {
   Billing billing;
   final String id;
   final bool small;
+  final void Function(String) onDelete;
+
   BillingCard(
-      {Key? key, required this.billing, required this.id, required this.small})
+      {Key? key,
+      required this.billing,
+      required this.id,
+      required this.small,
+      required this.onDelete})
       : super(key: key);
 
   @override
@@ -18,6 +26,37 @@ class _BillingCardState extends State<BillingCard>
     with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
+
+  void _editBillingModal(context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+            heightFactor: 0.7,
+            child: Container(
+              child: EditBillingForm(
+                  billing: widget.billing,
+                  onBillingEdit: (context, _billing) {
+                    billingChangedCallback(context, billing: _billing);
+                  }),
+            ));
+      },
+    );
+  }
+
+  void _deleteBillingDialog(context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog('Warning',
+            'Are you sure you want to delete SINFO ${widget.billing.event} billing?',
+            () {
+          widget.onDelete(widget.billing.id);
+        });
+      },
+    );
+  }
 
   Future<void> billingChangedCallback(BuildContext context,
       {Billing? billing}) async {
@@ -63,7 +102,7 @@ class _BillingCardState extends State<BillingCard>
                     padding: const EdgeInsets.all(8.0),
                     child: IconButton(
                         onPressed: () {
-                          // _editFlightModal(context);
+                          _editBillingModal(context);
                         },
                         color: const Color(0xff5c7ff2),
                         icon: Icon(Icons.edit)),
@@ -72,7 +111,7 @@ class _BillingCardState extends State<BillingCard>
                     padding: const EdgeInsets.all(8.0),
                     child: IconButton(
                         onPressed: () {
-                          // _deleteFlightDialog(context);
+                          _deleteBillingDialog(context);
                         },
                         color: Colors.red,
                         icon: Icon(Icons.delete)),

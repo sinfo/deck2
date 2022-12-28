@@ -230,25 +230,19 @@ func (b *BillingsType) UpdateBilling(id primitive.ObjectID, data CreateBillingDa
 	var updateQuery = bson.M{
 		"$set": bson.M{
 			"status": bson.M{
-				"invoice":  data.Status.Invoice,
-				"paid":     data.Status.Paid,
-				"proForma": data.Status.ProForma,
-				"receipt":  data.Status.Receipt,
+				"invoice":  *data.Status.Invoice,
+				"paid":     *data.Status.Paid,
+				"proForma": *data.Status.ProForma,
+				"receipt":  *data.Status.Receipt,
 			},
-			"event":         data.Event,
-			"value":         data.Value,
-			"invoiceNumber": data.InvoiceNumber,
-			"emission":      data.Emission,
-			"notes":         data.Notes,
+			"event":         *data.Event,
+			"value":         *data.Value,
+			"invoiceNumber": *data.InvoiceNumber,
+			"emission":      *data.Emission,
+			"notes":         *data.Notes,
+			"company":       *data.Company,
+			"visible":       *data.Visible,
 		},
-	}
-
-	if data.Company != nil {
-		updateQuery["company"] = *data.Company
-	}
-
-	if data.Visible != nil {
-		updateQuery["visible"] = *data.Visible
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()

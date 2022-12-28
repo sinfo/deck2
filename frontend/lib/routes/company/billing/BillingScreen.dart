@@ -9,6 +9,7 @@ class BillingScreen extends StatefulWidget {
   final List<CompanyParticipation>? participations;
   final String id;
   final bool small;
+  final void Function(String) onBillingDeleted;
   CompanyBillingInfo? billingInfo;
 
   BillingScreen(
@@ -16,7 +17,8 @@ class BillingScreen extends StatefulWidget {
       this.billingInfo,
       required this.participations,
       required this.small,
-      required this.id})
+      required this.id,
+      required this.onBillingDeleted})
       : super(key: key);
 
   @override
@@ -136,7 +138,8 @@ class _BillingScreenState extends State<BillingScreen>
                 (participation) => ParticipationBillingWidget(
                     participation: participation,
                     id: widget.id,
-                    small: widget.small),
+                    small: widget.small,
+                    onDelete: widget.onBillingDeleted),
               )
               .toList()),
     );

@@ -1184,23 +1184,19 @@ func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID pr
 }
 
 // RemoveCompanyParticipationBilling removes a billing on the company participation.
-func (c *CompaniesType) RemoveCompanyParticipationBilling(companyID primitive.ObjectID) (*models.Company, error) {
+func (c *CompaniesType) RemoveCompanyParticipationBilling(companyID primitive.ObjectID, event int) (*models.Company, error) {
 	ctx := context.Background()
 
 	var updatedCompany models.Company
 
-	currentEvent, err := Events.GetCurrentEvent()
-	if err != nil {
-		return nil, err
-	}
-
 	var updateQuery = bson.M{
-		"$pull": bson.M{
-			"participations.billing": "",
+		"$unset": bson.M{
+			"participations.$.billing": "",
+			"participations.billing":   "",
 		},
 	}
 
-	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+	var filterQuery = bson.M{"_id": companyID, "participations.event": event}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
