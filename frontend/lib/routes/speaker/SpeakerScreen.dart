@@ -118,6 +118,8 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                           context,
                           fs: _speakerService.removeFlightInfo(
                               flightInfoId: flightId, id: widget.speaker.id))),
+                  widget.speaker.participations!.isEmpty ?
+                  Center(child: Text('No participations yet')):
                   ParticipationList(
                     speaker: widget.speaker,
                     onParticipationChanged: (Map<String, dynamic> body) async {
@@ -136,6 +138,8 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                         fs: _speakerService.removeParticipation(
                             id: widget.speaker.id)),
                   ),
+                  widget.speaker.participations!.isEmpty ?
+                  Center(child: Text('No communications yet')):
                   CommunicationsList(
                     participations: widget.speaker.participations != null
                         ? widget.speaker.participations!.reversed.toList()

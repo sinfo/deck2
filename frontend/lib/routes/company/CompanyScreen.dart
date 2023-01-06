@@ -192,6 +192,8 @@ class _CompanyScreenState extends State<CompanyScreen>
                               companyChangedCallback(context,
                                   fs: _companyService.deleteBilling(
                                       widget.company.id, billingId))),
+                      widget.company.participations!.isEmpty ?
+                      Center(child: Text('No participations yet')):
                       ParticipationList(
                         company: widget.company,
                         onParticipationChanged:
@@ -214,6 +216,8 @@ class _CompanyScreenState extends State<CompanyScreen>
                                   partner: false,
                                 )),
                       ),
+                      widget.company.participations!.isEmpty ?
+                      Center(child: Text('No communications yet')):
                       CommunicationsList(
                           participations: widget.company.participations != null
                               ? widget.company.participations!.reversed.toList()
