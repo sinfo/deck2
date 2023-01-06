@@ -132,8 +132,10 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 		elemMatch["member"] = compOptions.MemberID
 	}
 
-	filter["participations"] = bson.M{
-		"$elemMatch": elemMatch,
+	if compOptions.EventID != nil || compOptions.IsPartner != nil || compOptions.MemberID != nil {
+		filter["participations"] = bson.M{
+			"$elemMatch": elemMatch,
+		}
 	}
 
 	if compOptions.Name != nil {

@@ -158,6 +158,8 @@ class _CompanyScreenState extends State<CompanyScreen>
                       Container(
                         child: Center(child: Text('Work in progress :)')),
                       ),
+                      widget.company.participations!.isEmpty ?
+                      Center(child: Text('No participations yet')):
                       ParticipationList(
                         company: widget.company,
                         onParticipationChanged:
@@ -180,6 +182,8 @@ class _CompanyScreenState extends State<CompanyScreen>
                                   partner: false,
                                 )),
                       ),
+                      widget.company.participations!.isEmpty ?
+                      Center(child: Text('No communications yet')):
                       CommunicationsList(
                           participations: widget.company.participations ?? [],
                           small: small),

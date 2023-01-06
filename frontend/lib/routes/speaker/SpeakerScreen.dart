@@ -104,6 +104,8 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                   Container(
                     child: Center(child: Text('Work in progress :)')),
                   ),
+                  widget.speaker.participations!.isEmpty ?
+                  Center(child: Text('No participations yet')):
                   ParticipationList(
                     speaker: widget.speaker,
                     onParticipationChanged: (Map<String, dynamic> body) async {
@@ -122,6 +124,8 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                         fs: _speakerService.removeParticipation(
                             id: widget.speaker.id)),
                   ),
+                  widget.speaker.participations!.isEmpty ?
+                  Center(child: Text('No communications yet')):
                   CommunicationsList(
                       participations: widget.speaker.participations ?? [],
                       small: small),
