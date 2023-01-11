@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/packageCard.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
@@ -199,7 +201,25 @@ class _ParticipationCardState extends State<ParticipationCard> {
                 : p.confirmed != null
                     ? p.confirmed.toString()
                     : ''),
-      )
+      ),
+      FutureBuilder(
+        future: p.package,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text('Error' + snapshot.error.toString());
+          }
+          if (snapshot.connectionState == ConnectionState.done) {
+            Package? pack = snapshot.data as Package?;
+
+            if (pack == null) {
+              return Container();
+            }
+            return PackageCard(package: pack);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     ];
   }
 

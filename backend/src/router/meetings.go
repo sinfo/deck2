@@ -177,6 +177,35 @@ func addMeetingThread(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteMeetingThread(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
+
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	// Delete thread and posts (comments) associated to it
+	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
+		http.Error(w, "Thread not found", http.StatusNotFound)
+		return
+	}
+
+	meeting, err := mongodb.Meetings.DeleteMeetingThread(id, threadID)
+	if err != nil {
+		http.Error(w, "Meeting or thread not found", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(meeting)
+}
+
 func getMeetings(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
@@ -227,8 +256,6 @@ func getMeetings(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateMeeting(w http.ResponseWriter, r *http.Request) {
-
-	//TODO: Update Participants as well
 
 	defer r.Body.Close()
 

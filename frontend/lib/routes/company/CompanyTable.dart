@@ -25,6 +25,7 @@ class _CompanyTableState extends State<CompanyTable>
   final CompanyService _companyService = CompanyService();
   late ParticipationStatus _filter;
 
+  @override
   bool get wantKeepAlive => true;
 
   @override

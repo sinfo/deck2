@@ -37,7 +37,7 @@ class SpeakerTableNotifier extends ChangeNotifier {
   }
 
   void edit(Speaker s) {
-    int index = speakers.indexOf(s);
+    int index = speakers.indexWhere((speak) => s.id == speak.id);
     if (index != -1) {
       speakers[index] = s;
       notifyListeners();

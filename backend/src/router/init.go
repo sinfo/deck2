@@ -164,10 +164,13 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/image/public", authCoordinator(setCompanyPublicImage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(updateCompanyParticipation)).Methods("PUT")
+	companyRouter.HandleFunc("/{id}/participation/thread/{threadID}", authMember(deleteCompanyThread)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/participation/status/next", authMember(getCompanyValidSteps)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setCompanyStatus)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/billing", authCoordinator(addCompanyParticipationBilling)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/billing/{billingID}", authCoordinator(deleteCompanyParticipationBilling)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
@@ -183,6 +186,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/unsubscribe", authMember(unsubscribeToSpeaker)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/participation", authMember(addSpeakerParticipation)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation", authMember(updateSpeakerParticipation)).Methods("PUT")
+	speakerRouter.HandleFunc("/{id}/participation/thread/{threadID}", authMember(deleteSpeakerThread)).Methods("DELETE")
 	speakerRouter.HandleFunc("/{id}/participation/status/next", authMember(getSpeakerValidSteps)).Methods("GET")
 	speakerRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepSpeakerStatus)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setSpeakerStatus)).Methods("PUT")
@@ -279,6 +283,7 @@ func InitializeRouter() {
 	meetingRouter.HandleFunc("/{id}", authCoordinator(deleteMeeting)).Methods("DELETE")
 	meetingRouter.HandleFunc("/{id}", authCoordinator(updateMeeting)).Methods("PUT")
 	meetingRouter.HandleFunc("/{id}/thread", authMember(addMeetingThread)).Methods("POST")
+	meetingRouter.HandleFunc("/{id}/thread/{threadID}", authMember(deleteMeetingThread)).Methods("DELETE")
 	meetingRouter.HandleFunc("/{id}/minute", authMember(uploadMeetingMinute)).Methods("POST")
 	meetingRouter.HandleFunc("/{id}/minute", authMember(deleteMeetingMinute)).Methods("DELETE")
 	meetingRouter.HandleFunc("/{id}/participants", authMember(addMeetingParticipant)).Methods("POST")
@@ -290,6 +295,7 @@ func InitializeRouter() {
 	threadRouter.HandleFunc("/{id}/comments", authMember(addCommentToThread)).Methods("POST")
 	threadRouter.HandleFunc("/{threadID}/comments/{postID}", authMember(removeCommentFromThread)).Methods("DELETE")
 	threadRouter.HandleFunc("/{id}", authMember(updateThread)).Methods("PUT")
+	threadRouter.HandleFunc("/{id}", authMember(deleteThread)).Methods("DELETE")
 
 	// posts handlers
 	postRouter := r.PathPrefix("/posts").Subrouter()
@@ -307,9 +313,7 @@ func InitializeRouter() {
 	billingsRouter := r.PathPrefix("/billings").Subrouter()
 	billingsRouter.HandleFunc("", authMember(getBillings)).Methods("GET")
 	billingsRouter.HandleFunc("/{id}", authCoordinator(getBilling)).Methods("GET")
-	billingsRouter.HandleFunc("", authCoordinator(createBilling)).Methods("POST")
 	billingsRouter.HandleFunc("/{id}", authCoordinator(updateBilling)).Methods("PUT")
-	billingsRouter.HandleFunc("/{id}", authCoordinator(deleteBilling)).Methods("DELETE")
 
 	// companyReps handlers
 	repsRouter := r.PathPrefix("/companyReps").Subrouter()

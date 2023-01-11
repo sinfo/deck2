@@ -1,12 +1,12 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
-import 'package:frontend/components/addThreadForm.dart';
+import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/components/threadCard.dart';
+import 'package:frontend/components/threads/threadCard/threadCard.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/thread.dart';
@@ -31,6 +31,7 @@ class MeetingScreen extends StatefulWidget {
 class _MeetingScreenState extends State<MeetingScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  MeetingService _meetingService = MeetingService();
 
   @override
   void initState() {
@@ -63,6 +64,18 @@ class _MeetingScreenState extends State<MeetingScreen>
       setState(() {
         widget.meeting = m!;
       });
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
     }
   }
 
@@ -72,10 +85,15 @@ class _MeetingScreenState extends State<MeetingScreen>
       builder: (context) {
         return Container(
           child: AddThreadForm(
-              meeting: widget.meeting,
-              onEditMeeting: (context, _meeting) {
-                meetingChangedCallback(context, meeting: _meeting);
-              }),
+            meeting: widget.meeting,
+            onAddMeeting: (thread_text) {
+              meetingChangedCallback(context,
+                  fm: _meetingService.addThread(
+                      id: widget.meeting.id,
+                      kind: 'MEETING',
+                      text: thread_text));
+            },
+          ),
         );
       },
     );
@@ -155,8 +173,14 @@ class _MeetingScreenState extends State<MeetingScreen>
                             meetingChangedCallback(context, meeting: _meeting);
                           }),
                       MeetingsCommunications(
-                          communications: widget.meeting.communications,
-                          small: small),
+                        communications: widget.meeting.communications,
+                        small: small,
+                        onCommunicationDeleted: (thread_ID) =>
+                            meetingChangedCallback(context,
+                                fm: _meetingService.deleteThread(
+                                    id: widget.meeting.id,
+                                    threadID: thread_ID)),
+                      ),
                     ]),
                   ),
                 ],
@@ -250,7 +274,7 @@ class MeetingParticipants extends StatelessWidget {
                           onPressed: () => _deleteMeetingParticipant(context,
                               membs[index]!.id, type, membs[index]!.name),
                           icon: Icon(Icons.delete),
-                          style: ElevatedButton.styleFrom(primary: Colors.red),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                           label: const Text("Delete participant")),
                     ]);
                   });
@@ -317,9 +341,13 @@ class MeetingParticipants extends StatelessWidget {
 class MeetingsCommunications extends StatelessWidget {
   final Future<List<Thread>?> communications;
   final bool small;
+  final void Function(String) onCommunicationDeleted;
 
   MeetingsCommunications(
-      {Key? key, required this.communications, required this.small});
+      {Key? key,
+      required this.communications,
+      required this.small,
+      required this.onCommunicationDeleted});
 
   @override
   Widget build(BuildContext context) {
@@ -345,6 +373,7 @@ class MeetingsCommunications extends StatelessWidget {
                       child: ThreadCard(
                         thread: thread,
                         small: small,
+                        onCommunicationDeleted: onCommunicationDeleted,
                       ),
                     ),
                   )
@@ -614,7 +643,7 @@ class MeetingBanner extends StatelessWidget {
                                                         context),
                                                 icon: Icon(Icons.article),
                                                 style: ElevatedButton.styleFrom(
-                                                    primary: meeting
+                                                    backgroundColor: meeting
                                                             .minute!.isNotEmpty
                                                         ? const Color(
                                                             0xFF5C7FF2)
@@ -637,7 +666,7 @@ class MeetingBanner extends StatelessWidget {
                                                     icon: Icon(Icons.article),
                                                     style: ElevatedButton
                                                         .styleFrom(
-                                                            primary: const Color(
+                                                            backgroundColor: const Color(
                                                                 0xFFF25C5C)),
                                                     label: const Text(
                                                         "Delete Minutes")))
