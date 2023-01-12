@@ -103,7 +103,7 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 
 	companies, err := mongodb.Companies.GetCompanies(options)
 	if err != nil {
-		http.Error(w, "Unable to get companies", http.StatusExpectationFailed)
+		http.Error(w, "Unable to get companies" + err.Error(), http.StatusExpectationFailed)
 	}
 
 	json.NewEncoder(w).Encode(companies)

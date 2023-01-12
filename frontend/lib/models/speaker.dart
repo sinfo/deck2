@@ -1,3 +1,4 @@
+import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:collection/collection.dart';
@@ -46,6 +47,27 @@ class Speaker {
       this.lastParticipation,
       this.participationStatus});
 
+  static int getNumParticipations(List<dynamic> participations) {
+    int numParticipations = 0;
+    participations.forEach((participation) {
+      if (participation['status'] ==
+          STATUSSTRING[ParticipationStatus.ANNOUNCED]!.toUpperCase()) {
+        numParticipations++;
+      }
+    });
+    return numParticipations;
+  }
+
+  static int? getLastParticipation(List<dynamic> participations) {
+    for (var participation in participations.reversed) {
+      if (participation['status'] ==
+          STATUSSTRING[ParticipationStatus.ANNOUNCED]!.toUpperCase()) {
+        return participation['event'];
+      }
+    }
+    return null;
+  }
+
   factory Speaker.fromJson(Map<String, dynamic> json) {
     var participationsList = json['participations'] as List;
     return Speaker(
@@ -59,10 +81,8 @@ class Speaker {
       participations: participationsList
           .map((p) => SpeakerParticipation.fromJson(p))
           .toList(),
-      numParticipations: participationsList.length,
-      lastParticipation: participationsList.length > 0
-          ? participationsList[participationsList.length - 1]['event']
-          : null,
+      numParticipations: getNumParticipations(participationsList),
+      lastParticipation: getLastParticipation(participationsList),
       participationStatus: participationsList.length > 0 &&
               participationsList[participationsList.length - 1]['event'] ==
                   App.localStorage.getInt("event")
@@ -159,16 +179,35 @@ class SpeakerLight {
       this.lastParticipation,
       required this.participationStatus});
 
+  static int getNumParticipations(List<dynamic> participations) {
+    int numParticipations = 0;
+    participations.forEach((participation) {
+      if (participation['status'] ==
+          STATUSSTRING[ParticipationStatus.ANNOUNCED]!.toUpperCase()) {
+        numParticipations++;
+      }
+    });
+    return numParticipations;
+  }
+
+  static int? getLastParticipation(List<dynamic> participations) {
+    for (var participation in participations.reversed) {
+      if (participation['status'] ==
+          STATUSSTRING[ParticipationStatus.ANNOUNCED]!.toUpperCase()) {
+        return participation['event'];
+      }
+    }
+    return null;
+  }
+
   factory SpeakerLight.fromJson(Map<String, dynamic> json) {
     var participations = json['participations'] as List;
     return SpeakerLight(
         id: json['id'],
         name: json['name'],
         speakerImages: Images.fromJson(json['imgs']),
-        numParticipations: participations.length,
-        lastParticipation: participations.length > 0
-            ? participations[participations.length - 1]['event']
-            : null,
+        numParticipations: getNumParticipations(participations),
+        lastParticipation: getLastParticipation(participations),
         participationStatus: participations.length > 0 &&
                 participations[participations.length - 1]['event'] ==
                     App.localStorage.getInt("event")

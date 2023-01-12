@@ -83,7 +83,7 @@ class ListViewCard extends StatelessWidget {
     _status = participation != null
         ? participation.status
         : ParticipationStatus.NO_STATUS;
-        
+
     _imageUrl = speaker!.imgs!.internal!;
     _title = speaker!.name;
     _color = STATUSCOLOR[_status]!;
@@ -103,7 +103,10 @@ class ListViewCard extends StatelessWidget {
                 fontSize: fontsize,
                 fontWeight: FontWeight.bold,
               )),
-          Text('$_numParticipations participations',
+          Text(
+              _numParticipations == 1
+                  ? '$_numParticipations participation'
+                  : '$_numParticipations participations',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: fontsize,
