@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/speaker.dart';
+import 'package:frontend/routes/speaker/SpeakerScreen.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -45,7 +46,14 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
                 id: s.id, image: File(_image!.path));
       }
       if (s != null) {
-        //TODO: Redirect to company page
+        // Taking the AddSpeakerForm screen from navigator
+        Navigator.pop(context);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SpeakerScreen(speaker: s!)),
+        );
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(

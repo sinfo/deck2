@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/memberService.dart';
 
 class AddMemberForm extends StatefulWidget {
@@ -41,7 +42,14 @@ class _AddMemberFormState extends State<AddMemberForm> {
       //           id: m.id, image: File(_image!.path));
       // }
       if (m != null) {
-        //TODO: Redirect to members page
+        // Taking the AddMemberForm screen from navigator
+        Navigator.pop(context);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MemberScreen(member: m)),
+        );
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -96,9 +104,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
               decoration: InputDecoration(
                 icon: const Icon(Icons.school),
                 labelText: "IstID *",
-                
               ),
-              
             ),
           ),
           Padding(
@@ -116,7 +122,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
                 icon: ImageIcon(
                   AssetImage("assets/PowerOnIcon.png"),
                   size: 15,
-              ),
+                ),
                 labelText: "SinfoID *",
               ),
             ),
@@ -270,7 +276,9 @@ class _AddMemberFormState extends State<AddMemberForm> {
   Widget build(BuildContext context) {
     //bool warning = _image != null && _size != null && _size! > 102400;
     return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true,),
+        appBar: CustomAppBar(
+          disableEventChange: true,
+        ),
         body: LayoutBuilder(builder: (contex, constraints) {
           return Column(children: [
             _buildForm(),
