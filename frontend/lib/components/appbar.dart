@@ -20,21 +20,16 @@ enum SortingMethod {
 
 class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
   final bool disableEventChange;
-  final List<Widget>? actions;
 
   @override
   final Size preferredSize;
 
-  CustomAppBar({
-    Key? key,
-    required this.disableEventChange,
-    this.actions,
-  })  : preferredSize = Size.fromHeight(kToolbarHeight),
+  CustomAppBar({Key? key, required this.disableEventChange})
+      : preferredSize = Size.fromHeight(kToolbarHeight),
         super(key: key);
 
   @override
-  _CustomAppBarState createState() =>
-      _CustomAppBarState(disableEventChange, actions);
+  _CustomAppBarState createState() => _CustomAppBarState(disableEventChange);
 }
 
 class _CustomAppBarState extends State<CustomAppBar> {
@@ -43,7 +38,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
   late Future<List<Member>> members;
   late Future<List<int>> _eventIds;
   final bool disableEventChange;
-  final List<Widget>? actions;
 
   EventService _eventService = EventService();
   CompanyService companyService = new CompanyService();
@@ -52,7 +46,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
   final _searchController = TextEditingController();
 
-  _CustomAppBarState(this.disableEventChange, this.actions);
+  _CustomAppBarState(this.disableEventChange);
 
   @override
   void initState() {
@@ -70,7 +64,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
       AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         iconTheme: IconThemeData(color: Colors.white),
-        actions: actions,
         title: Row(children: [
           InkWell(
             child: SizedBox(

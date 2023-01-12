@@ -19,14 +19,10 @@ class CompanyTable extends StatefulWidget {
   _CompanyTableState createState() => _CompanyTableState();
 }
 
-class _CompanyTableState extends State<CompanyTable>
-    with AutomaticKeepAliveClientMixin {
+class _CompanyTableState extends State<CompanyTable> {
   final MemberService _memberService = MemberService();
   final CompanyService _companyService = CompanyService();
   late ParticipationStatus _filter;
-
-  @override
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -36,7 +32,6 @@ class _CompanyTableState extends State<CompanyTable>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     int event = Provider.of<EventNotifier>(context).event.id;
 
     return NestedScrollView(

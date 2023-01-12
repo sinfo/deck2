@@ -4,9 +4,10 @@ import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/routes/company/CompanyTable.dart';
+import 'package:frontend/routes/company/CompanyPage.dart';
 import 'package:frontend/routes/meeting/MeetingPage.dart';
-import 'package:frontend/routes/speaker/SpeakerTable.dart';
+import 'package:frontend/routes/member/MemberPage.dart';
+import 'package:frontend/routes/speaker/SpeakerPage.dart';
 import 'package:frontend/routes/teams/TeamsTable.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -80,16 +81,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 children: <Widget>[
                   Center(
-                    child: const SpeakerTable(),
+                    child: const SpeakerPage(),
                   ),
                   Center(
                     child: const LandingPage(),
                   ),
                   Center(
-                    child: const CompanyTable(),
+                    child: const CompanyPage(),
                   ),
                   Center(
-                    child: const TeamTable(),
+                    child: const MemberPage(),
                   ),
                   Center(
                     child: const MeetingPage(),
@@ -124,11 +125,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pushNamed(
                 context,
-                Routes.ShowAllSpeakers,
+                Routes.AddSpeaker,
               );
             },
-            label: const Text('Show All Speakers'),
-            icon: const Icon(Icons.add),
+            label: const Text('Create New Speaker'),
+            icon: const Icon(Icons.person_add),
           );
         }
       case 1:
@@ -141,26 +142,38 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pushNamed(
                 context,
-                Routes.ShowAllCompanies,
+                Routes.AddCompany,
               );
             },
-            label: const Text('Show All Companies'),
-            icon: const Icon(Icons.add),
+            label: const Text('Create New Company'),
+            icon: const Icon(Icons.business),
           );
         }
-
       case 3:
         {
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                Routes.ShowAllMembers,
-              );
-            },
-            label: const Text('Show All Members'),
-            icon: const Icon(Icons.add),
-          );
+          return FutureBuilder(
+              future: Provider.of<AuthService>(context).role,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  Role r = snapshot.data as Role;
+
+                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
+                    return FloatingActionButton.extended(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          Routes.AddMember,
+                        );
+                      },
+                      label: const Text('Create New Member'),
+                      icon: const Icon(Icons.edit),
+                      backgroundColor: Color(0xff5C7FF2),
+                    );
+                  } else
+                    return Container();
+                } else
+                  return Container();
+              });
         }
 
       case 4:
@@ -231,7 +244,6 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage>
     with AutomaticKeepAliveClientMixin {
-
   @override
   bool get wantKeepAlive => true;
 
@@ -271,7 +283,7 @@ class CustomNavBar extends StatelessWidget {
               Icons.work,
             )),
         BottomNavigationBarItem(
-            label: 'Teams',
+            label: 'Members',
             icon: Icon(
               Icons.people,
             )),
