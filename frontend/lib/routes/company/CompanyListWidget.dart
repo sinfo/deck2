@@ -3,7 +3,10 @@ import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/participation.dart';
+import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/services/companyService.dart';
+import 'package:provider/provider.dart';
 
 final Map<SortingMethod, String> SORT_STRING = {
   SortingMethod.RANDOM: 'Sort Randomly',
@@ -67,6 +70,32 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
     this.companiesLoaded.addAll(await this.companies);
   }
 
+  Future<void> companyChangedCallback(BuildContext context,
+      {Future<Company?>? fs, Company? company}) async {
+    Company? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (company != null) {
+      s = company;
+    }
+
+    if (s != null) {
+      Provider.of<CompanyTableNotifier>(context, listen: false).edit(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Company>>(
@@ -124,9 +153,18 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                           itemCount: comp.length,
                           itemBuilder: (BuildContext context, int index) {
                             return ListViewCard(
-                                small: isSmall,
-                                company: comp[index],
-                                participationsInfo: true);
+                              small: isSmall,
+                              company: comp[index],
+                              participationsInfo: true,
+                              onChangeParticipationStatus:
+                                  (ParticipationStatus status) async {
+                                await companyChangedCallback(
+                                  context,
+                                  fs: companyService.updateParticipationStatus(
+                                      id: comp[index].id, newStatus: status),
+                                );
+                              },
+                            );
                           })),
                 ],
               );

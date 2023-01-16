@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
+import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -13,14 +14,14 @@ import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:collection/collection.dart';
 import 'package:provider/provider.dart';
 
-class ListViewCard extends StatelessWidget {
+class ListViewCard extends StatefulWidget {
   final Member? member;
   final Company? company;
   final Speaker? speaker;
   final bool small;
   final bool? participationsInfo;
-  late final ParticipationStatus _status;
-  late final Color _color;
+  late ParticipationStatus _status;
+  late Color _color;
   late final String _imageUrl;
   late final String _title;
   late final int? _numParticipations;
@@ -39,14 +40,16 @@ class ListViewCard extends StatelessWidget {
       this.participationsInfo,
       this.onChangeParticipationStatus})
       : super(key: key) {
-    int? event = App.localStorage.getInt("event");
-    if (event != null) {
-      if (company != null) {
-        _initCompany(event);
-      } else if (speaker != null) {
-        _initSpeaker(event);
-      } else if (member != null) {
-        _initMember(event);
+    {
+      int? event = App.localStorage.getInt("event");
+      if (event != null) {
+        if (company != null) {
+          _initCompany(event);
+        } else if (speaker != null) {
+          _initSpeaker(event);
+        } else if (member != null) {
+          _initMember(event);
+        }
       }
     }
   }
@@ -106,137 +109,6 @@ class ListViewCard extends StatelessWidget {
     _lastParticipation = speaker!.lastParticipation;
   }
 
-  Widget getParticipationInfo(double fontsize) {
-    if (participationsInfo != null) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(_title,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: fontsize,
-                fontWeight: FontWeight.bold,
-              )),
-          Text(
-              _numParticipations == 1
-                  ? '$_numParticipations participation'
-                  : '$_numParticipations participations',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: fontsize,
-                fontWeight: FontWeight.bold,
-              )),
-          Text(
-              _numParticipations! > 0
-                  ? 'Participated in SINFO $_lastParticipation'
-                  : 'No Participation',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: fontsize,
-                fontWeight: FontWeight.bold,
-              ))
-        ],
-      );
-    } else {
-      return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text(_title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: fontsize,
-              fontWeight: FontWeight.bold,
-            ))
-      ]);
-    }
-  }
-
-  List<ParticipationStatus> getAllStatus() {
-    List<ParticipationStatus> allStatus = STATUSSTRING.keys.toList();
-    allStatus
-        .removeWhere((element) => element == ParticipationStatus.NO_STATUS);
-    return allStatus;
-  }
-
-  List<Widget> getStatus(double fontsize) {
-    if (_editable!) {
-      return [
-        DecoratedBox(
-          decoration: BoxDecoration(
-              color: STATUSCOLOR[_status],
-              borderRadius: BorderRadius.circular(5)),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
-            child: DropdownButton<ParticipationStatus>(
-              icon: Icon(
-                Icons.arrow_downward,
-                color: _status == ParticipationStatus.GIVEN_UP
-                    ? Colors.white
-                    : Colors.black,
-              ),
-              // iconSize: 16,
-              selectedItemBuilder: (BuildContext context) {
-                return getAllStatus().map<Widget>((ParticipationStatus status) {
-                  return Container(
-                    alignment: Alignment.centerLeft,
-                    constraints: const BoxConstraints(minWidth: 70),
-                    child: Text(
-                      STATUSSTRING[status]!,
-                      style: TextStyle(
-                        color: _status == ParticipationStatus.GIVEN_UP
-                            ? Colors.white
-                            : Colors.black,
-                        fontSize: 14,
-                      ),
-                    ),
-                  );
-                }).toList();
-              },
-              underline: Container(
-                height: 2,
-                color: _status == ParticipationStatus.GIVEN_UP
-                    ? Colors.white
-                    : Colors.black,
-              ),
-              onChanged: (ParticipationStatus? newStatus) async {
-                onChangeParticipationStatus!(newStatus!);
-              },
-              value: _status,
-              items: getAllStatus()
-                  .map<DropdownMenuItem<ParticipationStatus>>((e) =>
-                      DropdownMenuItem<ParticipationStatus>(
-                          value: e, child: Text(STATUSSTRING[e]!)))
-                  .toList(),
-            ),
-          ),
-        )
-      ];
-    } else {
-      if (STATUSSTRING[_status] != null &&
-          STATUSSTRING[_status] !=
-              STATUSSTRING[ParticipationStatus.NO_STATUS]) {
-        return [
-          Container(
-            padding: EdgeInsets.all(6),
-            margin: EdgeInsets.fromLTRB(15, 15, 0, 0),
-            decoration: BoxDecoration(
-              color: _color,
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-            ),
-            child: Text(
-              STATUSSTRING[_status]!,
-              style: TextStyle(
-                  fontSize: fontsize,
-                  color: _status == ParticipationStatus.GIVEN_UP
-                      ? Colors.white
-                      : Colors.black),
-            ),
-          ),
-        ];
-      } else {
-        return [];
-      }
-    }
-  }
-
   static Widget fakeCard() {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -274,8 +146,159 @@ class ListViewCard extends StatelessWidget {
   }
 
   @override
+  _ListViewCardState createState() => _ListViewCardState();
+}
+
+class _ListViewCardState extends State<ListViewCard> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Widget getParticipationInfo(double fontsize) {
+    if (widget.participationsInfo != null) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(widget._title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              )),
+          Text(
+              widget._numParticipations == 1
+                  ? '${widget._numParticipations} participation'
+                  : '${widget._numParticipations} participations',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              )),
+          Text(
+              widget._numParticipations! > 0
+                  ? 'Participated in SINFO ${widget._lastParticipation}'
+                  : 'No Participation',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontsize,
+                fontWeight: FontWeight.bold,
+              ))
+        ],
+      );
+    } else {
+      return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Text(widget._title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: fontsize,
+              fontWeight: FontWeight.bold,
+            ))
+      ]);
+    }
+  }
+
+  List<ParticipationStatus> getAllStatus() {
+    List<ParticipationStatus> allStatus = STATUSSTRING.keys.toList();
+    allStatus
+        .removeWhere((element) => element == ParticipationStatus.NO_STATUS);
+    return allStatus;
+  }
+
+  void changeState(ParticipationStatus newStatus) {
+    setState(() {
+      widget._status = newStatus;
+      widget._color = STATUSCOLOR[newStatus]!;
+    });
+  }
+
+  List<Widget> getStatus(double fontsize) {
+    if (widget._editable!) {
+      return [
+        DecoratedBox(
+          decoration: BoxDecoration(
+              color: STATUSCOLOR[widget._status],
+              borderRadius: BorderRadius.circular(5)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+            child: DropdownButton<ParticipationStatus>(
+              icon: Icon(
+                Icons.arrow_downward,
+                color: widget._status == ParticipationStatus.GIVEN_UP
+                    ? Colors.white
+                    : Colors.black,
+              ),
+              // iconSize: 16,
+              selectedItemBuilder: (BuildContext context) {
+                return getAllStatus().map<Widget>((ParticipationStatus status) {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    constraints: const BoxConstraints(minWidth: 70),
+                    child: Text(
+                      STATUSSTRING[status]!,
+                      style: TextStyle(
+                        color: widget._status == ParticipationStatus.GIVEN_UP
+                            ? Colors.white
+                            : Colors.black,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }).toList();
+              },
+              underline: Container(
+                height: 2,
+                color: widget._status == ParticipationStatus.GIVEN_UP
+                    ? Colors.white
+                    : Colors.black,
+              ),
+              onChanged: (ParticipationStatus? newStatus) async {
+                widget.onChangeParticipationStatus!(newStatus!);
+                changeState(newStatus);
+              },
+              value: widget._status,
+              items: getAllStatus()
+                  .map<DropdownMenuItem<ParticipationStatus>>((e) =>
+                      DropdownMenuItem<ParticipationStatus>(
+                          value: e, child: Text(STATUSSTRING[e]!)))
+                  .toList(),
+            ),
+          ),
+        )
+      ];
+    } else {
+      if (STATUSSTRING[widget._status] != null &&
+          STATUSSTRING[widget._status] !=
+              STATUSSTRING[ParticipationStatus.NO_STATUS]) {
+        return [
+          Container(
+            padding: EdgeInsets.all(6),
+            margin: EdgeInsets.fromLTRB(15, 15, 0, 0),
+            decoration: BoxDecoration(
+              color: widget._color,
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+            ),
+            child: Text(
+              STATUSSTRING[widget._status]!,
+              style: TextStyle(
+                  fontSize: fontsize,
+                  color: widget._status == ParticipationStatus.GIVEN_UP
+                      ? Colors.white
+                      : Colors.black),
+            ),
+          ),
+        ];
+      } else {
+        return [];
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (company != null || speaker != null || member != null) {
+    if (widget.company != null ||
+        widget.speaker != null ||
+        widget.member != null) {
       Widget body = Stack(
         children: [
           InkWell(
@@ -286,27 +309,28 @@ class ListViewCard extends StatelessWidget {
                   PageRouteBuilder(
                     transitionDuration: Duration(milliseconds: 600),
                     pageBuilder: (context, animation, secondaryAnimation) =>
-                        _screen,
+                        widget._screen,
                   ));
             },
             child: Container(
-              height: small ? 175 : 225,
-              width: small ? 125 : 200,
-              margin: EdgeInsets.all(small ? 5 : 10),
+              height: widget.small ? 175 : 225,
+              width: widget.small ? 125 : 200,
+              margin: EdgeInsets.all(widget.small ? 5 : 10),
               alignment: Alignment.topCenter,
               decoration: BoxDecoration(
                 color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(5),
-                border: Border.all(color: _color, width: small ? 1 : 2),
+                border: Border.all(
+                    color: widget._color, width: widget.small ? 1 : 2),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Hero(
-                      tag: _tag,
+                      tag: widget._tag,
                       child: Image.network(
-                        _imageUrl,
+                        widget._imageUrl,
                         fit: BoxFit.contain,
                         loadingBuilder: (context, child, progress) {
                           return progress == null
@@ -324,11 +348,11 @@ class ListViewCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                      height: participationsInfo != null
-                          ? small
+                      height: widget.participationsInfo != null
+                          ? widget.small
                               ? 72
                               : 70
-                          : small
+                          : widget.small
                               ? 42
                               : 40,
                       child: getParticipationInfo(14)),
@@ -336,16 +360,21 @@ class ListViewCard extends StatelessWidget {
               ),
             ),
           ),
-          ...getStatus(small ? 10 : 14)
+          ...getStatus(widget.small ? 10 : 14)
         ],
       );
 
-      if (speaker != null) {
+      if (widget.speaker != null) {
         return Consumer<SpeakerTableNotifier>(
           builder: (a, b, c) => body,
         );
-      } else
+      } else if (widget.company != null) {
+        return Consumer<CompanyTableNotifier>(
+          builder: (a, b, c) => body,
+        );
+      } else {
         return body;
+      }
     } else {
       return UnknownScreen();
     }
