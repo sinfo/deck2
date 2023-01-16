@@ -22,7 +22,8 @@ class ParticipationList extends StatelessWidget {
       builder: (context, constraints) {
         bool small = constraints.maxWidth < App.SIZE;
         if (company.participations != null) {
-          if (company.lastParticipation ==
+          if (company
+                  .participations![company.participations!.length - 1].event ==
               Provider.of<EventNotifier>(context).latest.id) {
             return Padding(
               padding: const EdgeInsets.all(8.0),
@@ -57,10 +58,9 @@ class ParticipationList extends StatelessWidget {
                         .map((e) => Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: ParticipationCard(
-                                participation: e,
-                                small: small,
-                                type: CardType.COMPANY,
-                              ),
+                                  participation: e,
+                                  small: small,
+                                  type: CardType.COMPANY),
                             ))
                         .toList(),
                   ],

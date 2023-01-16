@@ -28,7 +28,7 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 	if len(member) > 0 {
 		memberID, err := primitive.ObjectIDFromHex(member)
 		if err != nil {
-			http.Error(w, "Invalid member ID format", http.StatusBadRequest)
+			http.Error(w, "Invalid member ID format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.Member = &memberID
@@ -41,7 +41,7 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
 		if err != nil {
-			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+			http.Error(w, "Invalid event ID format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.Event = &eventID
@@ -50,7 +50,7 @@ func getTeams(w http.ResponseWriter, r *http.Request) {
 	teams, err := mongodb.Teams.GetTeams(options)
 
 	if err != nil {
-		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		http.Error(w, "Unable to make query do database: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -64,14 +64,14 @@ func createTeam(w http.ResponseWriter, r *http.Request) {
 	var ctd = &mongodb.CreateTeamData{}
 
 	if err := ctd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newTeam, err := mongodb.Teams.CreateTeam(*ctd)
 
 	if err != nil {
-		http.Error(w, "Could not create team", http.StatusBadRequest)
+		http.Error(w, "Could not create team: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -85,7 +85,7 @@ func getTeam(w http.ResponseWriter, r *http.Request) {
 	team, err := mongodb.Teams.GetTeam(id)
 
 	if err != nil {
-		http.Error(w, "Could not find team", http.StatusNotFound)
+		http.Error(w, "Could not find team: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -99,7 +99,7 @@ func deleteTeam(w http.ResponseWriter, r *http.Request) {
 	team, err := mongodb.Teams.DeleteTeam(id)
 
 	if err != nil {
-		http.Error(w, "Could not find team", http.StatusNotFound)
+		http.Error(w, "Could not find team: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -115,14 +115,14 @@ func updateTeam(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if err := ctd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedTeam, err := mongodb.Teams.UpdateTeam(id, *ctd)
 
 	if err != nil {
-		http.Error(w, "Could not update team", http.StatusNotFound)
+		http.Error(w, "Could not update team: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -137,7 +137,7 @@ func addTeamMember(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if err := ctmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -146,7 +146,7 @@ func addTeamMember(w http.ResponseWriter, r *http.Request) {
 		if err.Error() == "Duplicate member" {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		} else {
-			http.Error(w, "Team or member not found", http.StatusNotFound)
+			http.Error(w, "Team or member not found: " + err.Error(), http.StatusNotFound)
 		}
 		return
 	}
@@ -163,13 +163,13 @@ func updateTeamMemberRole(w http.ResponseWriter, r *http.Request) {
 	memberID, _ := primitive.ObjectIDFromHex(params["memberID"])
 
 	if err := utmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	team, err := mongodb.Teams.UpdateTeamMemberRole(id, memberID, *utmd)
 	if err != nil {
-		http.Error(w, "Team or member not found", http.StatusNotFound)
+		http.Error(w, "Team or member not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -184,7 +184,7 @@ func deleteTeamMember(w http.ResponseWriter, r *http.Request) {
 
 	team, err := mongodb.Teams.DeleteTeamMember(id, memberID)
 	if err != nil {
-		http.Error(w, "Team or member not found", http.StatusNotFound)
+		http.Error(w, "Team or member not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -199,19 +199,19 @@ func addTeamMeeting(w http.ResponseWriter, r *http.Request) {
 	var cmd mongodb.CreateMeetingData
 
 	if err := cmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	meeting, err := mongodb.Meetings.CreateMeeting(cmd)
 	if err != nil {
-		http.Error(w, "Could not create team", http.StatusExpectationFailed)
+		http.Error(w, "Could not create team: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	team, err := mongodb.Teams.AddMeeting(id, meeting.ID)
 	if err != nil {
-		http.Error(w, "Could not find team", http.StatusNotFound)
+		http.Error(w, "Could not find team: " + err.Error(), http.StatusNotFound)
 		return
 	}
 

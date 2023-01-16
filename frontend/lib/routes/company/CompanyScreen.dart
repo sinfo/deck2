@@ -117,17 +117,7 @@ class _CompanyScreenState extends State<CompanyScreen>
         );
       case 2:
         {
-          if (widget.company.lastParticipation != latestEvent) {
-            return FloatingActionButton.extended(
-              onPressed: () => companyChangedCallback(context,
-                  fs: _companyService.addParticipation(
-                      id: widget.company.id, partner: false)),
-              label: const Text('Add Participation'),
-              icon: const Icon(Icons.add),
-            );
-          } else {
-            return null;
-          }
+          return null;
         }
       case 3:
         {
@@ -192,42 +182,44 @@ class _CompanyScreenState extends State<CompanyScreen>
                               companyChangedCallback(context,
                                   fs: _companyService.deleteBilling(
                                       widget.company.id, billingId))),
-                      widget.company.participations!.isEmpty ?
-                      Center(child: Text('No participations yet')):
-                      ParticipationList(
-                        company: widget.company,
-                        onParticipationChanged:
-                            (Map<String, dynamic> body) async {
-                          await companyChangedCallback(
-                            context,
-                            fs: _companyService.updateParticipation(
-                              id: widget.company.id,
-                              notes: body['notes'],
-                              member: body['member'],
-                              partner: body['partner'],
-                              confirmed: body['confirmed'],
+                      widget.company.participations!.isEmpty
+                          ? Center(child: Text('No participations yet'))
+                          : ParticipationList(
+                              company: widget.company,
+                              onParticipationChanged:
+                                  (Map<String, dynamic> body) async {
+                                await companyChangedCallback(
+                                  context,
+                                  fs: _companyService.updateParticipation(
+                                    id: widget.company.id,
+                                    notes: body['notes'],
+                                    member: body['member'],
+                                    partner: body['partner'],
+                                    confirmed: body['confirmed'],
+                                  ),
+                                );
+                              },
+                              onParticipationAdded: () =>
+                                  companyChangedCallback(context,
+                                      fs: _companyService.addParticipation(
+                                        id: widget.company.id,
+                                        partner: false,
+                                      )),
                             ),
-                          );
-                        },
-                        onParticipationAdded: () =>
-                            companyChangedCallback(context,
-                                fs: _companyService.addParticipation(
-                                  id: widget.company.id,
-                                  partner: false,
-                                )),
-                      ),
-                      widget.company.participations!.isEmpty ?
-                      Center(child: Text('No communications yet')):
-                      CommunicationsList(
-                          participations: widget.company.participations != null
-                              ? widget.company.participations!.reversed.toList()
-                              : [],
-                          onCommunicationDeleted: (thread_ID) =>
-                              companyChangedCallback(context,
-                                  fs: _companyService.deleteThread(
-                                      id: widget.company.id,
-                                      threadID: thread_ID)),
-                          small: small),
+                      widget.company.participations!.isEmpty
+                          ? Center(child: Text('No communications yet'))
+                          : CommunicationsList(
+                              participations:
+                                  widget.company.participations != null
+                                      ? widget.company.participations!.reversed
+                                          .toList()
+                                      : [],
+                              onCommunicationDeleted: (thread_ID) =>
+                                  companyChangedCallback(context,
+                                      fs: _companyService.deleteThread(
+                                          id: widget.company.id,
+                                          threadID: thread_ID)),
+                              small: small),
                     ]),
                   ),
                 ],

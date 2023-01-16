@@ -281,7 +281,7 @@ class CompanyService extends Service {
       String? notes,
       bool? partner}) async {
     var body = {
-      'confirmed': confirmed,
+      'confirmed': confirmed == null ? null : confirmed.toIso8601String(),
       'member': member,
       'notes': notes,
       'partner': partner

@@ -118,38 +118,40 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                           context,
                           fs: _speakerService.removeFlightInfo(
                               flightInfoId: flightId, id: widget.speaker.id))),
-                  widget.speaker.participations!.isEmpty ?
-                  Center(child: Text('No participations yet')):
-                  ParticipationList(
-                    speaker: widget.speaker,
-                    onParticipationChanged: (Map<String, dynamic> body) async {
-                      await speakerChangedCallback(
-                        context,
-                        fs: _speakerService.updateParticipation(
-                          id: widget.speaker.id,
-                          feedback: body['feedback'],
-                          member: body['member'],
-                          room: body['room'],
+                  widget.speaker.participations!.isEmpty
+                      ? Center(child: Text('No participations yet'))
+                      : ParticipationList(
+                          speaker: widget.speaker,
+                          onParticipationChanged:
+                              (Map<String, dynamic> body) async {
+                            await speakerChangedCallback(
+                              context,
+                              fs: _speakerService.updateParticipation(
+                                id: widget.speaker.id,
+                                feedback: body['feedback'],
+                                member: body['member'],
+                                room: body['room'],
+                              ),
+                            );
+                          },
+                          onParticipationDeleted: () => speakerChangedCallback(
+                              context,
+                              fs: _speakerService.removeParticipation(
+                                  id: widget.speaker.id)),
                         ),
-                      );
-                    },
-                    onParticipationDeleted: () => speakerChangedCallback(
-                        context,
-                        fs: _speakerService.removeParticipation(
-                            id: widget.speaker.id)),
-                  ),
-                  widget.speaker.participations!.isEmpty ?
-                  Center(child: Text('No communications yet')):
-                  CommunicationsList(
-                    participations: widget.speaker.participations != null
-                        ? widget.speaker.participations!.reversed.toList()
-                        : [],
-                    small: small,
-                    onCommunicationDeleted: (thread_ID) =>
-                        speakerChangedCallback(context,
-                            fs: _speakerService.deleteThread(
-                                id: widget.speaker.id, threadID: thread_ID)),
-                  ),
+                  widget.speaker.participations!.isEmpty
+                      ? Center(child: Text('No communications yet'))
+                      : CommunicationsList(
+                          participations: widget.speaker.participations != null
+                              ? widget.speaker.participations!.reversed.toList()
+                              : [],
+                          small: small,
+                          onCommunicationDeleted: (thread_ID) =>
+                              speakerChangedCallback(context,
+                                  fs: _speakerService.deleteThread(
+                                      id: widget.speaker.id,
+                                      threadID: thread_ID)),
+                        ),
                 ]),
               ),
             ],
@@ -204,16 +206,7 @@ class _SpeakerScreenState extends State<SpeakerScreen>
         );
       case 2:
         {
-          if (widget.speaker.lastParticipation != latestEvent) {
-            return FloatingActionButton.extended(
-              onPressed: () => speakerChangedCallback(context,
-                  fs: _speakerService.addParticipation(id: widget.speaker.id)),
-              label: const Text('Add Participation'),
-              icon: const Icon(Icons.add),
-            );
-          } else {
-            return null;
-          }
+          return null;
         }
       case 3:
         {

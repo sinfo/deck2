@@ -13,6 +13,7 @@ import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -162,6 +163,10 @@ class _ParticipationCardState extends State<ParticipationCard> {
     _partner = p.partner ?? false;
   }
 
+  String getDateTime(DateTime dateTime) {
+    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
+  }
+
   List<Widget> _buildCompanyFields() {
     CompanyParticipation p = widget.participation as CompanyParticipation;
 
@@ -197,9 +202,9 @@ class _ParticipationCardState extends State<ParticipationCard> {
                 onPressed: () => _selectDate(context),
               )
             : Text(_confirmed != null
-                ? _confirmed.toString()
+                ? getDateTime(_confirmed!)
                 : p.confirmed != null
-                    ? p.confirmed.toString()
+                    ? getDateTime(p.confirmed!)
                     : ''),
       ),
       FutureBuilder(
@@ -224,15 +229,29 @@ class _ParticipationCardState extends State<ParticipationCard> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final datePicker = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2025),
+    );
+
+    final timePicker = await showTimePicker(
         context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2015, 8),
-        lastDate: DateTime(2101));
-    if (picked != null && picked != _confirmed)
+        initialTime: TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        });
+
+    if (datePicker != null && timePicker != null) {
       setState(() {
-        _confirmed = picked;
+        _confirmed = DateTime(datePicker.year, datePicker.month, datePicker.day,
+            timePicker.hour, timePicker.minute);
       });
+    }
   }
 
   List<Widget> _buildSpeakerFields() {
@@ -315,7 +334,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
     Map<String, dynamic> body = {
       "notes": notes,
       "partner": _partner,
-      "confirmed": _confirmed == null ? '' : _confirmed!.toIso8601String(),
+      "confirmed": _confirmed == null ? null : _confirmed!.toUtc(),
       "member": _currentMember != null ? _currentMember!.id : m.id,
     };
     widget.onEdit!(body).then((value) {
@@ -402,7 +421,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                       ? Icon(Icons.edit)
                                       : Icon(Icons.cancel),
                                   color: !_isEditing
-                                      ? Color.fromRGBO(211, 211, 211, 1)
+                                      ? const Color(0xff5c7ff2)
                                       : Colors.red,
                                   iconSize: 22,
                                   onPressed: () {

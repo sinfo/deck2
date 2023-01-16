@@ -147,7 +147,7 @@ class _EditableCardState extends State<EditableCard> {
               splashColor: Colors.transparent,
               icon: !_isEditing ? Icon(Icons.edit) : Icon(Icons.cancel),
               color:
-                  !_isEditing ? Color.fromRGBO(211, 211, 211, 1) : Colors.red,
+                  !_isEditing ? const Color(0xff5c7ff2) : Colors.red,
               iconSize: 18,
               onPressed: () {
                 !_isEditing
