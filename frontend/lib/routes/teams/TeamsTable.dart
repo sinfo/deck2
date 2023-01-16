@@ -7,6 +7,7 @@ import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
 import 'package:frontend/routes/teams/TeamsNotifier.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:frontend/components/filterBarTeam.dart';
@@ -27,6 +28,7 @@ class _TeamTableState extends State<TeamTable>
   final TeamService _teamService = TeamService();
   String filter = "";
   late List<Team> teams;
+  late Role role;
 
   late Future<List<Member>> members;
 
@@ -41,31 +43,43 @@ class _TeamTableState extends State<TeamTable>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
     return Consumer<TeamsNotifier>(builder: (context, notif, child) {
       return Scaffold(
         body: FutureBuilder(
           future: Future.wait([
             _teamService.getTeams(
-                event: Provider.of<EventNotifier>(context).event.id)
+                event: Provider.of<EventNotifier>(context).event.id),
+            Provider.of<AuthService>(context, listen: false).role
           ]),
-          builder: (context, snapshot) {
+          builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.hasError) {
                 return showError();
               } else if (snapshot.hasData) {
+                
                 TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
 
-                List<List<Object>> dataTeam =
-                    snapshot.data as List<List<Object>>;
-
-                teams = dataTeam[0] as List<Team>;
+                teams = snapshot.data![0] as List<Team>;
+                role = snapshot.data![1] as Role;
 
                 notifier.teams = teams;
 
                 teams.sort((a, b) => a.name!.compareTo(b.name!));
 
-                return showTeams();
+                return Scaffold(
+                  body: showTeams(),
+                  floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+                  floatingActionButton: (role==Role.ADMIN || role == Role.COORDINATOR) ?
+                    FloatingActionButton.extended(
+                      onPressed: showCreateTeamDialog,
+                      label: const Text('Create New Team'),
+                      icon: const Icon(Icons.person_add),
+                      backgroundColor: Provider.of<ThemeNotifier>(context).isDark
+                          ? Colors.grey[500]
+                          : Colors.indigo)
+                      : null
+                );
+                
               } else {
                 return Center(child: CircularProgressIndicator());
               }
@@ -84,14 +98,6 @@ class _TeamTableState extends State<TeamTable>
             }
           },
         ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-        floatingActionButton: FloatingActionButton.extended(
-            onPressed: showCreateTeamDialog,
-            label: const Text('Create New Team'),
-            icon: const Icon(Icons.person_add),
-            backgroundColor: Provider.of<ThemeNotifier>(context).isDark
-                ? Colors.grey[500]
-                : Colors.indigo),
       );
     });
   }
