@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:frontend/models/meeting.dart';
@@ -8,8 +7,6 @@ import 'package:http_parser/http_parser.dart';
 import 'package:dio/dio.dart';
 import 'package:frontend/components/deckException.dart';
 import 'dart:io';
-
-import 'package:image_picker/image_picker.dart';
 
 class MeetingService extends Service {
   Future<List<Meeting>> getMeetings(
@@ -197,6 +194,21 @@ class MeetingService extends Service {
 
     Response<String> response =
         await dio.delete('/meetings/' + id + '/participants', data: body);
+    try {
+      return Meeting.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Meeting?> deleteThread(
+      {required String id, required String threadID}) async {
+    Response<String> response =
+        await dio.delete('/meetings/' + id + '/thread/' + threadID);
     try {
       return Meeting.fromJson(json.decode(response.data!));
     } on SocketException {

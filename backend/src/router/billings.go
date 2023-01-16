@@ -123,25 +123,6 @@ func getBilling(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(billing)
 }
 
-func createBilling(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	var cbd = &mongodb.CreateBillingData{}
-
-	if err := cbd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	newBilling, err := mongodb.Billings.CreateBilling(*cbd)
-	if err != nil {
-		http.Error(w, "Error finding created billing: "+err.Error(), http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(newBilling)
-}
-
 func updateBilling(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -162,18 +143,4 @@ func updateBilling(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(newBilling)
-}
-
-func deleteBilling(w http.ResponseWriter, r *http.Request) {
-
-	params := mux.Vars(r)
-	billingID, _ := primitive.ObjectIDFromHex(params["id"])
-
-	billing, err := mongodb.Billings.DeleteBilling(billingID)
-	if err != nil {
-		http.Error(w, "Billing not found"+err.Error(), http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(billing)
 }

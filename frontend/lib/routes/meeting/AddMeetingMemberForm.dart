@@ -30,6 +30,12 @@ class _AddMeetingMemberForm extends State<AddMeetingMemberForm> {
   String _memberName = '';
   bool disappearSearchResults = false;
 
+  @override
+  void initState() {
+    super.initState();
+    type = MemberType.MEMBER;
+  }
+
   String _convertMemberType(MemberType mt) {
     switch (mt) {
       case MemberType.MEMBER:
@@ -86,7 +92,6 @@ class _AddMeetingMemberForm extends State<AddMeetingMemberForm> {
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
                     List<Member> membsMatched = snapshot.data as List<Member>;
-                    print("membs matched:" + membsMatched.toString());
                     return searchResults(membsMatched, height);
                   } else {
                     return Center(child: CircularProgressIndicator());

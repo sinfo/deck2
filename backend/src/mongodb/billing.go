@@ -93,10 +93,6 @@ func (cbd *CreateBillingData) ParseBody(body io.Reader) error {
 		return errors.New("invalid emission time")
 	}
 
-	if cbd.Notes == nil {
-		return errors.New("invalid notes")
-	}
-
 	if cbd.Event == nil {
 		return errors.New("invalid event")
 	}
@@ -234,25 +230,19 @@ func (b *BillingsType) UpdateBilling(id primitive.ObjectID, data CreateBillingDa
 	var updateQuery = bson.M{
 		"$set": bson.M{
 			"status": bson.M{
-				"invoice":  data.Status.Invoice,
-				"paid":     data.Status.Paid,
-				"proForma": data.Status.ProForma,
-				"receipt":  data.Status.Receipt,
+				"invoice":  *data.Status.Invoice,
+				"paid":     *data.Status.Paid,
+				"proForma": *data.Status.ProForma,
+				"receipt":  *data.Status.Receipt,
 			},
-			"event":         data.Event,
-			"value":         data.Value,
-			"invoiceNumber": data.InvoiceNumber,
-			"emission":      data.Emission,
-			"notes":         data.Notes,
+			"event":         *data.Event,
+			"value":         *data.Value,
+			"invoiceNumber": *data.InvoiceNumber,
+			"emission":      *data.Emission,
+			"notes":         *data.Notes,
+			"company":       *data.Company,
+			"visible":       *data.Visible,
 		},
-	}
-
-	if data.Company != nil {
-		updateQuery["company"] = *data.Company
-	}
-
-	if data.Visible != nil {
-		updateQuery["visible"] = *data.Visible
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()
@@ -271,16 +261,16 @@ func (b *BillingsType) DeleteBilling(id primitive.ObjectID) (*models.Billing, er
 
 	billing, err := b.GetBilling(id)
 	if err != nil {
-		return nil, err
+		return billing, err
 	}
 
 	deleteResult, err := b.Collection.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
-		return nil, err
+		return billing, err
 	}
 
 	if deleteResult.DeletedCount != 1 {
-		return nil, fmt.Errorf("should have deleted 1 billing, deleted %v", deleteResult.DeletedCount)
+		return billing, fmt.Errorf("should have deleted 1 billing, deleted %v", deleteResult.DeletedCount)
 	}
 
 	return billing, nil

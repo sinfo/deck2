@@ -1,6 +1,10 @@
+import 'package:frontend/models/billing.dart';
+import 'package:frontend/models/flightInfo.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/thread.dart';
+import 'package:frontend/services/billingService.dart';
+import 'package:frontend/services/flightInfoService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/packageService.dart';
 import 'package:frontend/services/threadService.dart';
@@ -54,10 +58,9 @@ class Participation {
   }
 
   Future<List<Thread>?> get communications async {
-    if (_communications != null && _communications!.length == 0) {
+    if (_communications != null && _communications!.length > 0) {
       return _communications;
-    }
-    if (communicationsId == null) {
+    } else if (communicationsId == null || communicationsId == []) {
       return [];
     }
 
@@ -144,8 +147,28 @@ class Participation {
 
 class SpeakerParticipation extends Participation {
   final String? feedback;
-  final List<String>? flights; //TODO: Lazy load
+  final List<String>? flightsId;
+  List<FlightInfo>? _flights;
   final Room? room;
+
+  Future<List<FlightInfo>?> get flights async {
+    if (_flights != null && _flights!.length == 0) {
+      return _flights;
+    }
+    if (flightsId == null) {
+      return [];
+    }
+
+    List<FlightInfo> l = [];
+    FlightInfoService _flightInfoService = FlightInfoService();
+    for (String element in flightsId!) {
+      FlightInfo? fi = await _flightInfoService.getFlightInfo(element);
+      l.add(fi);
+    }
+
+    _flights = l;
+    return _flights;
+  }
 
   SpeakerParticipation({
     required int event,
@@ -153,7 +176,7 @@ class SpeakerParticipation extends Participation {
     required List<String> communicationIds,
     required ParticipationStatus status,
     this.feedback,
-    this.flights,
+    this.flightsId,
     this.room,
   }) : super(
           communicationsId: communicationIds,
@@ -167,7 +190,7 @@ class SpeakerParticipation extends Participation {
       communicationIds: List.from(json['communications']),
       event: json['event'],
       feedback: json['feedback'],
-      flights: List.from(json['flights']),
+      flightsId: List.from(json['flights']),
       member: json['member'],
       status: Participation.convert(json['status']),
       room: Room.fromJson(json['room']),
@@ -178,7 +201,7 @@ class SpeakerParticipation extends Participation {
         'communications': communicationsId,
         'event': event,
         'feedback': feedback,
-        'flights': flights,
+        'flights': flightsId,
         'member': memberId,
         'status': Participation.statusToString(status),
         'room': room?.toJson()
@@ -213,9 +236,12 @@ class ParticipationStep {
 
 class CompanyParticipation extends Participation {
   PackageService _packageService = PackageService();
+  BillingService _billingService = BillingService();
 
   final String? packageId;
   Package? _package;
+  final String? billingId;
+  Billing? _billing;
 
   final DateTime? confirmed;
   final bool? partner;
@@ -230,6 +256,7 @@ class CompanyParticipation extends Participation {
     this.confirmed,
     this.partner,
     this.notes,
+    this.billingId,
   }) : super(
           event: event,
           memberId: memberId,
@@ -244,6 +271,7 @@ class CompanyParticipation extends Participation {
       status: Participation.convert(json['status']),
       communicationsId: List.from(json['communications']),
       packageId: json['package'],
+      billingId: json['billing'],
       confirmed: DateTime.parse(json['confirmed']),
       partner: json['partner'],
       notes: json['notes'],
@@ -258,12 +286,21 @@ class CompanyParticipation extends Participation {
     return _package;
   }
 
+  Future<Billing?> get billing async {
+    if (_billing != null) return _billing;
+    if (billingId == null) return null;
+
+    _billing = await _billingService.getBilling(billingId!);
+    return _billing;
+  }
+
   Map<String, dynamic> toJson() => {
         'event': event,
         'member': memberId,
         'status': Participation.statusToString(status),
         'communications': communicationsId,
         'package': packageId,
+        'billing': billingId,
         'confirmed': confirmed != null ? confirmed!.toIso8601String() : '',
         'partner': partner,
         'notes': notes,

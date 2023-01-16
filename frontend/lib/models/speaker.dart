@@ -99,8 +99,8 @@ class Speaker {
     return '${this.name}';
   }
 
-  @override
-  String toString() => name;
+  // @override
+  // String toString() => name;
 
   bool operator ==(o) => o is Speaker && id == o.id;
   int get hashCode => id.hashCode;

@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/EditableCard.dart';
-import 'package:frontend/components/addThreadForm.dart';
+import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/components/participationCard.dart';
-import 'package:frontend/components/threadCard.dart';
+import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/routes/company/billing/AddBillingForm.dart';
+import 'package:frontend/routes/company/billing/BillingScreen.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
-import 'package:frontend/routes/company/EditCompanyForm.dart';
-import 'package:frontend/components/status.dart';
+import 'package:frontend/routes/company/DetailsScreen.dart';
+import 'package:frontend/routes/company/ParticipationList.dart';
+import 'package:frontend/routes/company/banner/CompanyBanner.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:provider/provider.dart';
-import 'package:collection/collection.dart';
 
 class CompanyScreen extends StatefulWidget {
   Company company;
@@ -57,11 +55,23 @@ class _CompanyScreenState extends State<CompanyScreen>
     } else if (company != null) {
       s = company;
     }
+
     if (s != null) {
       Provider.of<CompanyTableNotifier>(context, listen: false).edit(s);
       setState(() {
         widget.company = s!;
       });
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
     }
   }
 
@@ -72,8 +82,12 @@ class _CompanyScreenState extends State<CompanyScreen>
         return Container(
           child: AddThreadForm(
               company: widget.company,
-              onEditCompany: (context, _company) {
-                companyChangedCallback(context, company: _company);
+              onAddCompany: (thread_text, thread_kind) {
+                companyChangedCallback(context,
+                    fs: _companyService.addThread(
+                        id: widget.company.id,
+                        kind: thread_kind,
+                        text: thread_text));
               }),
         );
       },
@@ -85,8 +99,22 @@ class _CompanyScreenState extends State<CompanyScreen>
     int index = _tabController.index;
     switch (index) {
       case 0:
-      case 1:
         return null;
+      case 1:
+        return FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AddBillingForm(
+                        id: widget.company.id,
+                        onEditCompany: (context, _company) {
+                          companyChangedCallback(context, company: _company);
+                        })));
+          },
+          label: const Text('Add new Billing'),
+          icon: const Icon(Icons.add),
+        );
       case 2:
         {
           if (widget.company.lastParticipation != latestEvent) {
@@ -145,7 +173,7 @@ class _CompanyScreenState extends State<CompanyScreen>
                     controller: _tabController,
                     tabs: [
                       Tab(text: 'Details'),
-                      Tab(text: 'BillingInfo'),
+                      Tab(text: 'Billing'),
                       Tab(text: 'Participations'),
                       Tab(text: 'Communications'),
                     ],
@@ -155,9 +183,15 @@ class _CompanyScreenState extends State<CompanyScreen>
                       DetailsScreen(
                         company: widget.company,
                       ),
-                      Container(
-                        child: Center(child: Text('Work in progress :)')),
-                      ),
+                      BillingScreen(
+                          participations: widget.company.participations,
+                          billingInfo: widget.company.billingInfo,
+                          id: widget.company.id,
+                          small: small,
+                          onBillingDeleted: (billingId) =>
+                              companyChangedCallback(context,
+                                  fs: _companyService.deleteBilling(
+                                      widget.company.id, billingId))),
                       widget.company.participations!.isEmpty ?
                       Center(child: Text('No participations yet')):
                       ParticipationList(
@@ -185,7 +219,14 @@ class _CompanyScreenState extends State<CompanyScreen>
                       widget.company.participations!.isEmpty ?
                       Center(child: Text('No communications yet')):
                       CommunicationsList(
-                          participations: widget.company.participations ?? [],
+                          participations: widget.company.participations != null
+                              ? widget.company.participations!.reversed.toList()
+                              : [],
+                          onCommunicationDeleted: (thread_ID) =>
+                              companyChangedCallback(context,
+                                  fs: _companyService.deleteThread(
+                                      id: widget.company.id,
+                                      threadID: thread_ID)),
                           small: small),
                     ]),
                   ),

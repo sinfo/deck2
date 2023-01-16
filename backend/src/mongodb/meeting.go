@@ -505,3 +505,37 @@ func (m *MeetingsType) FindThread(threadID primitive.ObjectID) (*models.Meeting,
 
 	return nil, nil
 }
+
+func (m *MeetingsType) DeleteMeetingThread(id, threadID primitive.ObjectID) (*models.Meeting, error) {
+	meeting, err := m.GetMeeting(id)
+	if err != nil {
+		return nil, err
+	} else if meet, err := m.FindThread(threadID); err != nil || meet == nil {
+		return meet, err
+	}
+
+	var updatedMeeting models.Meeting
+	var communications []primitive.ObjectID
+
+	for i, s := range meeting.Communications {
+		if s == threadID {
+			communications = append(meeting.Communications[:i], meeting.Communications[i+1:]...)
+			break
+		}
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"communications": communications,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := m.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id}, updateQuery, optionsQuery).Decode(&updatedMeeting); err != nil {
+		return nil, err
+	}
+
+	return &updatedMeeting, nil
+}

@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/EditableCard.dart';
-import 'package:frontend/components/addThreadForm.dart';
+import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
-import 'package:frontend/components/participationCard.dart';
-import 'package:frontend/components/threadCard.dart';
+import 'package:frontend/components/threads/participations/communicationsList.dart';
+import 'package:frontend/routes/speaker/DetailsScreen.dart';
+import 'package:frontend/routes/speaker/ParticipationList.dart';
+import 'package:frontend/routes/speaker/banner/SpeakerBanner.dart';
+import 'package:frontend/routes/speaker/flights/AddFlightInfoForm.dart';
+import 'package:frontend/routes/speaker/flights/flightInfoScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
-import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/speaker.dart';
-import 'package:frontend/models/participation.dart';
-import 'package:frontend/routes/speaker/EditSpeakerForm.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
-import 'package:collection/collection.dart';
 
 class SpeakerScreen extends StatefulWidget {
   Speaker speaker;
@@ -62,6 +60,17 @@ class _SpeakerScreenState extends State<SpeakerScreen>
       setState(() {
         widget.speaker = s!;
       });
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
     }
   }
 
@@ -101,9 +110,14 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                   DetailsScreen(
                     speaker: widget.speaker,
                   ),
-                  Container(
-                    child: Center(child: Text('Work in progress :)')),
-                  ),
+                  FlightInfoScreen(
+                      participations: widget.speaker.participations ?? [],
+                      id: widget.speaker.id,
+                      small: small,
+                      onFlightDeleted: (flightId) => speakerChangedCallback(
+                          context,
+                          fs: _speakerService.removeFlightInfo(
+                              flightInfoId: flightId, id: widget.speaker.id))),
                   widget.speaker.participations!.isEmpty ?
                   Center(child: Text('No participations yet')):
                   ParticipationList(
@@ -127,8 +141,15 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                   widget.speaker.participations!.isEmpty ?
                   Center(child: Text('No communications yet')):
                   CommunicationsList(
-                      participations: widget.speaker.participations ?? [],
-                      small: small),
+                    participations: widget.speaker.participations != null
+                        ? widget.speaker.participations!.reversed.toList()
+                        : [],
+                    small: small,
+                    onCommunicationDeleted: (thread_ID) =>
+                        speakerChangedCallback(context,
+                            fs: _speakerService.deleteThread(
+                                id: widget.speaker.id, threadID: thread_ID)),
+                  ),
                 ]),
               ),
             ],
@@ -145,10 +166,15 @@ class _SpeakerScreenState extends State<SpeakerScreen>
       builder: (context) {
         return Container(
           child: AddThreadForm(
-              speaker: widget.speaker,
-              onEditSpeaker: (context, _speaker) {
-                speakerChangedCallback(context, speaker: _speaker);
-              }),
+            speaker: widget.speaker,
+            onAddSpeaker: (thread_text, thread_kind) {
+              speakerChangedCallback(context,
+                  fs: _speakerService.addThread(
+                      id: widget.speaker.id,
+                      kind: thread_kind,
+                      text: thread_text));
+            },
+          ),
         );
       },
     );
@@ -159,8 +185,23 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     int index = _tabController.index;
     switch (index) {
       case 0:
-      case 1:
         return null;
+      case 1:
+        return FloatingActionButton.extended(
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddFlightInfoForm(
+                      id: widget.speaker.id,
+                      onEditSpeaker: (context, _speaker) {
+                        speakerChangedCallback(context, speaker: _speaker);
+                      }),
+                ));
+          },
+          label: const Text('Add Flight Information'),
+          icon: const Icon(Icons.add),
+        );
       case 2:
         {
           if (widget.speaker.lastParticipation != latestEvent) {

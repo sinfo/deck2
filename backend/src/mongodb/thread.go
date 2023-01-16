@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// ThreadsType contains important database information on Meetings
+// ThreadsType contains important database information on Threads
 type ThreadsType struct {
 	Collection *mongo.Collection
 }
@@ -29,8 +29,8 @@ type CreateThreadData struct {
 }
 
 type UpdateThreadData struct {
-	Meeting primitive.ObjectID `json:"meeting"`
-	Kind    models.ThreadKind  `json:"kind"`
+	Meeting *primitive.ObjectID `json:"meeting"`
+	Kind    models.ThreadKind   `json:"kind"`
 }
 
 func (utd *UpdateThreadData) ParseBody(body io.Reader) error {
@@ -39,9 +39,10 @@ func (utd *UpdateThreadData) ParseBody(body io.Reader) error {
 		return err
 	}
 
-	if len(utd.Meeting) == 0 {
-		return errors.New("invalid meeting")
-	}
+	// Putting meeting optional for now
+	// if len(utd.Meeting) == 0 {
+	// 	return errors.New("invalid meeting")
+	// }
 
 	if len(utd.Kind) == 0 {
 		return errors.New("invalid kind")
@@ -171,15 +172,23 @@ func (t *ThreadsType) UpdateThread(threadID primitive.ObjectID, data UpdateThrea
 		return nil, errors.New("Thread kind not valid")
 	}
 
-	if _, err := Meetings.GetMeeting(data.Meeting); err != nil {
-		return nil, err
-	}
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"meeting": data.Meeting,
-			"kind":    data.Kind,
-		},
+	var updateQuery primitive.M
+	if data.Meeting != nil {
+		if _, err := Meetings.GetMeeting(*data.Meeting); err != nil {
+			return nil, err
+		}
+		updateQuery = bson.M{
+			"$set": bson.M{
+				"meeting": data.Meeting,
+				"kind":    data.Kind,
+			},
+		}
+	} else {
+		updateQuery = bson.M{
+			"$set": bson.M{
+				"kind": data.Kind,
+			},
+		}
 	}
 
 	var optionsQuery = options.FindOneAndUpdate()

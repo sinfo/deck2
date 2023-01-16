@@ -548,7 +548,7 @@ func TestUpdateThread(t *testing.T) {
 	assert.NilError(t, err)
 
 	data := mongodb.UpdateThreadData{
-		Meeting: newMeeting.ID,
+		Meeting: &newMeeting.ID,
 		Kind:    newKind,
 	}
 

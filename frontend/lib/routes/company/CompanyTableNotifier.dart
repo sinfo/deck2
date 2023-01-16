@@ -37,7 +37,7 @@ class CompanyTableNotifier extends ChangeNotifier {
   }
 
   void edit(Company s) {
-    int index = companies.indexOf(s);
+    int index = companies.indexWhere((comp) => s.id == comp.id);
     if (index != -1) {
       companies[index] = s;
       notifyListeners();

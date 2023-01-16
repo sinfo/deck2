@@ -35,7 +35,6 @@ class _SessionListState extends State<SessionList>
   }
 
   @override
-  // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 
   @override

@@ -276,7 +276,7 @@ func companyToPublic(company models.Company, eventID *int) (*models.CompanyPubli
 				Package: models.PackagePublic{},
 			}
 
-			pack, err := Packages.GetPackage(participation.Package)
+			pack, err := Packages.GetPackage(*participation.Package)
 			if err == nil {
 				participationObj.Package = models.PackagePublic{
 					Name:  pack.Name,
@@ -742,6 +742,31 @@ func (c *CompaniesType) UpdateCompanyParticipation(companyID primitive.ObjectID,
 	return &updatedCompany, nil
 }
 
+// DeleteCompanyThread deletes a thread from a company participation
+func (c *CompaniesType) DeleteCompanyThread(id, threadID primitive.ObjectID) (*models.Company, error) {
+	_, err := c.GetCompany(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.communications": threadID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
 // UpdateCompanyParticipationStatus updates a company's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
@@ -778,10 +803,10 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
 type UpdateCompanyData struct {
-	Name        string
-	Description string
-	Site        string
-	BillingInfo models.CompanyBillingInfo
+	Name        *string
+	Description *string
+	Site        *string
+	BillingInfo *models.CompanyBillingInfo
 }
 
 // ParseBody fills the UpdateCompanyData from a body
@@ -789,10 +814,6 @@ func (ucd *UpdateCompanyData) ParseBody(body io.Reader) error {
 
 	if err := json.NewDecoder(body).Decode(ucd); err != nil {
 		return err
-	}
-
-	if len(ucd.Name) == 0 {
-		return errors.New("Invalid name")
 	}
 
 	return nil
@@ -804,15 +825,26 @@ func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateC
 	ctx := context.Background()
 	var updatedCompany models.Company
 
+	updateFields := bson.M{}
+
+	if data.Name != nil {
+		updateFields["name"] = *data.Name
+	}
+	if data.Description != nil {
+		updateFields["description"] = *data.Description
+	}
+	if data.Site != nil {
+		updateFields["site"] = *data.Site
+	}
+	if data.BillingInfo != nil {
+		billingInfo := *data.BillingInfo
+		updateFields["billingInfo.name"] = billingInfo.Name
+		updateFields["billingInfo.address"] = billingInfo.Address
+		updateFields["billingInfo.tin"] = billingInfo.TIN
+	}
+
 	var updateQuery = bson.M{
-		"$set": bson.M{
-			"name":                data.Name,
-			"description":         data.Description,
-			"site":                data.Site,
-			"billingInfo.name":    data.BillingInfo.Name,
-			"billingInfo.address": data.BillingInfo.Address,
-			"billingInfo.tin":     data.BillingInfo.TIN,
-		},
+		"$set": updateFields,
 	}
 
 	var filterQuery = bson.M{"_id": companyID}
@@ -1120,6 +1152,61 @@ func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID pr
 	}
 
 	ResetCurrentPublicCompanies()
+
+	return &updatedCompany, nil
+}
+
+// UpdateBilling updates the billing of a company's participation related to the current event.
+// Uses a models.Billing ID to store this information.
+func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID primitive.ObjectID, event int) (*models.Company, error) {
+
+	ctx := context.Background()
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.billing": billingID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": event}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating company's participation's billing:", err)
+		return nil, err
+	}
+
+	ResetCurrentPublicCompanies()
+
+	return &updatedCompany, nil
+}
+
+// RemoveCompanyParticipationBilling removes a billing on the company participation.
+func (c *CompaniesType) RemoveCompanyParticipationBilling(companyID primitive.ObjectID, event int) (*models.Company, error) {
+	ctx := context.Background()
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$unset": bson.M{
+			"participations.$.billing": "",
+			"participations.billing":   "",
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": event}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("error updating company's participation billing:", err)
+		return nil, err
+	}
 
 	return &updatedCompany, nil
 }
