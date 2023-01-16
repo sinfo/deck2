@@ -123,7 +123,6 @@ class SpeakerService extends Service {
       String? notes,
       String? title}) async {
     var body = {"bio": bio, "name": name, "notes": notes, "title": title};
-    print(body);
 
     try {
       Response<String> response = await dio.put("/speakers/" + id, data: body);
@@ -297,8 +296,8 @@ class SpeakerService extends Service {
       "cost": cost,
       "from": from,
       "to": to,
-      "inbound": inbound,
-      "outbound": outbound,
+      "inbound": inbound.toIso8601String(),
+      "outbound": outbound.toIso8601String(),
       "link": link,
       "notes": notes
     };
@@ -319,7 +318,7 @@ class SpeakerService extends Service {
   Future<Speaker?> removeFlightInfo(
       {required String id, required String flightInfoId}) async {
     Response<String> response = await dio
-        .delete("/speakers/" + id + "participation/flightInfo" + flightInfoId);
+        .delete("/speakers/" + id + "/participation/flightInfo/" + flightInfoId);
     try {
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -420,6 +419,21 @@ class SpeakerService extends Service {
 
     Response<String> response =
         await dio.post("/speakers/" + id + "/thread", data: body);
+    try {
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Speaker?> deleteThread(
+      {required String id, required String threadID}) async {
+    Response<String> response = await dio
+        .delete("/speakers/" + id + "/participation/thread/" + threadID);
     try {
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {

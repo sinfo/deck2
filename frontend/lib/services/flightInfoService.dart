@@ -30,8 +30,8 @@ class FlightInfoService extends Service {
       int cost,
       String notes) async {
     var body = {
-      'inbound': inbound,
-      'outbound': outbound,
+      'inbound': inbound.toIso8601String(),
+      'outbound': outbound.toIso8601String(),
       'from': from,
       'to': to,
       'link': link,
