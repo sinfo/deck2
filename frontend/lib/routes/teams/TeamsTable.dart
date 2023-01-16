@@ -89,10 +89,7 @@ class _TeamTableState extends State<TeamTable>
         floatingActionButton: FloatingActionButton.extended(
             onPressed: showCreateTeamDialog,
             label: const Text('Create New Team'),
-            icon: const Icon(Icons.person_add),
-            backgroundColor: Provider.of<ThemeNotifier>(context).isDark
-                ? Colors.grey[500]
-                : Colors.indigo),
+            icon: const Icon(Icons.person_add)),
       );
     });
   }

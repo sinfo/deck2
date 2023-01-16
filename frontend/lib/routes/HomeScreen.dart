@@ -159,16 +159,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   if (r == Role.ADMIN || r == Role.COORDINATOR) {
                     return FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          Routes.AddMember,
-                        );
-                      },
-                      label: const Text('Create New Member'),
-                      icon: const Icon(Icons.edit),
-                      backgroundColor: Color(0xff5C7FF2),
-                    );
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            Routes.AddMember,
+                          );
+                        },
+                        label: const Text('Create New Member'),
+                        icon: const Icon(Icons.edit));
                   } else
                     return Container();
                 } else

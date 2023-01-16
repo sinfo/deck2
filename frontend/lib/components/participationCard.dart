@@ -29,6 +29,7 @@ class ParticipationCard extends StatefulWidget {
   final CardType type;
   final void Function()? onDelete;
   final Future<void> Function(Map<String, dynamic>)? onEdit;
+  final Future<void> Function(ParticipationStatus)? onChangeParticipationStatus;
   ParticipationCard({
     Key? key,
     required this.participation,
@@ -36,6 +37,7 @@ class ParticipationCard extends StatefulWidget {
     required this.type,
     this.onDelete,
     this.onEdit,
+    this.onChangeParticipationStatus,
   }) : super(key: key);
 
   static Widget addParticipationCard(Function() onAddParticipation) {
@@ -346,6 +348,92 @@ class _ParticipationCardState extends State<ParticipationCard> {
     _isWaiting = true;
   }
 
+  List<ParticipationStatus> getAllStatus() {
+    List<ParticipationStatus> allStatus = STATUSSTRING.keys.toList();
+    allStatus
+        .removeWhere((element) => element == ParticipationStatus.NO_STATUS);
+    return allStatus;
+  }
+
+  List<Widget> getStatus(bool editable) {
+    if (editable) {
+      return [
+        DecoratedBox(
+          decoration: BoxDecoration(
+              color: STATUSCOLOR[widget.participation.status],
+              borderRadius: BorderRadius.circular(5)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+            child: DropdownButton<ParticipationStatus>(
+              icon: Icon(
+                Icons.arrow_downward,
+                color:
+                    widget.participation.status == ParticipationStatus.GIVEN_UP
+                        ? Colors.white
+                        : Colors.black,
+              ),
+              // iconSize: 16,
+              selectedItemBuilder: (BuildContext context) {
+                return getAllStatus().map<Widget>((ParticipationStatus status) {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    constraints: const BoxConstraints(minWidth: 70),
+                    child: Text(
+                      STATUSSTRING[status]!,
+                      style: TextStyle(
+                        color: widget.participation.status ==
+                                ParticipationStatus.GIVEN_UP
+                            ? Colors.white
+                            : Colors.black,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }).toList();
+              },
+              underline: Container(
+                height: 2,
+                color:
+                    widget.participation.status == ParticipationStatus.GIVEN_UP
+                        ? Colors.white
+                        : Colors.black,
+              ),
+              onChanged: (ParticipationStatus? newStatus) async {
+                widget.onChangeParticipationStatus!(newStatus!);
+              },
+              value: widget.participation.status,
+              items: getAllStatus()
+                  .map<DropdownMenuItem<ParticipationStatus>>((e) =>
+                      DropdownMenuItem<ParticipationStatus>(
+                          value: e, child: Text(STATUSSTRING[e]!)))
+                  .toList(),
+            ),
+          ),
+        )
+      ];
+    } else {
+      return [
+        Container(
+          decoration: BoxDecoration(
+              color: STATUSCOLOR[widget.participation.status],
+              borderRadius: BorderRadius.circular(5)),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              STATUSSTRING[widget.participation.status]!,
+              style: TextStyle(
+                color:
+                    widget.participation.status == ParticipationStatus.GIVEN_UP
+                        ? Colors.white
+                        : Colors.black,
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     bool editable = widget.participation.event ==
@@ -432,23 +520,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                   }),
                             ),
                           ],
-                          Container(
-                            decoration: BoxDecoration(
-                                color: STATUSCOLOR[widget.participation.status],
-                                borderRadius: BorderRadius.circular(5)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                STATUSSTRING[widget.participation.status]!,
-                                style: TextStyle(
-                                  color: widget.participation.status ==
-                                          ParticipationStatus.GIVEN_UP
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
-                              ),
-                            ),
-                          ),
+                          ...getStatus(editable)
                         ],
                       ),
                     )

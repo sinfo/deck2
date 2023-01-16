@@ -3,17 +3,20 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:provider/provider.dart';
 
 class ParticipationList extends StatelessWidget {
   final Company company;
   final Future<void> Function(Map<String, dynamic>) onParticipationChanged;
+  final Future<void> Function(ParticipationStatus) onChangePartStatus;
   final void Function() onParticipationAdded;
   const ParticipationList({
     Key? key,
     required this.company,
     required this.onParticipationChanged,
     required this.onParticipationAdded,
+    required this.onChangePartStatus,
   }) : super(key: key);
 
   @override
@@ -37,6 +40,7 @@ class ParticipationList extends StatelessWidget {
                               small: small,
                               type: CardType.COMPANY,
                               onEdit: onParticipationChanged,
+                              onChangeParticipationStatus: onChangePartStatus,
                             ),
                           ))
                       .toList(),

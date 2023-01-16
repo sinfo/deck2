@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/deckException.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/participation.dart';
 import 'dart:convert';
@@ -317,8 +318,8 @@ class SpeakerService extends Service {
 
   Future<Speaker?> removeFlightInfo(
       {required String id, required String flightInfoId}) async {
-    Response<String> response = await dio
-        .delete("/speakers/" + id + "/participation/flightInfo/" + flightInfoId);
+    Response<String> response = await dio.delete(
+        "/speakers/" + id + "/participation/flightInfo/" + flightInfoId);
     try {
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -350,8 +351,10 @@ class SpeakerService extends Service {
 
   Future<Speaker?> updateParticipationStatus(
       {required String id, required ParticipationStatus newStatus}) async {
-    Response<String> response = await dio.put(
-        "/speakers/" + id + "/participation/status/" + newStatus.toString());
+    Response<String> response = await dio.put("/speakers/" +
+        id +
+        "/participation/status/" +
+        STATUSBACKENDSTR[newStatus]!);
     try {
       return Speaker.fromJson(json.decode(response.data!));
     } on SocketException {

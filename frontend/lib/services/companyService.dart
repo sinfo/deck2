@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
@@ -347,8 +348,11 @@ class CompanyService extends Service {
 
   Future<Company?> updateParticipationStatus(
       {required String id, required ParticipationStatus newStatus}) async {
-    Response<String> response = await dio.put(
-        "/companies/" + id + "/participation/status/" + newStatus.toString());
+    print(newStatus.toString());
+    Response<String> response = await dio.put("/companies/" +
+        id +
+        "/participation/status/" +
+        STATUSBACKENDSTR[newStatus]!);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {

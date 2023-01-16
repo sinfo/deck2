@@ -3,6 +3,7 @@ import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/speaker/DetailsScreen.dart';
 import 'package:frontend/routes/speaker/ParticipationList.dart';
 import 'package:frontend/routes/speaker/banner/SpeakerBanner.dart';
@@ -132,6 +133,14 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                                 member: body['member'],
                                 room: body['room'],
                               ),
+                            );
+                          },
+                          onChangePartStatus:
+                              (ParticipationStatus status) async {
+                            await speakerChangedCallback(
+                              context,
+                              fs: _speakerService.updateParticipationStatus(
+                                  id: widget.speaker.id, newStatus: status),
                             );
                           },
                           onParticipationDeleted: () => speakerChangedCallback(

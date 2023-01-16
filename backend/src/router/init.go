@@ -189,7 +189,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/participation/thread/{threadID}", authMember(deleteSpeakerThread)).Methods("DELETE")
 	speakerRouter.HandleFunc("/{id}/participation/status/next", authMember(getSpeakerValidSteps)).Methods("GET")
 	speakerRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepSpeakerStatus)).Methods("POST")
-	speakerRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setSpeakerStatus)).Methods("PUT")
+	speakerRouter.HandleFunc("/{id}/participation/status/{status}", authMember(setSpeakerStatus)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/participation/flightInfo", authMember(addSpeakerFlightInfo)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation/flightInfo/{flightInfoID}", authCoordinator(deleteSpeakerFlightInfo)).Methods("DELETE")
 	speakerRouter.HandleFunc("/{id}/image/internal", authMember(setSpeakerPrivateImage)).Methods("POST")

@@ -4,6 +4,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/billing/AddBillingForm.dart';
 import 'package:frontend/routes/company/billing/BillingScreen.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
@@ -205,6 +206,14 @@ class _CompanyScreenState extends State<CompanyScreen>
                                         id: widget.company.id,
                                         partner: false,
                                       )),
+                              onChangePartStatus:
+                                  (ParticipationStatus status) async {
+                                await companyChangedCallback(
+                                  context,
+                                  fs: _companyService.updateParticipationStatus(
+                                      id: widget.company.id, newStatus: status),
+                                );
+                              },
                             ),
                       widget.company.participations!.isEmpty
                           ? Center(child: Text('No communications yet'))
