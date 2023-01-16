@@ -131,7 +131,8 @@ class _SpeakerTableState extends State<SpeakerTable>
 class MemberSpeakerRow extends StatelessWidget {
   final Member member;
   final ParticipationStatus filter;
-  const MemberSpeakerRow({Key? key, required this.member, required this.filter})
+  final SpeakerService _speakerService = SpeakerService();
+  MemberSpeakerRow({Key? key, required this.member, required this.filter})
       : super(key: key);
 
   static Widget fake() {
@@ -184,6 +185,31 @@ class MemberSpeakerRow extends StatelessWidget {
     );
   }
 
+  Future<void> speakerChangedCallback(BuildContext context,
+      {Future<Speaker?>? fs, Speaker? speaker}) async {
+    Speaker? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (speaker != null) {
+      s = speaker;
+    }
+    if (s != null) {
+      Provider.of<SpeakerTableNotifier>(context, listen: false).edit(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
@@ -229,7 +255,19 @@ class MemberSpeakerRow extends StatelessWidget {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: speakers
-                              .map((e) => ListViewCard(small: true, speaker: e))
+                              .map((e) => ListViewCard(
+                                    small: true,
+                                    speaker: e,
+                                    onChangeParticipationStatus:
+                                        (ParticipationStatus status) async {
+                                      await speakerChangedCallback(
+                                        context,
+                                        fs: _speakerService
+                                            .updateParticipationStatus(
+                                                id: e.id, newStatus: status),
+                                      );
+                                    },
+                                  ))
                               .toList(),
                         ),
                       )
@@ -243,8 +281,21 @@ class MemberSpeakerRow extends StatelessWidget {
                                 alignment: WrapAlignment.start,
                                 crossAxisAlignment: WrapCrossAlignment.start,
                                 children: speakers
-                                    .map((e) =>
-                                        ListViewCard(small: false, speaker: e))
+                                    .map((e) => ListViewCard(
+                                          small: false,
+                                          speaker: e,
+                                          onChangeParticipationStatus:
+                                              (ParticipationStatus
+                                                  status) async {
+                                            await speakerChangedCallback(
+                                              context,
+                                              fs: _speakerService
+                                                  .updateParticipationStatus(
+                                                      id: e.id,
+                                                      newStatus: status),
+                                            );
+                                          },
+                                        ))
                                     .toList(),
                               ),
                             ),

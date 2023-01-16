@@ -119,7 +119,8 @@ class _CompanyTableState extends State<CompanyTable> {
 class MemberCompanyRow extends StatelessWidget {
   final Member member;
   final ParticipationStatus filter;
-  const MemberCompanyRow({Key? key, required this.member, required this.filter})
+  final CompanyService _companyService = CompanyService();
+  MemberCompanyRow({Key? key, required this.member, required this.filter})
       : super(key: key);
 
   static Widget fake() {
@@ -172,6 +173,32 @@ class MemberCompanyRow extends StatelessWidget {
     );
   }
 
+  Future<void> companyChangedCallback(BuildContext context,
+      {Future<Company?>? fs, Company? company}) async {
+    Company? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (company != null) {
+      s = company;
+    }
+
+    if (s != null) {
+      Provider.of<CompanyTableNotifier>(context, listen: false).edit(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Done.')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('An error occured.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
@@ -217,7 +244,19 @@ class MemberCompanyRow extends StatelessWidget {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: companies
-                              .map((e) => ListViewCard(small: true, company: e))
+                              .map((e) => ListViewCard(
+                                    small: true,
+                                    company: e,
+                                    onChangeParticipationStatus:
+                                        (ParticipationStatus status) async {
+                                      await companyChangedCallback(
+                                        context,
+                                        fs: _companyService
+                                            .updateParticipationStatus(
+                                                id: e.id, newStatus: status),
+                                      );
+                                    },
+                                  ))
                               .toList(),
                         ),
                       )
@@ -231,8 +270,21 @@ class MemberCompanyRow extends StatelessWidget {
                                 alignment: WrapAlignment.start,
                                 crossAxisAlignment: WrapCrossAlignment.start,
                                 children: companies
-                                    .map((e) =>
-                                        ListViewCard(small: false, company: e))
+                                    .map((e) => ListViewCard(
+                                          small: false,
+                                          company: e,
+                                          onChangeParticipationStatus:
+                                              (ParticipationStatus
+                                                  status) async {
+                                            await companyChangedCallback(
+                                              context,
+                                              fs: _companyService
+                                                  .updateParticipationStatus(
+                                                      id: e.id,
+                                                      newStatus: status),
+                                            );
+                                          },
+                                        ))
                                     .toList(),
                               ),
                             ),

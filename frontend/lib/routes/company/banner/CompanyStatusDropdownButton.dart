@@ -17,6 +17,7 @@ class CompanyStatusDropdownButton extends StatelessWidget {
   }) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    // TODO: should we show all options to change status?
     return FutureBuilder(
       future: _companyService.getNextParticipationSteps(id: companyId),
       builder: (context, snapshot) {

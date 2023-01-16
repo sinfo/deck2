@@ -26,7 +26,9 @@ class ListViewCard extends StatelessWidget {
   late final int? _numParticipations;
   late final int? _lastParticipation;
   late final String _tag;
+  late final bool? _editable;
   late Widget _screen;
+  final Future<void> Function(ParticipationStatus)? onChangeParticipationStatus;
 
   ListViewCard(
       {Key? key,
@@ -34,7 +36,8 @@ class ListViewCard extends StatelessWidget {
       this.member,
       this.company,
       this.speaker,
-      this.participationsInfo})
+      this.participationsInfo,
+      this.onChangeParticipationStatus})
       : super(key: key) {
     int? event = App.localStorage.getInt("event");
     if (event != null) {
@@ -55,6 +58,7 @@ class ListViewCard extends StatelessWidget {
     _color = Colors.indigo;
     _screen = MemberScreen(member: member!);
     _status = ParticipationStatus.NO_STATUS;
+    _editable = false;
   }
 
   void _initCompany(int event) {
@@ -62,6 +66,11 @@ class ListViewCard extends StatelessWidget {
     _screen = CompanyScreen(company: company!);
     CompanyParticipation? participation = company!.participations!
         .firstWhereOrNull((element) => element.event == event);
+    if (participation != null) {
+      _editable = participation.event == event;
+    } else {
+      _editable = false;
+    }
     _status = participation != null
         ? participation.status
         : ParticipationStatus.NO_STATUS;
@@ -80,6 +89,11 @@ class ListViewCard extends StatelessWidget {
         speaker!.participations!.firstWhereOrNull(
       (element) => element.event == event,
     );
+    if (participation != null) {
+      _editable = participation.event == event;
+    } else {
+      _editable = false;
+    }
     _status = participation != null
         ? participation.status
         : ParticipationStatus.NO_STATUS;
@@ -135,29 +149,91 @@ class ListViewCard extends StatelessWidget {
     }
   }
 
+  List<ParticipationStatus> getAllStatus() {
+    List<ParticipationStatus> allStatus = STATUSSTRING.keys.toList();
+    allStatus
+        .removeWhere((element) => element == ParticipationStatus.NO_STATUS);
+    return allStatus;
+  }
+
   List<Widget> getStatus(double fontsize) {
-    if (STATUSSTRING[_status] != null &&
-        STATUSSTRING[_status] != STATUSSTRING[ParticipationStatus.NO_STATUS]) {
+    if (_editable!) {
       return [
-        Container(
-          padding: EdgeInsets.all(6),
-          margin: EdgeInsets.fromLTRB(15, 15, 0, 0),
+        DecoratedBox(
           decoration: BoxDecoration(
-            color: _color,
-            borderRadius: BorderRadius.all(Radius.circular(5)),
-          ),
-          child: Text(
-            STATUSSTRING[_status]!,
-            style: TextStyle(
-                fontSize: fontsize,
+              color: STATUSCOLOR[_status],
+              borderRadius: BorderRadius.circular(5)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+            child: DropdownButton<ParticipationStatus>(
+              icon: Icon(
+                Icons.arrow_downward,
                 color: _status == ParticipationStatus.GIVEN_UP
                     ? Colors.white
-                    : Colors.black),
+                    : Colors.black,
+              ),
+              // iconSize: 16,
+              selectedItemBuilder: (BuildContext context) {
+                return getAllStatus().map<Widget>((ParticipationStatus status) {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    constraints: const BoxConstraints(minWidth: 70),
+                    child: Text(
+                      STATUSSTRING[status]!,
+                      style: TextStyle(
+                        color: _status == ParticipationStatus.GIVEN_UP
+                            ? Colors.white
+                            : Colors.black,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }).toList();
+              },
+              underline: Container(
+                height: 2,
+                color: _status == ParticipationStatus.GIVEN_UP
+                    ? Colors.white
+                    : Colors.black,
+              ),
+              onChanged: (ParticipationStatus? newStatus) async {
+                onChangeParticipationStatus!(newStatus!);
+              },
+              value: _status,
+              items: getAllStatus()
+                  .map<DropdownMenuItem<ParticipationStatus>>((e) =>
+                      DropdownMenuItem<ParticipationStatus>(
+                          value: e, child: Text(STATUSSTRING[e]!)))
+                  .toList(),
+            ),
           ),
-        ),
+        )
       ];
     } else {
-      return [];
+      if (STATUSSTRING[_status] != null &&
+          STATUSSTRING[_status] !=
+              STATUSSTRING[ParticipationStatus.NO_STATUS]) {
+        return [
+          Container(
+            padding: EdgeInsets.all(6),
+            margin: EdgeInsets.fromLTRB(15, 15, 0, 0),
+            decoration: BoxDecoration(
+              color: _color,
+              borderRadius: BorderRadius.all(Radius.circular(5)),
+            ),
+            child: Text(
+              STATUSSTRING[_status]!,
+              style: TextStyle(
+                  fontSize: fontsize,
+                  color: _status == ParticipationStatus.GIVEN_UP
+                      ? Colors.white
+                      : Colors.black),
+            ),
+          ),
+        ];
+      } else {
+        return [];
+      }
     }
   }
 
