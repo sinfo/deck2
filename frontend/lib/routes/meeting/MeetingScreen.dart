@@ -32,6 +32,7 @@ class _MeetingScreenState extends State<MeetingScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   MeetingService _meetingService = MeetingService();
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
 
   @override
   void initState() {
@@ -145,46 +146,56 @@ class _MeetingScreenState extends State<MeetingScreen>
       bool small = constraints.maxWidth < App.SIZE;
       return Consumer<MeetingsNotifier>(builder: (context, notif, child) {
         return Scaffold(
-            appBar: CustomAppBar(disableEventChange: true),
-            body: DefaultTabController(
-              length: 2,
-              child: Column(
-                children: [
-                  MeetingBanner(
-                    meeting: widget.meeting,
-                    onEdit: (context, _meeting) {
-                      meetingChangedCallback(context, meeting: _meeting);
-                    },
-                  ),
-                  TabBar(
-                    isScrollable: small,
-                    controller: _tabController,
-                    tabs: [
-                      Tab(text: 'Participants'),
-                      Tab(text: 'Communications'),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(controller: _tabController, children: [
-                      MeetingParticipants(
+            body: Stack(
+              children: [
+                Container(
+                  margin:
+                      EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+                  child: DefaultTabController(
+                    length: 2,
+                    child: Column(
+                      children: [
+                        MeetingBanner(
                           meeting: widget.meeting,
-                          small: small,
-                          onEditMeeting: (context, _meeting) {
+                          onEdit: (context, _meeting) {
                             meetingChangedCallback(context, meeting: _meeting);
-                          }),
-                      MeetingsCommunications(
-                        communications: widget.meeting.communications,
-                        small: small,
-                        onCommunicationDeleted: (thread_ID) =>
-                            meetingChangedCallback(context,
-                                fm: _meetingService.deleteThread(
-                                    id: widget.meeting.id,
-                                    threadID: thread_ID)),
-                      ),
-                    ]),
+                          },
+                        ),
+                        TabBar(
+                          isScrollable: small,
+                          controller: _tabController,
+                          tabs: [
+                            Tab(text: 'Participants'),
+                            Tab(text: 'Communications'),
+                          ],
+                        ),
+                        Expanded(
+                          child:
+                              TabBarView(controller: _tabController, children: [
+                            MeetingParticipants(
+                                meeting: widget.meeting,
+                                small: small,
+                                onEditMeeting: (context, _meeting) {
+                                  meetingChangedCallback(context,
+                                      meeting: _meeting);
+                                }),
+                            MeetingsCommunications(
+                              communications: widget.meeting.communications,
+                              small: small,
+                              onCommunicationDeleted: (thread_ID) =>
+                                  meetingChangedCallback(context,
+                                      fm: _meetingService.deleteThread(
+                                          id: widget.meeting.id,
+                                          threadID: thread_ID)),
+                            ),
+                          ]),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+                appBar,
+              ],
             ),
             floatingActionButton: _fabAtIndex(context));
       });
@@ -274,7 +285,8 @@ class MeetingParticipants extends StatelessWidget {
                           onPressed: () => _deleteMeetingParticipant(context,
                               membs[index]!.id, type, membs[index]!.name),
                           icon: Icon(Icons.delete),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red),
                           label: const Text("Delete participant")),
                     ]);
                   });
@@ -664,10 +676,11 @@ class MeetingBanner extends StatelessWidget {
                                                         _deleteMeetingMinuteDialog(
                                                             context),
                                                     icon: Icon(Icons.article),
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                            backgroundColor: const Color(
-                                                                0xFFF25C5C)),
+                                                    style:
+                                                        ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                const Color(
+                                                                    0xFFF25C5C)),
                                                     label: const Text(
                                                         "Delete Minutes")))
                                         ])),

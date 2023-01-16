@@ -195,12 +195,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
     List<Widget> results = getListCards(speakers, companies, members);
     return Container(
         constraints: BoxConstraints(maxHeight: listHeight),
-        child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: results.length,
-            itemBuilder: (BuildContext context, int index) {
-              return results[index];
-            }));
+        child: Material(
+            color: Theme.of(context).cardColor,
+            child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: results.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return results[index];
+                })));
   }
 
   List<Widget> getListCards(

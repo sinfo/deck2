@@ -23,6 +23,8 @@ class _SessionScreen extends State<SessionScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   SpeakerService speakerService = new SpeakerService();
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
+
   List<Speaker> allSpeakers = [];
   List<String> speakersNames = [];
   List<Images?> speakersImages = [];
@@ -74,43 +76,47 @@ class _SessionScreen extends State<SessionScreen>
     return LayoutBuilder(builder: (context, constraints) {
       bool small = constraints.maxWidth < App.SIZE;
       return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true),
-        body: DefaultTabController(
-            length: 3,
-            child: Column(children: <Widget>[
-              SessionBanner(session: widget.session /* , key: UniqueKey() */),
-              TabBar(
-                isScrollable: small,
-                controller: _tabController,
-                tabs: [
-                  Tab(text: 'General Information'),
-                  (widget.session.kind == 'TALK')
-                      ? Tab(text: 'Speakers')
-                      : Tab(text: 'Company'),
-                  Tab(text: 'Tickets'),
-                ],
-              ),
-              Expanded(
-                  child: TabBarView(
-                controller: _tabController,
-                children: [
-                  DisplayGeneralInformation(
-                    session: widget.session,
-                  ),
-                  (widget.session.kind == 'TALK')
-                      ? DisplaySpeakers(
-                          session: widget.session,
-                          speakersNames: speakersNames,
-                          speakersImages: speakersImages,
-                          speakersTitle: speakersTitle,
-                          speakers: speakers,
-                        )
-                      : DisplayCompany(session: widget.session),
-                  DisplayTickets(session: widget.session),
-                ],
-              ))
-            ])),
-      );
+          body: Stack(children: [
+        Container(
+          margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+          child: DefaultTabController(
+              length: 3,
+              child: Column(children: <Widget>[
+                SessionBanner(session: widget.session /* , key: UniqueKey() */),
+                TabBar(
+                  isScrollable: small,
+                  controller: _tabController,
+                  tabs: [
+                    Tab(text: 'General Information'),
+                    (widget.session.kind == 'TALK')
+                        ? Tab(text: 'Speakers')
+                        : Tab(text: 'Company'),
+                    Tab(text: 'Tickets'),
+                  ],
+                ),
+                Expanded(
+                    child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    DisplayGeneralInformation(
+                      session: widget.session,
+                    ),
+                    (widget.session.kind == 'TALK')
+                        ? DisplaySpeakers(
+                            session: widget.session,
+                            speakersNames: speakersNames,
+                            speakersImages: speakersImages,
+                            speakersTitle: speakersTitle,
+                            speakers: speakers,
+                          )
+                        : DisplayCompany(session: widget.session),
+                    DisplayTickets(session: widget.session),
+                  ],
+                ))
+              ])),
+        ),
+        appBar,
+      ]));
     });
   }
 }

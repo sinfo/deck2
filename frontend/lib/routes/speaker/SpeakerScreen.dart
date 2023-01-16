@@ -28,6 +28,7 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final SpeakerService _speakerService;
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
 
   @override
   void initState() {
@@ -81,90 +82,98 @@ class _SpeakerScreenState extends State<SpeakerScreen>
       bool small = constraints.maxWidth < App.SIZE;
       return Consumer<SpeakerTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
-          appBar: CustomAppBar(disableEventChange: true),
-          body: Column(
-            children: [
-              SpeakerBanner(
-                  speaker: widget.speaker,
-                  statusChangeCallback: (step, context) {
-                    speakerChangedCallback(
-                      context,
-                      fs: _speakerService.stepParticipationStatus(
-                          id: widget.speaker.id, step: step),
-                    );
-                  },
-                  onEdit: (context, _speaker) {
-                    speakerChangedCallback(context, speaker: _speaker);
-                  }),
-              TabBar(
-                isScrollable: small,
-                controller: _tabController,
-                tabs: [
-                  Tab(text: 'Details'),
-                  Tab(text: 'FlightInfo'),
-                  Tab(text: 'Participations'),
-                  Tab(text: 'Communications'),
+          body: Stack(children: [
+            Container(
+              margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+              child: Column(
+                children: [
+                  SpeakerBanner(
+                      speaker: widget.speaker,
+                      statusChangeCallback: (step, context) {
+                        speakerChangedCallback(
+                          context,
+                          fs: _speakerService.stepParticipationStatus(
+                              id: widget.speaker.id, step: step),
+                        );
+                      },
+                      onEdit: (context, _speaker) {
+                        speakerChangedCallback(context, speaker: _speaker);
+                      }),
+                  TabBar(
+                    isScrollable: small,
+                    controller: _tabController,
+                    tabs: [
+                      Tab(text: 'Details'),
+                      Tab(text: 'FlightInfo'),
+                      Tab(text: 'Participations'),
+                      Tab(text: 'Communications'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(controller: _tabController, children: [
+                      DetailsScreen(
+                        speaker: widget.speaker,
+                      ),
+                      FlightInfoScreen(
+                          participations: widget.speaker.participations ?? [],
+                          id: widget.speaker.id,
+                          small: small,
+                          onFlightDeleted: (flightId) => speakerChangedCallback(
+                              context,
+                              fs: _speakerService.removeFlightInfo(
+                                  flightInfoId: flightId,
+                                  id: widget.speaker.id))),
+                      widget.speaker.participations!.isEmpty
+                          ? Center(child: Text('No participations yet'))
+                          : ParticipationList(
+                              speaker: widget.speaker,
+                              onParticipationChanged:
+                                  (Map<String, dynamic> body) async {
+                                await speakerChangedCallback(
+                                  context,
+                                  fs: _speakerService.updateParticipation(
+                                    id: widget.speaker.id,
+                                    feedback: body['feedback'],
+                                    member: body['member'],
+                                    room: body['room'],
+                                  ),
+                                );
+                              },
+                              onChangePartStatus:
+                                  (ParticipationStatus status) async {
+                                await speakerChangedCallback(
+                                  context,
+                                  fs: _speakerService.updateParticipationStatus(
+                                      id: widget.speaker.id, newStatus: status),
+                                );
+                              },
+                              onParticipationDeleted: () =>
+                                  speakerChangedCallback(context,
+                                      fs: _speakerService.removeParticipation(
+                                          id: widget.speaker.id)),
+                            ),
+                      widget.speaker.participations!.isEmpty
+                          ? Center(child: Text('No communications yet'))
+                          : CommunicationsList(
+                              participations:
+                                  widget.speaker.participations != null
+                                      ? widget.speaker.participations!.reversed
+                                          .toList()
+                                      : [],
+                              small: small,
+                              onCommunicationDeleted: (thread_ID) =>
+                                  speakerChangedCallback(context,
+                                      fs: _speakerService.deleteThread(
+                                          id: widget.speaker.id,
+                                          threadID: thread_ID)),
+                            ),
+                    ]),
+                  ),
                 ],
               ),
-              Expanded(
-                child: TabBarView(controller: _tabController, children: [
-                  DetailsScreen(
-                    speaker: widget.speaker,
-                  ),
-                  FlightInfoScreen(
-                      participations: widget.speaker.participations ?? [],
-                      id: widget.speaker.id,
-                      small: small,
-                      onFlightDeleted: (flightId) => speakerChangedCallback(
-                          context,
-                          fs: _speakerService.removeFlightInfo(
-                              flightInfoId: flightId, id: widget.speaker.id))),
-                  widget.speaker.participations!.isEmpty
-                      ? Center(child: Text('No participations yet'))
-                      : ParticipationList(
-                          speaker: widget.speaker,
-                          onParticipationChanged:
-                              (Map<String, dynamic> body) async {
-                            await speakerChangedCallback(
-                              context,
-                              fs: _speakerService.updateParticipation(
-                                id: widget.speaker.id,
-                                feedback: body['feedback'],
-                                member: body['member'],
-                                room: body['room'],
-                              ),
-                            );
-                          },
-                          onChangePartStatus:
-                              (ParticipationStatus status) async {
-                            await speakerChangedCallback(
-                              context,
-                              fs: _speakerService.updateParticipationStatus(
-                                  id: widget.speaker.id, newStatus: status),
-                            );
-                          },
-                          onParticipationDeleted: () => speakerChangedCallback(
-                              context,
-                              fs: _speakerService.removeParticipation(
-                                  id: widget.speaker.id)),
-                        ),
-                  widget.speaker.participations!.isEmpty
-                      ? Center(child: Text('No communications yet'))
-                      : CommunicationsList(
-                          participations: widget.speaker.participations != null
-                              ? widget.speaker.participations!.reversed.toList()
-                              : [],
-                          small: small,
-                          onCommunicationDeleted: (thread_ID) =>
-                              speakerChangedCallback(context,
-                                  fs: _speakerService.deleteThread(
-                                      id: widget.speaker.id,
-                                      threadID: thread_ID)),
-                        ),
-                ]),
-              ),
-            ],
-          ),
+            ),
+            appBar,
+          ]),
           floatingActionButton: _fabAtIndex(context),
         );
       });

@@ -8,7 +8,6 @@ import 'package:frontend/routes/company/CompanyPage.dart';
 import 'package:frontend/routes/meeting/MeetingPage.dart';
 import 'package:frontend/routes/member/MemberPage.dart';
 import 'package:frontend/routes/speaker/SpeakerPage.dart';
-import 'package:frontend/routes/teams/TeamsTable.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
@@ -39,6 +40,7 @@ class _TeamScreen extends State<TeamScreen>
   late final TabController _tabController;
   TeamService _teamService = new TeamService();
   MemberService _memberService = new MemberService();
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
   late List<Future<Member?>> _members;
 
   @override
@@ -315,7 +317,7 @@ class _TeamScreen extends State<TeamScreen>
       size: 200,
     ));
   }
-  
+
   void removeTeamMember(context, String? id, String memberId) async {
     showDialog(
       context: context,
@@ -410,39 +412,37 @@ class _TeamScreen extends State<TeamScreen>
   Widget build(BuildContext context) {
     return Consumer<TeamsNotifier>(builder: (context, notif, child) {
       return Scaffold(
-        appBar: AppBar(
-          title: GestureDetector(
-              child: Image.asset(
-            'assets/logo-branco2.png',
-            height: 100,
-            width: 100,
-          )),
-        ),
-        body: Container(
-          child: DefaultTabController(
-              length: 2,
-              child: Column(children: <Widget>[
-                TeamBanner(team: widget.team),
-                TabBar(
-                  controller: _tabController,
-                  labelColor: Colors.black,
-                  tabs: [
-                    Tab(
-                      text: 'Members',
+        body: Stack(children: [
+          Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: Container(
+              child: DefaultTabController(
+                  length: 2,
+                  child: Column(children: <Widget>[
+                    TeamBanner(team: widget.team),
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: Colors.black,
+                      tabs: [
+                        Tab(
+                          text: 'Members',
+                        ),
+                        Tab(text: 'Meetings'),
+                      ],
                     ),
-                    Tab(text: 'Meetings'),
-                  ],
-                ),
-                Expanded(
-                    child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    DisplayMembers(members: _members),
-                    DisplayMeeting(meetingsIds: widget.team.meetings),
-                  ],
-                ))
-              ])),
-        ),
+                    Expanded(
+                        child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        DisplayMembers(members: _members),
+                        DisplayMeeting(meetingsIds: widget.team.meetings),
+                      ],
+                    ))
+                  ])),
+            ),
+          ),
+          appBar,
+        ]),
         // TODO should only appear in Members tab?
         floatingActionButton: buildSpeedDial(context),
       );
@@ -503,7 +503,8 @@ class DisplayMeeting extends StatefulWidget {
   _DisplayMeetingState createState() => _DisplayMeetingState();
 }
 
-class _DisplayMeetingState extends State<DisplayMeeting> with AutomaticKeepAliveClientMixin {
+class _DisplayMeetingState extends State<DisplayMeeting>
+    with AutomaticKeepAliveClientMixin {
   MeetingService _meetingService = new MeetingService();
 
   @override

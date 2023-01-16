@@ -28,6 +28,7 @@ class _CompanyScreenState extends State<CompanyScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final CompanyService _companyService;
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
 
   @override
   void initState() {
@@ -141,98 +142,111 @@ class _CompanyScreenState extends State<CompanyScreen>
       bool small = constraints.maxWidth < App.SIZE;
       return Consumer<CompanyTableNotifier>(builder: (context, notif, child) {
         return Scaffold(
-            appBar: CustomAppBar(disableEventChange: true),
-            body: DefaultTabController(
-              length: 4,
-              child: Column(
-                children: [
-                  CompanyBanner(
-                    company: widget.company,
-                    statusChangeCallback: (step, context) {
-                      companyChangedCallback(
-                        context,
-                        fs: _companyService.stepParticipationStatus(
-                            id: widget.company.id, step: step),
-                      );
-                    },
-                    onEdit: (context, _comp) {
-                      companyChangedCallback(context, company: _comp);
-                    },
-                  ),
-                  TabBar(
-                    isScrollable: small,
-                    controller: _tabController,
-                    tabs: [
-                      Tab(text: 'Details'),
-                      Tab(text: 'Billing'),
-                      Tab(text: 'Participations'),
-                      Tab(text: 'Communications'),
-                    ],
-                  ),
-                  Expanded(
-                    child: TabBarView(controller: _tabController, children: [
-                      DetailsScreen(
-                        company: widget.company,
-                      ),
-                      BillingScreen(
-                          participations: widget.company.participations,
-                          billingInfo: widget.company.billingInfo,
-                          id: widget.company.id,
-                          small: small,
-                          onBillingDeleted: (billingId) =>
-                              companyChangedCallback(context,
-                                  fs: _companyService.deleteBilling(
-                                      widget.company.id, billingId))),
-                      widget.company.participations!.isEmpty
-                          ? Center(child: Text('No participations yet'))
-                          : ParticipationList(
+            body: Stack(
+              children: [
+                Container(
+                  margin:
+                      EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+                  child: DefaultTabController(
+                    length: 4,
+                    child: Column(
+                      children: [
+                        CompanyBanner(
+                          company: widget.company,
+                          statusChangeCallback: (step, context) {
+                            companyChangedCallback(
+                              context,
+                              fs: _companyService.stepParticipationStatus(
+                                  id: widget.company.id, step: step),
+                            );
+                          },
+                          onEdit: (context, _comp) {
+                            companyChangedCallback(context, company: _comp);
+                          },
+                        ),
+                        TabBar(
+                          isScrollable: small,
+                          controller: _tabController,
+                          tabs: [
+                            Tab(text: 'Details'),
+                            Tab(text: 'Billing'),
+                            Tab(text: 'Participations'),
+                            Tab(text: 'Communications'),
+                          ],
+                        ),
+                        Expanded(
+                          child:
+                              TabBarView(controller: _tabController, children: [
+                            DetailsScreen(
                               company: widget.company,
-                              onParticipationChanged:
-                                  (Map<String, dynamic> body) async {
-                                await companyChangedCallback(
-                                  context,
-                                  fs: _companyService.updateParticipation(
-                                    id: widget.company.id,
-                                    notes: body['notes'],
-                                    member: body['member'],
-                                    partner: body['partner'],
-                                    confirmed: body['confirmed'],
-                                  ),
-                                );
-                              },
-                              onParticipationAdded: () =>
-                                  companyChangedCallback(context,
-                                      fs: _companyService.addParticipation(
-                                        id: widget.company.id,
-                                        partner: false,
-                                      )),
-                              onChangePartStatus:
-                                  (ParticipationStatus status) async {
-                                await companyChangedCallback(
-                                  context,
-                                  fs: _companyService.updateParticipationStatus(
-                                      id: widget.company.id, newStatus: status),
-                                );
-                              },
                             ),
-                      widget.company.participations!.isEmpty
-                          ? Center(child: Text('No communications yet'))
-                          : CommunicationsList(
-                              participations:
-                                  widget.company.participations != null
-                                      ? widget.company.participations!.reversed
-                                          .toList()
-                                      : [],
-                              onCommunicationDeleted: (thread_ID) =>
-                                  companyChangedCallback(context,
-                                      fs: _companyService.deleteThread(
+                            BillingScreen(
+                                participations: widget.company.participations,
+                                billingInfo: widget.company.billingInfo,
+                                id: widget.company.id,
+                                small: small,
+                                onBillingDeleted: (billingId) =>
+                                    companyChangedCallback(context,
+                                        fs: _companyService.deleteBilling(
+                                            widget.company.id, billingId))),
+                            widget.company.participations!.isEmpty
+                                ? Center(child: Text('No participations yet'))
+                                : ParticipationList(
+                                    company: widget.company,
+                                    onParticipationChanged:
+                                        (Map<String, dynamic> body) async {
+                                      await companyChangedCallback(
+                                        context,
+                                        fs: _companyService.updateParticipation(
                                           id: widget.company.id,
-                                          threadID: thread_ID)),
-                              small: small),
-                    ]),
+                                          notes: body['notes'],
+                                          member: body['member'],
+                                          partner: body['partner'],
+                                          confirmed: body['confirmed'],
+                                        ),
+                                      );
+                                    },
+                                    onParticipationAdded: () =>
+                                        companyChangedCallback(context,
+                                            fs: _companyService
+                                                .addParticipation(
+                                              id: widget.company.id,
+                                              partner: false,
+                                            )),
+                                    onChangePartStatus:
+                                        (ParticipationStatus status) async {
+                                      await companyChangedCallback(
+                                        context,
+                                        fs: _companyService
+                                            .updateParticipationStatus(
+                                                id: widget.company.id,
+                                                newStatus: status),
+                                      );
+                                    },
+                                  ),
+                            widget.company.participations!.isEmpty
+                                ? Center(child: Text('No communications yet'))
+                                : CommunicationsList(
+                                    participations:
+                                        widget.company.participations != null
+                                            ? widget.company.participations!
+                                                .reversed
+                                                .toList()
+                                            : [],
+                                    onCommunicationDeleted: (thread_ID) =>
+                                        companyChangedCallback(context,
+                                            fs: _companyService.deleteThread(
+                                                id: widget.company.id,
+                                                threadID: thread_ID)),
+                                    small: small),
+                          ]),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+                appBar,
+              ],
             ),
             floatingActionButton: _fabAtIndex(context));
       });

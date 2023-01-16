@@ -9,28 +9,34 @@ import 'package:frontend/models/speaker.dart';
 class ParticipationScreen extends StatelessWidget {
   final SpeakerParticipation participation;
   final Speaker speaker;
-  const ParticipationScreen(
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
+
+  ParticipationScreen(
       {Key? key, required this.participation, required this.speaker})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(disableEventChange: true),
-      body: ListView(
-        children: [
-          ParticipationBanner(participation: participation, speaker: speaker),
-          EditableCard(
-            title: 'Feedback',
-            body: participation.feedback ?? '',
-            bodyEditedCallback: (s) {
-              print('edited feedback');
-              return Future.delayed(Duration.zero);
-            },
-          ),
-        ],
+        body: Stack(children: [
+      Container(
+        margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+        child: ListView(
+          children: [
+            ParticipationBanner(participation: participation, speaker: speaker),
+            EditableCard(
+              title: 'Feedback',
+              body: participation.feedback ?? '',
+              bodyEditedCallback: (s) {
+                print('edited feedback');
+                return Future.delayed(Duration.zero);
+              },
+            ),
+          ],
+        ),
       ),
-    );
+      appBar,
+    ]));
   }
 }
 
