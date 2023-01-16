@@ -363,7 +363,7 @@ class CompanyService extends Service {
   Future<Company?> stepParticipationStatus(
       {required String id, required int step}) async {
     Response<String> response = await dio
-        .put("/companies/" + id + "/participation/status/" + step.toString());
+        .post("/companies/" + id + "/participation/status/" + step.toString());
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
