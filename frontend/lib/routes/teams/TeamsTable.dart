@@ -16,7 +16,7 @@ import 'package:shimmer/shimmer.dart';
 const ALL = "All";
 
 class TeamTable extends StatefulWidget {
-  TeamTable({Key? key}) : super(key: key);
+  const TeamTable({Key? key}) : super(key: key);
 
   @override
   _TeamTableState createState() => _TeamTableState();
@@ -30,6 +30,7 @@ class _TeamTableState extends State<TeamTable>
 
   late Future<List<Member>> members;
 
+  @override
   bool get wantKeepAlive => true;
 
   @override

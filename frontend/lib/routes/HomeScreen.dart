@@ -83,19 +83,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: const SpeakerTable(),
                   ),
                   Center(
-                    child: LandingPage(),
+                    child: const LandingPage(),
                   ),
                   Center(
-                    child: CompanyTable(),
+                    child: const CompanyTable(),
                   ),
                   Center(
-                    child: TeamTable(),
+                    child: const TeamTable(),
                   ),
                   Center(
-                    child: MeetingPage(),
+                    child: const MeetingPage(),
                   ),
                   Center(
-                    child: SessionPage(),
+                    child: const SessionPage(),
                   )
                 ],
               ),
@@ -222,11 +222,22 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class LandingPage extends StatelessWidget {
+class LandingPage extends StatefulWidget {
   const LandingPage({Key? key}) : super(key: key);
 
   @override
+  _LandingPageState createState() => _LandingPageState();
+}
+
+class _LandingPageState extends State<LandingPage>
+    with AutomaticKeepAliveClientMixin {
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Container(
       child: Text("Welcome to deck2! In Progress..."),
     );

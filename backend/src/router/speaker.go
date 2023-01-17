@@ -289,6 +289,36 @@ func updateSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
+
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+	
+	speaker, err := mongodb.Speakers.DeleteSpeakerThread(id, threadID)
+	if err != nil {
+		http.Error(w, "Speaker or thread not found", http.StatusNotFound)
+		return
+	}
+	
+	// Delete thread and posts (comments) associated to it - only if 
+	// thread was deleted sucessfully from speaker participation
+	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
+		http.Error(w, "Thread not found", http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(speaker)
+}
+
 func stepSpeakerStatus(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)

@@ -1,12 +1,18 @@
 import 'dart:convert';
 
+import 'package:intl/intl.dart';
+
 class BillingStatus {
   final bool proForma;
   final bool invoice;
   final bool receipt;
   final bool paid;
 
-  BillingStatus({required this.proForma, required this.invoice, required this.receipt, required this.paid});
+  BillingStatus(
+      {required this.proForma,
+      required this.invoice,
+      required this.receipt,
+      required this.paid});
 
   factory BillingStatus.fromJson(Map<String, dynamic> json) {
     return BillingStatus(
@@ -22,7 +28,7 @@ class BillingStatus {
         'invoice': invoice,
         'receipt': receipt,
         'paid': paid,
-  };
+      };
 
   @override
   String toString() {
@@ -41,22 +47,30 @@ class Billing {
   final String notes;
   final bool visible;
 
-  Billing({required this.id, required this.status, required this.event, this.company, required this.value, required this.invoiceNumber, required this.emission, required this.notes, required this.visible});
+  Billing(
+      {required this.id,
+      required this.status,
+      required this.event,
+      this.company,
+      required this.value,
+      required this.invoiceNumber,
+      required this.emission,
+      required this.notes,
+      required this.visible});
 
   factory Billing.fromJson(Map<String, dynamic> json) {
     return Billing(
       id: json['id'],
-      status:BillingStatus.fromJson(json['status']),
+      status: BillingStatus.fromJson(json['status']),
       event: json['event'],
       company: json['company'],
       value: json['value'],
       invoiceNumber: json['invoiceNumber'],
-      emission: DateTime(json['emission']),
+      emission: DateTime.parse(json['emission']),
       notes: json['notes'],
       visible: json['visible'],
     );
   }
-
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -72,6 +86,17 @@ class Billing {
 
   @override
   String toString() {
-    return json.encode(this.toJson());
+    String repr = "";
+    Map<String, dynamic> bill = this.toJson();
+    bill.forEach((key, value) {
+      repr += key + ' ';
+      if (value != DateTime) {
+        repr += value.toString();
+      } else {
+        repr += DateFormat('yyyy-MM-dd HH:mm').format(value);
+      }
+      repr += '\n';
+    });
+    return repr;
   }
 }

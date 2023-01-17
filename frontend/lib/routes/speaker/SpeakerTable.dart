@@ -25,6 +25,7 @@ class _SpeakerTableState extends State<SpeakerTable>
   final SpeakerService _speakerService = SpeakerService();
   late ParticipationStatus _filter;
 
+  @override
   bool get wantKeepAlive => true;
 
   @override

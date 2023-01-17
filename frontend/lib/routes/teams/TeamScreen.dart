@@ -504,7 +504,7 @@ class DisplayMeeting extends StatefulWidget {
   _DisplayMeetingState createState() => _DisplayMeetingState();
 }
 
-class _DisplayMeetingState extends State<DisplayMeeting> {
+class _DisplayMeetingState extends State<DisplayMeeting> with AutomaticKeepAliveClientMixin {
   MeetingService _meetingService = new MeetingService();
 
   @override
@@ -517,6 +517,7 @@ class _DisplayMeetingState extends State<DisplayMeeting> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     List<Future<Meeting?>> _futureMeetings =
         widget.meetingsIds!.map((m) => _meetingService.getMeeting(m)).toList();
 

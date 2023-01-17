@@ -39,11 +39,26 @@ class SearchResultWidget extends StatelessWidget {
         },
         child: Center(
           child: ListTile(
-            leading: CircleAvatar(
-              foregroundImage: NetworkImage(getImageURL()),
-              backgroundImage: AssetImage(
-                'assets/noImage.png',
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
               ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(300.0),
+                child: Image.network(
+                  getImageURL(),
+                  fit: BoxFit.cover,
+                  errorBuilder: (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                      return Image.asset(
+                        'assets/noImage.png'
+                      );
+                  }
+                ),
+              )
             ),
             title: Text(getName()),
           ),

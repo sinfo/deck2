@@ -180,6 +180,12 @@
     "/companies/{id}/participation/package": {
       "$ref": "./companies-id-participation-package.json"
     },
+    "/companies/{id}/participation/billing": {
+      "$ref": "./companies-id-participation-billing.json"
+    },
+    "/companies/{id}/participation/billing/{billingID}": {
+      "$ref": "./companies-id-participation-billing-billingid.json"
+    },
     "/companies/{id}/thread": {
       "$ref": "./companies-id-thread.json"
     },
@@ -366,8 +372,17 @@
     "/meetings/{id}/thread": {
       "$ref": "./meetings-id-thread.json"
     },
+    "/meetings/{id}/thread/{threadID}": {
+      "$ref": "./meetings-id-thread-threadid.json"
+    },
     "/meetings/{id}/participants": {
       "$ref": "./meetings-id-participants.json"
+    },
+    "/companies/{id}/participation/thread/{threadID}": {
+      "$ref": "./companies-id-participation-thread-threadID.json"
+    },
+    "/speakers/{id}/participation/thread/{threadID}": {
+      "$ref": "./speakers-id-participation-thread-threadID.json"
     }
   },
   "externalDocs": {

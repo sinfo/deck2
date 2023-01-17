@@ -83,7 +83,8 @@ class ListViewCard extends StatelessWidget {
     _status = participation != null
         ? participation.status
         : ParticipationStatus.NO_STATUS;
-    _imageUrl = speaker!.imgs!.speaker!;
+        
+    _imageUrl = speaker!.imgs!.internal!;
     _title = speaker!.name;
     _color = STATUSCOLOR[_status]!;
 

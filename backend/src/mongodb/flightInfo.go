@@ -53,12 +53,6 @@ func (cfid *CreateFlightInfoData) ParseBody(body io.Reader) error {
 		return errors.New("inbound must be after outbound")
 	}
 
-	var now = time.Now()
-
-	if now.After(*cfid.Outbound) || now.After(*cfid.Inbound) {
-		return errors.New("invalid outbound or inbound dates: must be in the future")
-	}
-
 	if cfid.From == nil {
 		return errors.New("invalid from")
 	}

@@ -1,0 +1,54 @@
+{
+    "delete": {
+        "tags": [
+            "speakers",
+            "threads"
+        ],
+        "summary": "Deletes thread from a speaker participation",
+        "operationId": "deleteSpeakerThread",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the speaker",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "in": "path",
+                "name": "threadID",
+                "description": "ID of the thread",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated speaker",
+                "schema": {
+                    "$ref": "./models/speaker.json"
+                }
+            },
+            "400": {
+                "description": "Invalid payload, or invalid credentials"
+            },
+            "404": {
+                "description": "Meeting not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
+    }
+}
