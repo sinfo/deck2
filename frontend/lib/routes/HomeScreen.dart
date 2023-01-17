@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
@@ -57,7 +58,10 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   colorFilter: ColorFilter.mode(
-                      Colors.grey.withOpacity(0.1), BlendMode.srcATop),
+                      Provider.of<ThemeNotifier>(context).isDark
+                          ? Colors.grey.withOpacity(0.05)
+                          : Colors.grey.withOpacity(0.1),
+                      BlendMode.srcATop),
                   fit: BoxFit.contain,
                   image: AssetImage('assets/logo_deck.png'),
                 ),
