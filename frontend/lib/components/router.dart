@@ -23,7 +23,6 @@ class Routes {
   static const String AddTeamMember = '/add/teamMember';
   static const String AddMeeting = '/add/meeting';
   static const String AddSession = '/add/session';
-  static const String AddPackage = '/add/package';
 }
 
 Route<dynamic> generateRoute(RouteSettings settings) {
@@ -38,8 +37,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return SlideRoute(page: AddCompanyForm());
     case Routes.AddSpeaker:
       return SlideRoute(page: AddSpeakerForm());
-    case Routes.AddPackage:
-      return SlideRoute(page: AddPackageForm());
     case Routes.ShowAllMembers:
       return MaterialPageRoute(builder: (context) => MemberListWidget());
     case Routes.AddTeamMember:

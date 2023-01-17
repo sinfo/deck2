@@ -111,13 +111,11 @@ class _CalendarState extends State<Calendar> {
                 titleTextStyle: TextStyle(
                     color: Color.fromARGB(255, 63, 81, 181), fontSize: 25.0),
                 decoration: BoxDecoration(
-                    color: Colors.white,
                     borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10))),
                 formatButtonShowsNext: false,
-                formatButtonTextStyle:
-                    TextStyle(color: Colors.white, fontSize: 16.0),
+                formatButtonTextStyle: TextStyle(fontSize: 16.0),
                 formatButtonDecoration: BoxDecoration(
                   color: Color.fromARGB(255, 63, 81, 181),
                   borderRadius: BorderRadius.all(
@@ -177,8 +175,6 @@ class _CalendarState extends State<Calendar> {
                                     )));
                       },
                       child: Card(
-                        color: Colors.white,
-                        shadowColor: Colors.grey.withOpacity(0.7),
                         elevation: 20,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5.0),
@@ -202,8 +198,7 @@ class _CalendarState extends State<Calendar> {
                                 padding: const EdgeInsets.only(left: 20),
                                 child: Text(
                                   calSessions.title,
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 18.0),
+                                  style: TextStyle(fontSize: 18.0),
                                   textAlign: TextAlign.left,
                                 ),
                               ),

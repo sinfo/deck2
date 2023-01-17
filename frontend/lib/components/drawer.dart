@@ -4,6 +4,7 @@ import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/company/packages/ItemPackagePage.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
@@ -92,6 +93,33 @@ class _DeckDrawerState extends State<DeckDrawer> {
               onTap: () async {
                 await signOut(context);
               }),
+          Divider(),
+          Container(
+            padding: const EdgeInsets.only(left: 20),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                "Company Management",
+                style: Theme.of(context).textTheme.caption,
+                textAlign: TextAlign.start,
+              ),
+            ),
+          ),
+          ListTile(
+              leading: Icon(
+                Icons.sell,
+              ),
+              title: Text('Manage packages'),
+              onTap: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 600),
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          ItemPackagePage(),
+                    ));
+              }),
         ],
       ),
     );
@@ -110,6 +138,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
   }
 
   myProfile(BuildContext context, Member member) {
+    Navigator.pop(context);
     Navigator.push(
         context,
         PageRouteBuilder(

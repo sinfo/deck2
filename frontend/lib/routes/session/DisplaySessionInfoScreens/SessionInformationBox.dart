@@ -19,7 +19,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -34,10 +34,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("Description",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(info: session.description),
             ],
@@ -49,7 +46,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -64,10 +61,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("Kind",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(info: session.kind),
             ],
@@ -79,7 +73,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -94,10 +88,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("VideoURL",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               (session.videoURL == "")
                   ? Text("No video available yet.")
@@ -111,7 +102,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -126,10 +117,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("Place",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(info: session.place!),
             ],
@@ -141,7 +129,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -156,10 +144,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("Max Tickets",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(info: session.tickets!.max.toString()),
             ],
@@ -171,7 +156,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -186,10 +171,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("Start",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(
                   info: DateFormat.yMd()
@@ -208,7 +190,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -223,10 +205,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("End",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(
                   info: DateFormat.yMd()
@@ -245,7 +224,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -260,10 +239,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("Begin",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(
                   info: DateFormat.yMd()
@@ -282,7 +258,7 @@ class SessionInformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -297,10 +273,7 @@ class SessionInformationBox extends StatelessWidget {
             children: [
               Text("End",
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Divider(),
               showInfo(
                   info: DateFormat.yMd()
@@ -324,7 +297,7 @@ class SessionInformationBox extends StatelessWidget {
         SelectableText(
           phone.phone!,
           textAlign: TextAlign.left,
-          style: TextStyle(fontSize: 18, color: Colors.black),
+          style: TextStyle(fontSize: 18),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -355,7 +328,7 @@ class SessionInformationBox extends StatelessWidget {
         Text(
           info,
           textAlign: TextAlign.left,
-          style: TextStyle(fontSize: 16, color: Colors.black),
+          style: TextStyle(fontSize: 16),
         ),
       ],
     );

@@ -37,7 +37,7 @@ class _DisplayTickets extends State<DisplayTickets> {
       margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
       padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
       decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(5),
           boxShadow: [
             BoxShadow(
@@ -63,7 +63,7 @@ class _DisplayTickets extends State<DisplayTickets> {
                 Text(
                   "No tickets were made available for this session.",
                   textAlign: TextAlign.left,
-                  style: TextStyle(fontSize: 16, color: Colors.black),
+                  style: TextStyle(fontSize: 16),
                 ),
               ],
             )

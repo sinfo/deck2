@@ -138,44 +138,16 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       case 2:
         {
-          return null;
-          // return FloatingActionButton.extended(
-          //   onPressed: () {
-          //     Navigator.pushNamed(
-          //       context,
-          //       Routes.AddCompany,
-          //     );
-          //   },
-          //   label: const Text('Create New Company'),
-          //   icon: const Icon(Icons.business),
-          // );
-          
-          // return SpeedDial(
-          //   icon: Icons.add,
-          //   activeIcon: Icons.close,
-          //   children: [
-          //     SpeedDialChild(
-          //       child: Icon(Icons.business),
-          //       onTap: () {
-          //         Navigator.pushNamed(
-          //           context,
-          //           Routes.AddCompany,
-          //         );
-          //       },
-          //       label: 'Create New Company',
-          //     ),
-          //     SpeedDialChild(
-          //       child: Icon(Icons.sell),
-          //       onTap: () {
-          //         Navigator.pushNamed(
-          //           context,
-          //           Routes.AddPackage,
-          //         );
-          //       },
-          //       label: 'Create new package',
-          //     ),
-          //   ],
-          // );
+          return FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.pushNamed(
+                context,
+                Routes.AddCompany,
+              );
+            },
+            label: const Text('Create New Company'),
+            icon: const Icon(Icons.business),
+          );
         }
       case 3:
         {
