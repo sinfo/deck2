@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/routes/company/CompanyPage.dart';
-import 'package:frontend/routes/meeting/MeetingPage.dart';
-import 'package:frontend/routes/member/MemberPage.dart';
 import 'package:frontend/routes/speaker/SpeakerPage.dart';
-import 'package:frontend/services/authService.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/routes/session/SessionPage.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key? key}) : super(key: key);
@@ -88,15 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Center(
                     child: const CompanyPage(),
-                  ),
-                  Center(
-                    child: const MemberPage(),
-                  ),
-                  Center(
-                    child: const MeetingPage(),
-                  ),
-                  Center(
-                    child: const SessionPage(),
                   )
                 ],
               ),
@@ -149,85 +135,9 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.business),
           );
         }
-      case 3:
+      default:
         {
-          return FutureBuilder(
-              future: Provider.of<AuthService>(context).role,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  Role r = snapshot.data as Role;
-
-                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
-                    return FloatingActionButton.extended(
-                        onPressed: () {
-                          Navigator.pushNamed(
-                            context,
-                            Routes.AddMember,
-                          );
-                        },
-                        label: const Text('Create New Member'),
-                        icon: const Icon(Icons.edit));
-                  } else
-                    return Container();
-                } else
-                  return Container();
-              });
-        }
-
-      case 4:
-        {
-          return FutureBuilder(
-              future: Provider.of<AuthService>(context).role,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  Role r = snapshot.data as Role;
-
-                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
-                    return FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          Routes.AddMeeting,
-                        );
-                      },
-                      label: const Text('Create New Meeting'),
-                      icon: const Icon(Icons.add),
-                    );
-                  } else {
-                    return Container();
-                  }
-                } else {
-                  return Container();
-                }
-              });
-        }
-
-      case 5:
-        {
-          return FutureBuilder(
-              future: Provider.of<AuthService>(context).role,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  Role r = snapshot.data as Role;
-
-                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
-                    return FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          Routes.AddSession,
-                        );
-                      },
-                      label: const Text('Create New Session'),
-                      icon: const Icon(Icons.add),
-                    );
-                  } else {
-                    return Container();
-                  }
-                } else {
-                  return Container();
-                }
-              });
+          return null;
         }
     }
   }
@@ -279,21 +189,6 @@ class CustomNavBar extends StatelessWidget {
             label: 'Companies',
             icon: Icon(
               Icons.work,
-            )),
-        BottomNavigationBarItem(
-            label: 'Members',
-            icon: Icon(
-              Icons.people,
-            )),
-        BottomNavigationBarItem(
-            label: 'Meetings',
-            icon: Icon(
-              Icons.meeting_room,
-            )),
-        BottomNavigationBarItem(
-            label: 'Sessions',
-            icon: Icon(
-              Icons.co_present,
             )),
       ],
       onTap: onTapped,
