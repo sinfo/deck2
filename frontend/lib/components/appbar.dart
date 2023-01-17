@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/SearchResultWidget.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:provider/provider.dart';
@@ -66,14 +67,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
         iconTheme: IconThemeData(color: Colors.white),
         title: Row(children: [
           InkWell(
+            onTap: () {
+              Navigator.pushReplacementNamed(context, Routes.HomeRoute);
+            },
             child: SizedBox(
-              height: kToolbarHeight,
+              height: kToolbarHeight * 1.5,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(0, 4, 4, 4),
-                child: Image.asset(
-                  'assets/logo_deck.png',
-                  fit: BoxFit.fill,
-                ),
+                child: Image.asset('assets/logo_deck.png'),
               ),
             ),
           ),

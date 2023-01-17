@@ -4,7 +4,6 @@ import 'package:frontend/routes/LoginScreen.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/Wrapper.dart';
 import 'package:frontend/routes/company/AddCompanyForm.dart';
-import 'package:frontend/routes/company/packages/AddPackageForm.dart';
 import 'package:frontend/routes/meeting/AddMeetingForm.dart';
 import 'package:frontend/routes/member/AddMemberForm.dart';
 import 'package:frontend/routes/member/MemberListWidget.dart';
