@@ -11,9 +11,8 @@ import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:frontend/services/authService.dart';
-import 'package:provider/provider.dart';
-
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:provider/provider.dart';
 
 import '../../components/blurryDialog.dart';
 
@@ -239,7 +238,7 @@ class _TeamScreen extends State<TeamScreen>
         context: context,
         builder: (BuildContext context) {
           return BlurryDialog(
-              'Warning', 'Are you sure you want to delete $name?', () {
+              'Warning', 'Are you sure you want to delete meeting $name?', () {
             deleteTeam(context, id);
           });
         }
@@ -316,7 +315,7 @@ class _TeamScreen extends State<TeamScreen>
       size: 200,
     ));
   }
-
+  
   void removeTeamMember(context, String? id, String memberId) async {
     showDialog(
       context: context,
@@ -568,7 +567,6 @@ class DisplayMembers extends StatelessWidget {
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 List<Member?> membs = snapshot.data as List<Member?>;
-                membs.sort((a, b) => a!.name.compareTo(b!.name));
 
                 return ListView(
                     padding: EdgeInsets.symmetric(horizontal: 32),
