@@ -307,10 +307,7 @@ class MeetingParticipants extends StatelessWidget {
           child: Text(_text, style: TextStyle(fontSize: small ? 14 : 18)),
           margin: EdgeInsets.fromLTRB(0, 8, 8, 0),
         ),
-        Divider(
-          color: Colors.grey,
-          thickness: 1,
-        ),
+        Divider(thickness: 1),
       ],
     );
   }
@@ -335,18 +332,17 @@ class MeetingParticipants extends StatelessWidget {
         child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Container(
-                color: Color(0xffF1F1F1),
                 child: Column(children: [
-                  Separator("Members"),
-                  Container(
-                      child: Center(
-                          child: MeetingMembersGrid(_futureMembers, "MEMBER"))),
-                  Separator("Company Reps"),
-                  Container(
-                      child: Center(
-                          child: MeetingMembersGrid(
-                              _futureCompanyReps, "COMPANYREP"))),
-                ]))));
+              Separator("Members"),
+              Container(
+                  child: Center(
+                      child: MeetingMembersGrid(_futureMembers, "MEMBER"))),
+              Separator("Company Reps"),
+              Container(
+                  child: Center(
+                      child: MeetingMembersGrid(
+                          _futureCompanyReps, "COMPANYREP"))),
+            ]))));
   }
 }
 
@@ -552,9 +548,7 @@ class MeetingBanner extends StatelessWidget {
                                 margin: EdgeInsets.only(bottom: 25),
                                 child: Text(
                                   meeting.title.toUpperCase(),
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: _titleFontSize),
+                                  style: TextStyle(fontSize: _titleFontSize),
                                   overflow: TextOverflow.ellipsis,
                                 )),
                             Padding(
@@ -572,8 +566,7 @@ class MeetingBanner extends StatelessWidget {
                                         RichText(
                                             text: TextSpan(children: [
                                           WidgetSpan(
-                                            child: Icon(Icons.calendar_today,
-                                                color: Colors.white),
+                                            child: Icon(Icons.calendar_today),
                                           ),
                                           TextSpan(
                                             text: ' ' +
@@ -588,15 +581,19 @@ class MeetingBanner extends StatelessWidget {
                                                     .format(meeting.begin)
                                                     .toUpperCase(),
                                             style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: _infoFontSize),
+                                                fontSize: _infoFontSize,
+                                                color:
+                                                    Provider.of<ThemeNotifier>(
+                                                                context)
+                                                            .isDark
+                                                        ? Colors.white
+                                                        : Colors.black),
                                           ),
                                         ])),
                                         RichText(
                                             text: TextSpan(children: [
                                           WidgetSpan(
-                                            child: Icon(Icons.schedule,
-                                                color: Colors.white),
+                                            child: Icon(Icons.schedule),
                                           ),
                                           TextSpan(
                                             text: ' ' +
@@ -606,36 +603,49 @@ class MeetingBanner extends StatelessWidget {
                                                 DateFormat.Hm().format(
                                                     meeting.end.toLocal()),
                                             style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: _infoFontSize),
+                                                fontSize: _infoFontSize,
+                                                color:
+                                                    Provider.of<ThemeNotifier>(
+                                                                context)
+                                                            .isDark
+                                                        ? Colors.white
+                                                        : Colors.black),
                                           ),
                                         ])),
                                         RichText(
                                             text: TextSpan(children: [
                                           WidgetSpan(
-                                            child: Icon(Icons.place,
-                                                color: Colors.white),
+                                            child: Icon(Icons.place),
                                           ),
                                           TextSpan(
                                             text: ' ' + meeting.place,
                                             style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: _infoFontSize),
+                                                fontSize: _infoFontSize,
+                                                color:
+                                                    Provider.of<ThemeNotifier>(
+                                                                context)
+                                                            .isDark
+                                                        ? Colors.white
+                                                        : Colors.black),
                                           ),
                                         ])),
                                         RichText(
                                             text: TextSpan(children: [
                                           WidgetSpan(
                                             child: Icon(
-                                                Icons.format_list_numbered,
-                                                color: Colors.white),
+                                                Icons.format_list_numbered),
                                           ),
                                           TextSpan(
                                             text: ' ' +
                                                 meeting.kind.toLowerCase(),
                                             style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: _infoFontSize),
+                                                fontSize: _infoFontSize,
+                                                color:
+                                                    Provider.of<ThemeNotifier>(
+                                                                context)
+                                                            .isDark
+                                                        ? Colors.white
+                                                        : Colors.black),
                                           ),
                                         ])),
                                       ],
