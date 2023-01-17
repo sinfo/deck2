@@ -12,6 +12,7 @@ import 'package:frontend/services/teamService.dart';
 import 'package:frontend/components/filterBarTeam.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:frontend/services/authService.dart';
 
 const ALL = "All";
 
@@ -87,7 +88,11 @@ class _TeamTableState extends State<TeamTable>
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
         floatingActionButton: FloatingActionButton.extended(
-            onPressed: showCreateTeamDialog,
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (context) => showCreateTeamDialog(context));
+            },
             label: const Text('Create New Team'),
             icon: const Icon(Icons.person_add),
             backgroundColor: Provider.of<ThemeNotifier>(context).isDark
@@ -160,30 +165,77 @@ class _TeamTableState extends State<TeamTable>
     );
   }
 
-  showCreateTeamDialog() {
+  FutureBuilder showCreateTeamDialog(BuildContext context) {
+    return FutureBuilder(
+        future: Provider.of<AuthService>(context).role,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Role role = snapshot.data;
+            if (role == Role.ADMIN || role == Role.COORDINATOR) {
+              return createTeamDialog();
+            } else {
+              return notAuthorizedDialog();
+            }
+          } else if (snapshot.hasError) {
+            return errorDialog();
+          } else {
+            return loadingDialog();
+          }
+        });
+  }
+
+  Widget createTeamDialog() {
     String name = "";
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: const Text("Create New Team"),
-        content: TextField(
-          onChanged: (value) {
-            name = value;
-          },
-          decoration: const InputDecoration(
-              hintText: "Insert the name of the new team"),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context, "Cancel"),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => createTeam(name),
-            child: const Text("Create"),
-          ),
-        ],
+    return AlertDialog(
+      title: const Text("Create New Team"),
+      content: TextField(
+        onChanged: (value) {
+          name = value;
+        },
+        decoration:
+            const InputDecoration(hintText: "Insert the name of the new team"),
       ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.pop(context, "Cancel"),
+          child: const Text("Cancel"),
+        ),
+        TextButton(
+          onPressed: () => createTeam(name),
+          child: const Text("Create"),
+        ),
+      ],
+    );
+  }
+
+  Widget notAuthorizedDialog() {
+    return AlertDialog(
+      title: const Text("You need to have ADMIN or COORDINATOR credentials"),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("OK"),
+        ),
+      ],
+    );
+  }
+
+  Widget errorDialog() {
+    return AlertDialog(
+      title: const Text("An error occurred"),
+      content: const Text("Please try again later"),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("OK"),
+        ),
+      ],
+    );
+  }
+
+  Widget loadingDialog() {
+    return Center(
+      child: CircularProgressIndicator(),
     );
   }
 

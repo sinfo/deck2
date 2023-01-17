@@ -504,7 +504,8 @@ class DisplayMeeting extends StatefulWidget {
   _DisplayMeetingState createState() => _DisplayMeetingState();
 }
 
-class _DisplayMeetingState extends State<DisplayMeeting> with AutomaticKeepAliveClientMixin {
+class _DisplayMeetingState extends State<DisplayMeeting>
+    with AutomaticKeepAliveClientMixin {
   MeetingService _meetingService = new MeetingService();
 
   @override
