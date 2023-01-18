@@ -275,7 +275,7 @@ class MeetingParticipants extends StatelessWidget {
                         MediaQuery.of(context).size.width ~/ cardWidth,
                     crossAxisSpacing: 5,
                     mainAxisSpacing: 5,
-                    childAspectRatio: 0.70,
+                    childAspectRatio: 0.65,
                   ),
                   itemCount: membs.length,
                   itemBuilder: (BuildContext context, int index) {

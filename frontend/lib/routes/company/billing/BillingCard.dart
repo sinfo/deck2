@@ -137,7 +137,7 @@ class _BillingCardState extends State<BillingCard>
               ),
               Column(
                 children: [
-                  Icon(Icons.request_quote, color: Colors.black, size: 48),
+                  Icon(Icons.request_quote, size: 48),
                   Text(
                     widget.billing.invoiceNumber,
                     style: TextStyle(fontSize: 16),
@@ -150,7 +150,7 @@ class _BillingCardState extends State<BillingCard>
               ),
               Column(
                 children: [
-                  Icon(Icons.schedule, color: Colors.black, size: 48),
+                  Icon(Icons.schedule, size: 48),
                   Text(
                     DateFormat('yyyy-MM-dd HH:mm')
                         .format(widget.billing.emission),
@@ -164,7 +164,7 @@ class _BillingCardState extends State<BillingCard>
               ),
               Column(
                 children: [
-                  Icon(Icons.monetization_on, color: Colors.black, size: 48),
+                  Icon(Icons.monetization_on, size: 48),
                   Text(
                     (widget.billing.value ~/ 100).toString() +
                         "," +

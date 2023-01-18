@@ -103,6 +103,20 @@ func updateItem(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedItem)
 }
 
+func deleteItem(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	item, err := mongodb.Items.DeleteItem(id)
+	if err != nil {
+		http.Error(w, "Could not find item: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(item)
+}
+
 func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)

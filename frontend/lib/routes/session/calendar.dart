@@ -115,7 +115,7 @@ class _CalendarState extends State<Calendar> {
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10))),
                 formatButtonShowsNext: false,
-                formatButtonTextStyle: TextStyle(fontSize: 16.0),
+                formatButtonTextStyle: TextStyle(fontSize: 16.0, color: Colors.white),
                 formatButtonDecoration: BoxDecoration(
                   color: Color.fromARGB(255, 63, 81, 181),
                   borderRadius: BorderRadius.all(

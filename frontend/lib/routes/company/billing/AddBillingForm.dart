@@ -235,6 +235,10 @@ class _AddBillingFormState extends State<AddBillingForm> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter the cost of the billing';
                       }
+                      int val = int.parse(value);
+                      if (val < 0 || val > 100) {
+                        return 'Number must be between 0 and 100';
+                      }
                       return null;
                     },
                     decoration: const InputDecoration(

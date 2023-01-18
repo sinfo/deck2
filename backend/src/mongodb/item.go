@@ -167,6 +167,29 @@ func (i *ItemsType) UpdateItem(itemID primitive.ObjectID, data UpdateItemData) (
 	return &item, nil
 }
 
+// DeleteItem deletes an item by its ID
+func (i *ItemsType) DeleteItem(itemID primitive.ObjectID) (*models.Item, error) {
+	ctx = context.Background()
+
+	var item models.Item
+
+	err := i.Collection.FindOne(ctx, bson.M{"_id": itemID}).Decode(&item)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResult, err := Items.Collection.DeleteOne(ctx, bson.M{"_id": itemID})
+	if err != nil {
+		return nil, err
+	}
+
+	if deleteResult.DeletedCount != 1 {
+		return nil, fmt.Errorf("should have deleted 1 item, deleted %v", deleteResult.DeletedCount)
+	}
+
+	return &item, nil
+}
+
 // GetItemsOptions is the options to give to GetItems.
 // All the fields are optional, and as such we use pointers as a "hack" to deal
 // with non-existent fields.

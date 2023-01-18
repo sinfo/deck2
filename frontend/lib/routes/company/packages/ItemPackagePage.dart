@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/routes/company/packages/AddItemForm.dart';
+import 'package:frontend/routes/company/items/AddItemForm.dart';
 import 'package:frontend/routes/company/packages/AddPackageForm.dart';
-import 'package:frontend/routes/company/packages/ItemScreen.dart';
+import 'package:frontend/routes/company/items/ItemScreen.dart';
 import 'package:frontend/routes/company/packages/PackageScreen.dart';
+import 'package:frontend/services/authService.dart';
+import 'package:provider/provider.dart';
 
 class ItemPackagePage extends StatefulWidget {
   const ItemPackagePage({Key? key}) : super(key: key);
@@ -40,28 +43,43 @@ class _ItemPackagePageState extends State<ItemPackagePage>
   }
 
   Widget? _fabAtIndex(BuildContext context) {
-    switch (_index) {
-      case 0:
-        return FloatingActionButton.extended(
-          onPressed: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => AddItemForm()));
-          },
-          label: const Text('Create new Item'),
-          icon: const Icon(Icons.add_shopping_cart),
-        );
-      case 1:
-        return FloatingActionButton.extended(
-          onPressed: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (context) => AddPackageForm()));
-          },
-          label: const Text('Create new Package'),
-          icon: const Icon(Icons.add_business),
-        );
-      default:
-        return null;
-    }
+    return FutureBuilder(
+        future: Provider.of<AuthService>(context).role,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Role r = snapshot.data as Role;
+
+            if (r == Role.ADMIN || r == Role.COORDINATOR) {
+              switch (_index) {
+                case 0:
+                  return FloatingActionButton.extended(
+                    onPressed: () {
+                      Navigator.push(context, SlideRoute(page: AddItemForm()));
+                    },
+                    label: const Text('Create new Item'),
+                    icon: const Icon(Icons.add_shopping_cart),
+                  );
+                case 1:
+                  return FloatingActionButton.extended(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AddPackageForm()));
+                    },
+                    label: const Text('Create new Package'),
+                    icon: const Icon(Icons.add_business),
+                  );
+                default:
+                  return Container();
+              }
+            } else {
+              return Container();
+            }
+          } else {
+            return Container();
+          }
+        });
   }
 
   @override
