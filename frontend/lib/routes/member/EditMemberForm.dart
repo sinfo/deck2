@@ -53,8 +53,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
 
       Member me = Provider.of<Member?>(context, listen: false)!;
       Member? m;
-      var role = Provider.of<AuthService>(context, listen: false).role;
-
+      var role = await Provider.of<AuthService>(context, listen: false).role;
       if(role==Role.ADMIN || role == Role.COORDINATOR){
         m = await _memberService.updateMember(
           id: widget.member.id,

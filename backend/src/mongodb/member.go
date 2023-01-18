@@ -94,7 +94,7 @@ func (umd *UpdateMemberData) ParseBody(body io.Reader) error {
 	}
 
 	if len(umd.Istid) < 3 || umd.Istid[:3] != "ist" {
-		return errors.New("invalid name")
+		return errors.New("invalid istid")
 	}
 
 	return nil

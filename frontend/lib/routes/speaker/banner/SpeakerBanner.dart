@@ -35,9 +35,10 @@ class SpeakerBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
-    bool isEditable = Provider.of<EventNotifier>(context).isLatest;
+    bool isLatestEvent = Provider.of<EventNotifier>(context).isLatest;
     Participation? part = speaker.participations!
         .firstWhereOrNull((element) => element.event == event);
+    bool hasParticipation = part != null; 
     ParticipationStatus speakerStatus =
         part != null ? part.status : ParticipationStatus.NO_STATUS;
 
@@ -130,13 +131,13 @@ class SpeakerBanner extends StatelessWidget {
                                 style: Theme.of(context).textTheme.subtitle1,
                                 softWrap: false,
                                 overflow: TextOverflow.ellipsis),
-                            if (isEditable)
+                            if (isLatestEvent && hasParticipation)
                               SpeakerStatusDropdownButton(
                                 speakerStatus: speakerStatus,
                                 statusChangeCallback: statusChangeCallback,
                                 speakerId: speaker.id,
                               ),
-                            if (!isEditable)
+                            if (!isLatestEvent)
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Container(
