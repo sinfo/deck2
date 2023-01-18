@@ -4,6 +4,7 @@ import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/company/packages/ItemPackagePage.dart';
 import 'package:frontend/routes/meeting/MeetingPage.dart';
 import 'package:frontend/routes/member/MemberPage.dart';
@@ -122,9 +123,9 @@ class _DeckDrawerState extends State<DeckDrawer> {
           ),
           ListTile(
               leading: Icon(
-                Icons.sell,
+                Icons.store,
               ),
-              title: Text('Manage packages'),
+              title: Text('Manage items/packages'),
               onTap: () async {
                 Navigator.pop(context);
                 Navigator.push(
@@ -178,6 +179,78 @@ class _DeckDrawerState extends State<DeckDrawer> {
                       transitionDuration: Duration(milliseconds: 600),
                       pageBuilder: (context, animation, secondaryAnimation) =>
                           SessionPage(),
+                    ));
+              }),
+          Divider(),
+          Container(
+            padding: const EdgeInsets.only(left: 20),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                "Utils",
+                style: Theme.of(context).textTheme.caption,
+                textAlign: TextAlign.start,
+              ),
+            ),
+          ),
+          ListTile(
+              leading: Icon(
+                Icons.receipt,
+              ),
+              title: Text('All billings'),
+              onTap: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 600),
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          UnknownScreen(), //TODO FIXME: All billings screen
+                    ));
+              }),
+          ListTile(
+              leading: Icon(
+                Icons.flight,
+              ),
+              title: Text('All flights'),
+              onTap: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 600),
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          UnknownScreen(), //TODO FIXME: All flights screen
+                    ));
+              }),
+          ListTile(
+              leading: Icon(
+                Icons.shopping_cart,
+              ),
+              title: Text('All items'),
+              onTap: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 600),
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          UnknownScreen(), //TODO FIXME: All items screen
+                    ));
+              }),
+          ListTile(
+              leading: Icon(
+                Icons.local_convenience_store,
+              ),
+              title: Text('All packages'),
+              onTap: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 600),
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          UnknownScreen(), //TODO FIXME: All packages screen
                     ));
               }),
         ],

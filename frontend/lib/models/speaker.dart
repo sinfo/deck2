@@ -101,7 +101,7 @@ class Speaker {
         'notes': notes,
         'imgs': imgs?.toJson(),
         'participations':
-            participations?.map((participation) => participation.toJson())
+            participations?.map((participation) => participation.toJson()).toList()
       };
 
   SpeakerParticipation? getParticipation(int event) {

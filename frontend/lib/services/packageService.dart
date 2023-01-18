@@ -35,13 +35,18 @@ class PackageService extends Service {
   }
 
   Future<Package?> createPackage(
-      Item item, String name, int price, int vat) async {
+      {List<PackageItem>? items,
+      required String name,
+      required int price,
+      required int vat}) async {
     var body = {
-      "item": item.toJson(),
+      "items": items == null ? null : items.map((i) => i.toJson()).toList(),
       "name": name,
       "price": price,
       "vat": vat,
     };
+
+    print(body);
 
     Response<String> response = await dio.post(baseURL, data: body);
 

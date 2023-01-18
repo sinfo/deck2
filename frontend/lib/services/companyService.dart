@@ -308,7 +308,7 @@ class CompanyService extends Service {
       required int price,
       required int vat}) async {
     var body = {
-      'items': items?.map((i) => i.toJson()),
+      'items': items?.map((i) => i.toJson()).toList(),
       'name': name,
       'price': price,
       'vat': vat

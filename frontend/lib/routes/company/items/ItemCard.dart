@@ -158,19 +158,6 @@ class ItemCard extends StatelessWidget {
               children: [
                 Column(
                   children: [
-                    Icon(Icons.receipt_long, size: 48),
-                    Text(
-                      item.vat.toString() + '%',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    Text(
-                      'VAT (IVA)',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
                     Icon(Icons.monetization_on, size: 48),
                     Text(
                       (item.price ~/ 100).toString() +
@@ -180,6 +167,19 @@ class ItemCard extends StatelessWidget {
                     ),
                     Text(
                       'Price',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+                Column(
+                  children: [
+                    Icon(Icons.receipt_long, size: 48),
+                    Text(
+                      item.vat.toString() + '%',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      'VAT (IVA)',
                       style: TextStyle(fontSize: 16),
                     ),
                   ],

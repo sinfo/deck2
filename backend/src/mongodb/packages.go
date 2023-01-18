@@ -48,9 +48,11 @@ func (cpd *CreatePackageData) ParseBody(body io.Reader) error {
 		return errors.New("invalid vat")
 	}
 
-	for _, item := range *cpd.Items {
-		if _, err := Items.GetItem(item.Item); err != nil {
-			return errors.New("invalid item")
+	if cpd.Items != nil && len(*cpd.Items) > 0 {
+		for _, item := range *cpd.Items {
+			if _, err := Items.GetItem(item.Item); err != nil {
+				return errors.New("invalid item")
+			}
 		}
 	}
 
@@ -65,9 +67,12 @@ func (p *PackagesType) CreatePackage(data CreatePackageData) (*models.Package, e
 
 	var query = bson.M{
 		"name":  *data.Name,
-		"items": *data.Items,
 		"price": *data.Price,
 		"vat":   *data.VAT,
+	}
+
+	if data.Items != nil {
+		query["items"] = *data.Items
 	}
 
 	insertResult, err := p.Collection.InsertOne(ctx, query)

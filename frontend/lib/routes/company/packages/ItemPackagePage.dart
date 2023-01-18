@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/routes/company/items/AddItemForm.dart';
@@ -84,6 +85,7 @@ class _ItemPackagePageState extends State<ItemPackagePage>
 
   @override
   Widget build(BuildContext context) {
+    int eventId = Provider.of<EventNotifier>(context).event.id;
     return Scaffold(
         body: Stack(children: [
           Container(
@@ -96,8 +98,8 @@ class _ItemPackagePageState extends State<ItemPackagePage>
                       isScrollable: small,
                       controller: _tabController,
                       tabs: [
-                        Tab(text: 'Items'),
-                        Tab(text: 'Packages'),
+                        Tab(text: 'SINFO ${eventId} Items'),
+                        Tab(text: 'SINFO ${eventId} Packages'),
                       ],
                     ),
                     Expanded(
