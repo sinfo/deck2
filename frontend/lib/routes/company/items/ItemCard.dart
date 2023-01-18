@@ -9,26 +9,11 @@ import 'package:frontend/services/eventService.dart';
 import 'package:frontend/services/itemService.dart';
 import 'package:provider/provider.dart';
 
-class ItemCard extends StatefulWidget {
+class ItemCard extends StatelessWidget {
   Item item;
   final bool small;
   ItemCard({Key? key, required this.item, required this.small})
       : super(key: key);
-
-  @override
-  _ItemCardState createState() => _ItemCardState();
-}
-
-class _ItemCardState extends State<ItemCard>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
-  Future<void> itemChangedCallback(BuildContext context, {Item? item}) async {
-    setState(() {
-      widget.item = item!;
-    });
-  }
 
   void _editItemModal(context) {
     showModalBottomSheet(
@@ -38,23 +23,20 @@ class _ItemCardState extends State<ItemCard>
         return FractionallySizedBox(
             heightFactor: 0.7,
             child: Container(
-              child: EditItemForm(
-                  item: widget.item,
-                  onItemEdit: (context, _item) {
-                    itemChangedCallback(context, item: _item);
-                  }),
+              child: EditItemForm(item: item),
             ));
       },
     );
   }
 
-  void _deleteItemDialog(context) {
+  void _deleteItemDialog(mainContext) {
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return BlurryDialog('Warning',
-            'Are you sure you want to delete item ${widget.item.name}?', () {
-          _deleteItem(context);
+      context: mainContext,
+      builder: (BuildContext secondaryContext) {
+        return BlurryDialog(
+            'Warning', 'Are you sure you want to delete item ${item.name}?',
+            () {
+          _deleteItem(mainContext);
         });
       },
     );
@@ -66,7 +48,7 @@ class _ItemCardState extends State<ItemCard>
     );
 
     EventService _eventService = EventService();
-    Event? e = await _eventService.removeItemFromEvent(itemId: widget.item.id);
+    Event? e = await _eventService.removeItemFromEvent(itemId: item.id);
 
     if (e != null) {
       EventNotifier eventNotifier =
@@ -75,7 +57,7 @@ class _ItemCardState extends State<ItemCard>
       eventNotifier.event = e;
 
       ItemService _itemService = ItemService();
-      Item? i = await _itemService.deleteItem(widget.item.id);
+      Item? i = await _itemService.deleteItem(item.id);
       if (i != null) {
         ItemsNotifier notifier =
             Provider.of<ItemsNotifier>(context, listen: false);
@@ -108,7 +90,6 @@ class _ItemCardState extends State<ItemCard>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Container(
@@ -122,10 +103,10 @@ class _ItemCardState extends State<ItemCard>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Item Name: " + widget.item.name,
+                Text("Item Name: " + item.name,
                     textAlign: TextAlign.left,
                     style: TextStyle(
-                        fontSize: widget.small ? 16 : 22,
+                        fontSize: small ? 16 : 22,
                         fontWeight: FontWeight.bold)),
                 Row(
                   children: [
@@ -152,12 +133,11 @@ class _ItemCardState extends State<ItemCard>
                           color: Color.fromARGB(255, 63, 81, 181),
                           borderRadius: BorderRadius.circular(5)),
                       child: Padding(
-                        padding: EdgeInsets.all(widget.small ? 4.0 : 8.0),
+                        padding: EdgeInsets.all(small ? 4.0 : 8.0),
                         child: Text(
-                          widget.item.type,
+                          item.type,
                           style: TextStyle(
-                              fontSize: widget.small ? 12 : 16,
-                              color: Colors.white),
+                              fontSize: small ? 12 : 16, color: Colors.white),
                         ),
                       ),
                     ),
@@ -175,7 +155,7 @@ class _ItemCardState extends State<ItemCard>
                   children: [
                     Icon(Icons.receipt_long, size: 48),
                     Text(
-                      widget.item.vat.toString() + '%',
+                      item.vat.toString() + '%',
                       style: TextStyle(fontSize: 16),
                     ),
                     Text(
@@ -188,9 +168,9 @@ class _ItemCardState extends State<ItemCard>
                   children: [
                     Icon(Icons.monetization_on, size: 48),
                     Text(
-                      (widget.item.price ~/ 100).toString() +
+                      (item.price ~/ 100).toString() +
                           "," +
-                          (widget.item.price % 100).toString(),
+                          (item.price % 100).toString(),
                       style: TextStyle(fontSize: 16),
                     ),
                     Text(
@@ -201,7 +181,7 @@ class _ItemCardState extends State<ItemCard>
                 ),
               ],
             ),
-            Text("Item description: " + widget.item.description,
+            Text("Item description: " + item.description,
                 textAlign: TextAlign.left, style: TextStyle(fontSize: 18))
           ],
         ),

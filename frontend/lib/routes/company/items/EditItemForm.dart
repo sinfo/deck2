@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/models/item.dart';
+import 'package:frontend/routes/company/items/ItemNotifier.dart';
 import 'package:frontend/services/itemService.dart';
+import 'package:provider/provider.dart';
 
 class EditItemForm extends StatefulWidget {
   final Item item;
-  final void Function(BuildContext, Item?)? onItemEdit;
-  EditItemForm({Key? key, required this.item, required this.onItemEdit})
+  EditItemForm({Key? key, required this.item})
       : super(key: key);
 
   @override
@@ -56,9 +57,11 @@ class _EditItemFormState extends State<EditItemForm> {
           widget.item.id, name, type, description, price, vat);
 
       if (i != null) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ItemsNotifier notifier =
+            Provider.of<ItemsNotifier>(context, listen: false);
+        notifier.edit(i);
 
-        widget.onItemEdit!(context, i);
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
