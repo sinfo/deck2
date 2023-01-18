@@ -65,7 +65,9 @@ class _EditFlightFormState extends State<EditFlightForm> {
           int.parse(_costCentsController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating Flight...')),
+        const SnackBar(
+            content: Text('Updating Flight...',
+                style: TextStyle(color: Colors.white))),
       );
 
       FlightInfo f = await _flightService.updateFlightInfo(
@@ -85,8 +87,8 @@ class _EditFlightFormState extends State<EditFlightForm> {
         widget.onFlightEdit!(context, f);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -95,7 +97,9 @@ class _EditFlightFormState extends State<EditFlightForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

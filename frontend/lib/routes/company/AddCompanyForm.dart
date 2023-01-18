@@ -34,7 +34,8 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
       var description = _descritpionController.text;
       var site = _websiteController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Company? c = await _companyService.createCompany(
@@ -59,7 +60,7 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Done'),
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
             action: SnackBarAction(
               label: 'Undo',
@@ -73,7 +74,9 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

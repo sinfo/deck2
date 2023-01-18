@@ -37,7 +37,9 @@ class _AddItemFormState extends State<AddItemForm> {
       var vat = int.parse(_vatController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creating Item...')),
+        const SnackBar(
+            content: Text('Creating Item...',
+                style: TextStyle(color: Colors.white))),
       );
 
       Item? i =
@@ -55,7 +57,8 @@ class _AddItemFormState extends State<AddItemForm> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Error: item not added to current event.')),
+                content: Text('Error: item not added to current event.',
+                    style: TextStyle(color: Colors.white))),
           );
         } else {
           EventNotifier eventNotifier =
@@ -66,8 +69,8 @@ class _AddItemFormState extends State<AddItemForm> {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Done'),
+            const SnackBar(
+              content: Text('Done', style: TextStyle(color: Colors.white)),
               duration: Duration(seconds: 2),
             ),
           );
@@ -76,7 +79,9 @@ class _AddItemFormState extends State<AddItemForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
       Navigator.pop(context);
@@ -132,7 +137,8 @@ class _AddItemFormState extends State<AddItemForm> {
               },
               decoration: const InputDecoration(
                 icon: const Icon(Icons.title),
-                labelText: "Type * (e.g Publicity, Merchandise, Stands, Talk or other)",
+                labelText:
+                    "Type * (e.g Publicity, Merchandise, Stands, Talk or other)",
               ),
             ),
           ),

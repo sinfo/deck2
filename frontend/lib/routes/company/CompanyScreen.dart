@@ -66,13 +66,16 @@ class _CompanyScreenState extends State<CompanyScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Done.')),
+        const SnackBar(
+            content: Text('Done.', style: TextStyle(color: Colors.white))),
       );
     } else {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }

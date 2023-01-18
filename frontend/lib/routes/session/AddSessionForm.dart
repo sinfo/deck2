@@ -63,7 +63,8 @@ class _AddSessionFormState extends State<AddSessionForm> {
           max: maxTickets as int, start: _beginTicket, end: _endTicket);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Session? s = await _sessionService.createSession(
@@ -87,7 +88,7 @@ class _AddSessionFormState extends State<AddSessionForm> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Done'),
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
             action: SnackBarAction(
               label: 'Undo',
@@ -102,7 +103,9 @@ class _AddSessionFormState extends State<AddSessionForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
       Navigator.pop(context);

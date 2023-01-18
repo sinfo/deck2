@@ -97,7 +97,8 @@ class _FlightCardState extends State<FlightCard>
                                 .then((value) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('Copied flight link.')),
+                                    content: Text('Copied flight link.',
+                                        style: TextStyle(color: Colors.white))),
                               );
                             });
                           },

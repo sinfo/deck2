@@ -209,7 +209,9 @@ class _MyFormState extends State<EditContact> {
                                     // you'd often call a server or save the information in a database.
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                          content: Text('Updated Contacts')),
+                                          content: Text('Updated Contacts',
+                                              style: TextStyle(
+                                                  color: Colors.white))),
                                     );
 
                                     for (int i = 0; i < mailsList.length; i++) {

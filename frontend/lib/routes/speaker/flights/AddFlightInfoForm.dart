@@ -11,7 +11,8 @@ class AddFlightInfoForm extends StatefulWidget {
   final String id;
   final void Function(BuildContext, Speaker?)? onEditSpeaker;
 
-  AddFlightInfoForm({Key? key, required this.id, required this.onEditSpeaker}) : super(key: key);
+  AddFlightInfoForm({Key? key, required this.id, required this.onEditSpeaker})
+      : super(key: key);
 
   @override
   _AddFlightInfoFormState createState() => _AddFlightInfoFormState();
@@ -46,7 +47,9 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
           int.parse(_costCentsController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creating Flight...')),
+        const SnackBar(
+            content: Text('Creating Flight...',
+                style: TextStyle(color: Colors.white))),
       );
 
       Speaker? s = await _speakerService.addFlightInfo(
@@ -70,8 +73,8 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -79,7 +82,9 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
       Navigator.pop(context);

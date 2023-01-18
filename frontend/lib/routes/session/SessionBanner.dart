@@ -55,7 +55,8 @@ class _SessionBannerState extends State<SessionBanner> {
 
   void _deleteSession(context, id) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleting')),
+      const SnackBar(
+          content: Text('Deleting', style: TextStyle(color: Colors.white))),
     );
 
     Session? s = await _sessionService.deleteSession(id);
@@ -67,8 +68,8 @@ class _SessionBannerState extends State<SessionBanner> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -76,7 +77,9 @@ class _SessionBannerState extends State<SessionBanner> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
     setState(() {});

@@ -69,13 +69,16 @@ class _MeetingScreenState extends State<MeetingScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Done.')),
+        const SnackBar(
+            content: Text('Done.', style: TextStyle(color: Colors.white))),
       );
     } else {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }
@@ -239,8 +242,8 @@ class MeetingParticipants extends StatelessWidget {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Done'),
+              const SnackBar(
+                content: Text('Done', style: TextStyle(color: Colors.white)),
                 duration: Duration(seconds: 2),
               ),
             );
@@ -248,7 +251,9 @@ class MeetingParticipants extends StatelessWidget {
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('An error occured.')),
+              const SnackBar(
+                  content: Text('An error occured.',
+                      style: TextStyle(color: Colors.white))),
             );
           }
         });
@@ -409,7 +414,9 @@ class MeetingBanner extends StatelessWidget {
       Uri uri = Uri.parse(meeting.minute!);
       if (!await launchUrl(uri)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error downloading minutes')),
+          const SnackBar(
+              content: Text('Error downloading minutes',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     } else {
@@ -419,7 +426,9 @@ class MeetingBanner extends StatelessWidget {
       );
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Uploading')),
+          const SnackBar(
+              content:
+                  Text('Uploading', style: TextStyle(color: Colors.white))),
         );
 
         PlatformFile minute = result.files.first;
@@ -437,8 +446,8 @@ class MeetingBanner extends StatelessWidget {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Done'),
+            const SnackBar(
+              content: Text('Done', style: TextStyle(color: Colors.white)),
               duration: Duration(seconds: 2),
             ),
           );
@@ -446,7 +455,9 @@ class MeetingBanner extends StatelessWidget {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('An error occured.')),
+            const SnackBar(
+                content: Text('An error occured.',
+                    style: TextStyle(color: Colors.white))),
           );
         }
       }
@@ -478,8 +489,8 @@ class MeetingBanner extends StatelessWidget {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -487,7 +498,9 @@ class MeetingBanner extends StatelessWidget {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }

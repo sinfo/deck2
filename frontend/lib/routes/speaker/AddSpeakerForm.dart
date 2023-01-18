@@ -34,7 +34,8 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
       var bio = _bioController.text;
       var title = _titleController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Speaker? s = await _speakerService.createSpeaker(bio, name, title);
@@ -57,8 +58,8 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -66,7 +67,9 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

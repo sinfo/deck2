@@ -44,7 +44,9 @@ class ItemCard extends StatelessWidget {
 
   void _deleteItem(context) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleting item...')),
+      const SnackBar(
+          content:
+              Text('Deleting item...', style: TextStyle(color: Colors.white))),
     );
 
     EventService _eventService = EventService();
@@ -66,8 +68,8 @@ class ItemCard extends StatelessWidget {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -75,7 +77,9 @@ class ItemCard extends StatelessWidget {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     } else {
@@ -83,7 +87,8 @@ class ItemCard extends StatelessWidget {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Error: item not deleted from current event')),
+            content: Text('Error: item not deleted from current event',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }

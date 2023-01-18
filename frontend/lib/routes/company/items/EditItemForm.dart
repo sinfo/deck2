@@ -7,8 +7,7 @@ import 'package:provider/provider.dart';
 
 class EditItemForm extends StatefulWidget {
   final Item item;
-  EditItemForm({Key? key, required this.item})
-      : super(key: key);
+  EditItemForm({Key? key, required this.item}) : super(key: key);
 
   @override
   _EditItemFormState createState() => _EditItemFormState();
@@ -50,7 +49,9 @@ class _EditItemFormState extends State<EditItemForm> {
       var vat = int.parse(_vatController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating item...')),
+        const SnackBar(
+            content: Text('Updating item...',
+                style: TextStyle(color: Colors.white))),
       );
 
       Item? i = await _itemService.updateItem(
@@ -64,8 +65,8 @@ class _EditItemFormState extends State<EditItemForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -74,7 +75,9 @@ class _EditItemFormState extends State<EditItemForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

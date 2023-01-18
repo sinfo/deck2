@@ -100,7 +100,9 @@ class _EditBillingFormState extends State<EditBillingForm> {
           int.parse(_valueCentsController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating Billing...')),
+        const SnackBar(
+            content: Text('Updating Billing...',
+                style: TextStyle(color: Colors.white))),
       );
 
       Billing? b = await _billingService.updateBilling(
@@ -122,8 +124,8 @@ class _EditBillingFormState extends State<EditBillingForm> {
         widget.onBillingEdit!(context, b);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -132,7 +134,9 @@ class _EditBillingFormState extends State<EditBillingForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

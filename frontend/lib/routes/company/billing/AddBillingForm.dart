@@ -102,7 +102,9 @@ class _AddBillingFormState extends State<AddBillingForm> {
           int.parse(_valueCentsController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creating Billing...')),
+        const SnackBar(
+            content: Text('Creating Billing...',
+                style: TextStyle(color: Colors.white))),
       );
 
       Company? c = await _companyService.createBilling(
@@ -128,8 +130,8 @@ class _AddBillingFormState extends State<AddBillingForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -137,7 +139,9 @@ class _AddBillingFormState extends State<AddBillingForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
       Navigator.pop(context);
