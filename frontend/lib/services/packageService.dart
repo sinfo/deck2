@@ -46,8 +46,6 @@ class PackageService extends Service {
       "vat": vat,
     };
 
-    print(body);
-
     Response<String> response = await dio.post(baseURL, data: body);
 
     try {

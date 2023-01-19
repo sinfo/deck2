@@ -31,14 +31,101 @@ class _AddPackageFormState extends State<AddPackageForm> {
   EventService _eventService = EventService();
 
   List<Item> _items = [];
+  Map<String, bool> _itemPublic = new Map();
 
-  List<PackageItem> createPackageItemList() {
-    List<PackageItem> packageItems = [];
-    for (Item i in _items) {
-      PackageItem pi = new PackageItem(itemID: i.id, quantity: 0, public: true);
-      packageItems.add(pi);
+  Widget quantityField(
+      TextEditingController _controller, Item i, StateSetter setState) {
+    return Container(
+        margin: EdgeInsets.only(bottom: 8),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(
+            controller: _controller,
+            decoration: InputDecoration(
+              icon: const Icon(Icons.tag),
+              labelText: "Quantity of item ${i.name} (optional) *",
+            ),
+            keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly
+            ],
+          ),
+          CheckboxListTile(
+            value: _itemPublic[i.id],
+            onChanged: (bool? val) {
+              setState(() {
+                if (val == null) {
+                  _itemPublic[i.id] = false;
+                } else {
+                  _itemPublic[i.id] = val;
+                }
+              });
+            },
+            title: new Text('${i.name} visible'),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.symmetric(horizontal: 4.0),
+          ),
+        ]));
+  }
+
+  Future<List<PackageItem>?> createPackageItemList() async {
+    if (_items == null || _items.length == 0) {
+      return [];
     }
-    return packageItems;
+
+    bool _formEdit = false;
+    List<PackageItem> packageItems = [];
+
+    // Has Item ID as key
+    Map<String, TextEditingController> _controllers = new Map();
+
+    for (Item i in _items) {
+      _controllers[i.id] = TextEditingController();
+      _itemPublic[i.id] = false;
+    }
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext mainContext) => AlertDialog(
+        title: const Text("Edit quantities and visibility of items in package"),
+        content: StatefulBuilder(
+            builder: (BuildContext secondaryContext, StateSetter setState) {
+          return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: _items
+                  .map((i) => quantityField(_controllers[i.id]!, i, setState))
+                  .toList());
+        }),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.pop(mainContext);
+              _formEdit = true;
+            },
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              for (Item i in _items) {
+                int? quant = _controllers[i.id]!.text == ""
+                    ? null
+                    : int.parse(_controllers[i.id]!.text);
+                PackageItem pi = new PackageItem(
+                    itemID: i.id, quantity: quant, public: _itemPublic[i.id]);
+                packageItems.add(pi);
+              }
+              Navigator.pop(mainContext);
+            },
+            child: const Text("Confirm"),
+          ),
+        ],
+      ),
+    );
+
+    if (_formEdit) {
+      return null;
+    } else {
+      return packageItems;
+    }
   }
 
   void _submit() async {
@@ -55,7 +142,10 @@ class _AddPackageFormState extends State<AddPackageForm> {
                 style: TextStyle(color: Colors.white))),
       );
 
-      List<PackageItem> itemsPack = createPackageItemList();
+      List<PackageItem>? itemsPack = await createPackageItemList();
+      if (itemsPack == null) {
+        return;
+      }
 
       Package? p = await _packageService.createPackage(
           name: name, price: price, vat: vat, items: itemsPack);
