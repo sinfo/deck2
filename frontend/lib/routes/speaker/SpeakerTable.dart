@@ -220,6 +220,7 @@ class MemberSpeakerRow extends StatelessWidget {
 
     List<Speaker> speakers = Provider.of<SpeakerTableNotifier>(context)
         .getByMember(member.id, event, filter);
+    if (speakers.isEmpty && filter != ParticipationStatus.NO_STATUS) return SizedBox.shrink();
     return Container(
       margin: EdgeInsets.all(10),
       child: Theme(

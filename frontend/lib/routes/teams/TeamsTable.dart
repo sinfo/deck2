@@ -6,6 +6,7 @@ import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/teams/TeamScreen.dart';
 import 'package:frontend/routes/teams/TeamsNotifier.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:frontend/components/filterBarTeam.dart';
@@ -26,6 +27,7 @@ class _TeamTableState extends State<TeamTable>
   final TeamService _teamService = TeamService();
   String filter = "";
   late List<Team> teams;
+  late Role role;
 
   late Future<List<Member>> members;
 
@@ -41,23 +43,22 @@ class _TeamTableState extends State<TeamTable>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
     return Consumer<TeamsNotifier>(builder: (context, notif, child) {
       return FutureBuilder(
         future: Future.wait([
           _teamService.getTeams(
-              event: Provider.of<EventNotifier>(context).event.id)
+              event: Provider.of<EventNotifier>(context).event.id),
+          Provider.of<AuthService>(context, listen: false).role
         ]),
-        builder: (context, snapshot) {
+        builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError) {
               return showError();
             } else if (snapshot.hasData) {
               TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
 
-              List<List<Object>> dataTeam = snapshot.data as List<List<Object>>;
-
-              teams = dataTeam[0] as List<Team>;
+              teams = snapshot.data![0] as List<Team>;
+              role = snapshot.data![1] as Role;
 
               notifier.teams = teams;
 

@@ -36,9 +36,10 @@ class CompanyBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
-    bool isEditable = Provider.of<EventNotifier>(context).isLatest;
+    bool isLatestEvent = Provider.of<EventNotifier>(context).isLatest;
     Participation? part = company.participations!
         .firstWhereOrNull((element) => element.event == event);
+    bool hasParticipation = part != null;    
     ParticipationStatus companyStatus =
         part != null ? part.status : ParticipationStatus.NO_STATUS;
     double lum = 0.2;
@@ -127,13 +128,13 @@ class CompanyBanner extends StatelessWidget {
                               style: Theme.of(context).textTheme.headline5,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            if (isEditable)
+                            if (isLatestEvent && hasParticipation)
                               CompanyStatusDropdownButton(
                                 companyStatus: companyStatus,
                                 statusChangeCallback: statusChangeCallback,
                                 companyId: company.id,
                               ),
-                            if (!isEditable)
+                            if (!isLatestEvent)
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Container(
