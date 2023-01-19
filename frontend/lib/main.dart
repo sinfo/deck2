@@ -47,7 +47,7 @@ Future main() async {
         create: (_) => ItemsNotifier(items: []),
       ),
       ChangeNotifierProvider<PackageNotifier>(
-        create: (_) => PackageNotifier(packages: []),
+        create: (_) => PackageNotifier(packages: new Map()),
       ),
       ChangeNotifierProvider<SessionsNotifier>(
         create: (_) => SessionsNotifier(sessions: []),

@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
 import 'package:frontend/models/package.dart';
-import 'package:frontend/routes/company/packages/PackageNotifier.dart';
-import 'package:provider/provider.dart';
 
 class PackageInfoCard extends StatelessWidget {
   EventPackage eventPackage;
+  Package pack;
   final bool small;
-  PackageInfoCard({Key? key, required this.eventPackage, required this.small})
+  PackageInfoCard(
+      {Key? key,
+      required this.eventPackage,
+      required this.small,
+      required this.pack})
       : super(key: key);
 
   Widget getItemRepresentation(PackageItem pi) {
@@ -107,69 +110,49 @@ class PackageInfoCard extends StatelessWidget {
             Divider(
               color: Colors.grey[600],
             ),
-            FutureBuilder(
-              future: eventPackage.package,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  PackageNotifier notifier =
-                      Provider.of<PackageNotifier>(context);
-
-                  Package p = snapshot.data as Package;
-                  notifier.add(p);
-
-                  return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Column(
-                              children: [
-                                Icon(Icons.monetization_on, size: 48),
-                                Text(
-                                  (p.price ~/ 100).toString() +
-                                      "," +
-                                      (p.price % 100).toString(),
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                Text(
-                                  'Price',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                Icon(Icons.receipt_long, size: 48),
-                                Text(
-                                  p.vat.toString() + '%',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                Text(
-                                  'VAT (IVA)',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        if (p.items != null && p.items!.length > 0)
-                          Text("Items:",
-                              textAlign: TextAlign.left,
-                              style: TextStyle(fontSize: 18)),
-                        ...p.items!
-                            .map((item) => getItemRepresentation(item))
-                            .toList(),
-                        Text("\nPrivate name: " + p.name,
-                            textAlign: TextAlign.left,
-                            style: TextStyle(fontSize: 18))
-                      ]);
-                } else {
-                  return Container(
-                      child: Center(child: CircularProgressIndicator()));
-                }
-              },
-            ),
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(
+                    children: [
+                      Icon(Icons.monetization_on, size: 48),
+                      Text(
+                        (pack.price ~/ 100).toString() +
+                            "," +
+                            (pack.price % 100).toString(),
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        'Price',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Icon(Icons.receipt_long, size: 48),
+                      Text(
+                        pack.vat.toString() + '%',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        'VAT (IVA)',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              if (pack.items != null && pack.items!.length > 0)
+                Text("Items:",
+                    textAlign: TextAlign.left, style: TextStyle(fontSize: 18)),
+              ...pack.items!
+                  .map((item) => getItemRepresentation(item))
+                  .toList(),
+              Text("\nPrivate name: " + pack.name,
+                  textAlign: TextAlign.left, style: TextStyle(fontSize: 18))
+            ]),
           ],
         ),
       ),
