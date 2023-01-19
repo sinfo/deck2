@@ -4,6 +4,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/billing/AddBillingForm.dart';
 import 'package:frontend/routes/company/billing/BillingScreen.dart';
@@ -224,6 +225,17 @@ class _CompanyScreenState extends State<CompanyScreen>
                                             .updateParticipationStatus(
                                                 id: widget.company.id,
                                                 newStatus: status),
+                                      );
+                                    },
+                                    onChangeCompanyPack: (Package p) async {
+                                      await companyChangedCallback(
+                                        context,
+                                        fs: _companyService.addPackage(
+                                            id: widget.company.id,
+                                            name: p.name,
+                                            price: p.price,
+                                            vat: p.vat,
+                                            items: p.items),
                                       );
                                     },
                                   ),

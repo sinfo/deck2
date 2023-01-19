@@ -8,11 +8,14 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/packageCard.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
+import 'package:frontend/models/event.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
+import 'package:frontend/routes/company/packages/PackageNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:frontend/services/packageService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -30,6 +33,8 @@ class ParticipationCard extends StatefulWidget {
   final void Function()? onDelete;
   final Future<void> Function(Map<String, dynamic>)? onEdit;
   final Future<void> Function(ParticipationStatus)? onChangeParticipationStatus;
+  final Future<void> Function(Package)? onChangeCompanyPackage;
+
   ParticipationCard({
     Key? key,
     required this.participation,
@@ -38,6 +43,7 @@ class ParticipationCard extends StatefulWidget {
     this.onDelete,
     this.onEdit,
     this.onChangeParticipationStatus,
+    this.onChangeCompanyPackage,
   }) : super(key: key);
 
   static Widget addParticipationCard(Function() onAddParticipation) {
@@ -91,6 +97,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
   late bool _partner;
   late DateTime? _confirmed;
   final MemberService _memberService = MemberService();
+  final PackageService _packageService = PackageService();
 
   @override
   void initState() {
@@ -169,6 +176,14 @@ class _ParticipationCardState extends State<ParticipationCard> {
     return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
   }
 
+  List<Future> getPackages(Event event) {
+    List<Future> futures = [];
+    for (EventPackage evPackage in event.eventPackagesId) {
+      futures.add(_packageService.getPackage(evPackage.packageID));
+    }
+    return futures;
+  }
+
   List<Widget> _buildCompanyFields() {
     CompanyParticipation p = widget.participation as CompanyParticipation;
 
@@ -218,10 +233,79 @@ class _ParticipationCardState extends State<ParticipationCard> {
           if (snapshot.connectionState == ConnectionState.done) {
             Package? pack = snapshot.data as Package?;
 
-            if (pack == null) {
+            if (pack == null &&
+                (p.status == ParticipationStatus.ACCEPTED ||
+                    p.status == ParticipationStatus.ANNOUNCED)) {
+              Event latest = Provider.of<EventNotifier>(context).latest;
+              PackageNotifier notifier = Provider.of<PackageNotifier>(context);
+
+              return FutureBuilder(
+                  future: Future.wait(getPackages(latest)),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Error' + snapshot.error.toString());
+                    }
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      List<dynamic> futurePacks =
+                          snapshot.data as List<dynamic>;
+                      List<Package> packs = [];
+
+                      for (int i = 0; i < futurePacks.length; i++) {
+                        Package p = futurePacks[i] as Package;
+                        packs.add(p);
+                      }
+
+                      notifier.loadPackages(packs);
+
+                      return DropdownButton<Package>(
+                        icon: Icon(Icons.arrow_downward),
+                        // iconSize: 16,
+                        selectedItemBuilder: (BuildContext context) {
+                          return notifier
+                              .getPackages()
+                              .map<Widget>((Package p) {
+                            return Container(
+                              alignment: Alignment.centerLeft,
+                              constraints: const BoxConstraints(minWidth: 70),
+                              child: Text(
+                                p.name,
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            );
+                          }).toList();
+                        },
+                        underline: Container(height: 2),
+                        onChanged: (Package? newPackage) async {
+                          widget.onChangeCompanyPackage!(newPackage!);
+                          setState(() {
+                            pack = newPackage;
+                          });
+                        },
+                        value: pack,
+                        hint: Container(
+                          alignment: Alignment.centerLeft,
+                          constraints: const BoxConstraints(minWidth: 70),
+                          child: Text(
+                            'Pick a package',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        items: notifier
+                            .getPackages()
+                            .map<DropdownMenuItem<Package>>((e) =>
+                                DropdownMenuItem<Package>(
+                                    value: e, child: Text(e.name)))
+                            .toList(),
+                      );
+                    } else {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                  });
+            } else if (pack != null) {
+              return PackageCard(package: pack);
+            } else {
               return Container();
             }
-            return PackageCard(package: pack);
           } else {
             return Center(child: CircularProgressIndicator());
           }

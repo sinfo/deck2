@@ -6,11 +6,11 @@ import 'package:dio/dio.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:frontend/models/package.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/contact.dart';
-import 'package:frontend/models/item.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -303,7 +303,7 @@ class CompanyService extends Service {
 
   Future<Company?> addPackage(
       {required String id,
-      required List<Item>? items,
+      required List<PackageItem>? items,
       required String name,
       required int price,
       required int vat}) async {
