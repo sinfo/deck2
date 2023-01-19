@@ -270,6 +270,7 @@ func InitializeRouter() {
 	packageRouter.HandleFunc("/{id}", authCoordinator(updatePackage)).Methods("PUT")
 	packageRouter.HandleFunc("/{id}/items", authCoordinator(updatePackageItems)).Methods("PUT")
 	packageRouter.HandleFunc("/{id}/item/{itemID}", authCoordinator(deleteItemPackage)).Methods("DELETE")
+	packageRouter.HandleFunc("/{id}", authCoordinator(deletePackage)).Methods("DELETE")
 
 	// contact handlers
 	contactRouter := r.PathPrefix("/contacts").Subrouter()

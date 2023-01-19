@@ -153,7 +153,8 @@ class ItemCard extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       child: IconButton(
                           onPressed: () {
-                            _deleteItemDialog(context);
+                            // TODO FIXME: Cannot delete items associated to packages
+                            // _deleteItemDialog(context);
                           },
                           color: Colors.red,
                           icon: Icon(Icons.delete)),

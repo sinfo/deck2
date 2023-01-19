@@ -94,10 +94,14 @@ class PackageService extends Service {
     }
   }
 
-  Future<Package?> updatePackageItems(String id, List<Item> package) async {
-    var body = {"package": jsonEncode(package)};
+  Future<Package?> updatePackageItems(
+      String id, List<PackageItem>? items) async {
+    var body = {
+      "items": items == null ? null : items.map((i) => i.toJson()).toList()
+    };
 
-    Response<String> response = await dio.put(baseURL + '/$id', data: body);
+    Response<String> response =
+        await dio.put(baseURL + '/$id/items', data: body);
 
     try {
       return Package.fromJson(json.decode(response.data!));
@@ -118,6 +122,19 @@ class PackageService extends Service {
 
     try {
       return Package.fromJson(json.decode(res.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Package?> deletePackage(String id) async {
+    Response<String> response = await dio.delete(baseURL + "/$id");
+    try {
+      return Package.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {

@@ -5,7 +5,7 @@ import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
-import 'package:frontend/routes/company/packages/ItemPackagePage.dart';
+import 'package:frontend/routes/company/ItemPackagePage.dart';
 import 'package:frontend/routes/meeting/MeetingPage.dart';
 import 'package:frontend/routes/member/MemberPage.dart';
 import 'package:frontend/routes/member/MemberScreen.dart';
@@ -205,7 +205,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     PageRouteBuilder(
                       transitionDuration: Duration(milliseconds: 600),
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                          UnknownScreen(), //TODO FIXME: All billings screen
+                          UnknownScreen(), //TODO: All billings screen
                     ));
               }),
           ListTile(
@@ -220,7 +220,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     PageRouteBuilder(
                       transitionDuration: Duration(milliseconds: 600),
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                          UnknownScreen(), //TODO FIXME: All flights screen
+                          UnknownScreen(), //TODO: All flights screen
                     ));
               }),
           ListTile(
@@ -235,7 +235,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     PageRouteBuilder(
                       transitionDuration: Duration(milliseconds: 600),
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                          UnknownScreen(), //TODO FIXME: All items screen
+                          UnknownScreen(), //TODO: All items screen
                     ));
               }),
           ListTile(
@@ -250,7 +250,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     PageRouteBuilder(
                       transitionDuration: Duration(milliseconds: 600),
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                          UnknownScreen(), //TODO FIXME: All packages screen
+                          UnknownScreen(), //TODO: All packages screen
                     ));
               }),
         ],

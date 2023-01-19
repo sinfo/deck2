@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
 import 'package:frontend/models/package.dart';
+import 'package:frontend/routes/company/packages/EditPackageForm.dart';
+import 'package:frontend/routes/company/packages/PackageNotifier.dart';
+import 'package:frontend/services/eventService.dart';
+import 'package:frontend/services/packageService.dart';
+import 'package:provider/provider.dart';
 
 class PackageInfoCard extends StatelessWidget {
   EventPackage eventPackage;
@@ -44,6 +51,84 @@ class PackageInfoCard extends StatelessWidget {
         });
   }
 
+  void _deletePackageDialog(context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BlurryDialog(
+            'Warning', 'Are you sure you want to delete package ${pack.name}?',
+            () {
+          _deletePackage(context);
+        });
+      },
+    );
+  }
+
+  void _deletePackage(context) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content:
+              Text('Deleting package...', style: TextStyle(color: Colors.white))),
+    );
+
+    EventService _eventService = EventService();
+    Event? e = await _eventService.removePackageFromEvent(template: pack.id);
+
+    if (e != null) {
+      EventNotifier eventNotifier =
+          Provider.of<EventNotifier>(context, listen: false);
+
+      eventNotifier.event = e;
+
+      PackageService _packageService = PackageService();
+      Package? p = await _packageService.deletePackage(pack.id);
+      if (p != null) {
+        PackageNotifier notifier =
+            Provider.of<PackageNotifier>(context, listen: false);
+        notifier.remove(p);
+
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Error: package not deleted from current event',
+                style: TextStyle(color: Colors.white))),
+      );
+    }
+  }
+
+  void _editPackageModal(context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+            heightFactor: 0.7,
+            child: Container(
+              child: EditPackageForm(eventPackage: eventPackage, package: pack),
+            ));
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -70,8 +155,7 @@ class PackageInfoCard extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       child: IconButton(
                           onPressed: () {
-                            // TODO FIXME: edit package
-                            // _editPackageModal(context);
+                            _editPackageModal(context);
                           },
                           color: const Color(0xff5c7ff2),
                           icon: Icon(Icons.edit)),
