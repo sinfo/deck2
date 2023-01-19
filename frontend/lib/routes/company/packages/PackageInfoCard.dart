@@ -51,14 +51,14 @@ class PackageInfoCard extends StatelessWidget {
         });
   }
 
-  void _deletePackageDialog(context) {
+  void _deletePackageDialog(mainContext) {
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
+      context: mainContext,
+      builder: (BuildContext secondaryContext) {
         return BlurryDialog(
             'Warning', 'Are you sure you want to delete package ${pack.name}?',
             () {
-          _deletePackage(context);
+          _deletePackage(secondaryContext);
         });
       },
     );
