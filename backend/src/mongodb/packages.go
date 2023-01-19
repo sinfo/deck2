@@ -217,6 +217,31 @@ func (p *PackagesType) DeletePackage(packageID primitive.ObjectID) (*models.Pack
 	return &result, nil
 }
 
+// DeleteItemPackage deletes an item ID from a package
+func (p *PackagesType) DeleteItemPackage(packageID primitive.ObjectID, itemID primitive.ObjectID) (*models.Package, error) {
+	ctx := context.Background()
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"items": itemID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": packageID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedPackage models.Package
+
+	if err := p.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedPackage); err != nil {
+		log.Println("error remove package's item:", err)
+		return nil, err
+	}
+
+	return &updatedPackage, nil
+}
+
 // GetPackagesOptions is the options to give to GetPackages.
 // All the fields are optional, and as such we use pointers as a "hack" to deal
 // with non-existent fields.

@@ -3,10 +3,13 @@ import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
+import 'package:frontend/models/package.dart';
 import 'package:frontend/routes/company/items/EditItemForm.dart';
 import 'package:frontend/routes/company/items/ItemNotifier.dart';
+import 'package:frontend/routes/company/packages/PackageNotifier.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:frontend/services/itemService.dart';
+import 'package:frontend/services/packageService.dart';
 import 'package:provider/provider.dart';
 
 class ItemCard extends StatelessWidget {
@@ -36,7 +39,7 @@ class ItemCard extends StatelessWidget {
         return BlurryDialog(
             'Warning', 'Are you sure you want to delete item ${item.name}?',
             () {
-          _deleteItem(mainContext);
+          _deleteItem(secondaryContext);
         });
       },
     );
@@ -57,6 +60,28 @@ class ItemCard extends StatelessWidget {
           Provider.of<EventNotifier>(context, listen: false);
 
       eventNotifier.event = e;
+
+      PackageService _packageService = PackageService();
+
+      for (EventPackage evPackage in e.eventPackagesId) {
+        Package? p = await _packageService.removeItemFromPackage(
+            id: evPackage.packageID, itemId: item.id);
+
+        if (p != null) {
+          PackageNotifier packageNotifier =
+              Provider.of<PackageNotifier>(context, listen: false);
+          packageNotifier.edit(p);
+        } else {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text(
+                    'Error: item not deleted from package ${evPackage.packageID}',
+                    style: TextStyle(color: Colors.white))),
+          );
+        }
+      }
 
       ItemService _itemService = ItemService();
       Item? i = await _itemService.deleteItem(item.id);

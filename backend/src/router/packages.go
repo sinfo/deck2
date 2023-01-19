@@ -148,3 +148,18 @@ func getPackage(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(p)
 }
+
+func deleteItemPackage(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	itemID, _ := primitive.ObjectIDFromHex(params["itemID"])
+
+	p, err := mongodb.Packages.DeleteItemPackage(id, itemID)
+	if err != nil {
+		http.Error(w, "Could not find package: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(p)
+}

@@ -109,4 +109,21 @@ class PackageService extends Service {
       throw DeckException('Wrong format');
     }
   }
+
+  Future<Package> removeItemFromPackage({
+    required String id,
+    required String itemId,
+  }) async {
+    Response<String> res = await dio.delete(baseURL + "/$id/item/$itemId");
+
+    try {
+      return Package.fromJson(json.decode(res.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 }
