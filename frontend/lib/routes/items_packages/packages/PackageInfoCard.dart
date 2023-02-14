@@ -4,16 +4,19 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
 import 'package:frontend/models/package.dart';
-import 'package:frontend/routes/company/packages/EditPackageForm.dart';
-import 'package:frontend/routes/company/packages/PackageNotifier.dart';
+import 'package:frontend/routes/items_packages/packages/EditPackageForm.dart';
+import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:frontend/services/packageService.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class PackageInfoCard extends StatelessWidget {
   EventPackage eventPackage;
   Package pack;
   final bool small;
+  NumberFormat formatter = new NumberFormat("00");
+
   PackageInfoCard(
       {Key? key,
       required this.eventPackage,
@@ -203,8 +206,8 @@ class PackageInfoCard extends StatelessWidget {
                       Icon(Icons.monetization_on, size: 48),
                       Text(
                         (pack.price ~/ 100).toString() +
-                            "," +
-                            (pack.price % 100).toString(),
+                            "." +
+                            formatter.format(pack.price % 100),
                         style: TextStyle(fontSize: 16),
                       ),
                       Text(

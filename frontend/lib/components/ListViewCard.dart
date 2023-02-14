@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
-import 'package:frontend/routes/member/MemberScreen.dart';
+import 'package:frontend/routes/members_teams/member/MemberScreen.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
@@ -12,6 +12,8 @@ import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/speaker/SpeakerScreen.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:collection/collection.dart';
+import 'package:frontend/services/companyService.dart';
+import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
 
 class ListViewCard extends StatefulWidget {
@@ -27,9 +29,10 @@ class ListViewCard extends StatefulWidget {
   late final int? _numParticipations;
   late final int? _lastParticipation;
   late final String _tag;
+  late final String? _id;
   late final bool? _editable;
   late Widget _screen;
-  final Future<void> Function(ParticipationStatus)? onChangeParticipationStatus;
+  final Future<void> Function(int, BuildContext)? onChangeParticipationStatus;
 
   ListViewCard(
       {Key? key,
@@ -80,6 +83,7 @@ class ListViewCard extends StatefulWidget {
     _imageUrl = company!.companyImages.internal;
     _title = company!.name;
     _color = STATUSCOLOR[_status]!;
+    _id = company!.id;
 
     _numParticipations = company!.numParticipations;
     _lastParticipation = company!.lastParticipation;
@@ -104,6 +108,7 @@ class ListViewCard extends StatefulWidget {
     _imageUrl = speaker!.imgs!.internal!;
     _title = speaker!.name;
     _color = STATUSCOLOR[_status]!;
+    _id = speaker!.id;
 
     _numParticipations = speaker!.numParticipations;
     _lastParticipation = speaker!.lastParticipation;
@@ -150,6 +155,9 @@ class ListViewCard extends StatefulWidget {
 }
 
 class _ListViewCardState extends State<ListViewCard> {
+  final CompanyService _companyService = CompanyService();
+  final SpeakerService _speakerService = SpeakerService();
+
   @override
   void initState() {
     super.initState();
@@ -212,30 +220,44 @@ class _ListViewCardState extends State<ListViewCard> {
     });
   }
 
-  List<Widget> getStatus(double fontsize) {
-    if (widget._editable!) {
-      return [
-        DecoratedBox(
-          decoration: BoxDecoration(
-              color: STATUSCOLOR[widget._status],
-              borderRadius: BorderRadius.circular(5)),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
-            child: DropdownButton<ParticipationStatus>(
+  Widget Function(BuildContext, AsyncSnapshot<List<ParticipationStep>>)
+      buildStatusButton() {
+    return (context, snapshot) {
+      List<ParticipationStep> steps = [
+        ParticipationStep(next: widget._status, step: 0)
+      ];
+      if (snapshot.hasData) {
+        steps.addAll(snapshot.data as List<ParticipationStep>);
+      }
+      return DecoratedBox(
+        decoration: BoxDecoration(
+            color: STATUSCOLOR[widget._status],
+            borderRadius: BorderRadius.circular(5)),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+          child: Container(
+            child: DropdownButton<ParticipationStep>(
               icon: Icon(
                 Icons.arrow_downward,
                 color: widget._status == ParticipationStatus.GIVEN_UP
                     ? Colors.white
                     : Colors.black,
               ),
-              // iconSize: 16,
+              underline: Container(
+                height: 2,
+                color: widget._status == ParticipationStatus.GIVEN_UP
+                    ? Colors.white
+                    : Colors.black,
+              ),
+              value: steps[0],
+              style: Theme.of(context).textTheme.subtitle2,
               selectedItemBuilder: (BuildContext context) {
-                return getAllStatus().map<Widget>((ParticipationStatus status) {
+                return steps.map((e) {
                   return Container(
                     alignment: Alignment.centerLeft,
                     constraints: const BoxConstraints(minWidth: 70),
                     child: Text(
-                      STATUSSTRING[status]!,
+                      STATUSSTRING[widget._status]!,
                       style: TextStyle(
                         color: widget._status == ParticipationStatus.GIVEN_UP
                             ? Colors.white
@@ -246,25 +268,36 @@ class _ListViewCardState extends State<ListViewCard> {
                   );
                 }).toList();
               },
-              underline: Container(
-                height: 2,
-                color: widget._status == ParticipationStatus.GIVEN_UP
-                    ? Colors.white
-                    : Colors.black,
-              ),
-              onChanged: (ParticipationStatus? newStatus) async {
-                widget.onChangeParticipationStatus!(newStatus!);
-                changeState(newStatus);
-              },
-              value: widget._status,
-              items: getAllStatus()
-                  .map<DropdownMenuItem<ParticipationStatus>>((e) =>
-                      DropdownMenuItem<ParticipationStatus>(
-                          value: e, child: Text(STATUSSTRING[e]!)))
+              items: steps
+                  .map((e) => DropdownMenuItem<ParticipationStep>(
+                        value: e,
+                        child: Text(STATUSSTRING[e.next] ?? ''),
+                      ))
                   .toList(),
+              onChanged: (next) {
+                if (next != null && next.step != 0) {
+                  widget.onChangeParticipationStatus!(next.step, context);
+                }
+              },
             ),
           ),
-        )
+        ),
+      );
+    };
+  }
+
+  List<Widget> getStatus(double fontsize) {
+    if (widget._editable! && widget.company != null) {
+      return [
+        FutureBuilder(
+            future: _companyService.getNextParticipationSteps(id: widget._id!),
+            builder: buildStatusButton())
+      ];
+    } else if (widget._editable! && widget.speaker != null) {
+      return [
+        FutureBuilder(
+            future: _speakerService.getNextParticipationSteps(id: widget._id!),
+            builder: buildStatusButton())
       ];
     } else {
       if (STATUSSTRING[widget._status] != null &&

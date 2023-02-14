@@ -186,7 +186,7 @@ class MeetingService extends Service {
     }
   }
 
-  Future<Meeting?> deleteMeetingParticipant(
+  Future<Meeting?> deleteMeetingMember(
       {required String id,
       required String memberID,
       required String type}) async {

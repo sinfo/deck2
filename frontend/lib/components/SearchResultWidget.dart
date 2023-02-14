@@ -3,7 +3,7 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
-import 'package:frontend/routes/member/MemberScreen.dart';
+import 'package:frontend/routes/members_teams/member/MemberScreen.dart';
 import 'package:frontend/routes/speaker/SpeakerScreen.dart';
 
 class SearchResultWidget extends StatelessWidget {

@@ -6,8 +6,8 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
 import 'package:frontend/models/package.dart';
-import 'package:frontend/routes/company/items/ItemNotifier.dart';
-import 'package:frontend/routes/company/packages/PackageNotifier.dart';
+import 'package:frontend/routes/items_packages/items/ItemNotifier.dart';
+import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:frontend/services/packageService.dart';
 import 'package:provider/provider.dart';
@@ -22,8 +22,7 @@ class AddPackageForm extends StatefulWidget {
 class _AddPackageFormState extends State<AddPackageForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _valueEurosController = TextEditingController();
-  final _valueCentsController = TextEditingController();
+  final _costController = TextEditingController();
   final _vatController = TextEditingController();
   final _publicNameController = TextEditingController();
 
@@ -131,8 +130,10 @@ class _AddPackageFormState extends State<AddPackageForm> {
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var name = _nameController.text;
-      var price = int.parse(_valueEurosController.text) * 100 +
-          int.parse(_valueCentsController.text);
+      var parseCost = double.parse(_costController.text);
+      var euros = parseCost.toInt();
+      var cents = ((parseCost - euros) * 100).round();
+      int cost = euros * 100 + cents;
       var vat = int.parse(_vatController.text);
       var publicName = _publicNameController.text;
 
@@ -148,7 +149,7 @@ class _AddPackageFormState extends State<AddPackageForm> {
       }
 
       Package? p = await _packageService.createPackage(
-          name: name, price: price, vat: vat, items: itemsPack);
+          name: name, price: cost, vat: vat, items: itemsPack);
 
       if (p != null) {
         PackageNotifier notifier =
@@ -236,57 +237,25 @@ class _AddPackageFormState extends State<AddPackageForm> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueEurosController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the package';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of package (only euros) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _costController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the cost of the package';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.money),
+                labelText: "Cost of Package *",
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueCentsController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the package';
-                      }
-                      int val = int.parse(value);
-                      if (val < 0 || val > 100) {
-                        return 'Cents must be a number between 0 and 100';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of package (only cents) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

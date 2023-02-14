@@ -3,7 +3,6 @@ import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
-import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:provider/provider.dart';
@@ -160,11 +159,11 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                               company: comp[index],
                               participationsInfo: true,
                               onChangeParticipationStatus:
-                                  (ParticipationStatus status) async {
-                                await companyChangedCallback(
+                                  (step, context) async {
+                                companyChangedCallback(
                                   context,
-                                  fs: companyService.updateParticipationStatus(
-                                      id: comp[index].id, newStatus: status),
+                                  fs: companyService.stepParticipationStatus(
+                                      id: comp[index].id, step: step),
                                 );
                               },
                             );

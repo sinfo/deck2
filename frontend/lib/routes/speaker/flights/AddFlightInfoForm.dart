@@ -27,8 +27,7 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
   final _toController = TextEditingController();
   final _linkController = TextEditingController();
   final _notesController = TextEditingController();
-  final _costEurosController = TextEditingController();
-  final _costCentsController = TextEditingController();
+  final _costController = TextEditingController();
   bool flightBought = false;
 
   final _speakerService = SpeakerService();
@@ -43,8 +42,10 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
       var to = _toController.text;
       var link = _linkController.text;
       var notes = _notesController.text;
-      var cost = int.parse(_costEurosController.text) * 100 +
-          int.parse(_costCentsController.text);
+      var parseCost = double.parse(_costController.text);
+      var euros = parseCost.toInt();
+      var cents = ((parseCost - euros) * 100).round();
+      int cost = euros * 100 + cents;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -227,53 +228,25 @@ class _AddFlightInfoFormState extends State<AddFlightInfoForm> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _costEurosController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the flight';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of flight (only euros) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _costController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the cost of the flight';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.money),
+                labelText: "Cost of flight *",
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _costCentsController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the flight';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of flight (only cents) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

@@ -5,10 +5,10 @@ import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/Wrapper.dart';
 import 'package:frontend/routes/company/AddCompanyForm.dart';
 import 'package:frontend/routes/meeting/AddMeetingForm.dart';
-import 'package:frontend/routes/member/AddMemberForm.dart';
-import 'package:frontend/routes/member/MemberListWidget.dart';
+import 'package:frontend/routes/members_teams/member/AddMemberForm.dart';
+import 'package:frontend/routes/members_teams/member/MemberListWidget.dart';
 import 'package:frontend/routes/speaker/AddSpeakerForm.dart';
-import 'package:frontend/routes/teams/AddTeamMemberForm.dart';
+import 'package:frontend/routes/members_teams/teams/AddTeamMemberForm.dart';
 import 'package:frontend/routes/session/AddSessionForm.dart';
 
 class Routes {

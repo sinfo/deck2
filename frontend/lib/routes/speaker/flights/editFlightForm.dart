@@ -22,8 +22,7 @@ class _EditFlightFormState extends State<EditFlightForm> {
   late TextEditingController _toController;
   late TextEditingController _linkController;
   late TextEditingController _notesController;
-  late TextEditingController _costEurosController;
-  late TextEditingController _costCentsController;
+  late TextEditingController _costController;
   late bool flightBought;
 
   final _flightService = FlightInfoService();
@@ -34,6 +33,7 @@ class _EditFlightFormState extends State<EditFlightForm> {
   @override
   void initState() {
     super.initState();
+    NumberFormat formatter = new NumberFormat("00");
     _fromController = TextEditingController(text: widget.flight.from);
     _toController = TextEditingController(text: widget.flight.to);
     _inboundController =
@@ -42,10 +42,9 @@ class _EditFlightFormState extends State<EditFlightForm> {
         TextEditingController(text: getDateTime(widget.flight.outbound));
     _linkController = TextEditingController(text: widget.flight.link);
     _notesController = TextEditingController(text: widget.flight.notes);
-    _costEurosController =
-        TextEditingController(text: (widget.flight.cost ~/ 100).toString());
-    _costCentsController =
-        TextEditingController(text: (widget.flight.cost % 100).toString());
+    _costController = TextEditingController(
+        text: (widget.flight.cost ~/ 100).toString() + "." +
+            formatter.format(widget.flight.cost % 100));
     _inbound = widget.flight.inbound;
     _outbound = widget.flight.outbound;
     flightBought = widget.flight.bought;
@@ -61,8 +60,10 @@ class _EditFlightFormState extends State<EditFlightForm> {
       var to = _toController.text;
       var link = _linkController.text;
       var notes = _notesController.text;
-      var cost = int.parse(_costEurosController.text) * 100 +
-          int.parse(_costCentsController.text);
+      var parseCost = double.parse(_costController.text);
+      var euros = parseCost.toInt();
+      var cents = ((parseCost - euros) * 100).round();
+      int cost = euros * 100 + cents;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -213,7 +214,7 @@ class _EditFlightFormState extends State<EditFlightForm> {
               readOnly: true, //prevents editing the date in the form field
               onTap: () async {
                 await _selectDateTime(context, true);
-                String formattedDate = getDateTime(_inbound!);
+                String formattedDate = getDateTime(_inbound);
 
                 setState(() {
                   _inboundController.text = formattedDate;
@@ -237,53 +238,25 @@ class _EditFlightFormState extends State<EditFlightForm> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _costEurosController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the flight';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of flight (only euros) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _costController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the cost of the flight';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.money),
+                labelText: "Cost of flight *",
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _costCentsController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the flight';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of flight (only cents) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

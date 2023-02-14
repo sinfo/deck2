@@ -1,76 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
-import 'package:frontend/routes/company/items/ItemNotifier.dart';
+import 'package:frontend/routes/items_packages/items/ItemNotifier.dart';
+import 'package:frontend/services/eventService.dart';
 import 'package:frontend/services/itemService.dart';
 import 'package:provider/provider.dart';
 
-class EditItemForm extends StatefulWidget {
-  final Item item;
-  EditItemForm({Key? key, required this.item}) : super(key: key);
+class AddItemForm extends StatefulWidget {
+  AddItemForm({Key? key}) : super(key: key);
 
   @override
-  _EditItemFormState createState() => _EditItemFormState();
+  _AddItemFormState createState() => _AddItemFormState();
 }
 
-class _EditItemFormState extends State<EditItemForm> {
+class _AddItemFormState extends State<AddItemForm> {
   final _formKey = GlobalKey<FormState>();
-
-  late TextEditingController _nameController;
-  late TextEditingController _typeController;
-  late TextEditingController _descriptionController;
-  late TextEditingController _valueEurosController;
-  late TextEditingController _valueCentsController;
-  late TextEditingController _vatController;
-
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _typeController = TextEditingController();
+  final _costController = TextEditingController();
+  final _vatController = TextEditingController();
   ItemService _itemService = ItemService();
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.item.name);
-    _descriptionController =
-        TextEditingController(text: widget.item.description);
-    _typeController = TextEditingController(text: widget.item.type);
-    _valueEurosController =
-        TextEditingController(text: (widget.item.price ~/ 100).toString());
-    _valueCentsController =
-        TextEditingController(text: (widget.item.price % 100).toString());
-    _vatController = TextEditingController(text: widget.item.vat.toString());
-  }
+  EventService _eventService = EventService();
 
   void _submit() async {
     if (_formKey.currentState!.validate()) {
       var name = _nameController.text;
       var description = _descriptionController.text;
       var type = _typeController.text;
-      var price = int.parse(_valueEurosController.text) * 100 +
-          int.parse(_valueCentsController.text);
+      var parseCost = double.parse(_costController.text);
+      var euros = parseCost.toInt();
+      var cents = ((parseCost - euros) * 100).round();
+      int cost = euros * 100 + cents;
       var vat = int.parse(_vatController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Updating item...',
+            content: Text('Creating Item...',
                 style: TextStyle(color: Colors.white))),
       );
 
-      Item? i = await _itemService.updateItem(
-          widget.item.id, name, type, description, price, vat);
+      Item? i =
+          await _itemService.createItem(name, type, description, cost, vat);
 
       if (i != null) {
         ItemsNotifier notifier =
             Provider.of<ItemsNotifier>(context, listen: false);
-        notifier.edit(i);
+        notifier.add(i);
 
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        Event? e = await _eventService.addItemToEvent(itemId: i.id);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Done', style: TextStyle(color: Colors.white)),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        Navigator.pop(context);
+        if (e == null) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Error: item not added to current event.',
+                    style: TextStyle(color: Colors.white))),
+          );
+        } else {
+          EventNotifier eventNotifier =
+              Provider.of<EventNotifier>(context, listen: false);
+
+          eventNotifier.event = e;
+
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Done', style: TextStyle(color: Colors.white)),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
@@ -80,6 +85,7 @@ class _EditItemFormState extends State<EditItemForm> {
                   style: TextStyle(color: Colors.white))),
         );
       }
+      Navigator.pop(context);
     }
   }
 
@@ -137,57 +143,25 @@ class _EditItemFormState extends State<EditItemForm> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueEurosController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the item';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of item (only euros) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _costController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the cost of the item';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.money),
+                labelText: "Cost of Item *",
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueCentsController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the item';
-                      }
-                      int val = int.parse(value);
-                      if (val < 0 || val > 100) {
-                        return 'Cents must be a number between 0 and 100';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of item (only cents) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
@@ -227,6 +201,16 @@ class _EditItemFormState extends State<EditItemForm> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildForm();
+    CustomAppBar appBar = CustomAppBar(
+      disableEventChange: true,
+    );
+    return Scaffold(
+      body: Stack(children: [
+        Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: _buildForm()),
+        appBar,
+      ]),
+    );
   }
 }

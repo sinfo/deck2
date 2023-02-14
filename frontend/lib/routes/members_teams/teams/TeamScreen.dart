@@ -5,9 +5,9 @@ import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
-import 'package:frontend/routes/member/MemberScreen.dart';
-import 'package:frontend/routes/teams/AddTeamMemberForm.dart';
-import 'package:frontend/routes/teams/TeamsNotifier.dart';
+import 'package:frontend/routes/members_teams/member/MemberScreen.dart';
+import 'package:frontend/routes/members_teams/teams/AddTeamMemberForm.dart';
+import 'package:frontend/routes/members_teams/teams/TeamsNotifier.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
@@ -16,7 +16,7 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
-import '../../components/blurryDialog.dart';
+import '../../../components/blurryDialog.dart';
 
 final Map<String, String> roles = {
   "MEMBER": "Member",

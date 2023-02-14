@@ -57,7 +57,7 @@ class _CalendarState extends State<Calendar> {
         if (calendarSessions[dateForCalendar.toUtc()] != null) {
           calendarSessions[dateForCalendar.toUtc()]!.add(session);
         } else {
-          calendarSessions[dateForCalendar!.toUtc()] = [session];
+          calendarSessions[dateForCalendar.toUtc()] = [session];
         }
       });
     }

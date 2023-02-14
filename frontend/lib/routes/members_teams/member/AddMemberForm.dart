@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/member/MemberScreen.dart';
+import 'package:frontend/routes/members_teams/member/MemberScreen.dart';
 import 'package:frontend/services/memberService.dart';
 
 class AddMemberForm extends StatefulWidget {

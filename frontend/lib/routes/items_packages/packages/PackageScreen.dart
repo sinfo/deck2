@@ -3,8 +3,8 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/package.dart';
-import 'package:frontend/routes/company/packages/PackageInfoCard.dart';
-import 'package:frontend/routes/company/packages/PackageNotifier.dart';
+import 'package:frontend/routes/items_packages/packages/PackageInfoCard.dart';
+import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/services/packageService.dart';
 import 'package:provider/provider.dart';
 

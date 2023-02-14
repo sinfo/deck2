@@ -24,6 +24,14 @@ class BillingCard extends StatefulWidget {
 
 class _BillingCardState extends State<BillingCard>
     with AutomaticKeepAliveClientMixin {
+  late NumberFormat formatter;
+
+  @override
+  void initState() {
+    super.initState();
+    formatter = new NumberFormat("00");
+  }
+
   @override
   bool get wantKeepAlive => true;
 
@@ -167,8 +175,8 @@ class _BillingCardState extends State<BillingCard>
                   Icon(Icons.monetization_on, size: 48),
                   Text(
                     (widget.billing.value ~/ 100).toString() +
-                        "," +
-                        (widget.billing.value % 100).toString(),
+                        "." +
+                        formatter.format(widget.billing.value % 100),
                     style: TextStyle(fontSize: 16),
                   ),
                   Text(

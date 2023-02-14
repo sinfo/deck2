@@ -12,7 +12,7 @@ import 'package:frontend/models/event.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
-import 'package:frontend/routes/company/packages/PackageNotifier.dart';
+import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/packageService.dart';

@@ -3,10 +3,10 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/routes/company/items/AddItemForm.dart';
-import 'package:frontend/routes/company/packages/AddPackageForm.dart';
-import 'package:frontend/routes/company/items/ItemScreen.dart';
-import 'package:frontend/routes/company/packages/PackageScreen.dart';
+import 'package:frontend/routes/items_packages/items/AddItemForm.dart';
+import 'package:frontend/routes/items_packages/packages/AddPackageForm.dart';
+import 'package:frontend/routes/items_packages/items/ItemScreen.dart';
+import 'package:frontend/routes/items_packages/packages/PackageScreen.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
 

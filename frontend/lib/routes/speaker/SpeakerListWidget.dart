@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/services/speakerService.dart';
@@ -155,18 +154,17 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
                           itemCount: speak.length,
                           itemBuilder: (BuildContext context, int index) {
                             return ListViewCard(
-                              small: isSmall,
-                              speaker: speak[index],
-                              participationsInfo: true,
-                              onChangeParticipationStatus:
-                                  (ParticipationStatus status) async {
-                                await speakerChangedCallback(
-                                  context,
-                                  fs: speakerService.updateParticipationStatus(
-                                      id: speak[index].id, newStatus: status),
-                                );
-                              },
-                            );
+                                small: isSmall,
+                                speaker: speak[index],
+                                participationsInfo: true,
+                                onChangeParticipationStatus:
+                                    (step, context) async {
+                                  speakerChangedCallback(
+                                    context,
+                                    fs: speakerService.stepParticipationStatus(
+                                        id: speak[index].id, step: step),
+                                  );
+                                });
                           })),
                 ],
               );

@@ -220,7 +220,8 @@ class MemberSpeakerRow extends StatelessWidget {
 
     List<Speaker> speakers = Provider.of<SpeakerTableNotifier>(context)
         .getByMember(member.id, event, filter);
-    if (speakers.isEmpty && filter != ParticipationStatus.NO_STATUS) return SizedBox.shrink();
+    if (speakers.isEmpty && filter != ParticipationStatus.NO_STATUS)
+      return SizedBox.shrink();
     return Container(
       margin: EdgeInsets.all(10),
       child: Theme(
@@ -264,12 +265,12 @@ class MemberSpeakerRow extends StatelessWidget {
                                     small: true,
                                     speaker: e,
                                     onChangeParticipationStatus:
-                                        (ParticipationStatus status) async {
-                                      await speakerChangedCallback(
+                                        (step, context) async {
+                                      speakerChangedCallback(
                                         context,
                                         fs: _speakerService
-                                            .updateParticipationStatus(
-                                                id: e.id, newStatus: status),
+                                            .stepParticipationStatus(
+                                                id: e.id, step: step),
                                       );
                                     },
                                   ))
@@ -290,14 +291,12 @@ class MemberSpeakerRow extends StatelessWidget {
                                           small: false,
                                           speaker: e,
                                           onChangeParticipationStatus:
-                                              (ParticipationStatus
-                                                  status) async {
-                                            await speakerChangedCallback(
+                                              (step, context) async {
+                                            speakerChangedCallback(
                                               context,
                                               fs: _speakerService
-                                                  .updateParticipationStatus(
-                                                      id: e.id,
-                                                      newStatus: status),
+                                                  .stepParticipationStatus(
+                                                      id: e.id, step: step),
                                             );
                                           },
                                         ))

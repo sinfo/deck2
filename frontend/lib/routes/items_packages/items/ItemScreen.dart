@@ -3,8 +3,8 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
-import 'package:frontend/routes/company/items/ItemCard.dart';
-import 'package:frontend/routes/company/items/ItemNotifier.dart';
+import 'package:frontend/routes/items_packages/items/ItemCard.dart';
+import 'package:frontend/routes/items_packages/items/ItemNotifier.dart';
 import 'package:provider/provider.dart';
 
 class ItemScreen extends StatefulWidget {

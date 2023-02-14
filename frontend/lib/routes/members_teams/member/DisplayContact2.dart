@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/member/EditContact.dart';
+import 'package:frontend/routes/members_teams/member/EditContact.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/contactService.dart';
 import 'package:provider/provider.dart';

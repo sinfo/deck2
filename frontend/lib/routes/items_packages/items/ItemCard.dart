@@ -4,17 +4,20 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
 import 'package:frontend/models/package.dart';
-import 'package:frontend/routes/company/items/EditItemForm.dart';
-import 'package:frontend/routes/company/items/ItemNotifier.dart';
-import 'package:frontend/routes/company/packages/PackageNotifier.dart';
+import 'package:frontend/routes/items_packages/items/EditItemForm.dart';
+import 'package:frontend/routes/items_packages/items/ItemNotifier.dart';
+import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:frontend/services/itemService.dart';
 import 'package:frontend/services/packageService.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class ItemCard extends StatelessWidget {
   Item item;
   final bool small;
+  late NumberFormat formatter = new NumberFormat("00");
+
   ItemCard({Key? key, required this.item, required this.small})
       : super(key: key);
 
@@ -187,8 +190,8 @@ class ItemCard extends StatelessWidget {
                     Icon(Icons.monetization_on, size: 48),
                     Text(
                       (item.price ~/ 100).toString() +
-                          "," +
-                          (item.price % 100).toString(),
+                          "." +
+                          formatter.format((item.price % 100)),
                       style: TextStyle(fontSize: 16),
                     ),
                     Text(

@@ -209,7 +209,8 @@ class MemberCompanyRow extends StatelessWidget {
 
     List<Company> companies = Provider.of<CompanyTableNotifier>(context)
         .getByMember(member.id, event, filter);
-    if (companies.isEmpty && filter != ParticipationStatus.NO_STATUS) return SizedBox.shrink();
+    if (companies.isEmpty && filter != ParticipationStatus.NO_STATUS)
+      return SizedBox.shrink();
     return Container(
       margin: EdgeInsets.all(10),
       child: Theme(
@@ -250,18 +251,17 @@ class MemberCompanyRow extends StatelessWidget {
                           scrollDirection: Axis.horizontal,
                           children: companies
                               .map((e) => ListViewCard(
-                                    small: true,
-                                    company: e,
-                                    onChangeParticipationStatus:
-                                        (ParticipationStatus status) async {
-                                      await companyChangedCallback(
-                                        context,
-                                        fs: _companyService
-                                            .updateParticipationStatus(
-                                                id: e.id, newStatus: status),
-                                      );
-                                    },
-                                  ))
+                                  small: true,
+                                  company: e,
+                                  onChangeParticipationStatus:
+                                      (step, context) async {
+                                    companyChangedCallback(
+                                      context,
+                                      fs: _companyService
+                                          .stepParticipationStatus(
+                                              id: e.id, step: step),
+                                    );
+                                  }))
                               .toList(),
                         ),
                       )
@@ -279,14 +279,12 @@ class MemberCompanyRow extends StatelessWidget {
                                           small: false,
                                           company: e,
                                           onChangeParticipationStatus:
-                                              (ParticipationStatus
-                                                  status) async {
-                                            await companyChangedCallback(
+                                              (step, context) async {
+                                            companyChangedCallback(
                                               context,
                                               fs: _companyService
-                                                  .updateParticipationStatus(
-                                                      id: e.id,
-                                                      newStatus: status),
+                                                  .stepParticipationStatus(
+                                                      id: e.id, step: step),
                                             );
                                           },
                                         ))

@@ -64,9 +64,7 @@ class Event {
         'start': start,
         'end': end,
         'items': itemIds,
-        'packages': eventPackagesId == null
-            ? ""
-            : eventPackagesId!.map((e) => e.toJson()).toList(),
+        'packages': eventPackagesId.map((e) => e.toJson()).toList(),
       };
 
   @override

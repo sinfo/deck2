@@ -5,10 +5,11 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/models/item.dart';
 import 'package:frontend/models/package.dart';
-import 'package:frontend/routes/company/items/ItemNotifier.dart';
-import 'package:frontend/routes/company/packages/PackageNotifier.dart';
+import 'package:frontend/routes/items_packages/items/ItemNotifier.dart';
+import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:frontend/services/packageService.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class EditPackageForm extends StatefulWidget {
@@ -26,8 +27,7 @@ class _EditPackageFormState extends State<EditPackageForm> {
   late TextEditingController _publicNameController;
   late bool _available;
   late TextEditingController _packageNameController;
-  late TextEditingController _valueEurosController;
-  late TextEditingController _valueCentsController;
+  late TextEditingController _costController;
   late TextEditingController _vatController;
 
   PackageService _packageService = PackageService();
@@ -39,14 +39,14 @@ class _EditPackageFormState extends State<EditPackageForm> {
   @override
   void initState() {
     super.initState();
+    NumberFormat formatter = new NumberFormat("00");
     _publicNameController =
         TextEditingController(text: widget.eventPackage.publicName);
     _available = widget.eventPackage.available;
     _packageNameController = TextEditingController(text: widget.package.name);
-    _valueEurosController =
-        TextEditingController(text: (widget.package.price ~/ 100).toString());
-    _valueCentsController =
-        TextEditingController(text: (widget.package.price % 100).toString());
+    _costController = TextEditingController(
+        text: (widget.package.price ~/ 100).toString() + "." +
+            formatter.format(widget.package.price % 100));
     _vatController = TextEditingController(text: widget.package.vat.toString());
   }
 
@@ -149,8 +149,10 @@ class _EditPackageFormState extends State<EditPackageForm> {
     if (_formKey.currentState!.validate()) {
       var publicName = _publicNameController.text;
       var packageName = _packageNameController.text;
-      var price = int.parse(_valueEurosController.text) * 100 +
-          int.parse(_valueCentsController.text);
+      var parseCost = double.parse(_costController.text);
+      var euros = parseCost.toInt();
+      var cents = ((parseCost - euros) * 100).round();
+      int cost = euros * 100 + cents;
       var vat = int.parse(_vatController.text);
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -183,7 +185,7 @@ class _EditPackageFormState extends State<EditPackageForm> {
       }
 
       Package? p = await _packageService.updatePackage(
-          widget.package.id, packageName, price, vat);
+          widget.package.id, packageName, cost, vat);
 
       if (p != null) {
         PackageNotifier notifier =
@@ -271,57 +273,25 @@ class _EditPackageFormState extends State<EditPackageForm> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueEurosController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the package';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of package (only euros) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _costController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the cost of the package';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.money),
+                labelText: "Cost of Package *",
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueCentsController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the package';
-                      }
-                      int val = int.parse(value);
-                      if (val < 0 || val > 100) {
-                        return 'Cents must be a number between 0 and 100';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of package (only cents) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+              ],
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

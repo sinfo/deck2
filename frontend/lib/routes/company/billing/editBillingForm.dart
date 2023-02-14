@@ -25,8 +25,7 @@ class _EditBillingFormState extends State<EditBillingForm> {
   late TextEditingController _eventController;
   late TextEditingController _invoiceNumberController;
   late TextEditingController _notesController;
-  late TextEditingController _valueEurosController;
-  late TextEditingController _valueCentsController;
+  late TextEditingController _costController;
 
   late bool invoice;
   late bool paid;
@@ -41,7 +40,7 @@ class _EditBillingFormState extends State<EditBillingForm> {
   @override
   void initState() {
     super.initState();
-
+    NumberFormat formatter = new NumberFormat("00");
     _emissionController =
         TextEditingController(text: getDateTime(widget.billing.emission));
     _eventController =
@@ -49,11 +48,9 @@ class _EditBillingFormState extends State<EditBillingForm> {
     _invoiceNumberController =
         TextEditingController(text: widget.billing.invoiceNumber);
     _notesController = TextEditingController(text: widget.billing.notes);
-    _valueEurosController =
-        TextEditingController(text: (widget.billing.value ~/ 100).toString());
-    _valueCentsController =
-        TextEditingController(text: (widget.billing.value % 100).toString());
-
+    _costController = TextEditingController(
+        text: (widget.billing.value ~/ 100).toString() + "." +
+            formatter.format(widget.billing.value % 100));
     invoice = widget.billing.status.invoice;
     paid = widget.billing.status.paid;
     proForma = widget.billing.status.proForma;
@@ -96,8 +93,10 @@ class _EditBillingFormState extends State<EditBillingForm> {
       var event = int.parse(_eventController.text);
       var invoiceNumber = _invoiceNumberController.text;
       var notes = _notesController.text;
-      var value = int.parse(_valueEurosController.text) * 100 +
-          int.parse(_valueCentsController.text);
+      var parseCost = double.parse(_costController.text);
+      var euros = parseCost.toInt();
+      var cents = ((parseCost - euros) * 100).round();
+      int cost = euros * 100 + cents;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -115,7 +114,7 @@ class _EditBillingFormState extends State<EditBillingForm> {
           paid: paid,
           proForma: proForma,
           receipt: receipt,
-          value: value,
+          value: cost,
           visible: visible);
 
       if (b != null) {
@@ -188,7 +187,7 @@ class _EditBillingFormState extends State<EditBillingForm> {
               readOnly: true, //prevents editing the date in the form field
               onTap: () async {
                 await _selectDateTime(context);
-                String formattedDate = getDateTime(_emission!);
+                String formattedDate = getDateTime(_emission);
 
                 setState(() {
                   _emissionController.text = formattedDate;
@@ -246,53 +245,25 @@ class _EditBillingFormState extends State<EditBillingForm> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueEurosController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the billing';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of billing (only euros) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _costController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the cost of the billing';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.money),
+                labelText: "Cost of billing *",
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueCentsController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the billing';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of billing (only cents) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+              ],
+            ),
           ),
           CheckboxListTile(
             value: this.invoice,

@@ -24,8 +24,16 @@ class FlightCard extends StatefulWidget {
 
 class _FlightCardState extends State<FlightCard>
     with AutomaticKeepAliveClientMixin {
+  late NumberFormat formatter;
+    
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    formatter = new NumberFormat("00");
+  }
 
   Future<void> flightChangedCallback(BuildContext context,
       {FlightInfo? flight}) async {
@@ -181,8 +189,8 @@ class _FlightCardState extends State<FlightCard>
                     Icon(Icons.monetization_on, size: 48),
                     Text(
                       (widget.flight.cost ~/ 100).toString() +
-                          "," +
-                          (widget.flight.cost % 100).toString(),
+                          "." +
+                          formatter.format(widget.flight.cost % 100),
                       style: TextStyle(fontSize: 16),
                     ),
                     Text(
