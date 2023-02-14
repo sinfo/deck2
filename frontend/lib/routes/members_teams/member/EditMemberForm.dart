@@ -13,11 +13,8 @@ import 'package:provider/provider.dart';
 class EditMemberForm extends StatefulWidget {
   final Member member;
   final void Function(BuildContext, Member?) onEdit;
-  EditMemberForm(
-    {Key? key, 
-    required this.member, 
-    required this.onEdit}) 
-    : super(key: key);
+  EditMemberForm({Key? key, required this.member, required this.onEdit})
+      : super(key: key);
 
   @override
   _EditMemberFormState createState() => _EditMemberFormState();
@@ -48,42 +45,42 @@ class _EditMemberFormState extends State<EditMemberForm> {
       var istId = _istIdController.text;
       ScaffoldMessenger.of(context).showSnackBar(
         //FIXME try to use themes to avoid using style property
-        const SnackBar(content: Text('Uploading', style: TextStyle(color: Colors.white),)),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Member me = Provider.of<Member?>(context, listen: false)!;
       Member? m;
-      var role = await Provider.of<AuthService>(context, listen: false).role;
-      if(role==Role.ADMIN || role == Role.COORDINATOR){
+      var role = Provider.of<AuthService>(context, listen: false).role;
+
+      if (role == Role.ADMIN || role == Role.COORDINATOR) {
         m = await _memberService.updateMember(
-          id: widget.member.id,
-          name: name,
-          istid: istId);
-      }
-      else{
+            id: widget.member.id, name: name, istid: istId);
+      } else {
         m = widget.member;
       }
 
       if (m != null && _image != null) {
-        if(me.id == m.id){
+        if (me.id == m.id) {
           m = kIsWeb
-            ? await _memberService.updateMyImageWeb(image: _image!)
-            : await _memberService.updateMyImage(image: File(_image!.path));
-        }
-        else{
+              ? await _memberService.updateMyImageWeb(image: _image!)
+              : await _memberService.updateMyImage(image: File(_image!.path));
+        } else {
           m = kIsWeb
-            ? await _memberService.updateImageWeb(
-                id: m.id, image: _image!)
-            : await _memberService.updateImage(
-                id: m.id, image: File(_image!.path));
+              ? await _memberService.updateImageWeb(id: m.id, image: _image!)
+              : await _memberService.updateImage(
+                  id: m.id, image: File(_image!.path));
         }
       }
       if (m != null) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done', style: TextStyle(color: Colors.white),),
+          const SnackBar(
+            content: Text(
+              'Done',
+              style: TextStyle(color: Colors.white),
+            ),
             duration: Duration(seconds: 2),
           ),
         );
@@ -93,7 +90,11 @@ class _EditMemberFormState extends State<EditMemberForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.', style: TextStyle(color: Colors.white),)),
+          const SnackBar(
+              content: Text(
+            'An error occured.',
+            style: TextStyle(color: Colors.white),
+          )),
         );
       }
     }
@@ -102,10 +103,10 @@ class _EditMemberFormState extends State<EditMemberForm> {
   Widget _buildForm() {
     return FutureBuilder(
       future: Provider.of<AuthService>(context).role,
-      builder:(context, snapshot) {
-        if(snapshot.hasData){
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
           Role role = snapshot.data as Role;
-          var adminOrCoord = role==Role.ADMIN || role == Role.COORDINATOR;
+          var adminOrCoord = role == Role.ADMIN || role == Role.COORDINATOR;
           return Form(
             key: _formKey,
             child: Column(
@@ -157,7 +158,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
               ],
             ),
           );
-        }else {
+        } else {
           return Container();
         }
       },
@@ -190,26 +191,27 @@ class _EditMemberFormState extends State<EditMemberForm> {
     } else {
       String path = _image == null ? _prevImage! : _image!.path;
       inkWellChild = Center(
-        child: 
-            Stack(
-              children: <Widget>[
-                  Center(child: kIsWeb ? 
-                          Image.network(path, fit: BoxFit.fill)
-                          : Image.file(File(path),fit: BoxFit.fill),
-                  ),
-                  ClipRRect( // Clip it cleanly. 
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                      child: Container(
-                        color: Colors.black.withOpacity(0.5),
-                        alignment: Alignment.center,
-                        child: Text('Change Photo', style: TextStyle(fontWeight: FontWeight.bold),),
-                      ),
-                    ),
-                  ),
-              ]
-            )
-      );
+          child: Stack(children: <Widget>[
+        Center(
+          child: kIsWeb
+              ? Image.network(path, fit: BoxFit.fill)
+              : Image.file(File(path), fit: BoxFit.fill),
+        ),
+        ClipRRect(
+          // Clip it cleanly.
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(
+              color: Colors.black.withOpacity(0.5),
+              alignment: Alignment.center,
+              child: Text(
+                'Change Photo',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
+      ]));
     }
 
     Widget outerBox;
@@ -292,30 +294,32 @@ class _EditMemberFormState extends State<EditMemberForm> {
         builder: (context, constraints) {
           if (constraints.maxWidth < 1000) {
             return Column(
-              children: [_buildPicture(constraints.maxWidth / 3),
-              warning
-                ? Text(
-                    'Image selected is too big!',
-                    style: TextStyle(
-                      color: Colors.red,
-                    ),
-                  )
-                : Container(),
-               _buildForm()],
+              children: [
+                _buildPicture(constraints.maxWidth / 3),
+                warning
+                    ? Text(
+                        'Image selected is too big!',
+                        style: TextStyle(
+                          color: Colors.red,
+                        ),
+                      )
+                    : Container(),
+                _buildForm()
+              ],
             );
           } else {
             return Column(
               children: [
                 _buildPicture(constraints.maxWidth / 6),
                 warning
-                  ? Text(
-                      'Image selected is too big!',
-                      style: TextStyle(
-                        color: Colors.red,
-                      ),
-                    )
-                  : Container(),
-                  _buildForm()
+                    ? Text(
+                        'Image selected is too big!',
+                        style: TextStyle(
+                          color: Colors.red,
+                        ),
+                      )
+                    : Container(),
+                _buildForm()
               ],
             );
           }

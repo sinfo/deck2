@@ -24,8 +24,16 @@ class FlightCard extends StatefulWidget {
 
 class _FlightCardState extends State<FlightCard>
     with AutomaticKeepAliveClientMixin {
+  late NumberFormat formatter;
+    
   @override
   bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    formatter = new NumberFormat("00");
+  }
 
   Future<void> flightChangedCallback(BuildContext context,
       {FlightInfo? flight}) async {
@@ -97,7 +105,8 @@ class _FlightCardState extends State<FlightCard>
                                 .then((value) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content: Text('Copied flight link.')),
+                                    content: Text('Copied flight link.',
+                                        style: TextStyle(color: Colors.white))),
                               );
                             });
                           },
@@ -149,7 +158,7 @@ class _FlightCardState extends State<FlightCard>
               children: [
                 Column(
                   children: [
-                    Icon(Icons.flight_takeoff, color: Colors.black, size: 48),
+                    Icon(Icons.flight_takeoff, size: 48),
                     Text(
                       widget.flight.from,
                       style: TextStyle(fontSize: 16),
@@ -163,7 +172,7 @@ class _FlightCardState extends State<FlightCard>
                 ),
                 Column(
                   children: [
-                    Icon(Icons.flight_land, color: Colors.black, size: 48),
+                    Icon(Icons.flight_land, size: 48),
                     Text(
                       widget.flight.to,
                       style: TextStyle(fontSize: 16),
@@ -177,11 +186,15 @@ class _FlightCardState extends State<FlightCard>
                 ),
                 Column(
                   children: [
-                    Icon(Icons.monetization_on, color: Colors.black, size: 48),
+                    Icon(Icons.monetization_on, size: 48),
                     Text(
                       (widget.flight.cost ~/ 100).toString() +
-                          "," +
-                          (widget.flight.cost % 100).toString(),
+                          "." +
+                          formatter.format(widget.flight.cost % 100),
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      'Price',
                       style: TextStyle(fontSize: 16),
                     ),
                   ],

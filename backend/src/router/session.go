@@ -21,7 +21,7 @@ func getSession(w http.ResponseWriter, r *http.Request) {
 	session, err := mongodb.Sessions.GetSession(sessionID)
 
 	if err != nil {
-		http.Error(w, "Could not find session", http.StatusNotFound)
+		http.Error(w, "Could not find session: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -121,7 +121,7 @@ func getSessions(w http.ResponseWriter, r *http.Request) {
 	sessions, err := mongodb.Sessions.GetSessions(options)
 
 	if err != nil {
-		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		http.Error(w, "Unable to make query do database: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -136,7 +136,7 @@ func getSessionPublic(w http.ResponseWriter, r *http.Request) {
 	session, err := mongodb.Sessions.GetSessionPublic(sessionID)
 
 	if err != nil {
-		http.Error(w, "Could not find session", http.StatusNotFound)
+		http.Error(w, "Could not find session: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -198,7 +198,7 @@ func updateSession(w http.ResponseWriter, r *http.Request) {
 	sessionID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Sessions.GetSession(sessionID); err != nil {
-		http.Error(w, "Could not find session", http.StatusNotFound)
+		http.Error(w, "Could not find session: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -212,7 +212,7 @@ func updateSession(w http.ResponseWriter, r *http.Request) {
 	updatedSession, err := mongodb.Sessions.UpdateSession(sessionID, *usd)
 
 	if err != nil {
-		http.Error(w, "Could not create session", http.StatusExpectationFailed)
+		http.Error(w, "Could not create session: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

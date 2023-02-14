@@ -27,6 +27,19 @@ final Map<ParticipationStatus, String> STATUSFILTER = {
   ParticipationStatus.SUGGESTED: 'Suggested',
 };
 
+final Map<ParticipationStatus, String> STATUSBACKENDSTR = {
+  ParticipationStatus.NO_STATUS: '',
+  ParticipationStatus.ACCEPTED: 'ACCEPTED',
+  ParticipationStatus.ANNOUNCED: 'ANNOUNCED',
+  ParticipationStatus.CONTACTED: 'CONTACTED',
+  ParticipationStatus.GIVEN_UP: 'GIVEN_UP',
+  ParticipationStatus.IN_CONVERSATIONS: 'IN_CONVERSATIONS',
+  ParticipationStatus.ON_HOLD: 'ON_HOLD',
+  ParticipationStatus.REJECTED: 'REJECTED',
+  ParticipationStatus.SELECTED: 'SELECTED',
+  ParticipationStatus.SUGGESTED: 'SUGGESTED',
+};
+
 final Map<ParticipationStatus, Color> STATUSCOLOR = {
   ParticipationStatus.ACCEPTED: Colors.lightGreen,
   ParticipationStatus.ANNOUNCED: Colors.green.shade700,

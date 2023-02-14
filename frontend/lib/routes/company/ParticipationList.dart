@@ -3,17 +3,23 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/models/package.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:provider/provider.dart';
 
 class ParticipationList extends StatelessWidget {
   final Company company;
   final Future<void> Function(Map<String, dynamic>) onParticipationChanged;
+  final Future<void> Function(ParticipationStatus) onChangePartStatus;
+  final Future<void> Function(Package) onChangeCompanyPack;
   final void Function() onParticipationAdded;
   const ParticipationList({
     Key? key,
     required this.company,
     required this.onParticipationChanged,
     required this.onParticipationAdded,
+    required this.onChangePartStatus,
+    required this.onChangeCompanyPack,
   }) : super(key: key);
 
   @override
@@ -22,7 +28,8 @@ class ParticipationList extends StatelessWidget {
       builder: (context, constraints) {
         bool small = constraints.maxWidth < App.SIZE;
         if (company.participations != null) {
-          if (company.lastParticipation ==
+          if (company
+                  .participations![company.participations!.length - 1].event ==
               Provider.of<EventNotifier>(context).latest.id) {
             return Padding(
               padding: const EdgeInsets.all(8.0),
@@ -36,6 +43,8 @@ class ParticipationList extends StatelessWidget {
                               small: small,
                               type: CardType.COMPANY,
                               onEdit: onParticipationChanged,
+                              onChangeParticipationStatus: onChangePartStatus,
+                              onChangeCompanyPackage: onChangeCompanyPack,
                             ),
                           ))
                       .toList(),
@@ -57,10 +66,9 @@ class ParticipationList extends StatelessWidget {
                         .map((e) => Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: ParticipationCard(
-                                participation: e,
-                                small: small,
-                                type: CardType.COMPANY,
-                              ),
+                                  participation: e,
+                                  small: small,
+                                  type: CardType.COMPANY),
                             ))
                         .toList(),
                   ],

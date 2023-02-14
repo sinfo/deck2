@@ -17,14 +17,14 @@ func createPackage(w http.ResponseWriter, r *http.Request) {
 	var cpd = &mongodb.CreatePackageData{}
 
 	if err := cpd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newPackage, err := mongodb.Packages.CreatePackage(*cpd)
 
 	if err != nil {
-		http.Error(w, "Could not create package", http.StatusExpectationFailed)
+		http.Error(w, "Could not create package: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -39,21 +39,21 @@ func updatePackageItems(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Packages.GetPackage(id); err != nil {
-		http.Error(w, "Package not found", http.StatusNotFound)
+		http.Error(w, "Package not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var upid = &mongodb.UpdatePackageItemsData{}
 
 	if err := upid.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedPackage, err := mongodb.Packages.UpdatePackageItems(id, *upid)
 
 	if err != nil {
-		http.Error(w, "Could not update package's items", http.StatusExpectationFailed)
+		http.Error(w, "Could not update package's items: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -68,21 +68,21 @@ func updatePackage(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Packages.GetPackage(id); err != nil {
-		http.Error(w, "Package not found", http.StatusNotFound)
+		http.Error(w, "Package not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var upd = &mongodb.UpdatePackageData{}
 
 	if err := upd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedPackage, err := mongodb.Packages.UpdatePackage(id, *upd)
 
 	if err != nil {
-		http.Error(w, "Could not update package", http.StatusExpectationFailed)
+		http.Error(w, "Could not update package: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -107,7 +107,7 @@ func getPackages(w http.ResponseWriter, r *http.Request) {
 		if p, err := strconv.Atoi(price); err == nil {
 			options.Price = &p
 		} else {
-			http.Error(w, "Invalid query (bad price)", http.StatusBadRequest)
+			http.Error(w, "Invalid query (bad price): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -118,7 +118,7 @@ func getPackages(w http.ResponseWriter, r *http.Request) {
 		if v, err := strconv.Atoi(vat); err == nil {
 			options.VAT = &v
 		} else {
-			http.Error(w, "Invalid query (bad VAT)", http.StatusBadRequest)
+			http.Error(w, "Invalid query (bad VAT): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -127,7 +127,7 @@ func getPackages(w http.ResponseWriter, r *http.Request) {
 	packages, err := mongodb.Packages.GetPackages(options)
 
 	if err != nil {
-		http.Error(w, "Could not get packages", http.StatusExpectationFailed)
+		http.Error(w, "Could not get packages: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -142,8 +142,38 @@ func getPackage(w http.ResponseWriter, r *http.Request) {
 	p, err := mongodb.Packages.GetPackage(packageID)
 
 	if err != nil {
-		http.Error(w, "Unable to get package", http.StatusNotFound)
+		http.Error(w, "Unable to get package: " + err.Error(), http.StatusNotFound)
+		return
 	}
 
 	json.NewEncoder(w).Encode(p)
+}
+
+func deleteItemPackage(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	itemID, _ := primitive.ObjectIDFromHex(params["itemID"])
+
+	p, err := mongodb.Packages.DeleteItemPackage(id, itemID)
+	if err != nil {
+		http.Error(w, "Could not find package: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(p)
+}
+
+func deletePackage(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	item, err := mongodb.Packages.DeletePackage(id)
+	if err != nil {
+		http.Error(w, "Could not find package: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(item)
 }

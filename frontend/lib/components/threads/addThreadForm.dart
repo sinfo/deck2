@@ -33,7 +33,8 @@ class _AddThreadFormState extends State<AddThreadForm> {
     if (_formKey.currentState!.validate()) {
       var text = _textController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       if (widget.speaker != null && widget.onAddSpeaker != null) {

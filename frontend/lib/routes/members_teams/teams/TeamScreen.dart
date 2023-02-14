@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/meeting.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
 import 'package:frontend/routes/meeting/MeetingCard.dart';
-import 'package:frontend/routes/member/MemberScreen.dart';
-import 'package:frontend/routes/teams/AddTeamMemberForm.dart';
-import 'package:frontend/routes/teams/TeamsNotifier.dart';
+import 'package:frontend/routes/members_teams/member/MemberScreen.dart';
+import 'package:frontend/routes/members_teams/teams/AddTeamMemberForm.dart';
+import 'package:frontend/routes/members_teams/teams/TeamsNotifier.dart';
 import 'package:frontend/services/meetingService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
@@ -15,7 +16,7 @@ import 'package:provider/provider.dart';
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
-import '../../components/blurryDialog.dart';
+import '../../../components/blurryDialog.dart';
 
 final Map<String, String> roles = {
   "MEMBER": "Member",
@@ -40,6 +41,7 @@ class _TeamScreen extends State<TeamScreen>
   late final TabController _tabController;
   TeamService _teamService = new TeamService();
   MemberService _memberService = new MemberService();
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
   late List<Future<Member?>> _members;
 
   @override
@@ -115,46 +117,33 @@ class _TeamScreen extends State<TeamScreen>
                 return SpeedDial(
                   animatedIcon: AnimatedIcons.menu_close,
                   animatedIconTheme: IconThemeData(size: 28.0),
-                  backgroundColor: Color(0xff5C7FF2),
                   visible: true,
                   curve: Curves.bounceInOut,
                   children: [
                     SpeedDialChild(
-                      child: Icon(Icons.person_remove, color: Colors.white),
-                      backgroundColor: Colors.indigo,
+                      child: Icon(Icons.person_remove),
                       onTap: () => showRemoveMemberDialog(context),
                       label: 'Remove Members',
-                      labelStyle: TextStyle(
-                          fontWeight: FontWeight.w500, color: Colors.white),
-                      labelBackgroundColor: Colors.black,
+                      labelStyle: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     SpeedDialChild(
-                      child: Icon(Icons.person_add, color: Colors.white),
-                      backgroundColor: Colors.indigo,
+                      child: Icon(Icons.person_add),
                       onTap: () => _addTeamMember(context),
                       label: 'Add Member',
-                      labelStyle: TextStyle(
-                          fontWeight: FontWeight.w500, color: Colors.white),
-                      labelBackgroundColor: Colors.black,
+                      labelStyle: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     SpeedDialChild(
-                      child: Icon(Icons.delete, color: Colors.white),
-                      backgroundColor: Colors.indigo,
+                      child: Icon(Icons.delete),
                       onTap: () =>
                           showDeleteTeamDialog(context, widget.team.id),
                       label: 'Delete Team',
-                      labelStyle: TextStyle(
-                          fontWeight: FontWeight.w500, color: Colors.white),
-                      labelBackgroundColor: Colors.black,
+                      labelStyle: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     SpeedDialChild(
-                      child: Icon(Icons.edit, color: Colors.white),
-                      backgroundColor: Colors.indigo,
+                      child: Icon(Icons.edit),
                       onTap: () => showEditTeamDialog(),
                       label: 'Edit Team',
-                      labelStyle: TextStyle(
-                          fontWeight: FontWeight.w500, color: Colors.white),
-                      labelBackgroundColor: Colors.black,
+                      labelStyle: TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ],
                 );
@@ -162,37 +151,27 @@ class _TeamScreen extends State<TeamScreen>
                 return SpeedDial(
                   animatedIcon: AnimatedIcons.menu_close,
                   animatedIconTheme: IconThemeData(size: 28.0),
-                  backgroundColor: Color(0xff5C7FF2),
                   visible: true,
                   curve: Curves.bounceInOut,
                   children: [
                     SpeedDialChild(
-                      child: Icon(Icons.groups, color: Colors.white),
-                      backgroundColor: Colors.indigo,
+                      child: Icon(Icons.groups),
                       onTap: () => {},
                       label: 'Add Meetings',
-                      labelStyle: TextStyle(
-                          fontWeight: FontWeight.w500, color: Colors.white),
-                      labelBackgroundColor: Colors.black,
+                      labelStyle: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     SpeedDialChild(
-                      child: Icon(Icons.delete, color: Colors.white),
-                      backgroundColor: Colors.indigo,
+                      child: Icon(Icons.delete),
                       onTap: () =>
                           showDeleteTeamDialog(context, widget.team.id),
                       label: 'Delete Team',
-                      labelStyle: TextStyle(
-                          fontWeight: FontWeight.w500, color: Colors.white),
-                      labelBackgroundColor: Colors.black,
+                      labelStyle: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     SpeedDialChild(
-                      child: Icon(Icons.edit, color: Colors.white),
-                      backgroundColor: Colors.indigo,
+                      child: Icon(Icons.edit),
                       onTap: () => showEditTeamDialog(),
                       label: 'Edit Team',
-                      labelStyle: TextStyle(
-                          fontWeight: FontWeight.w500, color: Colors.white),
-                      labelBackgroundColor: Colors.black,
+                      labelStyle: TextStyle(fontWeight: FontWeight.w500),
                     ),
                   ],
                 );
@@ -305,8 +284,9 @@ class _TeamScreen extends State<TeamScreen>
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('An error has occured. Please contact the admins'),
+      const SnackBar(
+        content: Text('An error has occured. Please contact the admins',
+            style: TextStyle(color: Colors.white)),
         duration: Duration(seconds: 4),
       ),
     );
@@ -335,8 +315,8 @@ class _TeamScreen extends State<TeamScreen>
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Done'),
+              const SnackBar(
+                content: Text('Done', style: TextStyle(color: Colors.white)),
                 duration: Duration(seconds: 2),
               ),
             );
@@ -346,7 +326,9 @@ class _TeamScreen extends State<TeamScreen>
             ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('An error occured.')),
+              const SnackBar(
+                  content: Text('An error occured.',
+                      style: TextStyle(color: Colors.white))),
             );
           }
         });
@@ -360,8 +342,8 @@ class _TeamScreen extends State<TeamScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -371,7 +353,9 @@ class _TeamScreen extends State<TeamScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
 
       Navigator.pop(context);
@@ -381,7 +365,8 @@ class _TeamScreen extends State<TeamScreen>
 
   void deleteTeam(context, String? id) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleting')),
+      const SnackBar(
+          content: Text('Deleting', style: TextStyle(color: Colors.white))),
     );
     Team? team = await _teamService.deleteTeam(id!);
     if (team != null) {
@@ -392,8 +377,8 @@ class _TeamScreen extends State<TeamScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -402,7 +387,9 @@ class _TeamScreen extends State<TeamScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }
@@ -411,39 +398,36 @@ class _TeamScreen extends State<TeamScreen>
   Widget build(BuildContext context) {
     return Consumer<TeamsNotifier>(builder: (context, notif, child) {
       return Scaffold(
-        appBar: AppBar(
-          title: GestureDetector(
-              child: Image.asset(
-            'assets/logo-branco2.png',
-            height: 100,
-            width: 100,
-          )),
-        ),
-        body: Container(
-          child: DefaultTabController(
-              length: 2,
-              child: Column(children: <Widget>[
-                TeamBanner(team: widget.team),
-                TabBar(
-                  controller: _tabController,
-                  labelColor: Colors.black,
-                  tabs: [
-                    Tab(
-                      text: 'Members',
+        body: Stack(children: [
+          Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: Container(
+              child: DefaultTabController(
+                  length: 2,
+                  child: Column(children: <Widget>[
+                    TeamBanner(team: widget.team),
+                    TabBar(
+                      controller: _tabController,
+                      tabs: [
+                        Tab(
+                          text: 'Members',
+                        ),
+                        Tab(text: 'Meetings'),
+                      ],
                     ),
-                    Tab(text: 'Meetings'),
-                  ],
-                ),
-                Expanded(
-                    child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    DisplayMembers(members: _members),
-                    DisplayMeeting(meetingsIds: widget.team.meetings),
-                  ],
-                ))
-              ])),
-        ),
+                    Expanded(
+                        child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        DisplayMembers(members: _members),
+                        DisplayMeeting(meetingsIds: widget.team.meetings),
+                      ],
+                    ))
+                  ])),
+            ),
+          ),
+          appBar,
+        ]),
         // TODO should only appear in Members tab?
         floatingActionButton: buildSpeedDial(context),
       );
@@ -504,7 +488,8 @@ class DisplayMeeting extends StatefulWidget {
   _DisplayMeetingState createState() => _DisplayMeetingState();
 }
 
-class _DisplayMeetingState extends State<DisplayMeeting> with AutomaticKeepAliveClientMixin {
+class _DisplayMeetingState extends State<DisplayMeeting>
+    with AutomaticKeepAliveClientMixin {
   MeetingService _meetingService = new MeetingService();
 
   @override
@@ -524,7 +509,6 @@ class _DisplayMeetingState extends State<DisplayMeeting> with AutomaticKeepAlive
     membersPage = false;
 
     return Scaffold(
-      backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
       body: (widget.meetingsIds == null)
           ? Container()
           : FutureBuilder(
@@ -563,7 +547,6 @@ class DisplayMembers extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
         body: FutureBuilder<List<Member?>>(
             future: Future.wait(members),
             builder: (context, snapshot) {
@@ -598,8 +581,6 @@ class ShowMember extends StatelessWidget {
                 builder: (context) => MemberScreen(member: member)));
       },
       child: Card(
-        color: Colors.white,
-        shadowColor: Colors.grey.withOpacity(0.3),
         elevation: 10,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5.0),
@@ -629,7 +610,7 @@ class ShowMember extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 20),
                 child: Text(
                   member.name,
-                  style: TextStyle(color: Colors.black, fontSize: 23.0),
+                  style: TextStyle(fontSize: 23.0),
                   textAlign: TextAlign.left,
                 ),
               ),
@@ -663,10 +644,7 @@ class TeamBanner extends StatelessWidget {
             Container(
               width: 210,
               height: 210,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white30),
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle),
               padding: const EdgeInsets.all(5),
               child: ClipOval(
                 child: Image.asset("assets/DevTeam.jpg", fit: BoxFit.cover),
@@ -674,10 +652,7 @@ class TeamBanner extends StatelessWidget {
             ),
             SizedBox(height: 30),
             Text(team.name!,
-                style: TextStyle(
-                    fontSize: 25,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
             SizedBox(height: 20),
           ],
         ),

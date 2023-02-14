@@ -4,12 +4,13 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:frontend/models/package.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/contact.dart';
-import 'package:frontend/models/item.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -281,7 +282,7 @@ class CompanyService extends Service {
       String? notes,
       bool? partner}) async {
     var body = {
-      'confirmed': confirmed,
+      'confirmed': confirmed == null ? null : confirmed.toIso8601String(),
       'member': member,
       'notes': notes,
       'partner': partner
@@ -302,12 +303,12 @@ class CompanyService extends Service {
 
   Future<Company?> addPackage(
       {required String id,
-      required List<Item>? items,
+      required List<PackageItem>? items,
       required String name,
       required int price,
       required int vat}) async {
     var body = {
-      'items': items?.map((i) => i.toJson()),
+      'items': items?.map((i) => i.toJson()).toList(),
       'name': name,
       'price': price,
       'vat': vat
@@ -347,8 +348,11 @@ class CompanyService extends Service {
 
   Future<Company?> updateParticipationStatus(
       {required String id, required ParticipationStatus newStatus}) async {
-    Response<String> response = await dio.put(
-        "/companies/" + id + "/participation/status/" + newStatus.toString());
+    print(newStatus.toString());
+    Response<String> response = await dio.put("/companies/" +
+        id +
+        "/participation/status/" +
+        STATUSBACKENDSTR[newStatus]!);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {

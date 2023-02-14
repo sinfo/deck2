@@ -86,6 +86,19 @@ class ItemService extends Service{
     }
   }
 
+  Future<Item?> deleteItem(String id) async {
+    Response<String> response = await dio.delete("/items/" + id);
+    try {
+      return Item.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
 
   //  FIXME: não tenho a certeza se se faz assim
   Future<Item?> uploadItemImage(String id, String url) async {

@@ -17,7 +17,7 @@ func getFlightInfo(w http.ResponseWriter, r *http.Request) {
 	flightInfo, err := mongodb.FlightInfo.GetFlightInfo(id)
 
 	if err != nil {
-		http.Error(w, "Could not find flight info", http.StatusNotFound)
+		http.Error(w, "Could not find flight info: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -32,21 +32,21 @@ func updateFlightInfo(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.FlightInfo.GetFlightInfo(id); err != nil {
-		http.Error(w, "Could not find flight info", http.StatusNotFound)
+		http.Error(w, "Could not find flight info: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var ufid = &mongodb.CreateFlightInfoData{}
 
 	if err := ufid.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedFlightInfo, err := mongodb.FlightInfo.UpdateFlightInfo(id, *ufid)
 
 	if err != nil {
-		http.Error(w, "Could not update flight info", http.StatusExpectationFailed)
+		http.Error(w, "Could not update flight info: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

@@ -22,13 +22,13 @@ class _PackageCardState extends State<PackageCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text("Package: " + widget.package.name!,
+          Text("Package: " + widget.package.name,
               style: TextStyle(fontSize: 16)),
           Text(
               "Price: " +
-                  (widget.package.price! ~/ 100).toString() +
+                  (widget.package.price ~/ 100).toString() +
                   "," +
-                  (widget.package.price! % 100).toString(),
+                  (widget.package.price % 100).toString(),
               style: TextStyle(fontSize: 16)),
           Text("VAT: " + widget.package.vat.toString(),
               style: TextStyle(fontSize: 16)),

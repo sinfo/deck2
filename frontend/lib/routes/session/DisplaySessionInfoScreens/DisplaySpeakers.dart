@@ -43,7 +43,7 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
                   margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
                   padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
                   decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(5),
                       boxShadow: [
                         BoxShadow(
@@ -63,7 +63,7 @@ class _DisplaySpeakersState extends State<DisplaySpeakers> {
                     },
                     title: Text(widget.speakersNames[index],
                         textAlign: TextAlign.left,
-                        style: TextStyle(fontSize: 18, color: Colors.black)),
+                        style: TextStyle(fontSize: 18)),
                     subtitle: (widget.speakersTitle[index] != "")
                         ? Text(widget.speakersTitle[index]!)
                         : Text("No titles avaible for this speaker."),

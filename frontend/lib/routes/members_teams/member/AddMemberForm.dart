@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/routes/members_teams/member/MemberScreen.dart';
 import 'package:frontend/services/memberService.dart';
 
 class AddMemberForm extends StatefulWidget {
@@ -16,6 +17,8 @@ class _AddMemberFormState extends State<AddMemberForm> {
   final _istIdController = TextEditingController();
   final _sinfoIdController = TextEditingController();
   MemberService _memberService = new MemberService();
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
+
   //final _imagePicker = ImagePicker();
   //XFile? _image;
   //int? _size;
@@ -28,7 +31,8 @@ class _AddMemberFormState extends State<AddMemberForm> {
       var sinfoid = _sinfoIdController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Member? m = await _memberService.createMember(
@@ -41,12 +45,19 @@ class _AddMemberFormState extends State<AddMemberForm> {
       //           id: m.id, image: File(_image!.path));
       // }
       if (m != null) {
-        //TODO: Redirect to members page
+        // Taking the AddMemberForm screen from navigator
+        Navigator.pop(context);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MemberScreen(member: m)),
+        );
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -54,7 +65,9 @@ class _AddMemberFormState extends State<AddMemberForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
 
         Navigator.pop(context);
@@ -96,9 +109,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
               decoration: InputDecoration(
                 icon: const Icon(Icons.school),
                 labelText: "IstID *",
-                
               ),
-              
             ),
           ),
           Padding(
@@ -116,7 +127,7 @@ class _AddMemberFormState extends State<AddMemberForm> {
                 icon: ImageIcon(
                   AssetImage("assets/PowerOnIcon.png"),
                   size: 15,
-              ),
+                ),
                 labelText: "SinfoID *",
               ),
             ),
@@ -270,37 +281,42 @@ class _AddMemberFormState extends State<AddMemberForm> {
   Widget build(BuildContext context) {
     //bool warning = _image != null && _size != null && _size! > 102400;
     return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true,),
-        body: LayoutBuilder(builder: (contex, constraints) {
-          return Column(children: [
-            _buildForm(),
-          ]);
-        }
-            // builder: (context, constraints) {
-            //   if (constraints.maxWidth < 1000) {
-            //     return Column(
-            //       children: [
-            //         //_buildPicture(constraints.maxWidth / 3),
-            //         _buildForm()
-            //       ],
-            //     );
-            //   } else {
-            //     return Column(
-            //       children: [
-            //         _buildPicture(constraints.maxWidth / 6),
-            //         warning
-            //             ? Text(
-            //                 'Image selected is too big!',
-            //                 style: TextStyle(
-            //                   color: Colors.red,
-            //                 ),
-            //               )
-            //             : Container(),
-            //         _buildForm()
-            //       ],
-            //     );
-            //   }
-            // },
-            ));
+        body: Stack(children: [
+      Container(
+          margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+          child: LayoutBuilder(builder: (contex, constraints) {
+            return Column(children: [
+              _buildForm(),
+            ]);
+          })),
+      appBar,
+    ]));
+    // }
+    // builder: (context, constraints) {
+    //   if (constraints.maxWidth < 1000) {
+    //     return Column(
+    //       children: [
+    //         //_buildPicture(constraints.maxWidth / 3),
+    //         _buildForm()
+    //       ],
+    //     );
+    //   } else {
+    //     return Column(
+    //       children: [
+    //         _buildPicture(constraints.maxWidth / 6),
+    //         warning
+    //             ? Text(
+    //                 'Image selected is too big!',
+    //                 style: TextStyle(
+    //                   color: Colors.red,
+    //                 ),
+    //               )
+    //             : Container(),
+    //         _buildForm()
+    //       ],
+    //     );
+    //   }
+    // },
+    // ));
   }
 }

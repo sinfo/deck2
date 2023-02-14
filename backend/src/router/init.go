@@ -259,6 +259,7 @@ func InitializeRouter() {
 	itemRouter.HandleFunc("", authCoordinator(createItem)).Methods("POST")
 	itemRouter.HandleFunc("/{id}", authMember(getItem)).Methods("GET")
 	itemRouter.HandleFunc("/{id}", authCoordinator(updateItem)).Methods("PUT")
+	itemRouter.HandleFunc("/{id}", authCoordinator(deleteItem)).Methods("DELETE")
 	itemRouter.HandleFunc("/{id}/image", authCoordinator(uploadItemImage)).Methods("POST")
 
 	// package handlers
@@ -268,6 +269,8 @@ func InitializeRouter() {
 	packageRouter.HandleFunc("/{id}", authMember(getPackage)).Methods("GET")
 	packageRouter.HandleFunc("/{id}", authCoordinator(updatePackage)).Methods("PUT")
 	packageRouter.HandleFunc("/{id}/items", authCoordinator(updatePackageItems)).Methods("PUT")
+	packageRouter.HandleFunc("/{id}/item/{itemID}", authCoordinator(deleteItemPackage)).Methods("DELETE")
+	packageRouter.HandleFunc("/{id}", authCoordinator(deletePackage)).Methods("DELETE")
 
 	// contact handlers
 	contactRouter := r.PathPrefix("/contacts").Subrouter()

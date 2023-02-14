@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/speaker.dart';
+import 'package:frontend/routes/speaker/SpeakerScreen.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -33,7 +34,8 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
       var bio = _bioController.text;
       var title = _titleController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Speaker? s = await _speakerService.createSpeaker(bio, name, title);
@@ -45,12 +47,19 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
                 id: s.id, image: File(_image!.path));
       }
       if (s != null) {
-        //TODO: Redirect to company page
+        // Taking the AddSpeakerForm screen from navigator
+        Navigator.pop(context);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SpeakerScreen(speaker: s!)),
+        );
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -58,7 +67,9 @@ class _AddSpeakerFormState extends State<AddSpeakerForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

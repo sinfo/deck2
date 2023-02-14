@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
-import 'package:frontend/routes/teams/TeamScreen.dart';
-import 'package:frontend/routes/teams/TeamsNotifier.dart';
+import 'package:frontend/routes/members_teams/teams/TeamScreen.dart';
+import 'package:frontend/routes/members_teams/teams/TeamsNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
@@ -45,60 +44,44 @@ class _TeamTableState extends State<TeamTable>
   Widget build(BuildContext context) {
     super.build(context);
     return Consumer<TeamsNotifier>(builder: (context, notif, child) {
-      return Scaffold(
-        body: FutureBuilder(
-          future: Future.wait([
-            _teamService.getTeams(
-                event: Provider.of<EventNotifier>(context).event.id),
-            Provider.of<AuthService>(context, listen: false).role
-          ]),
-          builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                return showError();
-              } else if (snapshot.hasData) {
-                
-                TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
+      return FutureBuilder(
+        future: Future.wait([
+          _teamService.getTeams(
+              event: Provider.of<EventNotifier>(context).event.id),
+          Provider.of<AuthService>(context, listen: false).role
+        ]),
+        builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              return showError();
+            } else if (snapshot.hasData) {
+              TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
 
-                teams = snapshot.data![0] as List<Team>;
-                role = snapshot.data![1] as Role;
+              teams = snapshot.data![0] as List<Team>;
+              role = snapshot.data![1] as Role;
 
-                notifier.teams = teams;
+              notifier.teams = teams;
 
-                teams.sort((a, b) => a.name!.compareTo(b.name!));
+              teams.sort((a, b) => a.name!.compareTo(b.name!));
 
-                return Scaffold(
-                  body: showTeams(),
-                  floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-                  floatingActionButton: (role==Role.ADMIN || role == Role.COORDINATOR) ?
-                    FloatingActionButton.extended(
-                      onPressed: showCreateTeamDialog,
-                      label: const Text('Create New Team'),
-                      icon: const Icon(Icons.person_add),
-                      backgroundColor: Provider.of<ThemeNotifier>(context).isDark
-                          ? Colors.grey[500]
-                          : Colors.indigo)
-                      : null
-                );
-                
-              } else {
-                return Center(child: CircularProgressIndicator());
-              }
+              return showTeams();
             } else {
-              return Shimmer.fromColors(
-                baseColor: Colors.grey[400]!,
-                highlightColor: Colors.white,
-                child: ListView.builder(
-                  itemCount: 5,
-                  itemBuilder: (context, index) => TeamMemberRow.fake(),
-                  addAutomaticKeepAlives: true,
-                  physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics()),
-                ),
-              );
+              return Center(child: CircularProgressIndicator());
             }
-          },
-        ),
+          } else {
+            return Shimmer.fromColors(
+              baseColor: Colors.grey[400]!,
+              highlightColor: Colors.white,
+              child: ListView.builder(
+                itemCount: 5,
+                itemBuilder: (context, index) => TeamMemberRow.fake(),
+                addAutomaticKeepAlives: true,
+                physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics()),
+              ),
+            );
+          }
+        },
       );
     });
   }
@@ -129,8 +112,9 @@ class _TeamTableState extends State<TeamTable>
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('An error has occured. Please contact the admins'),
+      const SnackBar(
+        content: Text('An error has occured. Please contact the admins',
+            style: TextStyle(color: Colors.white)),
         duration: Duration(seconds: 4),
       ),
     );
@@ -164,60 +148,6 @@ class _TeamTableState extends State<TeamTable>
         child: buildTeamsList(),
       ),
     );
-  }
-
-  showCreateTeamDialog() {
-    String name = "";
-    return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: const Text("Create New Team"),
-        content: TextField(
-          onChanged: (value) {
-            name = value;
-          },
-          decoration: const InputDecoration(
-              hintText: "Insert the name of the new team"),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context, "Cancel"),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => createTeam(name),
-            child: const Text("Create"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void createTeam(String name) async {
-    Team? t = await _teamService.createTeam(name);
-    if (t != null) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-
-      TeamsNotifier notifier =
-          Provider.of<TeamsNotifier>(context, listen: false);
-      notifier.add(t);
-    } else {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
-      );
-
-      Navigator.pop(context);
-    }
-    Navigator.pop(context, "Create");
   }
 
   getTeamsFilter() {

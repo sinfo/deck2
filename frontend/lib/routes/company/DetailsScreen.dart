@@ -14,13 +14,17 @@ class DetailsScreen extends StatelessWidget {
     Company? c;
     if (isDescription) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating Description...')),
+        const SnackBar(
+            content: Text('Updating Description...',
+                style: TextStyle(color: Colors.white))),
       );
       c = await _companyService.updateCompany(
           id: company.id, description: updatedValue);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating Site...')),
+        const SnackBar(
+            content: Text('Updating Site...',
+                style: TextStyle(color: Colors.white))),
       );
       c = await _companyService.updateCompany(
           id: company.id, site: updatedValue);
@@ -30,8 +34,8 @@ class DetailsScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -39,7 +43,9 @@ class DetailsScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }

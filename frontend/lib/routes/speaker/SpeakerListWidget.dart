@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/speaker.dart';
+import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/services/speakerService.dart';
+import 'package:provider/provider.dart';
 
 final Map<SortingMethod, String> SORT_STRING = {
+  SortingMethod.RANDOM: 'Sort Randomly',
   SortingMethod.NUM_PARTICIPATIONS: 'Sort By Number Of Participations',
   SortingMethod.LAST_PARTICIPATION: 'Sort By Last Participation',
 };
@@ -33,7 +35,9 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
     super.initState();
     _controller.addListener(_scrollListener);
     this.speakers = speakerService.getSpeakers(
-        maxSpeaksInRequest: MAX_SPEAKERS, numRequestsBackend: numRequests);
+        maxSpeaksInRequest: MAX_SPEAKERS,
+        numRequestsBackend: numRequests,
+        sortMethod: _sortMethod);
     numRequests++;
   }
 
@@ -65,7 +69,36 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
     this.speakersLoaded.addAll(await this.speakers);
   }
 
-  Widget speakerGrid() {
+  Future<void> speakerChangedCallback(BuildContext context,
+      {Future<Speaker?>? fs, Speaker? speaker}) async {
+    Speaker? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (speaker != null) {
+      s = speaker;
+    }
+    if (s != null) {
+      Provider.of<SpeakerTableNotifier>(context, listen: false).edit(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Done.', style: TextStyle(color: Colors.white))),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return FutureBuilder<List<Speaker>>(
         future: speakers,
         builder: (context, snapshot) {
@@ -78,81 +111,67 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
                 cardWidth = 125;
                 isSmall = true;
               }
-              return GridView.builder(
-                  controller: _controller,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount:
-                        MediaQuery.of(context).size.width ~/ cardWidth,
-                    crossAxisSpacing: 5,
-                    mainAxisSpacing: 5,
-                    childAspectRatio: 0.75,
+              return Column(
+                children: [
+                  DropdownButton<SortingMethod>(
+                    value: _sortMethod,
+                    icon: const Icon(Icons.sort),
+                    elevation: 16,
+                    underline: Container(
+                        height: 2, color: Theme.of(context).cardColor),
+                    onChanged: (SortingMethod? sort) {
+                      setState(() {
+                        _sortMethod = sort!;
+                        this.speakersLoaded.clear();
+                        numRequests = 0;
+                        this.speakers = speakerService.getSpeakers(
+                            maxSpeaksInRequest: MAX_SPEAKERS,
+                            sortMethod: sort,
+                            numRequestsBackend: numRequests);
+                        numRequests++;
+                      });
+                    },
+                    items: SORT_STRING.keys
+                        .map<DropdownMenuItem<SortingMethod>>(
+                            (SortingMethod value) {
+                      return DropdownMenuItem<SortingMethod>(
+                        value: value,
+                        child: Center(child: Text(SORT_STRING[value]!)),
+                      );
+                    }).toList(),
                   ),
-                  itemCount: speak.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return ListViewCard(
-                        small: isSmall,
-                        speaker: speak[index],
-                        participationsInfo: true);
-                  });
+                  Expanded(
+                      child: GridView.builder(
+                          controller: _controller,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount:
+                                MediaQuery.of(context).size.width ~/ cardWidth,
+                            crossAxisSpacing: 5,
+                            mainAxisSpacing: 5,
+                            childAspectRatio: 0.75,
+                          ),
+                          itemCount: speak.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return ListViewCard(
+                                small: isSmall,
+                                speaker: speak[index],
+                                participationsInfo: true,
+                                onChangeParticipationStatus:
+                                    (step, context) async {
+                                  speakerChangedCallback(
+                                    context,
+                                    fs: speakerService.stepParticipationStatus(
+                                        id: speak[index].id, step: step),
+                                  );
+                                });
+                          })),
+                ],
+              );
             });
           } else {
             return Center(child: CircularProgressIndicator());
           }
         });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> popUpMenuButton = popUpMenuBtn();
-    CustomAppBar appBar =
-        CustomAppBar(actions: popUpMenuButton, disableEventChange: true);
-    return Scaffold(
-      body: Stack(children: [
-        Container(
-            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
-            child: speakerGrid()),
-        appBar,
-      ]),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(
-            context,
-            Routes.AddSpeaker,
-          );
-        },
-        label: const Text('Create New Speaker'),
-        icon: const Icon(Icons.person_add),
-        backgroundColor: Color(0xff5C7FF2),
-      ),
-    );
-  }
-
-  List<Widget> popUpMenuBtn() {
-    return [
-      PopupMenuButton<SortingMethod>(
-        icon: const Icon(Icons.sort),
-        tooltip: 'Sort Speakers',
-        onSelected: (SortingMethod sort) {
-          setState(() {
-            _sortMethod = sort;
-            this.speakersLoaded.clear();
-            numRequests = 0;
-            this.speakers = speakerService.getSpeakers(
-                maxSpeaksInRequest: MAX_SPEAKERS,
-                sortMethod: sort,
-                numRequestsBackend: numRequests);
-            numRequests++;
-          });
-        },
-        itemBuilder: (BuildContext context) {
-          return SORT_STRING.keys.map((SortingMethod choice) {
-            return PopupMenuItem<SortingMethod>(
-              value: choice,
-              child: Center(child: Text(SORT_STRING[choice]!)),
-            );
-          }).toList();
-        },
-      )
-    ];
   }
 }

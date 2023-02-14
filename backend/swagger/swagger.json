@@ -303,6 +303,9 @@
     "/packages/{id}/items": {
       "$ref": "./packages-id-items.json"
     },
+    "/packages/{id}/item/{itemID}": {
+      "$ref": "./packages-id-item-itemid.json"
+    },
     "/contacts": {
       "$ref": "./contacts.json"
     },

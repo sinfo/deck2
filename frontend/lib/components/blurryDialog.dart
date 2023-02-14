@@ -8,7 +8,6 @@ class BlurryDialog extends StatelessWidget {
   VoidCallback continueCallBack;
 
   BlurryDialog(this.title, this.content, this.continueCallBack);
-  TextStyle textStyle = TextStyle(color: Colors.black);
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +16,9 @@ class BlurryDialog extends StatelessWidget {
         child: AlertDialog(
           title: new Text(
             title,
-            style: textStyle,
           ),
           content: new Text(
             content,
-            style: textStyle,
           ),
           actions: [
             new TextButton(

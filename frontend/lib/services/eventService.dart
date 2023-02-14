@@ -202,7 +202,7 @@ class EventService extends Service {
 
   /// Adds a package to current event.
   /// Requires coordinator credentials or higher.
-  Future<Event> addPackageToEvent({
+  Future<Event?> addPackageToEvent({
     required String publicName,
     required String template,
   }) async {

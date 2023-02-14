@@ -42,7 +42,9 @@ class _EditBillingInfoFormState extends State<EditBillingInfoForm> {
       var tin = _tinController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating Billing Info...')),
+        const SnackBar(
+            content: Text('Updating Billing Info...',
+                style: TextStyle(color: Colors.white))),
       );
 
       CompanyBillingInfo bi =
@@ -57,8 +59,8 @@ class _EditBillingInfoFormState extends State<EditBillingInfoForm> {
         widget.onBillingInfoEdit(bi);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -67,7 +69,9 @@ class _EditBillingInfoFormState extends State<EditBillingInfoForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }
