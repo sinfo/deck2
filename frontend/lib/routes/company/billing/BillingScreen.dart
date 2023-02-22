@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/billing/AddBillingInfoForm.dart';
@@ -110,9 +111,13 @@ class _BillingScreenState extends State<BillingScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text("Billing Information (Dados de faturação)",
+            Flexible(
+              child: Text(
+                "Billing Information (Dados de faturação)",
                 textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
             Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: getBillingInfoAction()),
@@ -149,7 +154,8 @@ class _BillingScreenState extends State<BillingScreen>
   Widget build(BuildContext context) {
     super.build(context);
     return Padding(
-        padding: const EdgeInsets.all(8),
-        child: ListView(children: [getBillingInfo(), getBillings()]));
+      padding: const EdgeInsets.all(8),
+      child: ListView(children: [getBillingInfo(), getBillings()]),
+    );
   }
 }

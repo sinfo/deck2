@@ -42,7 +42,6 @@ class _DeckDrawerState extends State<DeckDrawer> {
         padding: EdgeInsets.zero,
         children: <Widget>[
           buildHeader(context),
-          Divider(),
           Container(
             padding: const EdgeInsets.only(left: 20),
             child: Align(
@@ -283,7 +282,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
 
   DrawerHeader buildHeader(BuildContext context) {
     return DrawerHeader(
-        margin: EdgeInsets.zero,
+        margin: EdgeInsets.only(bottom: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,

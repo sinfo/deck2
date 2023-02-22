@@ -69,8 +69,8 @@ class ParticipationCard extends StatefulWidget {
                 child: Text(
                   '+ Add Participation',
                   style: small
-                      ? Theme.of(context).textTheme.headline6
-                      : Theme.of(context).textTheme.headline4,
+                      ? Theme.of(context).textTheme.titleLarge
+                      : Theme.of(context).textTheme.headlineMedium,
                 ),
               ),
             ),
