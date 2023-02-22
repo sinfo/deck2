@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/threads/editThreadForm.dart';
 import 'package:frontend/components/threads/threadCard/threadCard.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/post.dart';
 import 'package:frontend/models/thread.dart';
@@ -64,87 +65,97 @@ class ThreadCardHeader extends StatelessWidget {
           if (m != null) {
             Member? me = Provider.of<Member?>(context);
             bool owner = me != null && m.id == me.id;
-            return Wrap(
-              children: [
-                Wrap(
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                bool mustWrap = constraints.maxWidth < App.SIZE + 50;
+                return Flex(
+                  direction: mustWrap ? Axis.vertical : Axis.horizontal,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.all(Radius.circular(5.0)),
-                      child: Image.network(
-                        m.image!,
-                        width: 50,
-                        height: 50,
-                        errorBuilder: (BuildContext context, Object exception,
-                            StackTrace? stackTrace) {
-                          return Image.asset(
-                            'assets/noImage.png',
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                          child: Image.network(
+                            m.image!,
                             width: 50,
                             height: 50,
-                          );
-                        },
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            m.name,
-                            style: TextStyle(fontSize: 20),
+                            errorBuilder: (BuildContext context,
+                                Object exception, StackTrace? stackTrace) {
+                              return Image.asset(
+                                'assets/noImage.png',
+                                width: 50,
+                                height: 50,
+                              );
+                            },
                           ),
-                          Text(
-                            DateFormat('dd/MM/yyyy').format(thread.posted),
-                            style: TextStyle(fontSize: 14),
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    if (owner)
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: IconButton(
-                            onPressed: () {
-                              _deleteThreadDialog(context);
-                            },
-                            icon: Icon(Icons.delete)),
-                      ),
-                    if (owner)
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: IconButton(
-                            onPressed: () {
-                              _editThreadModal(context);
-                            },
-                            icon: Icon(Icons.edit)),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        thread.kind,
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                          color: THREADCOLOR[thread.status],
-                          borderRadius: BorderRadius.circular(5)),
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          thread.status,
-                          style: TextStyle(fontSize: 16),
                         ),
-                      ),
+                        Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                m.name,
+                                style: TextStyle(fontSize: 20),
+                              ),
+                              Text(
+                                DateFormat('dd/MM/yyyy').format(thread.posted),
+                                style: TextStyle(fontSize: 14),
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        if (owner)
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: IconButton(
+                                onPressed: () {
+                                  _deleteThreadDialog(context);
+                                },
+                                icon: Icon(Icons.delete)),
+                          ),
+                        if (owner)
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: IconButton(
+                                onPressed: () {
+                                  _editThreadModal(context);
+                                },
+                                icon: Icon(Icons.edit)),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            thread.kind,
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                              color: THREADCOLOR[thread.status],
+                              borderRadius: BorderRadius.circular(5)),
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Text(
+                              thread.status,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
+                );
+              },
             );
           } else {
             return Row(
