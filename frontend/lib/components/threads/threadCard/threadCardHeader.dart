@@ -64,46 +64,46 @@ class ThreadCardHeader extends StatelessWidget {
           if (m != null) {
             Member? me = Provider.of<Member?>(context);
             bool owner = me != null && m.id == me.id;
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Wrap(
               children: [
-                Row(
+                Wrap(
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.all(Radius.circular(5.0)),
                       child: Image.network(
                         m.image!,
-                        width: small ? 40 : 50,
-                        height: small ? 40 : 50,
+                        width: 50,
+                        height: 50,
                         errorBuilder: (BuildContext context, Object exception,
                             StackTrace? stackTrace) {
                           return Image.asset(
                             'assets/noImage.png',
-                            width: small ? 40 : 50,
-                            height: small ? 40 : 50,
+                            width: 50,
+                            height: 50,
                           );
                         },
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.all(small ? 4.0 : 8.0),
+                      padding: EdgeInsets.all(8.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             m.name,
-                            style: TextStyle(fontSize: small ? 12 : 20),
+                            style: TextStyle(fontSize: 20),
                           ),
                           Text(
                             DateFormat('dd/MM/yyyy').format(thread.posted),
-                            style: TextStyle(fontSize: small ? 10 : 14),
+                            style: TextStyle(fontSize: 14),
                           )
                         ],
                       ),
                     ),
                   ],
                 ),
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     if (owner)
                       Padding(
@@ -127,7 +127,7 @@ class ThreadCardHeader extends StatelessWidget {
                       padding: const EdgeInsets.all(8.0),
                       child: Text(
                         thread.kind,
-                        style: TextStyle(fontSize: small ? 12 : 16),
+                        style: TextStyle(fontSize: 16),
                       ),
                     ),
                     Container(
@@ -135,10 +135,10 @@ class ThreadCardHeader extends StatelessWidget {
                           color: THREADCOLOR[thread.status],
                           borderRadius: BorderRadius.circular(5)),
                       child: Padding(
-                        padding: EdgeInsets.all(small ? 4.0 : 8.0),
+                        padding: EdgeInsets.all(8.0),
                         child: Text(
                           thread.status,
-                          style: TextStyle(fontSize: small ? 12 : 16),
+                          style: TextStyle(fontSize: 16),
                         ),
                       ),
                     ),
