@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/my_flutter_app_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,22 +27,21 @@ class InformationBox extends StatelessWidget {
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
-                blurRadius: 7.0,
-                color: Colors.grey.withOpacity(0.3),
-                offset: new Offset(0, 3),
-                spreadRadius: 4.0),
-            ]
-        ),
+                  blurRadius: 7.0,
+                  color: Colors.grey.withOpacity(0.3),
+                  offset: new Offset(0, 3),
+                  spreadRadius: 4.0),
+            ]),
         child: Stack(children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold)),
-              Divider(color: Theme.of(context).dividerColor,),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Divider(
+                color: Theme.of(context).dividerColor,
+              ),
               for (int i = 0; i < contact.mails!.length; i++)
                 showMail(mail: contact.mails![i]),
             ],
@@ -53,26 +53,26 @@ class InformationBox extends StatelessWidget {
         margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
         padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
         decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(5),
-            boxShadow: [
-              BoxShadow(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(5),
+          boxShadow: [
+            BoxShadow(
                 blurRadius: 7.0,
                 color: Colors.grey.withOpacity(0.3),
                 offset: new Offset(0, 3),
                 spreadRadius: 4.0),
-            ],
-            ),
+          ],
+        ),
         child: Stack(children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(title,
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold)),
-              Divider(color: Theme.of(context).dividerColor,),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Divider(
+                color: Theme.of(context).dividerColor,
+              ),
               for (int i = 0; i < contact.phones!.length; i++)
                 showPhone(phone: contact.phones![i]),
             ],
@@ -88,10 +88,10 @@ class InformationBox extends StatelessWidget {
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
-                blurRadius: 7.0,
-                color: Colors.grey.withOpacity(0.3),
-                offset: new Offset(0, 3),
-                spreadRadius: 4.0),
+                  blurRadius: 7.0,
+                  color: Colors.grey.withOpacity(0.3),
+                  offset: new Offset(0, 3),
+                  spreadRadius: 4.0),
             ]),
         child: Stack(children: [
           Column(
@@ -99,10 +99,10 @@ class InformationBox extends StatelessWidget {
             children: [
               Text(title,
                   textAlign: TextAlign.left,
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold)),
-              Divider(color: Theme.of(context).dividerColor,),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Divider(
+                color: Theme.of(context).dividerColor,
+              ),
               Row(
                 children: [
                   (contact.socials!.facebook != null)
@@ -112,7 +112,8 @@ class InformationBox extends StatelessWidget {
                           color: Color.fromRGBO(24, 119, 242, 1),
                           tooltip: contact.socials!.facebook,
                           onPressed: () {
-                            _launchURL("https://facebook.com/${contact.socials!.facebook}");
+                            _launchURL(
+                                "https://facebook.com/${contact.socials!.facebook}");
                           },
                         )
                       : Text(''),
@@ -174,58 +175,68 @@ class InformationBox extends StatelessWidget {
   }
 
   Widget showPhone({required ContactPhone phone}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        SelectableText(
-          phone.phone!,
-          textAlign: TextAlign.left,
-          style: TextStyle(fontSize: 18),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool small = constraints.maxWidth < App.SIZE + 50;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            phone.valid!
-                ? Container()
-                : Icon(
-                    Icons.report,
-                    color: Colors.red[300],
-                  ),
+            SelectableText(
+              phone.phone!,
+              textAlign: TextAlign.left,
+              style: TextStyle(fontSize: small? 14 : 18),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                phone.valid!
+                    ? Container()
+                    : Icon(
+                        Icons.report,
+                        color: Colors.red[300],
+                      ),
+              ],
+            )
           ],
-        )
-      ],
+        );
+      },
     );
   }
 
   Widget showMail({required ContactMail mail}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        SelectableText(
-          mail.mail!,
-          textAlign: TextAlign.left,
-          style: TextStyle(fontSize: 18),
-        ),
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool small = constraints.maxWidth < App.SIZE + 50;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            mail.valid!
-                ? Container()
-                : Padding(
-                    padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
-                    child: Icon(Icons.report, color: Colors.red[300]),
-                  ),
-            mail.personal!
-                ? Padding(
-                    padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
-                    child: Icon(Icons.house),
-                  )
-                : Padding(
-                    padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
-                    child: Icon(Icons.work),
-                  ),
+            SelectableText(
+              mail.mail!,
+              textAlign: TextAlign.left,
+              style: TextStyle(fontSize: small ? 14 : 18),
+            ),
+            Row(
+              children: [
+                mail.valid!
+                    ? Container()
+                    : Padding(
+                        padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                        child: Icon(Icons.report, color: Colors.red[300]),
+                      ),
+                mail.personal!
+                    ? Padding(
+                        padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                        child: Icon(Icons.house),
+                      )
+                    : Padding(
+                        padding: EdgeInsets.fromLTRB(5, 0, 0, 0),
+                        child: Icon(Icons.work),
+                      ),
+              ],
+            )
           ],
-        )
-      ],
+        );
+      },
     );
   }
 }

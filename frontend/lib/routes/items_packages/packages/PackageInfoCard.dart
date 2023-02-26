@@ -70,8 +70,8 @@ class PackageInfoCard extends StatelessWidget {
   void _deletePackage(context) async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-          content:
-              Text('Deleting package...', style: TextStyle(color: Colors.white))),
+          content: Text('Deleting package...',
+              style: TextStyle(color: Colors.white))),
     );
 
     EventService _eventService = EventService();
@@ -144,15 +144,24 @@ class PackageInfoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text("Public Name: " + eventPackage.publicName,
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                        fontSize: small ? 16 : 22,
-                        fontWeight: FontWeight.bold)),
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      "Public Name: " + eventPackage.publicName,
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                          fontSize: small ? 16 : 22,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -186,7 +195,7 @@ class PackageInfoCard extends StatelessWidget {
                               ? "Package available"
                               : "Package not available",
                           style: TextStyle(
-                              fontSize: small ? 12 : 16, color: Colors.white),
+                              fontSize: 16, color: Colors.white),
                         ),
                       ),
                     ),

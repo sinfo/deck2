@@ -81,15 +81,15 @@ class _CompanyScreenState extends State<CompanyScreen>
     }
   }
 
-  void _addThreadModal(context) {
+  void _addThreadModal(mainContext) {
     showModalBottomSheet(
-      context: context,
+      context: mainContext,
       builder: (context) {
         return Container(
           child: AddThreadForm(
               company: widget.company,
               onAddCompany: (thread_text, thread_kind) {
-                companyChangedCallback(context,
+                companyChangedCallback(mainContext,
                     fs: _companyService.addThread(
                         id: widget.company.id,
                         kind: thread_kind,

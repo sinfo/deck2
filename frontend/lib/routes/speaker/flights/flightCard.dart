@@ -8,12 +8,10 @@ import 'package:intl/intl.dart';
 class FlightCard extends StatefulWidget {
   FlightInfo flight;
   final String id;
-  final bool small;
   final void Function(String) onDelete;
   FlightCard(
       {Key? key,
       required this.flight,
-      required this.small,
       required this.id,
       required this.onDelete})
       : super(key: key);
@@ -25,7 +23,7 @@ class FlightCard extends StatefulWidget {
 class _FlightCardState extends State<FlightCard>
     with AutomaticKeepAliveClientMixin {
   late NumberFormat formatter;
-    
+
   @override
   bool get wantKeepAlive => true;
 
@@ -86,15 +84,21 @@ class _FlightCardState extends State<FlightCard>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text("From " + widget.flight.from + " to " + widget.flight.to,
+                Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+                  Text(
+                    "From " + widget.flight.from + " to " + widget.flight.to,
                     textAlign: TextAlign.left,
                     style: TextStyle(
-                        fontSize: widget.small ? 16 : 22,
-                        fontWeight: FontWeight.bold)),
-                Row(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ]),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -137,12 +141,12 @@ class _FlightCardState extends State<FlightCard>
                               widget.flight.bought ? Colors.green : Colors.red,
                           borderRadius: BorderRadius.circular(5)),
                       child: Padding(
-                        padding: EdgeInsets.all(widget.small ? 4.0 : 8.0),
+                        padding: EdgeInsets.all(8.0),
                         child: Text(
                           widget.flight.bought
                               ? "Flight bought"
                               : "Flight not bought",
-                          style: TextStyle(fontSize: widget.small ? 12 : 16),
+                          style: TextStyle(fontSize: 16),
                         ),
                       ),
                     ),
@@ -153,53 +157,65 @@ class _FlightCardState extends State<FlightCard>
             Divider(
               color: Colors.grey[600],
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Column(
-                  children: [
-                    Icon(Icons.flight_takeoff, size: 48),
-                    Text(
-                      widget.flight.from,
-                      style: TextStyle(fontSize: 16),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Wrap(
+                alignment: WrapAlignment.spaceEvenly,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Column(
+                      children: [
+                        Icon(Icons.flight_takeoff, size: 48),
+                        Text(
+                          widget.flight.from,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Text(
+                          DateFormat('yyyy-MM-dd HH:mm')
+                              .format(widget.flight.outbound),
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ],
                     ),
-                    Text(
-                      DateFormat('yyyy-MM-dd HH:mm')
-                          .format(widget.flight.outbound),
-                      style: TextStyle(fontSize: 16),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Column(
+                      children: [
+                        Icon(Icons.flight_land, size: 48),
+                        Text(
+                          widget.flight.to,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Text(
+                          DateFormat('yyyy-MM-dd HH:mm')
+                              .format(widget.flight.inbound),
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Icon(Icons.flight_land, size: 48),
-                    Text(
-                      widget.flight.to,
-                      style: TextStyle(fontSize: 16),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Column(
+                      children: [
+                        Icon(Icons.monetization_on, size: 48),
+                        Text(
+                          (widget.flight.cost ~/ 100).toString() +
+                              "." +
+                              formatter.format(widget.flight.cost % 100),
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Text(
+                          'Price',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ],
                     ),
-                    Text(
-                      DateFormat('yyyy-MM-dd HH:mm')
-                          .format(widget.flight.inbound),
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Icon(Icons.monetization_on, size: 48),
-                    Text(
-                      (widget.flight.cost ~/ 100).toString() +
-                          "." +
-                          formatter.format(widget.flight.cost % 100),
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    Text(
-                      'Price',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ],
+                  )
+                ],
+              ),
             ),
             widget.flight.notes != ""
                 ? Text("Flight notes: " + widget.flight.notes,

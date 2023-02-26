@@ -183,15 +183,15 @@ class _SpeakerScreenState extends State<SpeakerScreen>
     });
   }
 
-  void _addThreadModal(context) {
+  void _addThreadModal(mainContext) {
     showModalBottomSheet(
-      context: context,
+      context: mainContext,
       builder: (context) {
         return Container(
           child: AddThreadForm(
             speaker: widget.speaker,
             onAddSpeaker: (thread_text, thread_kind) {
-              speakerChangedCallback(context,
+              speakerChangedCallback(mainContext,
                   fs: _speakerService.addThread(
                       id: widget.speaker.id,
                       kind: thread_kind,

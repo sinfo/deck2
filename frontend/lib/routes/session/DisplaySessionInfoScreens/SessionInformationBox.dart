@@ -325,10 +325,12 @@ class SessionInformationBox extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          info,
-          textAlign: TextAlign.left,
-          style: TextStyle(fontSize: 16),
+        Flexible(
+          child: Text(
+            info,
+            textAlign: TextAlign.left,
+            style: TextStyle(fontSize: 16),
+          ),
         ),
       ],
     );

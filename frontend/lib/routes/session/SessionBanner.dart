@@ -93,13 +93,21 @@ class _SessionBannerState extends State<SessionBanner> {
       isScrollControlled: true,
       builder: (context) {
         return FractionallySizedBox(
-            heightFactor: 0.7,
+            heightFactor: 0.8,
             child: Container(
               child: EditSessionForm(session: session),
             ));
       },
     );
     setState(() {});
+  }
+
+  String getThreeDots(session) {
+    if (session.title.length > 30) {
+      return "...";
+    } else {
+      return "";
+    }
   }
 
   @override
@@ -148,7 +156,13 @@ class _SessionBannerState extends State<SessionBanner> {
             Text(kind,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-            Text(widget.session.title,
+            Text(
+                widget.session.title.substring(
+                        0,
+                        widget.session.title.length < 30
+                            ? widget.session.title.length
+                            : 30) +
+                    getThreeDots(widget.session),
                 style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
             Row(
