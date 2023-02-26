@@ -73,6 +73,7 @@ class MeetingMembers extends StatelessWidget {
               membs.sort((a, b) => a!.name.compareTo(b!.name));
 
               cardWidth = small ? 125 : 200;
+              double cardHeight = 300;
 
               return GridView.builder(
                   controller: _controller,
@@ -82,7 +83,7 @@ class MeetingMembers extends StatelessWidget {
                         MediaQuery.of(context).size.width ~/ cardWidth,
                     crossAxisSpacing: 5,
                     mainAxisSpacing: 5,
-                    childAspectRatio: 0.65,
+                    childAspectRatio: cardWidth / cardHeight,
                   ),
                   itemCount: membs.length,
                   itemBuilder: (BuildContext context, int index) {

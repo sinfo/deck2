@@ -133,15 +133,24 @@ class ItemCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text("Item Name: " + item.name,
-                    textAlign: TextAlign.left,
-                    style: TextStyle(
-                        fontSize: small ? 16 : 22,
-                        fontWeight: FontWeight.bold)),
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text(
+                      "Item Name: " + item.name,
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                          fontSize: small ? 16 : 22,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -171,7 +180,7 @@ class ItemCard extends StatelessWidget {
                         child: Text(
                           item.type,
                           style: TextStyle(
-                              fontSize: small ? 12 : 16, color: Colors.white),
+                              fontSize: 16, color: Colors.white),
                         ),
                       ),
                     ),

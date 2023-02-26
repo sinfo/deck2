@@ -86,6 +86,14 @@ class _CalendarState extends State<Calendar> {
     return speakersNames;
   }
 
+  String getThreeDots(calSessions) {
+    if (calSessions.title.length > 30) {
+      return "...";
+    } else {
+      return "";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,7 +205,7 @@ class _CalendarState extends State<Calendar> {
                               Padding(
                                 padding: const EdgeInsets.only(left: 20),
                                 child: Text(
-                                  calSessions.title,
+                                  calSessions.title.substring(0, calSessions.title.length < 30 ? calSessions.title.length : 30) + getThreeDots(calSessions),
                                   style: TextStyle(fontSize: 18.0),
                                   textAlign: TextAlign.left,
                                 ),

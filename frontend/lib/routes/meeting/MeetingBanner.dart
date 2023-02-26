@@ -234,23 +234,28 @@ class MeetingBanner extends StatelessWidget {
                                                         : Colors.black),
                                           ),
                                         ])),
-                                        RichText(
-                                            text: TextSpan(children: [
-                                          WidgetSpan(
-                                            child: Icon(Icons.place),
+                                        SizedBox(
+                                          width: MediaQuery.of(context).size.width * 0.5,
+                                          child: Flexible(
+                                            child: RichText(
+                                                text: TextSpan(children: [
+                                              WidgetSpan(
+                                                child: Icon(Icons.place),
+                                              ),
+                                              TextSpan(
+                                                text: ' ' + meeting.place,
+                                                style: TextStyle(
+                                                    fontSize: _infoFontSize,
+                                                    color:
+                                                        Provider.of<ThemeNotifier>(
+                                                                    context)
+                                                                .isDark
+                                                            ? Colors.white
+                                                            : Colors.black),
+                                              ),
+                                            ])),
                                           ),
-                                          TextSpan(
-                                            text: ' ' + meeting.place,
-                                            style: TextStyle(
-                                                fontSize: _infoFontSize,
-                                                color:
-                                                    Provider.of<ThemeNotifier>(
-                                                                context)
-                                                            .isDark
-                                                        ? Colors.white
-                                                        : Colors.black),
-                                          ),
-                                        ])),
+                                        ),
                                         RichText(
                                             text: TextSpan(children: [
                                           WidgetSpan(

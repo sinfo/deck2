@@ -57,8 +57,8 @@ class _DisplayTickets extends State<DisplayTickets> {
                     color: Colors.red,
                     fontWeight: FontWeight.bold)),
             Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
               children: [
                 Text(
                   "No tickets were made available for this session.",
