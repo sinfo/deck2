@@ -2,7 +2,7 @@
 ##########################
 # STEP 1 build executable
 ############################
-FROM golang:alpine3.10 AS builder
+FROM golang:1.18-alpine3.17 AS builder
 
 # Create user
 RUN adduser -D -g '' myuser
