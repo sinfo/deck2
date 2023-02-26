@@ -5,8 +5,8 @@ import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/models/team.dart';
-import 'package:frontend/routes/teams/TeamScreen.dart';
-import 'package:frontend/routes/teams/TeamsNotifier.dart';
+import 'package:frontend/routes/members_teams/teams/TeamScreen.dart';
+import 'package:frontend/routes/members_teams/teams/TeamsNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
@@ -91,17 +91,7 @@ class _TeamTableState extends State<TeamTable>
                 return Center(child: CircularProgressIndicator());
               }
             } else {
-              return Shimmer.fromColors(
-                baseColor: Colors.grey[400]!,
-                highlightColor: Colors.white,
-                child: ListView.builder(
-                  itemCount: 5,
-                  itemBuilder: (context, index) => TeamMemberRow.fake(),
-                  addAutomaticKeepAlives: true,
-                  physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics()),
-                ),
-              );
+              return Center(child: CircularProgressIndicator());
             }
           },
         ),
@@ -147,8 +137,9 @@ class _TeamTableState extends State<TeamTable>
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('An error has occured. Please contact the admins'),
+      const SnackBar(
+        content: Text('An error has occured. Please contact the admins',
+            style: TextStyle(color: Colors.white)),
         duration: Duration(seconds: 4),
       ),
     );

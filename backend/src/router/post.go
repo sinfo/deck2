@@ -18,7 +18,7 @@ func getPost(w http.ResponseWriter, r *http.Request) {
 	post, err := mongodb.Posts.GetPost(postID)
 
 	if err != nil {
-		http.Error(w, "Could not find post", http.StatusNotFound)
+		http.Error(w, "Could not find post: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -35,7 +35,7 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	post, err := mongodb.Posts.GetPost(postID)
 
 	if err != nil {
-		http.Error(w, "Could not find post", http.StatusNotFound)
+		http.Error(w, "Could not find post: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -54,14 +54,14 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 	var upd mongodb.UpdatePostData
 
 	if err := upd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedPost, err := mongodb.Posts.UpdatePost(postID, upd)
 
 	if err != nil {
-		http.Error(w, "Could not update post", http.StatusExpectationFailed)
+		http.Error(w, "Could not update post: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

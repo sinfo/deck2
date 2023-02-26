@@ -57,7 +57,7 @@ class _CalendarState extends State<Calendar> {
         if (calendarSessions[dateForCalendar.toUtc()] != null) {
           calendarSessions[dateForCalendar.toUtc()]!.add(session);
         } else {
-          calendarSessions[dateForCalendar!.toUtc()] = [session];
+          calendarSessions[dateForCalendar.toUtc()] = [session];
         }
       });
     }
@@ -86,6 +86,14 @@ class _CalendarState extends State<Calendar> {
     return speakersNames;
   }
 
+  String getThreeDots(calSessions) {
+    if (calSessions.title.length > 30) {
+      return "...";
+    } else {
+      return "";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,13 +119,11 @@ class _CalendarState extends State<Calendar> {
                 titleTextStyle: TextStyle(
                     color: Color.fromARGB(255, 63, 81, 181), fontSize: 25.0),
                 decoration: BoxDecoration(
-                    color: Colors.white,
                     borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10))),
                 formatButtonShowsNext: false,
-                formatButtonTextStyle:
-                    TextStyle(color: Colors.white, fontSize: 16.0),
+                formatButtonTextStyle: TextStyle(fontSize: 16.0, color: Colors.white),
                 formatButtonDecoration: BoxDecoration(
                   color: Color.fromARGB(255, 63, 81, 181),
                   borderRadius: BorderRadius.all(
@@ -177,8 +183,6 @@ class _CalendarState extends State<Calendar> {
                                     )));
                       },
                       child: Card(
-                        color: Colors.white,
-                        shadowColor: Colors.grey.withOpacity(0.7),
                         elevation: 20,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5.0),
@@ -201,9 +205,8 @@ class _CalendarState extends State<Calendar> {
                               Padding(
                                 padding: const EdgeInsets.only(left: 20),
                                 child: Text(
-                                  calSessions.title,
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 18.0),
+                                  calSessions.title.substring(0, calSessions.title.length < 30 ? calSessions.title.length : 30) + getThreeDots(calSessions),
+                                  style: TextStyle(fontSize: 18.0),
                                   textAlign: TextAlign.left,
                                 ),
                               ),

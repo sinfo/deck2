@@ -27,7 +27,8 @@ class _EditPostFormState extends State<EditPostForm> {
     if (_formKey.currentState!.validate()) {
       var text = _textController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Editing...')),
+        const SnackBar(
+            content: Text('Editing...', style: TextStyle(color: Colors.white))),
       );
 
       PostService _postService = PostService();
@@ -36,8 +37,8 @@ class _EditPostFormState extends State<EditPostForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -48,7 +49,9 @@ class _EditPostFormState extends State<EditPostForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
 
         Navigator.pop(context);

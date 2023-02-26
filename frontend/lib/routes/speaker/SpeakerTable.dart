@@ -61,9 +61,10 @@ class _SpeakerTableState extends State<SpeakerTable>
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content:
-                      Text('An error has occured. Please contact the admins'),
+                const SnackBar(
+                  content: Text(
+                      'An error has occured. Please contact the admins',
+                      style: TextStyle(color: Colors.white)),
                   duration: Duration(seconds: 4),
                 ),
               );
@@ -131,7 +132,8 @@ class _SpeakerTableState extends State<SpeakerTable>
 class MemberSpeakerRow extends StatelessWidget {
   final Member member;
   final ParticipationStatus filter;
-  const MemberSpeakerRow({Key? key, required this.member, required this.filter})
+  final SpeakerService _speakerService = SpeakerService();
+  MemberSpeakerRow({Key? key, required this.member, required this.filter})
       : super(key: key);
 
   static Widget fake() {
@@ -184,13 +186,42 @@ class MemberSpeakerRow extends StatelessWidget {
     );
   }
 
+  Future<void> speakerChangedCallback(BuildContext context,
+      {Future<Speaker?>? fs, Speaker? speaker}) async {
+    Speaker? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (speaker != null) {
+      s = speaker;
+    }
+    if (s != null) {
+      Provider.of<SpeakerTableNotifier>(context, listen: false).edit(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Done.', style: TextStyle(color: Colors.white))),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
 
     List<Speaker> speakers = Provider.of<SpeakerTableNotifier>(context)
         .getByMember(member.id, event, filter);
-    if (speakers.isEmpty && filter != ParticipationStatus.NO_STATUS) return SizedBox.shrink();
+    if (speakers.isEmpty && filter != ParticipationStatus.NO_STATUS)
+      return SizedBox.shrink();
     return Container(
       margin: EdgeInsets.all(10),
       child: Theme(
@@ -230,7 +261,19 @@ class MemberSpeakerRow extends StatelessWidget {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: speakers
-                              .map((e) => ListViewCard(small: true, speaker: e))
+                              .map((e) => ListViewCard(
+                                    small: true,
+                                    speaker: e,
+                                    onChangeParticipationStatus:
+                                        (step, context) async {
+                                      speakerChangedCallback(
+                                        context,
+                                        fs: _speakerService
+                                            .stepParticipationStatus(
+                                                id: e.id, step: step),
+                                      );
+                                    },
+                                  ))
                               .toList(),
                         ),
                       )
@@ -244,8 +287,19 @@ class MemberSpeakerRow extends StatelessWidget {
                                 alignment: WrapAlignment.start,
                                 crossAxisAlignment: WrapCrossAlignment.start,
                                 children: speakers
-                                    .map((e) =>
-                                        ListViewCard(small: false, speaker: e))
+                                    .map((e) => ListViewCard(
+                                          small: false,
+                                          speaker: e,
+                                          onChangeParticipationStatus:
+                                              (step, context) async {
+                                            speakerChangedCallback(
+                                              context,
+                                              fs: _speakerService
+                                                  .stepParticipationStatus(
+                                                      id: e.id, step: step),
+                                            );
+                                          },
+                                        ))
                                     .toList(),
                               ),
                             ),

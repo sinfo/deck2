@@ -59,7 +59,8 @@ class _EditSessionFormState extends State<EditSessionForm> {
       var videoURL = _videoURLController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Session? s = await _sessionService.updateSession(Session(
@@ -83,8 +84,8 @@ class _EditSessionFormState extends State<EditSessionForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -93,7 +94,9 @@ class _EditSessionFormState extends State<EditSessionForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

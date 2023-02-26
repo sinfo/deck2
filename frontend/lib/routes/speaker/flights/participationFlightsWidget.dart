@@ -47,7 +47,6 @@ class ParticipationFlightsWidget extends StatelessWidget {
                     (flightInfo) => FlightCard(
                       flight: flightInfo,
                       id: id,
-                      small: small,
                       onDelete: onDelete,
                     ),
                   )

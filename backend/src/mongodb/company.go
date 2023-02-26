@@ -153,6 +153,10 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 		findOptions.SetSkip(*compOptions.NumRequests * (*compOptions.MaxCompInRequest))
 	}
 
+	if compOptions.SortingMethod != nil {
+		filter["participations.status"] = string(models.Announced)
+	}
+
 	var err error
 	var cur *mongo.Cursor
 	if compOptions.SortingMethod != nil {
@@ -165,7 +169,17 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 				{
 					{Key: "$addFields", Value: bson.D{
 						{Key: "numParticipations", Value: bson.D{
-							{Key: "$size", Value: "$participations"},
+							{Key: "$size", Value: bson.D{
+								{Key: "$filter", Value: bson.D{
+									{Key: "input", Value: "$participations"},
+									{Key: "as", Value: "participation"},
+									{Key: "cond", Value: bson.D{
+										{Key: "$eq", Value: bson.A{
+											"$$participation.status", "ANNOUNCED",
+										}},
+									}},
+								}},
+							}},
 						}},
 					}},
 				},
@@ -192,8 +206,23 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 					{Key: "$match", Value: filter},
 				},
 				{
+					{Key: "$addFields", Value: bson.D{
+						{Key: "participationsAnnounced", Value: bson.D{
+							{Key: "$filter", Value: bson.D{
+								{Key: "input", Value: "$participations"},
+								{Key: "as", Value: "participation"},
+								{Key: "cond", Value: bson.D{
+									{Key: "$eq", Value: bson.A{
+										"$$participation.status", "ANNOUNCED",
+									}},
+								}},
+							}},
+						}},
+					}},
+				},
+				{
 					{Key: "$sort", Value: bson.D{
-						{Key: "participations.event", Value: -1},
+						{Key: "participationsAnnounced.event", Value: -1},
 					}},
 				},
 				{

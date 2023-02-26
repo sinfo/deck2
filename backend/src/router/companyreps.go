@@ -22,7 +22,7 @@ func getCompanyReps(w http.ResponseWriter, r *http.Request) {
 
 	reps, err := mongodb.CompanyReps.GetCompanyReps(gcro)
 	if err != nil {
-		http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unexpected error: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -35,7 +35,7 @@ func getCompanyRep(w http.ResponseWriter, r *http.Request) {
 
 	rep, err := mongodb.CompanyReps.GetCompanyRep(repID)
 	if err != nil {
-		http.Error(w, "CompanyRep not found: "+err.Error(), http.StatusNotFound)
+		http.Error(w, "CompanyRep not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -49,13 +49,13 @@ func updateCompanyRep(w http.ResponseWriter, r *http.Request) {
 	var ccrd = mongodb.CreateCompanyRepData{}
 
 	if err := json.NewDecoder(r.Body).Decode(&ccrd); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	rep, err := mongodb.CompanyReps.UpdateCompanyRep(repID, ccrd)
 	if err != nil {
-		http.Error(w, "CompanyRep not found: "+err.Error(), http.StatusNotFound)
+		http.Error(w, "CompanyRep not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 

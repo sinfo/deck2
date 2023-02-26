@@ -23,7 +23,6 @@ class _DisplayGeneralInformation extends State<DisplayGeneralInformation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: 32),
         physics: BouncingScrollPhysics(),

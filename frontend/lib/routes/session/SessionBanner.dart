@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/blurryDialog.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/session.dart';
@@ -54,7 +55,8 @@ class _SessionBannerState extends State<SessionBanner> {
 
   void _deleteSession(context, id) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleting')),
+      const SnackBar(
+          content: Text('Deleting', style: TextStyle(color: Colors.white))),
     );
 
     Session? s = await _sessionService.deleteSession(id);
@@ -66,8 +68,8 @@ class _SessionBannerState extends State<SessionBanner> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -75,7 +77,9 @@ class _SessionBannerState extends State<SessionBanner> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
     setState(() {});
@@ -89,7 +93,7 @@ class _SessionBannerState extends State<SessionBanner> {
       isScrollControlled: true,
       builder: (context) {
         return FractionallySizedBox(
-            heightFactor: 0.7,
+            heightFactor: 0.8,
             child: Container(
               child: EditSessionForm(session: session),
             ));
@@ -98,15 +102,49 @@ class _SessionBannerState extends State<SessionBanner> {
     setState(() {});
   }
 
+  String getThreeDots(session) {
+    if (session.title.length > 30) {
+      return "...";
+    } else {
+      return "";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
+    double lum = 0.2;
+    var matrix = <double>[
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0.2126 * lum,
+      0.7152 * lum,
+      0.0722 * lum,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ]; // Greyscale matrix. Lum represents level of luminosity
     return LayoutBuilder(builder: (context, constraints) {
       bool small = constraints.maxWidth < App.SIZE;
       return Container(
         width: constraints.maxWidth,
         decoration: BoxDecoration(
           image: DecorationImage(
+            colorFilter: Provider.of<ThemeNotifier>(context).isDark
+                ? ColorFilter.matrix(matrix)
+                : null,
             image: AssetImage("assets/banner_background.png"),
             fit: BoxFit.cover,
           ),
@@ -116,16 +154,16 @@ class _SessionBannerState extends State<SessionBanner> {
           children: <Widget>[
             SizedBox(height: 30),
             Text(kind,
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold)),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-            Text(widget.session.title,
-                style: TextStyle(
-                    fontSize: 35,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold)),
+            Text(
+                widget.session.title.substring(
+                        0,
+                        widget.session.title.length < 30
+                            ? widget.session.title.length
+                            : 30) +
+                    getThreeDots(widget.session),
+                style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

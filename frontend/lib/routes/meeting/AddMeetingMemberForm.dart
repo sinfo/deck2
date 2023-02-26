@@ -50,7 +50,9 @@ class _AddMeetingMemberForm extends State<AddMeetingMemberForm> {
   void _submit(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Adding member...')),
+        const SnackBar(
+            content: Text('Adding member...',
+                style: TextStyle(color: Colors.white))),
       );
       Meeting? m = await service.addMeetingParticipant(
           id: widget.meeting!.id,
@@ -60,8 +62,8 @@ class _AddMeetingMemberForm extends State<AddMeetingMemberForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -72,7 +74,9 @@ class _AddMeetingMemberForm extends State<AddMeetingMemberForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
 
         Navigator.pop(context);

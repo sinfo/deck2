@@ -23,13 +23,17 @@ class _DetailsScreenState extends State<DetailsScreen>
     Speaker? s;
     if (isBio) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating Bio...')),
+        const SnackBar(
+            content:
+                Text('Updating Bio...', style: TextStyle(color: Colors.white))),
       );
       s = await _speakerService.updateSpeaker(
           id: widget.speaker.id, bio: updatedValue);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Updating Notes...')),
+        const SnackBar(
+            content: Text('Updating Notes...',
+                style: TextStyle(color: Colors.white))),
       );
       s = await _speakerService.updateSpeaker(
           id: widget.speaker.id, notes: updatedValue);
@@ -39,8 +43,8 @@ class _DetailsScreenState extends State<DetailsScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -48,7 +52,9 @@ class _DetailsScreenState extends State<DetailsScreen>
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }
@@ -66,7 +72,8 @@ class _DetailsScreenState extends State<DetailsScreen>
             child: EditableCard(
               title: 'Bio',
               body: widget.speaker.bio ?? "",
-              bodyEditedCallback: (newBio) => _editSpeaker(context, newBio, true),
+              bodyEditedCallback: (newBio) =>
+                  _editSpeaker(context, newBio, true),
               isSingleline: false,
               textInputType: TextInputType.multiline,
             ),
@@ -76,7 +83,8 @@ class _DetailsScreenState extends State<DetailsScreen>
             child: EditableCard(
               title: 'Notes',
               body: widget.speaker.notes ?? "",
-              bodyEditedCallback: (newNotes) => _editSpeaker(context, newNotes, false),
+              bodyEditedCallback: (newNotes) =>
+                  _editSpeaker(context, newNotes, false),
               isSingleline: false,
               textInputType: TextInputType.multiline,
             ),

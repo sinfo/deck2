@@ -51,7 +51,8 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
       var place = _placeController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Meeting? m = await _meetingService.updateMeeting(
@@ -65,8 +66,8 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -75,7 +76,9 @@ class _EditMeetingFormState extends State<EditMeetingForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

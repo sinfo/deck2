@@ -3,12 +3,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
-import 'package:frontend/routes/member/MemberNotifier.dart';
+import 'package:frontend/routes/items_packages/items/ItemNotifier.dart';
+import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
+import 'package:frontend/routes/members_teams/member/MemberNotifier.dart';
 import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/models/event.dart';
-import 'package:frontend/routes/teams/TeamsNotifier.dart';
+import 'package:frontend/routes/members_teams/teams/TeamsNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/eventService.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +42,12 @@ Future main() async {
       ),
       ChangeNotifierProvider<MeetingsNotifier>(
         create: (_) => MeetingsNotifier(meetings: []),
+      ),
+      ChangeNotifierProvider<ItemsNotifier>(
+        create: (_) => ItemsNotifier(items: []),
+      ),
+      ChangeNotifierProvider<PackageNotifier>(
+        create: (_) => PackageNotifier(packages: new Map()),
       ),
       ChangeNotifierProvider<SessionsNotifier>(
         create: (_) => SessionsNotifier(sessions: []),

@@ -27,8 +27,9 @@ class _AddBillingFormState extends State<AddBillingForm> {
   final _eventController = TextEditingController();
   final _invoiceNumberController = TextEditingController();
   final _notesController = TextEditingController();
-  final _valueEurosController = TextEditingController();
-  final _valueCentsController = TextEditingController();
+  final _costController = TextEditingController();
+
+  late NumberFormat formatter;
 
   bool invoice = false;
   bool paid = false;
@@ -98,11 +99,15 @@ class _AddBillingFormState extends State<AddBillingForm> {
       var event = int.parse(_eventController.text);
       var invoiceNumber = _invoiceNumberController.text;
       var notes = _notesController.text;
-      var value = int.parse(_valueEurosController.text) * 100 +
-          int.parse(_valueCentsController.text);
+      var parseCost = double.parse(_costController.text);
+      var euros = parseCost.toInt();
+      var cents = ((parseCost - euros) * 100).round();
+      int cost = euros * 100 + cents;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creating Billing...')),
+        const SnackBar(
+            content: Text('Creating Billing...',
+                style: TextStyle(color: Colors.white))),
       );
 
       Company? c = await _companyService.createBilling(
@@ -115,7 +120,7 @@ class _AddBillingFormState extends State<AddBillingForm> {
           paid: paid,
           proForma: proForma,
           receipt: receipt,
-          value: value,
+          value: cost,
           visible: visible);
 
       if (c != null) {
@@ -128,8 +133,8 @@ class _AddBillingFormState extends State<AddBillingForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -137,7 +142,9 @@ class _AddBillingFormState extends State<AddBillingForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
       Navigator.pop(context);
@@ -224,53 +231,25 @@ class _AddBillingFormState extends State<AddBillingForm> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueEurosController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the billing';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of billing (only euros) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              controller: _costController,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter the cost of the billing';
+                }
+                return null;
+              },
+              decoration: const InputDecoration(
+                icon: const Icon(Icons.money),
+                labelText: "Cost of billing *",
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    controller: _valueCentsController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter the cost of the billing';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.money),
-                      labelText: "Cost of billing (only cents) *",
-                    ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
-                  ),
-                ),
-              ),
-            ],
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: <TextInputFormatter>[
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+              ],
+            ),
           ),
           CheckboxListTile(
             value: this.invoice,

@@ -4,9 +4,9 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/memberPartCard.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/member/DisplayContact2.dart';
-import 'package:frontend/routes/member/EditMemberForm.dart';
-import 'package:frontend/routes/member/MemberNotifier.dart';
+import 'package:frontend/routes/members_teams/member/DisplayContact2.dart';
+import 'package:frontend/routes/members_teams/member/EditMemberForm.dart';
+import 'package:frontend/routes/members_teams/member/MemberNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/teamService.dart';
@@ -26,6 +26,7 @@ class MemberScreen extends StatefulWidget {
 class _MemberScreen extends State<MemberScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  CustomAppBar appBar = CustomAppBar(disableEventChange: true);
 
   @override
   void initState() {
@@ -66,33 +67,39 @@ class _MemberScreen extends State<MemberScreen>
     return LayoutBuilder(builder: (context, constraints) {
       bool small = constraints.maxWidth < App.SIZE;
       return Scaffold(
-        appBar: CustomAppBar(disableEventChange: true),
-        body: DefaultTabController(
-            length: 2,
-            child: Column(children: <Widget>[
-              MemberBanner(
-                  member: widget.member,
-                  onEdit: (context, _member) {
-                    memberChangedCallback(context, member: _member);
-                  }),
-              TabBar(
-                isScrollable: small,
-                controller: _tabController,
-                //FIXME: penso que as label Colors deviam ficam a preto
-                tabs: [
-                  Tab(text: 'Contacts'),
-                  Tab(text: 'Participations'),
-                ],
-              ),
-              Expanded(
-                  child: TabBarView(
-                controller: _tabController,
-                children: [
-                  DisplayContacts(member: widget.member),
-                  DisplayParticipations(member: widget.member, small: small),
-                ],
-              ))
-            ])),
+        body: Stack(children: [
+          Container(
+            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
+            child: DefaultTabController(
+                length: 2,
+                child: Column(children: <Widget>[
+                  MemberBanner(
+                      member: widget.member,
+                      onEdit: (context, _member) {
+                        memberChangedCallback(context, member: _member);
+                      }),
+                  TabBar(
+                    isScrollable: small,
+                    controller: _tabController,
+                    //FIXME: penso que as label Colors deviam ficam a preto
+                    tabs: [
+                      Tab(text: 'Contacts'),
+                      Tab(text: 'Participations'),
+                    ],
+                  ),
+                  Expanded(
+                      child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      DisplayContacts(member: widget.member),
+                      DisplayParticipations(
+                          member: widget.member, small: small),
+                    ],
+                  ))
+                ])),
+          ),
+          appBar,
+        ]),
       );
     });
   }

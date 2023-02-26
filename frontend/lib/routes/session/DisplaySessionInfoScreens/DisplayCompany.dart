@@ -49,7 +49,7 @@ class _DisplayCompanyState extends State<DisplayCompany> {
               margin: EdgeInsets.fromLTRB(0, 20, 0, 0),
               padding: EdgeInsets.fromLTRB(17, 15, 17, 15),
               decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(5),
                   boxShadow: [
                     BoxShadow(
@@ -68,8 +68,7 @@ class _DisplayCompanyState extends State<DisplayCompany> {
                               )));
                 },
                 title: Text(companyName,
-                    textAlign: TextAlign.left,
-                    style: TextStyle(fontSize: 18, color: Colors.black)),
+                    textAlign: TextAlign.left, style: TextStyle(fontSize: 18)),
                 subtitle: Text(companySite!),
                 leading: CircleAvatar(
                   radius: 26.0,

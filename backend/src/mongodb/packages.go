@@ -48,9 +48,11 @@ func (cpd *CreatePackageData) ParseBody(body io.Reader) error {
 		return errors.New("invalid vat")
 	}
 
-	for _, item := range *cpd.Items {
-		if _, err := Items.GetItem(item.Item); err != nil {
-			return errors.New("invalid item")
+	if cpd.Items != nil && len(*cpd.Items) > 0 {
+		for _, item := range *cpd.Items {
+			if _, err := Items.GetItem(item.Item); err != nil {
+				return errors.New("invalid item")
+			}
 		}
 	}
 
@@ -65,9 +67,12 @@ func (p *PackagesType) CreatePackage(data CreatePackageData) (*models.Package, e
 
 	var query = bson.M{
 		"name":  *data.Name,
-		"items": *data.Items,
 		"price": *data.Price,
 		"vat":   *data.VAT,
+	}
+
+	if data.Items != nil {
+		query["items"] = *data.Items
 	}
 
 	insertResult, err := p.Collection.InsertOne(ctx, query)
@@ -210,6 +215,31 @@ func (p *PackagesType) DeletePackage(packageID primitive.ObjectID) (*models.Pack
 	}
 
 	return &result, nil
+}
+
+// DeleteItemPackage deletes an item ID from a package
+func (p *PackagesType) DeleteItemPackage(packageID primitive.ObjectID, itemID primitive.ObjectID) (*models.Package, error) {
+	ctx := context.Background()
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"items": itemID,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": packageID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedPackage models.Package
+
+	if err := p.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedPackage); err != nil {
+		log.Println("error remove package's item:", err)
+		return nil, err
+	}
+
+	return &updatedPackage, nil
 }
 
 // GetPackagesOptions is the options to give to GetPackages.

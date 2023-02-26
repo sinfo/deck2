@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/participationCard.dart';
 import 'package:frontend/main.dart';
+import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/speaker.dart';
 
 class ParticipationList extends StatefulWidget {
   final Speaker speaker;
   final Future<void> Function(Map<String, dynamic>) onParticipationChanged;
+  final Future<void> Function(ParticipationStatus) onChangePartStatus;
   final void Function() onParticipationDeleted;
   const ParticipationList({
     Key? key,
     required this.speaker,
     required this.onParticipationChanged,
     required this.onParticipationDeleted,
+    required this.onChangePartStatus,
   }) : super(key: key);
 
   @override
@@ -45,6 +48,7 @@ class _ParticipationListState extends State<ParticipationList>
                             type: CardType.SPEAKER,
                             onEdit: widget.onParticipationChanged,
                             onDelete: widget.onParticipationDeleted,
+                            onChangeParticipationStatus: widget.onChangePartStatus,
                           ),
                         ))
                     .toList(),

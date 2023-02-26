@@ -34,7 +34,9 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
   void _submit(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Adding member...')),
+        const SnackBar(
+            content: Text('Adding member...',
+                style: TextStyle(color: Colors.white))),
       );
       Team? t = await service.addTeamMember(
           id: widget.team!.id, memberId: _memberID, role: role);
@@ -42,8 +44,8 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -53,7 +55,9 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
 
         Navigator.pop(context);

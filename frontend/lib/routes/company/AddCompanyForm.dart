@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/routes/company/CompanyScreen.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -33,7 +34,8 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
       var description = _descritpionController.text;
       var site = _websiteController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Company? c = await _companyService.createCompany(
@@ -46,12 +48,19 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
                 id: c.id, image: File(_image!.path));
       }
       if (c != null) {
-        //TODO: Redirect to company page
+        // Taking the AddCompanyForm screen from navigator
+        Navigator.pop(context);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CompanyScreen(company: c!)),
+        );
+
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Done'),
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
             action: SnackBarAction(
               label: 'Undo',
@@ -65,7 +74,9 @@ class _AddCompanyFormState extends State<AddCompanyForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }

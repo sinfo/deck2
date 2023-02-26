@@ -32,7 +32,7 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 		beforeDate, err := time.Parse(time.RFC3339, before)
 
 		if err != nil {
-			http.Error(w, "Invalid date format (before)", http.StatusBadRequest)
+			http.Error(w, "Invalid date format (before): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -43,7 +43,7 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 		afterDate, err := time.Parse(time.RFC3339, after)
 
 		if err != nil {
-			http.Error(w, "Invalid date format (after)", http.StatusBadRequest)
+			http.Error(w, "Invalid date format (after): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -54,7 +54,7 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 		duringDate, err := time.Parse(time.RFC3339, during)
 
 		if err != nil {
-			http.Error(w, "Invalid date format (during)", http.StatusBadRequest)
+			http.Error(w, "Invalid date format (during): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -64,7 +64,7 @@ func getEvents(w http.ResponseWriter, r *http.Request) {
 	events, err := mongodb.Events.GetEvents(options)
 
 	if err != nil {
-		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		http.Error(w, "Unable to make query do database: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -90,7 +90,7 @@ func getEventsPublic(w http.ResponseWriter, r *http.Request) {
 	events, err := mongodb.Events.GetPublicEvents(options)
 
 	if err != nil {
-		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		http.Error(w, "Unable to make query do database: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -100,7 +100,7 @@ func getEventsPublic(w http.ResponseWriter, r *http.Request) {
 func getLatestEvent(w http.ResponseWriter, r *http.Request){
 	event, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Could not find latest event", http.StatusNotFound)
+		http.Error(w, "Could not find latest event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -112,14 +112,14 @@ func getEvent(w http.ResponseWriter, r *http.Request) {
 	id, errConverter := strconv.Atoi(params["id"])
 
 	if errConverter != nil {
-		http.Error(w, "Could not find event", http.StatusNotFound)
+		http.Error(w, "Could not find event: " + errConverter.Error(), http.StatusNotFound)
 		return
 	}
 
 	event, err := mongodb.Events.GetEvent(id)
 
 	if err != nil {
-		http.Error(w, "Could not find event", http.StatusNotFound)
+		http.Error(w, "Could not find event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -133,14 +133,14 @@ func createEvent(w http.ResponseWriter, r *http.Request) {
 	var ced = &mongodb.CreateEventData{}
 
 	if err := ced.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newEvent, err := mongodb.Events.CreateEvent(*ced)
 
 	if err != nil {
-		http.Error(w, "Could not create event", http.StatusBadRequest)
+		http.Error(w, "Could not create event: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -154,21 +154,21 @@ func updateEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusExpectationFailed)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	var ued = &mongodb.UpdateEventData{}
 
 	if err := ued.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedEvent, err := mongodb.Events.UpdateEvent(currentEvent.ID, *ued)
 
 	if err != nil {
-		http.Error(w, "Could not update event", http.StatusExpectationFailed)
+		http.Error(w, "Could not update event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -180,14 +180,14 @@ func deleteEvent(w http.ResponseWriter, r *http.Request) {
 	id, errConverter := strconv.Atoi(params["id"])
 
 	if errConverter != nil {
-		http.Error(w, "Could not convert event ID to integer", http.StatusNotFound)
+		http.Error(w, "Could not convert event ID to integer: " + errConverter.Error(), http.StatusNotFound)
 		return
 	}
 
 	event, err := mongodb.Events.DeleteEvent(id)
 
 	if err != nil {
-		http.Error(w, "Could not delete event", http.StatusNotFound)
+		http.Error(w, "Could not delete event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -201,21 +201,21 @@ func updateEventThemes(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var uetd = &mongodb.UpdateEventThemesData{}
 
 	if err := uetd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	days, err := currentEvent.DurationInDays()
 
 	if err != nil {
-		http.Error(w, "Event without dates yet.", http.StatusBadRequest)
+		http.Error(w, "Event without dates yet: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -228,7 +228,7 @@ func updateEventThemes(w http.ResponseWriter, r *http.Request) {
 	updatedEvent, err := mongodb.Events.UpdateThemes(currentEvent.ID, *uetd)
 
 	if err != nil {
-		http.Error(w, "Could not update event's themes", http.StatusExpectationFailed)
+		http.Error(w, "Could not update event's themes: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -242,26 +242,26 @@ func addPackageToEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var aepd = &mongodb.AddEventPackageData{}
 
 	if err := aepd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if _, err := mongodb.Packages.GetPackage(*aepd.Template); err != nil {
-		http.Error(w, "Package not found", http.StatusNotFound)
+		http.Error(w, "Package not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	newEvent, err := mongodb.Events.AddPackage(currentEvent.ID, *aepd)
 
 	if err != nil {
-		http.Error(w, "Could not save package on event", http.StatusExpectationFailed)
+		http.Error(w, "Could not save package on event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -276,14 +276,14 @@ func removePackageFromEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	newEvent, err := mongodb.Events.RemovePackage(currentEvent.ID, packageID)
 
 	if err != nil {
-		http.Error(w, "Could not remove package from the current event", http.StatusExpectationFailed)
+		http.Error(w, "Could not remove package from the current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -300,21 +300,21 @@ func updatePackageFromEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var uepd = &mongodb.UpdateEventPackageData{}
 
 	if err := uepd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newEvent, err := mongodb.Events.UpdatePackage(currentEvent.ID, packageID, *uepd)
 
 	if err != nil {
-		http.Error(w, "Could not update template on the current event", http.StatusExpectationFailed)
+		http.Error(w, "Could not update template on the current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -328,26 +328,26 @@ func addItemToEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var aeid = &mongodb.AddEventItemData{}
 
 	if err := aeid.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if _, err = mongodb.Items.GetItem(*aeid.ItemID); err != nil {
-		http.Error(w, "Could not find item", http.StatusNotFound)
+		http.Error(w, "Could not find item: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedEvent, err := mongodb.Events.AddItem(currentEvent.ID, *aeid)
 
 	if err != nil {
-		http.Error(w, "Could not save item on event", http.StatusExpectationFailed)
+		http.Error(w, "Could not save item on event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -362,14 +362,14 @@ func removeItemToEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedEvent, err := mongodb.Events.RemoveItem(currentEvent.ID, itemID)
 
 	if err != nil {
-		http.Error(w, "Could not remove item from event", http.StatusExpectationFailed)
+		http.Error(w, "Could not remove item from event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -383,7 +383,7 @@ func addSessionToEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -397,18 +397,18 @@ func addSessionToEvent(w http.ResponseWriter, r *http.Request) {
 	createdSession, err := mongodb.Sessions.CreateSession(*csd)
 
 	if err != nil {
-		http.Error(w, "Could not create session", http.StatusExpectationFailed)
+		http.Error(w, "Could not create session: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	updatedEvent, err := mongodb.Events.AddSession(currentEvent.ID, createdSession.ID)
 
 	if err != nil {
-		http.Error(w, "Could not save session on event", http.StatusExpectationFailed)
+		http.Error(w, "Could not save session on event: " + err.Error(), http.StatusExpectationFailed)
 
 		// delete created session
 		if _, err = mongodb.Sessions.DeleteSession(createdSession.ID); err != nil {
-			log.Println("Error removing session")
+			log.Println("Error removing session: " + err.Error())
 		}
 
 		return
@@ -432,27 +432,27 @@ func addMeetingToEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var cmd = &mongodb.CreateMeetingData{}
 
 	if err := cmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newMeeting, err := mongodb.Meetings.CreateMeeting(*cmd)
 	if err != nil {
-		http.Error(w, "Could not create a new meeting", http.StatusExpectationFailed)
+		http.Error(w, "Could not create a new meeting: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	updatedEvent, err := mongodb.Events.AddMeeting(currentEvent.ID, newMeeting.ID)
 
 	if err != nil {
-		http.Error(w, "Could not save meeting on event", http.StatusExpectationFailed)
+		http.Error(w, "Could not save meeting on event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -467,24 +467,24 @@ func removeMeetingFromEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	if _, err = mongodb.Meetings.GetMeeting(meetingID); err != nil {
-		http.Error(w, "Could not find meeting", http.StatusNotFound)
+		http.Error(w, "Could not find meeting: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedEvent, err := mongodb.Events.RemoveMeeting(currentEvent.ID, meetingID)
 
 	if err != nil {
-		http.Error(w, "Could not remove meeting from event", http.StatusExpectationFailed)
+		http.Error(w, "Could not remove meeting from event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	if _, err = mongodb.Meetings.DeleteMeeting(meetingID); err != nil {
-		http.Error(w, "Could not delete meeting", http.StatusExpectationFailed)
+		http.Error(w, "Could not delete meeting: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -498,19 +498,19 @@ func removeTeamFromEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event", http.StatusNotFound)
+		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	if _, err = mongodb.Teams.GetTeam(teamID); err != nil {
-		http.Error(w, "Could not find team", http.StatusNotFound)
+		http.Error(w, "Could not find team: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedEvent, err := mongodb.Events.RemoveTeam(currentEvent.ID, teamID)
 
 	if err != nil {
-		http.Error(w, "Could not remove team from event", http.StatusExpectationFailed)
+		http.Error(w, "Could not remove team from event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

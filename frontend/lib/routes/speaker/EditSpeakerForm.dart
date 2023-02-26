@@ -42,7 +42,8 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
       var name = _nameController.text;
       var title = _titleController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Speaker? s = await _speakerService.updateSpeaker(
@@ -62,8 +63,8 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -73,7 +74,9 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }
@@ -156,26 +159,16 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
       String path = _image == null ? _prevImage! : _image!.path;
       inkWellChild = Center(
         child: kIsWeb
-            ? Image.network(
-                path,
-                fit: BoxFit.fill,
-                errorBuilder: (BuildContext context, Object exception,
-                  StackTrace? stackTrace) {
-                  return Image.asset(
-                    'assets/noImage.png'
-                  );
-                }
-              )
-            : Image.file(
-                File(path),
-                fit: BoxFit.fill,
-                errorBuilder: (BuildContext context, Object exception,
-                  StackTrace? stackTrace) {
-                  return Image.asset(
-                    'assets/noImage.png'
-                  );
-                }
-              ),
+            ? Image.network(path, fit: BoxFit.fill, errorBuilder:
+                (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                return Image.asset('assets/noImage.png');
+              })
+            : Image.file(File(path), fit: BoxFit.fill, errorBuilder:
+                (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                return Image.asset('assets/noImage.png');
+              }),
       );
     }
 

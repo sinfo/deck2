@@ -31,7 +31,7 @@ func getMe(w http.ResponseWriter, r *http.Request) {
 	member, err := mongodb.Members.GetMember(memberID)
 
 	if err != nil {
-		http.Error(w, "Could not find member", http.StatusNotFound)
+		http.Error(w, "Could not find member: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -50,7 +50,7 @@ func setMyImage(w http.ResponseWriter, r *http.Request) {
 	memberID := credentials.ID
 
 	if _, err := mongodb.Members.GetMember(memberID); err != nil {
-		http.Error(w, "Invalid member ID", http.StatusNotFound)
+		http.Error(w, "Invalid member ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -61,7 +61,7 @@ func setMyImage(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		http.Error(w, "Invalid payload: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -76,7 +76,7 @@ func setMyImage(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -86,7 +86,7 @@ func setMyImage(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -97,7 +97,7 @@ func setMyImage(w http.ResponseWriter, r *http.Request) {
 
 	kind, err := filetype.Match(bytes)
 	if err != nil {
-		http.Error(w, "Unable to get file type", http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -109,7 +109,7 @@ func setMyImage(w http.ResponseWriter, r *http.Request) {
 
 	updatedMember, err := mongodb.Members.UpdateImage(memberID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update member's image", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update member's image: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -139,7 +139,7 @@ func updateMe(w http.ResponseWriter, r *http.Request) {
 	updatedMember, err := mongodb.Members.UpdateMember(memberID, *umd)
 
 	if err != nil {
-		http.Error(w, "Could not update me", http.StatusNotFound)
+		http.Error(w, "Could not update me: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -158,13 +158,13 @@ func getMyNotifications(w http.ResponseWriter, r *http.Request) {
 	memberID := credentials.ID
 
 	if _, err := mongodb.Members.GetMember(memberID); err != nil {
-		http.Error(w, "Could not find member", http.StatusNotFound)
+		http.Error(w, "Could not find member: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	notifications, err := mongodb.Notifications.GetMemberNotifications(memberID)
 	if err != nil {
-		http.Error(w, "Could not find get notifications", http.StatusExpectationFailed)
+		http.Error(w, "Could not find get notifications: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -186,18 +186,18 @@ func deleteMyNotification(w http.ResponseWriter, r *http.Request) {
 	memberID := credentials.ID
 
 	if _, err := mongodb.Members.GetMember(memberID); err != nil {
-		http.Error(w, "Could not find member", http.StatusNotFound)
+		http.Error(w, "Could not find member: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	if _, err := mongodb.Notifications.GetNotification(id); err != nil {
-		http.Error(w, "Notification not found", http.StatusNotFound)
+		http.Error(w, "Notification not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	notification, err := mongodb.Notifications.DeleteNotification(id)
 	if err != nil {
-		http.Error(w, "Could not delete notification", http.StatusExpectationFailed)
+		http.Error(w, "Could not delete notification: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

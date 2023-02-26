@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/models/session.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
 import 'package:frontend/routes/session/calendar.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/sessionService.dart';
 import 'package:provider/provider.dart';
 
@@ -40,24 +43,57 @@ class _SessionListState extends State<SessionList>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return FutureBuilder(
-      future: _sessions,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          SessionsNotifier notifier = Provider.of<SessionsNotifier>(context);
+    CustomAppBar _appBar = CustomAppBar(disableEventChange: true);
+    return Scaffold(
+      body: Stack(children: [
+        Container(
+            margin: EdgeInsets.fromLTRB(0, _appBar.preferredSize.height, 0, 0),
+            child: FutureBuilder(
+              future: _sessions,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  SessionsNotifier notifier =
+                      Provider.of<SessionsNotifier>(context);
 
-          notifier.sessions = snapshot.data as List<Session>;
+                  notifier.sessions = snapshot.data as List<Session>;
 
-          var upcomingSessions = notifier.getAll().toList();
+                  var upcomingSessions = notifier.getAll().toList();
 
-          return Calendar(
-            sessions: upcomingSessions,
-            key: UniqueKey(),
-          );
-        } else {
-          return CircularProgressIndicator();
-        }
-      },
+                  return Calendar(
+                    sessions: upcomingSessions,
+                    key: UniqueKey(),
+                  );
+                } else {
+                  return CircularProgressIndicator();
+                }
+              },
+            )),
+        _appBar,
+      ]),
+      floatingActionButton: FutureBuilder(
+          future: Provider.of<AuthService>(context).role,
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              Role r = snapshot.data as Role;
+
+              if (r == Role.ADMIN || r == Role.COORDINATOR) {
+                return FloatingActionButton.extended(
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      Routes.AddSession,
+                    );
+                  },
+                  label: const Text('Create New Session'),
+                  icon: const Icon(Icons.add),
+                );
+              } else {
+                return Container();
+              }
+            } else {
+              return Container();
+            }
+          }),
     );
   }
 }

@@ -10,7 +10,8 @@ class AddBillingInfoForm extends StatefulWidget {
   final String id;
   final void Function(CompanyBillingInfo) onBillingInfoEdit;
 
-  AddBillingInfoForm({Key? key, required this.id, required this.onBillingInfoEdit})
+  AddBillingInfoForm(
+      {Key? key, required this.id, required this.onBillingInfoEdit})
       : super(key: key);
 
   @override
@@ -33,7 +34,9 @@ class _AddBillingInfoFormState extends State<AddBillingInfoForm> {
       var tin = _tinController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Creating Billing Info...')),
+        const SnackBar(
+            content: Text('Creating Billing Info...',
+                style: TextStyle(color: Colors.white))),
       );
 
       CompanyBillingInfo bi =
@@ -52,8 +55,8 @@ class _AddBillingInfoFormState extends State<AddBillingInfoForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -61,7 +64,9 @@ class _AddBillingInfoFormState extends State<AddBillingInfoForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
       Navigator.pop(context);
