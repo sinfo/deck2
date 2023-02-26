@@ -2,7 +2,7 @@ module github.com/minio/minio-go
 
 require (
 	github.com/mitchellh/go-homedir v1.1.0
-	golang.org/x/crypto v0.0.0-20190128193316-c7b33c32a30b
+	golang.org/x/crypto v0.1.0
 	golang.org/x/net v0.7.0
 	gopkg.in/ini.v1 v1.41.0
 )
