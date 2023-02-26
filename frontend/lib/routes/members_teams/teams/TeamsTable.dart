@@ -46,67 +46,34 @@ class _TeamTableState extends State<TeamTable>
   Widget build(BuildContext context) {
     super.build(context);
     return Consumer<TeamsNotifier>(builder: (context, notif, child) {
-      return Scaffold(
-        body: FutureBuilder(
-          future: Future.wait([
-            _teamService.getTeams(
-                event: Provider.of<EventNotifier>(context).event.id),
-            Provider.of<AuthService>(context, listen: false).role
-          ]),
-          builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                return showError();
-              } else if (snapshot.hasData) {
-                TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
+      return FutureBuilder(
+        future: Future.wait([
+          _teamService.getTeams(
+              event: Provider.of<EventNotifier>(context).event.id),
+          Provider.of<AuthService>(context, listen: false).role
+        ]),
+        builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              return showError();
+            } else if (snapshot.hasData) {
+              TeamsNotifier notifier = Provider.of<TeamsNotifier>(context);
 
-                teams = snapshot.data![0] as List<Team>;
-                role = snapshot.data![1] as Role;
+              teams = snapshot.data![0] as List<Team>;
+              role = snapshot.data![1] as Role;
 
-                notifier.teams = teams;
+              notifier.teams = teams;
 
-                teams.sort((a, b) => a.name!.compareTo(b.name!));
+              teams.sort((a, b) => a.name!.compareTo(b.name!));
 
-                return Scaffold(
-                    body: showTeams(),
-                    floatingActionButtonLocation:
-                        FloatingActionButtonLocation.startFloat,
-                    floatingActionButton:
-                        (role == Role.ADMIN || role == Role.COORDINATOR)
-                            ? FloatingActionButton.extended(
-                                onPressed: () {
-                                  showDialog(
-                                      context: context,
-                                      builder: (context) =>
-                                          showCreateTeamDialog(context));
-                                },
-                                label: const Text('Create New Team'),
-                                icon: const Icon(Icons.person_add),
-                                backgroundColor:
-                                    Provider.of<ThemeNotifier>(context).isDark
-                                        ? Colors.grey[500]
-                                        : Colors.indigo)
-                            : null);
-              } else {
-                return Center(child: CircularProgressIndicator());
-              }
+              return showTeams();
             } else {
               return Center(child: CircularProgressIndicator());
             }
-          },
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-        floatingActionButton: FloatingActionButton.extended(
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (context) => showCreateTeamDialog(context));
-            },
-            label: const Text('Create New Team'),
-            icon: const Icon(Icons.person_add),
-            backgroundColor: Provider.of<ThemeNotifier>(context).isDark
-                ? Colors.grey[500]
-                : Colors.indigo),
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
       );
     });
   }
