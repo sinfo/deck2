@@ -52,7 +52,7 @@ jobs:
       with:
         context: ./frontend
         push: true
-        tags: orgsinfo/deck2-frontend:latest
+        tags: orgsinfo/deck2-frontend:${{ steps.vars.outputs.tag }}
         file: ./frontend/Dockerfile
     
     - name: Deck2 Frontend Image Digest
