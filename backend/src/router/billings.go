@@ -38,7 +38,7 @@ func getBillings(w http.ResponseWriter, r *http.Request) {
 		afterDate, err := time.Parse(time.RFC3339, after)
 
 		if err != nil {
-			http.Error(w, "Invalid date format (after)", http.StatusBadRequest)
+			http.Error(w, "Invalid date format (after): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -49,7 +49,7 @@ func getBillings(w http.ResponseWriter, r *http.Request) {
 		beforeDate, err := time.Parse(time.RFC3339, before)
 
 		if err != nil {
-			http.Error(w, "Invalid date format (before)", http.StatusBadRequest)
+			http.Error(w, "Invalid date format (before): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -60,7 +60,7 @@ func getBillings(w http.ResponseWriter, r *http.Request) {
 		vgt, err := strconv.Atoi(valueGreaterThan)
 
 		if err != nil {
-			http.Error(w, "Invalid value (greater)", http.StatusBadRequest)
+			http.Error(w, "Invalid value (greater): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -71,7 +71,7 @@ func getBillings(w http.ResponseWriter, r *http.Request) {
 		vlt, err := strconv.Atoi(valueLessThan)
 
 		if err != nil {
-			http.Error(w, "Invalid value (less)", http.StatusBadRequest)
+			http.Error(w, "Invalid value (less): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -82,7 +82,7 @@ func getBillings(w http.ResponseWriter, r *http.Request) {
 		eventInt, err := strconv.Atoi(event)
 
 		if err != nil {
-			http.Error(w, "Invalid value (event)", http.StatusBadRequest)
+			http.Error(w, "Invalid value (event): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -93,7 +93,7 @@ func getBillings(w http.ResponseWriter, r *http.Request) {
 
 		companyID, err := primitive.ObjectIDFromHex(company)
 		if err != nil {
-			http.Error(w, "Invalid value (company)", http.StatusBadRequest)
+			http.Error(w, "Invalid value (company): " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -102,7 +102,7 @@ func getBillings(w http.ResponseWriter, r *http.Request) {
 
 	billings, err := mongodb.Billings.GetBillings(options)
 	if err != nil {
-		http.Error(w, "unexpected error found", http.StatusExpectationFailed)
+		http.Error(w, "unexpected error found: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -116,30 +116,11 @@ func getBilling(w http.ResponseWriter, r *http.Request) {
 
 	billing, err := mongodb.Billings.GetBilling(billingID)
 	if err != nil {
-		http.Error(w, "Billing not found", http.StatusNotFound)
+		http.Error(w, "Billing not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(billing)
-}
-
-func createBilling(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-
-	var cbd = &mongodb.CreateBillingData{}
-
-	if err := cbd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	newBilling, err := mongodb.Billings.CreateBilling(*cbd)
-	if err != nil {
-		http.Error(w, "Error finding created billing: "+err.Error(), http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(newBilling)
 }
 
 func updateBilling(w http.ResponseWriter, r *http.Request) {
@@ -151,29 +132,15 @@ func updateBilling(w http.ResponseWriter, r *http.Request) {
 	var cbd = &mongodb.CreateBillingData{}
 
 	if err := cbd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newBilling, err := mongodb.Billings.UpdateBilling(billingID, *cbd)
 	if err != nil {
-		http.Error(w, "Billing not found: "+err.Error(), http.StatusNotFound)
+		http.Error(w, "Billing not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(newBilling)
-}
-
-func deleteBilling(w http.ResponseWriter, r *http.Request) {
-
-	params := mux.Vars(r)
-	billingID, _ := primitive.ObjectIDFromHex(params["id"])
-
-	billing, err := mongodb.Billings.DeleteBilling(billingID)
-	if err != nil {
-		http.Error(w, "Billing not found"+err.Error(), http.StatusNotFound)
-		return
-	}
-
-	json.NewEncoder(w).Encode(billing)
 }

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/models/member.dart';
@@ -59,7 +58,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                         content: Text(
-                            'Could not login. Please try again or contact admins.')),
+                            'Could not login. Please try again or contact admins.',
+                            style: TextStyle(color: Colors.white))),
                   );
                 }
               },

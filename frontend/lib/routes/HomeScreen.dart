@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/drawer.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/routes/company/CompanyTable.dart';
-import 'package:frontend/routes/meeting/MeetingPage.dart';
-import 'package:frontend/routes/speaker/SpeakerTable.dart';
-import 'package:frontend/routes/teams/TeamsTable.dart';
-import 'package:frontend/services/authService.dart';
+import 'package:frontend/routes/company/CompanyPage.dart';
+import 'package:frontend/routes/speaker/SpeakerPage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/routes/session/SessionPage.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key? key}) : super(key: key);
@@ -61,7 +58,10 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 image: DecorationImage(
                   colorFilter: ColorFilter.mode(
-                      Colors.grey.withOpacity(0.1), BlendMode.srcATop),
+                      Provider.of<ThemeNotifier>(context).isDark
+                          ? Colors.grey.withOpacity(0.05)
+                          : Colors.grey.withOpacity(0.1),
+                      BlendMode.srcATop),
                   fit: BoxFit.contain,
                   image: AssetImage('assets/logo_deck.png'),
                 ),
@@ -80,22 +80,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 children: <Widget>[
                   Center(
-                    child: const SpeakerTable(),
+                    child: const SpeakerPage(),
                   ),
                   Center(
-                    child: LandingPage(),
+                    child: const LandingPage(),
                   ),
                   Center(
-                    child: CompanyTable(),
-                  ),
-                  Center(
-                    child: TeamTable(),
-                  ),
-                  Center(
-                    child: MeetingPage(),
-                  ),
-                  Center(
-                    child: SessionPage(),
+                    child: const CompanyPage(),
                   )
                 ],
               ),
@@ -124,11 +115,11 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pushNamed(
                 context,
-                Routes.ShowAllSpeakers,
+                Routes.AddSpeaker,
               );
             },
-            label: const Text('Show All Speakers'),
-            icon: const Icon(Icons.add),
+            label: const Text('Create New Speaker'),
+            icon: const Icon(Icons.person_add),
           );
         }
       case 1:
@@ -141,92 +132,36 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               Navigator.pushNamed(
                 context,
-                Routes.ShowAllCompanies,
+                Routes.AddCompany,
               );
             },
-            label: const Text('Show All Companies'),
-            icon: const Icon(Icons.add),
+            label: const Text('Create New Company'),
+            icon: const Icon(Icons.business),
           );
         }
-
-      case 3:
+      default:
         {
-          return FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                Routes.ShowAllMembers,
-              );
-            },
-            label: const Text('Show All Members'),
-            icon: const Icon(Icons.add),
-          );
-        }
-
-      case 4:
-        {
-          return FutureBuilder(
-              future: Provider.of<AuthService>(context).role,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  Role r = snapshot.data as Role;
-
-                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
-                    return FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          Routes.AddMeeting,
-                        );
-                      },
-                      label: const Text('Create New Meeting'),
-                      icon: const Icon(Icons.add),
-                    );
-                  } else {
-                    return Container();
-                  }
-                } else {
-                  return Container();
-                }
-              });
-        }
-
-      case 5:
-        {
-          return FutureBuilder(
-              future: Provider.of<AuthService>(context).role,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  Role r = snapshot.data as Role;
-
-                  if (r == Role.ADMIN || r == Role.COORDINATOR) {
-                    return FloatingActionButton.extended(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          Routes.AddSession,
-                        );
-                      },
-                      label: const Text('Create New Session'),
-                      icon: const Icon(Icons.add),
-                    );
-                  } else {
-                    return Container();
-                  }
-                } else {
-                  return Container();
-                }
-              });
+          return null;
         }
     }
   }
 }
 
-class LandingPage extends StatelessWidget {
+class LandingPage extends StatefulWidget {
   const LandingPage({Key? key}) : super(key: key);
 
   @override
+  _LandingPageState createState() => _LandingPageState();
+}
+
+class _LandingPageState extends State<LandingPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Container(
       child: Text("Welcome to deck2! In Progress..."),
     );
@@ -258,21 +193,6 @@ class CustomNavBar extends StatelessWidget {
             label: 'Companies',
             icon: Icon(
               Icons.work,
-            )),
-        BottomNavigationBarItem(
-            label: 'Teams',
-            icon: Icon(
-              Icons.people,
-            )),
-        BottomNavigationBarItem(
-            label: 'Meetings',
-            icon: Icon(
-              Icons.meeting_room,
-            )),
-        BottomNavigationBarItem(
-            label: 'Sessions',
-            icon: Icon(
-              Icons.co_present,
             )),
       ],
       onTap: onTapped,

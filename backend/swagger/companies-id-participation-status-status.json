@@ -3,7 +3,7 @@
         "tags": [
             "companies"
         ],
-        "summary": "Updated a company's participation status on the current event (admin credentials)",
+        "summary": "Updated a company's participation status on the current event",
         "operationId": "updateCompanyParticipationStatus",
         "consumes": [
             "application/json"

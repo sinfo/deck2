@@ -46,7 +46,8 @@ class MeetingCard extends StatelessWidget {
 
   void _deleteMeeting(context, id) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Deleting')),
+      const SnackBar(
+          content: Text('Deleting', style: TextStyle(color: Colors.white))),
     );
 
     Meeting? m = await _meetingService.deleteMeeting(id);
@@ -58,8 +59,8 @@ class MeetingCard extends StatelessWidget {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -67,7 +68,9 @@ class MeetingCard extends StatelessWidget {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }
@@ -77,7 +80,9 @@ class MeetingCard extends StatelessWidget {
       Uri uri = Uri.parse(meeting.minute!);
       if (!await launchUrl(uri)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error downloading minutes')),
+          const SnackBar(
+              content: Text('Error downloading minutes',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     } else {
@@ -87,7 +92,9 @@ class MeetingCard extends StatelessWidget {
       );
       if (result != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Uploading')),
+          const SnackBar(
+              content:
+                  Text('Uploading', style: TextStyle(color: Colors.white))),
         );
 
         PlatformFile minute = result.files.first;
@@ -103,8 +110,8 @@ class MeetingCard extends StatelessWidget {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Done'),
+            const SnackBar(
+              content: Text('Done', style: TextStyle(color: Colors.white)),
               duration: Duration(seconds: 2),
             ),
           );
@@ -112,7 +119,9 @@ class MeetingCard extends StatelessWidget {
           ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('An error occured.')),
+            const SnackBar(
+                content: Text('An error occured.',
+                    style: TextStyle(color: Colors.white))),
           );
         }
       }
@@ -142,8 +151,8 @@ class MeetingCard extends StatelessWidget {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Done'),
+        const SnackBar(
+          content: Text('Done', style: TextStyle(color: Colors.white)),
           duration: Duration(seconds: 2),
         ),
       );
@@ -151,7 +160,9 @@ class MeetingCard extends StatelessWidget {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An error occured.')),
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
       );
     }
   }
@@ -325,9 +336,10 @@ class MeetingCard extends StatelessWidget {
                                         _uploadMeetingMinute(context),
                                     icon: Icon(Icons.article),
                                     style: ElevatedButton.styleFrom(
-                                        primary: meeting.minute!.isNotEmpty
-                                            ? const Color(0xFF5C7FF2)
-                                            : Colors.green),
+                                        backgroundColor:
+                                            meeting.minute!.isNotEmpty
+                                                ? const Color(0xFF5C7FF2)
+                                                : Colors.green),
                                     label: meeting.minute!.isNotEmpty
                                         ? const Text("Minutes")
                                         : const Text("Add Minutes")),
@@ -340,7 +352,8 @@ class MeetingCard extends StatelessWidget {
                                             _deleteMeetingMinuteDialog(context),
                                         icon: Icon(Icons.article),
                                         style: ElevatedButton.styleFrom(
-                                            primary: const Color(0xFFF25C5C)),
+                                            backgroundColor:
+                                                const Color(0xFFF25C5C)),
                                         label: const Text("Delete Minutes")))
                             ])),
                   ),

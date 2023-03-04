@@ -49,6 +49,10 @@ test:
 run: build-src build-swagger
 	@$(BINDIR)/$(BINARY_FILENAME)
 
+run-doc: build-swagger
+	@echo "[*] serving swagger"
+	@swagger serve --flavor=swagger ./static/swagger.json
+
 ## docker-test               : Run docker tests.
 .PHONY: docker-test
 docker-test:

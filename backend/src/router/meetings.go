@@ -27,7 +27,7 @@ func getMeeting(w http.ResponseWriter, r *http.Request) {
 
 	meeting, err := mongodb.Meetings.GetMeeting(id)
 	if err != nil {
-		http.Error(w, "Could not find meeting", http.StatusNotFound)
+		http.Error(w, "Could not find meeting: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -41,7 +41,7 @@ func deleteMeeting(w http.ResponseWriter, r *http.Request) {
 
 	meeting, err := mongodb.Meetings.DeleteMeeting(id)
 	if err != nil {
-		http.Error(w, "Could not find meeting", http.StatusNotFound)
+		http.Error(w, "Could not find meeting: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -63,13 +63,13 @@ func createMeeting(w http.ResponseWriter, r *http.Request) {
 	var cmd = mongodb.CreateMeetingData{}
 
 	if err := cmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	meeting, err := mongodb.Meetings.CreateMeeting(cmd)
 	if err != nil {
-		http.Error(w, "Could not create team", http.StatusExpectationFailed)
+		http.Error(w, "Could not create team: " + err.Error(), http.StatusExpectationFailed)
 	}
 
 	json.NewEncoder(w).Encode(meeting)
@@ -91,14 +91,14 @@ func addMeetingThread(w http.ResponseWriter, r *http.Request) {
 	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
-		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		http.Error(w, "Invalid meeting ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var atd = &addThreadData{}
 
 	if err := atd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -118,7 +118,7 @@ func addMeetingThread(w http.ResponseWriter, r *http.Request) {
 	newPost, err := mongodb.Posts.CreatePost(cpd)
 
 	if err != nil {
-		http.Error(w, "Could not create post", http.StatusExpectationFailed)
+		http.Error(w, "Could not create post: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -137,7 +137,7 @@ func addMeetingThread(w http.ResponseWriter, r *http.Request) {
 	newThread, err := mongodb.Threads.CreateThread(ctd)
 
 	if err != nil {
-		http.Error(w, "Could not create thread", http.StatusExpectationFailed)
+		http.Error(w, "Could not create thread: " + err.Error(), http.StatusExpectationFailed)
 
 		// clean up the created post
 		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -151,7 +151,7 @@ func addMeetingThread(w http.ResponseWriter, r *http.Request) {
 	updatedMeeting, err := mongodb.Meetings.AddThread(meetingID, newThread.ID)
 
 	if err != nil {
-		http.Error(w, "Could not add thread to meeting", http.StatusExpectationFailed)
+		http.Error(w, "Could not add thread to meeting: " + err.Error(), http.StatusExpectationFailed)
 
 		// clean up the created post and thread
 		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -177,6 +177,35 @@ func addMeetingThread(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteMeetingThread(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
+
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	// Delete thread and posts (comments) associated to it
+	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
+		http.Error(w, "Thread not found: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	meeting, err := mongodb.Meetings.DeleteMeetingThread(id, threadID)
+	if err != nil {
+		http.Error(w, "Meeting or thread not found: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(meeting)
+}
+
 func getMeetings(w http.ResponseWriter, r *http.Request) {
 
 	urlQuery := r.URL.Query()
@@ -193,7 +222,7 @@ func getMeetings(w http.ResponseWriter, r *http.Request) {
 	if len(team) > 0 {
 		teamID, err = primitive.ObjectIDFromHex(team)
 		if err != nil {
-			http.Error(w, "Error parsing query", http.StatusBadRequest)
+			http.Error(w, "Error parsing query: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.Team = &teamID
@@ -202,7 +231,7 @@ func getMeetings(w http.ResponseWriter, r *http.Request) {
 	if len(company) > 0 {
 		companyID, err = primitive.ObjectIDFromHex(company)
 		if err != nil {
-			http.Error(w, "Error parsing query", http.StatusBadRequest)
+			http.Error(w, "Error parsing query: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.Company = &companyID
@@ -211,7 +240,7 @@ func getMeetings(w http.ResponseWriter, r *http.Request) {
 	if len(event) > 0 {
 		eventID, err = strconv.Atoi(event)
 		if err != nil {
-			http.Error(w, "Error parsing query", http.StatusBadRequest)
+			http.Error(w, "Error parsing query: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.Event = &eventID
@@ -219,7 +248,7 @@ func getMeetings(w http.ResponseWriter, r *http.Request) {
 
 	meetings, err := mongodb.Meetings.GetMeetings(options)
 	if err != nil {
-		http.Error(w, "Event, company or team not found", http.StatusNotFound)
+		http.Error(w, "Event, company or team not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -227,8 +256,6 @@ func getMeetings(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateMeeting(w http.ResponseWriter, r *http.Request) {
-
-	//TODO: Update Participants as well
 
 	defer r.Body.Close()
 
@@ -238,18 +265,18 @@ func updateMeeting(w http.ResponseWriter, r *http.Request) {
 	var umd = mongodb.UpdateMeetingData{}
 
 	if _, err := mongodb.Meetings.GetMeeting(id); err != nil {
-		http.Error(w, "Could not find meeting", http.StatusNotFound)
+		http.Error(w, "Could not find meeting: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	if err := umd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	meeting, err := mongodb.Meetings.UpdateMeeting(umd, id)
 	if err != nil {
-		http.Error(w, "Could not update meeting", http.StatusExpectationFailed)
+		http.Error(w, "Could not update meeting: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -261,7 +288,7 @@ func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
 	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
-		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		http.Error(w, "Invalid meeting ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -272,7 +299,7 @@ func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("minute")
 	if err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		http.Error(w, "Invalid payload: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -287,7 +314,7 @@ func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -297,7 +324,7 @@ func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -309,7 +336,7 @@ func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
 	kind, err := filetype.Match(bytes)
 	log.Println(kind)
 	if err != nil {
-		http.Error(w, "Unable to get file type", http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -321,7 +348,7 @@ func uploadMeetingMinute(w http.ResponseWriter, r *http.Request) {
 
 	updatedMeeting, err := mongodb.Meetings.UploadMeetingMinute(meetingID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update speaker internal image", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update speaker internal image: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -341,13 +368,13 @@ func deleteMeetingMinute(w http.ResponseWriter, r *http.Request) {
 	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
-		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		http.Error(w, "Invalid meeting ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -359,7 +386,7 @@ func deleteMeetingMinute(w http.ResponseWriter, r *http.Request) {
 
 	updatedMeeting, err := mongodb.Meetings.DeleteMeetingMinute(meetingID)
 	if err != nil {
-		http.Error(w, "Couldn't delete meeting minutes", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't delete meeting minutes: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -382,20 +409,21 @@ func addMeetingParticipant(w http.ResponseWriter, r *http.Request) {
 	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
-		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		http.Error(w, "Invalid meeting ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var cmd = mongodb.MeetingParticipantData{}
 
 	if err := cmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	meeting, err := mongodb.Meetings.AddMeetingParticipant(meetingID, cmd)
 	if err != nil {
-		http.Error(w, "Could not add participant to meeting", http.StatusExpectationFailed)
+		http.Error(w, "Could not add participant to meeting: " + err.Error(), http.StatusExpectationFailed)
+		return
 	}
 
 	json.NewEncoder(w).Encode(meeting)
@@ -416,20 +444,20 @@ func deleteMeetingParticipant(w http.ResponseWriter, r *http.Request) {
 	meetingID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Meetings.GetMeeting(meetingID); err != nil {
-		http.Error(w, "Invalid meeting ID", http.StatusNotFound)
+		http.Error(w, "Invalid meeting ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var cmd = mongodb.MeetingParticipantData{}
 
 	if err := cmd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	meeting, err := mongodb.Meetings.DeleteMeetingParticipant(meetingID, cmd)
 	if err != nil {
-		http.Error(w, "Could not add participant to meeting", http.StatusExpectationFailed)
+		http.Error(w, "Could not add participant to meeting: " + err.Error(), http.StatusExpectationFailed)
 	}
 
 	json.NewEncoder(w).Encode(meeting)

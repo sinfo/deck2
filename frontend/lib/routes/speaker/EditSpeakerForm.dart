@@ -4,7 +4,6 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
-import 'package:frontend/components/appbar.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,7 +34,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
     super.initState();
     _nameController = TextEditingController(text: widget.speaker.name);
     _titleController = TextEditingController(text: widget.speaker.title);
-    _prevImage = widget.speaker.imgs!.speaker;
+    _prevImage = widget.speaker.imgs!.internal;
   }
 
   void _submit() async {
@@ -43,7 +42,8 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
       var name = _nameController.text;
       var title = _titleController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Speaker? s = await _speakerService.updateSpeaker(
@@ -63,8 +63,8 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -74,7 +74,9 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }
@@ -157,14 +159,16 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
       String path = _image == null ? _prevImage! : _image!.path;
       inkWellChild = Center(
         child: kIsWeb
-            ? Image.network(
-                path,
-                fit: BoxFit.fill,
-              )
-            : Image.file(
-                File(path),
-                fit: BoxFit.fill,
-              ),
+            ? Image.network(path, fit: BoxFit.fill, errorBuilder:
+                (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                return Image.asset('assets/noImage.png');
+              })
+            : Image.file(File(path), fit: BoxFit.fill, errorBuilder:
+                (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                return Image.asset('assets/noImage.png');
+              }),
       );
     }
 
@@ -242,7 +246,7 @@ class _EditSpeakerFormState extends State<EditSpeakerForm> {
 
   @override
   Widget build(BuildContext context) {
-    bool warning = _image != null && _size != null && _size! > 102400;
+    bool warning = _image != null && _size != null && _size! > 10485760;
     return SingleChildScrollView(
       child: LayoutBuilder(
         builder: (context, constraints) {

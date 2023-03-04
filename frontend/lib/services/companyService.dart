@@ -4,12 +4,13 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/status.dart';
 import 'package:frontend/models/meeting.dart';
+import 'package:frontend/models/package.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/models/contact.dart';
-import 'package:frontend/models/item.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/services/service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -121,12 +122,15 @@ class CompanyService extends Service {
       String? description,
       String? name,
       String? site}) async {
-    var body = {
-      'billingInfo': billingInfo?.toJson(),
+    final Map<String, dynamic> body = {
       'description': description,
       'name': name,
       'site': site
     };
+
+    if (billingInfo != null) {
+      body['billingInfo'] = billingInfo.toJson();
+    }
 
     Response<String> response = await dio.put('/companies/' + id, data: body);
     try {
@@ -278,7 +282,7 @@ class CompanyService extends Service {
       String? notes,
       bool? partner}) async {
     var body = {
-      'confirmed': confirmed,
+      'confirmed': confirmed == null ? null : confirmed.toIso8601String(),
       'member': member,
       'notes': notes,
       'partner': partner
@@ -299,12 +303,12 @@ class CompanyService extends Service {
 
   Future<Company?> addPackage(
       {required String id,
-      required List<Item>? items,
+      required List<PackageItem>? items,
       required String name,
       required int price,
       required int vat}) async {
     var body = {
-      'items': items?.map((i) => i.toJson()),
+      'items': items?.map((i) => i.toJson()).toList(),
       'name': name,
       'price': price,
       'vat': vat
@@ -344,8 +348,11 @@ class CompanyService extends Service {
 
   Future<Company?> updateParticipationStatus(
       {required String id, required ParticipationStatus newStatus}) async {
-    Response<String> response = await dio.put(
-        "/companies/" + id + "/participation/status/" + newStatus.toString());
+    print(newStatus.toString());
+    Response<String> response = await dio.put("/companies/" +
+        id +
+        "/participation/status/" +
+        STATUSBACKENDSTR[newStatus]!);
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -360,7 +367,7 @@ class CompanyService extends Service {
   Future<Company?> stepParticipationStatus(
       {required String id, required int step}) async {
     Response<String> response = await dio
-        .put("/companies/" + id + "/participation/status/" + step.toString());
+        .post("/companies/" + id + "/participation/status/" + step.toString());
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {
@@ -414,6 +421,78 @@ class CompanyService extends Service {
 
     Response<String> response =
         await dio.post("/companies/" + id + "/thread", data: body);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> deleteThread(
+      {required String id, required String threadID}) async {
+    Response<String> response = await dio
+        .delete("/companies/" + id + "/participation/thread/" + threadID);
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> createBilling(
+      {required String id,
+      required DateTime emission,
+      required int event,
+      required String invoiceNumber,
+      String? notes,
+      required bool invoice,
+      required bool paid,
+      required bool proForma,
+      required bool receipt,
+      required int value,
+      bool? visible}) async {
+    var body = {
+      "emission": emission.toIso8601String(),
+      "event": event,
+      "invoiceNumber": invoiceNumber,
+      "notes": notes,
+      "status": {
+        "invoice": invoice,
+        "paid": paid,
+        "proForma": proForma,
+        "receipt": receipt
+      },
+      "value": value,
+      "company": id,
+      "visible": visible
+    };
+
+    Response<String> response = await dio
+        .post("/companies/" + id + "/participation/billing", data: body);
+
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Company?> deleteBilling(String id, String billingID) async {
+    Response<String> response = await dio
+        .delete("/companies/" + id + "/participation/billing/" + billingID);
+
     try {
       return Company.fromJson(json.decode(response.data!));
     } on SocketException {

@@ -32,6 +32,9 @@ const (
 	NotificationKindUpdatedParticipationPackage NotificationKind = "UPDATED_PARTICIPATION_PACKAGE"
 	NotificationKindDeletedParticipationPackage NotificationKind = "DELETED_PARTICIPATION_PACKAGE"
 
+	NotificationKindCreatedParticipationBilling NotificationKind = "CREATED_PARTICIPATION_BILLING"
+	NotificationKindDeletedParticipationBilling NotificationKind = "DELETED_PARTICIPATION_BILLING"
+
 	NotificationKindUpdatedParticipationStatus NotificationKind = "UPDATED_PARTICIPATION_STATUS"
 
 	NotificationKindTagged NotificationKind = "TAGGED"

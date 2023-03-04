@@ -34,7 +34,7 @@ var (
 	// Max size of the images to be uploaded by deck2 (Companies public and private images,
 	// speakers public and private images, etc)
 	// 10 MB
-	ImageMaxSize  int64 = 20 << 10
+	ImageMaxSize  int64 = 10 << 20
 	MinuteMaxSize int64 = 500 << 10
 
 	// Where to send the authentication token after successeful authentication

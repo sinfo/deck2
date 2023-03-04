@@ -6,8 +6,8 @@ class SessionsNotifier extends ChangeNotifier {
 
   SessionsNotifier({required this.sessions});
 
-  List<Session> getUpcoming() {
-    return sessions.where((s) => DateTime.now().isBefore(s.begin)).toList();
+  List<Session> getAll() {
+    return sessions.toList();
   }
 
   List<Session> getPast() {

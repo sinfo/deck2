@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
+import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/services/companyService.dart';
+import 'package:provider/provider.dart';
 
 final Map<SortingMethod, String> SORT_STRING = {
+  SortingMethod.RANDOM: 'Sort Randomly',
   SortingMethod.NUM_PARTICIPATIONS: 'Sort By Number Of Participations',
   SortingMethod.LAST_PARTICIPATION: 'Sort By Last Participation',
 };
@@ -33,7 +35,9 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
     super.initState();
     _controller.addListener(_scrollListener);
     this.companies = companyService.getCompanies(
-        maxCompInRequest: MAX_COMP, numRequestsBackend: numRequests);
+        maxCompInRequest: MAX_COMP,
+        numRequestsBackend: numRequests,
+        sortMethod: _sortMethod);
     numRequests++;
   }
 
@@ -65,7 +69,37 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
     this.companiesLoaded.addAll(await this.companies);
   }
 
-  Widget companyGrid() {
+  Future<void> companyChangedCallback(BuildContext context,
+      {Future<Company?>? fs, Company? company}) async {
+    Company? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (company != null) {
+      s = company;
+    }
+
+    if (s != null) {
+      Provider.of<CompanyTableNotifier>(context, listen: false).edit(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Done.', style: TextStyle(color: Colors.white))),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return FutureBuilder<List<Company>>(
         future: companies,
         builder: (context, snapshot) {
@@ -78,81 +112,68 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                 cardWidth = 125;
                 isSmall = true;
               }
-              return GridView.builder(
-                  controller: _controller,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount:
-                        MediaQuery.of(context).size.width ~/ cardWidth,
-                    crossAxisSpacing: 5,
-                    mainAxisSpacing: 5,
-                    childAspectRatio: 0.75,
+              return Column(
+                children: [
+                  DropdownButton<SortingMethod>(
+                    value: _sortMethod,
+                    icon: const Icon(Icons.sort),
+                    elevation: 16,
+                    underline: Container(
+                        height: 2, color: Theme.of(context).cardColor),
+                    onChanged: (SortingMethod? sort) {
+                      setState(() {
+                        _sortMethod = sort!;
+                        this.companiesLoaded.clear();
+                        numRequests = 0;
+                        this.companies = companyService.getCompanies(
+                            maxCompInRequest: MAX_COMP,
+                            sortMethod: sort,
+                            numRequestsBackend: numRequests);
+                        numRequests++;
+                      });
+                    },
+                    items: SORT_STRING.keys
+                        .map<DropdownMenuItem<SortingMethod>>(
+                            (SortingMethod value) {
+                      return DropdownMenuItem<SortingMethod>(
+                        value: value,
+                        child: Center(child: Text(SORT_STRING[value]!)),
+                      );
+                    }).toList(),
                   ),
-                  itemCount: comp.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return ListViewCard(
-                        small: isSmall,
-                        company: comp[index],
-                        participationsInfo: true);
-                  });
+                  Expanded(
+                      child: GridView.builder(
+                          controller: _controller,
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount:
+                                MediaQuery.of(context).size.width ~/ cardWidth,
+                            crossAxisSpacing: 5,
+                            mainAxisSpacing: 5,
+                            childAspectRatio: 0.75,
+                          ),
+                          itemCount: comp.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return ListViewCard(
+                              small: isSmall,
+                              company: comp[index],
+                              participationsInfo: true,
+                              onChangeParticipationStatus:
+                                  (step, context) async {
+                                companyChangedCallback(
+                                  context,
+                                  fs: companyService.stepParticipationStatus(
+                                      id: comp[index].id, step: step),
+                                );
+                              },
+                            );
+                          })),
+                ],
+              );
             });
           } else {
             return Center(child: CircularProgressIndicator());
           }
         });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> popupMenuBtn = popUpMenuButton();
-    CustomAppBar appBar =
-        CustomAppBar(actions: popupMenuBtn, disableEventChange: true);
-    return Scaffold(
-      body: Stack(children: [
-        Container(
-            margin: EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
-            child: companyGrid()),
-        appBar,
-      ]),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(
-            context,
-            Routes.AddCompany,
-          );
-        },
-        label: const Text('Create New Company'),
-        icon: const Icon(Icons.business),
-        backgroundColor: Color(0xff5C7FF2),
-      ),
-    );
-  }
-
-  List<Widget> popUpMenuButton() {
-    return [
-      PopupMenuButton<SortingMethod>(
-        icon: const Icon(Icons.sort),
-        tooltip: 'Sort Companies',
-        onSelected: (SortingMethod sort) {
-          setState(() {
-            _sortMethod = sort;
-            this.companiesLoaded.clear();
-            numRequests = 0;
-            this.companies = companyService.getCompanies(
-                maxCompInRequest: MAX_COMP,
-                sortMethod: sort,
-                numRequestsBackend: numRequests);
-            numRequests++;
-          });
-        },
-        itemBuilder: (BuildContext context) {
-          return SORT_STRING.keys.map((SortingMethod choice) {
-            return PopupMenuItem<SortingMethod>(
-              value: choice,
-              child: Center(child: Text(SORT_STRING[choice]!)),
-            );
-          }).toList();
-        },
-      )
-    ];
   }
 }

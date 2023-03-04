@@ -45,7 +45,7 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	oauthState, err := r.Cookie(cookieName)
 
 	if err != nil {
-		http.Error(w, "Invalid cookie on oauth google callback", http.StatusUnauthorized)
+		http.Error(w, "Invalid cookie on oauth google callback: " + err.Error(), http.StatusUnauthorized)
 		return
 	}
 

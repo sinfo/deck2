@@ -25,9 +25,10 @@ COPY . /app
 WORKDIR /app
 
 # Create env file
-RUN touch .env && echo DECK2_URL="https://deck2.sinfo.org/api" > .env
+RUN touch .env && echo DECK2_URL="https://deck.sinfo.org/api" > .env
 
 # Get App Dependencies and Build it
+RUN flutter clean
 RUN flutter pub get
 RUN flutter build web --release
 

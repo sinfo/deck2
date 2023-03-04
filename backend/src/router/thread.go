@@ -21,7 +21,7 @@ func getThread(w http.ResponseWriter, r *http.Request) {
 	thread, err := mongodb.Threads.GetThread(threadID)
 
 	if err != nil {
-		http.Error(w, "Could not find thread", http.StatusNotFound)
+		http.Error(w, "Could not find thread: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -53,7 +53,7 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 	var acttd = &addCommentToThreadData{}
 
 	if err := acttd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -73,14 +73,14 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 	newPost, err := mongodb.Posts.CreatePost(cpd)
 
 	if err != nil {
-		http.Error(w, "Could not create post", http.StatusExpectationFailed)
+		http.Error(w, "Could not create post: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	// now adding to the thread
 	updatedThread, err := mongodb.Threads.AddCommentToThread(threadID, newPost.ID)
 	if err != nil {
-		http.Error(w, "Could not add post to thread", http.StatusExpectationFailed)
+		http.Error(w, "Could not add post to thread: " + err.Error(), http.StatusExpectationFailed)
 
 		// clean up the created post
 		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -138,23 +138,23 @@ func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
 	postID, _ := primitive.ObjectIDFromHex(params["postID"])
 
 	if _, err := mongodb.Threads.GetThread(threadID); err != nil {
-		http.Error(w, "Thread not found", http.StatusNotFound)
+		http.Error(w, "Thread not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	if _, err := mongodb.Posts.GetPost(postID); err != nil {
-		http.Error(w, "Post not found", http.StatusNotFound)
+		http.Error(w, "Post not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedThread, err := mongodb.Threads.RemoveCommentFromThread(threadID, postID)
 	if err != nil {
-		http.Error(w, "Could not remove post from thread", http.StatusExpectationFailed)
+		http.Error(w, "Could not remove post from thread: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	if _, err := mongodb.Posts.DeletePost(postID); err != nil {
-		http.Error(w, "Could not delete post", http.StatusExpectationFailed)
+		http.Error(w, "Could not delete post: " + err.Error(), http.StatusExpectationFailed)
 
 		// add the not deleted post to the thread again
 		if _, err := mongodb.Threads.AddCommentToThread(threadID, postID); err != nil {
@@ -182,14 +182,14 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 		t, err := mongodb.Threads.GetThread(id)
 		if err != nil {
 			log.Println("getThread")
-			http.Error(w, "Thread not found", http.StatusNotFound)
+			http.Error(w, "Thread not found: " + err.Error(), http.StatusNotFound)
 			return
 		}
 
 		p, err := mongodb.Posts.GetPost(t.Entry)
 		if err != nil {
 			log.Println("getPost")
-			http.Error(w, "Post not found", http.StatusNotFound)
+			http.Error(w, "Post not found: " + err.Error(), http.StatusNotFound)
 			return
 		}
 
@@ -205,14 +205,52 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 	var utd = mongodb.UpdateThreadData{}
 
 	if err := utd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	thread, err := mongodb.Threads.UpdateThread(id, utd)
 
 	if err != nil {
-		http.Error(w, "Could not find thread or meeting", http.StatusNotFound)
+		http.Error(w, "Could not find thread or meeting: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(thread)
+}
+
+func deleteThread(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		t, err := mongodb.Threads.GetThread(id)
+		if err != nil {
+			http.Error(w, "Thread not found: " + err.Error(), http.StatusNotFound)
+			return
+		}
+
+		for _, commentID := range t.Comments {
+			_, err = mongodb.Posts.DeletePost(commentID)
+			if err != nil {
+				http.Error(w, "Post not found. Thread was not deleted: " + err.Error(), http.StatusNotFound)
+				return
+			}
+		}
+
+		if credentials.Role.AccessLevel() != 0 {
+			http.Error(w, "Unauthorized", http.StatusForbidden)
+			return
+		}
+	} else {
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		return
+	}
+
+	thread, err := mongodb.Threads.DeleteThread(id)
+
+	if err != nil {
+		http.Error(w, "Could not find thread: " + err.Error(), http.StatusNotFound)
 		return
 	}
 

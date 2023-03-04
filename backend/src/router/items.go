@@ -24,14 +24,14 @@ func createItem(w http.ResponseWriter, r *http.Request) {
 	var cid = &mongodb.CreateItemData{}
 
 	if err := cid.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newItem, err := mongodb.Items.CreateItem(*cid)
 
 	if err != nil {
-		http.Error(w, "Could not create item", http.StatusExpectationFailed)
+		http.Error(w, "Could not create item: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -57,7 +57,7 @@ func getItems(w http.ResponseWriter, r *http.Request) {
 	items, err := mongodb.Items.GetItems(options)
 
 	if err != nil {
-		http.Error(w, "Could not get items", http.StatusNotFound)
+		http.Error(w, "Could not get items: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -72,7 +72,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 	item, err := mongodb.Items.GetItem(id)
 
 	if err != nil {
-		http.Error(w, "Could not find item", http.StatusNotFound)
+		http.Error(w, "Could not find item: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -89,18 +89,32 @@ func updateItem(w http.ResponseWriter, r *http.Request) {
 	var uid = &mongodb.UpdateItemData{}
 
 	if err := uid.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedItem, err := mongodb.Items.UpdateItem(id, *uid)
 
 	if err != nil {
-		http.Error(w, "Could not update item", http.StatusNotFound)
+		http.Error(w, "Could not update item: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(updatedItem)
+}
+
+func deleteItem(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	item, err := mongodb.Items.DeleteItem(id)
+	if err != nil {
+		http.Error(w, "Could not find item: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(item)
 }
 
 func uploadItemImage(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +123,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 	itemID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Items.GetItem(itemID); err != nil {
-		http.Error(w, "Invalid item ID", http.StatusNotFound)
+		http.Error(w, "Invalid item ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -120,7 +134,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		http.Error(w, "Invalid payload: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -137,7 +151,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -147,18 +161,18 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	if !filetype.IsImage(bytes) {
-		http.Error(w, "Not an image", http.StatusBadRequest)
+		http.Error(w, "Not an image: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	kind, err := filetype.Match(bytes)
 	if err != nil {
-		http.Error(w, "Unable to get file type", http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -170,7 +184,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	updatedItem, err := mongodb.Items.UpdateItemImage(itemID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update item image", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update item image: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

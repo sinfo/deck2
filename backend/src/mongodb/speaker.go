@@ -175,8 +175,11 @@ func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.S
 	if speakOptions.MemberID != nil {
 		elemMatch["member"] = speakOptions.MemberID
 	}
-	filter["participations"] = bson.M{
-		"$elemMatch": elemMatch,
+
+	if speakOptions.EventID != nil || speakOptions.MemberID != nil {
+		filter["participations"] = bson.M{
+			"$elemMatch": elemMatch,
+		}
 	}
 
 	if speakOptions.Name != nil {
@@ -206,7 +209,17 @@ func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.S
 				{
 					{Key: "$addFields", Value: bson.D{
 						{Key: "numParticipations", Value: bson.D{
-							{Key: "$size", Value: "$participations"},
+							{Key: "$size", Value: bson.D{
+								{Key: "$filter", Value: bson.D{
+									{Key: "input", Value: "$participations"},
+									{Key: "as", Value: "participation"},
+									{Key: "cond", Value: bson.D{
+										{Key: "$eq", Value: bson.A{
+											"$$participation.status", "ANNOUNCED",
+										}},
+									}},
+								}},
+							}},
 						}},
 					}},
 				},
@@ -233,8 +246,23 @@ func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.S
 					{Key: "$match", Value: filter},
 				},
 				{
+					{Key: "$addFields", Value: bson.D{
+						{Key: "participationsAnnounced", Value: bson.D{
+							{Key: "$filter", Value: bson.D{
+								{Key: "input", Value: "$participations"},
+								{Key: "as", Value: "participation"},
+								{Key: "cond", Value: bson.D{
+									{Key: "$eq", Value: bson.A{
+										"$$participation.status", "ANNOUNCED",
+									}},
+								}},
+							}},
+						}},
+					}},
+				},
+				{
 					{Key: "$sort", Value: bson.D{
-						{Key: "participations.event", Value: -1},
+						{Key: "participationsAnnounced.event", Value: -1},
 					}},
 				},
 				{
@@ -423,22 +451,6 @@ func (usd *UpdateSpeakerData) ParseBody(body io.Reader) error {
 		return err
 	}
 
-	if usd.Name == nil || len(*usd.Name) == 0 {
-		return errors.New("Invalid name")
-	}
-
-	if usd.Bio == nil {
-		return errors.New("Invalid bio")
-	}
-
-	if usd.Title == nil {
-		return errors.New("Invalid title")
-	}
-
-	if usd.Notes == nil {
-		return errors.New("Invalid notes")
-	}
-
 	return nil
 }
 
@@ -448,13 +460,23 @@ func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSp
 
 	var updatedSpeaker models.Speaker
 
+	updateFields := bson.M{}
+
+	if data.Name != nil {
+		updateFields["name"] = *data.Name
+	}
+	if data.Bio != nil {
+		updateFields["bio"] = *data.Bio
+	}
+	if data.Title != nil {
+		updateFields["title"] = *data.Title
+	}
+	if data.Notes != nil {
+		updateFields["notes"] = *data.Notes
+	}
+
 	var updateQuery = bson.M{
-		"$set": bson.M{
-			"name":  data.Name,
-			"bio":   data.Bio,
-			"title": data.Title,
-			"notes": data.Notes,
-		},
+		"$set": updateFields,
 	}
 
 	var filterQuery = bson.M{"_id": speakerID}
@@ -618,7 +640,7 @@ func (uspd *UpdateSpeakerParticipationData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-// UpdateSpeakerParticipation updates a company's participation data
+// UpdateSpeakerParticipation updates a speaker's participation data
 // related to the current event.
 func (s *SpeakersType) UpdateSpeakerParticipation(speakerID primitive.ObjectID, data UpdateSpeakerParticipationData) (*models.Speaker, error) {
 	ctx := context.Background()
@@ -851,6 +873,31 @@ func (s *SpeakersType) UpdateSpeakerPublicImage(speakerID primitive.ObjectID, ur
 	return &updatedSpeaker, nil
 }
 
+// DeleteSpeakerThread deletes a thread from a speaker participation
+func (s *SpeakersType) DeleteSpeakerThread(id, threadID primitive.ObjectID) (*models.Speaker, error) {
+	_, err := s.GetSpeaker(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations.$.communications": threadID,
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
+
 // AddSpeakerFlightInfo stores a flightInfo on the speaker's participation.
 func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, flightInfo primitive.ObjectID) (*models.Speaker, error) {
 	ctx := context.Background()
@@ -911,7 +958,7 @@ func (s *SpeakersType) RemoveSpeakerFlightInfo(speakerID primitive.ObjectID, fli
 	return &updatedSpeaker, nil
 }
 
-// AddThread adds a models.Thread to a company's participation's list of communications (related to the current event).
+// AddThread adds a models.Thread to a speaker's participation's list of communications (related to the current event).
 func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitive.ObjectID) (*models.Speaker, error) {
 	ctx := context.Background()
 

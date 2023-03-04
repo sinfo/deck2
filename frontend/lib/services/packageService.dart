@@ -35,9 +35,12 @@ class PackageService extends Service {
   }
 
   Future<Package?> createPackage(
-      Item item, String name, int price, int vat) async {
+      {List<PackageItem>? items,
+      required String name,
+      required int price,
+      required int vat}) async {
     var body = {
-      "item": item.toJson(),
+      "items": items == null ? null : items.map((i) => i.toJson()).toList(),
       "name": name,
       "price": price,
       "vat": vat,
@@ -91,11 +94,45 @@ class PackageService extends Service {
     }
   }
 
-  Future<Package?> updatePackageItems(String id, List<Item> package) async {
-    var body = {"package": jsonEncode(package)};
+  Future<Package?> updatePackageItems(
+      String id, List<PackageItem>? items) async {
+    var body = {
+      "items": items == null ? null : items.map((i) => i.toJson()).toList()
+    };
 
-    Response<String> response = await dio.put(baseURL + '/$id', data: body);
+    Response<String> response =
+        await dio.put(baseURL + '/$id/items', data: body);
 
+    try {
+      return Package.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Package> removeItemFromPackage({
+    required String id,
+    required String itemId,
+  }) async {
+    Response<String> res = await dio.delete(baseURL + "/$id/item/$itemId");
+
+    try {
+      return Package.fromJson(json.decode(res.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Package?> deletePackage(String id) async {
+    Response<String> response = await dio.delete(baseURL + "/$id");
     try {
       return Package.fromJson(json.decode(response.data!));
     } on SocketException {

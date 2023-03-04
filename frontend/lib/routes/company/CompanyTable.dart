@@ -19,13 +19,10 @@ class CompanyTable extends StatefulWidget {
   _CompanyTableState createState() => _CompanyTableState();
 }
 
-class _CompanyTableState extends State<CompanyTable>
-    with AutomaticKeepAliveClientMixin {
+class _CompanyTableState extends State<CompanyTable> {
   final MemberService _memberService = MemberService();
   final CompanyService _companyService = CompanyService();
   late ParticipationStatus _filter;
-
-  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -35,7 +32,6 @@ class _CompanyTableState extends State<CompanyTable>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     int event = Provider.of<EventNotifier>(context).event.id;
 
     return NestedScrollView(
@@ -60,9 +56,10 @@ class _CompanyTableState extends State<CompanyTable>
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content:
-                      Text('An error has occured. Please contact the admins'),
+                const SnackBar(
+                  content: Text(
+                      'An error has occured. Please contact the admins',
+                      style: TextStyle(color: Colors.white)),
                   duration: Duration(seconds: 4),
                 ),
               );
@@ -123,7 +120,8 @@ class _CompanyTableState extends State<CompanyTable>
 class MemberCompanyRow extends StatelessWidget {
   final Member member;
   final ParticipationStatus filter;
-  const MemberCompanyRow({Key? key, required this.member, required this.filter})
+  final CompanyService _companyService = CompanyService();
+  MemberCompanyRow({Key? key, required this.member, required this.filter})
       : super(key: key);
 
   static Widget fake() {
@@ -176,12 +174,43 @@ class MemberCompanyRow extends StatelessWidget {
     );
   }
 
+  Future<void> companyChangedCallback(BuildContext context,
+      {Future<Company?>? fs, Company? company}) async {
+    Company? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (company != null) {
+      s = company;
+    }
+
+    if (s != null) {
+      Provider.of<CompanyTableNotifier>(context, listen: false).edit(s);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Done.', style: TextStyle(color: Colors.white))),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
 
     List<Company> companies = Provider.of<CompanyTableNotifier>(context)
         .getByMember(member.id, event, filter);
+    if (companies.isEmpty && filter != ParticipationStatus.NO_STATUS)
+      return SizedBox.shrink();
     return Container(
       margin: EdgeInsets.all(10),
       child: Theme(
@@ -221,7 +250,18 @@ class MemberCompanyRow extends StatelessWidget {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           children: companies
-                              .map((e) => ListViewCard(small: true, company: e))
+                              .map((e) => ListViewCard(
+                                  small: true,
+                                  company: e,
+                                  onChangeParticipationStatus:
+                                      (step, context) async {
+                                    companyChangedCallback(
+                                      context,
+                                      fs: _companyService
+                                          .stepParticipationStatus(
+                                              id: e.id, step: step),
+                                    );
+                                  }))
                               .toList(),
                         ),
                       )
@@ -235,8 +275,19 @@ class MemberCompanyRow extends StatelessWidget {
                                 alignment: WrapAlignment.start,
                                 crossAxisAlignment: WrapCrossAlignment.start,
                                 children: companies
-                                    .map((e) =>
-                                        ListViewCard(small: false, company: e))
+                                    .map((e) => ListViewCard(
+                                          small: false,
+                                          company: e,
+                                          onChangeParticipationStatus:
+                                              (step, context) async {
+                                            companyChangedCallback(
+                                              context,
+                                              fs: _companyService
+                                                  .stepParticipationStatus(
+                                                      id: e.id, step: step),
+                                            );
+                                          },
+                                        ))
                                     .toList(),
                               ),
                             ),

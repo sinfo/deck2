@@ -29,7 +29,7 @@ func getCompany(w http.ResponseWriter, r *http.Request) {
 	company, err := mongodb.Companies.GetCompany(companyID)
 
 	if err != nil {
-		http.Error(w, "Unable to get company", http.StatusNotFound)
+		http.Error(w, "Unable to get company:" + err.Error(), http.StatusNotFound)
 	}
 
 	json.NewEncoder(w).Encode(company)
@@ -51,7 +51,7 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
 		if err != nil {
-			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+			http.Error(w, "Invalid event ID format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.EventID = &eventID
@@ -60,7 +60,7 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	if len(partner) > 0 {
 		isPartner, err := strconv.ParseBool(partner)
 		if err != nil {
-			http.Error(w, "Invalid partner format", http.StatusBadRequest)
+			http.Error(w, "Invalid partner format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.IsPartner = &isPartner
@@ -69,7 +69,7 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	if len(member) > 0 {
 		memberID, err := primitive.ObjectIDFromHex(member)
 		if err != nil {
-			http.Error(w, "Invalid member ID format", http.StatusBadRequest)
+			http.Error(w, "Invalid member ID format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.MemberID = &memberID
@@ -82,7 +82,7 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	if len(numRequests) > 0 {
 		numReq, err := strconv.ParseInt(numRequests, 10, 64)
 		if err != nil {
-			http.Error(w, "Number of Requests: Invalid Company ID format", http.StatusBadRequest)
+			http.Error(w, "Number of Requests: Invalid Company ID format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.NumRequests = &numReq
@@ -91,7 +91,7 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 	if len(maxCompInRequest) > 0 {
 		maxComp, err := strconv.ParseInt(maxCompInRequest, 10, 64)
 		if err != nil {
-			http.Error(w, "Max Companies in Request: Invalid number format", http.StatusBadRequest)
+			http.Error(w, "Max Companies in Request: Invalid number format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.MaxCompInRequest = &maxComp
@@ -103,7 +103,8 @@ func getCompanies(w http.ResponseWriter, r *http.Request) {
 
 	companies, err := mongodb.Companies.GetCompanies(options)
 	if err != nil {
-		http.Error(w, "Unable to get companies", http.StatusExpectationFailed)
+		http.Error(w, "Unable to get companies: " + err.Error(), http.StatusExpectationFailed)
+		return
 	}
 
 	json.NewEncoder(w).Encode(companies)
@@ -121,7 +122,7 @@ func getCompaniesPublic(w http.ResponseWriter, r *http.Request) {
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
 		if err != nil {
-			http.Error(w, "Invalid event ID format", http.StatusBadRequest)
+			http.Error(w, "Invalid event ID format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.EventID = &eventID
@@ -130,7 +131,7 @@ func getCompaniesPublic(w http.ResponseWriter, r *http.Request) {
 	if len(partner) > 0 {
 		isPartner, err := strconv.ParseBool(partner)
 		if err != nil {
-			http.Error(w, "Invalid partner format", http.StatusBadRequest)
+			http.Error(w, "Invalid partner format: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.IsPartner = &isPartner
@@ -144,7 +145,7 @@ func getCompaniesPublic(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Unable to make query do database", http.StatusExpectationFailed)
+		http.Error(w, "Unable to make query do database: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -157,7 +158,7 @@ func getCompanyPublic(w http.ResponseWriter, r *http.Request) {
 
 	company, err := mongodb.Companies.GetCompanyPublic(companyID)
 	if err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -171,14 +172,14 @@ func createCompany(w http.ResponseWriter, r *http.Request) {
 	var ccd = &mongodb.CreateCompanyData{}
 
 	if err := ccd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newCompany, err := mongodb.Companies.CreateCompany(*ccd)
 
 	if err != nil {
-		http.Error(w, "Could not create company", http.StatusBadRequest)
+		http.Error(w, "Could not create company: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -201,21 +202,21 @@ func updateCompany(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var ucd = &mongodb.UpdateCompanyData{}
 
 	if err := ucd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedCompany, err := mongodb.Companies.UpdateCompany(companyID, *ucd)
 
 	if err != nil {
-		http.Error(w, "Could not update company data", http.StatusExpectationFailed)
+		http.Error(w, "Could not update company data: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -238,21 +239,21 @@ func updateCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var ucpd = &mongodb.UpdateCompanyParticipationData{}
 
 	if err := ucpd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedCompany, err := mongodb.Companies.UpdateCompanyParticipation(companyID, *ucpd)
 
 	if err != nil {
-		http.Error(w, "Could not update company data", http.StatusExpectationFailed)
+		http.Error(w, "Could not update company data: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -267,6 +268,36 @@ func updateCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
+
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	company, err := mongodb.Companies.DeleteCompanyThread(id, threadID)
+	if err != nil {
+		http.Error(w, "Company or thread not found: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	// Delete thread and posts (comments) associated to it - only if
+	// thread was deleted sucessfully from speaker participation
+	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
+		http.Error(w, "Thread not found: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(company)
+}
+
 func addCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
@@ -277,7 +308,7 @@ func addCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 	var apd = &mongodb.AddParticipationData{}
 
 	if err := apd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -291,7 +322,7 @@ func addCompanyParticipation(w http.ResponseWriter, r *http.Request) {
 	updatedCompany, err := mongodb.Companies.AddParticipation(companyID, credentials.ID, *apd)
 
 	if err != nil {
-		http.Error(w, "Could not add participation to company", http.StatusBadRequest)
+		http.Error(w, "Could not add participation to company: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -341,14 +372,14 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var atd = &addThreadData{}
 
 	if err := atd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -368,7 +399,7 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	newPost, err := mongodb.Posts.CreatePost(cpd)
 
 	if err != nil {
-		http.Error(w, "Could not create post", http.StatusExpectationFailed)
+		http.Error(w, "Could not create post: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -377,14 +408,14 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	if *atd.Kind == models.ThreadKindMeeting {
 
 		if err := atd.Meeting.Validate(); err != nil {
-			http.Error(w, "Invalid meeting data", http.StatusBadRequest)
+			http.Error(w, "Invalid meeting data: " + err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		meeting, err := mongodb.Meetings.CreateMeeting(*atd.Meeting)
 
 		if err != nil {
-			http.Error(w, "Could not create meeting", http.StatusExpectationFailed)
+			http.Error(w, "Could not create meeting: " + err.Error(), http.StatusExpectationFailed)
 
 			// clean up the created post
 			if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -407,7 +438,7 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	newThread, err := mongodb.Threads.CreateThread(ctd)
 
 	if err != nil {
-		http.Error(w, "Could not create thread", http.StatusExpectationFailed)
+		http.Error(w, "Could not create thread: " + err.Error(), http.StatusExpectationFailed)
 
 		// clean up the created post and possibly meeting
 		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -427,7 +458,7 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	updatedCompany, err := mongodb.Companies.AddThread(companyID, newThread.ID)
 
 	if err != nil {
-		http.Error(w, "Could not add thread to company", http.StatusExpectationFailed)
+		http.Error(w, "Could not add thread to company: " + err.Error(), http.StatusExpectationFailed)
 
 		// clean up the created post, thread and possibly meeting
 		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -467,26 +498,26 @@ func addCompanyPackage(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var cpd = &mongodb.CreatePackageData{}
 
 	if err := cpd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newPackage, err := mongodb.Packages.CreatePackage(*cpd)
 	if err != nil {
-		http.Error(w, "Could not create new package", http.StatusExpectationFailed)
+		http.Error(w, "Could not create new package: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	updatedCompany, err := mongodb.Companies.UpdatePackage(companyID, newPackage.ID)
 	if err != nil {
-		http.Error(w, "Could not update company's package", http.StatusExpectationFailed)
+		http.Error(w, "Could not update company's package: " + err.Error(), http.StatusExpectationFailed)
 
 		// delete created package
 		if _, err := mongodb.Packages.DeletePackage(newPackage.ID); err != nil {
@@ -507,6 +538,105 @@ func addCompanyPackage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func addCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var cbd = &mongodb.CreateBillingData{}
+
+	if err := cbd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	newBilling, err := mongodb.Billings.CreateBilling(*cbd)
+	if err != nil {
+		http.Error(w, "Error finding created billing: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateBilling(companyID, newBilling.ID, newBilling.Event)
+	if err != nil {
+		http.Error(w, "Could not update company's billing: " + err.Error(), http.StatusExpectationFailed)
+
+		// delete created billing
+		if _, err := mongodb.Packages.DeletePackage(newBilling.ID); err != nil {
+			log.Printf("error deleting billing: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindCreatedParticipationBilling,
+			Company: &updatedCompany.ID,
+		})
+	}
+}
+
+func deleteCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+	billingID, _ := primitive.ObjectIDFromHex(params["billingID"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	backupBilling, _ := mongodb.Billings.GetBilling(billingID)
+
+	updatedCompany, err := mongodb.Companies.RemoveCompanyParticipationBilling(companyID, backupBilling.Event)
+	if err != nil {
+		http.Error(w, "Could not remove billing from company participation: " + err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	bill, err := mongodb.Billings.DeleteBilling(billingID)
+	if err != nil {
+		http.Error(w, "Billing not found: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		http.Error(w, "Could not delete billing: " + err.Error(), http.StatusExpectationFailed)
+
+		if backupBilling == nil {
+			log.Printf("no backup billing to compensate the failed deletion of the billing: %s\n", err.Error())
+		}
+
+		// create deleted billing
+		if _, err := mongodb.Companies.UpdateBilling(companyID, billingID, bill.Event); err != nil {
+			log.Printf("error adding billing to company participation: %s\n", err.Error())
+		}
+
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindDeletedParticipationBilling,
+			Speaker: &updatedCompany.ID,
+		})
+	}
+}
+
 func deleteCompany(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
@@ -515,7 +645,7 @@ func deleteCompany(w http.ResponseWriter, r *http.Request) {
 	deletedCompany, err := mongodb.Companies.DeleteCompany(companyID)
 
 	if err != nil {
-		http.Error(w, "Could not delete company", http.StatusNotFound)
+		http.Error(w, "Could not delete company: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -539,19 +669,19 @@ func setCompanyStatus(w http.ResponseWriter, r *http.Request) {
 	err := status.Parse(params["status"])
 
 	if err != nil {
-		http.Error(w, "Invalid status", http.StatusBadRequest)
+		http.Error(w, "Invalid status: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedCompany, err := mongodb.Companies.UpdateCompanyParticipationStatus(companyID, *status)
 
 	if err != nil {
-		http.Error(w, "Could not update company status", http.StatusExpectationFailed)
+		http.Error(w, "Could not update company status: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -573,19 +703,19 @@ func stepCompanyStatus(w http.ResponseWriter, r *http.Request) {
 	step, err := strconv.Atoi(params["step"])
 
 	if err != nil {
-		http.Error(w, "Invalid step", http.StatusBadRequest)
+		http.Error(w, "Invalid step: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedCompany, err := mongodb.Companies.StepStatus(companyID, step)
 
 	if err != nil {
-		http.Error(w, "Could not update company status", http.StatusExpectationFailed)
+		http.Error(w, "Could not update company status: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -610,7 +740,7 @@ func getCompanyValidSteps(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -619,7 +749,7 @@ func getCompanyValidSteps(w http.ResponseWriter, r *http.Request) {
 	steps, err := mongodb.Companies.GetCompanyParticipationStatusValidSteps(companyID)
 
 	if err != nil {
-		http.Error(w, "Company without participation on the current event", http.StatusBadRequest)
+		http.Error(w, "Company without participation on the current event: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -636,7 +766,7 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -651,7 +781,7 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 
-		http.Error(w, "Invalid payload!", http.StatusBadRequest)
+		http.Error(w, "Invalid payload!: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -666,7 +796,7 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -676,7 +806,7 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -687,7 +817,7 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	kind, err := filetype.Match(bytes)
 	if err != nil {
-		http.Error(w, "Unable to get file type", http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -699,7 +829,7 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	updatedCompany, err := mongodb.Companies.UpdateCompanyInternalImage(companyID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update company internal image", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update company internal image: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -720,7 +850,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -731,7 +861,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
+		http.Error(w, "Invalid payload: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -746,7 +876,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -756,19 +886,19 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	if !filetype.IsImage(bytes) {
 		log.Print("Not an image")
-		http.Error(w, "Not an image", http.StatusBadRequest)
+		http.Error(w, "Not an image: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	kind, err := filetype.Match(bytes)
 	if err != nil {
-		http.Error(w, "Unable to get file type", http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -780,7 +910,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	updatedCompany, err := mongodb.Companies.UpdateCompanyPublicImage(companyID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update company internal image", http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update company internal image: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -803,13 +933,13 @@ func addEmployer(w http.ResponseWriter, r *http.Request) {
 	var ccrp = &mongodb.CreateCompanyRepData{}
 
 	if err := ccrp.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body", http.StatusBadRequest)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	company, err := mongodb.Companies.AddEmployer(companyID, *ccrp)
 	if err != nil {
-		http.Error(w, "Could not parse body", http.StatusNotFound)
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -824,7 +954,7 @@ func removeEmployer(w http.ResponseWriter, r *http.Request) {
 
 	company, err := mongodb.Companies.RemoveEmployer(companyID, repID)
 	if err != nil {
-		http.Error(w, "Could not remove employer: "+err.Error(), http.StatusNotFound)
+		http.Error(w, "Could not remove employer: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -840,7 +970,7 @@ func subscribeToCompany(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -854,7 +984,7 @@ func subscribeToCompany(w http.ResponseWriter, r *http.Request) {
 	updatedCompany, err := mongodb.Companies.Subscribe(companyID, credentials.ID)
 
 	if err != nil {
-		http.Error(w, "Could not subscribe to company", http.StatusExpectationFailed)
+		http.Error(w, "Could not subscribe to company: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -869,7 +999,7 @@ func unsubscribeToCompany(w http.ResponseWriter, r *http.Request) {
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
-		http.Error(w, "Invalid company ID", http.StatusNotFound)
+		http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -883,7 +1013,7 @@ func unsubscribeToCompany(w http.ResponseWriter, r *http.Request) {
 	updatedCompany, err := mongodb.Companies.Unsubscribe(companyID, credentials.ID)
 
 	if err != nil {
-		http.Error(w, "Could not subscribe to company", http.StatusExpectationFailed)
+		http.Error(w, "Could not subscribe to company: " + err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

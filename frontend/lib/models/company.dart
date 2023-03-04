@@ -1,3 +1,4 @@
+import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/participation.dart';
@@ -47,16 +48,35 @@ class CompanyLight {
       this.lastParticipation,
       required this.participationStatus});
 
+  static int getNumParticipations(List<dynamic> participations) {
+    int numParticipations = 0;
+    participations.forEach((participation) {
+      if (participation['status'] ==
+          STATUSSTRING[ParticipationStatus.ANNOUNCED]!.toUpperCase()) {
+        numParticipations++;
+      }
+    });
+    return numParticipations;
+  }
+
+  static int? getLastParticipation(List<dynamic> participations) {
+    for (var participation in participations.reversed) {
+      if (participation['status'] ==
+          STATUSSTRING[ParticipationStatus.ANNOUNCED]!.toUpperCase()) {
+        return participation['event'];
+      }
+    }
+    return null;
+  }
+
   factory CompanyLight.fromJson(Map<String, dynamic> json) {
     var participations = json['participations'] as List;
     return CompanyLight(
         id: json['id'],
         name: json['name'],
         companyImages: CompanyImages.fromJson(json['imgs']),
-        numParticipations: participations.length,
-        lastParticipation: participations.length > 0
-            ? participations[participations.length - 1]['event']
-            : null,
+        numParticipations: getNumParticipations(participations),
+        lastParticipation: getLastParticipation(participations),
         participationStatus: participations.length > 0 &&
                 participations[participations.length - 1]['event'] ==
                     App.localStorage.getInt("event")
@@ -93,6 +113,27 @@ class Company {
     this.participationStatus,
   });
 
+  static int getNumParticipations(List<dynamic> participations) {
+    int numParticipations = 0;
+    participations.forEach((participation) {
+      if (participation['status'] ==
+          STATUSSTRING[ParticipationStatus.ANNOUNCED]!.toUpperCase()) {
+        numParticipations++;
+      }
+    });
+    return numParticipations;
+  }
+
+  static int? getLastParticipation(List<dynamic> participations) {
+    for (var participation in participations.reversed) {
+      if (participation['status'] ==
+          STATUSSTRING[ParticipationStatus.ANNOUNCED]!.toUpperCase()) {
+        return participation['event'];
+      }
+    }
+    return null;
+  }
+
   factory Company.fromJson(Map<String, dynamic> json) {
     // var employees = json['employers'] as List;
     var participationsList = json['participations'] as List;
@@ -107,10 +148,8 @@ class Company {
       participations: participationsList
           .map((e) => CompanyParticipation.fromJson(e))
           .toList(),
-      numParticipations: participationsList.length,
-      lastParticipation: participationsList.length > 0
-          ? participationsList[participationsList.length - 1]['event']
-          : null,
+      numParticipations: getNumParticipations(participationsList),
+      lastParticipation: getLastParticipation(participationsList),
       participationStatus: participationsList.length > 0 &&
               participationsList[participationsList.length - 1]['event'] ==
                   App.localStorage.getInt("event")

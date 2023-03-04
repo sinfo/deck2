@@ -39,7 +39,8 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
     if (_formKey.currentState!.validate()) {
       var name = _nameController.text;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Company? s = await _companyService.updateCompany(
@@ -60,8 +61,8 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Done'),
+          const SnackBar(
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
           ),
         );
@@ -71,7 +72,9 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
     }
@@ -112,7 +115,6 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
 
   Widget _buildPicture(double size) {
     Widget inkWellChild;
-
     if (_image == null && _prevImage == null) {
       inkWellChild = Center(
         child: Column(
@@ -140,10 +142,18 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
             ? Image.network(
                 path,
                 fit: BoxFit.fill,
+                errorBuilder: (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                  return Image.asset('assets/noImage.png');
+                },
               )
             : Image.file(
                 File(path),
                 fit: BoxFit.fill,
+                errorBuilder: (BuildContext context, Object exception,
+                    StackTrace? stackTrace) {
+                  return Image.asset('assets/noImage.png');
+                },
               ),
       );
     }
@@ -222,7 +232,7 @@ class _EditCompanyFormState extends State<EditCompanyForm> {
 
   @override
   Widget build(BuildContext context) {
-    bool warning = _image != null && _size != null && _size! > 102400;
+    bool warning = _image != null && _size != null && _size! > 10485760;
     return SingleChildScrollView(
       child: LayoutBuilder(
         builder: (context, constraints) {

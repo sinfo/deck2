@@ -35,7 +35,8 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
       var place = _placeController.text;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Uploading')),
+        const SnackBar(
+            content: Text('Uploading', style: TextStyle(color: Colors.white))),
       );
 
       Meeting? m = await _meetingService.createMeeting(
@@ -49,7 +50,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Done'),
+            content: Text('Done', style: TextStyle(color: Colors.white)),
             duration: Duration(seconds: 2),
             action: SnackBarAction(
               label: 'Undo',
@@ -64,7 +65,9 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('An error occured.')),
+          const SnackBar(
+              content: Text('An error occured.',
+                  style: TextStyle(color: Colors.white))),
         );
       }
       Navigator.pop(context);

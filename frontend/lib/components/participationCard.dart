@@ -5,12 +5,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/eventNotifier.dart';
+import 'package:frontend/components/packageCard.dart';
 import 'package:frontend/components/status.dart';
 import 'package:frontend/main.dart';
+import 'package:frontend/models/event.dart';
 import 'package:frontend/models/member.dart';
+import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
+import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
+import 'package:frontend/services/packageService.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -26,6 +32,9 @@ class ParticipationCard extends StatefulWidget {
   final CardType type;
   final void Function()? onDelete;
   final Future<void> Function(Map<String, dynamic>)? onEdit;
+  final Future<void> Function(ParticipationStatus)? onChangeParticipationStatus;
+  final Future<void> Function(Package)? onChangeCompanyPackage;
+
   ParticipationCard({
     Key? key,
     required this.participation,
@@ -33,6 +42,8 @@ class ParticipationCard extends StatefulWidget {
     required this.type,
     this.onDelete,
     this.onEdit,
+    this.onChangeParticipationStatus,
+    this.onChangeCompanyPackage,
   }) : super(key: key);
 
   static Widget addParticipationCard(Function() onAddParticipation) {
@@ -58,8 +69,8 @@ class ParticipationCard extends StatefulWidget {
                 child: Text(
                   '+ Add Participation',
                   style: small
-                      ? Theme.of(context).textTheme.headline6
-                      : Theme.of(context).textTheme.headline4,
+                      ? Theme.of(context).textTheme.titleLarge
+                      : Theme.of(context).textTheme.headlineMedium,
                 ),
               ),
             ),
@@ -86,6 +97,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
   late bool _partner;
   late DateTime? _confirmed;
   final MemberService _memberService = MemberService();
+  final PackageService _packageService = PackageService();
 
   @override
   void initState() {
@@ -160,6 +172,18 @@ class _ParticipationCardState extends State<ParticipationCard> {
     _partner = p.partner ?? false;
   }
 
+  String getDateTime(DateTime dateTime) {
+    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
+  }
+
+  List<Future> getPackages(Event event) {
+    List<Future> futures = [];
+    for (EventPackage evPackage in event.eventPackagesId) {
+      futures.add(_packageService.getPackage(evPackage.packageID));
+    }
+    return futures;
+  }
+
   List<Widget> _buildCompanyFields() {
     CompanyParticipation p = widget.participation as CompanyParticipation;
 
@@ -195,24 +219,125 @@ class _ParticipationCardState extends State<ParticipationCard> {
                 onPressed: () => _selectDate(context),
               )
             : Text(_confirmed != null
-                ? _confirmed.toString()
+                ? getDateTime(_confirmed!)
                 : p.confirmed != null
-                    ? p.confirmed.toString()
+                    ? getDateTime(p.confirmed!)
                     : ''),
-      )
+      ),
+      FutureBuilder(
+        future: p.package,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Text('Error' + snapshot.error.toString());
+          }
+          if (snapshot.connectionState == ConnectionState.done) {
+            Package? pack = snapshot.data as Package?;
+
+            if (pack == null &&
+                (p.status == ParticipationStatus.ACCEPTED ||
+                    p.status == ParticipationStatus.ANNOUNCED)) {
+              Event latest = Provider.of<EventNotifier>(context).latest;
+              PackageNotifier notifier = Provider.of<PackageNotifier>(context);
+
+              return FutureBuilder(
+                  future: Future.wait(getPackages(latest)),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text('Error' + snapshot.error.toString());
+                    }
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      List<dynamic> futurePacks =
+                          snapshot.data as List<dynamic>;
+                      List<Package> packs = [];
+
+                      for (int i = 0; i < futurePacks.length; i++) {
+                        Package p = futurePacks[i] as Package;
+                        packs.add(p);
+                      }
+
+                      notifier.loadPackages(packs);
+
+                      return DropdownButton<Package>(
+                        icon: Icon(Icons.arrow_downward),
+                        // iconSize: 16,
+                        selectedItemBuilder: (BuildContext context) {
+                          return notifier
+                              .getPackages()
+                              .map<Widget>((Package p) {
+                            return Container(
+                              alignment: Alignment.centerLeft,
+                              constraints: const BoxConstraints(minWidth: 70),
+                              child: Text(
+                                p.name,
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            );
+                          }).toList();
+                        },
+                        underline: Container(height: 2),
+                        onChanged: (Package? newPackage) async {
+                          widget.onChangeCompanyPackage!(newPackage!);
+                          setState(() {
+                            pack = newPackage;
+                          });
+                        },
+                        value: pack,
+                        hint: Container(
+                          alignment: Alignment.centerLeft,
+                          constraints: const BoxConstraints(minWidth: 70),
+                          child: Text(
+                            'Pick a package',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        items: notifier
+                            .getPackages()
+                            .map<DropdownMenuItem<Package>>((e) =>
+                                DropdownMenuItem<Package>(
+                                    value: e, child: Text(e.name)))
+                            .toList(),
+                      );
+                    } else {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                  });
+            } else if (pack != null) {
+              return PackageCard(package: pack);
+            } else {
+              return Container();
+            }
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
     ];
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final datePicker = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2025),
+    );
+
+    final timePicker = await showTimePicker(
         context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(2015, 8),
-        lastDate: DateTime(2101));
-    if (picked != null && picked != _confirmed)
+        initialTime: TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        });
+
+    if (datePicker != null && timePicker != null) {
       setState(() {
-        _confirmed = picked;
+        _confirmed = DateTime(datePicker.year, datePicker.month, datePicker.day,
+            timePicker.hour, timePicker.minute);
       });
+    }
   }
 
   List<Widget> _buildSpeakerFields() {
@@ -295,7 +420,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
     Map<String, dynamic> body = {
       "notes": notes,
       "partner": _partner,
-      "confirmed": _confirmed == null ? '' : _confirmed!.toIso8601String(),
+      "confirmed": _confirmed == null ? null : _confirmed!.toUtc(),
       "member": _currentMember != null ? _currentMember!.id : m.id,
     };
     widget.onEdit!(body).then((value) {
@@ -305,6 +430,92 @@ class _ParticipationCardState extends State<ParticipationCard> {
       });
     });
     _isWaiting = true;
+  }
+
+  List<ParticipationStatus> getAllStatus() {
+    List<ParticipationStatus> allStatus = STATUSSTRING.keys.toList();
+    allStatus
+        .removeWhere((element) => element == ParticipationStatus.NO_STATUS);
+    return allStatus;
+  }
+
+  List<Widget> getStatus(bool editable) {
+    if (editable) {
+      return [
+        DecoratedBox(
+          decoration: BoxDecoration(
+              color: STATUSCOLOR[widget.participation.status],
+              borderRadius: BorderRadius.circular(5)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
+            child: DropdownButton<ParticipationStatus>(
+              icon: Icon(
+                Icons.arrow_downward,
+                color:
+                    widget.participation.status == ParticipationStatus.GIVEN_UP
+                        ? Colors.white
+                        : Colors.black,
+              ),
+              // iconSize: 16,
+              selectedItemBuilder: (BuildContext context) {
+                return getAllStatus().map<Widget>((ParticipationStatus status) {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    constraints: const BoxConstraints(minWidth: 70),
+                    child: Text(
+                      STATUSSTRING[status]!,
+                      style: TextStyle(
+                        color: widget.participation.status ==
+                                ParticipationStatus.GIVEN_UP
+                            ? Colors.white
+                            : Colors.black,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }).toList();
+              },
+              underline: Container(
+                height: 2,
+                color:
+                    widget.participation.status == ParticipationStatus.GIVEN_UP
+                        ? Colors.white
+                        : Colors.black,
+              ),
+              onChanged: (ParticipationStatus? newStatus) async {
+                widget.onChangeParticipationStatus!(newStatus!);
+              },
+              value: widget.participation.status,
+              items: getAllStatus()
+                  .map<DropdownMenuItem<ParticipationStatus>>((e) =>
+                      DropdownMenuItem<ParticipationStatus>(
+                          value: e, child: Text(STATUSSTRING[e]!)))
+                  .toList(),
+            ),
+          ),
+        )
+      ];
+    } else {
+      return [
+        Container(
+          decoration: BoxDecoration(
+              color: STATUSCOLOR[widget.participation.status],
+              borderRadius: BorderRadius.circular(5)),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              STATUSSTRING[widget.participation.status]!,
+              style: TextStyle(
+                color:
+                    widget.participation.status == ParticipationStatus.GIVEN_UP
+                        ? Colors.white
+                        : Colors.black,
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
   }
 
   @override
@@ -382,7 +593,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                       ? Icon(Icons.edit)
                                       : Icon(Icons.cancel),
                                   color: !_isEditing
-                                      ? Color.fromRGBO(211, 211, 211, 1)
+                                      ? const Color(0xff5c7ff2)
                                       : Colors.red,
                                   iconSize: 22,
                                   onPressed: () {
@@ -393,23 +604,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                   }),
                             ),
                           ],
-                          Container(
-                            decoration: BoxDecoration(
-                                color: STATUSCOLOR[widget.participation.status],
-                                borderRadius: BorderRadius.circular(5)),
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                STATUSSTRING[widget.participation.status]!,
-                                style: TextStyle(
-                                  color: widget.participation.status ==
-                                          ParticipationStatus.GIVEN_UP
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
-                              ),
-                            ),
-                          ),
+                          ...getStatus(editable)
                         ],
                       ),
                     )
