@@ -15,7 +15,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "313557983935-ni2rq84iub8882n0id50ju04ulv37m9e.apps.googleusercontent.com",
+          "client_id": "475922911787-mj5hp1pcb00329tarno2bdeclmh7schr.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.sinfo.frontend",
@@ -23,20 +23,20 @@
           }
         },
         {
-          "client_id": "313557983935-8q8u3qkioilcj7pbr6gv80brissdr2vo.apps.googleusercontent.com",
+          "client_id": "475922911787-mj5hp1pcb00329tarno2bdeclmh7schr.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAB-zFNCnHHAWZWqvn9PJp4sqMeg-7u7oM"
+          "current_key": "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"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "313557983935-8q8u3qkioilcj7pbr6gv80brissdr2vo.apps.googleusercontent.com",
+              "client_id": "475922911787-mj5hp1pcb00329tarno2bdeclmh7schr.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
