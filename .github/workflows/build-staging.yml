@@ -47,7 +47,7 @@ jobs:
         context: ./frontend
         push: true
         tags: orgsinfo/deck2-frontend:latest
-        file: ./frontend/Dockerfile
+        file: ./frontend/Dockerfile_staging
     
     - name: Deck2 Frontend Image Digest
       run: echo ${{ steps.docker_build.outputs.digest }}
