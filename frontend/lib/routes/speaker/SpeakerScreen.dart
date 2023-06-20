@@ -154,6 +154,10 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                                   speakerChangedCallback(context,
                                       fs: _speakerService.removeParticipation(
                                           id: widget.speaker.id)),
+                              onParticipationAdded: () =>
+                                  speakerChangedCallback(context,
+                                      fs: _speakerService.addParticipation(
+                                          id: widget.speaker.id)),
                             ),
                       widget.speaker.participations!.isEmpty
                           ? Center(child: Text('No communications yet'))
