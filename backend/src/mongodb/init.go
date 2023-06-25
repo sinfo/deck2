@@ -7,6 +7,7 @@ import (
 
 	"github.com/sinfo/deck2/src/config"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -47,6 +48,8 @@ var (
 	CompanyReps *CompanyRepsType
 	//Notifications is an instance of a mongodb collection
 	Notifications *NotificationsType
+	//Templates is an instance of a mongodb collection
+	Templates *TemplateType
 )
 
 var (
@@ -165,6 +168,18 @@ func InitializeDatabase() {
 	Notifications = &NotificationsType{
 		Collection: db.Collection("notifications"),
 	}
+
+	Templates = &TemplateType{
+		Collection: db.Collection("templates"),
+	}
+
+	_, err = Templates.Collection.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys:    bson.D{{Key: "name", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+	)
 
 	log.Println("Connected to the database successfully")
 
