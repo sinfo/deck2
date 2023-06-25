@@ -546,20 +546,17 @@ class _ParticipationCardState extends State<ParticipationCard> {
                       style:
                           TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                     ),
-                    Container(
-                      child: Row(
-                        children: [
-                          if (editable) ...[
-                            FutureBuilder(
-                                future: Provider.of<AuthService>(context).role,
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData) {
-                                    Role r = snapshot.data as Role;
+                    FutureBuilder(
+                        future: Provider.of<AuthService>(context).role,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            Role r = snapshot.data as Role;
 
-                                    if (r == Role.ADMIN &&
-                                        widget.onDelete != null) {
-                                      //TODO: Check for other constraints
-                                      return IconButton(
+                            return Container(
+                              child: Row(children: [
+                                if (editable) ...[
+                                  r == Role.ADMIN && widget.onDelete != null
+                                      ? IconButton(
                                           constraints: BoxConstraints(),
                                           hoverColor: Colors.transparent,
                                           splashColor: Colors.transparent,
@@ -578,36 +575,36 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                                 return d;
                                               },
                                             );
+                                          })
+                                      : Container(),
+                                  Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: IconButton(
+                                        constraints: BoxConstraints(),
+                                        hoverColor: Colors.transparent,
+                                        splashColor: Colors.transparent,
+                                        icon: !_isEditing
+                                            ? Icon(Icons.edit)
+                                            : Icon(Icons.cancel),
+                                        color: !_isEditing
+                                            ? const Color(0xff5c7ff2)
+                                            : Colors.red,
+                                        iconSize: 22,
+                                        onPressed: () {
+                                          setState(() {
+                                            _isEditing = !_isEditing;
+                                            _resetControllers();
                                           });
-                                    }
-                                  }
-                                  return Container();
-                                }),
-                            Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: IconButton(
-                                  constraints: BoxConstraints(),
-                                  hoverColor: Colors.transparent,
-                                  splashColor: Colors.transparent,
-                                  icon: !_isEditing
-                                      ? Icon(Icons.edit)
-                                      : Icon(Icons.cancel),
-                                  color: !_isEditing
-                                      ? const Color(0xff5c7ff2)
-                                      : Colors.red,
-                                  iconSize: 22,
-                                  onPressed: () {
-                                    setState(() {
-                                      _isEditing = !_isEditing;
-                                      _resetControllers();
-                                    });
-                                  }),
-                            ),
-                          ],
-                          ...getStatus(editable)
-                        ],
-                      ),
-                    )
+                                        }),
+                                  )
+                                ],
+                                ...getStatus(editable)
+                              ]),
+                            );
+                          }
+
+                          return Container();
+                        })
                   ],
                 ),
                 Divider(
