@@ -1077,6 +1077,9 @@ func (s *SpeakersType) RemoveSpeakerParticipation(speakerID primitive.ObjectID, 
 			if len(s.Communications) > 0 {
 				return nil, errors.New("Participation has communication")
 			}
+      if len(s.Flights) > 0 {
+        return nil, errors.New("Participation has flight")
+      }
 			break
 		}
 	}
