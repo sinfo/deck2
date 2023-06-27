@@ -410,7 +410,16 @@ func (s *SpeakersType) DeleteSpeaker(speakerID primitive.ObjectID) (*models.Spea
 
 	var speaker models.Speaker
 
-	err := s.Collection.FindOneAndDelete(ctx, bson.M{"_id": speakerID}).Decode(&speaker)
+  currentSpeaker, err := s.GetSpeaker(speakerID)
+  if err != nil {
+    return nil, err
+  }
+
+  if len(currentSpeaker.Participations) > 0 {
+    return nil, errors.New("Speaker has participations, cannot delete")
+  }
+
+	err = s.Collection.FindOneAndDelete(ctx, bson.M{"_id": speakerID}).Decode(&speaker)
 	if err != nil {
 		return nil, err
 	}
