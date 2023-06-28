@@ -424,6 +424,11 @@ func (s *SpeakersType) DeleteSpeaker(speakerID primitive.ObjectID) (*models.Spea
 		return nil, err
 	}
 
+  _, err = Contacts.DeleteContact(*speaker.Contact)
+  if err != nil {
+    return nil, err
+  }
+
 	return &speaker, nil
 }
 
