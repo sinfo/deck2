@@ -77,7 +77,13 @@ class ParticipationList extends StatelessWidget {
             );
           }
         } else {
-          return Container();
+          return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ParticipationCard.addParticipationCard(onParticipationAdded)
+              )
+            );
         }
       },
     );

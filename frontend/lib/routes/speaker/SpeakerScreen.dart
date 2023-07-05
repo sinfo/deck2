@@ -231,7 +231,17 @@ class _SpeakerScreenState extends State<SpeakerScreen>
         );
       case 2:
         {
-          return null;
+          bool hasCurrentParticipation = !widget.speaker.participations!.isEmpty && widget.speaker
+                  .participations![widget.speaker.participations!.length - 1].event == latestEvent;
+          return hasCurrentParticipation ? null : FloatingActionButton.extended(
+            onPressed: () {
+              speakerChangedCallback(context,
+                fs: _speakerService.addParticipation(
+                id: widget.speaker.id));
+            },
+            label: const Text('Add Participation'),
+            icon: const Icon(Icons.add),
+          );
         }
       case 3:
         {

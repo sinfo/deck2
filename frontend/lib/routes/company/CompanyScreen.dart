@@ -123,7 +123,20 @@ class _CompanyScreenState extends State<CompanyScreen>
         );
       case 2:
         {
-          return null;
+          bool hasCurrentParticipation = !widget.company.participations!.isEmpty && widget.company
+                  .participations![widget.company.participations!.length - 1].event == latestEvent;
+          return hasCurrentParticipation ? null : FloatingActionButton.extended(
+            onPressed: () {
+              companyChangedCallback(context,
+              fs: _companyService
+                  .addParticipation(
+                id: widget.company.id,
+                partner: false,
+              ));
+            },
+            label: const Text('Add Participation'),
+            icon: const Icon(Icons.add),
+          );
         }
       case 3:
         {
