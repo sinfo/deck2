@@ -132,7 +132,7 @@ class _CompanyScreenState extends State<CompanyScreen>
                   .addParticipation(
                 id: widget.company.id,
                 partner: false,
-              )),
+              ));
             },
             label: const Text('Add Participation'),
             icon: const Icon(Icons.add),
