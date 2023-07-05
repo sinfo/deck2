@@ -125,7 +125,7 @@ class _CompanyScreenState extends State<CompanyScreen>
         {
           bool hasCurrentParticipation = !widget.company
                   .participations!.isEmpty && widget.company
-                  .participations![company.participations!.length - 1].event == latestEvent
+                  .participations![widget.company.participations!.length - 1].event == latestEvent
           return hasCurrentParticipation ? null : FloatingActionButton.extended(
             onPressed: () {
               companyChangedCallback(context,
