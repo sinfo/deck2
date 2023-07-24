@@ -914,23 +914,23 @@ func (c *CompaniesType) UpdateCompanyPublicImage(companyID primitive.ObjectID, u
 func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Company, error) {
 
 	ctx := context.Background()
-	company, err := Companies.GetCompany(companyID)
+  var company models.Company
+
+	currentCompany, err := Companies.GetCompany(companyID)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteResult, err := Companies.Collection.DeleteOne(ctx, bson.M{"_id": companyID})
-	if err != nil {
-		return nil, err
-	}
+  if len(currentCompany.Participations) > 0 {
+    return nil, errors.New("Company has participations")
+  }
 
-	if deleteResult.DeletedCount != 1 {
-		return nil, fmt.Errorf("should have deleted 1 company, deleted %v", deleteResult.DeletedCount)
-	}
+  err = c.Collection.FindOneAndDelete(ctx, bson.M{"_id": companyID}).Decode(&company)
+  if err != nil {
+    return nil, err
+  }
 
-	ResetCurrentPublicCompanies()
-
-	return company, nil
+	return &company, nil
 }
 
 // AddEmployer adds a models.CompanyRep to a company.
