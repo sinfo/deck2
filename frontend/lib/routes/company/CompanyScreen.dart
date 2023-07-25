@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
@@ -166,6 +167,16 @@ class _CompanyScreenState extends State<CompanyScreen>
                           },
                           onEdit: (context, _comp) {
                             companyChangedCallback(context, company: _comp);
+                          },
+                          onDelete: () {
+                            companyChangedCallback(context,
+                                fs: () async {
+                                  Company? c = await _companyService.deleteCompany(id: widget.company.id);
+                                  if (c != null) {
+                                    Navigator.popAndPushNamed(context, Routes.HomeRoute);
+                                  }
+                                  return c;
+                                }());
                           },
                         ),
                         TabBar(
