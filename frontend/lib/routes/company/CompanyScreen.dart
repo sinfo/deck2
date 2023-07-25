@@ -217,6 +217,11 @@ class _CompanyScreenState extends State<CompanyScreen>
                                               id: widget.company.id,
                                               partner: false,
                                             )),
+                                    onParticipationDeleted: () =>
+                                        companyChangedCallback(context,
+                                            fs: _companyService
+                                                .removeParticipation(
+                                                    id: widget.company.id)),
                                     onChangePartStatus:
                                         (ParticipationStatus status) async {
                                       await companyChangedCallback(
