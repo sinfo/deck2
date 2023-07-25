@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
@@ -101,6 +102,17 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                       },
                       onEdit: (context, _speaker) {
                         speakerChangedCallback(context, speaker: _speaker);
+                      },
+                      onDelete: () {
+                        speakerChangedCallback(context, fs: () async {
+                          Speaker? s = await _speakerService.deleteSpeaker(
+                              id: widget.speaker.id);
+                          if (s != null) {
+                            Navigator.popAndPushNamed(
+                                context, Routes.HomeRoute);
+                          }
+                          return s;
+                        }());
                       }),
                   TabBar(
                     isScrollable: small,
