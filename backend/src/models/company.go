@@ -83,6 +83,9 @@ type Company struct {
 
 	BillingInfo    CompanyBillingInfo     `json:"billingInfo,omitempty" bson:"billingInfo,omitempty"`
 	Participations []CompanyParticipation `json:"participations" bson:"participations"`
+
+	// Contact is an _id of Contact (see models.Contact).
+	Contact primitive.ObjectID `json:"contact" bson:"contact"`
 }
 
 // CompanyParticipationPublic stores a company's participation info to be shown to everyone publicly.
