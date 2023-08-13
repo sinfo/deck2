@@ -138,6 +138,19 @@ class SpeakerService extends Service {
     }
   }
 
+  Future<Speaker?> deleteSpeaker({required String id}) async {
+    try {
+      Response<String> response = await dio.delete("/speakers/" + id);
+      return Speaker.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
   Future<Speaker?> updateInternalImageWeb(
       {required String id, required XFile image}) async {
     Uint8List file = await image.readAsBytes();

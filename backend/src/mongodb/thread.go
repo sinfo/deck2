@@ -107,6 +107,13 @@ func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread,
 		return nil, err
 	}
 
+  for _, comment := range thread.Comments {
+    _, err := Posts.DeletePost(comment)
+    if err != nil {
+      return nil, err
+    }
+  }
+
 	return &thread, nil
 }
 

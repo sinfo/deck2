@@ -660,6 +660,31 @@ func deleteCompany(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteCompanyParticipation(w http.ResponseWriter, r *http.Request) {
+  params := mux.Vars(r)
+  companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+  if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+    http.Error(w, "Invalid company ID: " + err.Error(), http.StatusNotFound)
+    return
+  }
+
+  event, err := mongodb.Events.GetCurrentEvent()
+  if err != nil {
+    http.Error(w, "Error finding current event: " + err.Error(), http.StatusNotFound)
+    return
+  }
+
+  company, err := mongodb.Companies.DeleteCompanyParticipation(companyID, event.ID)
+  if err != nil {
+    http.Error(w, "Could not remove company participation: " + err.Error(), http.StatusExpectationFailed)
+    return
+  }
+
+  json.NewEncoder(w).Encode(company)
+
+}
+
 func setCompanyStatus(w http.ResponseWriter, r *http.Request) {
 
 	status := new(models.ParticipationStatus)
