@@ -170,7 +170,7 @@ class CompanyBanner extends StatelessWidget {
                     if (snapshot.hasData) {
                       Role r = snapshot.data as Role;
 
-                      if (r == Role.ADMIN)
+                      if (r == Role.COORDINATOR || r == Role.ADMIN)
                         return IconButton(
                             onPressed: () {
                               BlurryDialog d = BlurryDialog(
