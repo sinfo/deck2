@@ -65,12 +65,28 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 
 	ctx := context.Background()
 
+	createdContact, err := Contacts.Collection.InsertOne(ctx, bson.M{
+		"phones": []models.ContactPhone{},
+		"socials": bson.M{
+			"facebook": "",
+			"skype":    "",
+			"github":   "",
+			"twitter":  "",
+			"linkedin": "",
+		},
+		"mails": []models.ContactMail{},
+	})
+  if err != nil {
+    return nil, err
+  }
+
 	insertResult, err := c.Collection.InsertOne(ctx, bson.M{
 		"name":           data.Name,
 		"description":    data.Description,
 		"site":           data.Site,
 		"employers":      []primitive.ObjectID{},
 		"participations": []models.CompanyParticipation{},
+    "contact":        createdContact.InsertedID.(primitive.ObjectID),
 	})
 
 	if err != nil {
@@ -926,6 +942,11 @@ func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Com
   }
 
   err = c.Collection.FindOneAndDelete(ctx, bson.M{"_id": companyID}).Decode(&company)
+  if err != nil {
+    return nil, err
+  }
+
+  _, err = Contacts.DeleteContact(company.Contact)
   if err != nil {
     return nil, err
   }
