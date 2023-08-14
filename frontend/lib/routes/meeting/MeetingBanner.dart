@@ -168,10 +168,11 @@ class MeetingBanner extends StatelessWidget {
                           children: [
                             Container(
                                 margin: EdgeInsets.only(bottom: 25),
-                                child: Text(
+                                child: SelectableText(
                                   meeting.title.toUpperCase(),
-                                  style: TextStyle(fontSize: _titleFontSize),
-                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: _titleFontSize,
+                                    overflow: TextOverflow.ellipsis),
                                 )),
                             Padding(
                                 padding: EdgeInsets.symmetric(
