@@ -288,3 +288,15 @@ func (c *ContactsType) UpdateSocials(id primitive.ObjectID, data models.ContactS
 
 	return &updatedContact, nil
 }
+
+// DeleteContact deletes a contact by its ID
+func (c *ContactsType) DeleteContact(id primitive.ObjectID)  (*models.Contact, error) {
+  ctx := context.Background()
+  var contact models.Contact
+
+  if err := c.Collection.FindOneAndDelete(ctx, bson.M{"_id": id}).Decode(&contact); err != nil {
+    return nil, err
+  }
+
+  return &contact, nil
+}

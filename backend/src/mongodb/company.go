@@ -65,12 +65,28 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 
 	ctx := context.Background()
 
+	createdContact, err := Contacts.Collection.InsertOne(ctx, bson.M{
+		"phones": []models.ContactPhone{},
+		"socials": bson.M{
+			"facebook": "",
+			"skype":    "",
+			"github":   "",
+			"twitter":  "",
+			"linkedin": "",
+		},
+		"mails": []models.ContactMail{},
+	})
+  if err != nil {
+    return nil, err
+  }
+
 	insertResult, err := c.Collection.InsertOne(ctx, bson.M{
 		"name":           data.Name,
 		"description":    data.Description,
 		"site":           data.Site,
 		"employers":      []primitive.ObjectID{},
 		"participations": []models.CompanyParticipation{},
+    "contact":        createdContact.InsertedID.(primitive.ObjectID),
 	})
 
 	if err != nil {
@@ -580,41 +596,6 @@ func (c *CompaniesType) AddParticipation(companyID primitive.ObjectID, memberID 
 	return &updatedCompany, nil
 }
 
-// RemoveParticipation removes a company's participation on the current event.
-func (c *CompaniesType) RemoveParticipation(companyID primitive.ObjectID) (*models.Company, error) {
-
-	ctx := context.Background()
-	currentEvent, err := Events.GetCurrentEvent()
-
-	if err != nil {
-		return nil, err
-	}
-
-	var updatedCompany models.Company
-
-	var updateQuery = bson.M{
-		"$pull": bson.M{
-			"participations": bson.M{
-				"event": currentEvent.ID,
-			},
-		},
-	}
-
-	var filterQuery = bson.M{"_id": companyID}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		log.Println("Error removing participation:", err)
-		return nil, err
-	}
-
-	ResetCurrentPublicCompanies()
-
-	return &updatedCompany, nil
-}
-
 // StepStatus advances the status of a company's participation in the current event,
 // according to the given step (see models.Company).
 func (c *CompaniesType) StepStatus(companyID primitive.ObjectID, step int) (*models.Company, error) {
@@ -949,23 +930,28 @@ func (c *CompaniesType) UpdateCompanyPublicImage(companyID primitive.ObjectID, u
 func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Company, error) {
 
 	ctx := context.Background()
-	company, err := Companies.GetCompany(companyID)
+  var company models.Company
+
+	currentCompany, err := Companies.GetCompany(companyID)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteResult, err := Companies.Collection.DeleteOne(ctx, bson.M{"_id": companyID})
-	if err != nil {
-		return nil, err
-	}
+  if len(currentCompany.Participations) > 0 {
+    return nil, errors.New("Company has participations")
+  }
 
-	if deleteResult.DeletedCount != 1 {
-		return nil, fmt.Errorf("should have deleted 1 company, deleted %v", deleteResult.DeletedCount)
-	}
+  err = c.Collection.FindOneAndDelete(ctx, bson.M{"_id": companyID}).Decode(&company)
+  if err != nil {
+    return nil, err
+  }
 
-	ResetCurrentPublicCompanies()
+  _, err = Contacts.DeleteContact(company.Contact)
+  if err != nil {
+    return nil, err
+  }
 
-	return company, nil
+	return &company, nil
 }
 
 // AddEmployer adds a models.CompanyRep to a company.
@@ -1239,6 +1225,45 @@ func (c *CompaniesType) RemoveCompanyParticipationBilling(companyID primitive.Ob
 
 	return &updatedCompany, nil
 }
+
+// DeleteCompanyParticipation deletes a company's participation related to the eventID
+func (c *CompaniesType) DeleteCompanyParticipation(companyID primitive.ObjectID, eventID int) (*models.Company, error) {
+  ctx := context.Background();
+  var updatedCompany models.Company
+
+  company, err := c.GetCompany(companyID)
+  if err != nil {
+    return nil, err
+  }
+
+  for _, p := range company.Participations {
+    if p.Event == eventID {
+      if (len(p.Communications) > 0) {
+        return nil, errors.New("Company participation has communications")
+      }
+    }
+  }
+
+  var updateQuery = bson.M{
+    "$pull": bson.M{
+      "participations": bson.M{
+        "event": eventID,
+      },
+    },
+  }
+
+  var filterQuery = bson.M{"_id": companyID}
+
+  var optionsQuery = options.FindOneAndUpdate()
+  optionsQuery.SetReturnDocument(options.After)
+
+  if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+    return nil, err
+  }
+
+  return &updatedCompany, nil
+}
+
 
 // FindThread finds a thread in a company
 func (c *CompaniesType) FindThread(threadID primitive.ObjectID) (*models.Company, error) {

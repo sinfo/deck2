@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
@@ -123,7 +124,20 @@ class _CompanyScreenState extends State<CompanyScreen>
         );
       case 2:
         {
-          return null;
+          bool hasCurrentParticipation = !widget.company.participations!.isEmpty && widget.company
+                  .participations![widget.company.participations!.length - 1].event == latestEvent;
+          return hasCurrentParticipation ? null : FloatingActionButton.extended(
+            onPressed: () {
+              companyChangedCallback(context,
+              fs: _companyService
+                  .addParticipation(
+                id: widget.company.id,
+                partner: false,
+              ));
+            },
+            label: const Text('Add Participation'),
+            icon: const Icon(Icons.add),
+          );
         }
       case 3:
         {
@@ -166,6 +180,16 @@ class _CompanyScreenState extends State<CompanyScreen>
                           },
                           onEdit: (context, _comp) {
                             companyChangedCallback(context, company: _comp);
+                          },
+                          onDelete: () {
+                            companyChangedCallback(context,
+                                fs: () async {
+                                  Company? c = await _companyService.deleteCompany(id: widget.company.id);
+                                  if (c != null) {
+                                    Navigator.popAndPushNamed(context, Routes.HomeRoute);
+                                  }
+                                  return c;
+                                }());
                           },
                         ),
                         TabBar(
@@ -217,6 +241,11 @@ class _CompanyScreenState extends State<CompanyScreen>
                                               id: widget.company.id,
                                               partner: false,
                                             )),
+                                    onParticipationDeleted: () =>
+                                        companyChangedCallback(context,
+                                            fs: _companyService
+                                                .removeParticipation(
+                                                    id: widget.company.id)),
                                     onChangePartStatus:
                                         (ParticipationStatus status) async {
                                       await companyChangedCallback(

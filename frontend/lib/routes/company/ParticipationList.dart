@@ -12,12 +12,14 @@ class ParticipationList extends StatelessWidget {
   final Future<void> Function(Map<String, dynamic>) onParticipationChanged;
   final Future<void> Function(ParticipationStatus) onChangePartStatus;
   final Future<void> Function(Package) onChangeCompanyPack;
+  final void Function() onParticipationDeleted;
   final void Function() onParticipationAdded;
   const ParticipationList({
     Key? key,
     required this.company,
     required this.onParticipationChanged,
     required this.onParticipationAdded,
+    required this.onParticipationDeleted,
     required this.onChangePartStatus,
     required this.onChangeCompanyPack,
   }) : super(key: key);
@@ -43,6 +45,7 @@ class ParticipationList extends StatelessWidget {
                               small: small,
                               type: CardType.COMPANY,
                               onEdit: onParticipationChanged,
+                              onDelete: onParticipationDeleted,
                               onChangeParticipationStatus: onChangePartStatus,
                               onChangeCompanyPackage: onChangeCompanyPack,
                             ),
@@ -77,7 +80,13 @@ class ParticipationList extends StatelessWidget {
             );
           }
         } else {
-          return Container();
+          return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ParticipationCard.addParticipationCard(onParticipationAdded)
+              )
+            );
         }
       },
     );

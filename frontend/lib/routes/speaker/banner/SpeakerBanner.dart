@@ -1,5 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -8,17 +10,20 @@ import 'package:frontend/models/participation.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/speaker/EditSpeakerForm.dart';
 import 'package:frontend/routes/speaker/banner/SpeakerStatusDropdownButton.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
 
 class SpeakerBanner extends StatelessWidget {
   final Speaker speaker;
   final void Function(int, BuildContext) statusChangeCallback;
+  final void Function() onDelete;
   final void Function(BuildContext, Speaker?) onEdit;
   const SpeakerBanner(
       {Key? key,
       required this.speaker,
       required this.statusChangeCallback,
-      required this.onEdit})
+      required this.onEdit,
+      required this.onDelete})
       : super(key: key);
 
   void _editSpeakerModal(context) {
@@ -38,7 +43,7 @@ class SpeakerBanner extends StatelessWidget {
     bool isLatestEvent = Provider.of<EventNotifier>(context).isLatest;
     Participation? part = speaker.participations!
         .firstWhereOrNull((element) => element.event == event);
-    bool hasParticipation = part != null; 
+    bool hasParticipation = part != null;
     ParticipationStatus speakerStatus =
         part != null ? part.status : ParticipationStatus.NO_STATUS;
 
@@ -122,15 +127,29 @@ class SpeakerBanner extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              speaker.name,
-                              style: Theme.of(context).textTheme.headline5,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                SelectableText(
+                                  speaker.name,
+                                  style: TextStyle(
+                                    overflow: TextOverflow.ellipsis,
+                                  ).merge(Theme.of(context).textTheme.headline5),
+                                ),
+                                IconButton(
+                                  onPressed: () => Clipboard.setData(ClipboardData(text: speaker.name)).then((_) => ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Speaker name copied to clipboard'))
+                                  )),
+                                  icon: Icon(Icons.copy),
+                                  iconSize: 18,
+                                  color: Theme.of(context).colorScheme.secondary
+                                ),
+                            ]),
+                            SelectableText(
+                              speaker.title!,
+                              style: TextStyle(
+                                overflow: TextOverflow.ellipsis,
+                              ).merge(Theme.of(context).textTheme.subtitle1),
                             ),
-                            Text(speaker.title!,
-                                style: Theme.of(context).textTheme.subtitle1,
-                                softWrap: false,
-                                overflow: TextOverflow.ellipsis),
                             if (isLatestEvent && hasParticipation)
                               SpeakerStatusDropdownButton(
                                 speakerStatus: speakerStatus,
@@ -162,12 +181,38 @@ class SpeakerBanner extends StatelessWidget {
                 ),
               ),
             ),
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                _editSpeakerModal(context);
-              },
-            )
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              FutureBuilder(
+                  future: Provider.of<AuthService>(context).role,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      Role r = snapshot.data as Role;
+
+                      if (r == Role.COORDINATOR || r == Role.ADMIN)
+                        return IconButton(
+                            onPressed: () {
+                              BlurryDialog d = BlurryDialog(
+                                  'Warning',
+                                  'Are you sure you want to delete this speaker?',
+                                  onDelete);
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return d;
+                                },
+                              );
+                            },
+                            icon: Icon(Icons.delete));
+                    }
+                    return Container();
+                  }),
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  _editSpeakerModal(context);
+                },
+              )
+            ])
           ],
         );
       },

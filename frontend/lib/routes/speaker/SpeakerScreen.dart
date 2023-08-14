@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/router.dart';
 import 'package:frontend/components/threads/addThreadForm.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
@@ -101,6 +102,17 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                       },
                       onEdit: (context, _speaker) {
                         speakerChangedCallback(context, speaker: _speaker);
+                      },
+                      onDelete: () {
+                        speakerChangedCallback(context, fs: () async {
+                          Speaker? s = await _speakerService.deleteSpeaker(
+                              id: widget.speaker.id);
+                          if (s != null) {
+                            Navigator.popAndPushNamed(
+                                context, Routes.HomeRoute);
+                          }
+                          return s;
+                        }());
                       }),
                   TabBar(
                     isScrollable: small,
@@ -231,7 +243,17 @@ class _SpeakerScreenState extends State<SpeakerScreen>
         );
       case 2:
         {
-          return null;
+          bool hasCurrentParticipation = !widget.speaker.participations!.isEmpty && widget.speaker
+                  .participations![widget.speaker.participations!.length - 1].event == latestEvent;
+          return hasCurrentParticipation ? null : FloatingActionButton.extended(
+            onPressed: () {
+              speakerChangedCallback(context,
+                fs: _speakerService.addParticipation(
+                id: widget.speaker.id));
+            },
+            label: const Text('Add Participation'),
+            icon: const Icon(Icons.add),
+          );
         }
       case 3:
         {

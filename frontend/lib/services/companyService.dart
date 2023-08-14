@@ -157,6 +157,20 @@ class CompanyService extends Service {
     }
   }
 
+  Future<Company?> removeParticipation({required String id}) async {
+    Response<String> response =
+        await dio.delete('/companies/' + id + '/participation');
+    try {
+      return Company.fromJson(json.decode(response.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
   Future<Company?> createRep(
       {required String id,
       required String name,

@@ -62,6 +62,7 @@ class DetailsScreen extends StatelessWidget {
             child: EditableCard(
               title: 'Description',
               body: company.description ?? "",
+              linkify: true,
               bodyEditedCallback: (newDescription) =>
                   _editCompany(context, newDescription, true),
               isSingleline: false,
@@ -73,6 +74,7 @@ class DetailsScreen extends StatelessWidget {
             child: EditableCard(
               title: 'Site',
               body: company.site ?? "",
+              linkify: true,
               bodyEditedCallback: (newSite) =>
                   _editCompany(context, newSite, false),
               isSingleline: false,

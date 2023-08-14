@@ -1,5 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/status.dart';
@@ -8,18 +10,21 @@ import 'package:frontend/models/company.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/EditCompanyForm.dart';
 import 'package:frontend/routes/company/banner/CompanyStatusDropdownButton.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
 
 class CompanyBanner extends StatelessWidget {
   final Company company;
   final void Function(int, BuildContext) statusChangeCallback;
+  final void Function() onDelete;
   final void Function(BuildContext, Company?) onEdit;
 
   const CompanyBanner(
       {Key? key,
       required this.company,
       required this.statusChangeCallback,
-      required this.onEdit})
+      required this.onEdit,
+      required this.onDelete})
       : super(key: key);
 
   void _editCompanyModal(context) {
@@ -39,7 +44,7 @@ class CompanyBanner extends StatelessWidget {
     bool isLatestEvent = Provider.of<EventNotifier>(context).isLatest;
     Participation? part = company.participations!
         .firstWhereOrNull((element) => element.event == event);
-    bool hasParticipation = part != null;    
+    bool hasParticipation = part != null;
     ParticipationStatus companyStatus =
         part != null ? part.status : ParticipationStatus.NO_STATUS;
     double lum = 0.2;
@@ -123,11 +128,23 @@ class CompanyBanner extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              company.name,
-                              style: Theme.of(context).textTheme.headline5,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            Row(
+                              children: [
+                                SelectableText(
+                                  company.name,
+                                  style: TextStyle(
+                                    overflow: TextOverflow.ellipsis,
+                                  ).merge(Theme.of(context).textTheme.headline5),
+                                ),
+                                IconButton(
+                                  onPressed: () => Clipboard.setData(ClipboardData(text: company.name)).then((_) => ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Company name copied to clipboard'))
+                                  )),
+                                  icon: Icon(Icons.copy),
+                                  iconSize: 18,
+                                  color: Theme.of(context).colorScheme.secondary
+                                ),
+                            ]),
                             if (isLatestEvent && hasParticipation)
                               CompanyStatusDropdownButton(
                                 companyStatus: companyStatus,
@@ -159,12 +176,38 @@ class CompanyBanner extends StatelessWidget {
                 ),
               ),
             ),
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                _editCompanyModal(context);
-              },
-            )
+            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+              FutureBuilder(
+                  future: Provider.of<AuthService>(context).role,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      Role r = snapshot.data as Role;
+
+                      if (r == Role.COORDINATOR || r == Role.ADMIN)
+                        return IconButton(
+                            onPressed: () {
+                              BlurryDialog d = BlurryDialog(
+                                  'Warning',
+                                  'Are you sure you want to delete this company?',
+                                  onDelete);
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return d;
+                                },
+                              );
+                            },
+                            icon: Icon(Icons.delete));
+                    }
+                    return Container();
+                  }),
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  _editCompanyModal(context);
+                },
+              )
+            ])
           ],
         );
       },
