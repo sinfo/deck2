@@ -5,60 +5,51 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 	"text/template"
 	"time"
 
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/patrickmn/go-cache"
-	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/mongodb"
-	"github.com/sinfo/deck2/src/spaces"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type companyPage struct {
-	Company string
-}
-
-type speakerPage struct {
+type testPage struct {
 	Speaker    string
 	MemberName string
+	Company    string
 }
 
 var templateCache = cache.New(1*time.Minute, 10*time.Minute)
 
 //FIXME
-func getTemplate(w http.ResponseWriter, r *http.Request) {
+// func getTemplate(w http.ResponseWriter, r *http.Request) {
 
-	// params := mux.Vars(r)
-	// templateID, _ := primitive.ObjectIDFromHex(params["id"])
+// params := mux.Vars(r)
+// templateID, _ := primitive.ObjectIDFromHex(params["id"])
 
-	// template, err := mongodb.Companies.GetCompany(templateID)
+// template, err := mongodb.Companies.GetCompany(templateID)
 
-	// if err != nil {
-	// 	http.Error(w, "Unable to get company", http.StatusNotFound)
-	// }
+// if err != nil {
+// 	http.Error(w, "Unable to get company", http.StatusNotFound)
+// }
 
-	// json.NewEncoder(w).Encode(template)
+// json.NewEncoder(w).Encode(template)
 
-	absPath, _ := filepath.Abs("")
+// 	absPath, _ := filepath.Abs("")
 
-	b, err := os.ReadFile(absPath + "/src/router/template1.html") // just pass the file name
-	if err != nil {
-		fmt.Print(err)
-	}
+// 	b, err := os.ReadFile(absPath + "/src/router/template1.html") // just pass the file name
+// 	if err != nil {
+// 		fmt.Print(err)
+// 	}
 
-	str := string(b) // convert content to a 'string'
+// 	str := string(b) // convert content to a 'string'
 
-	fmt.Fprint(w, str)
-}
+// 	fmt.Fprint(w, str)
+// }
 
 func getFilledTemplate(w http.ResponseWriter, r *http.Request) {
 
@@ -97,22 +88,16 @@ func fillTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sPage := speakerPage{}
-	cPage := companyPage{}
+	tPage := testPage{}
 
 	for _, req := range *ftd.Requirements {
 		// TODO refactor executions of template
-		if templateObject.Name == "Speaker Template" {
-			if req.Name == "speakerName" {
-				sPage.Speaker = req.StringValue
-			}
-			if req.Name == "userName" {
-				sPage.MemberName = req.StringValue
-			}
-		} else if templateObject.Name == "Company Template" {
-			if req.Name == "companyName" {
-				cPage.Company = req.StringValue
-			}
+		if req.Name == "speakerName" {
+			tPage.Speaker = req.StringValue
+		} else if req.Name == "userName" {
+			tPage.MemberName = req.StringValue
+		} else if req.Name == "companyName" {
+			tPage.Company = req.StringValue
 		}
 	}
 
@@ -136,11 +121,7 @@ func fillTemplate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	buf := new(bytes.Buffer)
-	if templateObject.Name == "Speaker Template" {
-		err = t.Execute(buf, sPage)
-	} else if templateObject.Name == "Company Template" {
-		err = t.Execute(buf, cPage)
-	}
+	err = t.Execute(buf, tPage)
 
 	if err != nil {
 		http.Error(w, "Error executing template", http.StatusExpectationFailed)
@@ -153,147 +134,146 @@ func fillTemplate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(uuid.String())
 }
 
-func uploadTemplateFile(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+// func uploadTemplateFile(w http.ResponseWriter, r *http.Request) {
+// 	defer r.Body.Close()
 
-	params := mux.Vars(r)
-	templateID, _ := primitive.ObjectIDFromHex(params["id"])
+// 	params := mux.Vars(r)
+// 	templateID, _ := primitive.ObjectIDFromHex(params["id"])
 
-	if _, err := mongodb.Templates.GetTemplate(templateID); err != nil {
-		http.Error(w, "Invalid template ID", http.StatusNotFound)
-		return
-	}
+// 	if _, err := mongodb.Templates.GetTemplate(templateID); err != nil {
+// 		http.Error(w, "Invalid template ID", http.StatusNotFound)
+// 		return
+// 	}
 
-	if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
-		return
-	}
+// 	if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
+// 		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
+// 		return
+// 	}
 
-	file, handler, err := r.FormFile("template")
-	if err != nil {
-		http.Error(w, "Invalid payload", http.StatusBadRequest)
-		return
-	}
+// 	file, handler, err := r.FormFile("template")
+// 	if err != nil {
+// 		http.Error(w, "Invalid payload", http.StatusBadRequest)
+// 		return
+// 	}
 
-	// check again for file size
-	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
-	if handler.Size > config.ImageMaxSize {
-		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
-		return
-	}
+// 	// check again for file size
+// 	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
+// 	if handler.Size > config.ImageMaxSize {
+// 		http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
+// 		return
+// 	}
 
-	defer file.Close()
+// 	defer file.Close()
 
-	currentEvent, err := mongodb.Events.GetCurrentEvent()
-	if err != nil {
-		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
-		return
-	}
+// 	currentEvent, err := mongodb.Events.GetCurrentEvent()
+// 	if err != nil {
+// 		http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+// 		return
+// 	}
 
-	// must duplicate the reader so that we can get some information first, and then pass it to the spaces package
-	var buf bytes.Buffer
-	checker := io.TeeReader(file, &buf)
+// 	print("Current event " + strconv.Itoa(currentEvent.ID))
 
-	bytes, err := ioutil.ReadAll(checker)
-	if err != nil {
-		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
-		return
-	}
+// 	// must duplicate the reader so that we can get some information first, and then pass it to the spaces package
+// 	var buf bytes.Buffer
+// 	checker := io.TeeReader(file, &buf)
 
-	templateType := mimetype.Detect(bytes)
+// 	bytes, err := ioutil.ReadAll(checker)
+// 	if err != nil {
+// 		http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+// 		return
+// 	}
 
-	url, err := spaces.UploadTemplateFile(currentEvent.ID, templateID.Hex(), &buf, handler.Size, templateType.Extension())
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
-		return
-	}
+// 	templateType := mimetype.Detect(bytes)
 
-	updatedTemplate, err := mongodb.Templates.UpdateTemplateUrl(templateID, *url)
-	if err != nil {
-		http.Error(w, "Could not update url"+err.Error(), http.StatusBadRequest)
-		return
-	}
+// 	url, err := spaces.UploadTemplateFile(currentEvent.ID, templateID.Hex(), &buf, handler.Size, templateType.Extension())
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
+// 		return
+// 	}
 
-	json.NewEncoder(w).Encode(updatedTemplate)
-}
+// 	updatedTemplate, err := mongodb.Templates.UpdateTemplateUrl(templateID, *url)
+// 	if err != nil {
+// 		http.Error(w, "Could not update url"+err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
 
-func createTemplate(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+// 	json.NewEncoder(w).Encode(updatedTemplate)
+// }
 
-	params := mux.Vars(r)
-	name := params["name"]
+// func createTemplate(w http.ResponseWriter, r *http.Request) {
+// 	defer r.Body.Close()
 
-	var ctd = &mongodb.TemplateData{}
+// 	params := mux.Vars(r)
+// 	name := params["name"]
 
-	if err := ctd.ParseCreateBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body"+err.Error(), http.StatusBadRequest)
-		return
-	}
+// 	var ctd = &mongodb.TemplateData{}
+// 	if err := ctd.ParseCreateBody(r.Body); err != nil {
+// 		http.Error(w, "Could not parse body"+err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
+// 	newTemplate, err := mongodb.Templates.CreateTemplate(*ctd, name)
+// 	if err != nil {
+// 		http.Error(w, "Could not create template"+err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
+// if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
+// 	http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
+// 	return
+// }
 
-	newTemplate, err := mongodb.Templates.CreateTemplate(*ctd, name)
-	if err != nil {
-		http.Error(w, "Could not create template"+err.Error(), http.StatusBadRequest)
-		return
-	}
+// file, handler, err := r.FormFile("template")
+// if err != nil {
+// 	http.Error(w, "Invalid payload", http.StatusBadRequest)
+// 	return
+// }
 
-	// if err := r.ParseMultipartForm(config.ImageMaxSize); err != nil {
-	// 	http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
-	// 	return
-	// }
+// check again for file size
+// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
+// if handler.Size > config.ImageMaxSize {
+// 	http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
+// 	return
+// }
 
-	// file, handler, err := r.FormFile("template")
-	// if err != nil {
-	// 	http.Error(w, "Invalid payload", http.StatusBadRequest)
-	// 	return
-	// }
+// defer file.Close()
 
-	// check again for file size
-	// the previous check fails only if a chunk > maxSize is sent, but this tests the whole file
-	// if handler.Size > config.ImageMaxSize {
-	// 	http.Error(w, fmt.Sprintf("Exceeded file size (%v bytes)", config.ImageMaxSize), http.StatusBadRequest)
-	// 	return
-	// }
+// currentEvent, err := mongodb.Events.GetCurrentEvent()
+// if err != nil {
+// 	http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
+// 	return
+// }
 
-	// defer file.Close()
+// must duplicate the reader so that we can get some information first, and then pass it to the spaces package
+// var buf bytes.Buffer
+// checker := io.TeeReader(file, &buf)
 
-	// currentEvent, err := mongodb.Events.GetCurrentEvent()
-	// if err != nil {
-	// 	http.Error(w, "Couldn't fetch current event", http.StatusExpectationFailed)
-	// 	return
-	// }
+// bytes, err := ioutil.ReadAll(checker)
+// if err != nil {
+// 	http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
+// 	return
+// }
 
-	// must duplicate the reader so that we can get some information first, and then pass it to the spaces package
-	// var buf bytes.Buffer
-	// checker := io.TeeReader(file, &buf)
+// templateType := mimetype.Detect(bytes)
 
-	// bytes, err := ioutil.ReadAll(checker)
-	// if err != nil {
-	// 	http.Error(w, "Unable to read the file", http.StatusExpectationFailed)
-	// 	return
-	// }
+// newTemplate, err := mongodb.Templates.CreateTemplate(name)
+// if err != nil {
+// 	http.Error(w, "Could not create template"+err.Error(), http.StatusBadRequest)
+// 	return
+// }
 
-	// templateType := mimetype.Detect(bytes)
+// url, err := spaces.UploadTemplateFile(currentEvent.ID, newTemplate.ID.Hex(), &buf, handler.Size, templateType.Extension())
+// if err != nil {
+// 	http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
+// 	return
+// }
 
-	// newTemplate, err := mongodb.Templates.CreateTemplate(name)
-	// if err != nil {
-	// 	http.Error(w, "Could not create template"+err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
+// updatedTemplate, err := mongodb.Templates.UpdateTemplateUrl(newTemplate.ID, *url)
+// if err != nil {
+// 	http.Error(w, "Could not update url"+err.Error(), http.StatusBadRequest)
+// 	return
+// }
 
-	// url, err := spaces.UploadTemplateFile(currentEvent.ID, newTemplate.ID.Hex(), &buf, handler.Size, templateType.Extension())
-	// if err != nil {
-	// 	http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
-	// 	return
-	// }
-
-	// updatedTemplate, err := mongodb.Templates.UpdateTemplateUrl(newTemplate.ID, *url)
-	// if err != nil {
-	// 	http.Error(w, "Could not update url"+err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-
-	json.NewEncoder(w).Encode(newTemplate)
-}
+// 	json.NewEncoder(w).Encode(newTemplate)
+// }
 
 func getTemplates(w http.ResponseWriter, r *http.Request) {
 
@@ -319,6 +299,7 @@ func getTemplates(w http.ResponseWriter, r *http.Request) {
 	templates, err := mongodb.Templates.GetTemplates(options)
 	if err != nil {
 		http.Error(w, "Unable to get templates", http.StatusExpectationFailed)
+		return
 	}
 
 	json.NewEncoder(w).Encode(templates)

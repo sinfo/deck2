@@ -101,12 +101,18 @@ class TemplateService extends Service {
     Response<String> res =
         await dio.get(templateUrl, queryParameters: queryParams);
 
-    if (res.statusCode == 200 && res.data!.isNotEmpty) {
-      final jsonRes = json.decode(res.data!) as List;
-      List<Template> data = jsonRes.map((e) => Template.fromJson(e)).toList();
-      return data;
-    } else {
-      return [];
+    try {
+      final responseJson = json.decode(res.data!) as List;
+      List<Template> templates =
+          responseJson.map((e) => Template.fromJson(e)).toList();
+      print(templates);
+      return templates;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
     }
   }
 }

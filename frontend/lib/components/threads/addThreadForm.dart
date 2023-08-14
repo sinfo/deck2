@@ -130,24 +130,6 @@ class _AddThreadFormState extends State<AddThreadForm> {
       key: _formKey,
       child: Column(
         children: [
-          // Padding(
-          //   padding: const EdgeInsets.all(8.0),
-          //   child: TextFormField(
-          //     keyboardType: TextInputType.multiline,
-          //     textInputAction: TextInputAction.newline,
-          //     controller: _textController,
-          //     validator: (value) {
-          //       if (value == null || value.isEmpty) {
-          //         return 'Please contents of communication';
-          //       }
-          //       return null;
-          //     },
-          //     decoration: const InputDecoration(
-          //       icon: const Icon(Icons.work),
-          //       labelText: "Content *",
-          //     ),
-          //   ),
-          // ),
           if (widget.meeting == null && widget.onAddMeeting == null)
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -201,43 +183,52 @@ class _AddThreadFormState extends State<AddThreadForm> {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   List<Template> templates = snapshot.data as List<Template>;
-                  selectedTemplateId = selectedTemplateId ?? templates.first.id;
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: DropdownButtonFormField<String>(
-                      icon: Icon(Icons.tag),
-                      items: templates
-                          .map((e) =>
-                              DropdownMenuItem<String>(value: e.id, child: Text(e.name)))
-                          .toList(),
-                      value: templates.first.id,
-                      selectedItemBuilder: (BuildContext context) {
-                        return templates.map((e) {
-                          return Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: Container(child: Text(e.name)),
-                          );
-                        }).toList();
-                      },
-                      onChanged: (next) {
-                        setState(() {
-                          selectedTemplateId = next!;
-                          print(selectedTemplateId);
-                        });
-                      },
-                    ),
-                  );
+                  if (!templates.isEmpty) {
+                    selectedTemplateId = selectedTemplateId ?? templates.first.id;
+                    return Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: DropdownButtonFormField<String>(
+                            icon: Icon(Icons.tag),
+                            items: templates
+                                .map((e) =>
+                                    DropdownMenuItem<String>(value: e.id, child: Text(e.name)))
+                                .toList(),
+                            value: templates.first.id,
+                            selectedItemBuilder: (BuildContext context) {
+                              return templates.map((e) {
+                                return Align(
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: Container(child: Text(e.name)),
+                                );
+                              }).toList();
+                            },
+                            onChanged: (next) {
+                              setState(() {
+                                selectedTemplateId = next!;
+                                print(selectedTemplateId);
+                              });
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ElevatedButton(
+                            onPressed: () => _getTemplate(context),
+                            child: const Text('Get Template'),
+                          ),
+                        ),
+                      ]
+                    );
+                  }
+                  else {
+                  return Container();
+                }
                 } else {
                   return Container();
                 }
               }),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () => _getTemplate(context),
-              child: const Text('Get Template'),
-            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

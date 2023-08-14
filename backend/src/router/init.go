@@ -328,13 +328,13 @@ func InitializeRouter() {
 	templatesRouter := r.PathPrefix("/templates").Subrouter()
 	templatesRouter.HandleFunc("", getTemplates).Methods("GET")
 
-	templatesRouter.HandleFunc("/{name}", createTemplate).Methods("POST")
-	templatesRouter.HandleFunc("/file/{id}", uploadTemplateFile).Methods("POST")
+	// templatesRouter.HandleFunc("/{name}", createTemplate).Methods("POST")
+	// templatesRouter.HandleFunc("/file/{id}", uploadTemplateFile).Methods("POST")
 
 	templatesRouter.HandleFunc("/fill/{id}", fillTemplate).Methods("POST")
 	templatesRouter.HandleFunc("/filled/{uuid}", getFilledTemplate).Methods("GET")
 
-	templatesRouter.HandleFunc("/{id}/original", getTemplate).Methods("GET")
+	// templatesRouter.HandleFunc("/{id}/original", getTemplate).Methods("GET")
 
 	// templatesRouter.HandleFunc("/{id}", authMember(updateTemplate)).Methods("PUT")
 	// templatesRouter.HandleFunc("/{id}", authAdmin(deleteTemplate)).Methods("DELETE")
