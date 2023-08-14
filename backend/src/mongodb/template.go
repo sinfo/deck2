@@ -56,32 +56,6 @@ func (ctd *TemplateData) ParseFillBody(body io.Reader) error {
 	return nil
 }
 
-//TODO still not in use, testing needed
-// CreateTemplate creates a new template and saves it to the database
-// func (t *TemplateType) CreateTemplate(data TemplateData, name string) (*models.Template, error) {
-// 	ctx := context.Background()
-
-// 	insertResult, err := t.Collection.InsertOne(ctx, bson.M{
-// 		"name":         name,
-// 		"requirements": data.Requirements,
-// 	})
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	newTemplate, err := t.GetTemplate(insertResult.InsertedID.(primitive.ObjectID))
-
-// 	if err != nil {
-// 		log.Println("Error finding created template", err)
-// 		return nil, err
-// 	}
-
-// 	ResetCurrentPublicTemplates()
-
-// 	return newTemplate, nil
-// }
-
 func (t *TemplateType) UpdateTemplateUrl(templateID primitive.ObjectID, url string) (*models.Template, error) {
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -118,21 +92,6 @@ func (t *TemplateType) GetTemplate(templateID primitive.ObjectID) (*models.Templ
 	return &template, nil
 }
 
-// // UpdateTemplateData is the data used to update a template, using the method UpdateTemplate.
-// type UpdateTemplateData struct {
-// 	Name *string
-// }
-
-// // ParseBody fills the UpdateTemplateData from a body
-// func (utd *UpdateTemplateData) ParseBody(body io.Reader) error {
-
-// 	if err := json.NewDecoder(body).Decode(utd); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
 // GetTemplatesOptions is the options to give to GetTemplates.
 // All the fields are optional, and as such we use pointers as a "hack" to deal
 // with non-existent fields.
@@ -152,8 +111,6 @@ func (t *TemplateType) GetTemplates(tempOptions GetTemplatesOptions) ([]*models.
 	filter := bson.M{}
 	elemMatch := bson.M{}
 
-	//findOptions := options.Find()
-
 	if tempOptions.EventID != nil {
 		elemMatch["event"] = tempOptions.EventID
 	}
@@ -165,10 +122,6 @@ func (t *TemplateType) GetTemplates(tempOptions GetTemplatesOptions) ([]*models.
 		}
 	}
 
-	//var err error
-	//var cur *mongo.Cursor
-
-	//cur, err = t.Collection.Find(ctx, filter, findOptions)
 	cur, err := t.Collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err

@@ -61,55 +61,6 @@ class _CommunicationsListState extends State<CommunicationsList>
                 part.communicationsId!.length != 0)
             .length > 0) {
       return [
-        // ElevatedButton(
-        //   child: Text("Create Templates"),
-        //   style: ElevatedButton.styleFrom(
-        //     backgroundColor: Colors.red,
-        //     elevation: 0,
-        //   ),
-        //   onPressed: () async {
-        //     FilePickerResult? result = await FilePicker.platform.pickFiles();
-        //     if (result != null) {
-        //       ScaffoldMessenger.of(context).showSnackBar(
-        //         const SnackBar(content: Text('Creating')),
-        //       );
-
-        //       PlatformFile template = result.files.first;
-
-        //       Requirement requirement1 = new Requirement(title: "Insert Company Name", name:"companyName", type: "String");
-
-        //       //Requirement requirement2 = new Requirement(title: "Insert User Name", name:"userName", type:"String");
-
-        //       List<Requirement> requirements = [ 
-        //         requirement1,
-        //         //requirement2,
-        //       ];
-
-        //       // TODO insert form field to select name of template
-        //       Template? m = await templateService.createTemplate(
-        //         name: "Company Template", requirements: requirements);
-
-        //       if (m != null) {
-        //         m = await templateService.uploadTemplateFile(
-        //           id: m.id, template: template);
-        //         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-        //         ScaffoldMessenger.of(context).showSnackBar(
-        //           SnackBar(
-        //             content: Text('Done'),
-        //             duration: Duration(seconds: 2),
-        //           ),
-        //         );
-        //       } else {
-        //         ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-        //         ScaffoldMessenger.of(context).showSnackBar(
-        //           const SnackBar(content: Text('An error occured.')),
-        //         );
-        //       }
-        //     }
-        //   },
-        // ),
         TabBar(
           isScrollable: true,
           controller: _tabController,

@@ -91,14 +91,6 @@ class _AddThreadFormState extends State<AddThreadForm> {
         }
       });
 
-      // Requirement requirement1 = new Requirement(title: "Insert Speaker Name", name:"speakerName", type: "String", stringVal: widget.speaker!.name);
-      // Requirement requirement2 = new Requirement(title: "Insert User Name", name:"userName", type:"String", stringVal: me.name);
-
-      // List<Requirement> requirements = [ 
-      //   requirement1,
-      //   requirement2,
-      // ];
-
       if(selectedTemplateId != null){
         
         print(selectedTemplateId);

@@ -164,7 +164,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/image/public", authCoordinator(setCompanyPublicImage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(addCompanyParticipation)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation", authMember(updateCompanyParticipation)).Methods("PUT")
-  companyRouter.HandleFunc("/{id}/participation", authCoordinator(deleteCompanyParticipation)).Methods("DELETE")
+	companyRouter.HandleFunc("/{id}/participation", authCoordinator(deleteCompanyParticipation)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/participation/thread/{threadID}", authMember(deleteCompanyThread)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/participation/status/next", authMember(getCompanyValidSteps)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/participation/status/{status}", authAdmin(setCompanyStatus)).Methods("PUT")
@@ -328,17 +328,8 @@ func InitializeRouter() {
 	// templates handlers
 	templatesRouter := r.PathPrefix("/templates").Subrouter()
 	templatesRouter.HandleFunc("", getTemplates).Methods("GET")
-
-	// templatesRouter.HandleFunc("/{name}", createTemplate).Methods("POST")
-	// templatesRouter.HandleFunc("/file/{id}", uploadTemplateFile).Methods("POST")
-
 	templatesRouter.HandleFunc("/fill/{id}", fillTemplate).Methods("POST")
 	templatesRouter.HandleFunc("/filled/{uuid}", getFilledTemplate).Methods("GET")
-
-	// templatesRouter.HandleFunc("/{id}/original", getTemplate).Methods("GET")
-
-	// templatesRouter.HandleFunc("/{id}", authMember(updateTemplate)).Methods("PUT")
-	// templatesRouter.HandleFunc("/{id}", authAdmin(deleteTemplate)).Methods("DELETE")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
