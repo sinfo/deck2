@@ -126,15 +126,18 @@ class SpeakerBanner extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            SelectableText(
                               speaker.name,
-                              style: Theme.of(context).textTheme.headline5,
-                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                overflow: TextOverflow.ellipsis,
+                              ).merge(Theme.of(context).textTheme.headline5),
                             ),
-                            Text(speaker.title!,
-                                style: Theme.of(context).textTheme.subtitle1,
-                                softWrap: false,
-                                overflow: TextOverflow.ellipsis),
+                            SelectableText(
+                              speaker.title!,
+                              style: TextStyle(
+                                overflow: TextOverflow.ellipsis,
+                              ).merge(Theme.of(context).textTheme.subtitle1),
+                            ),
                             if (isLatestEvent && hasParticipation)
                               SpeakerStatusDropdownButton(
                                 speakerStatus: speakerStatus,

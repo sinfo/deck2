@@ -127,10 +127,11 @@ class CompanyBanner extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            SelectableText(
                               company.name,
-                              style: Theme.of(context).textTheme.headline5,
-                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                overflow: TextOverflow.ellipsis,
+                              ).merge(Theme.of(context).textTheme.headline5),
                             ),
                             if (isLatestEvent && hasParticipation)
                               CompanyStatusDropdownButton(
