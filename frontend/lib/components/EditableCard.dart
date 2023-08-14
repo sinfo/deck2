@@ -1,6 +1,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EditableCard extends StatefulWidget {
   ///The title displayed at the top of the card
@@ -19,6 +21,9 @@ class EditableCard extends StatefulWidget {
 
   ///The initial text to be placed inside the card
   final String body;
+
+  ///Set to true if the body of the card should be linkified
+  final bool linkify;
 
   ///A value of [TextInputType] that will determine what kind of text will be displayed in the card
   ///
@@ -39,6 +44,7 @@ class EditableCard extends StatefulWidget {
     required this.bodyEditedCallback,
     this.textInputType = TextInputType.text,
     this.isSingleline = true,
+    this.linkify = false,
   }) : super(key: key);
 
   @override
@@ -77,11 +83,24 @@ class _EditableCardState extends State<EditableCard> {
               color: Colors.grey[600],
             ),
             AnimatedCrossFade(
-              firstChild: SelectableText(
-                _body,
-                textAlign: TextAlign.left,
-                style: TextStyle(fontSize: 18),
-              ),
+              firstChild:
+                widget.linkify
+                ? SelectableLinkify(
+                  text: _body,
+                  onOpen: (link) async {
+                    if (!await launchUrl(Uri.parse(link.url))) {
+                      throw Exception('Could not launch ${link.url}');
+                    }
+                  },
+                  options: LinkifyOptions(humanize: true),
+                  textAlign: TextAlign.left,
+                  style: TextStyle(fontSize: 18),
+                )
+                : SelectableText(
+                  _body,
+                  textAlign: TextAlign.left,
+                  style: TextStyle(fontSize: 18),
+                ),
               secondChild: Column(
                 children: [
                   Stack(

@@ -72,6 +72,7 @@ class _DetailsScreenState extends State<DetailsScreen>
             child: EditableCard(
               title: 'Bio',
               body: widget.speaker.bio ?? "",
+              linkify: true,
               bodyEditedCallback: (newBio) =>
                   _editSpeaker(context, newBio, true),
               isSingleline: false,
@@ -83,6 +84,7 @@ class _DetailsScreenState extends State<DetailsScreen>
             child: EditableCard(
               title: 'Notes',
               body: widget.speaker.notes ?? "",
+              linkify: true,
               bodyEditedCallback: (newNotes) =>
                   _editSpeaker(context, newNotes, false),
               isSingleline: false,

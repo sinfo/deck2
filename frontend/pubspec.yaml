@@ -52,6 +52,7 @@ dependencies:
   dropdown_search: ^5.0.3
   form_builder_extra_fields: ^10.0.0
   table_calendar: ^3.0.8
+  flutter_linkify: ^6.0.0
 
 dev_dependencies:
   flutter_test:
