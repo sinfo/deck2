@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/components/blurryDialog.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
@@ -127,12 +128,23 @@ class CompanyBanner extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SelectableText(
-                              company.name,
-                              style: TextStyle(
-                                overflow: TextOverflow.ellipsis,
-                              ).merge(Theme.of(context).textTheme.headline5),
-                            ),
+                            Row(
+                              children: [
+                                SelectableText(
+                                  company.name,
+                                  style: TextStyle(
+                                    overflow: TextOverflow.ellipsis,
+                                  ).merge(Theme.of(context).textTheme.headline5),
+                                ),
+                                IconButton(
+                                  onPressed: () => Clipboard.setData(ClipboardData(text: company.name)).then((_) => ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Company name copied to clipboard'))
+                                  )),
+                                  icon: Icon(Icons.copy),
+                                  iconSize: 18,
+                                  color: Theme.of(context).colorScheme.secondary
+                                ),
+                            ]),
                             if (isLatestEvent && hasParticipation)
                               CompanyStatusDropdownButton(
                                 companyStatus: companyStatus,
