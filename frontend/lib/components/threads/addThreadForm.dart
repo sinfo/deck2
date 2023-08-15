@@ -69,11 +69,7 @@ class _AddThreadFormState extends State<AddThreadForm> {
     if (_formKey.currentState!.validate()) {
 
       (await _templates).forEach((template) {
-        print(selectedTemplateId);
         if (template.id == selectedTemplateId) {
-          print(template.name);
-          print(template.requirements);
-
           template.requirements?.forEach((req) {
             switch (req.name) {
               case "speakerName" :
@@ -92,8 +88,6 @@ class _AddThreadFormState extends State<AddThreadForm> {
       });
 
       if(selectedTemplateId != null){
-        
-        print(selectedTemplateId);
         var uuid = await templateService.fillTemplate(id:selectedTemplateId!, filledRequirements: filledRequirements);
         if(uuid != null){
           final String? _deckURL =
@@ -199,7 +193,6 @@ class _AddThreadFormState extends State<AddThreadForm> {
                             onChanged: (next) {
                               setState(() {
                                 selectedTemplateId = next!;
-                                print(selectedTemplateId);
                               });
                             },
                           ),
