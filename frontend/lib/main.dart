@@ -8,6 +8,7 @@ import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/routes/members_teams/member/MemberNotifier.dart';
 import 'package:frontend/routes/meeting/MeetingsNotifier.dart';
 import 'package:frontend/routes/session/SessionsNotifier.dart';
+import 'package:frontend/routes/template/TemplatesNotifier.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/models/event.dart';
 import 'package:frontend/routes/members_teams/teams/TeamsNotifier.dart';
@@ -60,6 +61,9 @@ Future main() async {
       ),
       ChangeNotifierProvider<TeamsNotifier>(
         create: (_) => TeamsNotifier(teams: []),
+      ),
+      ChangeNotifierProvider<TemplatesNotifier>(
+        create: (_) => TemplatesNotifier(templates: []),
       ),
     ],
     child: App(),
