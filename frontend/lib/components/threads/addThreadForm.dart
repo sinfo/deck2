@@ -215,13 +215,17 @@ class _AddThreadFormState extends State<AddThreadForm> {
                 }
               }),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () => _submit(context),
-              child: const Text('Submit'),
-            ),
-          ),
+          // This is temporary, while templates are not editable, to prevent users from submitting an empty thread.
+          Visibility(
+            visible: kind != "TEMPLATE",
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                onPressed: () => _submit(context),
+                child: const Text('Submit'),
+              )
+            )
+          )
         ],
       ),
     );
