@@ -944,6 +944,18 @@ func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Com
     }
   }
 
+  sessions, err := Sessions.GetSessions(GetSessionsOptions{Company: &companyID})
+	if err != nil {
+		return nil, err
+	}
+
+  for _, session := range sessions {
+    _, err := Sessions.DeleteSession(session.ID)
+    if err != nil {
+      return nil, err
+    }
+  }
+
   err = c.Collection.FindOneAndDelete(ctx, bson.M{"_id": companyID}).Decode(&company)
   if err != nil {
     return nil, err

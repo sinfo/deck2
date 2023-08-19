@@ -422,6 +422,18 @@ func (s *SpeakersType) DeleteSpeaker(speakerID primitive.ObjectID) (*models.Spea
     }
   }
 
+	sessions, err := Sessions.GetSessions(GetSessionsOptions{Speaker: &speakerID})
+	if err != nil {
+		return nil, err
+	}
+
+  for _, session := range sessions {
+    _, err := Sessions.DeleteSession(session.ID)
+    if err != nil {
+      return nil, err
+    }
+  }
+
 	err = s.Collection.FindOneAndDelete(ctx, bson.M{"_id": speakerID}).Decode(&speaker)
 	if err != nil {
 		return nil, err
@@ -1070,18 +1082,6 @@ func (s *SpeakersType) RemoveSpeakerParticipation(speakerID primitive.ObjectID, 
 	if err != nil {
 		return nil, err
 	}
-
-	sessions, err := Sessions.GetSessions(GetSessionsOptions{Speaker: &speakerID})
-	if err != nil {
-		return nil, err
-	}
-
-  for _, session := range sessions {
-    _, err := Sessions.DeleteSession(session.ID)
-    if err != nil {
-      return nil, err
-    }
-  }
 
 	for _, p := range speaker.Participations {
 		if p.Event == eventID {
