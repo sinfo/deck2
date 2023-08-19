@@ -415,8 +415,11 @@ func (s *SpeakersType) DeleteSpeaker(speakerID primitive.ObjectID) (*models.Spea
     return nil, err
   }
 
-  if len(currentSpeaker.Participations) > 0 {
-    return nil, errors.New("Speaker has participations, cannot delete")
+  for _, participation := range currentSpeaker.Participations {
+    _, err = s.RemoveSpeakerParticipation(speakerID, participation.Event)
+    if err != nil {
+      return nil, err
+    }
   }
 
 	err = s.Collection.FindOneAndDelete(ctx, bson.M{"_id": speakerID}).Decode(&speaker)
@@ -1073,17 +1076,26 @@ func (s *SpeakersType) RemoveSpeakerParticipation(speakerID primitive.ObjectID, 
 		return nil, err
 	}
 
-	if len(sessions) > 0 {
-		return nil, errors.New("Participation associated with session")
-	}
+  for _, session := range sessions {
+    _, err := Sessions.DeleteSession(session.ID)
+    if err != nil {
+      return nil, err
+    }
+  }
 
-	for _, s := range speaker.Participations {
-		if s.Event == eventID {
-			if len(s.Communications) > 0 {
-				return nil, errors.New("Participation has communication")
-			}
-      if len(s.Flights) > 0 {
-        return nil, errors.New("Participation has flight")
+	for _, p := range speaker.Participations {
+		if p.Event == eventID {
+      for _, f := range p.Flights {
+        _, err := s.RemoveSpeakerFlightInfo(speakerID, f)
+        if err != nil {
+          return nil, err
+        }
+      }
+      for _, c := range p.Communications {
+        _, err := s.DeleteSpeakerThread(speakerID, c)
+        if err != nil {
+          return nil, err
+        }
       }
 			break
 		}
