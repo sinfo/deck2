@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/routes/company/CompanyScreen.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
@@ -15,6 +17,7 @@ import 'package:collection/collection.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
 
 class ListViewCard extends StatefulWidget {
   final Member? member;
@@ -33,9 +36,11 @@ class ListViewCard extends StatefulWidget {
   late final bool? _editable;
   late Widget _screen;
   final Future<void> Function(int, BuildContext)? onChangeParticipationStatus;
+  int? latestEvent;
 
   ListViewCard(
       {Key? key,
+      this.latestEvent,
       required this.small,
       this.member,
       this.company,
@@ -47,9 +52,9 @@ class ListViewCard extends StatefulWidget {
       int? event = App.localStorage.getInt("event");
       if (event != null) {
         if (company != null) {
-          _initCompany(event);
+          _initCompany(event, this.latestEvent);
         } else if (speaker != null) {
-          _initSpeaker(event);
+          _initSpeaker(event, this.latestEvent);
         } else if (member != null) {
           _initMember(event);
         }
@@ -67,13 +72,13 @@ class ListViewCard extends StatefulWidget {
     _editable = false;
   }
 
-  void _initCompany(int event) {
+  void _initCompany(int event, int? latestEvent) {
     _tag = company!.id + event.toString();
     _screen = CompanyScreen(company: company!);
     CompanyParticipation? participation = company!.participations!
         .firstWhereOrNull((element) => element.event == event);
     if (participation != null) {
-      _editable = participation.event == event;
+      _editable = latestEvent == event;
     } else {
       _editable = false;
     }
@@ -89,7 +94,7 @@ class ListViewCard extends StatefulWidget {
     _lastParticipation = company!.lastParticipation;
   }
 
-  void _initSpeaker(int event) {
+  void _initSpeaker(int event, int? latestEvent) {
     _tag = speaker!.id + event.toString();
     _screen = SpeakerScreen(speaker: speaker!);
     SpeakerParticipation? participation =
@@ -97,7 +102,7 @@ class ListViewCard extends StatefulWidget {
       (element) => element.event == event,
     );
     if (participation != null) {
-      _editable = participation.event == event;
+      _editable = latestEvent == event;
     } else {
       _editable = false;
     }
