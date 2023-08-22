@@ -14,9 +14,9 @@ final Map<String, String> roles = {
 class AddTeamMemberForm extends StatefulWidget {
   final Team? team;
   final void Function(BuildContext, Team?)? onEditTeam;
-  final Role? role2;
+  final Role? myRole;
 
-  AddTeamMemberForm({Key? key, this.role2, this.team, this.onEditTeam})
+  AddTeamMemberForm({Key? key, this.myRole, this.team, this.onEditTeam})
       : super(key: key);
 
   @override
@@ -69,11 +69,8 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
   }
 
   Widget _buildForm() {
-    var r = widget.role2;
-    debugPrint('Role in add team member form: $r');
-    if (widget.role2 == Role.ADMIN) {
+    if (widget.myRole == Role.ADMIN) {
       roles['COORDINATOR'] = 'Coordinator';
-      debugPrint('In if');
     }
     return Form(
       key: _formKey,

@@ -87,8 +87,6 @@ class _TeamScreen extends State<TeamScreen>
   }
 
   void _addTeamMember(context, Role role) {
-    debugPrint('Role in team screen: $role');
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -97,7 +95,7 @@ class _TeamScreen extends State<TeamScreen>
           heightFactor: 0.7,
           child: Container(
             child: AddTeamMemberForm(
-                role2: role,
+                myRole: role,
                 team: widget.team,
                 onEditTeam: (context, _team) {
                   teamChangedCallback(context, team: _team);
