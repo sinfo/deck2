@@ -86,7 +86,9 @@ class _TeamScreen extends State<TeamScreen>
     }
   }
 
-  void _addTeamMember(context) {
+  void _addTeamMember(context, Role role) {
+    debugPrint('Role in team screen: $role');
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -95,6 +97,7 @@ class _TeamScreen extends State<TeamScreen>
           heightFactor: 0.7,
           child: Container(
             child: AddTeamMemberForm(
+                role2: role,
                 team: widget.team,
                 onEditTeam: (context, _team) {
                   teamChangedCallback(context, team: _team);
@@ -128,7 +131,7 @@ class _TeamScreen extends State<TeamScreen>
                     ),
                     SpeedDialChild(
                       child: Icon(Icons.person_add),
-                      onTap: () => _addTeamMember(context),
+                      onTap: () => _addTeamMember(context, r),
                       label: 'Add Member',
                       labelStyle: TextStyle(fontWeight: FontWeight.w500),
                     ),
