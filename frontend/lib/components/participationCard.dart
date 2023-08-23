@@ -587,26 +587,29 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                             );
                                           })
                                       : Container(),
-                                  Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: IconButton(
-                                        constraints: BoxConstraints(),
-                                        hoverColor: Colors.transparent,
-                                        splashColor: Colors.transparent,
-                                        icon: !_isEditing
-                                            ? Icon(Icons.edit)
-                                            : Icon(Icons.cancel),
-                                        color: !_isEditing
-                                            ? const Color(0xff5c7ff2)
-                                            : Colors.red,
-                                        iconSize: 22,
-                                        onPressed: () {
-                                          setState(() {
-                                            _isEditing = !_isEditing;
-                                            _resetControllers();
-                                          });
-                                        }),
-                                  )
+                                  (participationMemberId == currentMemberId) ||
+                                          (r == Role.ADMIN)
+                                      ? Padding(
+                                          padding: const EdgeInsets.all(4),
+                                          child: IconButton(
+                                              constraints: BoxConstraints(),
+                                              hoverColor: Colors.transparent,
+                                              splashColor: Colors.transparent,
+                                              icon: !_isEditing
+                                                  ? Icon(Icons.edit)
+                                                  : Icon(Icons.cancel),
+                                              color: !_isEditing
+                                                  ? const Color(0xff5c7ff2)
+                                                  : Colors.red,
+                                              iconSize: 22,
+                                              onPressed: () {
+                                                setState(() {
+                                                  _isEditing = !_isEditing;
+                                                  _resetControllers();
+                                                });
+                                              }),
+                                        )
+                                      : Container()
                                 ],
                                 ...getStatus(editable)
                               ]),
