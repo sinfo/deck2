@@ -71,7 +71,7 @@ class AuthService extends ChangeNotifier {
         Response<String> response =
             await _dio.get(_deckURL! + '/members/${me!.id}/role');
         final responseJson = json.decode(response.data as String);
-        _role = convert(responseJson['role']);
+        _role = Role.MEMBER;
         return _role;
       } on SocketException {
         throw DeckException('No Internet connection');

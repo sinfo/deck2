@@ -551,7 +551,17 @@ class _ParticipationCardState extends State<ParticipationCard> {
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             Role r = snapshot.data as Role;
+                            Member? me = Provider.of<Member?>(context);
 
+                            var participationMemberId =
+                                widget.participation.memberId;
+                            debugPrint(
+                                'participationMemberId: $participationMemberId');
+
+                            var currentMemberId = me?.id;
+                            debugPrint('currentMemberId: $currentMemberId');
+
+                            // _currentMember
                             return Container(
                               child: Row(children: [
                                 if (editable) ...[
