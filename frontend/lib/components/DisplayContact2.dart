@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
+import 'package:frontend/models/speaker.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/members_teams/member/EditContact.dart';
+import 'package:frontend/components/EditContact.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/contactService.dart';
 import 'package:provider/provider.dart';
 import 'InformationBox.dart';
 
 class DisplayContacts extends StatefulWidget {
-  final Member member;
-  const DisplayContacts({Key? key, required this.member}) : super(key: key);
+  final dynamic person; // Accept either Speaker or Member
+  const DisplayContacts({Key? key, required this.person}) : super(key: key);
 
   @override
   _DisplayContactsState createState() => _DisplayContactsState();
@@ -22,7 +23,7 @@ class _DisplayContactsState extends State<DisplayContacts> {
   @override
   void initState() {
     super.initState();
-    this.contact = contactService.getContact(widget.member.contact!);
+    this.contact = contactService.getContact(widget.person.contact!);
   }
 
   _isEditable(Contact cont) {
@@ -33,17 +34,21 @@ class _DisplayContactsState extends State<DisplayContacts> {
             Role r = snapshot.data as Role;
             Member me = Provider.of<Member?>(context)!;
 
-            if (r == Role.ADMIN || r == Role.COORDINATOR || me.id == widget.member.id) {
+            if (r == Role.ADMIN ||
+                r == Role.COORDINATOR ||
+                r == Role.MEMBER ||
+                (widget.person is Member && widget.person.id == me.id)) {
               return FloatingActionButton.extended(
                 onPressed: () async {
                   final bool? shouldRefresh = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
                         builder: (context) =>
-                            EditContact(contact: cont, member: widget.member)),
+                            EditContact(contact: cont, person: widget.person)),
                   );
                   if (shouldRefresh ?? false) {
-                    this.contact = contactService.getContact(widget.member.contact!);
+                    this.contact =
+                        contactService.getContact(widget.person.contact!);
                     setState(() {});
                   }
                 },

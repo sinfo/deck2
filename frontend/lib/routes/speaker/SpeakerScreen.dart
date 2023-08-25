@@ -5,6 +5,7 @@ import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/threads/participations/communicationsList.dart';
 import 'package:frontend/models/participation.dart';
+import 'package:frontend/components/DisplayContact2.dart';
 import 'package:frontend/routes/speaker/DetailsScreen.dart';
 import 'package:frontend/routes/speaker/ParticipationList.dart';
 import 'package:frontend/routes/speaker/banner/SpeakerBanner.dart';
@@ -35,7 +36,7 @@ class _SpeakerScreenState extends State<SpeakerScreen>
   void initState() {
     super.initState();
     _speakerService = SpeakerService();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(_handleTabIndex);
   }
 
@@ -119,6 +120,7 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                     controller: _tabController,
                     tabs: [
                       Tab(text: 'Details'),
+                      Tab(text: 'Contacts'),
                       Tab(text: 'FlightInfo'),
                       Tab(text: 'Participations'),
                       Tab(text: 'Communications'),
@@ -129,6 +131,7 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                       DetailsScreen(
                         speaker: widget.speaker,
                       ),
+                      DisplayContacts(person: widget.speaker),
                       FlightInfoScreen(
                           participations: widget.speaker.participations ?? [],
                           id: widget.speaker.id,
@@ -226,6 +229,8 @@ class _SpeakerScreenState extends State<SpeakerScreen>
       case 0:
         return null;
       case 1:
+        return null;
+      case 2:
         return FloatingActionButton.extended(
           onPressed: () {
             Navigator.push(
@@ -241,21 +246,29 @@ class _SpeakerScreenState extends State<SpeakerScreen>
           label: const Text('Add Flight Information'),
           icon: const Icon(Icons.add),
         );
-      case 2:
-        {
-          bool hasCurrentParticipation = !widget.speaker.participations!.isEmpty && widget.speaker
-                  .participations![widget.speaker.participations!.length - 1].event == latestEvent;
-          return hasCurrentParticipation ? null : FloatingActionButton.extended(
-            onPressed: () {
-              speakerChangedCallback(context,
-                fs: _speakerService.addParticipation(
-                id: widget.speaker.id));
-            },
-            label: const Text('Add Participation'),
-            icon: const Icon(Icons.add),
-          );
-        }
       case 3:
+        {
+          bool hasCurrentParticipation =
+              !widget.speaker.participations!.isEmpty &&
+                  widget
+                          .speaker
+                          .participations![
+                              widget.speaker.participations!.length - 1]
+                          .event ==
+                      latestEvent;
+          return hasCurrentParticipation
+              ? null
+              : FloatingActionButton.extended(
+                  onPressed: () {
+                    speakerChangedCallback(context,
+                        fs: _speakerService.addParticipation(
+                            id: widget.speaker.id));
+                  },
+                  label: const Text('Add Participation'),
+                  icon: const Icon(Icons.add),
+                );
+        }
+      case 4:
         {
           return FloatingActionButton.extended(
             onPressed: () {
