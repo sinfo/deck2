@@ -321,22 +321,24 @@ func companyToPublic(company models.Company, eventID *int) (*models.CompanyPubli
 				Package: models.PackagePublic{},
 			}
 
-			pack, err := Packages.GetPackage(*participation.Package)
-			if err == nil {
-				participationObj.Package = models.PackagePublic{
-					Name:  pack.Name,
-					Items: make([]models.PackageItemPublic, 0),
-				}
+			if participation.Package != nil {
+				pack, err := Packages.GetPackage(*participation.Package)
+				if err == nil {
+					participationObj.Package = models.PackagePublic{
+						Name:  pack.Name,
+						Items: make([]models.PackageItemPublic, 0),
+					}
 
-				// add only public items
-				for _, item := range pack.Items {
-					if item.Public {
-						participationObj.Package.Items = append(
-							participationObj.Package.Items,
-							models.PackageItemPublic{
-								Item:     item.Item,
-								Quantity: item.Quantity,
-							})
+					// add only public items
+					for _, item := range pack.Items {
+						if item.Public {
+							participationObj.Package.Items = append(
+								participationObj.Package.Items,
+								models.PackageItemPublic{
+									Item:     item.Item,
+									Quantity: item.Quantity,
+								})
+						}
 					}
 				}
 			}
@@ -421,7 +423,6 @@ func (c *CompaniesType) GetPublicCompanies(options GetCompaniesPublicOptions) ([
 		if err == nil {
 			public = append(public, p)
 		}
-
 	}
 
 	if err := cur.Err(); err != nil {
