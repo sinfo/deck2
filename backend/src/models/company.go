@@ -97,9 +97,6 @@ type CompanyParticipationPublic struct {
 	// Is this company participating as a partner.
 	Partner bool `json:"partner"`
 
-	// Participation's status.
-	Status ParticipationStatus `json:"status" bson:"status"`
-
 	// Participation's package is a Package _id (see models.Package).
 	Package PackagePublic `json:"package,omitempty"`
 }

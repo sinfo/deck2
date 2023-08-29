@@ -318,7 +318,6 @@ func companyToPublic(company models.Company, eventID *int) (*models.CompanyPubli
 			participationObj = models.CompanyParticipationPublic{
 				Event:   p.Event,
 				Partner: participation.Partner,
-				Status: participation.Status,
 				Package: models.PackagePublic{},
 			}
 
