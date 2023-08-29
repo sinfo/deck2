@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/SearchResultWidget.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/team.dart';
+import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/teamService.dart';
 import 'package:frontend/services/memberService.dart';
 
@@ -13,8 +14,10 @@ final Map<String, String> roles = {
 class AddTeamMemberForm extends StatefulWidget {
   final Team? team;
   final void Function(BuildContext, Team?)? onEditTeam;
+  final Role? myRole;
 
-  AddTeamMemberForm({Key? key, this.team, this.onEditTeam}) : super(key: key);
+  AddTeamMemberForm({Key? key, this.myRole, this.team, this.onEditTeam})
+      : super(key: key);
 
   @override
   _AddTeamMemberFormState createState() => _AddTeamMemberFormState();
@@ -66,6 +69,9 @@ class _AddTeamMemberFormState extends State<AddTeamMemberForm> {
   }
 
   Widget _buildForm() {
+    if (widget.myRole == Role.ADMIN) {
+      roles['COORDINATOR'] = 'Coordinator';
+    }
     return Form(
       key: _formKey,
       child: SingleChildScrollView(

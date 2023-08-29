@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/speaker/speakerNotifier.dart';
@@ -99,6 +100,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
 
   @override
   Widget build(BuildContext context) {
+    int latestEvent = Provider.of<EventNotifier>(context).latest.id;
     return FutureBuilder<List<Speaker>>(
         future: speakers,
         builder: (context, snapshot) {
@@ -154,6 +156,7 @@ class _SpeakerListWidgetState extends State<SpeakerListWidget> {
                           itemCount: speak.length,
                           itemBuilder: (BuildContext context, int index) {
                             return ListViewCard(
+                                latestEvent: latestEvent,
                                 small: isSmall,
                                 speaker: speak[index],
                                 participationsInfo: true,
