@@ -321,22 +321,24 @@ func companyToPublic(company models.Company, eventID *int) (*models.CompanyPubli
 				Package: models.PackagePublic{},
 			}
 
-			pack, err := Packages.GetPackage(*participation.Package)
-			if err == nil {
-				participationObj.Package = models.PackagePublic{
-					Name:  pack.Name,
-					Items: make([]models.PackageItemPublic, 0),
-				}
+			if participation.Package != nil {
+				pack, err := Packages.GetPackage(*participation.Package)
+				if err == nil {
+					participationObj.Package = models.PackagePublic{
+						Name:  pack.Name,
+						Items: make([]models.PackageItemPublic, 0),
+					}
 
-				// add only public items
-				for _, item := range pack.Items {
-					if item.Public {
-						participationObj.Package.Items = append(
-							participationObj.Package.Items,
-							models.PackageItemPublic{
-								Item:     item.Item,
-								Quantity: item.Quantity,
-							})
+					// add only public items
+					for _, item := range pack.Items {
+						if item.Public {
+							participationObj.Package.Items = append(
+								participationObj.Package.Items,
+								models.PackageItemPublic{
+									Item:     item.Item,
+									Quantity: item.Quantity,
+								})
+						}
 					}
 				}
 			}
@@ -421,7 +423,6 @@ func (c *CompaniesType) GetPublicCompanies(options GetCompaniesPublicOptions) ([
 		if err == nil {
 			public = append(public, p)
 		}
-
 	}
 
 	if err := cur.Err(); err != nil {
@@ -937,8 +938,23 @@ func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Com
 		return nil, err
 	}
 
-  if len(currentCompany.Participations) > 0 {
-    return nil, errors.New("Company has participations")
+  for _, participation := range currentCompany.Participations {
+    _, err := c.DeleteCompanyParticipation(companyID, participation.Event)
+    if err != nil {
+      return nil, err
+    }
+  }
+
+  sessions, err := Sessions.GetSessions(GetSessionsOptions{Company: &companyID})
+	if err != nil {
+		return nil, err
+	}
+
+  for _, session := range sessions {
+    _, err := Sessions.DeleteSession(session.ID)
+    if err != nil {
+      return nil, err
+    }
   }
 
   err = c.Collection.FindOneAndDelete(ctx, bson.M{"_id": companyID}).Decode(&company)
@@ -946,10 +962,8 @@ func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Com
     return nil, err
   }
 
-  _, err = Contacts.DeleteContact(company.Contact)
-  if err != nil {
-    return nil, err
-  }
+  // Ignore error, if contact doesn't exist, it's ok.
+  Contacts.DeleteContact(company.Contact)
 
 	return &company, nil
 }
@@ -1238,8 +1252,11 @@ func (c *CompaniesType) DeleteCompanyParticipation(companyID primitive.ObjectID,
 
   for _, p := range company.Participations {
     if p.Event == eventID {
-      if (len(p.Communications) > 0) {
-        return nil, errors.New("Company participation has communications")
+      for _, communication := range p.Communications {
+        _, err := c.DeleteCompanyThread(companyID, communication)
+        if err != nil {
+          return nil, err
+        }
       }
     }
   }

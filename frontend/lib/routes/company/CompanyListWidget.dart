@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/ListViewCard.dart';
 import 'package:frontend/components/appbar.dart';
+import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
@@ -100,6 +101,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
 
   @override
   Widget build(BuildContext context) {
+    int latestEvent = Provider.of<EventNotifier>(context).latest.id;
     return FutureBuilder<List<Company>>(
         future: companies,
         builder: (context, snapshot) {
@@ -155,6 +157,7 @@ class _CompanyListWidgetState extends State<CompanyListWidget> {
                           itemCount: comp.length,
                           itemBuilder: (BuildContext context, int index) {
                             return ListViewCard(
+                              latestEvent: latestEvent,
                               small: isSmall,
                               company: comp[index],
                               participationsInfo: true,

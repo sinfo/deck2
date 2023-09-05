@@ -217,6 +217,7 @@ class MemberSpeakerRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int event = Provider.of<EventNotifier>(context).event.id;
+    int latestEvent = Provider.of<EventNotifier>(context).latest.id;
 
     List<Speaker> speakers = Provider.of<SpeakerTableNotifier>(context)
         .getByMember(member.id, event, filter);
@@ -262,6 +263,7 @@ class MemberSpeakerRow extends StatelessWidget {
                           scrollDirection: Axis.horizontal,
                           children: speakers
                               .map((e) => ListViewCard(
+                                    latestEvent: latestEvent,
                                     small: true,
                                     speaker: e,
                                     onChangeParticipationStatus:
@@ -288,6 +290,7 @@ class MemberSpeakerRow extends StatelessWidget {
                                 crossAxisAlignment: WrapCrossAlignment.start,
                                 children: speakers
                                     .map((e) => ListViewCard(
+                                          latestEvent: latestEvent,
                                           small: false,
                                           speaker: e,
                                           onChangeParticipationStatus:

@@ -156,7 +156,7 @@ class _SessionBannerState extends State<SessionBanner> {
             Text(kind,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-            Text(
+            SelectableText(
                 widget.session.title.substring(
                         0,
                         widget.session.title.length < 30
