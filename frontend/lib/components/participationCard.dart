@@ -12,13 +12,16 @@ import 'package:frontend/models/event.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
+import 'package:frontend/models/speaker.dart';
 import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
+import 'package:frontend/routes/speaker/speakerNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/memberService.dart';
 import 'package:frontend/services/packageService.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:frontend/routes/speaker/banner/SpeakerBanner.dart';
 
 enum CardType {
   MEMBER,
@@ -34,6 +37,7 @@ class ParticipationCard extends StatefulWidget {
   final Future<void> Function(Map<String, dynamic>)? onEdit;
   final Future<void> Function(ParticipationStatus)? onChangeParticipationStatus;
   final Future<void> Function(Package)? onChangeCompanyPackage;
+  final Speaker? speaker;
 
   ParticipationCard({
     Key? key,
@@ -44,6 +48,7 @@ class ParticipationCard extends StatefulWidget {
     this.onEdit,
     this.onChangeParticipationStatus,
     this.onChangeCompanyPackage,
+    this.speaker,
   }) : super(key: key);
 
   static Widget addParticipationCard(Function() onAddParticipation) {
@@ -440,6 +445,12 @@ class _ParticipationCardState extends State<ParticipationCard> {
   }
 
   List<Widget> getStatus(bool editable) {
+    ParticipationStatus? speakerStatus = widget.speaker!.participationStatus;
+    List<ParticipationStep> steps = [
+      ParticipationStep(next: speakerStatus!, step: 0)
+    ];
+    final void Function(int, BuildContext) statusChangeCallback;
+
     if (editable) {
       return [
         DecoratedBox(
@@ -448,7 +459,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
               borderRadius: BorderRadius.circular(5)),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
-            child: DropdownButton<ParticipationStatus>(
+            child: DropdownButton<ParticipationStep>(
               icon: Icon(
                 Icons.arrow_downward,
                 color:
@@ -458,20 +469,10 @@ class _ParticipationCardState extends State<ParticipationCard> {
               ),
               // iconSize: 16,
               selectedItemBuilder: (BuildContext context) {
-                return getAllStatus().map<Widget>((ParticipationStatus status) {
-                  return Container(
-                    alignment: Alignment.centerLeft,
-                    constraints: const BoxConstraints(minWidth: 70),
-                    child: Text(
-                      STATUSSTRING[status]!,
-                      style: TextStyle(
-                        color: widget.participation.status ==
-                                ParticipationStatus.GIVEN_UP
-                            ? Colors.white
-                            : Colors.black,
-                        fontSize: 14,
-                      ),
-                    ),
+                return steps.map((e) {
+                  return Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Container(child: Text(STATUSSTRING[e.next]!)),
                   );
                 }).toList();
               },
@@ -482,14 +483,19 @@ class _ParticipationCardState extends State<ParticipationCard> {
                         ? Colors.white
                         : Colors.black,
               ),
-              onChanged: (ParticipationStatus? newStatus) async {
-                widget.onChangeParticipationStatus!(newStatus!);
+              onChanged: (next) {
+                // speakerChangedCallback(
+                //   context,
+                //   fs: _speakerService.stepParticipationStatus(
+                //       id: widget.speaker.id, step: step),
+                // );
               },
-              value: widget.participation.status,
-              items: getAllStatus()
-                  .map<DropdownMenuItem<ParticipationStatus>>((e) =>
-                      DropdownMenuItem<ParticipationStatus>(
-                          value: e, child: Text(STATUSSTRING[e]!)))
+              value: steps[0],
+              items: steps
+                  .map((e) => DropdownMenuItem<ParticipationStep>(
+                        value: e,
+                        child: Text(STATUSSTRING[e.next] ?? ''),
+                      ))
                   .toList(),
             ),
           ),
@@ -515,6 +521,36 @@ class _ParticipationCardState extends State<ParticipationCard> {
           ),
         ),
       ];
+    }
+  }
+
+  Future<void> speakerChangedCallback(BuildContext context,
+      {Future<Speaker?>? fs, Speaker? speaker}) async {
+    Speaker? s;
+    if (fs != null) {
+      s = await fs;
+    } else if (speaker != null) {
+      s = speaker;
+    }
+    if (s != null) {
+      Provider.of<SpeakerTableNotifier>(context, listen: false).edit(s);
+      // setState(() {
+      //   widget.speaker = s!;
+      // });
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Done.', style: TextStyle(color: Colors.white))),
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('An error occured.',
+                style: TextStyle(color: Colors.white))),
+      );
     }
   }
 
