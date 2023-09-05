@@ -588,7 +588,8 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                           })
                                       : Container(),
                                   (participationMemberId == currentMemberId) ||
-                                          (r == Role.ADMIN)
+                                          (r == Role.ADMIN) ||
+                                          (r == Role.COORDINATOR)
                                       ? Padding(
                                           padding: const EdgeInsets.all(4),
                                           child: IconButton(
