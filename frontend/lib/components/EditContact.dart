@@ -629,6 +629,6 @@ extension EmailValidator on String {
 
 extension PhoneValidator on String {
   bool isValidPhoneNumber() {
-    return RegExp(r'^[0-9]{9}$').hasMatch(this);
+    return RegExp(r'^[0-9]{7,15}$').hasMatch(this);
   }
 }
