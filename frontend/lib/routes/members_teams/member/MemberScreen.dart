@@ -4,7 +4,7 @@ import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/components/memberPartCard.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
-import 'package:frontend/routes/members_teams/member/DisplayContact2.dart';
+import 'package:frontend/components/DisplayContact2.dart';
 import 'package:frontend/routes/members_teams/member/EditMemberForm.dart';
 import 'package:frontend/routes/members_teams/member/MemberNotifier.dart';
 import 'package:frontend/services/authService.dart';
@@ -91,7 +91,7 @@ class _MemberScreen extends State<MemberScreen>
                       child: TabBarView(
                     controller: _tabController,
                     children: [
-                      DisplayContacts(member: widget.member),
+                      DisplayContacts(person: widget.member),
                       DisplayParticipations(
                           member: widget.member, small: small),
                     ],
