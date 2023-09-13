@@ -4,15 +4,12 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:frontend/main.dart';
 import 'package:frontend/models/requirement.dart';
 import 'package:frontend/models/template.dart';
 import 'package:frontend/services/service.dart';
 import 'package:frontend/components/deckException.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 
 class TemplateService extends Service {
   
@@ -105,7 +102,6 @@ class TemplateService extends Service {
       final responseJson = json.decode(res.data!) as List;
       List<Template> templates =
           responseJson.map((e) => Template.fromJson(e)).toList();
-      print(templates);
       return templates;
     } on SocketException {
       throw DeckException('No Internet connection');

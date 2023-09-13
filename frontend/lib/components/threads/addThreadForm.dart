@@ -34,9 +34,27 @@ class AddThreadForm extends StatefulWidget {
   _AddThreadFormState createState() => _AddThreadFormState();
 }
 
+String ordinal(int number) {
+    if(!(number >= 1 && number <= 100)) {//here you change the range
+      throw Exception('Invalid number');
+    }
+
+    if(number >= 11 && number <= 13) {
+      return 'th';
+    }
+
+    switch(number % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+}
+
 class _AddThreadFormState extends State<AddThreadForm> {
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
+  final _paragraphController = TextEditingController();
   final TemplateService templateService = TemplateService();
   final AuthService authService = new AuthService();
   String kind = 'TEMPLATE';
@@ -64,10 +82,10 @@ class _AddThreadFormState extends State<AddThreadForm> {
 
   void _getTemplate(BuildContext context) async {
     Member me = Provider.of<Member?>(context, listen: false)!;
+    int eventEdition = Provider.of<EventNotifier>(context, listen: false).event.id;
     List<Requirement> filledRequirements = [];
 
     if (_formKey.currentState!.validate()) {
-
       (await _templates).forEach((template) {
         if (template.id == selectedTemplateId) {
           template.requirements?.forEach((req) {
@@ -81,6 +99,21 @@ class _AddThreadFormState extends State<AddThreadForm> {
               case "companyName" :
                 req.stringVal = widget.company!.name;
                 break;
+              case "eventEdition" :
+                req.stringVal = eventEdition.toString();
+                break;
+              case "eventEditionOrdinal" :
+                req.stringVal = ordinal(eventEdition);
+                break;
+              case "initialParagraph" :
+                req.stringVal = _paragraphController.text;
+                break;
+              case "eventDates" :
+                DateTime eventStart = Provider.of<EventNotifier>(context, listen: false).event.start;
+                DateTime eventEnd = Provider.of<EventNotifier>(context, listen: false).event.end;
+                String dateStart ="${eventStart.day.toString().padLeft(2,'0')}/${eventStart.month.toString().padLeft(2,'0')}/${eventStart.year.toString()}";
+                String dateEnd ="${eventEnd.day.toString().padLeft(2,'0')}/${eventEnd.month.toString().padLeft(2,'0')}/${eventEnd.year.toString()}";
+                req.stringVal = dateStart + " - " + dateEnd;
             }
             filledRequirements.add(req);
           });
@@ -111,7 +144,6 @@ class _AddThreadFormState extends State<AddThreadForm> {
   @override
   Widget build(BuildContext context) {
     List<String> kinds = ["TEMPLATE", "TO", "FROM", "PHONE_CALL", "MEETING"];
-    int event = Provider.of<EventNotifier>(context).event.id;
     return Form(
       key: _formKey,
       child: Column(
@@ -148,6 +180,7 @@ class _AddThreadFormState extends State<AddThreadForm> {
                 child: TextFormField(
                   keyboardType: TextInputType.multiline,
                   textInputAction: TextInputAction.newline,
+                  maxLines: null,
                   controller: _textController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -170,20 +203,25 @@ class _AddThreadFormState extends State<AddThreadForm> {
                 if (snapshot.hasData) {
                   List<Template> templates = snapshot.data as List<Template>;
                   if (!templates.isEmpty) {
-                    selectedTemplateId = selectedTemplateId ?? templates.first.id;
+                    var validTemplates = templates.where((template) {
+                      if (widget.speaker != null) return template.kind == "Speaker";
+                      else if (widget.company != null) return template.kind == "Company";
+                      else return false;
+                    });
+                    selectedTemplateId = selectedTemplateId ?? validTemplates.first.id;
                     return Column(
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: DropdownButtonFormField<String>(
                             icon: Icon(Icons.tag),
-                            items: templates
+                            items: validTemplates
                                 .map((e) =>
                                     DropdownMenuItem<String>(value: e.id, child: Text(e.name)))
                                 .toList(),
-                            value: templates.first.id,
+                            value: validTemplates.first.id,
                             selectedItemBuilder: (BuildContext context) {
-                              return templates.map((e) {
+                              return validTemplates.map((e) {
                                 return Align(
                                   alignment: AlignmentDirectional.centerStart,
                                   child: Container(child: Text(e.name)),
@@ -195,6 +233,23 @@ class _AddThreadFormState extends State<AddThreadForm> {
                                 selectedTemplateId = next!;
                               });
                             },
+                          ),
+                        ),
+                        Visibility(
+                          visible: templates.firstWhere((template) => template.id == selectedTemplateId)
+                              .requirements!.any((req) => req.name == "initialParagraph"),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: TextFormField(
+                              keyboardType: TextInputType.multiline,
+                              textInputAction: TextInputAction.newline,
+                              controller: _paragraphController,
+                              maxLines: null,
+                              decoration: const InputDecoration(
+                                icon: const Icon(Icons.work),
+                                labelText: "Insert initial paragraph (optional)",
+                              ),
+                            ),
                           ),
                         ),
                         Padding(

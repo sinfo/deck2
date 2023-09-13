@@ -18,9 +18,13 @@ import (
 )
 
 type testPage struct {
-	Speaker    string
-	MemberName string
-	Company    string
+	Speaker        string
+	MemberName     string
+	Company        string
+	EventDates     string
+	Paragraph      string
+	Edition        string
+	EditionOrdinal string
 }
 
 var templateCache = cache.New(1*time.Minute, 10*time.Minute)
@@ -72,6 +76,14 @@ func fillTemplate(w http.ResponseWriter, r *http.Request) {
 			tPage.MemberName = req.StringValue
 		} else if req.Name == "companyName" {
 			tPage.Company = req.StringValue
+		} else if req.Name == "initialParagraph" {
+			tPage.Paragraph = req.StringValue
+		} else if req.Name == "eventEdition" {
+			tPage.Edition = req.StringValue
+		} else if req.Name == "eventEditionOrdinal" {
+			tPage.EditionOrdinal = req.StringValue
+		} else if req.Name == "eventDates" {
+			tPage.EventDates = req.StringValue
 		}
 	}
 

@@ -6,14 +6,12 @@ class Requirement {
   String? stringVal;
   bool? boolVal;
 
-
   Requirement({
     required this.title,
     required this.name,
     required this.type,
     this.stringVal,
     this.boolVal,
-
   });
 
   factory Requirement.fromJson(Map<String, dynamic> json) {
