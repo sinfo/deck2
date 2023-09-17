@@ -217,8 +217,8 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/packages/{id}", authCoordinator(updatePackageFromEvent)).Methods("PUT")
 	eventRouter.HandleFunc("/items", authCoordinator(addItemToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/items/{id}", authCoordinator(removeItemToEvent)).Methods("DELETE")
-	eventRouter.HandleFunc("/meetings", authCoordinator(addMeetingToEvent)).Methods("POST")
-	eventRouter.HandleFunc("/meetings/{id}", authCoordinator(removeMeetingFromEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/meetings", authTeamLeader(addMeetingToEvent)).Methods("POST")
+	eventRouter.HandleFunc("/meetings/{id}", authTeamLeader(removeMeetingFromEvent)).Methods("DELETE")
 	eventRouter.HandleFunc("/sessions", authCoordinator(addSessionToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/teams/{id}", authAdmin(removeTeamFromEvent)).Methods("DELETE")
 
