@@ -162,9 +162,6 @@ class _LandingPageState extends State<LandingPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Container(
-      child: Text("Welcome to deck2! In Progress..."),
-    );
   }
 }
 
