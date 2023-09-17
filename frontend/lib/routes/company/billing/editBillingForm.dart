@@ -241,7 +241,7 @@ class _EditBillingFormState extends State<EditBillingForm> {
               controller: _notesController,
               decoration: const InputDecoration(
                 icon: const Icon(Icons.note),
-                labelText: "Additional notes (optional) *",
+                labelText: "Additional notes (optional)",
               ),
             ),
           ),

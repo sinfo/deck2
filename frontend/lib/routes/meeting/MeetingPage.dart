@@ -99,7 +99,7 @@ class _MeetingPageState extends State<MeetingPage>
             if (snapshot.hasData) {
               Role r = snapshot.data as Role;
 
-              if (r == Role.ADMIN || r == Role.COORDINATOR) {
+              if (r == Role.ADMIN || r == Role.COORDINATOR || r == Role.TEAMLEADER) {
                 return FloatingActionButton.extended(
                   onPressed: () {
                     Navigator.pushNamed(

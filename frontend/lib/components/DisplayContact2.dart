@@ -36,8 +36,8 @@ class _DisplayContactsState extends State<DisplayContacts> {
 
             if (r == Role.ADMIN ||
                 r == Role.COORDINATOR ||
-                r == Role.MEMBER ||
-                (widget.person is Member && widget.person.id == me.id)) {
+                (widget.person is Member && widget.person.id == me.id) ||
+                (widget.person is Speaker)) {
               return FloatingActionButton.extended(
                 onPressed: () async {
                   final bool? shouldRefresh = await Navigator.push<bool>(
