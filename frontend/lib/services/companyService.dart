@@ -190,12 +190,12 @@ class CompanyService extends Service {
     }
   }
 
-  Future<Company?> deleteRep(
+  Future<CompanyRep?> deleteRep(
       {required String id, required String repId}) async {
     Response<String> response =
         await dio.delete('/companies/' + id + '/employer/' + repId);
     try {
-      return Company.fromJson(json.decode(response.data!));
+      return CompanyRep.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -234,6 +234,7 @@ class CompanyService extends Service {
         print(e.response);
       }
     }
+    return null;
   }
 
   Future<Company?> updateInternalImage(

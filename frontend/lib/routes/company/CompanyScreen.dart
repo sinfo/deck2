@@ -9,6 +9,7 @@ import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/billing/AddBillingForm.dart';
 import 'package:frontend/routes/company/billing/BillingScreen.dart';
+import 'package:frontend/components/DisplayContact_Company.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/DetailsScreen.dart';
 import 'package:frontend/routes/company/ParticipationList.dart';
@@ -36,7 +37,7 @@ class _CompanyScreenState extends State<CompanyScreen>
   void initState() {
     super.initState();
     _companyService = CompanyService();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(_handleTabIndex);
   }
 
@@ -108,6 +109,8 @@ class _CompanyScreenState extends State<CompanyScreen>
       case 0:
         return null;
       case 1:
+        return null;
+      case 2:
         return FloatingActionButton.extended(
           onPressed: () {
             Navigator.push(
@@ -122,24 +125,31 @@ class _CompanyScreenState extends State<CompanyScreen>
           label: const Text('Add new Billing'),
           icon: const Icon(Icons.add),
         );
-      case 2:
-        {
-          bool hasCurrentParticipation = !widget.company.participations!.isEmpty && widget.company
-                  .participations![widget.company.participations!.length - 1].event == latestEvent;
-          return hasCurrentParticipation ? null : FloatingActionButton.extended(
-            onPressed: () {
-              companyChangedCallback(context,
-              fs: _companyService
-                  .addParticipation(
-                id: widget.company.id,
-                partner: false,
-              ));
-            },
-            label: const Text('Add Participation'),
-            icon: const Icon(Icons.add),
-          );
-        }
       case 3:
+        {
+          bool hasCurrentParticipation =
+              !widget.company.participations!.isEmpty &&
+                  widget
+                          .company
+                          .participations![
+                              widget.company.participations!.length - 1]
+                          .event ==
+                      latestEvent;
+          return hasCurrentParticipation
+              ? null
+              : FloatingActionButton.extended(
+                  onPressed: () {
+                    companyChangedCallback(context,
+                        fs: _companyService.addParticipation(
+                          id: widget.company.id,
+                          partner: false,
+                        ));
+                  },
+                  label: const Text('Add Participation'),
+                  icon: const Icon(Icons.add),
+                );
+        }
+      case 4:
         {
           return FloatingActionButton.extended(
             onPressed: () {
@@ -182,14 +192,15 @@ class _CompanyScreenState extends State<CompanyScreen>
                             companyChangedCallback(context, company: _comp);
                           },
                           onDelete: () {
-                            companyChangedCallback(context,
-                                fs: () async {
-                                  Company? c = await _companyService.deleteCompany(id: widget.company.id);
-                                  if (c != null) {
-                                    Navigator.popAndPushNamed(context, Routes.HomeRoute);
-                                  }
-                                  return c;
-                                }());
+                            companyChangedCallback(context, fs: () async {
+                              Company? c = await _companyService.deleteCompany(
+                                  id: widget.company.id);
+                              if (c != null) {
+                                Navigator.popAndPushNamed(
+                                    context, Routes.HomeRoute);
+                              }
+                              return c;
+                            }());
                           },
                         ),
                         TabBar(
@@ -197,6 +208,7 @@ class _CompanyScreenState extends State<CompanyScreen>
                           controller: _tabController,
                           tabs: [
                             Tab(text: 'Details'),
+                            Tab(text: 'Contacts'),
                             Tab(text: 'Billing'),
                             Tab(text: 'Participations'),
                             Tab(text: 'Communications'),
@@ -206,6 +218,9 @@ class _CompanyScreenState extends State<CompanyScreen>
                           child:
                               TabBarView(controller: _tabController, children: [
                             DetailsScreen(
+                              company: widget.company,
+                            ),
+                            DisplayContactsCompany(
                               company: widget.company,
                             ),
                             BillingScreen(
