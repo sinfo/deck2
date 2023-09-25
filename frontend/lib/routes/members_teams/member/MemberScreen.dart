@@ -276,7 +276,7 @@ class _DisplayParticipationsState extends State<DisplayParticipations> {
                               myRole: r.name,
                               team: e.team!,
                               small: widget.small,
-                              canEdit: (authService.convert(e.role!) ==
+                              canEdit: (authService.convertStringToRole(e.role!) ==
                                       Role.ADMIN)
                                   ? (r == Role.ADMIN)
                                   : (r == Role.ADMIN || r == Role.COORDINATOR),

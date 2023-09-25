@@ -29,9 +29,78 @@ class AuthService extends ChangeNotifier {
         as String,
   ));
 
-  Member? _user;
   String? _token;
+  Member? _user;
   Role? _role;
+
+  Future<bool> login() async {
+    if (await _googleSignIn.isSignedIn()) {
+      await _googleSignIn.disconnect();
+    }
+
+    GoogleSignInAccount? acc = await _googleSignIn.signIn();
+    if (acc != null) {
+      GoogleSignInAuthentication auth = await acc.authentication;
+      if (auth.accessToken == null) { return false; }
+      // Generate JWT from Google access token
+      await generateJWT(auth.accessToken!);
+      return true;
+    }
+
+    return false;
+  }
+
+  Future signOut() async {
+    try {
+      _user = null;
+      _token = null;
+      _dio.options.headers["Authorization"] = null;
+      App.localStorage.remove('jwt');
+      await _googleSignIn.disconnect();
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  Future<String?> get token async {
+    if (_token != null) {
+      return _token;
+    }
+
+    if (App.localStorage.containsKey('jwt')) {
+      // Log
+      _token = App.localStorage.getString('jwt');
+      // Verify token, if valid, exception is thrown
+      try {
+        if (await verifyToken(_token!)) {
+          _dio.options.headers["Authorization"] = _token;
+
+          notifyListeners();
+          return _token;
+        }
+      } catch (e) {}
+
+      // If token is invalid, sign out
+      await signOut();
+    }
+
+    return null;
+  }
+
+  Future<Member?> get user async {
+    if (_user != null) {
+      return _user;
+    }
+
+    String? token = await this.token;
+    if (token != null) {
+      _user = await getMe(token);
+      notifyListeners();
+      return _user;
+    }
+
+    return null;
+  }
 
   Future<Role?> get role async {
     if (_role != null) {
@@ -39,51 +108,17 @@ class AuthService extends ChangeNotifier {
     }
 
     Member? me = await user;
-    if (_token == null) {
-      if (App.localStorage.containsKey('jwt')) {
-        _token = App.localStorage.getString('jwt');
-      } else {
-        bool isLoggedIn = _googleSignIn.currentUser != null;
-        if (isLoggedIn) {
-          GoogleSignInAccount? acc = await _googleSignIn.signInSilently();
-          if (acc != null) {
-            GoogleSignInAuthentication auth = await acc.authentication;
-            _token = await getJWT(auth.accessToken);
-          } else {
-            return null;
-          }
-        } else {
-          return null;
-        }
-      }
-    }
-    bool t = await verify(_token!);
-    if (t) {
-      Member? me;
-      if (_user == null) {
-        _user = await getMe(_token!);
-      }
-      me = _user;
+    if (me != null) {
+      _role = await getRole(me.id);
 
-      try {
-        _dio.options.headers["Authorization"] = _token;
-
-        Response<String> response =
-            await _dio.get(_deckURL! + '/members/${me!.id}/role');
-        final responseJson = json.decode(response.data as String);
-        _role = convert(responseJson['role']);
-        return _role;
-      } on SocketException {
-        throw DeckException('No Internet connection');
-      } on HttpException {
-        throw DeckException('Not found');
-      } on FormatException {
-        throw DeckException('Wrong format');
-      }
+      notifyListeners();
+      return _role;
     }
+
+    return null;
   }
 
-  Role convert(String s) {
+  Role convertStringToRole(String s) {
     switch (s) {
       case 'ADMIN':
         return Role.ADMIN;
@@ -98,58 +133,34 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<Member?> get user async {
-    if (_user != null) {
-      return _user;
-    }
-    if (_token != null) {
-      bool t = await verify(_token!);
-      if (t) {
-        return getMe(_token!);
-      } else {
-        _token = null;
-        return null;
-      }
-    } else if (App.localStorage.containsKey('jwt')) {
-      _token = App.localStorage.getString('jwt');
-      bool t = await verify(_token!);
-      if (t) {
-        return getMe(_token!);
-      } else {
-        _token = null;
-        return null;
-      }
-    } else {
-      bool isLoggedIn = _googleSignIn.currentUser != null;
-      if (isLoggedIn) {
-        GoogleSignInAccount? acc = await _googleSignIn.signInSilently();
-        if (acc != null) {
-          GoogleSignInAuthentication auth = await acc.authentication;
-          _token = await getJWT(auth.accessToken);
-          return getMe(_token!);
-        } else {
-          return null;
-        }
-      } else {
-        return null;
-      }
-    }
-  }
-
-  Future<String> getJWT(String? token) async {
-    if (token != null) {
+  Future<String?> generateJWT(String accessToken) async {
+    try {
       Response<String> response = await _dio.post(
         _deckURL! + '/auth/checkin',
         data: jsonEncode(<String, String>{
-          'access_token': token,
+          'access_token': accessToken,
         }),
       );
 
+      final responseJson = json.decode(response.data as String);
+      App.localStorage.setString("jwt", responseJson["deck_token"]);
+      return token;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
+
+  Future<Role?> getRole(String userId) async {
       try {
+        Response<String> response =
+            await _dio.get(_deckURL! + '/members/$userId/role');
         final responseJson = json.decode(response.data as String);
-        App.localStorage.setString("jwt", responseJson["deck_token"]);
-        _token = responseJson["deck_token"];
-        return responseJson["deck_token"];
+        _role = convertStringToRole(responseJson['role']);
+        return _role;
       } on SocketException {
         throw DeckException('No Internet connection');
       } on HttpException {
@@ -157,14 +168,9 @@ class AuthService extends ChangeNotifier {
       } on FormatException {
         throw DeckException('Wrong format');
       }
-    } else {
-      return '';
-    }
   }
 
   Future<Member?> getMe(String token) async {
-    _dio.options.headers["Authorization"] = token;
-
     try {
       Response<String> response = await _dio.get(_deckURL! + '/me');
       final responseJson = json.decode(response.data as String);
@@ -179,15 +185,10 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<bool> verify(String token) async {
-    final url = _deckURL! + '/auth/verify/$token';
+  Future<bool> verifyToken(String token) async {
     try {
-      Response<String> res = await _dio.get(url);
-      if (res.statusCode == 200) {
-        return true;
-      } else {
-        return false;
-      }
+      Response<String> res = await _dio.get(_deckURL! + '/auth/verify/$token');
+      return res.statusCode == 200;
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
@@ -197,32 +198,4 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<bool> login() async {
-    if (await _googleSignIn.isSignedIn()) {
-      await _googleSignIn.disconnect();
-    }
-    GoogleSignInAccount? acc = await _googleSignIn.signIn();
-    if (acc != null) {
-      GoogleSignInAuthentication auth = await acc.authentication;
-      _token = await getJWT(auth.accessToken);
-      App.localStorage.setString('jwt', _token!);
-      _user = await getMe(_token!);
-      App.localStorage.setString('me', json.encode(_user!.toJson()));
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  Future signOut() async {
-    try {
-      _user = null;
-      _token = null;
-      App.localStorage.remove('me');
-      App.localStorage.remove('jwt');
-      await _googleSignIn.disconnect();
-    } catch (e) {
-      print(e.toString());
-    }
-  }
 }
