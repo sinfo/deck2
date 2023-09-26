@@ -264,7 +264,7 @@ class _EditFlightFormState extends State<EditFlightForm> {
               controller: _notesController,
               decoration: const InputDecoration(
                 icon: const Icon(Icons.note),
-                labelText: "Additional notes (optional) *",
+                labelText: "Additional notes (optional)",
               ),
             ),
           ),
