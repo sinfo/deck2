@@ -1,16 +1,13 @@
 package models
 
-// import (
-// 	"go.mongodb.org/mongo-driver/bson/primitive"
-// )
+import "time"
 
 type Requirement struct {
-
-	// template's ID (_id of mongodb).
-	//ID    primitive.ObjectID `json:"id" bson:"_id"`
-	Title       string `json:"title"`
-	Name        string `json:"name"`
-	StringValue string `json:"stringVal"`
-	BoolValue   bool   `json:"boolVal"`
-	Type        string `json:"type"`
+	Title        string    `json:"title"`
+	Name         string    `json:"name"`
+	Type         string    `json:"type"`
+	StringValue  string    `json:"stringVal"`
+	IntegerValue int       `json:"intVal"`
+	BoolValue    bool      `json:"boolVal"`
+	DateValue    time.Time `json:"dateVal"`
 }

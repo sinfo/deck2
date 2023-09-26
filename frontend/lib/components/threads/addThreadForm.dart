@@ -34,32 +34,15 @@ class AddThreadForm extends StatefulWidget {
   _AddThreadFormState createState() => _AddThreadFormState();
 }
 
-String ordinal(int number) {
-    if(!(number >= 1 && number <= 100)) {//here you change the range
-      throw Exception('Invalid number');
-    }
-
-    if(number >= 11 && number <= 13) {
-      return 'th';
-    }
-
-    switch(number % 10) {
-      case 1: return 'st';
-      case 2: return 'nd';
-      case 3: return 'rd';
-      default: return 'th';
-    }
-}
-
 class _AddThreadFormState extends State<AddThreadForm> {
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
-  final _paragraphController = TextEditingController();
   final TemplateService templateService = TemplateService();
   final AuthService authService = new AuthService();
-  String kind = 'TEMPLATE';
   String? selectedTemplateId;
   late Future<List<Template>> _templates;
+  List<String> kinds = ["TO", "FROM", "TEMPLATE", "PHONE_CALL", "MEETING"];
+  String? kind;
 
   void _submit(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
@@ -70,9 +53,9 @@ class _AddThreadFormState extends State<AddThreadForm> {
       );
 
       if (widget.speaker != null && widget.onAddSpeaker != null) {
-        widget.onAddSpeaker!(text, kind);
+        widget.onAddSpeaker!(text, kind!);
       } else if (widget.company != null && widget.onAddCompany != null) {
-        widget.onAddCompany!(text, kind);
+        widget.onAddCompany!(text, kind!);
       } else if (widget.meeting != null && widget.onAddMeeting != null) {
         widget.onAddMeeting!(text);
       }
@@ -99,21 +82,23 @@ class _AddThreadFormState extends State<AddThreadForm> {
               case "companyName" :
                 req.stringVal = widget.company!.name;
                 break;
+              case "initialParagraph" :
+                req.stringVal = _textController.text;
+                break;
               case "eventEdition" :
-                req.stringVal = eventEdition.toString();
+                req.intVal = eventEdition;
                 break;
               case "eventEditionOrdinal" :
-                req.stringVal = ordinal(eventEdition);
+                req.intVal = eventEdition;
                 break;
-              case "initialParagraph" :
-                req.stringVal = _paragraphController.text;
-                break;
-              case "eventDates" :
+              case "eventStart" :
                 DateTime eventStart = Provider.of<EventNotifier>(context, listen: false).event.start;
+                req.dateVal = eventStart;
+                break;
+              case "eventEnd" :
                 DateTime eventEnd = Provider.of<EventNotifier>(context, listen: false).event.end;
-                String dateStart ="${eventStart.day.toString().padLeft(2,'0')}/${eventStart.month.toString().padLeft(2,'0')}/${eventStart.year.toString()}";
-                String dateEnd ="${eventEnd.day.toString().padLeft(2,'0')}/${eventEnd.month.toString().padLeft(2,'0')}/${eventEnd.year.toString()}";
-                req.stringVal = dateStart + " - " + dateEnd;
+                req.dateVal = eventEnd;
+                break;
             }
             filledRequirements.add(req);
           });
@@ -129,8 +114,6 @@ class _AddThreadFormState extends State<AddThreadForm> {
           html.window.open(_deckURL! + "/templates/filled/" + filteredUuid ,"_blank");
         }
       }
-
-      Navigator.pop(context);
     }
   }
 
@@ -138,12 +121,11 @@ class _AddThreadFormState extends State<AddThreadForm> {
   void initState() {
     super.initState();
     _templates = templateService.getTemplates();
+    kind = kinds[0];
   }
-
 
   @override
   Widget build(BuildContext context) {
-    List<String> kinds = ["TEMPLATE", "TO", "FROM", "PHONE_CALL", "MEETING"];
     return Form(
       key: _formKey,
       child: Column(
@@ -173,53 +155,32 @@ class _AddThreadFormState extends State<AddThreadForm> {
                 },
               ),
             ),
-          Visibility(
-            visible: kind != "TEMPLATE",
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  keyboardType: TextInputType.multiline,
-                  textInputAction: TextInputAction.newline,
-                  maxLines: null,
-                  controller: _textController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please contents of communication';
-                    }
-                    return null;
-                  },
-                  decoration: const InputDecoration(
-                    icon: const Icon(Icons.work),
-                    labelText: "Content *",
-                  ),
-                ),
-              ),
-          ),
-          Visibility(
-            visible: kind == "TEMPLATE",
-            child: FutureBuilder(
+          if (kind == "TEMPLATE")
+            FutureBuilder(
               future: _templates,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   List<Template> templates = snapshot.data as List<Template>;
-                  if (!templates.isEmpty) {
-                    var validTemplates = templates.where((template) {
-                      if (widget.speaker != null) return template.kind == "Speaker";
-                      else if (widget.company != null) return template.kind == "Company";
-                      else return false;
-                    });
+
+                  List<Template> validTemplates = templates.where((template) {
+                    if (widget.speaker != null) return template.kind == "Speaker";
+                    else if (widget.company != null) return template.kind == "Company";
+                    else return false;
+                  }).toList();
+
+                  if (!validTemplates.isEmpty) {
                     selectedTemplateId = selectedTemplateId ?? validTemplates.first.id;
                     return Column(
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: DropdownButtonFormField<String>(
-                            icon: Icon(Icons.tag),
+                            icon: Icon(Icons.newspaper),
                             items: validTemplates
                                 .map((e) =>
                                     DropdownMenuItem<String>(value: e.id, child: Text(e.name)))
                                 .toList(),
-                            value: validTemplates.first.id,
+                            value: selectedTemplateId,
                             selectedItemBuilder: (BuildContext context) {
                               return validTemplates.map((e) {
                                 return Align(
@@ -235,15 +196,14 @@ class _AddThreadFormState extends State<AddThreadForm> {
                             },
                           ),
                         ),
-                        Visibility(
-                          visible: templates.firstWhere((template) => template.id == selectedTemplateId)
-                              .requirements!.any((req) => req.name == "initialParagraph"),
-                          child: Padding(
+                        if(validTemplates.firstWhere((template) => template.id == selectedTemplateId)
+                            .requirements?.any((req) => req.name == "initialParagraph") ?? false)
+                          Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: TextFormField(
                               keyboardType: TextInputType.multiline,
                               textInputAction: TextInputAction.newline,
-                              controller: _paragraphController,
+                              controller: _textController,
                               maxLines: null,
                               decoration: const InputDecoration(
                                 icon: const Icon(Icons.work),
@@ -251,36 +211,68 @@ class _AddThreadFormState extends State<AddThreadForm> {
                               ),
                             ),
                           ),
-                        ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: ElevatedButton(
-                            onPressed: () => _getTemplate(context),
-                            child: const Text('Get Template'),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () => _getTemplate(context),
+                                child: const Text('Get Template'),
+                              ),
+                              SizedBox(width: 15),
+                              ElevatedButton(
+                                onPressed: (){
+                                  if (_textController.text.isEmpty) _textController.text = "Template sent";
+                                  _submit(context);
+                                },
+                                child: const Text('Submit'),
+                              ),
+                            ],
                           ),
                         ),
                       ]
                     );
                   }
                   else {
-                  return Container();
-                }
+                    return Container(child: Text("No valid templates"),);
+                  }
                 } else {
-                  return Container();
+                  return Container(child: Text("No templates exist"),);
                 }
-              }),
-          ),
-          // This is temporary, while templates are not editable, to prevent users from submitting an empty thread.
-          Visibility(
-            visible: kind != "TEMPLATE",
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                onPressed: () => _submit(context),
-                child: const Text('Submit'),
-              )
-            )
-          )
+              }
+            ),
+          if (kind != "TEMPLATE")
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextFormField(
+                    keyboardType: TextInputType.multiline,
+                    textInputAction: TextInputAction.newline,
+                    maxLines: null,
+                    controller: _textController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please contents of communication';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      icon: const Icon(Icons.work),
+                      labelText: "Content *",
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () => _submit(context),
+                    child: const Text('Submit'),
+                  )
+                )
+              ],
+            ),
         ],
       ),
     );

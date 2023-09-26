@@ -21,10 +21,11 @@ type testPage struct {
 	Speaker        string
 	MemberName     string
 	Company        string
-	EventDates     string
 	Paragraph      string
-	Edition        string
+	Edition        int
 	EditionOrdinal string
+	EventStart     time.Time
+	EventEnd       time.Time
 }
 
 var templateCache = cache.New(1*time.Minute, 10*time.Minute)
@@ -79,11 +80,13 @@ func fillTemplate(w http.ResponseWriter, r *http.Request) {
 		} else if req.Name == "initialParagraph" {
 			tPage.Paragraph = req.StringValue
 		} else if req.Name == "eventEdition" {
-			tPage.Edition = req.StringValue
+			tPage.Edition = req.IntegerValue
 		} else if req.Name == "eventEditionOrdinal" {
-			tPage.EditionOrdinal = req.StringValue
-		} else if req.Name == "eventDates" {
-			tPage.EventDates = req.StringValue
+			tPage.EditionOrdinal = addOrdinal(req.IntegerValue)
+		} else if req.Name == "eventStart" {
+			tPage.EventStart = req.DateValue
+		} else if req.Name == "eventEnd" {
+			tPage.EventEnd = req.DateValue
 		}
 	}
 
@@ -118,6 +121,23 @@ func fillTemplate(w http.ResponseWriter, r *http.Request) {
 	templateCache.Set(uuid.String(), buf.String(), cache.DefaultExpiration)
 
 	json.NewEncoder(w).Encode(uuid.String())
+}
+
+func addOrdinal(n int) string {
+	if n >= 11 && n <= 13 {
+		return fmt.Sprintf("%dth", n)
+	}
+
+	switch n % 10 {
+	case 1:
+		return fmt.Sprintf("%dst", n)
+	case 2:
+		return fmt.Sprintf("%dnd", n)
+	case 3:
+		return fmt.Sprintf("%drd", n)
+	default:
+		return fmt.Sprintf("%dth", n)
+	}
 }
 
 func getTemplates(w http.ResponseWriter, r *http.Request) {

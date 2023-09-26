@@ -76,15 +76,15 @@ class _MeetingScreenState extends State<MeetingScreen>
     }
   }
 
-  void _addThreadModal(context) {
+  void _addThreadModal(mainContext) {
     showModalBottomSheet(
-      context: context,
+      context: mainContext,
       builder: (context) {
         return Container(
           child: AddThreadForm(
             meeting: widget.meeting,
             onAddMeeting: (thread_text) {
-              meetingChangedCallback(context,
+              meetingChangedCallback(mainContext,
                   fm: _meetingService.addThread(
                       id: widget.meeting.id,
                       kind: 'MEETING',
