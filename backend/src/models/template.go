@@ -12,4 +12,5 @@ type Template struct {
 	Name         string        `json:"name" bson:"name"`
 	Url          string        `json:"url" bson:"url"`
 	Requirements []Requirement `json:"requirements" bson:"requirements"`
+	Kind         string        `json:"kind" bson:"kind"`
 }
