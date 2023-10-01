@@ -1,9 +1,6 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/threads/participations/participationThreadsWidget.dart';
 import 'package:frontend/models/participation.dart';
-import 'package:frontend/models/requirement.dart';
-import 'package:frontend/models/template.dart';
 import '../../../services/templateService.dart';
 
 class CommunicationsList extends StatefulWidget {

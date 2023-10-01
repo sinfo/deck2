@@ -81,6 +81,7 @@ class _EditThreadFormState extends State<EditThreadForm> {
             child: TextFormField(
               keyboardType: TextInputType.multiline,
               textInputAction: TextInputAction.newline,
+              maxLines: null,
               controller: _textController,
               validator: (value) {
                 if (value == null || value.isEmpty) {

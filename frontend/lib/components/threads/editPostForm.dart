@@ -70,6 +70,7 @@ class _EditPostFormState extends State<EditPostForm> {
             child: TextFormField(
               keyboardType: TextInputType.multiline,
               textInputAction: TextInputAction.newline,
+              maxLines: null,
               controller: _textController,
               validator: (value) {
                 if (value == null || value.isEmpty) {
