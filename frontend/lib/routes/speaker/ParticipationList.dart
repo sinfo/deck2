@@ -37,7 +37,7 @@ class ParticipationList extends StatelessWidget {
                     .map((e) => Padding(
                           padding: const EdgeInsets.all(8.0),
                           child: ParticipationCard(
-                              speaker: speaker,
+                              // speaker: speaker,
                               participation: e,
                               small: small,
                               type: CardType.SPEAKER,
