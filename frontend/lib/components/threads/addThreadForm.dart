@@ -228,7 +228,11 @@ class _AddThreadFormState extends State<AddThreadForm> {
                               SizedBox(width: 15),
                               ElevatedButton(
                                 onPressed: (){
-                                  if (_textController.text.isEmpty) _textController.text = "Template sent";
+                                  String templateName = validTemplates.firstWhere((template) => 
+                                    template.id == selectedTemplateId).name;
+
+                                  if (!_textController.text.isEmpty) _textController.text = '\n\nInitial paragraph: "' + _textController.text + '"';
+                                  _textController.text = '"' + templateName + '" sent' + _textController.text;
                                   _submit(context);
                                 },
                                 child: const Text('Submit'),
