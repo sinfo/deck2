@@ -3,8 +3,8 @@ import 'package:frontend/models/contact.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/components/EditContact.dart';
-import 'package:frontend/components/DisplayContact2.dart';
 import 'package:frontend/services/authService.dart';
+import 'package:frontend/services/contactService.dart';
 import 'package:provider/provider.dart';
 import 'InformationBox.dart';
 
@@ -18,142 +18,80 @@ class DisplayContactsCompany extends StatefulWidget {
 }
 
 class _DisplayContactsState extends State<DisplayContactsCompany> {
-  List<CompanyRep> representatives = [];
+  ContactService contactService = new ContactService();
+  late Future<Contact?> contact;
 
   @override
   void initState() {
     super.initState();
-    representatives = widget.company.employees ?? [];
+    this.contact = contactService.getContact(widget.company.employees!.last);
   }
 
-  // Function to create a company representative
-  Future<void> _createCompanyRep() async {
-    // Declare repName before the showDialog.
-    String? repName = '';
+  _isEditable(Contact cont) {
+    return FutureBuilder(
+        future: Provider.of<AuthService>(context).role,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Role r = snapshot.data as Role;
 
-    await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Create Representative'),
-          content: TextField(
-            decoration: InputDecoration(labelText: 'Name'),
-            onChanged: (value) {
-              repName = value; // Update the repName variable as you type.
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (repName != null && repName!.isNotEmpty) {
-                  try {
-                    // Create a CompanyRep object with id and name.
-                    CompanyRep newRep = CompanyRep(
-                      id: widget.company.id, // Use the company's ID
-                      name: repName,
-                      contactID: '', // You can leave contactID empty for now.
-                    );
-
-                    setState(() {
-                      // Add the new representative to the list
-                      representatives.add(newRep);
-                    });
-                    print(repName);
-                    print(representatives);
-                    // Close the dialog.
-                    Navigator.of(context).pop();
-                  } catch (e) {
-                    // Handle any errors that occur during representative creation
-                    print('Error creating representative: $e');
+            if (r == Role.ADMIN || r == Role.COORDINATOR || r == Role.MEMBER) {
+              return FloatingActionButton.extended(
+                onPressed: () async {
+                  final bool? shouldRefresh = await Navigator.push<bool>(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            EditContact(contact: cont, person: widget.company)),
+                  );
+                  if (shouldRefresh ?? false) {
+                    this.contact = contactService
+                        .getContact(widget.company.employees!.last);
+                    setState(() {});
                   }
-                }
-              },
-              child: Text('Create'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Function to delete a company representative
-  void _deleteCompanyRep(int index) {
-    setState(() {
-      // Remove the representative at the specified index
-      representatives.removeAt(index);
-    });
+                },
+                label: const Text('Edit Contacts'),
+                icon: const Icon(Icons.edit),
+                backgroundColor: Color(0xff5C7FF2),
+              );
+            } else
+              return Container();
+          } else
+            return Container();
+        });
   }
 
   @override
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
+  Widget build(BuildContext context) => FutureBuilder(
+      future: contact,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          Contact cont = snapshot.data as Contact;
+          return Scaffold(
+            backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
+            body: ListView(
               padding: EdgeInsets.symmetric(horizontal: 32),
               physics: BouncingScrollPhysics(),
-              itemCount: representatives.length,
-              itemBuilder: (context, index) {
-                final representative = representatives[index];
-                return ListTile(
-                  leading:
-                      Icon(Icons.person), // Add your representative image here
-                  title: Text(representative.name ?? 'N/A'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit),
-                        onPressed: () {
-                          // Implement code to edit the representative's details
-                          // You can use the representative data to populate the edit form
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => DisplayContacts(
-                                person: representative,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete),
-                        onPressed: () {
-                          // Delete the representative when the delete icon is tapped
-                          _deleteCompanyRep(index);
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
+              children: [
+                InformationBox(title: "Mails", contact: cont, type: "mail"),
+                InformationBox(title: "Phones", contact: cont, type: "phone"),
+                InformationBox(
+                    title: "Socials",
+                    contact: cont,
+                    type: "social"), //SizedBox(height: 24,),
+              ],
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // Add a button to create a company representative
-          FloatingActionButton(
-            onPressed: _createCompanyRep,
-            tooltip: 'Create Representative',
-            child: Icon(Icons.person_add),
-            backgroundColor: Color(0xff5C7FF2),
-          ),
-          SizedBox(height: 10),
-          //_isEditable(cont), // Edit Contacts button
-        ],
-      ),
-    );
-  }
+            floatingActionButton: _isEditable(cont),
+          );
+        } else {
+          return Container(
+            child: Center(
+              child: Container(
+                height: 50,
+                width: 50,
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+      });
 }

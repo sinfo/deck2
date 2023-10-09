@@ -10,6 +10,7 @@ import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/billing/AddBillingForm.dart';
 import 'package:frontend/routes/company/billing/BillingScreen.dart';
 import 'package:frontend/components/DisplayContact_Company.dart';
+import 'package:frontend/components/CreateRep.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/DetailsScreen.dart';
 import 'package:frontend/routes/company/ParticipationList.dart';
@@ -176,7 +177,7 @@ class _CompanyScreenState extends State<CompanyScreen>
                   margin:
                       EdgeInsets.fromLTRB(0, appBar.preferredSize.height, 0, 0),
                   child: DefaultTabController(
-                    length: 4,
+                    length: 5,
                     child: Column(
                       children: [
                         CompanyBanner(
@@ -220,7 +221,7 @@ class _CompanyScreenState extends State<CompanyScreen>
                             DetailsScreen(
                               company: widget.company,
                             ),
-                            DisplayContactsCompany(
+                            CreateRep(
                               company: widget.company,
                             ),
                             BillingScreen(

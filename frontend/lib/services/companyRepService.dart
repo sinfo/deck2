@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:frontend/models/companyRep.dart';
+import 'package:frontend/models/company.dart';
 import 'package:frontend/services/service.dart';
 import 'package:frontend/components/deckException.dart';
 

@@ -172,10 +172,8 @@ class CompanyService extends Service {
   }
 
   Future<Company?> createRep(
-      {required String id,
-      required String name,
-      required Contact contact}) async {
-    var body = {'id': id, 'name': name, 'contact': contact.toJson()};
+      {required String id, required String name, Contact? contact}) async {
+    var body = {'id': id, 'name': name, 'contact': contact?.toJson()};
 
     Response<String> response =
         await dio.post('/companies/' + id + '/employer', data: body);
@@ -190,12 +188,12 @@ class CompanyService extends Service {
     }
   }
 
-  Future<CompanyRep?> deleteRep(
+  Future<Company?> deleteRep(
       {required String id, required String repId}) async {
     Response<String> response =
         await dio.delete('/companies/' + id + '/employer/' + repId);
     try {
-      return CompanyRep.fromJson(json.decode(response.data!));
+      return Company.fromJson(json.decode(response.data!));
     } on SocketException {
       throw DeckException('No Internet connection');
     } on HttpException {
