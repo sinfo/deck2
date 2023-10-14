@@ -54,11 +54,11 @@ final Map<ParticipationStatus, Color> STATUSCOLOR = {
 };
 
 final Map<ParticipationStatus, Color> STATUSTEXTCOLOR = {
-  ParticipationStatus.ACCEPTED: Colors.white,
+  ParticipationStatus.ACCEPTED: Colors.black,
   ParticipationStatus.ANNOUNCED: Colors.white,
   ParticipationStatus.CONTACTED: Colors.black,
   ParticipationStatus.GIVEN_UP: Colors.white,
-  ParticipationStatus.IN_CONVERSATIONS: Colors.white,
+  ParticipationStatus.IN_CONVERSATIONS: Colors.black,
   ParticipationStatus.ON_HOLD: Colors.white,
   ParticipationStatus.REJECTED: Colors.white,
   ParticipationStatus.SELECTED: Colors.white,

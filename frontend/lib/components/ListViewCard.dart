@@ -244,18 +244,20 @@ class _ListViewCardState extends State<ListViewCard> {
             child: DropdownButton<ParticipationStep>(
               icon: Icon(
                 Icons.arrow_downward,
-                color: widget._status == ParticipationStatus.GIVEN_UP
-                    ? Colors.white
-                    : Colors.black,
+                color: STATUSTEXTCOLOR[widget._status],
+                // widget._status == ParticipationStatus.GIVEN_UP
+                //     ? Colors.white
+                //     : Colors.black,
               ),
               underline: Container(
                 height: 2,
-                color: widget._status == ParticipationStatus.GIVEN_UP
-                    ? Colors.white
-                    : Colors.black,
+                color: STATUSTEXTCOLOR[widget._status],
+              // widget._status == ParticipationStatus.GIVEN_UP
+              //     ? Colors.white
+              //     : Colors.black,
               ),
               value: steps[0],
-              style: Theme.of(context).textTheme.subtitle2,
+              style: Theme.of(context).textTheme.titleSmall,
               selectedItemBuilder: (BuildContext context) {
                 return steps.map((e) {
                   return Container(
@@ -264,9 +266,10 @@ class _ListViewCardState extends State<ListViewCard> {
                     child: Text(
                       STATUSSTRING[widget._status]!,
                       style: TextStyle(
-                        color: widget._status == ParticipationStatus.GIVEN_UP
-                            ? Colors.white
-                            : Colors.black,
+                        color: STATUSTEXTCOLOR[widget._status],
+                        // widget._status == ParticipationStatus.GIVEN_UP
+                        //     ? Colors.white
+                        //     : Colors.black,
                         fontSize: 14,
                       ),
                     ),
@@ -319,10 +322,12 @@ class _ListViewCardState extends State<ListViewCard> {
             child: Text(
               STATUSSTRING[widget._status]!,
               style: TextStyle(
-                  fontSize: fontsize,
-                  color: widget._status == ParticipationStatus.GIVEN_UP
-                      ? Colors.white
-                      : Colors.black),
+                fontSize: fontsize,
+                color: STATUSTEXTCOLOR[widget._status],
+                // widget._status == ParticipationStatus.GIVEN_UP
+                //     ? Colors.white
+                //     : Colors.black
+              ),
             ),
           ),
         ];
