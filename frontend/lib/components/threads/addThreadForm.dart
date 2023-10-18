@@ -200,16 +200,21 @@ class _AddThreadFormState extends State<AddThreadForm> {
                             .requirements?.any((req) => req.name == "initialParagraph") ?? false)
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: TextFormField(
-                              keyboardType: TextInputType.multiline,
-                              textInputAction: TextInputAction.newline,
-                              controller: _textController,
-                              maxLines: null,
-                              decoration: const InputDecoration(
-                                icon: const Icon(Icons.work),
-                                labelText: "Insert initial paragraph (optional)",
+                            child: new ConstrainedBox(
+                              constraints: BoxConstraints(
+                                  maxHeight: 150.0,
                               ),
-                            ),
+                              child: TextFormField(
+                                keyboardType: TextInputType.multiline,
+                                textInputAction: TextInputAction.newline,
+                                controller: _textController,
+                                maxLines: null,
+                                decoration: const InputDecoration(
+                                  icon: const Icon(Icons.work),
+                                  labelText: "Insert initial paragraph (optional)",
+                                ),
+                              ),
+                            ), 
                           ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -247,22 +252,27 @@ class _AddThreadFormState extends State<AddThreadForm> {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.newline,
-                    maxLines: null,
-                    controller: _textController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please contents of communication';
-                      }
-                      return null;
-                    },
-                    decoration: const InputDecoration(
-                      icon: const Icon(Icons.work),
-                      labelText: "Content *",
+                  child: new ConstrainedBox(
+                    constraints: BoxConstraints(
+                        maxHeight: 150.0,
                     ),
-                  ),
+                    child: TextFormField(
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.newline,
+                      maxLines: null,
+                      controller: _textController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please contents of communication';
+                        }
+                        return null;
+                      },
+                      decoration: const InputDecoration(
+                        icon: const Icon(Icons.work),
+                        labelText: "Content *",
+                      ),
+                    ),
+                  ), 
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
