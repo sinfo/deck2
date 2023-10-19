@@ -141,6 +141,13 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                       widget.speaker.participations!.isEmpty
                           ? Center(child: Text('No participations yet'))
                           : ParticipationList(
+                              statusChangeCallback: (step, context) {
+                                speakerChangedCallback(
+                                  context,
+                                  fs: _speakerService.stepParticipationStatus(
+                                      id: widget.speaker.id, step: step),
+                                );
+                              },
                               speaker: widget.speaker,
                               onParticipationChanged:
                                   (Map<String, dynamic> body) async {
@@ -243,17 +250,25 @@ class _SpeakerScreenState extends State<SpeakerScreen>
         );
       case 2:
         {
-          bool hasCurrentParticipation = !widget.speaker.participations!.isEmpty && widget.speaker
-                  .participations![widget.speaker.participations!.length - 1].event == latestEvent;
-          return hasCurrentParticipation ? null : FloatingActionButton.extended(
-            onPressed: () {
-              speakerChangedCallback(context,
-                fs: _speakerService.addParticipation(
-                id: widget.speaker.id));
-            },
-            label: const Text('Add Participation'),
-            icon: const Icon(Icons.add),
-          );
+          bool hasCurrentParticipation =
+              !widget.speaker.participations!.isEmpty &&
+                  widget
+                          .speaker
+                          .participations![
+                              widget.speaker.participations!.length - 1]
+                          .event ==
+                      latestEvent;
+          return hasCurrentParticipation
+              ? null
+              : FloatingActionButton.extended(
+                  onPressed: () {
+                    speakerChangedCallback(context,
+                        fs: _speakerService.addParticipation(
+                            id: widget.speaker.id));
+                  },
+                  label: const Text('Add Participation'),
+                  icon: const Icon(Icons.add),
+                );
         }
       case 3:
         {

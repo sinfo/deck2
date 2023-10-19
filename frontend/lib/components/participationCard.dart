@@ -34,9 +34,17 @@ class ParticipationCard extends StatefulWidget {
   final Future<void> Function(Map<String, dynamic>)? onEdit;
   final Future<void> Function(ParticipationStatus)? onChangeParticipationStatus;
   final Future<void> Function(Package)? onChangeCompanyPackage;
+  void Function(int, BuildContext)? statusChangeCallback;
+  ParticipationStatus? speakerStatus;
+  String? speakerId;
+  List<ParticipationStep>? steps;
 
   ParticipationCard({
     Key? key,
+    this.statusChangeCallback,
+    this.speakerStatus,
+    this.speakerId,
+    this.steps,
     required this.participation,
     required this.small,
     required this.type,
@@ -440,6 +448,10 @@ class _ParticipationCardState extends State<ParticipationCard> {
   }
 
   List<Widget> getStatus(bool editable) {
+    var steps = widget.steps;
+    for (var step in steps!) {
+      debugPrint('step: $step');
+    }
     if (editable) {
       return [
         DecoratedBox(
@@ -448,50 +460,53 @@ class _ParticipationCardState extends State<ParticipationCard> {
               borderRadius: BorderRadius.circular(5)),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 0),
-            child: DropdownButton<ParticipationStatus>(
-              icon: Icon(
-                Icons.arrow_downward,
-                color:
-                    widget.participation.status == ParticipationStatus.GIVEN_UP
-                        ? Colors.white
-                        : Colors.black,
-              ),
-              // iconSize: 16,
-              selectedItemBuilder: (BuildContext context) {
-                return getAllStatus().map<Widget>((ParticipationStatus status) {
-                  return Container(
-                    alignment: Alignment.centerLeft,
-                    constraints: const BoxConstraints(minWidth: 70),
-                    child: Text(
-                      STATUSSTRING[status]!,
-                      style: TextStyle(
-                        color: widget.participation.status ==
-                                ParticipationStatus.GIVEN_UP
-                            ? Colors.white
-                            : Colors.black,
-                        fontSize: 14,
+            child: DropdownButton<ParticipationStep>(
+                icon: Icon(
+                  Icons.arrow_downward,
+                  color: widget.participation.status ==
+                          ParticipationStatus.GIVEN_UP
+                      ? Colors.white
+                      : Colors.black,
+                ),
+                // iconSize: 16,
+                selectedItemBuilder: (BuildContext context) {
+                  return getAllStatus()
+                      .map<Widget>((ParticipationStatus status) {
+                    return Container(
+                      alignment: Alignment.centerLeft,
+                      constraints: const BoxConstraints(minWidth: 70),
+                      child: Text(
+                        STATUSSTRING[status]!,
+                        style: TextStyle(
+                          color: widget.participation.status ==
+                                  ParticipationStatus.GIVEN_UP
+                              ? Colors.white
+                              : Colors.black,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                  );
-                }).toList();
-              },
-              underline: Container(
-                height: 2,
-                color:
-                    widget.participation.status == ParticipationStatus.GIVEN_UP
-                        ? Colors.white
-                        : Colors.black,
-              ),
-              onChanged: (ParticipationStatus? newStatus) async {
-                widget.onChangeParticipationStatus!(newStatus!);
-              },
-              value: widget.participation.status,
-              items: getAllStatus()
-                  .map<DropdownMenuItem<ParticipationStatus>>((e) =>
-                      DropdownMenuItem<ParticipationStatus>(
-                          value: e, child: Text(STATUSSTRING[e]!)))
-                  .toList(),
-            ),
+                    );
+                  }).toList();
+                },
+                underline: Container(
+                  height: 2,
+                  color: widget.participation.status ==
+                          ParticipationStatus.GIVEN_UP
+                      ? Colors.white
+                      : Colors.black,
+                ),
+                onChanged: (next) {
+                  if (next != null && next.step != 0) {
+                    widget.statusChangeCallback!(next.step, context);
+                  }
+                },
+                value: widget.steps![0],
+                items: widget.steps!
+                    .map((e) => DropdownMenuItem<ParticipationStep>(
+                          value: e,
+                          child: Text(STATUSSTRING[e.next] ?? ''),
+                        ))
+                    .toList()),
           ),
         )
       ];
