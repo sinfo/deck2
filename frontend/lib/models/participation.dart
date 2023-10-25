@@ -90,7 +90,7 @@ class Participation {
       case ParticipationStatus.SELECTED:
         return "SELECTED";
       case ParticipationStatus.ON_HOLD:
-        return "ON HOLD";
+        return "ON_HOLD";
       case ParticipationStatus.CONTACTED:
         return "CONTACTED";
       case ParticipationStatus.IN_CONVERSATIONS:
@@ -116,7 +116,7 @@ class Participation {
         return ParticipationStatus.SUGGESTED;
       case "SELECTED":
         return ParticipationStatus.SELECTED;
-      case "ON HOLD":
+      case "ON_HOLD":
         return ParticipationStatus.ON_HOLD;
       case "CONTACTED":
         return ParticipationStatus.CONTACTED;
