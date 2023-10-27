@@ -144,6 +144,13 @@ class _SpeakerScreenState extends State<SpeakerScreen>
                       widget.speaker.participations!.isEmpty
                           ? Center(child: Text('No participations yet'))
                           : ParticipationList(
+                              statusChangeCallback: (step, context) {
+                                speakerChangedCallback(
+                                  context,
+                                  fs: _speakerService.stepParticipationStatus(
+                                      id: widget.speaker.id, step: step),
+                                );
+                              },
                               speaker: widget.speaker,
                               onParticipationChanged:
                                   (Map<String, dynamic> body) async {

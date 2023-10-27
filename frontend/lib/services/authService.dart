@@ -41,7 +41,9 @@ class AuthService extends ChangeNotifier {
     GoogleSignInAccount? acc = await _googleSignIn.signIn();
     if (acc != null) {
       GoogleSignInAuthentication auth = await acc.authentication;
-      if (auth.accessToken == null) { return false; }
+      if (auth.accessToken == null) {
+        return false;
+      }
       // Generate JWT from Google access token
       await generateJWT(auth.accessToken!);
       return true;
@@ -155,19 +157,19 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<Role?> getRole(String userId) async {
-      try {
-        Response<String> response =
-            await _dio.get(_deckURL! + '/members/$userId/role');
-        final responseJson = json.decode(response.data as String);
-        _role = convertStringToRole(responseJson['role']);
-        return _role;
-      } on SocketException {
-        throw DeckException('No Internet connection');
-      } on HttpException {
-        throw DeckException('Not found');
-      } on FormatException {
-        throw DeckException('Wrong format');
-      }
+    try {
+      Response<String> response =
+          await _dio.get(_deckURL! + '/members/$userId/role');
+      final responseJson = json.decode(response.data as String);
+      _role = convertStringToRole(responseJson['role']);
+      return _role;
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
   }
 
   Future<Member?> getMe(String token) async {
@@ -197,5 +199,4 @@ class AuthService extends ChangeNotifier {
       throw DeckException('Wrong format');
     }
   }
-
 }
