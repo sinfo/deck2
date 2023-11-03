@@ -17,17 +17,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type testPage struct {
-	Speaker        string
-	MemberName     string
-	Company        string
-	Paragraph      string
-	Edition        int
-	EditionOrdinal string
-	EventStart     time.Time
-	EventEnd       time.Time
-}
-
 var templateCache = cache.New(1*time.Minute, 10*time.Minute)
 
 func getFilledTemplate(w http.ResponseWriter, r *http.Request) {
@@ -67,26 +56,17 @@ func fillTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tPage := testPage{}
+	tPage := make(map[string]interface{})
 
 	for _, req := range *ftd.Requirements {
-		// TODO refactor executions of template
-		if req.Name == "speakerName" {
-			tPage.Speaker = req.StringValue
-		} else if req.Name == "userName" {
-			tPage.MemberName = req.StringValue
-		} else if req.Name == "companyName" {
-			tPage.Company = req.StringValue
-		} else if req.Name == "initialParagraph" {
-			tPage.Paragraph = req.StringValue
-		} else if req.Name == "eventEdition" {
-			tPage.Edition = req.IntegerValue
-		} else if req.Name == "eventEditionOrdinal" {
-			tPage.EditionOrdinal = addOrdinal(req.IntegerValue)
-		} else if req.Name == "eventStart" {
-			tPage.EventStart = req.DateValue
-		} else if req.Name == "eventEnd" {
-			tPage.EventEnd = req.DateValue
+		if req.Type == "String" {
+			tPage[req.Name] = req.StringValue
+		} else if req.Type == "Integer" {
+			tPage[req.Name] = req.IntegerValue
+		} else if req.Type == "Bool" {
+			tPage[req.Name] = req.BoolValue
+		} else if req.Type == "Date" {
+			tPage[req.Name] = req.DateValue
 		}
 	}
 

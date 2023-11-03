@@ -73,29 +73,29 @@ class _AddThreadFormState extends State<AddThreadForm> {
         if (template.id == selectedTemplateId) {
           template.requirements?.forEach((req) {
             switch (req.name) {
-              case "speakerName" :
+              case "Speaker" :
                 req.stringVal = widget.speaker!.name;
                 break;
-              case "userName" :
+              case "MemberName" :
                 req.stringVal = me.name;
                 break;
-              case "companyName" :
+              case "Company" :
                 req.stringVal = widget.company!.name;
                 break;
-              case "initialParagraph" :
+              case "Paragraph" :
                 req.stringVal = _textController.text;
                 break;
-              case "eventEdition" :
+              case "Edition" :
                 req.intVal = eventEdition;
                 break;
-              case "eventEditionOrdinal" :
+              case "EditionOrdinal" :
                 req.intVal = eventEdition;
                 break;
-              case "eventStart" :
+              case "EventStart" :
                 DateTime eventStart = Provider.of<EventNotifier>(context, listen: false).event.start;
                 req.dateVal = eventStart;
                 break;
-              case "eventEnd" :
+              case "EventEnd" :
                 DateTime eventEnd = Provider.of<EventNotifier>(context, listen: false).event.end;
                 req.dateVal = eventEnd;
                 break;
