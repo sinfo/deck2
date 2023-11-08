@@ -135,17 +135,18 @@ class Company {
   }
 
   factory Company.fromJson(Map<String, dynamic> json) {
-    //var employersList = json['employers'] as List<String>;
+    var employersList =
+        json['employers'] != null ? json['employers'] as List : null;
 
     var participationsList = json['participations'] as List;
-    print(json['employers']);
+
     return Company(
       id: json['id'],
       name: json['name'],
       description: json['description'],
       companyImages: CompanyImages.fromJson(json['imgs']),
       site: json['site'],
-      //employees: employersList.map((e) => e.toString()).toList(),
+      employees: employersList?.map((e) => e.toString()).toList(),
       billingInfo: CompanyBillingInfo.fromJson(json['billingInfo']),
       participations: participationsList
           .map((e) => CompanyParticipation.fromJson(e))

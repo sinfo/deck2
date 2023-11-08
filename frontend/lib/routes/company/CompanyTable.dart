@@ -67,6 +67,7 @@ class _CompanyTableState extends State<CompanyTable> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError) {
+              print(snapshot.error);
               ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
               ScaffoldMessenger.of(context).showSnackBar(
