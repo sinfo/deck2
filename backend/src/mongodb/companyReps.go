@@ -104,6 +104,24 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 		}
 
 		dataQuery["contact"] = contact.ID
+	} else {
+		contact, err := Contacts.Collection.InsertOne(ctx, bson.M{
+			"phones": []models.ContactPhone{},
+			"socials": bson.M{
+				"facebook": "",
+				"skype":    "",
+				"github":   "",
+				"twitter":  "",
+				"linkedin": "",
+			},
+			"mails": []models.ContactMail{},
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		dataQuery["contact"] = contact.InsertedID.(primitive.ObjectID)
 	}
 
 	insertResult, err := c.Collection.InsertOne(ctx, dataQuery)

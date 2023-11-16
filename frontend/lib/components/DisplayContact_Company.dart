@@ -9,9 +9,9 @@ import 'package:provider/provider.dart';
 import 'InformationBox.dart';
 
 class DisplayContactsCompany extends StatefulWidget {
-  final Company company;
+  final CompanyRep rep;
 
-  DisplayContactsCompany({Key? key, required this.company}) : super(key: key);
+  DisplayContactsCompany({Key? key, required this.rep}) : super(key: key);
 
   @override
   _DisplayContactsState createState() => _DisplayContactsState();
@@ -24,7 +24,7 @@ class _DisplayContactsState extends State<DisplayContactsCompany> {
   @override
   void initState() {
     super.initState();
-    this.contact = contactService.getContact(widget.company.employees!.last);
+    this.contact = contactService.getContact(widget.rep.contactID);
   }
 
   _isEditable(Contact cont) {
@@ -40,12 +40,13 @@ class _DisplayContactsState extends State<DisplayContactsCompany> {
                   final bool? shouldRefresh = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            EditContact(contact: cont, person: widget.company)),
+                      builder: (context) =>
+                          EditContact(contact: cont, person: widget.rep),
+                    ),
                   );
                   if (shouldRefresh ?? false) {
-                    this.contact = contactService
-                        .getContact(widget.company.employees!.last);
+                    this.contact =
+                        contactService.getContact(widget.rep.contactID);
                     setState(() {});
                   }
                 },
@@ -67,29 +68,38 @@ class _DisplayContactsState extends State<DisplayContactsCompany> {
         if (snapshot.hasData) {
           Contact cont = snapshot.data as Contact;
           return Scaffold(
+            appBar: AppBar(
+              title: Text('Contact Details'),
+              backgroundColor: Color(0xff5C7FF2),
+            ),
             backgroundColor: Color.fromRGBO(186, 196, 242, 0.1),
-            body: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 32),
-              physics: BouncingScrollPhysics(),
-              children: [
-                InformationBox(title: "Mails", contact: cont, type: "mail"),
-                InformationBox(title: "Phones", contact: cont, type: "phone"),
-                InformationBox(
-                    title: "Socials",
-                    contact: cont,
-                    type: "social"), //SizedBox(height: 24,),
-              ],
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFEFEFEF), Color(0xFFFFFFFF)],
+                ),
+              ),
+              child: ListView(
+                padding: EdgeInsets.symmetric(horizontal: 32),
+                physics: BouncingScrollPhysics(),
+                children: [
+                  InformationBox(title: "Mails", contact: cont, type: "mail"),
+                  InformationBox(title: "Phones", contact: cont, type: "phone"),
+                  InformationBox(
+                      title: "Socials",
+                      contact: cont,
+                      type: "social"), //SizedBox(height: 24,),
+                ],
+              ),
             ),
             floatingActionButton: _isEditable(cont),
           );
         } else {
           return Container(
             child: Center(
-              child: Container(
-                height: 50,
-                width: 50,
-                child: CircularProgressIndicator(),
-              ),
+              child: CircularProgressIndicator(),
             ),
           );
         }

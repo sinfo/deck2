@@ -7,7 +7,7 @@ type CompanyRep struct {
 
 	// CompanyRep's ID (_id of mongodb).
 	ID   primitive.ObjectID `json:"id" bson:"_id"`
-	Name string	`json:"name" bson:"name"`
+	Name string             `json:"name" bson:"name"`
 
 	// Contact is a Contact _id (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
