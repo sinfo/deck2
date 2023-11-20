@@ -6,6 +6,10 @@ class TemplatesNotifier extends ChangeNotifier {
 
   TemplatesNotifier({required this.templates});
 
+  List<Template> getAll() {
+    return templates;
+  }
+
   void add(Template t) {
     templates.add(t);
     notifyListeners();

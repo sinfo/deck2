@@ -10,6 +10,7 @@ import 'package:frontend/routes/meeting/MeetingPage.dart';
 import 'package:frontend/routes/members_teams/member/MemberPage.dart';
 import 'package:frontend/routes/members_teams/member/MemberScreen.dart';
 import 'package:frontend/routes/session/SessionPage.dart';
+import 'package:frontend/routes/template/TemplatePage.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
@@ -178,6 +179,21 @@ class _DeckDrawerState extends State<DeckDrawer> {
                       transitionDuration: Duration(milliseconds: 600),
                       pageBuilder: (context, animation, secondaryAnimation) =>
                           SessionPage(),
+                    ));
+              }),
+          ListTile(
+              leading: Icon(
+                Icons.email,
+              ),
+              title: Text('Templates'),
+              onTap: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      transitionDuration: Duration(milliseconds: 600),
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          TemplatePage(),
                     ));
               }),
           Divider(),
