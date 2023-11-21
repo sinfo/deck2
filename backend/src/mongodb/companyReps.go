@@ -38,7 +38,7 @@ func (ccrp *CreateCompanyRepData) ParseBody(body io.Reader) error {
 
 	json.NewDecoder(body).Decode(ccrp)
 
-	if ccrp.Name == nil {
+	if ccrp.Name == nil || len(*ccrp.Name) == 0 {
 		return errors.New("Invalid name")
 	}
 	return nil
