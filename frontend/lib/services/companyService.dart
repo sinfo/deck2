@@ -227,12 +227,7 @@ class CompanyService extends Service {
       throw DeckException('Not found');
     } on FormatException {
       throw DeckException('Wrong format');
-    } catch (e) {
-      if (e is DioError) {
-        print(e.response);
-      }
-    }
-    return null;
+    } 
   }
 
   Future<Company?> updateInternalImage(

@@ -5,7 +5,7 @@ import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/companyRepService.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/components/EditContact.dart';
-import 'package:frontend/components/DisplayContact_Company.dart';
+import 'package:frontend/components/DisplayContactCompany.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/services/authService.dart';
 import 'package:provider/provider.dart';
@@ -181,8 +181,8 @@ class _CreateRepState extends State<CreateRep> {
             ],
           ),
           body: FutureBuilder(
-              future: companyRepService.getCompanyReps(
-                  null, widget.company.id, null),
+              future:
+                  companyRepService.getCompanyReps(company: widget.company.id),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   print(snapshot.error);

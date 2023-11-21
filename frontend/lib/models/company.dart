@@ -200,7 +200,7 @@ class CompanyImages {
 
 class CompanyRep {
   final String id;
-  final String? name;
+  final String name;
   final String contactID;
   Contact? _contact;
   ContactService _contactService = ContactService();

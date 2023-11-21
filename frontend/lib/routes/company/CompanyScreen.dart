@@ -9,7 +9,7 @@ import 'package:frontend/models/package.dart';
 import 'package:frontend/models/participation.dart';
 import 'package:frontend/routes/company/billing/AddBillingForm.dart';
 import 'package:frontend/routes/company/billing/BillingScreen.dart';
-import 'package:frontend/components/DisplayContact_Company.dart';
+import 'package:frontend/components/DisplayContactCompany.dart';
 import 'package:frontend/routes/company/CreateRep.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
 import 'package:frontend/routes/company/DetailsScreen.dart';
