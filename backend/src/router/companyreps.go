@@ -34,7 +34,6 @@ func getCompanyReps(w http.ResponseWriter, r *http.Request) {
 	}
 
 	employerIDs := company.Employers
-	print(employerIDs)
 	// Initialize a slice to store the representatives
 	reps := make([]*models.CompanyRep, 0)
 

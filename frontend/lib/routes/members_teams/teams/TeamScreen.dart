@@ -113,7 +113,7 @@ class _TeamScreen extends State<TeamScreen>
           if (snapshot.hasData) {
             Role r = snapshot.data as Role;
 
-            if (r == Role.ADMIN || r == Role.COORDINATOR || r == Role.MEMBER) {
+            if (r == Role.ADMIN || r == Role.COORDINATOR) {
               if (membersPage) {
                 return SpeedDial(
                   animatedIcon: AnimatedIcons.menu_close,

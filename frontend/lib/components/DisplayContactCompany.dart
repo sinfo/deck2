@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
-import 'package:frontend/services/companyService.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/components/EditContact.dart';
 import 'package:frontend/services/authService.dart';

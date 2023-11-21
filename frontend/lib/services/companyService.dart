@@ -172,7 +172,10 @@ class CompanyService extends Service {
   }
 
   Future<Company?> createRep(
-      {required String id, required String name, Contact? contact}) async {
+      {required String id, 
+      required String name, 
+      Contact? contact}) async {
+      //TODO: Variable contact should be required 
     var body = {'id': id, 'name': name, 'contact': contact?.toJson()};
 
     Response<String> response =
