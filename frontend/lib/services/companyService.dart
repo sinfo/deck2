@@ -172,10 +172,11 @@ class CompanyService extends Service {
   }
 
   Future<Company?> createRep(
-      {required String id,
-      required String name,
-      required Contact contact}) async {
-    var body = {'id': id, 'name': name, 'contact': contact.toJson()};
+      {required String id, 
+      required String name, 
+      Contact? contact}) async {
+      //TODO: Variable contact should be required 
+    var body = {'id': id, 'name': name, 'contact': contact?.toJson()};
 
     Response<String> response =
         await dio.post('/companies/' + id + '/employer', data: body);
@@ -229,11 +230,7 @@ class CompanyService extends Service {
       throw DeckException('Not found');
     } on FormatException {
       throw DeckException('Wrong format');
-    } catch (e) {
-      if (e is DioError) {
-        print(e.response);
-      }
-    }
+    } 
   }
 
   Future<Company?> updateInternalImage(

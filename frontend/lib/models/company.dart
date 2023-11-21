@@ -92,7 +92,7 @@ class Company {
   final String? description;
   final CompanyImages companyImages;
   final String? site;
-  List<CompanyRep>? employees;
+  List<String>? employees;
   CompanyBillingInfo? billingInfo;
   List<CompanyParticipation>? participations;
   final int? numParticipations;
@@ -135,15 +135,18 @@ class Company {
   }
 
   factory Company.fromJson(Map<String, dynamic> json) {
-    // var employees = json['employers'] as List;
+    var employersList =
+        json['employers'] != null ? json['employers'] as List : null;
+
     var participationsList = json['participations'] as List;
+
     return Company(
       id: json['id'],
       name: json['name'],
       description: json['description'],
       companyImages: CompanyImages.fromJson(json['imgs']),
       site: json['site'],
-      // employees: employees.map((e) => CompanyRep.fromJson(e)).toList(),
+      employees: employersList?.map((e) => e.toString()).toList(),
       billingInfo: CompanyBillingInfo.fromJson(json['billingInfo']),
       participations: participationsList
           .map((e) => CompanyParticipation.fromJson(e))

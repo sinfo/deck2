@@ -128,22 +128,24 @@ class CompanyBanner extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                SelectableText(
-                                  company.name,
-                                  style: TextStyle(
-                                    overflow: TextOverflow.ellipsis,
-                                  ).merge(Theme.of(context).textTheme.headline5),
-                                ),
-                                IconButton(
-                                  onPressed: () => Clipboard.setData(ClipboardData(text: company.name)).then((_) => ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Company name copied to clipboard'))
-                                  )),
+                            Row(children: [
+                              SelectableText(
+                                company.name,
+                                style: TextStyle(
+                                  overflow: TextOverflow.ellipsis,
+                                ).merge(Theme.of(context).textTheme.headline5),
+                              ),
+                              IconButton(
+                                  onPressed: () => Clipboard.setData(
+                                          ClipboardData(text: company.name))
+                                      .then((_) => ScaffoldMessenger.of(context)
+                                          .showSnackBar(SnackBar(
+                                              content: Text(
+                                                  'Company name copied to clipboard')))),
                                   icon: Icon(Icons.copy),
                                   iconSize: 18,
-                                  color: Theme.of(context).colorScheme.secondary
-                                ),
+                                  color:
+                                      Theme.of(context).colorScheme.secondary),
                             ]),
                             if (isLatestEvent && hasParticipation)
                               CompanyStatusDropdownButton(
