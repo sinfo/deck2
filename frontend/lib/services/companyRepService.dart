@@ -7,8 +7,7 @@ import 'package:frontend/services/service.dart';
 import 'package:frontend/components/deckException.dart';
 
 class CompanyRepService extends Service {
-  Future<List<CompanyRep>> getCompanyReps(
-      {String? meeting, String? company, String? name}) async {
+  Future<List<CompanyRep>> getCompanyReps({String? meeting, String? company, String? name}) async {
     var queryParameters = {
       'meeting': meeting,
       'company': company,
