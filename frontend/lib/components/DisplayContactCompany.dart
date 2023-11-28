@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/contact.dart';
 import 'package:frontend/models/company.dart';
 import 'package:frontend/components/EditContact.dart';
-import 'package:frontend/services/authService.dart';
 import 'package:frontend/services/contactService.dart';
-import 'package:provider/provider.dart';
 import 'InformationBox.dart';
 
 class DisplayContactsCompany extends StatefulWidget {
@@ -26,38 +24,26 @@ class _DisplayContactsState extends State<DisplayContactsCompany> {
     this.contact = contactService.getContact(widget.rep.contactID);
   }
 
-  _isEditable(Contact cont) {
-    return FutureBuilder(
-        future: Provider.of<AuthService>(context).role,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            Role r = snapshot.data as Role;
-
-            if (r == Role.ADMIN || r == Role.COORDINATOR || r == Role.MEMBER) {
-              return FloatingActionButton.extended(
-                onPressed: () async {
-                  final bool? shouldRefresh = await Navigator.push<bool>(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          EditContact(contact: cont, person: widget.rep),
-                    ),
-                  );
-                  if (shouldRefresh ?? false) {
-                    this.contact =
-                        contactService.getContact(widget.rep.contactID);
-                    setState(() {});
-                  }
-                },
-                label: const Text('Edit Contacts'),
-                icon: const Icon(Icons.edit),
-                backgroundColor: Color(0xff5C7FF2),
-              );
-            } else
-              return Container();
-          } else
-            return Container();
-        });
+  _isEditable(Contact cont) {  
+    return FloatingActionButton.extended(
+      onPressed: () async {
+        final bool? shouldRefresh = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                EditContact(contact: cont, person: widget.rep),
+          ),
+        );
+        if (shouldRefresh ?? false) {
+          this.contact =
+              contactService.getContact(widget.rep.contactID);
+          setState(() {});
+        }
+      },
+      label: const Text('Edit Contacts'),
+      icon: const Icon(Icons.edit),
+      backgroundColor: Color(0xff5C7FF2),
+    );     
   }
 
   @override
