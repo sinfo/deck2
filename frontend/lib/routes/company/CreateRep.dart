@@ -212,9 +212,8 @@ class _CreateRepState extends State<CreateRep> {
                             final representative = _Reps[index];
                             return ListTile(
                               key: Key(representative.id.toString()),
-                              leading: Icon(Icons
-                                  .person), // Add your representative image here
-                              title: Text(representative.name ?? 'N/A'),
+                              leading: Icon(Icons.person), // Add your representative image here
+                              title: SelectableText(representative.name),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
