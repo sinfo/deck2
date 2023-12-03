@@ -304,14 +304,14 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
 		return
 	}
-	
+
 	speaker, err := mongodb.Speakers.DeleteSpeakerThread(id, threadID)
 	if err != nil {
 		http.Error(w, "Speaker or thread not found: " + err.Error(), http.StatusNotFound)
 		return
 	}
-	
-	// Delete thread and posts (comments) associated to it - only if 
+
+	// Delete thread and posts (comments) associated to it - only if
 	// thread was deleted sucessfully from speaker participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: " + err.Error(), http.StatusNotFound)
@@ -662,6 +662,8 @@ func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	params := mux.Vars(r)
+  query := r.URL.Query()
+  event := query.Get("event")
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
@@ -669,7 +671,27 @@ func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+  var eventID int
+  // If the event is not specified, use the current event
+  if len(event) > 0 {
+    eventID, _ = strconv.Atoi(event)
+    _, err := mongodb.Events.GetEvent(eventID)
+    if err != nil {
+      http.Error(w, "Invalid event ID: " + err.Error(), http.StatusNotFound)
+      return
+    }
+  } else {
+    currentEvent, err := mongodb.Events.GetCurrentEvent()
+    if err != nil {
+      http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
+      return
+    }
+    eventID = currentEvent.ID
+  }
+
 	var cfid = &mongodb.CreateFlightInfoData{}
+  cfid.Speaker = &speakerID
+  cfid.Event = &eventID
 
 	if err := cfid.ParseBody(r.Body); err != nil {
 		http.Error(w, fmt.Sprintf("Could not parse body: %s", err.Error()), http.StatusBadRequest)
@@ -683,7 +705,7 @@ func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedSpeaker, err := mongodb.Speakers.AddSpeakerFlightInfo(speakerID, newFlightInfo.ID)
+	updatedSpeaker, err := mongodb.Speakers.AddSpeakerFlightInfo(speakerID, eventID, newFlightInfo.ID)
 
 	if err != nil {
 		http.Error(w, "Could not add flight info to speaker: " + err.Error(), http.StatusExpectationFailed)
@@ -735,7 +757,7 @@ func deleteSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// create deleted flight info
-		if _, err := mongodb.Speakers.AddSpeakerFlightInfo(speakerID, flightInfoID); err != nil {
+		if _, err := mongodb.Speakers.AddSpeakerFlightInfo(speakerID, backupFlightInfo.Event,flightInfoID); err != nil {
 			log.Printf("error adding flight info to speaker: %s\n", err.Error())
 		}
 

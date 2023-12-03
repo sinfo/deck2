@@ -24,14 +24,24 @@ type FlightInfoType struct {
 
 //CreateFlightInfoData holds data needed to create a flightInfo
 type CreateFlightInfoData struct {
-	Inbound  *time.Time `json:"inbound"`
-	Outbound *time.Time `json:"outbound"`
-	From     *string    `json:"from"`
-	To       *string    `json:"to"`
-	Link     string     `json:"link"`
-	Bought   *bool      `json:"bought"`
-	Cost     *int       `json:"cost"`
-	Notes    *string    `json:"notes"`
+  Event    *int                `json:"event"`
+  Speaker  *primitive.ObjectID `json:"speaker"`
+	Inbound  *time.Time          `json:"inbound"`
+	Outbound *time.Time          `json:"outbound"`
+	From     *string             `json:"from"`
+	To       *string             `json:"to"`
+	Link     string              `json:"link"`
+	Bought   *bool               `json:"bought"`
+	Cost     *int                `json:"cost"`
+	Notes    *string             `json:"notes"`
+}
+
+// GetFlightsInfoOptions holds the options for getting flights info
+type GetFlightsInfoOptions struct {
+  Event *int `json:"event"`
+  Speaker *primitive.ObjectID `json:"speaker"`
+  From *string `json:"from"`
+  To *string `json:"to"`
 }
 
 // ParseBody fills the CreateFlightInfo from a body
@@ -83,6 +93,8 @@ func (f *FlightInfoType) CreateFlightInfo(data CreateFlightInfoData) (*models.Fl
 	var createdFlightInfo models.FlightInfo
 
 	var c = bson.M{
+    "event":    data.Event,
+    "speaker":  data.Speaker,
 		"inbound":  data.Inbound.UTC(),
 		"outbound": data.Outbound.UTC(),
 		"from":     data.From,
@@ -169,4 +181,40 @@ func (f *FlightInfoType) UpdateFlightInfo(flightInfoID primitive.ObjectID, data 
 	}
 
 	return &flightInfo, nil
+}
+
+// GetFlightInfos gets all flights info
+func (f *FlightInfoType) GetFlightsInfo(flightsInfoOptions GetFlightsInfoOptions) ([]*models.FlightInfo, error) {
+  ctx := context.Background()
+
+  var flightInfos []*models.FlightInfo
+
+  var query = bson.M{}
+
+  if flightsInfoOptions.Event != nil {
+    query["event"] = flightsInfoOptions.Event
+  }
+
+  if flightsInfoOptions.Speaker != nil {
+    query["speaker"] = flightsInfoOptions.Speaker
+  }
+
+  if flightsInfoOptions.From != nil {
+    query["from"] = flightsInfoOptions.From
+  }
+
+  if flightsInfoOptions.To != nil {
+    query["to"] = flightsInfoOptions.To
+  }
+
+  cursor, err := f.Collection.Find(ctx, query)
+  if err != nil {
+    return nil, err
+  }
+
+  if err = cursor.All(ctx, &flightInfos); err != nil {
+    return nil, err
+  }
+
+  return flightInfos, nil
 }

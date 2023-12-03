@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/sinfo/deck2/src/mongodb"
@@ -22,6 +23,52 @@ func getFlightInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(flightInfo)
+}
+
+func getFlightsInfo(w http.ResponseWriter, r *http.Request) {
+
+  urlQuery := r.URL.Query()
+  options := mongodb.GetFlightsInfoOptions{}
+
+  event := urlQuery.Get("event")
+  speaker := urlQuery.Get("speaker")
+  from := urlQuery.Get("from")
+  to := urlQuery.Get("to")
+
+  if len(event) > 0 {
+    eventID, err := strconv.Atoi(event)
+    if err != nil {
+      http.Error(w, "Invalid event ID format: " + err.Error(), http.StatusBadRequest)
+      return
+    }
+    options.Event = &eventID
+  }
+
+  if len(speaker) > 0 {
+    speakerID, err := primitive.ObjectIDFromHex(speaker)
+    if err != nil {
+      http.Error(w, "Invalid speaker ID format: " + err.Error(), http.StatusBadRequest)
+      return
+    }
+    options.Speaker = &speakerID
+  }
+
+  if len(from) > 0 {
+    options.From = &from
+  }
+
+  if len(to) > 0 {
+    options.To = &to
+  }
+
+  flightsInfo, err := mongodb.FlightInfo.GetFlightsInfo(options)
+
+  if err != nil {
+    http.Error(w, "Could not find flights info: " + err.Error(), http.StatusNotFound)
+    return
+  }
+
+  json.NewEncoder(w).Encode(flightsInfo)
 }
 
 func updateFlightInfo(w http.ResponseWriter, r *http.Request) {

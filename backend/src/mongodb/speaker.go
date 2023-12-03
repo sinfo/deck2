@@ -928,15 +928,10 @@ func (s *SpeakersType) DeleteSpeakerThread(id, threadID primitive.ObjectID) (*mo
 }
 
 // AddSpeakerFlightInfo stores a flightInfo on the speaker's participation.
-func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, flightInfo primitive.ObjectID) (*models.Speaker, error) {
+func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, eventID int, flightInfo primitive.ObjectID) (*models.Speaker, error) {
 	ctx := context.Background()
 
 	var updatedSpeaker models.Speaker
-
-	currentEvent, err := Events.GetCurrentEvent()
-	if err != nil {
-		return nil, err
-	}
 
 	var updateQuery = bson.M{
 		"$addToSet": bson.M{
@@ -944,7 +939,7 @@ func (s *SpeakersType) AddSpeakerFlightInfo(speakerID primitive.ObjectID, flight
 		},
 	}
 
-	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": eventID}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
@@ -1085,8 +1080,16 @@ func (s *SpeakersType) RemoveSpeakerParticipation(speakerID primitive.ObjectID, 
 
 	for _, p := range speaker.Participations {
 		if p.Event == eventID {
-      for _, f := range p.Flights {
-        _, err := s.RemoveSpeakerFlightInfo(speakerID, f)
+      var flightsInfoOptions = GetFlightsInfoOptions {
+        Speaker: &speakerID,
+        Event: &p.Event,
+      };
+      flights, err := FlightInfo.GetFlightsInfo(flightsInfoOptions);
+      if err != nil {
+        return nil, err
+      }
+      for _, f := range flights {
+        _, err := FlightInfo.DeleteFlightInfo(f.ID)
         if err != nil {
           return nil, err
         }

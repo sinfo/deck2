@@ -201,6 +201,7 @@ func InitializeRouter() {
 
 	// flightInfo handlers
 	flightInfoRouter := r.PathPrefix("/flightInfo").Subrouter()
+  flightInfoRouter.HandleFunc("", authMember(getFlightsInfo)).Methods("GET")
 	flightInfoRouter.HandleFunc("/{id}", authMember(getFlightInfo)).Methods("GET")
 	flightInfoRouter.HandleFunc("/{id}", authMember(updateFlightInfo)).Methods("PUT")
 

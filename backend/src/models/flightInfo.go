@@ -12,6 +12,9 @@ type FlightInfo struct {
 	// FlightInfo's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
+  Event int `json:"event" bson:"event"`
+  Speaker primitive.ObjectID `json:"speaker" bson:"speaker"`
+
 	Inbound  time.Time `json:"inbound" bson:"inbound"`
 	Outbound time.Time `json:"outbound" bson:"outbound"`
 
