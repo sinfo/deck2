@@ -51,4 +51,20 @@ class FlightInfoService extends Service {
       throw DeckException('Wrong format');
     }
   }
+
+  Future<List<FlightInfo>> getFlights() async {
+    try {
+      Response<String> response = await dio.get("/flightInfo");
+
+      return (json.decode(response.data!) as List)
+          .map((i) => FlightInfo.fromJson(i))
+          .toList();
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 }

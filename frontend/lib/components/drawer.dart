@@ -5,6 +5,7 @@ import 'package:frontend/components/router.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/models/member.dart';
 import 'package:frontend/routes/UnknownScreen.dart';
+import 'package:frontend/routes/flight/FlightPage.dart';
 import 'package:frontend/routes/items_packages/ItemPackagePage.dart';
 import 'package:frontend/routes/meeting/MeetingPage.dart';
 import 'package:frontend/routes/members_teams/member/MemberPage.dart';
@@ -219,7 +220,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
                     PageRouteBuilder(
                       transitionDuration: Duration(milliseconds: 600),
                       pageBuilder: (context, animation, secondaryAnimation) =>
-                          UnknownScreen(), //TODO: All flights screen
+                          FlightPage(),
                     ));
               }),
           ListTile(

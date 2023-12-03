@@ -2,6 +2,8 @@ import 'dart:convert';
 
 class FlightInfo {
   final String id;
+  final int event;
+  final String speaker;
   final DateTime inbound;
   final DateTime outbound;
   final String from;
@@ -13,6 +15,8 @@ class FlightInfo {
 
   FlightInfo(
       {required this.id,
+      required this.event,
+      required this.speaker,
       required this.inbound,
       required this.outbound,
       required this.from,
@@ -25,6 +29,8 @@ class FlightInfo {
   factory FlightInfo.fromJson(Map<String, dynamic> json) {
     return FlightInfo(
       id: json['id'],
+      event: json['event'],
+      speaker: json['speaker'],
       inbound: DateTime.parse(json['inbound']),
       outbound: DateTime.parse(json['outbound']),
       from: json['from'],
@@ -38,6 +44,8 @@ class FlightInfo {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'event': event,
+        'speaker': speaker,
         'inbound': inbound,
         'outbound': outbound,
         'from': from,

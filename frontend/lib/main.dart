@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:frontend/components/deckTheme.dart';
 import 'package:frontend/components/eventNotifier.dart';
 import 'package:frontend/routes/company/CompanyTableNotifier.dart';
+import 'package:frontend/routes/flight/FlightsNotifier.dart';
 import 'package:frontend/routes/items_packages/items/ItemNotifier.dart';
 import 'package:frontend/routes/items_packages/packages/PackageNotifier.dart';
 import 'package:frontend/routes/members_teams/member/MemberNotifier.dart';
@@ -43,6 +44,9 @@ Future main() async {
       ),
       ChangeNotifierProvider<MeetingsNotifier>(
         create: (_) => MeetingsNotifier(meetings: []),
+      ),
+      ChangeNotifierProvider<FlightsNotifier>(
+        create: (_) => FlightsNotifier(flights: []),
       ),
       ChangeNotifierProvider<ItemsNotifier>(
         create: (_) => ItemsNotifier(items: []),
