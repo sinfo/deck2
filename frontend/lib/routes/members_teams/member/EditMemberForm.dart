@@ -51,9 +51,9 @@ class _EditMemberFormState extends State<EditMemberForm> {
 
       Member me = Provider.of<Member?>(context, listen: false)!;
       Member? m;
-      var role = Provider.of<AuthService>(context, listen: false).role;
+      var role = await Provider.of<AuthService>(context, listen: false).role;
 
-      if (role == Role.ADMIN || role == Role.COORDINATOR) {
+      if (role == Role.ADMIN || role == Role.COORDINATOR || role == Role.TEAMLEADER) {
         m = await _memberService.updateMember(
             id: widget.member.id, name: name, istid: istId);
       } else {
@@ -106,7 +106,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           Role role = snapshot.data as Role;
-          var adminOrCoord = role == Role.ADMIN || role == Role.COORDINATOR;
+          var adminOrCoordOrTeamLeader = role == Role.ADMIN || role == Role.COORDINATOR || role == Role.TEAMLEADER;
           return Form(
             key: _formKey,
             child: Column(
@@ -114,7 +114,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: TextFormField(
-                    readOnly: !adminOrCoord,
+                    readOnly: !adminOrCoordOrTeamLeader,
                     controller: _nameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -125,14 +125,14 @@ class _EditMemberFormState extends State<EditMemberForm> {
                     decoration: InputDecoration(
                       icon: const Icon(Icons.person),
                       labelText: "Name *",
-                      border: adminOrCoord ? null : InputBorder.none,
+                      border: adminOrCoordOrTeamLeader ? null : InputBorder.none,
                     ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: TextFormField(
-                    readOnly: !adminOrCoord,
+                    readOnly: !adminOrCoordOrTeamLeader,
                     controller: _istIdController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -144,7 +144,7 @@ class _EditMemberFormState extends State<EditMemberForm> {
                     decoration: InputDecoration(
                       icon: const Icon(Icons.school),
                       labelText: "IstId *",
-                      border: adminOrCoord ? null : InputBorder.none,
+                      border: adminOrCoordOrTeamLeader ? null : InputBorder.none,
                     ),
                   ),
                 ),
