@@ -10,6 +10,9 @@
         "title": {
             "type": "string"
         },
+        "bio": {
+            "type": "string"
+        },
         "imgs": {
             "type": "object",
             "properties": {
