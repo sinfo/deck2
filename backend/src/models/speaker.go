@@ -109,6 +109,9 @@ type SpeakerPublic struct {
 	// Title of the speaker (CEO @ HugeCorportation, for example).
 	Title string `json:"title" bson:"title"`
 
+	// Bio of the speaker. Careful, this will be visible on our website!
+	Bio string `json:"bio" bson:"bio"`
+
 	Images         SpeakerImagesPublic          `json:"imgs" bson:"imgs"`
 	Participations []SpeakerParticipationPublic `json:"participation" bson:"participations"`
 }

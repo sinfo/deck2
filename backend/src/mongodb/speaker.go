@@ -35,6 +35,7 @@ func speakerToPublic(speaker models.Speaker, eventID *int) (*models.SpeakerPubli
 	public := models.SpeakerPublic{
 		ID:    speaker.ID,
 		Name:  speaker.Name,
+		Bio:  speaker.Bio,
 		Title: speaker.Title,
 		Images: models.SpeakerImagesPublic{
 			Speaker: speaker.Images.Speaker,
