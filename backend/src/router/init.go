@@ -250,9 +250,9 @@ func InitializeRouter() {
 	memberRouter.HandleFunc("/{id}", authMember(getMember)).Methods("GET")
 	memberRouter.HandleFunc("/{id}/role", authMember(getMemberRole)).Methods("GET")
 	memberRouter.HandleFunc("/{id}/participations", authMember(getMembersParticipations)).Methods("GET")
-	memberRouter.HandleFunc("/{id}", authAdmin(updateMember)).Methods("PUT")
+	memberRouter.HandleFunc("/{id}", authTeamLeader(updateMember)).Methods("PUT")
 	memberRouter.HandleFunc("/{id}", authAdmin(deleteMember)).Methods("DELETE")
-	memberRouter.HandleFunc("/{id}/image", authCoordinator(setMemberImage)).Methods("POST")
+	memberRouter.HandleFunc("/{id}/image", authTeamLeader(setMemberImage)).Methods("POST")
 
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
