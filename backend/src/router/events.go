@@ -543,7 +543,7 @@ func updateCalendar(w http.ResponseWriter, r *http.Request) {
 	calendar.SetVersion("3.0")
 
 	for _, session := range sessions {
-		event := calendar.AddEvent(fmt.Sprintf("sinfo-%d-%s", currentEvent.ID, session.Title))
+		event := calendar.AddEvent(fmt.Sprintf("sinfo-%d-%s", currentEvent.ID, session.ID.Hex()))
 		event.SetCreatedTime(time.Now())
 		event.SetDtStampTime(time.Now())
 
