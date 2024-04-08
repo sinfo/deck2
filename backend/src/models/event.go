@@ -45,6 +45,9 @@ type Event struct {
 
 	// Teams is an array of Team_id (see models.Team).
 	Teams []primitive.ObjectID `json:"teams" bson:"teams"`
+
+	// Calendar is a link to the event's calendar.
+	CalendarUrl string `json:"calendarUrl" bson:"calendarUrl"`
 }
 
 // DurationInDays returns the duration of the event in days.

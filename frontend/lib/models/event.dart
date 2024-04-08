@@ -18,6 +18,8 @@ class Event {
 
   ItemService _itemService = ItemService();
 
+  String? calendarUrl;
+
   Event({
     required this.id,
     required this.name,
@@ -25,6 +27,7 @@ class Event {
     required this.end,
     this.itemIds,
     required this.eventPackagesId,
+    this.calendarUrl,
   });
 
   Future<List<Item>?> get items async {
@@ -55,6 +58,7 @@ class Event {
       end: DateTime.parse(json['end']),
       itemIds: List.from(json['items']),
       eventPackagesId: evPackages.map((e) => EventPackage.fromJson(e)).toList(),
+      calendarUrl: json['calendar_url'],
     );
   }
 
@@ -65,6 +69,7 @@ class Event {
         'end': end,
         'items': itemIds,
         'packages': eventPackagesId.map((e) => e.toJson()).toList(),
+        'calendar_url': calendarUrl,
       };
 
   @override
@@ -90,6 +95,7 @@ class EventPublic {
   final DateTime start;
   final DateTime end;
   final List<String> themes;
+  final String? calendarUrl;
 
   EventPublic({
     required this.id,
@@ -97,6 +103,7 @@ class EventPublic {
     required this.start,
     required this.end,
     required this.themes,
+    this.calendarUrl,
   });
 
   factory EventPublic.fromJson(Map<String, dynamic> json) {
@@ -106,6 +113,7 @@ class EventPublic {
       start: DateTime.parse(json['begin']),
       end: DateTime.parse(json['end']),
       themes: json['themes'] as List<String>,
+      calendarUrl: json['calendar_url'],
     );
   }
 }

@@ -120,14 +120,15 @@ func (e *EventsType) CreateEvent(data CreateEventData) (*models.Event, error) {
 	}
 
 	var c = bson.M{
-		"_id":      latestEvent.ID + 1,
-		"name":     data.Name,
-		"themes":   make([]string, 0),
-		"packages": make([]models.EventPackages, 0),
-		"items":    make([]primitive.ObjectID, 0),
-		"meetings": make([]primitive.ObjectID, 0),
-		"sessions": make([]primitive.ObjectID, 0),
-		"teams":    make([]primitive.ObjectID, 0),
+		"_id":         latestEvent.ID + 1,
+		"name":        data.Name,
+		"themes":      make([]string, 0),
+		"packages":    make([]models.EventPackages, 0),
+		"items":       make([]primitive.ObjectID, 0),
+		"meetings":    make([]primitive.ObjectID, 0),
+		"sessions":    make([]primitive.ObjectID, 0),
+		"teams":       make([]primitive.ObjectID, 0),
+		"calendarUrl": "",
 	}
 
 	insertResult, err := e.Collection.InsertOne(ctx, c)
@@ -774,6 +775,31 @@ func (e *EventsType) RemoveTeam(eventID int, teamID primitive.ObjectID) (*models
 
 	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
 		log.Println("error remove event's item:", err)
+		return nil, err
+	}
+
+	return &updatedEvent, nil
+}
+
+// Func that updates event calendar
+func (e *EventsType) UpdateCalendar(eventID int, calendarUrl string) (*models.Event, error) {
+	ctx := context.Background()
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"calendarUrl": calendarUrl,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": eventID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedEvent models.Event
+
+	if err := e.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedEvent); err != nil {
+		log.Println("error updating event's calendar:", err)
 		return nil, err
 	}
 

@@ -143,6 +143,7 @@ func InitializeRouter() {
 	publicRouter.HandleFunc("/sessions/{id}", getSessionPublic).Methods("GET")
 	publicRouter.HandleFunc("/speakers/{id}", getSpeakerPublic).Methods("GET")
 	publicRouter.HandleFunc("/events/latest", getLatestEvent).Methods("GET")
+	publicRouter.HandleFunc("/calendar.ics", getEventCalendar).Methods("GET")
 
 	// auth handlers
 	authRouter := r.PathPrefix("/auth").Subrouter()
@@ -221,6 +222,7 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("/meetings/{id}", authTeamLeader(removeMeetingFromEvent)).Methods("DELETE")
 	eventRouter.HandleFunc("/sessions", authCoordinator(addSessionToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/teams/{id}", authAdmin(removeTeamFromEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/updateCalendar", authCoordinator(updateCalendar)).Methods("GET")
 
 	// team handlers
 	teamRouter := r.PathPrefix("/teams").Subrouter()
