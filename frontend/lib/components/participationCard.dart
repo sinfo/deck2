@@ -694,7 +694,7 @@ class _ParticipationCardState extends State<ParticipationCard> {
                                           value: _currentMember,
                                           style: Theme.of(context)
                                               .textTheme
-                                              .subtitle2,
+                                              .titleSmall,
                                           selectedItemBuilder:
                                               (BuildContext context) {
                                             return members.map((e) {

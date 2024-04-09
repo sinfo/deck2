@@ -133,7 +133,7 @@ class SpeakerBanner extends StatelessWidget {
                                   speaker.name,
                                   style: TextStyle(
                                     overflow: TextOverflow.ellipsis,
-                                  ).merge(Theme.of(context).textTheme.headline5),
+                                  ).merge(Theme.of(context).textTheme.headlineSmall),
                                 ),
                                 IconButton(
                                   onPressed: () => Clipboard.setData(ClipboardData(text: speaker.name)).then((_) => ScaffoldMessenger.of(context).showSnackBar(
@@ -148,7 +148,7 @@ class SpeakerBanner extends StatelessWidget {
                               speaker.title!,
                               style: TextStyle(
                                 overflow: TextOverflow.ellipsis,
-                              ).merge(Theme.of(context).textTheme.subtitle1),
+                              ).merge(Theme.of(context).textTheme.titleMedium),
                             ),
                             if (isLatestEvent && hasParticipation)
                               SpeakerStatusDropdownButton(

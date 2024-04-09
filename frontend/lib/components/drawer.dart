@@ -48,7 +48,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
               alignment: AlignmentDirectional.centerStart,
               child: Text(
                 "Me",
-                style: Theme.of(context).textTheme.caption,
+                style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.start,
               ),
             ),
@@ -115,7 +115,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
               alignment: AlignmentDirectional.centerStart,
               child: Text(
                 "Management",
-                style: Theme.of(context).textTheme.caption,
+                style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.start,
               ),
             ),
@@ -187,7 +187,7 @@ class _DeckDrawerState extends State<DeckDrawer> {
               alignment: AlignmentDirectional.centerStart,
               child: Text(
                 "Utils",
-                style: Theme.of(context).textTheme.caption,
+                style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.start,
               ),
             ),
