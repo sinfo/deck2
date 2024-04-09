@@ -33,7 +33,7 @@ class CompanyStatusDropdownButton extends StatelessWidget {
               decoration: BoxDecoration(color: STATUSCOLOR[companyStatus]),
             ),
             value: steps[0],
-            style: Theme.of(context).textTheme.subtitle2,
+            style: Theme.of(context).textTheme.titleSmall,
             selectedItemBuilder: (BuildContext context) {
               return steps.map((e) {
                 return Align(
