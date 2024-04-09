@@ -17,7 +17,6 @@ import 'package:collection/collection.dart';
 import 'package:frontend/services/companyService.dart';
 import 'package:frontend/services/speakerService.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart';
 
 class ListViewCard extends StatefulWidget {
   final Member? member;
@@ -255,7 +254,7 @@ class _ListViewCardState extends State<ListViewCard> {
                     : Colors.black,
               ),
               value: steps[0],
-              style: Theme.of(context).textTheme.subtitle2,
+              style: Theme.of(context).textTheme.titleSmall,
               selectedItemBuilder: (BuildContext context) {
                 return steps.map((e) {
                   return Container(

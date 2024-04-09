@@ -18,9 +18,9 @@ class LightTheme extends BaseTheme {
       tabBarTheme: TabBarTheme(labelColor: Colors.black),
       primarySwatch: Colors.indigo,
       primaryColor: Colors.indigo,
-      backgroundColor: const Color(0xFFE5E5E5),
+      // backgroundColor: const Color(0xFFE5E5E5),
       //secondary: Color.fromRGBO(92, 127, 242, 1)
-      colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo)
+      colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.indigo, backgroundColor: const Color(0xFFE5E5E5))
                 .copyWith(secondary: Colors.grey,
                 brightness: Brightness.light,),
       cardColor: Color.fromRGBO(241, 241, 241, 1),
@@ -40,8 +40,8 @@ class DarkTheme extends BaseTheme {
       disabledColor: Colors.grey,
       primarySwatch: Colors.grey,
       primaryColor: Colors.black,
-      backgroundColor: Colors.white,
-      colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.grey)
+      // backgroundColor: Colors.white,
+      colorScheme: ColorScheme.fromSwatch(primarySwatch: Colors.grey, backgroundColor: Colors.white)
                 .copyWith(secondary: Colors.white,
                 brightness: Brightness.dark,),
       cardColor: Color.fromRGBO(0, 0, 0, 0.6),

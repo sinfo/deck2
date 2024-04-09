@@ -133,7 +133,7 @@ class CompanyBanner extends StatelessWidget {
                                 company.name,
                                 style: TextStyle(
                                   overflow: TextOverflow.ellipsis,
-                                ).merge(Theme.of(context).textTheme.headline5),
+                                ).merge(Theme.of(context).textTheme.headlineSmall),
                               ),
                               IconButton(
                                   onPressed: () => Clipboard.setData(
