@@ -78,11 +78,12 @@ func (e *EventsType) GetCurrentEvent() (*models.Event, error) {
 func eventToPublic(event models.Event) *models.EventPublic {
 
 	public := models.EventPublic{
-		ID:     event.ID,
-		Name:   event.Name,
-		Begin:  event.Begin,
-		End:    event.End,
-		Themes: event.Themes,
+		ID:          event.ID,
+		Name:        event.Name,
+		Begin:       event.Begin,
+		End:         event.End,
+		Themes:      event.Themes,
+		CalendarUrl: event.CalendarUrl,
 	}
 
 	return &public
