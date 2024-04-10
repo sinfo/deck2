@@ -400,4 +400,19 @@ class EventService extends Service {
       throw DeckException('Wrong format');
     }
   }
+
+  // Updates the current event calendar
+  Future<Event?> updateEventCalendar() async {
+    Response<String> res = await dio.get(basePath + "/updateCalendar");
+
+    try {
+      return Event.fromJson(json.decode(res.data!));
+    } on SocketException {
+      throw DeckException('No Internet connection');
+    } on HttpException {
+      throw DeckException('Not found');
+    } on FormatException {
+      throw DeckException('Wrong format');
+    }
+  }
 }

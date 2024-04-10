@@ -6,11 +6,14 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	ics "github.com/arran4/golang-ical"
 	"github.com/gorilla/mux"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
+	"github.com/sinfo/deck2/src/spaces"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -498,21 +501,123 @@ func removeTeamFromEvent(w http.ResponseWriter, r *http.Request) {
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 
 	if err != nil {
-		http.Error(w, "Could not find current event: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Could not find current event: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	if _, err = mongodb.Teams.GetTeam(teamID); err != nil {
-		http.Error(w, "Could not find team: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Could not find team: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedEvent, err := mongodb.Events.RemoveTeam(currentEvent.ID, teamID)
 
 	if err != nil {
-		http.Error(w, "Could not remove team from event: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not remove team from event: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	json.NewEncoder(w).Encode(updatedEvent)
+}
+
+func updateCalendar(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Could not find current event: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	sessions, err := mongodb.Sessions.GetPublicSessions(mongodb.GetSessionsPublicOptions{})
+	if err != nil {
+		http.Error(w, "Could not get sessions: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	calendar := ics.NewCalendar()
+	calendar.SetMethod(ics.MethodRequest)
+	calendar.SetProductId("-//deck.sinfo.org//deck//EN")
+	calendar.SetXWRCalName(fmt.Sprintf("SINFO %d Sessions", currentEvent.ID))
+	calendar.SetVersion("3.0")
+
+	for _, session := range sessions {
+		event := calendar.AddEvent(fmt.Sprintf("sinfo-%d-%s", currentEvent.ID, session.ID.Hex()))
+		event.SetCreatedTime(time.Now())
+		event.SetDtStampTime(time.Now())
+
+		// makes session names more readable
+		kind := session.Kind
+		sessionKind := "Session"
+
+		if kind == "TALK" {
+			sessionKind = "Keynote"
+		} else if kind == "WORKSHOP" {
+			sessionKind = "Workshop"
+		} else if kind == "PRESENTATION" {
+			sessionKind = "Presentation"
+		}
+
+		// sets summary of event differently depending on the kind of session
+		if kind == "WORKSHOP" || kind == "PRESENTATION" {
+			event.SetSummary(fmt.Sprintf("%s - %s", session.CompanyPublic.Name, sessionKind))
+		} else {
+			speakerNames := ""
+
+			// in case of a panel with more than one speaker
+			for _, speaker := range *session.SpeakersPublic {
+				speakerNames += speaker.Name + ", "
+			}
+
+			// remove last comma
+			speakerNames = speakerNames[:len(speakerNames)-2]
+
+			event.SetSummary(fmt.Sprintf("%s - %s", speakerNames, sessionKind))
+		}
+
+		event.SetDescription(fmt.Sprintf("%s Title:\n%s\n\nDescription:\n%s", sessionKind, session.Title, session.Description))
+		event.SetLocation(session.Place)
+		event.SetStartAt(session.Begin)
+		event.SetEndAt(session.End)
+	}
+
+	// get size of calendar file
+	calendarString := calendar.Serialize()
+	calendarReader := strings.NewReader(calendarString)
+	size := int64(calendarReader.Len())
+
+	url, err := spaces.UploadCalendarFile(currentEvent.ID, calendarReader, size, "text/calendar")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Couldn't upload file: %v", err), http.StatusExpectationFailed)
+		return
+	}
+
+	updatedEvent, err := mongodb.Events.UpdateCalendar(currentEvent.ID, *url)
+	if err != nil {
+		http.Error(w, "Could not update event's calendar: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedEvent)
+}
+
+func getEventCalendar(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+
+	if err != nil {
+		http.Error(w, "Could not find event: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	// check if calendar file exists
+	if currentEvent.CalendarUrl == "" {
+		http.Error(w, "Calendar file not found", http.StatusNotFound)
+		return
+	}
+
+	http.Redirect(w, r, currentEvent.CalendarUrl, http.StatusPermanentRedirect)
 }

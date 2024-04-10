@@ -45,6 +45,9 @@ type Event struct {
 
 	// Teams is an array of Team_id (see models.Team).
 	Teams []primitive.ObjectID `json:"teams" bson:"teams"`
+
+	// Calendar is a link to the event's calendar.
+	CalendarUrl string `json:"calendarUrl" bson:"calendarUrl"`
 }
 
 // DurationInDays returns the duration of the event in days.
@@ -83,6 +86,8 @@ type EventPublic struct {
 	// Example: index 1 corresponds to monday, index 2 to tuesday, etc).
 	// The themes can be "Software Engineer", "Security", "Gaming", etc.
 	Themes []string `json:"themes" bson:"themes"`
+
+	CalendarUrl string `json:"calendarUrl" bson:"calendarUrl"`
 }
 
 // DurationInDays returns the duration of the event in days.

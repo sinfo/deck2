@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.46.3 // indirect
+	github.com/arran4/golang-ical v0.2.7
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/digitalocean/godo v1.19.0
 	github.com/google/uuid v1.3.0
@@ -23,7 +24,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.1.0 // indirect
 	google.golang.org/appengine v1.6.2 // indirect
-	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/ini.v1 v1.46.0 // indirect
 	gotest.tools v0.0.0-20181223230014-1083505acf35
 )
