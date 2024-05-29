@@ -507,7 +507,7 @@ class _DisplayMeetingState extends State<DisplayMeeting>
     List<Future<Meeting?>> _futureMeetings =
         widget.meetingsIds!.map((m) => _meetingService.getMeeting(m)).toList();
 
-    membersPage = false;
+    // membersPage = false;
 
     return Scaffold(
       body: (widget.meetingsIds == null)
