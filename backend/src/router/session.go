@@ -150,6 +150,8 @@ func getPublicSessions(w http.ResponseWriter, r *http.Request) {
 
 	event := urlQuery.Get("event")
 	kind := urlQuery.Get("kind")
+  company := urlQuery.Get("company")
+	speaker := urlQuery.Get("speaker")
 
 	if len(event) > 0 {
 		eventValue, err := strconv.Atoi(event)
@@ -178,6 +180,28 @@ func getPublicSessions(w http.ResponseWriter, r *http.Request) {
 		}
 
 		options.Kind = kindValue
+	}
+
+	if len(company) > 0 {
+		companyValue, err := primitive.ObjectIDFromHex(company)
+
+		if err != nil {
+			json.NewEncoder(w).Encode(make([]*models.Session, 0))
+			return
+		}
+
+		options.Company = &companyValue
+	}
+
+	if len(speaker) > 0 {
+		speakerValue, err := primitive.ObjectIDFromHex(speaker)
+
+		if err != nil {
+			json.NewEncoder(w).Encode(make([]*models.Session, 0))
+			return
+		}
+
+		options.Speaker = &speakerValue
 	}
 
 	sessions, err := mongodb.Sessions.GetPublicSessions(options)

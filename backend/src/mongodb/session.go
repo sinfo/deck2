@@ -492,6 +492,8 @@ func (s *SessionsType) GetSessions(options GetSessionsOptions) ([]*models.Sessio
 type GetSessionsPublicOptions struct {
 	EventID *int
 	Kind    *models.SessionKind
+	Company *primitive.ObjectID
+  Speaker *primitive.ObjectID
 }
 
 // GetPublicSessions gets all sessions specified with a query to be shown publicly
@@ -499,46 +501,16 @@ func (s *SessionsType) GetPublicSessions(options GetSessionsPublicOptions) ([]*m
 	ctx = context.Background()
 
 	var public = make([]*models.SessionPublic, 0)
-	var filtered = make([]*models.Session, 0)
 	var sessions []*models.Session
 	var err error
 
-	if currentPublicCompanies != nil {
-
-		var filtered = make([]*models.SessionPublic, 0)
-
-		if options.Kind != nil {
-
-			for _, s := range *currentPublicSessions {
-				if s.Kind == *options.Kind {
-					filtered = append(filtered, s)
-				}
-			}
-
-		} else {
-			filtered = *currentPublicSessions
-		}
-
-		// return cached value
-		return filtered, nil
-
-	}
-
-	sessions, err = Sessions.GetSessions(GetSessionsOptions{Event: options.EventID})
+  sessions, err = Sessions.GetSessions(GetSessionsOptions{
+    Event: options.EventID,
+    Kind: options.Kind,
+    Company: options.Company,
+    Speaker: options.Speaker})
 	if err != nil {
 		return nil, err
-	}
-
-	if options.Kind != nil {
-
-		for _, s := range sessions {
-			if s.Kind == *options.Kind {
-				filtered = append(filtered, s)
-			}
-		}
-
-	} else {
-		filtered = sessions
 	}
 
 	var event *models.Event
@@ -554,7 +526,7 @@ func (s *SessionsType) GetPublicSessions(options GetSessionsPublicOptions) ([]*m
 		}
 	}
 
-	for _, session := range filtered {
+	for _, session := range sessions {
 		p, err := sessionToPublic(*session, &event.ID)
 		if err != nil {
 			return nil, err
@@ -562,7 +534,7 @@ func (s *SessionsType) GetPublicSessions(options GetSessionsPublicOptions) ([]*m
 		public = append(public, p)
 	}
 
-	if options.EventID == nil && options.Kind == nil && currentPublicSessions == nil {
+	if options.EventID == nil && options.Kind == nil && options.Company == nil && options.Speaker == nil && currentPublicSessions == nil {
 		currentPublicSessions = &public
 	}
 
