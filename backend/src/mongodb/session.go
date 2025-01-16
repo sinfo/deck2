@@ -37,6 +37,7 @@ func sessionToPublic(session models.Session, eventID *int) (*models.SessionPubli
 		Begin:       session.Begin,
 		End:         session.End,
 		Title:       session.Title,
+		Image:       session.Image,
 		Description: session.Description,
 		Place:       session.Place,
 		Kind:        session.Kind,

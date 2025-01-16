@@ -38,6 +38,32 @@ type CompanyParticipation struct {
 
 	// Some random notes about this participation.
 	Notes string `json:"notes" bson:"notes"`
+
+  // Stand details
+  StandDetails StandDetails `json:"standDetails,omitempty" bson:"standDetails,omitempty"`
+
+  // Stand and days at the venue
+  Stands []Stand `json:"stands,omitempty" bson:"stands,omitempty"`
+
+}
+
+type Stand struct {
+  // Stand identifier
+  StandID string  `json:"standId" bson:"standId"`
+
+  // Day at the venue
+  Date *time.Time `json:"date,omitempty" bson:"date,omitempty"`
+}
+
+type StandDetails struct {
+  // Number of chairs required by the company
+  Chairs int `json:"chairs" bson:"chairs"`
+
+  // Require front table
+  Table bool `json:"table" bson:"table"`
+
+  // Require lettering
+  Lettering bool `json:"lettering" bson:"lettering"`
 }
 
 // CompanyBillingInfo of company
@@ -99,6 +125,12 @@ type CompanyParticipationPublic struct {
 
 	// Participation's package is a Package _id (see models.Package).
 	Package PackagePublic `json:"package,omitempty"`
+
+  // Stand details
+  StandDetails StandDetails `json:"standDetails,omitempty"`
+
+  // Days at the venue
+  Stands []Stand `json:"stands,omitempty"`
 }
 
 // CompanyPublic represents a company to be contacted by the team, that will hopefully participate
