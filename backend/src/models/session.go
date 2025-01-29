@@ -62,6 +62,9 @@ type Session struct {
 	Title       string    `json:"title" bson:"title"`
 	Description string    `json:"description" bson:"description"`
 
+  // Session Image
+  Image string `json:"img,omitempty" bson:"img,omitempty"`
+
 	// Where the session is being held. Typically a room on the venue.
 	Place string `json:"place" bson:"place"`
 
@@ -88,6 +91,9 @@ type SessionPublic struct {
 	End         time.Time `json:"end"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
+
+  // Session Image
+  Image string `json:"img,omitempty" bson:"img,omitempty"`
 
 	// Where the session is being held. Typically a room on the venue.
 	Place string `json:"place"`

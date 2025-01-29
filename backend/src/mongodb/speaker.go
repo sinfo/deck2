@@ -37,6 +37,7 @@ func speakerToPublic(speaker models.Speaker, eventID *int) (*models.SpeakerPubli
 		Name:  speaker.Name,
 		Bio:  speaker.Bio,
 		Title: speaker.Title,
+    CompanyName: speaker.CompanyName,
 		Images: models.SpeakerImagesPublic{
 			Speaker: speaker.Images.Speaker,
 			Company: speaker.Images.Company,

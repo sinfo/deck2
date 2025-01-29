@@ -72,6 +72,9 @@ type Speaker struct {
 	// Bio of the speaker. Careful, this will be visible on our website!
 	Bio string `json:"bio" bson:"bio"`
 
+  // Company name
+  CompanyName string `json:"companyName" bson:"companyName"`
+
 	// This is only visible by the team. Praise and trash talk at will.
 	Notes          string                 `json:"notes" bson:"notes"`
 	Images         SpeakerImages          `json:"imgs" bson:"imgs"`
@@ -86,7 +89,7 @@ type SpeakerImagesPublic struct {
 
 	// Speaker's company photo. This is a URL pointing to the photo, stored somewhere. It will
 	// be visible on our website.
-	Company string `json:"company" bson:"company"`
+	Company string `json:"company,omitempty" bson:"company"`
 }
 
 type SpeakerParticipationPublic struct {
@@ -111,6 +114,9 @@ type SpeakerPublic struct {
 
 	// Bio of the speaker. Careful, this will be visible on our website!
 	Bio string `json:"bio" bson:"bio"`
+
+  // Company name
+  CompanyName string `json:"companyName,omitempty" bson:"companyName"`
 
 	Images         SpeakerImagesPublic          `json:"imgs" bson:"imgs"`
 	Participations []SpeakerParticipationPublic `json:"participation" bson:"participations"`

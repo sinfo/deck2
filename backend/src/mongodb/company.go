@@ -319,6 +319,8 @@ func companyToPublic(company models.Company, eventID *int) (*models.CompanyPubli
 				Event:   p.Event,
 				Partner: participation.Partner,
 				Package: models.PackagePublic{},
+        StandDetails: participation.StandDetails,
+        Stands: participation.Stands,
 			}
 
 			if participation.Package != nil {
