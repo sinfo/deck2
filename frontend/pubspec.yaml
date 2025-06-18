@@ -26,7 +26,7 @@ dependencies:
   flutter_speed_dial:
   google_sign_in: ^6.1.4
   http: ^1.0.0
-  file_picker: ^5.2.0+1
+  file_picker: ^10.2.0
   flutter_dotenv: ^5.0.0
   shared_preferences: ^2.0.6
   responsive_scaffold_nullsafe: ^1.0.1
@@ -36,7 +36,7 @@ dependencies:
   image_picker_for_web: ^2.1.3
   dotted_border: ^2.0.0+1
   provider: ^6.0.0
-  flutter_dropzone: ^3.0.5
+  flutter_dropzone: ^4.2.1
   google_fonts: ^5.1.0
   intl: ^0.18.1
   collection: ^1.15.0
