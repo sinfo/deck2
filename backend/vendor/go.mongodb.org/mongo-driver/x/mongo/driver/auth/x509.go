@@ -9,10 +9,10 @@ package auth
 import (
 	"context"
 
-	"go.mongodb.org/mongo-driver/x/bsonx"
-	"go.mongodb.org/mongo-driver/x/network/command"
-	"go.mongodb.org/mongo-driver/x/network/description"
-	"go.mongodb.org/mongo-driver/x/network/wiremessage"
+	"go.mongodb.org/mongo-driver/mongo/description"
+	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
+	"go.mongodb.org/mongo-driver/x/mongo/driver"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/operation"
 )
 
 // MongoDBX509 is the mechanism name for MongoDBX509.
@@ -27,20 +27,55 @@ type MongoDBX509Authenticator struct {
 	User string
 }
 
-// Auth implements the Authenticator interface.
-func (a *MongoDBX509Authenticator) Auth(ctx context.Context, desc description.Server, rw wiremessage.ReadWriter) error {
-	authRequestDoc := bsonx.Doc{
-		{"authenticate", bsonx.Int32(1)},
-		{"mechanism", bsonx.String(MongoDBX509)},
+var _ SpeculativeAuthenticator = (*MongoDBX509Authenticator)(nil)
+
+// x509 represents a X509 authentication conversation. This type implements the SpeculativeConversation interface so the
+// conversation can be executed in multi-step speculative fashion.
+type x509Conversation struct{}
+
+var _ SpeculativeConversation = (*x509Conversation)(nil)
+
+// FirstMessage returns the first message to be sent to the server.
+func (c *x509Conversation) FirstMessage() (bsoncore.Document, error) {
+	return createFirstX509Message(description.Server{}, ""), nil
+}
+
+// createFirstX509Message creates the first message for the X509 conversation.
+func createFirstX509Message(desc description.Server, user string) bsoncore.Document {
+	elements := [][]byte{
+		bsoncore.AppendInt32Element(nil, "authenticate", 1),
+		bsoncore.AppendStringElement(nil, "mechanism", MongoDBX509),
 	}
 
-	if desc.WireVersion.Max < 5 {
-		authRequestDoc = append(authRequestDoc, bsonx.Elem{"user", bsonx.String(a.User)})
+	// Server versions < 3.4 require the username to be included in the message. Versions >= 3.4 will extract the
+	// username from the certificate.
+	if desc.WireVersion != nil && desc.WireVersion.Max < 5 {
+		elements = append(elements, bsoncore.AppendStringElement(nil, "user", user))
 	}
 
-	authCmd := command.Read{DB: "$external", Command: authRequestDoc}
-	ssdesc := description.SelectedServer{Server: desc}
-	_, err := authCmd.RoundTrip(ctx, ssdesc, rw)
+	return bsoncore.BuildDocument(nil, elements...)
+}
+
+// Finish implements the SpeculativeConversation interface and is a no-op because an X509 conversation only has one
+// step.
+func (c *x509Conversation) Finish(context.Context, *Config, bsoncore.Document) error {
+	return nil
+}
+
+// CreateSpeculativeConversation creates a speculative conversation for X509 authentication.
+func (a *MongoDBX509Authenticator) CreateSpeculativeConversation() (SpeculativeConversation, error) {
+	return &x509Conversation{}, nil
+}
+
+// Auth authenticates the provided connection by conducting an X509 authentication conversation.
+func (a *MongoDBX509Authenticator) Auth(ctx context.Context, cfg *Config) error {
+	requestDoc := createFirstX509Message(cfg.Description, a.User)
+	authCmd := operation.
+		NewCommand(requestDoc).
+		Database("$external").
+		Deployment(driver.SingleConnectionDeployment{cfg.Connection}).
+		ClusterClock(cfg.ClusterClock)
+	err := authCmd.Execute(ctx)
 	if err != nil {
 		return newAuthError("round trip error", err)
 	}
