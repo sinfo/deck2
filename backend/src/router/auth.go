@@ -147,6 +147,58 @@ func generateJwt(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(authResponse)
 }
 
+type credRequest struct {
+	Credentials string `json:"credentials"`
+}
+
+func generateJwtAuthCode(w http.ResponseWriter, r *http.Request) {
+	var token credRequest
+
+	err := json.NewDecoder(r.Body).Decode(&token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	data, err := google.GetUserDataFromGoogleJWT(token.Credentials)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
+
+	fmt.Printf("%+v\n", data)
+
+	var emailParts = strings.Split(data.Email, "@")
+	if len(emailParts) != 2 {
+		log.Println("error parsing user email")
+		return
+	}
+
+	if (emailParts[1]) != "sinfo.org" {
+		log.Println("not valid sinfo email")
+		return
+	}
+
+	var sinfoid = emailParts[0]
+	credentials, err := mongodb.Members.GetMemberAuthCredentials(sinfoid)
+	if err != nil {
+		log.Println("member " + sinfoid + "not found, or without team")
+		return
+	}
+
+	decktoken, err := auth.SignJWT(*credentials)
+	if err != nil {
+		log.Println("unable to create jwt" + err.Error())
+		return
+	}
+
+	var authResponse = &AuthResponse{
+		DeckToken: *decktoken,
+	}
+
+	json.NewEncoder(w).Encode(authResponse)
+}
+
 func verifyToken(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	tokenString := params["token"]
