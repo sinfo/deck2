@@ -151,6 +151,7 @@ func InitializeRouter() {
 	authRouter.HandleFunc("/callback", oauthGoogleCallback).Methods("GET")
 	authRouter.HandleFunc("/verify/{token}", verifyToken).Methods("GET")
 	authRouter.HandleFunc("/checkin", generateJwt).Methods("POST")
+	authRouter.HandleFunc("/checkin/jwt", generateJwtAuthCode).Methods("POST")
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
@@ -176,6 +177,8 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
+	companyRouter.HandleFunc("/{id}/representatives", authMember(getCompanyRepresentatives)).Methods("GET")
+	companyRouter.HandleFunc("/{id}/communications", authMember(getCompanyCommunications)).Methods("GET")
 
 	// speaker handlers
 	speakerRouter := r.PathPrefix("/speakers").Subrouter()
