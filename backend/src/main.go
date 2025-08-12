@@ -12,15 +12,18 @@ import (
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/router"
-	"github.com/sinfo/deck2/src/spaces"
 )
 
 func main() {
 
 	prod := flag.Bool("production", false, "Switch between production mode and dev mode")
-	file := flag.String("config", "", "Config filename. If ommited, configuration is obtained via env vars")
+	file := flag.String("config", ".env", "Config filename. If ommited, configuration is obtained via env vars")
 	flag.Parse()
 
+	print("Deck2 Backend\n")
+	
+	// Initialize configuration
+	print("Initializing configuration...\n")
 	config.InitializeConfig(file)
 
 	if *prod {
@@ -29,13 +32,21 @@ func main() {
 		config.Production = true
 	}
 
+	print("Initializing OAuth2\n")
 	if err := auth.InitializeOAuth2(); err != nil {
 		log.Fatal(err.Error())
 	}
 
+	print("Initializing JWT\n")
 	auth.InitializeJWT()
+
+	print("Initializing MongoDB\n")
 	mongodb.InitializeDatabase()
-	spaces.InitializeSpaces()
+
+	print("Initializing Spaces\n")
+	// spaces.InitializeSpaces()
+
+	print("Initializing Router\n")
 	router.InitializeRouter()
 
 	log.Printf("Serving at %s:%s\n", config.Host, config.Port)
