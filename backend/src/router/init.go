@@ -244,6 +244,7 @@ func InitializeRouter() {
 	meRouter := r.PathPrefix("/me").Subrouter()
 	meRouter.HandleFunc("", authMember(getMe)).Methods("GET")
 	meRouter.HandleFunc("", authMember(updateMe)).Methods("PUT")
+	meRouter.HandleFunc("/responsibilities", authMember(getResponsibilities)).Methods("GET")
 	meRouter.HandleFunc("/image", authMember(setMyImage)).Methods("POST")
 	meRouter.HandleFunc("/notifications", authMember(getMyNotifications)).Methods("GET")
 	meRouter.HandleFunc("/notifications/{id}", authMember(deleteMyNotification)).Methods("DELETE")
