@@ -473,6 +473,7 @@ type UpdateSpeakerData struct {
 	Bio   *string
 	Title *string
 	Notes *string
+	CompanyName *string
 }
 
 // ParseBody fills the UpdateSpeakerData from a body
@@ -504,6 +505,9 @@ func (s *SpeakersType) UpdateSpeaker(speakerID primitive.ObjectID, data UpdateSp
 	}
 	if data.Notes != nil {
 		updateFields["notes"] = *data.Notes
+	}
+	if data.CompanyName != nil {
+		updateFields["companyName"] = *data.CompanyName
 	}
 
 	var updateQuery = bson.M{

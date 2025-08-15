@@ -31,6 +31,14 @@ func getSpeaker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	contact, err := mongodb.Contacts.GetContact(*speaker.Contact)
+	if err != nil {
+		http.Error(w, "Unable to get contact: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	speaker.ContactObject = contact
+
 	json.NewEncoder(w).Encode(speaker)
 }
 
