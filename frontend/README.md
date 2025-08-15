@@ -1,16 +1,16 @@
-# frontend
+# Flutter Deck
 
-A new Flutter project.
+## Installation
+Packages? No idea, don't remember. TODO.
 
-## Getting Started
+### Auth
+Make sure to copy [`.env.example`](.env.example) into [`.env`](.env). This file has the API URL for the Deck backend.
 
-This project is a starting point for a Flutter application.
+If hosting your own backend, make sure to point it to your local instance.
+Also, edit the google auth metatag on [`web/index.html`](./web/index.html) to your Google Auth Client ID. Do **not** commit it. Moving it to .env would be a good first issue.
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+## Running
+Run `flutter run -d chrome --web-port 8083` and it will open a new chrome instance on port 8083.
+Can likely use other browsers, check documentation.
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
