@@ -704,7 +704,8 @@ func (ucpd *UpdateCompanyParticipationData) ParseBody(body io.Reader) error {
 	}
 
 	if ucpd.Confirmed == nil {
-		return errors.New("invalid confirmation date")
+		// Confirmed may be null
+		// return errors.New("invalid confirmation date")
 	}
 
 	if ucpd.Notes == nil {
@@ -735,9 +736,12 @@ func (c *CompaniesType) UpdateCompanyParticipation(companyID primitive.ObjectID,
 		"$set": bson.M{
 			"participations.$.member":    *data.Member,
 			"participations.$.partner":   *data.Partner,
-			"participations.$.confirmed": data.Confirmed.UTC(),
 			"participations.$.notes":     *data.Notes,
 		},
+	}
+
+	if data.Confirmed != nil {
+		updateQuery["participations.$.confirmed"] = data.Confirmed.UTC()
 	}
 
 	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
