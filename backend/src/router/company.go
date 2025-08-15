@@ -1087,21 +1087,17 @@ func unsubscribeToCompany(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedCompany)
 }
 
+type ParticipationCommunications struct {
+	Event int `json:"event"`
+	Communications []*models.ThreadWithEntry `json:"communications"`
+}
+
 func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
-	urlQuery := r.URL.Query()
-	event := urlQuery.Get("event")
-	if len(event) == 0 {
-		http.Error(w, "Event ID is required", http.StatusBadRequest)
-		return
-	}
-
-	eventID, err := strconv.Atoi(event)
-
-	// Retrieve the list of employer IDs from the Company document
+	// Retrieve the company document
 	company, err := mongodb.Companies.GetCompany(companyID)
 	if err != nil {
 		http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
@@ -1113,48 +1109,40 @@ func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find the participation for the specified event
-	var targetParticipation *models.CompanyParticipation
+	participationComms := make([]*ParticipationCommunications, 0)
+
 	for _, participation := range company.Participations {
-		if participation.Event == eventID {
-			targetParticipation = &participation
-			break
-		}
-	}
+		comms := make([]*models.ThreadWithEntry, 0)
 
-	if targetParticipation == nil {
-		json.NewEncoder(w).Encode(make([]*models.ThreadWithEntry, 0))
-		return
-	}
+		for _, threadID := range participation.Communications {
+			thread, err := mongodb.Threads.GetThread(threadID)
+			if err != nil {
+				http.Error(w, "Could not get thread: "+err.Error(), http.StatusNotFound)
+				return
+			}
 
-	// Extract communications from the participation
-	// Communications are in the Communications field which contains thread IDs
-	communications := targetParticipation.Communications
-	comms := make([]*models.ThreadWithEntry, 0)
+			post, err := mongodb.Posts.GetPost(thread.Entry)
+			if err != nil {
+				http.Error(w, "Could not get post: "+err.Error(), http.StatusNotFound)
+				return
+			}
 
-	for _, threadID := range communications {
-		thread, err := mongodb.Threads.GetThread(threadID)
-		if err != nil {
-			http.Error(w, "Could not get thread: "+err.Error(), http.StatusNotFound)
-			return
-		}
-
-		post, err := mongodb.Posts.GetPost(thread.Entry)
-		if err != nil {
-			http.Error(w, "Could not get post: "+err.Error(), http.StatusNotFound)
-			return
+			comms = append(comms, &models.ThreadWithEntry{
+				ID:      thread.ID,
+				Posted:  thread.Posted,
+				Entry:  post,
+				Meeting: thread.Meeting,
+				Comments: thread.Comments,
+				Kind:    thread.Kind,
+				Status:  thread.Status,
+			})
 		}
 
-		comms = append(comms, &models.ThreadWithEntry{
-			ID:      thread.ID,
-			Posted:  thread.Posted,
-			Entry:  post,
-			Meeting: thread.Meeting,
-			Comments: thread.Comments,
-			Kind:    thread.Kind,
-			Status:  thread.Status,
+		participationComms = append(participationComms, &ParticipationCommunications{
+			Event: participation.Event,
+			Communications: comms,
 		})
 	}
 
-	json.NewEncoder(w).Encode(comms)
+	json.NewEncoder(w).Encode(participationComms)
 }
