@@ -31,7 +31,7 @@ type CompanyParticipation struct {
 	// Participation's billing is a billing _id (see models.Billing).
 	Billing *primitive.ObjectID `json:"billing" bson:"billing"`
 
-	Confirmed time.Time `json:"confirmed" bson:"confirmed"`
+	Confirmed *time.Time `json:"confirmed,omitempty" bson:"confirmed,omitempty"`
 
 	// Is this company participating as a partner.
 	Partner bool `json:"partner" bson:"partner"`
