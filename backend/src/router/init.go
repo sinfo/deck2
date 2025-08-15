@@ -174,11 +174,11 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/billing", authCoordinator(addCompanyParticipationBilling)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/billing/{billingID}", authCoordinator(deleteCompanyParticipationBilling)).Methods("DELETE")
+	companyRouter.HandleFunc("/{id}/threads", authMember(getCompanyThreads)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/employers", authMember(getCompanyEmployers)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
-	companyRouter.HandleFunc("/{id}/representatives", authMember(getCompanyRepresentatives)).Methods("GET")
-	companyRouter.HandleFunc("/{id}/communications", authMember(getCompanyCommunications)).Methods("GET")
 
 	// speaker handlers
 	speakerRouter := r.PathPrefix("/speakers").Subrouter()

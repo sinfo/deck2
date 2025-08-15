@@ -950,7 +950,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getCompanyRepresentatives(w http.ResponseWriter, r *http.Request) {
+func getCompanyEmployers(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
 
@@ -1087,7 +1087,7 @@ func unsubscribeToCompany(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedCompany)
 }
 
-func getCompanyCommunications(w http.ResponseWriter, r *http.Request) {
+func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 	companyID, _ := primitive.ObjectIDFromHex(params["id"])
