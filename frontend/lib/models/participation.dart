@@ -272,7 +272,8 @@ class CompanyParticipation extends Participation {
       communicationsId: List.from(json['communications']),
       packageId: json['package'],
       billingId: json['billing'],
-      confirmed: DateTime.parse(json['confirmed']),
+      confirmed:
+          json['confirmed'] != null ? DateTime.parse(json['confirmed']) : null,
       partner: json['partner'],
       notes: json['notes'],
     );
