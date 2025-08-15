@@ -78,6 +78,8 @@ type CreateSpeakerData struct {
 	Name  *string `json:"name"`
 	Title *string `json:"title"`
 	Bio   *string `json:"bio"`
+	CompanyName *string `json:"companyName"`
+	Contact     *models.Contact `json:"contact,omitempty"`
 }
 
 // ParseBody fills the CreateSpeakerData from a body
@@ -99,6 +101,24 @@ func (cpd *CreateSpeakerData) ParseBody(body io.Reader) error {
 		return errors.New("invalid bio")
 	}
 
+	// Don't enforce yet, deck2 flutter doesn't submit companyName
+	/* if cpd.CompanyName == nil || len(*cpd.CompanyName) == 0 {
+		return errors.New("invalid company name")
+	} */ 
+
+	if cpd.Contact != nil {
+		for _, s := range cpd.Contact.Phones {
+			if len(s.Phone) == 0 {
+				return errors.New("Invalid phone number")
+			}
+		}
+		for _, s := range cpd.Contact.Mails {
+			if len(s.Mail) == 0 {
+				return errors.New("Invalid mail")
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -106,7 +126,7 @@ func (cpd *CreateSpeakerData) ParseBody(body io.Reader) error {
 func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, error) {
 	ctx := context.Background()
 
-	createdContact, err := Contacts.Collection.InsertOne(ctx, bson.M{
+	contact := bson.M{
 		"phones": []models.ContactPhone{},
 		"socials": bson.M{
 			"facebook": "",
@@ -116,7 +136,15 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 			"linkedin": "",
 		},
 		"mails": []models.ContactMail{},
-	})
+	}
+
+	if data.Contact != nil {
+		contact["phones"] = data.Contact.Phones
+		contact["mails"] = data.Contact.Mails
+		contact["socials"] = data.Contact.Socials
+	}
+
+	createdContact, err := Contacts.Collection.InsertOne(ctx, contact)
 
 	if err != nil {
 		return nil, err
@@ -126,6 +154,7 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 		"name":           data.Name,
 		"title":          data.Title,
 		"bio":            data.Bio,
+		"companyName":    data.CompanyName,
 		"participations": []models.SpeakerParticipation{},
 		"contact":        createdContact.InsertedID.(primitive.ObjectID),
 	})
