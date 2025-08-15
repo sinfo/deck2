@@ -12,6 +12,7 @@ import (
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/router"
+	"github.com/sinfo/deck2/src/spaces"
 )
 
 func main() {
@@ -44,7 +45,7 @@ func main() {
 	mongodb.InitializeDatabase()
 
 	print("Initializing Spaces\n")
-	// spaces.InitializeSpaces()
+	spaces.InitializeSpaces()
 
 	print("Initializing Router\n")
 	router.InitializeRouter()
