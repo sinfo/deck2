@@ -200,6 +200,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/image/internal", authMember(setSpeakerPrivateImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/image/public/speaker", authCoordinator(setSpeakerPublicImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/image/public/company", authCoordinator(setSpeakerCompanyImage)).Methods("POST")
+	speakerRouter.HandleFunc("/{id}/threads", authMember(getSpeakerThreads)).Methods("GET")
 	speakerRouter.HandleFunc("/{id}/thread", authMember(addSpeakerThread)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation", authCoordinator(removeSpeakerParticipation)).Methods("DELETE")
 
