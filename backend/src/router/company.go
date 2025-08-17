@@ -1029,6 +1029,35 @@ func removeEmployer(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func updateEmployersOrder(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Company not found: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var ueod = &mongodb.UpdateEmployersOrderData{}
+
+	if err := ueod.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateEmployersOrder(companyID, *ueod)
+
+	if err != nil {
+		http.Error(w, "Could not update employers order: " + err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+}
+
 func subscribeToCompany(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()

@@ -177,6 +177,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/threads", authMember(getCompanyThreads)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employers", authMember(getCompanyEmployers)).Methods("GET")
+	companyRouter.HandleFunc("/{id}/employers", authMember(updateEmployersOrder)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
 

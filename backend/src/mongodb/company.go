@@ -1033,6 +1033,55 @@ func (c *CompaniesType) RemoveEmployer(companyID primitive.ObjectID, companyRep 
 	return &updatedCompany, nil
 }
 
+// UpdateEmployersOrderData is the structure used to update a company's employers order
+type UpdateEmployersOrderData struct {
+	Employers *[]primitive.ObjectID `json:"employers"`
+}
+
+// ParseBody fills the UpdateEmployersOrderData from a body
+func (ueod *UpdateEmployersOrderData) ParseBody(body io.Reader) error {
+	if err := json.NewDecoder(body).Decode(ueod); err != nil {
+		return err
+	}
+
+	if ueod.Employers == nil {
+		return errors.New("invalid employers")
+	}
+
+	// Validate that all employer IDs exist
+	for _, employerID := range *ueod.Employers {
+		if _, err := CompanyReps.GetCompanyRep(employerID); err != nil {
+			return errors.New("invalid employer ID: " + employerID.Hex())
+		}
+	}
+
+	return nil
+}
+
+// UpdateEmployersOrder updates the order of employers for a company
+func (c *CompaniesType) UpdateEmployersOrder(companyID primitive.ObjectID, data UpdateEmployersOrderData) (*models.Company, error) {
+	ctx := context.Background()
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"employers": data.Employers,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating employers order:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
 // AddThread adds a models.Thread to a company's participation's list of communications (related to the current event).
 func (c *CompaniesType) AddThread(companyID primitive.ObjectID, threadID primitive.ObjectID) (*models.Company, error) {
 
