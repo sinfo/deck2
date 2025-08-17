@@ -30,11 +30,17 @@ func getMe(w http.ResponseWriter, r *http.Request) {
 	memberID := credentials.ID
 
 	member, err := mongodb.Members.GetMember(memberID)
-
 	if err != nil {
 		http.Error(w, "Could not find member: " + err.Error(), http.StatusNotFound)
 		return
 	}
+
+	contact, err := mongodb.Contacts.GetContact(member.Contact)
+	if err != nil {
+		http.Error(w, "Could not find contact: " + err.Error(), http.StatusNotFound)
+		return
+	}
+	member.ContactObject = contact
 
 	json.NewEncoder(w).Encode(member)
 }
