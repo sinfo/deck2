@@ -319,15 +319,15 @@ const isMac = computed(() => {
 
 // Companies query
 const { data: companiesData, isLoading: companiesLoading } = useQuery({
-  key: () => ["companies", eventStore.selectedEvent?.id || 0],
-  query: () => getAllCompanies({ event: eventStore.selectedEvent?.id }),
+  key: () => ["companies"],
+  query: () => getAllCompanies({}),
   enabled: () => !!eventStore.selectedEvent?.id,
 });
 
 // Speakers query
 const { data: speakersData, isLoading: speakersLoading } = useQuery({
-  key: () => ["speakers", eventStore.selectedEvent?.id || 0],
-  query: () => getAllSpeakers({ event: eventStore.selectedEvent?.id }),
+  key: () => ["speakers"],
+  query: () => getAllSpeakers({ }),
   enabled: () => !!eventStore.selectedEvent?.id,
 });
 
