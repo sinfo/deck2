@@ -29,6 +29,8 @@ type GetContactsOptions struct {
 
 // CreateContactData contains data needed to create a contact
 type CreateContactData struct {
+	Gender models.Gender `json:"gender" bson:"gender"`
+	Language models.Language `json:"language" bson:"language"`
 	Phones  []models.ContactPhone `json:"phones" bson:"phones"`
 	Socials models.ContactSocials `json:"socials" bson:"socials"`
 	Mails   []models.ContactMail  `json:"mails" bson:"mails"`
@@ -127,6 +129,8 @@ func (c *ContactsType) CreateContact(data CreateContactData) (*models.Contact, e
 	insertData["phones"] = data.Phones
 	insertData["socials"] = data.Socials
 	insertData["mails"] = data.Mails
+	insertData["gender"] = data.Gender
+	insertData["language"] = data.Language
 
 	insertResult, err := c.Collection.InsertOne(ctx, insertData)
 	if err != nil {
@@ -149,6 +153,8 @@ func (c *ContactsType) UpdateContact(contactID primitive.ObjectID, data CreateCo
 			"phones":  data.Phones,
 			"socials": data.Socials,
 			"mails":   data.Mails,
+			"gender":  data.Gender,
+			"language": data.Language,
 		},
 	}
 

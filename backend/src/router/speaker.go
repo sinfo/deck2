@@ -31,6 +31,14 @@ func getSpeaker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	contact, err := mongodb.Contacts.GetContact(*speaker.Contact)
+	if err != nil {
+		http.Error(w, "Unable to get contact: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	speaker.ContactObject = contact
+
 	json.NewEncoder(w).Encode(speaker)
 }
 
@@ -751,6 +759,61 @@ func deleteSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 			Speaker: &updatedSpeaker.ID,
 		})
 	}
+}
+
+func getSpeakerThreads(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	// Retrieve the speaker document
+	speaker, err := mongodb.Speakers.GetSpeaker(speakerID)
+	if err != nil {
+		http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	if len(speaker.Participations) == 0 {
+		http.Error(w, "No participations found", http.StatusNotFound)
+		return
+	}
+
+	participationComms := make([]*ParticipationCommunications, 0)
+
+	for _, participation := range speaker.Participations {
+		comms := make([]*models.ThreadWithEntry, 0)
+
+		for _, threadID := range participation.Communications {
+			thread, err := mongodb.Threads.GetThread(threadID)
+			if err != nil {
+				http.Error(w, "Could not get thread: "+err.Error(), http.StatusNotFound)
+				return
+			}
+
+			post, err := mongodb.Posts.GetPost(thread.Entry)
+			if err != nil {
+				http.Error(w, "Could not get post: "+err.Error(), http.StatusNotFound)
+				return
+			}
+
+			comms = append(comms, &models.ThreadWithEntry{
+				ID:      thread.ID,
+				Posted:  thread.Posted,
+				Entry:  post,
+				Meeting: thread.Meeting,
+				Comments: thread.Comments,
+				Kind:    thread.Kind,
+				Status:  thread.Status,
+			})
+		}
+
+		participationComms = append(participationComms, &ParticipationCommunications{
+			Event: participation.Event,
+			Communications: comms,
+		})
+	}
+
+	json.NewEncoder(w).Encode(participationComms)
 }
 
 func addSpeakerThread(w http.ResponseWriter, r *http.Request) {

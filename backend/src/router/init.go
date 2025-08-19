@@ -151,6 +151,7 @@ func InitializeRouter() {
 	authRouter.HandleFunc("/callback", oauthGoogleCallback).Methods("GET")
 	authRouter.HandleFunc("/verify/{token}", verifyToken).Methods("GET")
 	authRouter.HandleFunc("/checkin", generateJwt).Methods("POST")
+	authRouter.HandleFunc("/checkin/jwt", generateJwtAuthCode).Methods("POST")
 
 	// company handlers
 	companyRouter := r.PathPrefix("/companies").Subrouter()
@@ -173,7 +174,10 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/billing", authCoordinator(addCompanyParticipationBilling)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/billing/{billingID}", authCoordinator(deleteCompanyParticipationBilling)).Methods("DELETE")
+	companyRouter.HandleFunc("/{id}/threads", authMember(getCompanyThreads)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/employers", authMember(getCompanyEmployers)).Methods("GET")
+	companyRouter.HandleFunc("/{id}/employers", authMember(updateEmployersOrder)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
 
@@ -197,6 +201,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/image/internal", authMember(setSpeakerPrivateImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/image/public/speaker", authCoordinator(setSpeakerPublicImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/image/public/company", authCoordinator(setSpeakerCompanyImage)).Methods("POST")
+	speakerRouter.HandleFunc("/{id}/threads", authMember(getSpeakerThreads)).Methods("GET")
 	speakerRouter.HandleFunc("/{id}/thread", authMember(addSpeakerThread)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation", authCoordinator(removeSpeakerParticipation)).Methods("DELETE")
 
@@ -241,6 +246,7 @@ func InitializeRouter() {
 	meRouter := r.PathPrefix("/me").Subrouter()
 	meRouter.HandleFunc("", authMember(getMe)).Methods("GET")
 	meRouter.HandleFunc("", authMember(updateMe)).Methods("PUT")
+	meRouter.HandleFunc("/responsibilities", authMember(getResponsibilities)).Methods("GET")
 	meRouter.HandleFunc("/image", authMember(setMyImage)).Methods("POST")
 	meRouter.HandleFunc("/notifications", authMember(getMyNotifications)).Methods("GET")
 	meRouter.HandleFunc("/notifications/{id}", authMember(deleteMyNotification)).Methods("DELETE")

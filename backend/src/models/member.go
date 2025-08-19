@@ -25,6 +25,7 @@ type Member struct {
 
 	// Contact is an _id of Contact (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
+	ContactObject *Contact `json:"contactObject,omitempty" bson:"-"`
 }
 
 // MemberPublic is the public information about a member
@@ -47,6 +48,8 @@ type AuthorizationCredentials struct {
 
 	// Role on SINFO
 	Role TeamRole
+
+	Team string
 }
 
 type MemberEventTeam struct {

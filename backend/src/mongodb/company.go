@@ -704,7 +704,8 @@ func (ucpd *UpdateCompanyParticipationData) ParseBody(body io.Reader) error {
 	}
 
 	if ucpd.Confirmed == nil {
-		return errors.New("invalid confirmation date")
+		// Confirmed may be null
+		// return errors.New("invalid confirmation date")
 	}
 
 	if ucpd.Notes == nil {
@@ -735,9 +736,12 @@ func (c *CompaniesType) UpdateCompanyParticipation(companyID primitive.ObjectID,
 		"$set": bson.M{
 			"participations.$.member":    *data.Member,
 			"participations.$.partner":   *data.Partner,
-			"participations.$.confirmed": data.Confirmed.UTC(),
 			"participations.$.notes":     *data.Notes,
 		},
+	}
+
+	if data.Confirmed != nil {
+		updateQuery["participations.$.confirmed"] = data.Confirmed.UTC()
 	}
 
 	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
@@ -1023,6 +1027,55 @@ func (c *CompaniesType) RemoveEmployer(companyID primitive.ObjectID, companyRep 
 
 	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
 		log.Println("Error finding created company:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// UpdateEmployersOrderData is the structure used to update a company's employers order
+type UpdateEmployersOrderData struct {
+	Employers *[]primitive.ObjectID `json:"employers"`
+}
+
+// ParseBody fills the UpdateEmployersOrderData from a body
+func (ueod *UpdateEmployersOrderData) ParseBody(body io.Reader) error {
+	if err := json.NewDecoder(body).Decode(ueod); err != nil {
+		return err
+	}
+
+	if ueod.Employers == nil {
+		return errors.New("invalid employers")
+	}
+
+	// Validate that all employer IDs exist
+	for _, employerID := range *ueod.Employers {
+		if _, err := CompanyReps.GetCompanyRep(employerID); err != nil {
+			return errors.New("invalid employer ID: " + employerID.Hex())
+		}
+	}
+
+	return nil
+}
+
+// UpdateEmployersOrder updates the order of employers for a company
+func (c *CompaniesType) UpdateEmployersOrder(companyID primitive.ObjectID, data UpdateEmployersOrderData) (*models.Company, error) {
+	ctx := context.Background()
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"employers": data.Employers,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating employers order:", err)
 		return nil, err
 	}
 

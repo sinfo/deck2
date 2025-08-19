@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -33,6 +34,7 @@ var (
 
 	// Max size of the images to be uploaded by deck2 (Companies public and private images,
 	// speakers public and private images, etc)
+	// Also don't forget to update the frontend if this changes
 	// 10 MB
 	ImageMaxSize  int64 = 10 << 20
 	MinuteMaxSize int64 = 500 << 10
@@ -49,6 +51,7 @@ const (
 	keyPort string = "PORT"
 
 	keyDatabaseURI  string = "DB_URL"
+	deckDbURL string = "DECK_DB_URL"
 	keyDatabaseName string = "DB_NAME"
 	keyCallbackURL  string = "CALLBACK_URL"
 
@@ -77,7 +80,6 @@ func set(variable *string, key string, mandatory bool) {
 }
 
 func InitializeConfig(filename *string) {
-
 	var file = true
 	if filename == nil {
 		file = false
@@ -86,17 +88,14 @@ func InitializeConfig(filename *string) {
 	}
 
 	if file {
-		viper.SetConfigName(*filename)
-		viper.AddConfigPath(".")
-		if err := viper.ReadInConfig(); err != nil {
-			file = false
-		}
-
-	} else {
-		viper.SetEnvPrefix(keyPrefix)
-		viper.AutomaticEnv()
+		if err := godotenv.Load(*filename); err != nil {
+            fmt.Printf("Error loading .env file: %v\n", err)
+        }
 	}
 
+	viper.SetEnvPrefix(keyPrefix)
+	viper.AutomaticEnv()
+	
 	set(&Host, keyHost, false)
 	set(&Port, keyPort, false)
 

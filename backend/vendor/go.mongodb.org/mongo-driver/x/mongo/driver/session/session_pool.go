@@ -9,8 +9,8 @@ package session
 import (
 	"sync"
 
-	"go.mongodb.org/mongo-driver/x/bsonx"
-	"go.mongodb.org/mongo-driver/x/network/description"
+	"go.mongodb.org/mongo-driver/mongo/description"
+	"go.mongodb.org/mongo-driver/x/bsonx/bsoncore"
 )
 
 // Node represents a server session in a linked list
@@ -124,6 +124,11 @@ func (p *Pool) ReturnSession(ss *Server) {
 		return
 	}
 
+	// session is dirty
+	if ss.Dirty {
+		return
+	}
+
 	newNode := &Node{
 		Server: ss,
 		next:   nil,
@@ -144,11 +149,11 @@ func (p *Pool) ReturnSession(ss *Server) {
 }
 
 // IDSlice returns a slice of session IDs for each session in the pool
-func (p *Pool) IDSlice() []bsonx.Doc {
+func (p *Pool) IDSlice() []bsoncore.Document {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
-	ids := []bsonx.Doc{}
+	var ids []bsoncore.Document
 	for node := p.head; node != nil; node = node.next {
 		ids = append(ids, node.SessionID)
 	}

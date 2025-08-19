@@ -28,3 +28,5 @@ services:
     image: mongo:4.0.4
     container_name: "deck2_testing_mongodb"
     command: mongod --smallfiles --logpath=/dev/null
+    ports:
+      - "127.0.0.1:27017:27017"
