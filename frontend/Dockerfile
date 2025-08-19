@@ -1,38 +1,20 @@
-# Install dependencies
-FROM debian:latest AS builder
-RUN apt-get update 
-RUN apt-get install -y curl git wget unzip libgconf-2-4 gdb libstdc++6 libglu1-mesa fonts-droid-fallback lib32stdc++6 python3 psmisc
-RUN apt-get clean
-
-# Clone the flutter repo
-RUN git clone https://github.com/flutter/flutter.git /usr/local/flutter
-
-# Set flutter path
-ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
-
-# Enable flutter web
-RUN flutter channel stable
-RUN flutter upgrade
-RUN flutter config --enable-web
-
-# Run flutter doctor
-RUN flutter doctor -v
-
-# Copy the app files to the container
-COPY . /app
-
-# Set the working directory to the app files within the container
+FROM node:22-alpine AS build
 WORKDIR /app
 
-# Create env file
-RUN touch .env && echo DECK2_URL="https://deck.sinfo.org/api" > .env
+COPY package*.json ./
 
-# Get App Dependencies and Build it
-RUN flutter clean
-RUN flutter pub get
-RUN flutter build web --release
+RUN npm install --frozen-lockfile
 
-# Run the app on NGINX
-FROM nginx
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine AS runner
+
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/build/web/ /web/
+COPY --from=build /app/dist /web
+
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
