@@ -8,13 +8,16 @@ FROM golang:1.23-alpine AS builder
 RUN adduser -D -g '' myuser
 
 WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
 
 RUN apk --no-cache add ca-certificates
 
 # Optimize by removing debug informations, compile only for linux target
 # and disabling cross compilation for go >= 1.10
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/deck2 ./src/*.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o deck2 ./src
 
 
 ############################
