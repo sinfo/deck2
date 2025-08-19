@@ -41,6 +41,12 @@ func (ccrp *CreateCompanyRepData) ParseBody(body io.Reader) error {
 	if ccrp.Name == nil || len(*ccrp.Name) == 0 {
 		return errors.New("Invalid name")
 	}
+
+	valid, err := validateContact(ccrp.Contact)
+	if !valid {
+		return err
+	}
+	
 	return nil
 }
 

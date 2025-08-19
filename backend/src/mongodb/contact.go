@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/mail"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -46,6 +47,39 @@ type UpdateMailsData struct {
 	Mails []models.ContactMail `json:"mails"`
 }
 
+func validateContact(contact *CreateContactData) (bool, error) {
+	if contact == nil {
+		return false, errors.New("invalid contact")
+	}
+
+	if contact.Gender == "" {
+		return false, errors.New("invalid contact gender")
+	}
+
+	if contact.Language == "" {
+		return false, errors.New("invalid contact language")
+	}
+
+	for _, phone := range contact.Phones {
+		if len(phone.Phone) == 0 {
+			return false, errors.New("invalid contact phone number")
+		}
+	}
+
+	for _, email := range contact.Mails {
+		if len(email.Mail) == 0 {
+			return false, errors.New("invalid contact mail")
+		}
+
+		address, err := mail.ParseAddress(email.Mail)
+		if err != nil || address == nil {
+			return false, errors.New("invalid contact mail")
+		}
+	}
+
+	return true, nil
+}
+
 // ParseBody fills a CreateContactData struct from a body
 func (ccd *CreateContactData) ParseBody(body io.Reader) error {
 
@@ -53,15 +87,8 @@ func (ccd *CreateContactData) ParseBody(body io.Reader) error {
 		return err
 	}
 
-	for _, s := range ccd.Phones {
-		if len(s.Phone) == 0 {
-			return errors.New("Invalid phone number")
-		}
-	}
-	for _, s := range ccd.Mails {
-		if len(s.Mail) == 0 {
-			return errors.New("Invalid mail")
-		}
+	if valid, err := validateContact(ccd); !valid {
+		return err
 	}
 
 	return nil
