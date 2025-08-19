@@ -7,6 +7,7 @@ import { generateJwt } from "@/api/auth";
 import { useAuthStore } from "@/stores/auth";
 import GoogleIcon from "@/assets/google-icon.svg";
 import { useRoute, useRouter } from "vue-router";
+import { env } from "@/env";
 
 const props = defineProps<{
   class?: HTMLAttributes["class"];
@@ -16,8 +17,8 @@ const login = () => {
   googleSdkLoaded((google) => {
     google.accounts.oauth2
       .initTokenClient({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-        scope: import.meta.env.VITE_GOOGLE_SCOPE,
+        client_id: env.GOOGLE_CLIENT_ID,
+        scope: env.GOOGLE_SCOPE,
         callback: (response) => {
           callback(response);
         },

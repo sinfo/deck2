@@ -2,6 +2,7 @@ import { googleSdkLoaded, type CallbackTypes } from "vue3-google-login";
 import { generateJwt } from "@/api/auth";
 import { useAuthStore } from "@/stores/auth";
 import { ref } from "vue";
+import { env } from "@/env";
 
 export const useGoogleAuth = () => {
   const authStore = useAuthStore();
@@ -16,8 +17,8 @@ export const useGoogleAuth = () => {
       googleSdkLoaded((google) => {
         google.accounts.oauth2
           .initTokenClient({
-            client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-            scope: import.meta.env.VITE_GOOGLE_SCOPE,
+            client_id: env.GOOGLE_CLIENT_ID,
+            scope: env.GOOGLE_SCOPE,
             callback: async (response) => {
               try {
                 await handleGoogleCallback(response);
