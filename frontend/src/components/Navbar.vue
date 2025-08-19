@@ -1,0 +1,205 @@
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { Menu, X, LogOut, Settings } from "lucide-vue-next";
+import { Button } from "@/components/ui/button";
+import type { RouteLocationRaw } from "vue-router";
+import { useQuery } from "@pinia/colada";
+import { getAllEvents } from "@/api/events";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { useEventStore } from "@/stores/event";
+import { useAuthStore } from "@/stores/auth";
+import { useRouter } from "vue-router";
+import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerAutocompleteWithDialog.vue";
+import type { Company } from "@/dto/companies";
+import type { Speaker } from "@/dto/speakers";
+import { useMagicKeys } from "@vueuse/core";
+
+const isOpen = ref(false);
+const authStore = useAuthStore();
+const router = useRouter();
+
+const logout = () => {
+  authStore.clearToken();
+  router.push({ name: "landing" });
+};
+
+interface NavigationItem {
+  name: string;
+  to: RouteLocationRaw;
+  icon?: any;
+}
+
+const navigation: NavigationItem[] = [
+  { name: "Me", to: { name: "dashboard" } },
+  { name: "Companies", to: { name: "companies" } },
+  { name: "Speakers", to: { name: "speakers" } },
+  { name: "Settings", to: { name: "settings" }, icon: Settings },
+];
+
+const { data: events, isLoading: eventsLoading } = useQuery({
+  key: ["events"],
+  query: getAllEvents,
+});
+
+const sortedEvents = computed(() =>
+  events.value?.data.sort((a, b) => b.begin?.localeCompare(a.begin || "") || 0),
+);
+
+const eventStore = useEventStore();
+
+watch(
+  () => sortedEvents.value,
+  () => {
+    if (sortedEvents.value?.length && !eventStore.selectedEvent) {
+      eventStore.selectedEvent = sortedEvents.value[0]!;
+    }
+  },
+  { immediate: true },
+);
+
+const companySelected = (company: Company) =>
+  router.push({ name: "company", params: { companyId: company.id } });
+
+const speakerSelected = (speaker: Speaker) =>
+  router.push({ name: "speaker", params: { speakerId: speaker.id } });
+
+const keys = useMagicKeys();
+const shortcutMac = keys["meta+k"];
+const shortcutLinux = keys["ctrl+k"];
+const showSuggestions = ref(false);
+
+watch(shortcutMac, () => {
+  if (shortcutMac.value) {
+    showSuggestions.value = true;
+    // Reset after a short delay to allow the component to react
+    setTimeout(() => {
+      showSuggestions.value = false;
+    }, 100);
+  }
+});
+
+watch(shortcutLinux, () => {
+  if (shortcutLinux.value) {
+    showSuggestions.value = true;
+    // Reset after a short delay to allow the component to react
+    setTimeout(() => {
+      showSuggestions.value = false;
+    }, 100);
+  }
+});
+</script>
+
+<template>
+  <section
+    class="fixed top-0 left-0 right-0 z-50 w-full flex items-center bg-white py-4 border-b border-gray-200"
+  >
+    <div class="container mx-auto px-4 md:px-6 lg:px-8">
+      <nav class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <RouterLink :to="{ name: 'dashboard' }" class="text-2xl font-bold"
+            >Deck</RouterLink
+          >
+
+          <Select v-model="eventStore.selectedEvent">
+            <SelectTrigger :loading="eventsLoading">
+              <SelectValue placeholder="Edition" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="event in sortedEvents"
+                :key="event.id"
+                :value="event"
+              >
+                {{ event.name }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <CompanyOrSpeakerAutocompleteWithDialog
+          :autofocus="showSuggestions"
+          :force-show-suggestions="showSuggestions"
+          class="hidden md:inline w-full px-3"
+          placeholder="Search"
+          @company-selected="companySelected"
+          @speaker-selected="speakerSelected"
+          show-create
+        />
+
+        <!-- Desktop Navigation -->
+        <div class="hidden md:flex items-center space-x-4">
+          <RouterLink
+            v-for="item in navigation"
+            :key="item.name"
+            :to="item.to"
+            class="text-gray-600 hover:text-gray-900"
+            :title="item.name"
+          >
+            <component v-if="item.icon" :is="item.icon" class="h-5 w-5" />
+            <span v-else>{{ item.name }}</span>
+          </RouterLink>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            @click="logout"
+            class="text-gray-600 hover:text-gray-900"
+          >
+            <LogOut class="h-4 w-4" />
+          </Button>
+        </div>
+
+        <!-- Mobile Navigation Button -->
+        <div class="md:hidden">
+          <Button variant="ghost" @click="isOpen = !isOpen">
+            <Menu v-if="!isOpen" class="h-6 w-6" />
+            <X v-else class="h-6 w-6" />
+          </Button>
+        </div>
+      </nav>
+
+      <!-- Mobile Navigation Menu -->
+      <div
+        v-if="isOpen"
+        class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 py-4"
+      >
+        <CompanyOrSpeakerAutocompleteWithDialog
+          class="w-full px-3 pb-3"
+          placeholder="Search"
+          @company-selected="companySelected"
+          @speaker-selected="speakerSelected"
+        />
+
+        <div class="container mx-auto px-4">
+          <div class="flex flex-col space-y-4">
+            <RouterLink
+              v-for="item in navigation"
+              :key="item.name"
+              :to="item.to"
+              class="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+            >
+              <component v-if="item.icon" :is="item.icon" class="h-4 w-4" />
+              <span>{{ item.name }}</span>
+            </RouterLink>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              @click="logout"
+              class="text-gray-600 hover:text-gray-900 justify-start p-0"
+            >
+              <LogOut class="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
