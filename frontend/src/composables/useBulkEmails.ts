@@ -181,6 +181,9 @@ const speakerEmailFetcher: EmailFetcher<SpeakerWithParticipation> = {
     try {
       const response = await getSpeakerById(speaker.id);
       const speakerData = response.data;
+
+      console.log("speakerEmailFetcher", speakerData);
+
       if (
         !speakerData.contactObject?.mails ||
         speakerData.contactObject.mails.length === 0
@@ -253,6 +256,7 @@ export const useBulkEmails = <T extends BulkEmailEntity>(
 
         try {
           email = await emailFetcher.getEmail(entity);
+          console.log('useBulkEmails', email, entity)
           valid = processEmail(email, entity);
         } catch (error) {
           valid = {
