@@ -28,7 +28,6 @@ export const useAuthStore = defineStore("auth", () => {
     if (!token.value) return false;
     const expires = decoded.value?.exp ? decoded.value.exp * 1000 : null;
     if (expires && expires < Date.now()) {
-      clearToken();
       return false;
     }
     return true;

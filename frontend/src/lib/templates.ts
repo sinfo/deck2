@@ -29,8 +29,8 @@ export const templateHumanReadableNames: Record<EmailTemplate, string> = {
 export const templatePaths: Record<EmailTemplate, string> = {
   [EmailTemplate.COMPANIES_EN]: "/companies/32-en.html",
   [EmailTemplate.COMPANIES_PT]: "/companies/32-pt.html",
-  [EmailTemplate.SPEAKERS_EN]: "/speakers/32-en.html",
-  [EmailTemplate.SPEAKERS_PT]: "/speakers/32-pt.html",
+  [EmailTemplate.SPEAKERS_EN]: "/speakers/33-en.html",
+  [EmailTemplate.SPEAKERS_PT]: "/speakers/33-pt.html",
 };
 
 // 4. Set the company templates and the speaker templates
