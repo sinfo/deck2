@@ -410,7 +410,6 @@ export const useBulkEmails = <T extends BulkEmailEntity>(
       ? getVariablesFromType<SpeakerVariablesInput>({
           ...varsInput,
           speaker: entity,
-          paragraph: "blablabla",
         })
       : getVariablesFromType<CompanyVariablesInput>({
           ...varsInput,
