@@ -4,7 +4,7 @@ Version 2 of eventdeck
 ## Requirements
 
 - go version >= 1.18
-- swagger: `go get -u github.com/go-swagger/go-swagger/cmd/swagger` (info on https://goswagger.io/)
+- swagger: `go install github.com/go-swagger/go-swagger/cmd/swagger@latest` (info on https://goswagger.io/)
 
 ## Documentation
 
