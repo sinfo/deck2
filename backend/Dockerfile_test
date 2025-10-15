@@ -13,7 +13,7 @@ RUN swagger validate /go/bin/swagger.json -q
 ############################
 # STEP 2 run tests
 ############################
-FROM golang:alpine3.10
+FROM golang:1.23-alpine AS builder
 
 WORKDIR $GOPATH/src/github.com/sinfo/deck2
 COPY . .
