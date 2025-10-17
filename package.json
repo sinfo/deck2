@@ -6,7 +6,7 @@
     "start:backend": "cd backend && go run src/main.go",
     "start:frontend": "cd frontend && npm run dev",
     "dev": "concurrently \"npm run start:db\" \"npm run start:backend\" \"npm run start:frontend\"",
-    "stop": "docker compose down"
+    "stop": "docker compose -f docker-compose.test.yml down"
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
