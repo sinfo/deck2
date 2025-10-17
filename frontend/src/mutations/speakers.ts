@@ -1,10 +1,10 @@
 import {
-  updateSpeaker,
-  updateSpeakerParticipation,
-  updateSpeakerParticipationStep,
-  createSpeakerParticipation,
-  postSpeakerThread,
-  uploadSpeakerInternalImage,
+    updateSpeaker,
+    updateSpeakerParticipation,
+    updateSpeakerParticipationStep,
+    createSpeakerParticipation,
+    postSpeakerThread,
+    uploadSpeakerInternalImage, updateSpeakerParticipationStatus,
 } from "@/api/speakers";
 import type {
   UpdateSpeakerData,
@@ -41,6 +41,28 @@ export const useSpeakerParticipationStepMutation = defineMutation(() => {
     speakerId,
     step,
   };
+});
+
+export const useSpeakerParticipationStatusMutation = defineMutation(() => {
+    const speakerId = ref<string>();
+    const queryCache = useQueryCache();
+
+    const { mutate, ...mutation } = useMutation({
+        mutation: (status: string) => updateSpeakerParticipationStatus(speakerId.value!, status),
+        onSettled: () => {
+            if (speakerId.value) {
+                queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+            }
+            queryCache.invalidateQueries({ key: ["speakers"] });
+            queryCache.invalidateQueries({ key: ["responsibilities"] });
+        },
+    });
+
+    return {
+        mutate,
+        ...mutation,
+        speakerId,
+    };
 });
 
 export const useCreateSpeakerParticipationMutation = defineMutation(() => {

@@ -30,6 +30,9 @@ export const updateSpeakerParticipation = (
 export const updateSpeakerParticipationStep = (id: string, step: number) =>
   instance.post<Speaker>(`/speakers/${id}/participation/status/${step}`);
 
+export const updateSpeakerParticipationStatus = (id: string, status: string) =>
+  instance.put<Speaker>(`/speakers/${id}/participation/status/${status}`);
+
 export const getSpeakerCommunications = (id: string) =>
   instance.get<ParticipationCommunications[]>(`/speakers/${id}/threads`);
 
