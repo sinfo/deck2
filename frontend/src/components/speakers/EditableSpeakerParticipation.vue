@@ -6,12 +6,11 @@
           {{ getEventName(participation.event) }}
         </h4>
         <div class="flex items-center gap-2">
-          <Popover v-model:open="isStatusMenuOpen">
-            <PopoverTrigger as-child>
+          <Popover :open="isEditing && isStatusMenuOpen" @update:open="isStatusMenuOpen = $event">
+          <PopoverTrigger as-child>
               <Badge
                   :class="participationStatusColor[selectedStatus]?.background"
                   class="text-xs flex items-center gap-1 cursor-pointer"
-                  :disabled="!isEditing"
               >
                 {{ humanReadableParticipationStatus[selectedStatus] }}
                 <ChevronDown v-if="isEditing" class="w-3 h-3" />
