@@ -71,6 +71,14 @@
 
             <!-- Step 1: Configuration -->
             <div v-if="currentStep === 1" class="mt-6 space-y-6">
+              <div v-if="showNoMemberContactWarning" class="bg-red-50 rounded-lg p-4 max-h-40 overflow-y-auto">
+                <h1 class="text-xl font-semibold">⚠️ Important</h1>
+                <p class="mt-2 text-sm">
+                  You must <RouterLink :to="{ name: 'settings' }" class="font-medium text-blue-600 hover:underline" @click="handleCancel"> set your contact email and phone number</RouterLink>.
+                  Not doing so will fail later. You have been warned.
+                </p>
+              </div>
+
               <div>
                 <label
                   class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -439,6 +447,7 @@ import {
   useBulkSpeakerEmails,
   type BulkEmailResult,
 } from "@/composables/useBulkEmails";
+import { useAuthStore } from "@/stores/auth";
 
 interface Props {
   size?: "sm" | "default" | "lg" | "icon";
@@ -458,6 +467,17 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   success: [template: EmailTemplateCategory, result: BulkEmailResult];
 }>();
+
+const authStore = useAuthStore();
+const showNoMemberContactWarning = computed(() => {
+  const { member } = authStore;
+
+  if (!member?.contactObject) return true;
+
+  const hasMail = member?.contactObject?.mails?.length > 0 && member.contactObject.mails[0].mail.trim() !== "";
+  const hasPhone = member?.contactObject?.phones?.length > 0 && member.contactObject.phones[0].phone.trim() !== "";
+  return !hasMail || !hasPhone;
+});
 
 // Use the appropriate composable based on entity type
 const bulkEmailComposable =

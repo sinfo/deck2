@@ -290,6 +290,7 @@ import Button from "@/components/ui/button/Button.vue";
 import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
+import { useAuthStore } from "@/stores/auth";
 
 const isEditMode = ref(false);
 const queryCache = useQueryCache();
@@ -316,6 +317,7 @@ const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
   },
 });
 
+const authStore = useAuthStore();
 const handleUpdateContact = async (data: any) => {
   if (!user.value?.data.contactObject?.id) return;
 
@@ -332,6 +334,14 @@ const handleUpdateContact = async (data: any) => {
     id: user.value.data.contactObject.id,
     data: contactData,
   });
+
+  // Assert
+  if (!authStore.member) return;
+
+  authStore.member.contactObject = {
+    ...authStore.member?.contactObject,
+    ...contactData,
+  };
 };
 
 const handleImageError = (event: Event) => {
