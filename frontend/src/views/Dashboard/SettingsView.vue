@@ -37,12 +37,13 @@
                 </CardDescription>
               </div>
               <Button
+                  v-if="!isEditingProfile"
                   variant="outline"
                   size="sm"
-                  @click="isEditingProfile = !isEditingProfile"
+                  @click="isEditingProfile = true"
                   :disabled="isUploadingImage"
               >
-                {{ isEditingProfile ? "Cancel" : "Edit" }}
+                Edit
               </Button>
             </div>
           </CardHeader>
@@ -50,10 +51,9 @@
             <div class="flex items-center space-x-4">
               <div class="relative group">
                 <img
-                    :src="user.data.img"
+                    :src="profileImageUrl"
                     :alt="user.data.name"
                     class="w-16 h-16 rounded-full object-cover border-2 border-border"
-                    @error="handleImageError"
                 />
                 <div
                     v-if="isEditingProfile"
@@ -86,7 +86,7 @@
                 />
               </div>
               <div>
-              <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
+                <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
                 <p class="text-sm text-muted-foreground">
                   IST ID: {{ user.data.istid }}
                 </p>
@@ -94,6 +94,25 @@
                   SINFO ID: {{ user.data.sinfoid }}
                 </p>
               </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div v-if="isEditingProfile" class="flex justify-end gap-2 pt-4 border-t">
+              <Button
+                  variant="outline"
+                  size="sm"
+                  @click="cancelProfileEdit"
+                  :disabled="isUploadingImage"
+              >
+                Cancel
+              </Button>
+              <Button
+                  size="sm"
+                  @click="updateProfileChanges"
+                  :disabled="!previewImageUrl || isUploadingImage"
+              >
+                {{ isUploadingImage ? "Uploading..." : "Update Profile" }}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -314,10 +333,9 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from "vue";
-import {useQuery, useMutation, useQueryCache} from "@pinia/colada";
-import {getMe} from "@/api/members";
-import {updateContact} from "@/api/contacts";
+import {computed, onUnmounted, ref} from "vue";
+import {useQuery} from "@pinia/colada";
+import {getMe} from "@/api/me";
 import type {
   ContactSocials,
   CreateContactData,
@@ -333,11 +351,20 @@ import Button from "@/components/ui/button/Button.vue";
 import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
+import {useUpdateContactMutation, useUploadImageMutation} from "@/mutations/me.ts";
 
 const isEditingProfile = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const isEditingContacts = ref(false);
-const queryCache = useQueryCache();
+
+const previewImageUrl = ref<string | null>(null);
+
+onUnmounted(() => {
+  if (previewImageUrl.value) {
+    try { URL.revokeObjectURL(previewImageUrl.value); } catch (e) { /* ignore */ }
+    previewImageUrl.value = null;
+  }
+});
 
 // Fetch user data
 const {
@@ -350,51 +377,26 @@ const {
   query: getMe,
 });
 
-// Update contact mutation
-const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
-  mutation: (variables: { id: string; data: CreateContactData }) =>
-      updateContact(variables.id, variables.data),
-  onSuccess: () => {
-    isEditingContacts.value = false;
-    queryCache.invalidateQueries({ key: ["me"] });
-  },
+const updateContactMutation = useUpdateContactMutation();
+const uploadImageMutation = useUploadImageMutation();
+
+const profileImageUrl = computed(() => {
+  return previewImageUrl.value || user.value?.data.img;
 });
-
-// Upload profile image mutation
-const { mutate: uploadImageMutation, isLoading: isUploadingImage } = useMutation({
-  mutation: async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await fetch("/api/me/image", {
-      method: "PUT",
-      body: formData,
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to upload image");
-    }
-
-    return response.json();
-  },
-  onSuccess: () => {
-    isEditingProfile.value = false;
-    queryCache.invalidateQueries({ key: ["me"] });
-  },
-});
-
-const triggerFileInput = () => {
-  fileInput.value?.click();
-};
+const isSaving = computed(() => updateContactMutation.isLoading.value);
+const isUploadingImage = computed(() => uploadImageMutation.isLoading.value);
 
 const handleImageUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
+  const target = event.target as HTMLInputElement | null;
+  const file = target?.files?.[0];
+  if (!file) return;
 
-  if (file) {
-    uploadImageMutation(file);
+  if (previewImageUrl.value) {
+    URL.revokeObjectURL(previewImageUrl.value);
   }
+
+  previewImageUrl.value = URL.createObjectURL(file);
+  uploadImageMutation.file.value = file;
 };
 
 const handleUpdateContact = async (data: any) => {
@@ -408,18 +410,32 @@ const handleUpdateContact = async (data: any) => {
     mails: data.contact?.mails || [],
   };
 
-  updateContactMutation({
-    id: user.value.data.contactObject.id,
-    data: contactData,
-  });
+  updateContactMutation.contactId.value = user.value.data.contactObject.id;
+  updateContactMutation.data.value = contactData;
+  updateContactMutation.mutate();
 };
 
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = "/src/assets/noImage.png";
+const updateProfileChanges = () => {
+  if (uploadImageMutation.file.value) {
+    uploadImageMutation.mutate();
+  }
+  isEditingProfile.value = false;
 };
 
-// Utility functions remain the same
+const triggerFileInput = () => {
+  fileInput.value?.click();
+};
+
+const cancelProfileEdit = () => {
+  if (previewImageUrl.value) {
+    URL.revokeObjectURL(previewImageUrl.value);
+    previewImageUrl.value = null;
+  }
+
+  if (fileInput.value) { fileInput.value.value = ""; }
+  isEditingProfile.value = false;
+};
+
 const formatGender = (gender: Gender): string => {
   switch (gender) {
     case "MALE":

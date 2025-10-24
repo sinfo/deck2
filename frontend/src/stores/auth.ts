@@ -1,4 +1,4 @@
-import { getMe } from "@/api/members";
+import { getMe } from "@/api/me";
 import type { JWTAuth, MemberWithContact } from "@/dto/members";
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
