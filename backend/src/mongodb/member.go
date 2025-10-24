@@ -311,6 +311,7 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 
 	var level = -1
 	var role models.TeamRole
+	var memberTeam string
 	for _, team := range teams {
 		member, err := team.GetMember(member.ID)
 
@@ -327,6 +328,7 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 		if level == -1 || level > l {
 			level = l
 			role = member.Role
+			memberTeam = team.Name
 		}
 	}
 
@@ -335,6 +337,7 @@ func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.Authoriz
 	}
 
 	result.Role = role
+	result.Team = memberTeam
 
 	return &result, nil
 }

@@ -12,3 +12,12 @@ type CompanyRep struct {
 	// Contact is a Contact _id (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
 }
+
+type CompanyRepWithContact struct {
+	// CompanyRep's ID (_id of mongodb).
+	ID   primitive.ObjectID `json:"id" bson:"_id"`
+	Name string             `json:"name" bson:"name"`
+
+	// Contact is the contact information of the representative.
+	Contact *Contact `json:"contact" bson:"contact"`
+}

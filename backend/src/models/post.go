@@ -18,5 +18,5 @@ type Post struct {
 	Text string `json:"text" bson:"text"`
 
 	Posted  time.Time `json:"posted" bson:"posted"`
-	Updated time.Time `json:"updated" bson:"updated"`
+	Updated *time.Time `json:"updated,omitempty" bson:"updated,omitempty"`
 }

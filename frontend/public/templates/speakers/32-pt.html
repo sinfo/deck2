@@ -1,0 +1,887 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <!-- utf-8 works for most cases -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Forcing initial-scale shouldn't be necessary -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Use the latest (edge) version of IE rendering engine -->
+    <title>SINFO {{.Edition}} - Convite para participação como orador!</title>
+    <!-- The title tag shows in email notifications, like Android 4.4. -->
+    <!-- Please use an inliner tool to convert all CSS to inline as inpage or external CSS is removed by email clients -->
+    <!-- important in CSS is used to prevent the styles of currently inline CSS from overriding the ones mentioned in media queries when corresponding screen sizes are encountered -->
+
+    <!-- CSS Reset -->
+    <style type="text/css">
+      /* What it does: Remove spaces around the email design added by some email clients. */
+      /* Beware: It can remove the padding / margin and add a background color to the compose a reply window. */
+      html,
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        width: 100% !important;
+      }
+
+      /* What it does: Stops email clients resizing small text. */
+      * {
+        -ms-text-size-adjust: 100%;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* What it does: Forces Outlook.com to display emails full width. */
+      .ExternalClass {
+        width: 100%;
+      }
+
+      /* What is does: Centers email on Android 4.4 */
+      div[style*="margin: 16px 0"] {
+        margin: 0 !important;
+      }
+
+      /* What it does: Stops Outlook from adding extra spacing to tables. */
+      table,
+      td {
+        mso-table-lspace: 0pt !important;
+        mso-table-rspace: 0pt !important;
+      }
+
+      /* What it does: Fixes webkit padding issue. Fix for Yahoo mail table alignment bug. Applies table-layout to the first 2 tables then removes for anything nested deeper. */
+      table {
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
+        table-layout: fixed !important;
+        margin: 0 auto !important;
+      }
+
+      table table table {
+        table-layout: auto;
+      }
+
+      /* What it does: Uses a better rendering method when resizing images in IE. */
+      img {
+        -ms-interpolation-mode: bicubic;
+      }
+
+      /* What it does: Overrides styles added when Yahoo's auto-senses a link. */
+      .yshortcuts a {
+        border-bottom: none !important;
+      }
+
+      /* What it does: Another work-around for iOS meddling in triggered links. */
+      a[x-apple-data-detectors] {
+        color: inherit !important;
+      }
+
+      a:link {
+        text-decoration: none;
+      }
+
+      a:visited {
+        text-decoration: none;
+      }
+    </style>
+
+    <!-- Progressive Enhancements -->
+    <style type="text/css">
+      /* What it does: Hover styles for buttons */
+      .button-td,
+      .button-a {
+        transition: all 100ms ease-in;
+      }
+
+      .button-td:hover,
+      .button-a:hover {
+        background: #555555 !important;
+        border-color: #555555 !important;
+      }
+
+      /* Media Queries */
+      @media screen and (max-width: 600px) {
+        .email-container {
+          width: 100% !important;
+          border: none;
+          text-align: center;
+          background-color: #ffffff;
+        }
+
+        /* What it does: Forces elements to resize to the full width of their container. Useful for resizing images beyond their max-width. */
+        .fluid,
+        .fluid-centered {
+          max-width: 100% !important;
+          height: auto !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+
+        /* And center justify these ones. */
+        .fluid-centered {
+          margin-left: auto !important;
+          margin-right: auto !important;
+        }
+
+        /* What it does: Forces table cells into full-width rows. */
+        .stack-column,
+        .stack-column-center {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          direction: ltr !important;
+        }
+
+        /* And center justify these ones. */
+        .stack-column-center {
+          text-align: center !important;
+        }
+
+        /* What it does: Generic utility class for centering. Useful for images, buttons, and nested tables. */
+        .center-on-narrow {
+          text-align: center !important;
+          display: block !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          float: none !important;
+        }
+
+        table.center-on-narrow {
+          display: inline-block !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body yahoo="yahoo">
+    <table
+      cellpadding="0"
+      cellspacing="0"
+      height="100%"
+      style="border-collapse: collapse; border: 4px solid #323363"
+    >
+      <tr>
+        <td>
+          <div style="text-align: center; width: 100%">
+            <!-- Visually Hidden Preheader Text : BEGIN -->
+            <div
+              style="
+                display: none;
+                font-size: 1px;
+                line-height: 1px;
+                max-height: 0px;
+                max-width: 0px;
+                opacity: 0;
+                overflow: hidden;
+                mso-hide: all;
+                font-family: sans-serif;
+              "
+            >
+              Em nome da equipa que organiza a SINFO, ficaríamos muito felizes
+              se aceitasse o nosso convite para fazer uma palestra. A SINFO é
+              uma organização de estudantes universitários sem fins lucrativos
+              responsável pelo planeamento de um dos maiores eventos de
+              tecnologia em Portugal. Trata-se de uma conferência anual que
+              ocorre em Lisboa.
+            </div>
+            <!-- Visually Hidden Preheader Text : END -->
+
+            <!-- Email Header : BEGIN -->
+            <!-- Email Header : END -->
+
+            <!-- Email Body : BEGIN -->
+            <table
+              cellspacing="0"
+              cellpadding="0"
+              width="600"
+              class="email-container"
+            >
+              <!-- Hero Image, Flush : BEGIN -->
+              <tr style="width: 100%">
+                <td class="full-width-image">
+                  <img
+                    src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/{{.Edition}}-sinfo/templates/images/headerSINFO{{.Edition}}.png"
+                    alt="/static/{{.Edition}}-sinfo/templates/headerSINFO{{.Edition}}.png"
+                    style="
+                      border: none;
+                      display: block;
+                      margin: 100;
+                      text-align: center;
+                      background-position: center center !important;
+                      background-size: cover !important;
+                      max-width: 100%;
+                    "
+                  />
+                </td>
+              </tr>
+              <!-- Hero Image, Flush : END -->
+
+              <!-- 1 Column Text : BEGIN -->
+              <tr></tr>
+            </table>
+            <table
+              cellspacing="0"
+              cellpadding="0"
+              width="600"
+              class="email-container"
+            >
+              <tr>
+                <td
+                  style="
+                    padding: 40px;
+                    text-align: left;
+                    font-family: sans-serif;
+                    font-size: 13px;
+                    mso-height-rule: exactly;
+                    line-height: 20px;
+                    color: black;
+                  "
+                >
+                  <p>
+                    <strong
+                      >Car<b style="color: red">o/a/e</b> {{.Speaker}},</strong
+                    >
+                  </p>
+                  <p>
+                    Sou <b style="color: red">o/a/e</b> {{.Member}}, um
+                    orgulhoso membro da SINFO. Em nome da equipa organizadora da
+                    SINFO {{.Edition}}, convidamo-l<b style="color: red"
+                      >o/a/e</b
+                    >
+                    a participar como orador<b style="color: red">(a)</b> de uma
+                    palestra no nosso evento. Ficaríamos muito gratos pela
+                    oportunidade de recebê-l<b style="color: red">o/a/e</b> se
+                    aceitar este convite.
+                  </p>
+
+                  <p>
+                    A SINFO é uma organização sem fins lucrativos, responsável
+                    por um dos maiores eventos de tecnologia em Portugal
+                    organizado por alunos universitários. Trata-se de uma
+                    conferência anual realizada na maravilhosa cidade de Lisboa.
+                  </p>
+
+                  <p>
+                    O nosso evento tem sido organizado por estudantes
+                    universitários apaixonados por tecnologia e inovação desde
+                    1992, celebrando a sua {{.Edition}}ª edição este ano.
+                  </p>
+
+                  <!-- Button : Begin -->
+
+                  <!-- Button : END -->
+                </td>
+              </tr>
+              <!-- 1 Column Text : BEGIN -->
+
+              <!-- Background Image with Text : BEGIN -->
+
+              <tr>
+                <td
+                  style="
+                    padding: 40px;
+                    text-align: left;
+                    font-family: sans-serif;
+                    font-size: 12.5px;
+                    mso-height-rule: exactly;
+                    line-height: 20px;
+                    color: white;
+                    background-color: #323363;
+                  "
+                >
+                  <div>
+                    <table>
+                      <tr>
+                        <td valign="top">
+                          <div
+                            style="
+                              background-color: white;
+                              color: black;
+                              font-size: 12px;
+                              font-weight: bold;
+                              text-align: center;
+                              padding: 4px 30px 4px 30px;
+                            "
+                          >
+                            O quê
+                          </div>
+                        </td>
+                        <td
+                          style="
+                            font-size: 14px;
+                            text-align: left;
+                            padding-left: 15px;
+                            color: white;
+                          "
+                          valign="middle"
+                        >
+                          <b>SINFO {{.Edition}}</b>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>&nbsp;</td>
+                      </tr>
+                      <tr>
+                        <td valign="top">
+                          <div
+                            style="
+                              background-color: white;
+                              color: black;
+                              font-size: 12px;
+                              font-weight: bold;
+                              text-align: center;
+                              padding: 4px 30px 4px 30px;
+                            "
+                          >
+                            Quando
+                          </div>
+                        </td>
+                        <td
+                          style="
+                            font-size: 14px;
+                            text-align: left;
+                            padding-left: 15px;
+                            color: white;
+                          "
+                          valign="middle"
+                        >
+                          <b
+                            >Na semana de {{.EventStartDay}} a {{.EventEndDay}}
+                            de {{.EventEndMonth}} de {{.EventEndYear}}</b
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>&nbsp;</td>
+                      </tr>
+                      <tr>
+                        <td valign="top">
+                          <div
+                            style="
+                              background-color: white;
+                              color: black;
+                              font-size: 12px;
+                              font-weight: bold;
+                              text-align: center;
+                              padding: 4px 30px 4px 30px;
+                            "
+                          >
+                            Onde
+                          </div>
+                        </td>
+                        <td
+                          style="
+                            font-size: 14px;
+                            text-align: left;
+                            padding-left: 15px;
+                            color: white;
+                          "
+                          valign="middle"
+                        >
+                          <b
+                            >Técnico Innovation Center (TIC), Saldanha, Lisboa,
+                            Portugal</b
+                          >
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    padding: 40px;
+                    text-align: left;
+                    font-family: sans-serif;
+                    font-size: 13px;
+                    mso-height-rule: exactly;
+                    line-height: 20px;
+                    color: black;
+                  "
+                >
+                  <p>
+                    Seria com muito gosto que lhe daríamos as boas-vindas à
+                    nossa cidade! Apesar de sermos um evento universitário sem
+                    fins lucrativos, estamos totalmente preparados para cobrir
+                    as despesas de viagem e alojamento.
+                  </p>
+
+                  <p>
+                    {{if .Paragraph}} {{.Paragraph}} {{else}} A maioria dos
+                    nossos visitantes são estudantes de Informática ansiosos por
+                    começar as suas carreiras e seria com muito prazer que iam
+                    ouvi-l<b style="color: red">o/a</b> falar sobre o seu
+                    percurso profissional e aprender com a sua experiência!
+                    {{end}}
+                  </p>
+
+                  <br />
+                  <br />
+                  <!-- Button : Begin -->
+                  <table
+                    cellspacing="0"
+                    cellpadding="0"
+                    style="text-align: center; border: none; margin: auto"
+                  >
+                    <tr>
+                      <td
+                        style="
+                          border-radius: 3px;
+                          background: #323363;
+                          text-align: center;
+                        "
+                        class="button-td"
+                      >
+                        <a
+                          href="http://www.sinfo.org"
+                          target="_blank"
+                          style="
+                            background: #323363;
+                            border: 15px solid #323363;
+                            padding: 0 10px;
+                            color: #ffffff;
+                            font-family: sans-serif;
+                            font-size: 13px;
+                            line-height: 1.1;
+                            text-align: center;
+                            text-decoration: none;
+                            display: block;
+                            border-radius: 3px;
+                            font-weight: bold;
+                          "
+                          class="button-a"
+                        >
+                          <!--[if mso]>&nbsp;&nbsp;&nbsp;&nbsp;<![endif]-->
+                          Visite o nosso website
+                          <!--[if mso]>&nbsp;&nbsp;&nbsp;&nbsp;<![endif]-->
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                  <!-- Button : END -->
+                </td>
+              </tr>
+              <tr>
+                <td class="full-width-image">
+                  <img
+                    src="https://static.sinfo.org/static/32-sinfo/templates/images/keynote.jpg"
+                    alt="alt_text"
+                    style="
+                      text-align: center;
+                      border: none;
+                      display: block;
+                      margin: 100;
+                      text-align: center;
+                      background-position: center center !important;
+                      background-size: cover !important;
+                      max-width: 100%;
+                    "
+                  />
+                </td>
+              </tr>
+            </table>
+            <table
+              cellspacing="0"
+              cellpadding="0"
+              width="600"
+              class="email-container"
+            >
+              <td
+                style="
+                  padding-top: 20px;
+                  text-align: center;
+                  font-family: sans-serif;
+                  font-size: 12.5px;
+                  mso-height-rule: exactly;
+                  line-height: 20px;
+                  color: black;
+                "
+              >
+                <p><strong>Algumas palestras de edições passadas:</strong></p>
+              </td>
+              <!-- Background Image with Text : END -->
+
+              <!-- Two Even Columns : BEGIN -->
+              <!-- Two Even Columns : END -->
+
+              <!-- Three Even Columns : BEGIN -->
+              <!-- Three Even Columns : BEGIN -->
+              <tr>
+                <td
+                  valign="top"
+                  style="text-align: center; padding: 5px; padding-bottom: 30px"
+                >
+                  <table
+                    cellspacing="0"
+                    cellpadding="0"
+                    width="100%"
+                    style="border: none"
+                  >
+                    <tr>
+                      <td width="25%" class="stack-column-center">
+                        <a
+                          href="https://youtu.be/qG9_o7KHRMU?si=_9sk08egrQcivvZy"
+                          target="_blank"
+                        >
+                          <table
+                            cellspacing="0"
+                            cellpadding="0"
+                            style="border: none"
+                          >
+                            <tr>
+                              <td style="padding: 10px; text-align: center">
+                                <img
+                                  src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/32-sinfo/templates/images/speakers/abby.jpeg"
+                                  style="border-radius: 50%; border: none"
+                                  width="125"
+                                  height="125"
+                                  alt="abby"
+                                  class="fluid"
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                style="
+                                  font-family: sans-serif;
+                                  font-size: 15px;
+                                  mso-height-rule: exactly;
+                                  line-height: 20px;
+                                  color: #555555;
+                                  padding: 0 10px 10px;
+                                  text-align: center;
+                                "
+                                class="center-on-narrow"
+                              >
+                                <strong>Abby LeMaster</strong><br />
+                                Riot Games
+                              </td>
+                            </tr>
+                          </table>
+                        </a>
+                      </td>
+                      <td width="25%" class="stack-column-center">
+                        <a
+                          href="https://youtu.be/R4Uho3ZUQzY?si=T0X_Iew2HXRoytOu"
+                          target="_blank"
+                        >
+                          <table
+                            cellspacing="0"
+                            cellpadding="0"
+                            style="border: none"
+                          >
+                            <tr>
+                              <td style="padding: 10px; text-align: center">
+                                <img
+                                  src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/32-sinfo/templates/images/speakers/cody.jpeg"
+                                  style="border-radius: 50%; border: none"
+                                  width="125"
+                                  height="125"
+                                  alt="cody"
+                                  class="fluid"
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                style="
+                                  font-family: sans-serif;
+                                  font-size: 15px;
+                                  mso-height-rule: exactly;
+                                  line-height: 20px;
+                                  color: #555555;
+                                  padding: 0 10px 10px;
+                                  text-align: center;
+                                "
+                                class="center-on-narrow"
+                              >
+                                <strong>Cody Lyon</strong><br />
+                                Pixar
+                              </td>
+                            </tr>
+                          </table>
+                        </a>
+                      </td>
+                      <td width="25%" class="stack-column-center">
+                        <a
+                          href="https://youtu.be/oIJpfWjhDes?si=DPcUzg7uFUYEnT6r"
+                          target="_blank"
+                        >
+                          <table
+                            cellspacing="0"
+                            cellpadding="0"
+                            style="border: none"
+                          >
+                            <tr>
+                              <td style="padding: 10px; text-align: center">
+                                <img
+                                  src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/32-sinfo/templates/images/speakers/amanda.jpeg"
+                                  style="border-radius: 50%; border: none"
+                                  width="125"
+                                  height="125"
+                                  alt="amanda"
+                                  class="fluid"
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                style="
+                                  font-family: sans-serif;
+                                  font-size: 15px;
+                                  mso-height-rule: exactly;
+                                  line-height: 20px;
+                                  color: #555555;
+                                  padding: 0 10px 10px;
+                                  text-align: center;
+                                "
+                                class="center-on-narrow"
+                              >
+                                <strong>Amanda Souza</strong><br />
+                                Microsoft
+                              </td>
+                            </tr>
+                          </table>
+                        </a>
+                      </td>
+                      <td width="25%" class="stack-column-center">
+                        <a
+                          href="https://youtu.be/6dRaWG7ANrk?si=BwjbVH7eiKgFvLik"
+                          target="_blank"
+                        >
+                          <table
+                            cellspacing="0"
+                            cellpadding="0"
+                            style="border: none"
+                          >
+                            <tr>
+                              <td style="padding: 10px; text-align: center">
+                                <img
+                                  src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/32-sinfo/templates/images/speakers/joseph.jpeg"
+                                  style="border-radius: 50%; border: none"
+                                  width="125"
+                                  height="125"
+                                  alt="joseph"
+                                  class="fluid"
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                style="
+                                  font-family: sans-serif;
+                                  font-size: 15px;
+                                  mso-height-rule: exactly;
+                                  line-height: 20px;
+                                  color: #555555;
+                                  padding: 0 10px 10px;
+                                  text-align: center;
+                                "
+                                class="center-on-narrow"
+                              >
+                                <strong>Joseph Katsioloudes</strong><br />
+                                GitHub
+                              </td>
+                            </tr>
+                          </table>
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                  <table
+                    cellspacing="0"
+                    cellpadding="0"
+                    style="border: none"
+                    width="100%"
+                  >
+                    <tr>
+                      <td width="25%" class="stack-column-center">
+                        <a
+                          href="https://youtu.be/byRnbnakeUQ?si=EplCJFC4D9nlm1R6"
+                          target="_blank"
+                        >
+                          <table
+                            cellspacing="0"
+                            cellpadding="0"
+                            style="border: none"
+                          >
+                            <tr>
+                              <td style="padding: 10px; text-align: center">
+                                <img
+                                  src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/32-sinfo/templates/images/speakers/manuel.jpeg"
+                                  style="border-radius: 50%; border: none"
+                                  width="125"
+                                  height="125"
+                                  alt="manuel"
+                                  class="fluid"
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                style="
+                                  font-family: sans-serif;
+                                  font-size: 15px;
+                                  mso-height-rule: exactly;
+                                  line-height: 20px;
+                                  color: #555555;
+                                  padding: 0 10px 10px;
+                                  text-align: center;
+                                "
+                                class="center-on-narrow"
+                              >
+                                <strong>Manuel Sousa</strong><br />
+                                Google
+                              </td>
+                            </tr>
+                          </table>
+                        </a>
+                      </td>
+                      <td width="25%" class="stack-column-center">
+                        <table
+                          cellspacing="0"
+                          cellpadding="0"
+                          style="border: none"
+                        >
+                          <tr>
+                            <td style="padding: 10px; text-align: center">
+                              <img
+                                src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/32-sinfo/templates/images/speakers/avneet.jpeg"
+                                style="border-radius: 50%; border: none"
+                                width="125"
+                                height="125"
+                                alt="avneet"
+                                class="fluid"
+                              />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td
+                              style="
+                                font-family: sans-serif;
+                                font-size: 15px;
+                                mso-height-rule: exactly;
+                                line-height: 20px;
+                                color: #555555;
+                                padding: 0 10px 10px;
+                                text-align: center;
+                              "
+                              class="center-on-narrow"
+                            >
+                              <strong>Avneet Kaur</strong><br />
+                              Walt Disney Animation Studios
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                      <td width="25%" class="stack-column-center">
+                        <a
+                          href="https://youtu.be/evh9dfGd3eY?si=OTJoQL-aioY3OPgS"
+                          target="_blank"
+                        >
+                          <table
+                            cellspacing="0"
+                            cellpadding="0"
+                            style="border: none"
+                          >
+                            <tr>
+                              <td style="padding: 10px; text-align: center">
+                                <img
+                                  src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/32-sinfo/templates/images/speakers/roger.jpeg"
+                                  style="border-radius: 50%; border: none"
+                                  width="125"
+                                  height="125"
+                                  alt="roger"
+                                  class="fluid"
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                style="
+                                  font-family: sans-serif;
+                                  font-size: 15px;
+                                  mso-height-rule: exactly;
+                                  line-height: 20px;
+                                  color: #555555;
+                                  padding: 0 10px 10px;
+                                  text-align: center;
+                                "
+                                class="center-on-narrow"
+                              >
+                                <strong>Roger Dingledine</strong><br />
+                                Tor
+                              </td>
+                            </tr>
+                          </table>
+                        </a>
+                      </td>
+                      <td width="25%" class="stack-column-center">
+                        <table
+                          cellspacing="0"
+                          cellpadding="0"
+                          style="border: none"
+                        >
+                          <tr>
+                            <td style="padding: 10px; text-align: center">
+                              <img
+                                src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/32-sinfo/templates/images/speakers/benjamin.jpeg"
+                                style="border-radius: 50%; border: none"
+                                width="125"
+                                height="125"
+                                alt="benjamin"
+                                class="fluid"
+                              />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td
+                              style="
+                                font-family: sans-serif;
+                                font-size: 15px;
+                                mso-height-rule: exactly;
+                                line-height: 20px;
+                                color: #555555;
+                                padding: 0 10px 10px;
+                                text-align: center;
+                              "
+                              class="center-on-narrow"
+                            >
+                              <strong>Benjamin Han</strong><br />
+                              Apple<br />
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!-- Three Even Columns : END -->
+
+              <!-- Thumbnail Left, Text Right : BEGIN -->
+
+              <!-- Thumbnail Left, Text Right : END -->
+
+              <!-- Thumbnail Right, Text Left : BEGIN -->
+
+              <!-- Thumbnail Right, Text Left : END -->
+            </table>
+            <!-- Email Body : END -->
+
+            <!-- Email Footer : BEGIN -->
+            <!-- Email Footer : END -->
+          </div>
+        </td>
+      </tr>
+    </table>
+    <br />
+    <br />
+    <script
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+      integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
+      data-cf-beacon='{"version":"2024.11.0","token":"3c3fc6e6382e42adab1fe649438c790f","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}'
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>

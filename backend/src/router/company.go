@@ -950,6 +950,48 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getCompanyEmployers(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	// Retrieve the list of employer IDs from the Company document
+	company, err := mongodb.Companies.GetCompany(companyID)
+	if err != nil {
+		http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	employerIDs := company.Employers
+	// Initialize a slice to store the representatives
+	reps := make([]*models.CompanyRepWithContact, 0)
+
+	// Iterate through the representative IDs and fetch each representative
+	for _, repID := range employerIDs {
+		rep, err := mongodb.CompanyReps.GetCompanyRep(repID)
+		if err != nil {
+			http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		contact, err := mongodb.Contacts.GetContact(rep.Contact)
+		if err != nil {
+			http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
+			return
+		}
+
+		// Create a new CompanyRepWithContact instance
+		repWithContact := &models.CompanyRepWithContact{
+			ID:      rep.ID,
+			Name:    rep.Name,
+			Contact: contact,
+		}
+		
+		reps = append(reps, repWithContact)
+	}
+
+	json.NewEncoder(w).Encode(reps)
+}
+
 func addEmployer(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
@@ -985,6 +1027,35 @@ func removeEmployer(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(company)
 
+}
+
+func updateEmployersOrder(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Company not found: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var ueod = &mongodb.UpdateEmployersOrderData{}
+
+	if err := ueod.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateEmployersOrder(companyID, *ueod)
+
+	if err != nil {
+		http.Error(w, "Could not update employers order: " + err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
 }
 
 func subscribeToCompany(w http.ResponseWriter, r *http.Request) {
@@ -1043,4 +1114,64 @@ func unsubscribeToCompany(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedCompany)
+}
+
+type ParticipationCommunications struct {
+	Event int `json:"event"`
+	Communications []*models.ThreadWithEntry `json:"communications"`
+}
+
+func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	// Retrieve the company document
+	company, err := mongodb.Companies.GetCompany(companyID)
+	if err != nil {
+		http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	if len(company.Participations) == 0 {
+		http.Error(w, "No participations found", http.StatusNotFound)
+		return
+	}
+
+	participationComms := make([]*ParticipationCommunications, 0)
+
+	for _, participation := range company.Participations {
+		comms := make([]*models.ThreadWithEntry, 0)
+
+		for _, threadID := range participation.Communications {
+			thread, err := mongodb.Threads.GetThread(threadID)
+			if err != nil {
+				http.Error(w, "Could not get thread: "+err.Error(), http.StatusNotFound)
+				return
+			}
+
+			post, err := mongodb.Posts.GetPost(thread.Entry)
+			if err != nil {
+				http.Error(w, "Could not get post: "+err.Error(), http.StatusNotFound)
+				return
+			}
+
+			comms = append(comms, &models.ThreadWithEntry{
+				ID:      thread.ID,
+				Posted:  thread.Posted,
+				Entry:  post,
+				Meeting: thread.Meeting,
+				Comments: thread.Comments,
+				Kind:    thread.Kind,
+				Status:  thread.Status,
+			})
+		}
+
+		participationComms = append(participationComms, &ParticipationCommunications{
+			Event: participation.Event,
+			Communications: comms,
+		})
+	}
+
+	json.NewEncoder(w).Encode(participationComms)
 }

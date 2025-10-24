@@ -25,12 +25,27 @@ type ContactMail struct {
 	Valid    bool   `json:"valid" bson:"valid"`
 }
 
+type Gender string
+const (
+	GenMale   Gender = "MALE"
+	GenFemale Gender = "FEMALE"
+	GenOther  Gender = "OTHER"
+)
+
+type Language string
+const (
+	LangEnglish Language = "ENGLISH"
+	LangPortuguese Language = "PORTUGUESE"
+)
+
 // Contact stores contacts' information. It doesn't hold a name, because it's used on models.CompanyRep,
 // models.Member and models.Speaker. All of them already hold a name.
 type Contact struct {
 	// Contact's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
+	Gender Gender `json:"gender" bson:"gender"`
+	Language Language `json:"language" bson:"language"`
 	Phones  []ContactPhone `json:"phones" bson:"phones"`
 	Socials ContactSocials `json:"socials" bson:"socials"`
 	Mails   []ContactMail  `json:"mails" bson:"mails"`

@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/h2non/filetype"
@@ -29,11 +30,17 @@ func getMe(w http.ResponseWriter, r *http.Request) {
 	memberID := credentials.ID
 
 	member, err := mongodb.Members.GetMember(memberID)
-
 	if err != nil {
 		http.Error(w, "Could not find member: " + err.Error(), http.StatusNotFound)
 		return
 	}
+
+	contact, err := mongodb.Contacts.GetContact(member.Contact)
+	if err != nil {
+		http.Error(w, "Could not find contact: " + err.Error(), http.StatusNotFound)
+		return
+	}
+	member.ContactObject = contact
 
 	json.NewEncoder(w).Encode(member)
 }
@@ -144,6 +151,51 @@ func updateMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(updatedMember)
+}
+
+func getResponsibilities(w http.ResponseWriter, r *http.Request) {
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	urlQuery := r.URL.Query()
+	event := urlQuery.Get("event")
+
+	companyOptions := mongodb.GetCompaniesOptions{MemberID: &credentials.ID}
+	speakerOptions := mongodb.GetSpeakersOptions{MemberID: &credentials.ID}
+
+	if len(event) > 0 {
+		eventID, err := strconv.Atoi(event)
+		if err != nil {
+			http.Error(w, "Invalid event ID format: " + err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		companyOptions.EventID = &eventID
+		speakerOptions.EventID = &eventID
+	}
+
+	companies, err := mongodb.Companies.GetCompanies(companyOptions)
+	if err != nil {
+		http.Error(w, "Unable to get companies: " + err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	speakers, err := mongodb.Speakers.GetSpeakers(speakerOptions)
+	if err != nil {
+		http.Error(w, "Unable to get speakers: " + err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	responsibilities := map[string]interface{}{
+		"companies": companies,
+		"speakers":  speakers,
+	}
+
+	json.NewEncoder(w).Encode(responsibilities)
 }
 
 func getMyNotifications(w http.ResponseWriter, r *http.Request) {

@@ -67,3 +67,30 @@ type Thread struct {
 	// PENDING => thread is posted and is waiting for the coordination's approval/review.
 	Status ThreadStatus `json:"status" bson:"status"`
 }
+
+type ThreadWithEntry struct {
+	// Thread's ID (_id of mongodb).
+	ID primitive.ObjectID `json:"id" bson:"_id"`
+
+	// Time posted
+	Posted  time.Time `json:"posted" bson:"posted"`
+
+	// Entry is an _id of Post (see models.Post).
+	Entry *Post `json:"entry" bson:"entry"`
+
+	// Meeting is an _id of Meeting (see models.Meeting).
+	Meeting *primitive.ObjectID `json:"meeting,omitempty" bson:"meeting,omitempty"`
+
+	// Comments is an array of _id of Post (see models.Post).
+	Comments []primitive.ObjectID `json:"comments" bson:"comments"`
+
+	// Kind of thread can be "TO", "FROM", "PHONE_CALL", "MEETING".
+	// This represents the type of communication made with a certain Company/Speaker.
+	Kind ThreadKind `json:"kind" bson:"kind"`
+
+	// Status of this thread can be "APPROVED", "REVIEWED", "PENDING".
+	// APPROVED => thread is posted and approved by the coordination.
+	// REVIEWED => thread is posted, but some changed must be made before it's ready to be approved.
+	// PENDING => thread is posted and is waiting for the coordination's approval/review.
+	Status ThreadStatus `json:"status" bson:"status"`
+}

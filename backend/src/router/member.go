@@ -75,11 +75,17 @@ func getMember(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	member, err := mongodb.Members.GetMember(id)
-
 	if err != nil {
 		http.Error(w, "Could not find member: " + err.Error(), http.StatusNotFound)
 		return
 	}
+
+	contact, err := mongodb.Contacts.GetContact(member.Contact)
+	if err != nil {
+		http.Error(w, "Could not find contact: " + err.Error(), http.StatusNotFound)
+		return
+	}
+	member.ContactObject = contact
 
 	json.NewEncoder(w).Encode(member)
 }

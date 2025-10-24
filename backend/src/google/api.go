@@ -8,6 +8,9 @@ import (
 	"net/http"
 
 	"github.com/sinfo/deck2/src/auth"
+	"github.com/sinfo/deck2/src/config"
+
+	"google.golang.org/api/idtoken"
 )
 
 const oauthGoogleURLAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
@@ -72,4 +75,20 @@ func GetUserDataWithToken(token string) (*UserData, error) {
 	}
 
 	return &result, nil
+}
+
+
+func GetUserDataFromGoogleJWT(token string) (*UserData, error) {
+	payload, err := idtoken.Validate(context.Background(), token, config.GoogleOAuthClientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate ID token: %s", err.Error())
+	}
+
+	return &UserData{
+		ID:       payload.Subject,
+		Email:    payload.Claims["email"].(string),
+		Verified: payload.Claims["email_verified"].(bool),
+		Picture:  payload.Claims["picture"].(string),
+		HD:       payload.Claims["hd"].(string),
+	}, nil
 }
