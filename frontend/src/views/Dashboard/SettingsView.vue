@@ -50,9 +50,9 @@
           <CardContent class="space-y-4">
             <div class="flex items-center space-x-4">
               <div class="relative group">
-                <img
+                <Image
                     :src="profileImageUrl"
-                    :alt="user.data.name"
+                    :alt="`${user.data.name} logo`"
                     class="w-16 h-16 rounded-full object-cover border-2 border-border"
                 />
                 <div
@@ -352,6 +352,7 @@ import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
 import {useUpdateContactMutation, useUploadImageMutation} from "@/mutations/me.ts";
+import Image from "@/components/Image.vue";
 
 const isEditingProfile = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
