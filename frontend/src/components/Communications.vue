@@ -99,17 +99,13 @@
         >
           <!-- Member avatar for outgoing messages (on the left side) -->
           <div
-            v-if="
-              getMessageDirection(thread.kind) === 'outgoing' &&
-              thread.entry?.member &&
-              thread.kind !== ThreadKind.ThreadKindPhoneCall
-            "
+            v-if="thread.kind !== ThreadKind.ThreadKindPhoneCall"
             class="flex flex-col items-center gap-1"
           >
             <Image
-              v-if="getMemberById(thread.entry.member)?.img"
-              :src="getMemberById(thread.entry.member)?.img"
-              :alt="getMemberById(thread.entry.member)?.name || 'Member'"
+              v-if="getEntityAvatar(getMessageAuthor(thread))"
+              :src="getEntityAvatar(getMessageAuthor(thread))"
+              :alt="getMessageAuthor(thread)?.name || 'Member'"
               class="w-8 h-8 rounded-full object-cover"
             />
             <div
@@ -117,15 +113,15 @@
               class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center"
             >
               <span class="text-sm font-medium">{{
-                getMemberById(thread.entry.member)?.name?.charAt(0) || "?"
+                getMessageAuthor(thread)?.name?.charAt(0) || "?"
               }}</span>
             </div>
             <div class="text-xs text-center max-w-20 leading-tight">
               <div>
-                {{ getFirstName(getMemberById(thread.entry.member)?.name) }}
+                {{ getFirstName(getMessageAuthor(thread)?.name) }}
               </div>
               <div>
-                {{ getLastName(getMemberById(thread.entry.member)?.name) }}
+                {{ getLastName(getMessageAuthor(thread)?.name) }}
               </div>
             </div>
           </div>
@@ -281,8 +277,13 @@ import { ref, computed, watch, nextTick } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
+import { getSpeakerById } from "@/api/speakers";
+import { getCompanyById } from "@/api/companies";
 import { ThreadKind, ThreadStatus } from "@/dto/threads";
-import type { ParticipationCommunications } from "@/dto/threads";
+import type { ParticipationCommunications, ThreadWithEntry } from "@/dto/threads";
+import type { Speaker } from "@/dto/speakers";
+import type { Company } from "@/dto/companies";
+import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
 import Card from "./ui/card/Card.vue";
 import CardContent from "./ui/card/CardContent.vue";
@@ -325,6 +326,8 @@ interface CommunicationsProps {
   postThreadMutation?: any;
 }
 
+type Entity = Member | Speaker | Company;
+
 const props = withDefaults(defineProps<CommunicationsProps>(), {
   canSendMessages: false,
   templates: () => [],
@@ -362,6 +365,24 @@ const { data: membersData } = useQuery({
   key: () => ["members"],
   query: () => getAllMembers(),
 });
+
+// Fetch current entity (company or speaker) based on props
+const { data: entityData } = useQuery({
+  key: () => [`entity`, props.entityType, props.entityId],
+  query: () => {
+    if (!props.entityId) return Promise.resolve({ data: null } as any);
+    return props.entityType === "company"
+      ? getCompanyById(props.entityId)
+      : getSpeakerById(props.entityId);
+  },
+});
+
+// Computed property for current entity
+const currentEntity = computed<Entity | null>(() => {
+  return (entityData.value && (entityData.value as any).data) || null;
+});
+
+
 
 // Computed property to get events with participations
 const availableEvents = computed(() => {
@@ -473,6 +494,29 @@ const getMessageDirection = (kind: ThreadKind): "incoming" | "outgoing" => {
     kind === ThreadKind.ThreadKindTemplate
     ? "outgoing"
     : "incoming";
+};
+
+const getMessageAuthor = (thread: ThreadWithEntry): Entity | null => {
+  const direction = getMessageDirection(thread.kind);
+
+  if (direction === "outgoing" && thread.entry?.member) {
+    return getMemberById(thread.entry?.member);
+  } else if (direction === "incoming") {
+    return currentEntity.value;
+  }
+  return null;
+};
+
+const getEntityAvatar = (entity: Entity | null): string | undefined => {
+  if (!entity) return undefined;
+
+  if ("imgs" in entity) {
+    return entity.imgs?.internal;
+  } else if ("img" in entity) {
+    return entity.img;
+  }
+
+  return undefined;
 };
 
 const getKindLabel = (kind: ThreadKind): string => {
