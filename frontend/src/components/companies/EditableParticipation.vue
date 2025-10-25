@@ -6,12 +6,33 @@
           {{ getEventName(participation.event) }}
         </h4>
         <div class="flex items-center gap-2">
-          <Badge
-            :class="participationStatusColor[participation.status]?.background"
-            class="text-xs"
-          >
-            {{ humanReadableParticipationStatus[participation.status] }}
-          </Badge>
+          <Popover :open="isEditing && isStatusMenuOpen" @update:open="isStatusMenuOpen = $event">
+            <PopoverTrigger as-child>
+              <Badge
+                  :class="participationStatusColor[selectedStatus]?.background"
+                  class="text-xs flex items-center gap-1 cursor-pointer"
+              >
+                {{ humanReadableParticipationStatus[selectedStatus] }}
+                <ChevronDown v-if="isEditing" class="w-3 h-3" />
+              </Badge>
+            </PopoverTrigger>
+            <PopoverContent class="w-56 p-0">
+              <div class="flex flex-col">
+                <button
+                    v-for="(label, value) in humanReadableParticipationStatus"
+                    :key="value"
+                    @click="selectStatus(value as ParticipationStatus)"
+                    :class="[
+          'px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer',
+          selectedStatus === value && 'bg-accent'
+        ]"
+                >
+                  {{ label }}
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <Button
             v-if="!isEditing"
             variant="outline"
@@ -123,7 +144,7 @@ import { ref, reactive } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import { useCompanyParticipationMutation } from "@/mutations/companies";
+import {useCompanyParticipationMutation, useCompanyParticipationStatusMutation} from "@/mutations/companies";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -134,9 +155,11 @@ import type {
   UpdateCompanyParticipationData,
 } from "@/dto/companies";
 import {
-  humanReadableParticipationStatus,
+  humanReadableParticipationStatus, type ParticipationStatus,
   participationStatusColor,
 } from "@/dto";
+import { ChevronDown } from "lucide-vue-next";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import Image from "../Image.vue";
 
 interface Props {
@@ -148,16 +171,17 @@ const props = defineProps<Props>();
 
 const isEditing = ref(false);
 const isSaving = ref(false);
+const isStatusMenuOpen = ref(false);
+const selectedStatus = ref<ParticipationStatus>(props.participation.status);
 
-// Use the mutation from mutations/companies.ts
 const updateMutation = useCompanyParticipationMutation();
+const statusMutation = useCompanyParticipationStatusMutation();
+statusMutation.companyId.value = props.companyId;
 
-// Helper function to format date to ISO string format
 const formatToISOString = (date: Date): string => {
   return date.toISOString();
 };
 
-// Helper function to format ISO string to datetime-local input format
 const formatToDatetimeLocal = (isoString: string): string => {
   if (!isoString) return "";
   try {
@@ -174,7 +198,6 @@ const formatToDatetimeLocal = (isoString: string): string => {
   }
 };
 
-// Helper function to convert datetime-local format back to ISO string
 const convertDatetimeLocalToISO = (datetimeLocal: string): string => {
   if (!datetimeLocal) return "";
   try {
@@ -209,9 +232,14 @@ const { data: membersData } = useQuery({
   query: () => getAllMembers(),
 });
 
+const selectStatus = (status: ParticipationStatus) => {
+  selectedStatus.value = status;
+  isStatusMenuOpen.value = false;
+};
+
 const startEditing = () => {
   isEditing.value = true;
-  // Reset form to current values
+  selectedStatus.value = props.participation.status;
   editForm.member = props.participation.member;
   editForm.partner = props.participation.partner;
   // If no confirmed date exists, set it to current time, otherwise convert existing date
@@ -227,21 +255,28 @@ const cancelEditing = () => {
 const saveChanges = async () => {
   isSaving.value = true;
 
-  // Convert datetime-local format back to ISO string for the API
-  const dataToSend = {
-    ...editForm,
-    confirmed: editForm.confirmed
-      ? convertDatetimeLocalToISO(editForm.confirmed!)
-      : undefined,
-  };
+  try {
+    if (selectedStatus.value !== props.participation.status) {
+      statusMutation.mutate(selectedStatus.value);
+    }
 
-  updateMutation.companyId.value = props.companyId;
-  updateMutation.data.value = dataToSend;
-  updateMutation.mutate();
+    const dataToSend = {
+      ...editForm,
+      confirmed: editForm.confirmed
+          ? convertDatetimeLocalToISO(editForm.confirmed!)
+          : undefined,
+    };
 
-  // Reset editing state after mutation
-  isEditing.value = false;
-  isSaving.value = false;
+    updateMutation.companyId.value = props.companyId;
+    updateMutation.data.value = dataToSend;
+    updateMutation.mutate();
+
+    isEditing.value = false;
+  } catch (error) {
+    console.error("Failed to update company participation:", error);
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 const getEventName = (eventId: number) => {
