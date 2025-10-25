@@ -72,12 +72,11 @@ export const useCreateCompanyParticipationMutation = defineMutation(() => {
 
 export const useCompanyParticipationStatusMutation = defineMutation(() => {
   const companyId = ref<string>();
-  const status = ref<ParticipationStatus>();
   const queryCache = useQueryCache();
 
   const { mutate, ...mutation } = useMutation({
-    mutation: () =>
-      updateCompanyParticipationStatus(companyId.value!, status.value!),
+    mutation: (status: ParticipationStatus) =>
+      updateCompanyParticipationStatus(companyId.value!, status),
     onSettled: () => {
       queryCache.invalidateQueries({ key: ["companies"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
