@@ -123,3 +123,5 @@ deck2.sh
 /frontend/ios/Flutter/Debug.xcconfig
 /frontend/ios/Flutter/Release.xcconfig
 Podfile
+
+/backend/.vendor-new
