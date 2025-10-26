@@ -277,8 +277,6 @@ import { ref, computed, watch, nextTick } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import { getSpeakerById } from "@/api/speakers";
-import { getCompanyById } from "@/api/companies";
 import { ThreadKind, ThreadStatus } from "@/dto/threads";
 import type { ParticipationCommunications, ThreadWithEntry } from "@/dto/threads";
 import type { Speaker } from "@/dto/speakers";
