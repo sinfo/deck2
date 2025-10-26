@@ -262,9 +262,7 @@ const saveChanges = async () => {
 
     const dataToSend = {
       ...editForm,
-      confirmed: editForm.confirmed
-          ? convertDatetimeLocalToISO(editForm.confirmed!)
-          : undefined,
+      confirmed: convertDatetimeLocalToISO(editForm.confirmed!)
     };
 
     updateMutation.companyId.value = props.companyId;
