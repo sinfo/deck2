@@ -182,7 +182,7 @@ const formatToISOString = (date: Date): string => {
   return date.toISOString();
 };
 
-const formatToDatetimeLocal = (isoString: string): string => {
+const formatToDatetimeLocal = (isoString: string | null): string => {
   if (!isoString) return "";
   try {
     const date = new Date(isoString);
@@ -198,8 +198,8 @@ const formatToDatetimeLocal = (isoString: string): string => {
   }
 };
 
-const convertDatetimeLocalToISO = (datetimeLocal: string): string => {
-  if (!datetimeLocal) return "";
+const convertDatetimeLocalToISO = (datetimeLocal: string): string | null => {
+  if (!datetimeLocal || datetimeLocal.trim() === "") return null;
   try {
     // Add seconds if not present and convert to ISO 8601
     const date = new Date(
@@ -207,9 +207,9 @@ const convertDatetimeLocalToISO = (datetimeLocal: string): string => {
         ? `${datetimeLocal}:00`
         : datetimeLocal,
     );
-    return formatToISOString(date);
+    return date.toISOString();
   } catch {
-    return datetimeLocal;
+    return null;
   }
 };
 
