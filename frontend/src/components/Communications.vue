@@ -97,7 +97,7 @@
                 : 'justify-start',
           ]"
         >
-          <!-- Member avatar for outgoing messages (on the left side) -->
+          <!-- Author avatar for messages (on the left side) -->
           <div
             v-if="thread.kind !== ThreadKind.ThreadKindPhoneCall"
             class="flex flex-col items-center gap-1"
@@ -106,7 +106,7 @@
               v-if="getAuthorAvatar(getMessageAuthor(thread))"
               :src="getAuthorAvatar(getMessageAuthor(thread))"
               :alt="getMessageAuthor(thread)?.name || 'Member'"
-              class="w-8 h-8 rounded-full object-cover"
+              :class="avatarClasses(thread)"
             />
             <div
               v-else
@@ -500,6 +500,29 @@ const getAuthorAvatar = (entity: Author | null): string | undefined => {
   }
 
   return undefined;
+};
+
+const avatarClasses = (thread: ThreadWithEntry) => {
+  const direction = getMessageDirection(thread.kind);
+
+  // People related avatars: always circular
+  if (direction === "outgoing" || props.entityType === "speaker") {
+    return ["w-8 h-8 object-cover", "rounded-full"];
+  }
+
+  return [
+    "w-8 h-8 bg-white p-1",
+    "object-contain",
+    "rounded-sm",
+    "border border-gray-100",
+    "shadow-sm",
+    "sm:rounded-none",
+    "sm:w-9",
+    "sm:h-9",
+    "md:w-12",
+    "md:h-10",
+    "md:rounded-md",
+  ];
 };
 
 const getKindLabel = (kind: ThreadKind): string => {
