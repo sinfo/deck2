@@ -1,6 +1,6 @@
 <template>
   <Communications
-    :entity-id="company.id"
+    :entity="company"
     entity-type="company"
     description="Communication history with company representatives"
     :participations="company.participations"

@@ -103,8 +103,8 @@
             class="flex flex-col items-center gap-1"
           >
             <Image
-              v-if="getEntityAvatar(getMessageAuthor(thread))"
-              :src="getEntityAvatar(getMessageAuthor(thread))"
+              v-if="getAuthorAvatar(getMessageAuthor(thread))"
+              :src="getAuthorAvatar(getMessageAuthor(thread))"
               :alt="getMessageAuthor(thread)?.name || 'Member'"
               class="w-8 h-8 rounded-full object-cover"
             />
@@ -314,7 +314,7 @@ interface TemplateWithVariables {
 }
 
 interface CommunicationsProps {
-  entityId: string;
+  entity: Company | Speaker;
   entityType: "company" | "speaker";
   description: string;
   participations?: Array<{ event: number }>;
@@ -326,7 +326,7 @@ interface CommunicationsProps {
   postThreadMutation?: any;
 }
 
-type Entity = Member | Speaker | Company;
+type Author = Member | Speaker | Company;
 
 const props = withDefaults(defineProps<CommunicationsProps>(), {
   canSendMessages: false,
@@ -366,23 +366,6 @@ const { data: membersData } = useQuery({
   query: () => getAllMembers(),
 });
 
-// Fetch current entity (company or speaker) based on props
-const { data: entityData } = useQuery({
-  key: () => [`entity`, props.entityType, props.entityId],
-  query: () => {
-    if (!props.entityId) return Promise.resolve({ data: null } as any);
-    return props.entityType === "company"
-      ? getCompanyById(props.entityId)
-      : getSpeakerById(props.entityId);
-  },
-});
-
-// Computed property for current entity
-const currentEntity = computed<Entity | null>(() => {
-  return (entityData.value && (entityData.value as any).data) || null;
-});
-
-
 
 // Computed property to get events with participations
 const availableEvents = computed(() => {
@@ -417,8 +400,8 @@ const {
   isLoading,
   error,
 } = useQuery({
-  key: () => [`${props.entityType}-communications`, props.entityId],
-  query: () => props.fetchCommunications(props.entityId).then((it) => it.data),
+  key: () => [`${props.entityType}-communications`, props.entity.id],
+  query: () => props.fetchCommunications(props.entity.id).then((it) => it.data),
 });
 
 const sortedCommunications = computed(() => {
@@ -496,18 +479,18 @@ const getMessageDirection = (kind: ThreadKind): "incoming" | "outgoing" => {
     : "incoming";
 };
 
-const getMessageAuthor = (thread: ThreadWithEntry): Entity | null => {
+const getMessageAuthor = (thread: ThreadWithEntry): Author | null => {
   const direction = getMessageDirection(thread.kind);
 
   if (direction === "outgoing" && thread.entry?.member) {
     return getMemberById(thread.entry?.member);
   } else if (direction === "incoming") {
-    return currentEntity.value;
+    return props.entity;
   }
   return null;
 };
 
-const getEntityAvatar = (entity: Entity | null): string | undefined => {
+const getAuthorAvatar = (entity: Author | null): string | undefined => {
   if (!entity) return undefined;
 
   if ("imgs" in entity) {
