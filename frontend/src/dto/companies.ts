@@ -82,7 +82,7 @@ export interface CompanyWithParticipation extends Company {
 export interface UpdateCompanyParticipationData {
   member?: ObjectID;
   partner?: boolean;
-  confirmed?: string;
+  confirmed?: string | null;
   notes?: string;
 }
 
