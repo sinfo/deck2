@@ -201,7 +201,7 @@ const formatToDatetimeLocal = (isoString: string): string => {
 const convertDatetimeLocalToISO = (datetimeLocal: string): string => {
   if (!datetimeLocal) return "";
   try {
-    // Add seconds if not present and convert to ISO
+    // Add seconds if not present and convert to ISO 8601
     const date = new Date(
       datetimeLocal.includes(":") && datetimeLocal.split(":").length === 2
         ? `${datetimeLocal}:00`

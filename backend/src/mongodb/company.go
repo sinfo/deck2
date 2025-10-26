@@ -26,7 +26,7 @@ type CompaniesType struct {
 // Cached version of the public companies for the current event
 var currentPublicCompanies *[]*models.CompanyPublic
 
-//ResetCurrentPublicCompanies resets current public companies
+// ResetCurrentPublicCompanies resets current public companies
 func ResetCurrentPublicCompanies() {
 	currentPublicCompanies = nil
 }
@@ -76,9 +76,9 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 		},
 		"mails": []models.ContactMail{},
 	})
-  if err != nil {
-    return nil, err
-  }
+	if err != nil {
+		return nil, err
+	}
 
 	insertResult, err := c.Collection.InsertOne(ctx, bson.M{
 		"name":           data.Name,
@@ -86,7 +86,7 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 		"site":           data.Site,
 		"employers":      []primitive.ObjectID{},
 		"participations": []models.CompanyParticipation{},
-    "contact":        createdContact.InsertedID.(primitive.ObjectID),
+		"contact":        createdContact.InsertedID.(primitive.ObjectID),
 	})
 
 	if err != nil {
@@ -316,11 +316,11 @@ func companyToPublic(company models.Company, eventID *int) (*models.CompanyPubli
 			var participationObj models.CompanyParticipationPublic
 
 			participationObj = models.CompanyParticipationPublic{
-				Event:   p.Event,
-				Partner: participation.Partner,
-				Package: models.PackagePublic{},
-        StandDetails: participation.StandDetails,
-        Stands: participation.Stands,
+				Event:        p.Event,
+				Partner:      participation.Partner,
+				Package:      models.PackagePublic{},
+				StandDetails: participation.StandDetails,
+				Stands:       participation.Stands,
 			}
 
 			if participation.Package != nil {
@@ -732,16 +732,20 @@ func (c *CompaniesType) UpdateCompanyParticipation(companyID primitive.ObjectID,
 		return nil, err
 	}
 
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"participations.$.member":    *data.Member,
-			"participations.$.partner":   *data.Partner,
-			"participations.$.notes":     *data.Notes,
-		},
+	setFields := bson.M{
+		"participations.$.member":  *data.Member,
+		"participations.$.partner": *data.Partner,
+		"participations.$.notes":   *data.Notes,
 	}
 
 	if data.Confirmed != nil {
-		updateQuery["participations.$.confirmed"] = data.Confirmed.UTC()
+		setFields["participations.$.confirmed"] = data.Confirmed.UTC()
+	} else {
+		setFields["participations.$.confirmed"] = nil
+	}
+
+	var updateQuery = bson.M{
+		"$set": setFields,
 	}
 
 	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
@@ -937,39 +941,39 @@ func (c *CompaniesType) UpdateCompanyPublicImage(companyID primitive.ObjectID, u
 func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Company, error) {
 
 	ctx := context.Background()
-  var company models.Company
+	var company models.Company
 
 	currentCompany, err := Companies.GetCompany(companyID)
 	if err != nil {
 		return nil, err
 	}
 
-  for _, participation := range currentCompany.Participations {
-    _, err := c.DeleteCompanyParticipation(companyID, participation.Event)
-    if err != nil {
-      return nil, err
-    }
-  }
+	for _, participation := range currentCompany.Participations {
+		_, err := c.DeleteCompanyParticipation(companyID, participation.Event)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-  sessions, err := Sessions.GetSessions(GetSessionsOptions{Company: &companyID})
+	sessions, err := Sessions.GetSessions(GetSessionsOptions{Company: &companyID})
 	if err != nil {
 		return nil, err
 	}
 
-  for _, session := range sessions {
-    _, err := Sessions.DeleteSession(session.ID)
-    if err != nil {
-      return nil, err
-    }
-  }
+	for _, session := range sessions {
+		_, err := Sessions.DeleteSession(session.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-  err = c.Collection.FindOneAndDelete(ctx, bson.M{"_id": companyID}).Decode(&company)
-  if err != nil {
-    return nil, err
-  }
+	err = c.Collection.FindOneAndDelete(ctx, bson.M{"_id": companyID}).Decode(&company)
+	if err != nil {
+		return nil, err
+	}
 
-  // Ignore error, if contact doesn't exist, it's ok.
-  Contacts.DeleteContact(company.Contact)
+	// Ignore error, if contact doesn't exist, it's ok.
+	Contacts.DeleteContact(company.Contact)
 
 	return &company, nil
 }
@@ -1297,45 +1301,44 @@ func (c *CompaniesType) RemoveCompanyParticipationBilling(companyID primitive.Ob
 
 // DeleteCompanyParticipation deletes a company's participation related to the eventID
 func (c *CompaniesType) DeleteCompanyParticipation(companyID primitive.ObjectID, eventID int) (*models.Company, error) {
-  ctx := context.Background();
-  var updatedCompany models.Company
+	ctx := context.Background()
+	var updatedCompany models.Company
 
-  company, err := c.GetCompany(companyID)
-  if err != nil {
-    return nil, err
-  }
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
 
-  for _, p := range company.Participations {
-    if p.Event == eventID {
-      for _, communication := range p.Communications {
-        _, err := c.DeleteCompanyThread(companyID, communication)
-        if err != nil {
-          return nil, err
-        }
-      }
-    }
-  }
+	for _, p := range company.Participations {
+		if p.Event == eventID {
+			for _, communication := range p.Communications {
+				_, err := c.DeleteCompanyThread(companyID, communication)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
 
-  var updateQuery = bson.M{
-    "$pull": bson.M{
-      "participations": bson.M{
-        "event": eventID,
-      },
-    },
-  }
+	var updateQuery = bson.M{
+		"$pull": bson.M{
+			"participations": bson.M{
+				"event": eventID,
+			},
+		},
+	}
 
-  var filterQuery = bson.M{"_id": companyID}
+	var filterQuery = bson.M{"_id": companyID}
 
-  var optionsQuery = options.FindOneAndUpdate()
-  optionsQuery.SetReturnDocument(options.After)
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
 
-  if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-    return nil, err
-  }
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		return nil, err
+	}
 
-  return &updatedCompany, nil
+	return &updatedCompany, nil
 }
-
 
 // FindThread finds a thread in a company
 func (c *CompaniesType) FindThread(threadID primitive.ObjectID) (*models.Company, error) {
