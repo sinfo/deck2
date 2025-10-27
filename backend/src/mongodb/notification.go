@@ -20,7 +20,7 @@ type NotificationsType struct {
 
 var tagRegexCompiler, _ = regexp.Compile(`@[a-zA-Z0-9\.]+`)
 
-//Notify creates a notification and adds it to every subscriber
+// Notify creates a notification and adds it to every subscriber
 func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotificationData) {
 
 	event, err := Events.GetCurrentEvent()
@@ -137,7 +137,7 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 	}
 }
 
-//CreateNotificationData holds data needed to create a notification
+// CreateNotificationData holds data needed to create a notification
 type CreateNotificationData struct {
 	Kind    models.NotificationKind
 	Post    *primitive.ObjectID
@@ -148,7 +148,7 @@ type CreateNotificationData struct {
 	Session *primitive.ObjectID
 }
 
-//NotifyMember adds a notification to a member
+// NotifyMember adds a notification to a member
 func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data CreateNotificationData) {
 	ctx = context.Background()
 
@@ -214,11 +214,11 @@ func (n *NotificationsType) GetNotification(id primitive.ObjectID) (*models.Noti
 	return &notification, nil
 }
 
-//GetMemberNotifications gets all notifications for a member
-func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) ([]*models.Notification, error) {
+// GetMemberNotifications gets all notifications for a member
+func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) ([]map[string]interface{}, error) {
 	ctx = context.Background()
 
-	var notifications = make([]*models.Notification, 0)
+	var notifications = make([]map[string]interface{}, 0)
 
 	filter := bson.M{
 		"member": memberID,
@@ -231,7 +231,7 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 
 	for cur.Next(ctx) {
 
-		// create a value into which the single document can be decoded
+		// decode into models.Notification first
 		var notification models.Notification
 
 		err := cur.Decode(&notification)
@@ -239,7 +239,49 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 			return nil, err
 		}
 
-		notifications = append(notifications, &notification)
+		// build a JSON-friendly map for the response
+		notifMap := map[string]interface{}{
+			"id":        notification.ID.Hex(),
+			"kind":      notification.Kind,
+			"signature": notification.Signature,
+			"member":    notification.Member.Hex(),
+			"date":      notification.Date.Format(time.RFC3339),
+		}
+
+		if notification.Post != nil {
+			notifMap["post"] = notification.Post.Hex()
+		}
+		if notification.Thread != nil {
+			notifMap["thread"] = notification.Thread.Hex()
+		}
+		if notification.Meeting != nil {
+			notifMap["meeting"] = notification.Meeting.Hex()
+		}
+		if notification.Session != nil {
+			notifMap["session"] = notification.Session.Hex()
+		}
+
+		// Try to embed the speaker object if present
+		if notification.Speaker != nil {
+			if sp, err := Speakers.GetSpeaker(*notification.Speaker); err == nil {
+				// embed full speaker object
+				notifMap["speaker"] = sp
+			} else {
+				// fallback to id
+				notifMap["speaker"] = notification.Speaker.Hex()
+			}
+		}
+
+		// Try to embed the company object if present
+		if notification.Company != nil {
+			if co, err := Companies.GetCompany(*notification.Company); err == nil {
+				notifMap["company"] = co
+			} else {
+				notifMap["company"] = notification.Company.Hex()
+			}
+		}
+
+		notifications = append(notifications, notifMap)
 	}
 
 	if err := cur.Err(); err != nil {
