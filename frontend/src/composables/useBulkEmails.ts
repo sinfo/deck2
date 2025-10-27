@@ -22,7 +22,9 @@ import { isEmailValid } from "@/lib/utils";
 import { Gender, Language } from "@/dto/contacts";
 
 // Generic types for bulk emails
-type BulkEmailEntity = CompanyWithParticipation | SpeakerWithParticipation;
+export type BulkEmailEntity =
+  | CompanyWithParticipation
+  | SpeakerWithParticipation;
 function isSpeaker(
   entity: BulkEmailEntity,
 ): entity is SpeakerWithParticipation {
@@ -225,7 +227,7 @@ export const useBulkEmails = <T extends BulkEmailEntity>(
   const processBulkEmails = async (
     templateCategory: EmailTemplateCategory,
     statuses: ParticipationStatus[],
-    entities: BulkEmailEntity[],
+    entities: T[],
   ): Promise<BulkEmailProcessResult<T>> => {
     isProcessing.value = true;
     processedCount.value = 0;
