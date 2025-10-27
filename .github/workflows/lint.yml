@@ -29,3 +29,7 @@ jobs:
       - name: Run Prettier check
         working-directory: frontend
         run: npx prettier --check .
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
