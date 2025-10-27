@@ -12,7 +12,7 @@
       <!-- Loading State -->
       <div v-if="isLoading" class="flex justify-center py-8">
         <div
-            class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
+          class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
         ></div>
       </div>
 
@@ -37,11 +37,11 @@
                 </CardDescription>
               </div>
               <Button
-                  v-if="!isEditingProfile"
-                  variant="outline"
-                  size="sm"
-                  @click="isEditingProfile = true"
-                  :disabled="isUploadingImage"
+                v-if="!isEditingProfile"
+                variant="outline"
+                size="sm"
+                :disabled="isUploadingImage"
+                @click="isEditingProfile = true"
               >
                 Edit
               </Button>
@@ -51,38 +51,40 @@
             <div class="flex items-center space-x-4">
               <div class="relative group">
                 <Image
-                    :src="profileImageUrl"
-                    :alt="`${user.data.name} logo`"
-                    class="w-16 h-16 rounded-full object-cover border-2 border-border"
+                  :src="profileImageUrl"
+                  :alt="`${user.data.name} logo`"
+                  class="w-16 h-16 rounded-full object-cover border-2 border-border"
                 />
                 <div
-                    v-if="isEditingProfile"
-                    @click="triggerFileInput"
-                    class="absolute inset-0 w-16 h-16 rounded-full bg-black/0 group-hover:bg-black/50 transition-all cursor-pointer flex items-center justify-center"
-                    :class="{ 'pointer-events-none': isUploadingImage }"
+                  v-if="isEditingProfile"
+                  class="absolute inset-0 w-16 h-16 rounded-full bg-black/0 group-hover:bg-black/50 transition-all cursor-pointer flex items-center justify-center"
+                  :class="{ 'pointer-events-none': isUploadingImage }"
+                  @click="triggerFileInput"
                 >
                   <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="white"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="opacity-0 group-hover:opacity-100 transition-opacity"
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                    <path
+                      d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"
+                    />
                     <path d="m15 5 4 4" />
                   </svg>
                 </div>
                 <input
-                    ref="fileInput"
-                    type="file"
-                    accept="image/*"
-                    class="hidden"
-                    @change="handleImageUpload"
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handleImageUpload"
                 />
               </div>
               <div>
@@ -97,19 +99,22 @@
             </div>
 
             <!-- Action Buttons -->
-            <div v-if="isEditingProfile" class="flex justify-end gap-2 pt-4 border-t">
+            <div
+              v-if="isEditingProfile"
+              class="flex justify-end gap-2 pt-4 border-t"
+            >
               <Button
-                  variant="outline"
-                  size="sm"
-                  @click="cancelProfileEdit"
-                  :disabled="isUploadingImage"
+                variant="outline"
+                size="sm"
+                :disabled="isUploadingImage"
+                @click="cancelProfileEdit"
               >
                 Cancel
               </Button>
               <Button
-                  size="sm"
-                  @click="updateProfileChanges"
-                  :disabled="!previewImageUrl || isUploadingImage"
+                size="sm"
+                :disabled="!previewImageUrl || isUploadingImage"
+                @click="updateProfileChanges"
               >
                 {{ isUploadingImage ? "Uploading..." : "Update Profile" }}
               </Button>
@@ -127,10 +132,10 @@
                 </CardDescription>
               </div>
               <Button
-                  variant="outline"
-                  size="sm"
-                  @click="isEditingContacts = !isEditingContacts"
-                  :disabled="isSaving"
+                variant="outline"
+                size="sm"
+                :disabled="isSaving"
+                @click="isEditingContacts = !isEditingContacts"
               >
                 {{ isEditingContacts ? "Cancel" : "Edit" }}
               </Button>
@@ -145,18 +150,18 @@
                 <div class="flex gap-4">
                   <div v-if="user.data.contactObject.gender" class="space-y-1">
                     <Label class="text-sm font-medium text-muted-foreground"
-                    >Gender</Label
+                      >Gender</Label
                     >
                     <Badge variant="secondary" class="text-sm">
                       {{ formatGender(user.data.contactObject.gender) }}
                     </Badge>
                   </div>
                   <div
-                      v-if="user.data.contactObject.language"
-                      class="space-y-1"
+                    v-if="user.data.contactObject.language"
+                    class="space-y-1"
                   >
                     <Label class="text-sm font-medium text-muted-foreground"
-                    >Language</Label
+                      >Language</Label
                     >
                     <Badge variant="outline" class="text-sm">
                       {{ formatLanguage(user.data.contactObject.language) }}
@@ -166,36 +171,36 @@
 
                 <!-- Email Addresses -->
                 <div
-                    v-if="user.data.contactObject.mails.length"
-                    class="space-y-2"
+                  v-if="user.data.contactObject.mails.length"
+                  class="space-y-2"
                 >
                   <Label class="text-sm font-medium text-muted-foreground"
-                  >Email Addresses</Label
+                    >Email Addresses</Label
                   >
                   <div class="space-y-1">
                     <div
-                        v-for="mail in user.data.contactObject.mails"
-                        :key="mail.mail"
-                        class="flex items-center gap-2 text-sm"
+                      v-for="mail in user.data.contactObject.mails"
+                      :key="mail.mail"
+                      class="flex items-center gap-2 text-sm"
                     >
                       <a
-                          :href="`mailto:${mail.mail}`"
-                          class="text-primary hover:underline"
+                        :href="`mailto:${mail.mail}`"
+                        class="text-primary hover:underline"
                       >
                         {{ mail.mail }}
                       </a>
                       <div class="flex gap-1">
                         <Badge
-                            v-if="mail.personal"
-                            variant="secondary"
-                            class="text-xs"
+                          v-if="mail.personal"
+                          variant="secondary"
+                          class="text-xs"
                         >
                           Personal
                         </Badge>
                         <Badge
-                            v-if="!mail.valid"
-                            variant="destructive"
-                            class="text-xs"
+                          v-if="!mail.valid"
+                          variant="destructive"
+                          class="text-xs"
                         >
                           Invalid
                         </Badge>
@@ -206,28 +211,28 @@
 
                 <!-- Phone Numbers -->
                 <div
-                    v-if="user.data.contactObject.phones.length"
-                    class="space-y-2"
+                  v-if="user.data.contactObject.phones.length"
+                  class="space-y-2"
                 >
                   <Label class="text-sm font-medium text-muted-foreground"
-                  >Phone Numbers</Label
+                    >Phone Numbers</Label
                   >
                   <div class="space-y-1">
                     <div
-                        v-for="phone in user.data.contactObject.phones"
-                        :key="phone.phone"
-                        class="flex items-center gap-2 text-sm"
+                      v-for="phone in user.data.contactObject.phones"
+                      :key="phone.phone"
+                      class="flex items-center gap-2 text-sm"
                     >
                       <a
-                          :href="`tel:${phone.phone}`"
-                          class="text-primary hover:underline"
+                        :href="`tel:${phone.phone}`"
+                        class="text-primary hover:underline"
                       >
                         {{ phone.phone }}
                       </a>
                       <Badge
-                          v-if="!phone.valid"
-                          variant="destructive"
-                          class="text-xs"
+                        v-if="!phone.valid"
+                        variant="destructive"
+                        class="text-xs"
                       >
                         Invalid
                       </Badge>
@@ -237,59 +242,59 @@
 
                 <!-- Social Media -->
                 <div
-                    v-if="hasSocials(user.data.contactObject.socials)"
-                    class="space-y-2"
+                  v-if="hasSocials(user.data.contactObject.socials)"
+                  class="space-y-2"
                 >
                   <Label class="text-sm font-medium text-muted-foreground"
-                  >Social Media</Label
+                    >Social Media</Label
                   >
                   <div class="flex flex-wrap gap-2">
                     <a
-                        v-if="user.data.contactObject.socials.linkedin"
-                        :href="
+                      v-if="user.data.contactObject.socials.linkedin"
+                      :href="
                         linkedinUrl(user.data.contactObject.socials.linkedin)
                       "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
                     >
                       LinkedIn
                     </a>
                     <a
-                        v-if="user.data.contactObject.socials.twitter"
-                        :href="
+                      v-if="user.data.contactObject.socials.twitter"
+                      :href="
                         twitterUrl(user.data.contactObject.socials.twitter)
                       "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-sky-100 text-sky-700 rounded hover:bg-sky-200 transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-sky-100 text-sky-700 rounded hover:bg-sky-200 transition-colors"
                     >
                       Twitter
                     </a>
                     <a
-                        v-if="user.data.contactObject.socials.facebook"
-                        :href="
+                      v-if="user.data.contactObject.socials.facebook"
+                      :href="
                         facebookUrl(user.data.contactObject.socials.facebook)
                       "
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
                     >
                       Facebook
                     </a>
                     <a
-                        v-if="user.data.contactObject.socials.github"
-                        :href="githubUrl(user.data.contactObject.socials.github)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                      v-if="user.data.contactObject.socials.github"
+                      :href="githubUrl(user.data.contactObject.socials.github)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
                     >
                       GitHub
                     </a>
                     <a
-                        v-if="user.data.contactObject.socials.skype"
-                        :href="`skype:${user.data.contactObject.socials.skype}?chat`"
-                        class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-cyan-100 text-cyan-700 rounded hover:bg-cyan-200 transition-colors"
+                      v-if="user.data.contactObject.socials.skype"
+                      :href="`skype:${user.data.contactObject.socials.skype}?chat`"
+                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-cyan-100 text-cyan-700 rounded hover:bg-cyan-200 transition-colors"
                     >
                       Skype
                     </a>
@@ -301,9 +306,9 @@
               <div v-else class="text-center py-8 text-muted-foreground">
                 <p>No contact information available</p>
                 <Button
-                    @click="isEditingContacts = true"
-                    variant="outline"
-                    class="mt-2"
+                  variant="outline"
+                  class="mt-2"
+                  @click="isEditingContacts = true"
                 >
                   Add Contact Information
                 </Button>
@@ -313,16 +318,16 @@
             <!-- Edit Mode -->
             <div v-if="isEditingContacts && user.data.contactObject">
               <ContactForm
-                  mode="edit"
-                  without-name
-                  :initial-data="{
+                mode="edit"
+                without-name
+                :initial-data="{
                   id: user.data.contactObject.id,
                   name: user.data.name,
                   contact: user.data.contactObject,
                 }"
-                  :is-loading="isSaving"
-                  @submit="handleUpdateContact"
-                  @cancel="isEditingContacts = false"
+                :is-loading="isSaving"
+                @submit="handleUpdateContact"
+                @cancel="isEditingContacts = false"
               />
             </div>
           </CardContent>
@@ -333,9 +338,9 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onUnmounted, ref} from "vue";
-import {useQuery} from "@pinia/colada";
-import {getMe} from "@/api/me";
+import { computed, onUnmounted, ref } from "vue";
+import { useQuery } from "@pinia/colada";
+import { getMe } from "@/api/me";
 import type {
   ContactSocials,
   CreateContactData,
@@ -351,7 +356,10 @@ import Button from "@/components/ui/button/Button.vue";
 import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
-import {useUpdateContactMutation, useUploadImageMutation} from "@/mutations/me.ts";
+import {
+  useUpdateContactMutation,
+  useUploadImageMutation,
+} from "@/mutations/me.ts";
 import Image from "@/components/Image.vue";
 
 const isEditingProfile = ref(false);
@@ -360,9 +368,25 @@ const isEditingContacts = ref(false);
 
 const previewImageUrl = ref<string | null>(null);
 
+const profileImageUrl = computed(() => {
+  if (previewImageUrl.value) return previewImageUrl.value;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const u = user.value as any;
+  return (
+    u?.data?.img ||
+    u?.data?.imgs?.public ||
+    u?.data?.contactObject?.image ||
+    "/src/assets/noImage.png"
+  );
+});
+
 onUnmounted(() => {
   if (previewImageUrl.value) {
-    try { URL.revokeObjectURL(previewImageUrl.value); } catch (e) { /* ignore */ }
+    try {
+      URL.revokeObjectURL(previewImageUrl.value);
+    } catch {
+      /* ignore */
+    }
     previewImageUrl.value = null;
   }
 });
@@ -378,17 +402,61 @@ const {
   query: getMe,
 });
 
-// Update contact mutation
-const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
-  mutation: (variables: { id: string; data: CreateContactData }) =>
-    updateContact(variables.id, variables.data),
-  onSuccess: () => {
-    isEditMode.value = false;
-    // Invalidate the user query to refresh the data
-    queryCache.invalidateQueries({ key: ["me"] });
-  },
-});
+const updateContactMutation = useUpdateContactMutation();
+const uploadImageMutation = useUploadImageMutation();
+const isSaving = updateContactMutation.isLoading;
+const isUploadingImage = uploadImageMutation.isLoading;
 
+const triggerFileInput = () => {
+  fileInput.value?.click();
+};
+
+const handleImageUpload = (ev: Event) => {
+  const input = ev.target as HTMLInputElement;
+  const f = input.files && input.files[0];
+  if (!f) return;
+  // set preview
+  try {
+    if (previewImageUrl.value) {
+      URL.revokeObjectURL(previewImageUrl.value);
+    }
+  } catch {
+    /* ignore */
+  }
+  previewImageUrl.value = URL.createObjectURL(f);
+  // store file in upload mutation
+  uploadImageMutation.file.value = f;
+};
+
+const cancelProfileEdit = () => {
+  isEditingProfile.value = false;
+  try {
+    if (previewImageUrl.value) {
+      URL.revokeObjectURL(previewImageUrl.value);
+    }
+  } catch (err) {
+    void err;
+  }
+  previewImageUrl.value = null;
+  uploadImageMutation.file.value = undefined;
+  if (fileInput.value) fileInput.value.value = "";
+};
+
+const updateProfileChanges = async () => {
+  if (uploadImageMutation.file.value) {
+    try {
+      await uploadImageMutation.mutate();
+    } catch {
+      /* ignore */
+    }
+  }
+  // after upload (or if none), close edit mode — `useUploadImageMutation` invalidates the `me` query on settled
+  isEditingProfile.value = false;
+  previewImageUrl.value = null;
+  if (fileInput.value) fileInput.value.value = "";
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const handleUpdateContact = async (data: any) => {
   if (!user.value?.data.contactObject?.id) return;
 
@@ -403,11 +471,6 @@ const handleUpdateContact = async (data: any) => {
   updateContactMutation.contactId.value = user.value.data.contactObject.id;
   updateContactMutation.data.value = contactData;
   updateContactMutation.mutate();
-};
-
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = "/src/assets/noImage.png"; // Fallback image
 };
 
 // Utility functions
@@ -438,11 +501,11 @@ const formatLanguage = (language: Language): string => {
 const hasSocials = (socials?: ContactSocials): boolean => {
   if (!socials) return false;
   return !!(
-      socials.linkedin ||
-      socials.twitter ||
-      socials.facebook ||
-      socials.github ||
-      socials.skype
+    socials.linkedin ||
+    socials.twitter ||
+    socials.facebook ||
+    socials.github ||
+    socials.skype
   );
 };
 
