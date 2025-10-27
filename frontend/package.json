@@ -13,8 +13,8 @@
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
     "prepare": "cd .. && husky frontend/.husky",
-    "lint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src",
-    "format": "prettier .  --write"
+    "lint": "eslint --ext .ts,.vue,.js,.json --fix src",
+    "format": "prettier . --write"
   },
   "dependencies": {
     "@pinia/colada": "^0.17.1",
@@ -31,6 +31,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
     "tw-animate-css": "^1.3.6",
+    "typescript-eslint": "^8.46.2",
     "vee-validate": "^4.15.1",
     "vue": "^3.5.17",
     "vue-confetti-explosion": "^1.0.2",
@@ -45,13 +46,21 @@
     "@types/node": "^24.2.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",
-    "eslint": "^9.32.0",
+    "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-vue": "^10.4.0",
+    "eslint-plugin-vue": "^10.5.1",
     "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "prettier": "3.6.2",
     "typescript": "~5.8.3",
     "vite": "7.1.5",
     "vue-tsc": "^2.2.12"
-  }
+  },
+  "lint-staged": {
+    "*.{ts,vue}": [
+      "npx --yes eslint --ext .ts,.vue,.js,.json --fix",
+      "npx --yes prettier --write"
+    ]
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
