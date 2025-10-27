@@ -288,6 +288,10 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   showCreate: false,
   autofocus: false,
+  modelValue: undefined,
+  label: undefined,
+  placeholder: undefined,
+  eventId: undefined,
 });
 
 const emit = defineEmits<{
@@ -327,7 +331,7 @@ const { data: companiesData, isLoading: companiesLoading } = useQuery({
 // Speakers query
 const { data: speakersData, isLoading: speakersLoading } = useQuery({
   key: () => ["speakers"],
-  query: () => getAllSpeakers({ }),
+  query: () => getAllSpeakers({}),
   enabled: () => !!eventStore.selectedEvent?.id,
 });
 

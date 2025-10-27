@@ -54,7 +54,7 @@ const callback = async (response: CallbackTypes.TokenPopupResponse) => {
       </p>
     </div>
     <div class="flex flex-1 items-center justify-center flex-col gap-4">
-      <Button @click.prevent="login" class="flex items-center gap-2">
+      <Button class="flex items-center gap-2" @click.prevent="login">
         <img :src="GoogleIcon" alt="Google" class="w-4 h-4" />
         Login with Google
       </Button>

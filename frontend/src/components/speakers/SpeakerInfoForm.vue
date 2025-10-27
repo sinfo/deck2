@@ -60,8 +60,8 @@
           id="speaker-image"
           type="file"
           accept="image/*"
-          @change="handleImageChange"
           :disabled="isLoading"
+          @change="handleImageChange"
         />
         <p class="text-xs text-muted-foreground">
           Recommended: Square image, minimum 256x256px, max 10MB
@@ -99,13 +99,13 @@
 
     <!-- Form Actions -->
     <div class="flex justify-end gap-3 pt-6 border-t">
-      <Button variant="outline" @click="$emit('cancel')" :disabled="isLoading">
+      <Button variant="outline" :disabled="isLoading" @click="$emit('cancel')">
         Cancel
       </Button>
       <Button
-        @click="handleSubmit"
         :disabled="!isValid || isLoading"
         :loading="isLoading"
+        @click="handleSubmit"
       >
         {{ mode === "edit" ? "Update" : "Save" }} Speaker
       </Button>
@@ -131,6 +131,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "create",
+  initialData: undefined,
 });
 
 const emit = defineEmits<{

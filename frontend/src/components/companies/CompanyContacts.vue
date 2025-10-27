@@ -14,14 +14,14 @@
             v-if="representatives.length > 1"
             variant="outline"
             size="sm"
-            @click="toggleReorderMode"
             :class="{ 'bg-primary/10 border-primary': isReorderMode }"
             :title="isReorderMode ? 'Exit reorder mode' : 'Reorder contacts'"
+            @click="toggleReorderMode"
           >
             <GripVerticalIcon class="w-4 h-4" />
           </Button>
           <Popover v-model:open="isAddFormOpen">
-            <PopoverTrigger asChild>
+            <PopoverTrigger as-child>
               <Button variant="outline" size="sm"> Add </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -93,9 +93,9 @@
               variant="outline"
               size="sm"
               :disabled="index === 0"
-              @click="moveUp(index)"
               class="h-8 w-8 p-0 shadow-sm"
               title="Move up"
+              @click="moveUp(index)"
             >
               <ChevronUpIcon class="w-4 h-4" />
             </Button>
@@ -103,9 +103,9 @@
               variant="outline"
               size="sm"
               :disabled="index === orderedRepresentatives.length - 1"
-              @click="moveDown(index)"
               class="h-8 w-8 p-0 shadow-sm"
               title="Move down"
+              @click="moveDown(index)"
             >
               <ChevronDownIcon class="w-4 h-4" />
             </Button>
@@ -142,8 +142,6 @@
               :entity-id="companyId"
               entity-type="company"
               :is-deleting="isDeleting"
-              @updated="handleContactUpdated"
-              @delete="() => handleDeleteRepresentative(rep.id)"
               :class="{
                 'ml-2 md:ml-4': isReorderMode,
                 'transition-all duration-300': true,
@@ -151,6 +149,8 @@
                 'ring-1 ring-orange-200 shadow-sm':
                   index === 0 && !isReorderMode,
               }"
+              @updated="handleContactUpdated"
+              @delete="() => handleDeleteRepresentative(rep.id)"
             />
           </div>
         </div>

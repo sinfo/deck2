@@ -71,11 +71,20 @@
 
             <!-- Step 1: Configuration -->
             <div v-if="currentStep === 1" class="mt-6 space-y-6">
-              <div v-if="showNoMemberContactWarning" class="bg-red-50 rounded-lg p-4 max-h-40 overflow-y-auto">
+              <div
+                v-if="showNoMemberContactWarning"
+                class="bg-red-50 rounded-lg p-4 max-h-40 overflow-y-auto"
+              >
                 <h1 class="text-xl font-semibold">⚠️ Important</h1>
                 <p class="mt-2 text-sm">
-                  You must <RouterLink :to="{ name: 'settings' }" class="font-medium text-blue-600 hover:underline" @click="handleCancel"> set your contact email and phone number</RouterLink>.
-                  Not doing so will fail later. You have been warned.
+                  You must
+                  <RouterLink
+                    :to="{ name: 'settings' }"
+                    class="font-medium text-blue-600 hover:underline"
+                    @click="handleCancel"
+                  >
+                    set your contact email and phone number</RouterLink
+                  >. Not doing so will fail later. You have been warned.
                 </p>
               </div>
 
@@ -343,9 +352,9 @@
                       Gmail drafts folder.
                     </p>
                     <Button
-                      @click="openGmailDrafts"
                       variant="outline"
                       class="mr-2"
+                      @click="openGmailDrafts"
                     >
                       Open Gmail Drafts
                     </Button>
@@ -381,12 +390,12 @@
 
               <Button
                 v-if="currentStep === 1"
-                @click="handleNext"
                 :disabled="
                   !selectedTemplate ||
                   selectedStatuses.length === 0 ||
                   isProcessing
                 "
+                @click="handleNext"
               >
                 {{ buttonText }}
               </Button>
@@ -397,8 +406,8 @@
                   processResult &&
                   processResult.ready.length > 0
                 "
-                @click="handleSendDrafts"
                 :disabled="isProcessing || isSending"
+                @click="handleSendDrafts"
               >
                 {{
                   isSending
@@ -474,8 +483,12 @@ const showNoMemberContactWarning = computed(() => {
 
   if (!member?.contactObject) return true;
 
-  const hasMail = member?.contactObject?.mails?.length > 0 && member.contactObject.mails[0].mail.trim() !== "";
-  const hasPhone = member?.contactObject?.phones?.length > 0 && member.contactObject.phones[0].phone.trim() !== "";
+  const hasMail =
+    member?.contactObject?.mails?.length > 0 &&
+    member.contactObject.mails[0].mail.trim() !== "";
+  const hasPhone =
+    member?.contactObject?.phones?.length > 0 &&
+    member.contactObject.phones[0].phone.trim() !== "";
   return !hasMail || !hasPhone;
 });
 
@@ -594,13 +607,13 @@ const handleNext = async () => {
 
     // Process the bulk emails (this will verify emails and prepare data)
     if (props.entityType === "companies") {
-      await (processBulkEmails as any)(
+      await processBulkEmails(
         selectedTemplate.value,
         selectedStatuses.value,
         props.companies,
       );
     } else {
-      await (processBulkEmails as any)(
+      await processBulkEmails(
         selectedTemplate.value,
         selectedStatuses.value,
         props.speakers,

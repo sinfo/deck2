@@ -78,8 +78,8 @@
 
       <TabsContent value="companies">
         <div
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
           v-if="!currentCompaniesParticipation?.length && isLoading"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
         >
           <Skeleton
             v-for="i in 21"
@@ -109,8 +109,8 @@
 
       <TabsContent value="speakers">
         <div
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
           v-if="!currentSpeakersParticipation?.length && isLoading"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
         >
           <Skeleton
             v-for="i in 21"
@@ -172,7 +172,7 @@ const authStore = useAuthStore();
 const activeTab = ref("companies");
 
 // Event handlers
-const onCompanyCreated = (_companyId: string) => {
+const onCompanyCreated = () => {
   // The dialog component will handle navigation to the company page
 };
 

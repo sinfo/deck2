@@ -207,7 +207,7 @@ const isCreatingParticipation = computed(
 
 const sortedParticipations = computed(() => {
   if (!props.participations) return [];
-  return props.participations.sort((a, b) => b.event - a.event); // Most recent first
+  return [...props.participations].sort((a, b) => b.event - a.event); // Most recent first
 });
 
 const getCurrentEvent = () => {

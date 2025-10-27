@@ -74,12 +74,12 @@
       <div class="flex justify-between pt-4">
         <Button
           variant="outline"
-          @click="$emit('cancel')"
           :disabled="isLoading"
+          @click="$emit('cancel')"
         >
           Cancel
         </Button>
-        <Button @click="nextStep" :disabled="isLoading || !isStep1Valid">
+        <Button :disabled="isLoading || !isStep1Valid" @click="nextStep">
           Next
         </Button>
       </div>
@@ -93,8 +93,8 @@
           id="image"
           type="file"
           accept="image/*"
-          @change="handleImageChange"
           :disabled="isLoading"
+          @change="handleImageChange"
         />
         <p class="text-xs text-muted-foreground">
           Recommended: Square image, minimum 256x256px, max 10MB
@@ -118,11 +118,11 @@
 
       <!-- Step 2 Actions -->
       <div class="flex justify-between pt-4">
-        <Button variant="outline" @click="previousStep" :disabled="isLoading">
+        <Button variant="outline" :disabled="isLoading" @click="previousStep">
           Back
         </Button>
         <div class="flex gap-2">
-          <Button @click="nextStep" :disabled="isLoading">
+          <Button :disabled="isLoading" @click="nextStep">
             <span v-if="!imagePreview">Skip</span>
             <span v-else>Next</span>
           </Button>
@@ -159,8 +159,8 @@
               <Button
                 variant="outline"
                 size="sm"
-                @click="removeRepresentative(index)"
                 :disabled="isLoading"
+                @click="removeRepresentative(index)"
               >
                 Remove
               </Button>
@@ -183,8 +183,8 @@
                 <Button
                   variant="outline"
                   size="sm"
-                  @click="removeEmail(index, emailIndex)"
                   :disabled="isLoading"
+                  @click="removeEmail(index, emailIndex)"
                 >
                   Remove
                 </Button>
@@ -192,8 +192,8 @@
               <Button
                 variant="outline"
                 size="sm"
-                @click="addEmail(index)"
                 :disabled="isLoading"
+                @click="addEmail(index)"
               >
                 Add Email
               </Button>
@@ -216,8 +216,8 @@
                 <Button
                   variant="outline"
                   size="sm"
-                  @click="removePhone(index, phoneIndex)"
                   :disabled="isLoading"
+                  @click="removePhone(index, phoneIndex)"
                 >
                   Remove
                 </Button>
@@ -225,8 +225,8 @@
               <Button
                 variant="outline"
                 size="sm"
-                @click="addPhone(index)"
                 :disabled="isLoading"
+                @click="addPhone(index)"
               >
                 Add Phone
               </Button>
@@ -237,9 +237,9 @@
         <!-- Add Representative Button -->
         <Button
           variant="outline"
-          @click="addRepresentative"
           :disabled="isLoading"
           class="w-full"
+          @click="addRepresentative"
         >
           Add Representative
         </Button>
@@ -247,11 +247,11 @@
 
       <!-- Step 3 Actions -->
       <div class="flex justify-between pt-4">
-        <Button variant="outline" @click="previousStep" :disabled="isLoading">
+        <Button variant="outline" :disabled="isLoading" @click="previousStep">
           Back
         </Button>
         <div class="flex gap-2">
-          <Button @click="createCompanyAndFinish" :disabled="isLoading">
+          <Button :disabled="isLoading" @click="createCompanyAndFinish">
             Create Company
           </Button>
         </div>

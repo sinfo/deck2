@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, type FunctionalComponent } from "vue";
 import { Menu, X, LogOut, Settings } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import type { RouteLocationRaw } from "vue-router";
@@ -30,12 +30,10 @@ const logout = () => {
   router.push({ name: "landing" });
 };
 
-
-
 interface NavigationItem {
   name: string;
   to: RouteLocationRaw;
-  icon?: any;
+  icon?: FunctionalComponent;
 }
 
 const navigation: NavigationItem[] = [
@@ -51,7 +49,9 @@ const { data: events, isLoading: eventsLoading } = useQuery({
 });
 
 const sortedEvents = computed(() =>
-  events.value?.data.sort((a, b) => b.begin?.localeCompare(a.begin || "") || 0),
+  [...(events.value?.data ?? [])].sort(
+    (a, b) => b.begin?.localeCompare(a.begin || "") || 0,
+  ),
 );
 
 const eventStore = useEventStore();
@@ -99,38 +99,62 @@ watch(shortcutLinux, () => {
 </script>
 
 <template>
-  <section class="fixed top-0 left-0 right-0 z-50 w-full flex items-center bg-white py-4 border-b border-gray-200">
+  <section
+    class="fixed top-0 left-0 right-0 z-50 w-full flex items-center bg-white py-4 border-b border-gray-200"
+  >
     <div class="container mx-auto px-4 md:px-6 lg:px-8">
       <nav class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <RouterLink :to="{ name: 'dashboard' }" class="text-2xl font-bold">Deck</RouterLink>
+          <RouterLink :to="{ name: 'dashboard' }" class="text-2xl font-bold"
+            >Deck</RouterLink
+          >
 
           <Select v-model="eventStore.selectedEvent">
             <SelectTrigger :loading="eventsLoading">
               <SelectValue placeholder="Edition" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="event in sortedEvents" :key="event.id" :value="event">
+              <SelectItem
+                v-for="event in sortedEvents"
+                :key="event.id"
+                :value="event"
+              >
                 {{ event.name }}
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <CompanyOrSpeakerAutocompleteWithDialog :autofocus="showSuggestions" :force-show-suggestions="showSuggestions"
-          class="hidden md:inline w-full px-3" placeholder="Search" @company-selected="companySelected"
-          @speaker-selected="speakerSelected" show-create />
+        <CompanyOrSpeakerAutocompleteWithDialog
+          :autofocus="showSuggestions"
+          :force-show-suggestions="showSuggestions"
+          class="hidden md:inline w-full px-3"
+          placeholder="Search"
+          show-create
+          @company-selected="companySelected"
+          @speaker-selected="speakerSelected"
+        />
 
         <!-- Desktop Navigation -->
         <div class="hidden md:flex items-center space-x-4">
-            <Notification />
-          <RouterLink v-for="item in navigation" :key="item.name" :to="item.to"
-            class="text-gray-600 hover:text-gray-900" :title="item.name">
-            <component v-if="item.icon" :is="item.icon" class="h-5 w-5" />
+          <Notification />
+          <RouterLink
+            v-for="item in navigation"
+            :key="item.name"
+            :to="item.to"
+            class="text-gray-600 hover:text-gray-900"
+            :title="item.name"
+          >
+            <component :is="item.icon" v-if="item.icon" class="h-5 w-5" />
             <span v-else>{{ item.name }}</span>
           </RouterLink>
 
-          <Button variant="ghost" size="sm" @click="logout" class="text-gray-600 hover:text-gray-900">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="text-gray-600 hover:text-gray-900"
+            @click="logout"
+          >
             <LogOut class="h-4 w-4" />
           </Button>
         </div>
@@ -146,21 +170,35 @@ watch(shortcutLinux, () => {
       </nav>
 
       <!-- Mobile Navigation Menu -->
-      <div v-if="isOpen" class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 py-4">
-        <CompanyOrSpeakerAutocompleteWithDialog class="w-full px-3 pb-3" placeholder="Search"
-          @company-selected="companySelected" @speaker-selected="speakerSelected" />
+      <div
+        v-if="isOpen"
+        class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 py-4"
+      >
+        <CompanyOrSpeakerAutocompleteWithDialog
+          class="w-full px-3 pb-3"
+          placeholder="Search"
+          @company-selected="companySelected"
+          @speaker-selected="speakerSelected"
+        />
 
         <div class="container mx-auto px-4">
           <div class="flex flex-col space-y-4">
-            
-            <RouterLink v-for="item in navigation" :key="item.name" :to="item.to"
-              class="text-gray-600 hover:text-gray-900 flex items-center gap-2">
-              <component v-if="item.icon" :is="item.icon" class="h-4 w-4" />
+            <RouterLink
+              v-for="item in navigation"
+              :key="item.name"
+              :to="item.to"
+              class="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+            >
+              <component :is="item.icon" v-if="item.icon" class="h-4 w-4" />
               <span>{{ item.name }}</span>
             </RouterLink>
 
-            <Button variant="ghost" size="sm" @click="logout"
-              class="text-gray-600 hover:text-gray-900 justify-start p-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              class="text-gray-600 hover:text-gray-900 justify-start p-0"
+              @click="logout"
+            >
               <LogOut class="h-4 w-4 mr-2" />
               Logout
             </Button>

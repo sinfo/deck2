@@ -1,3 +1,6 @@
+import type { Company } from "./companies";
+import type { Speaker } from "./speakers";
+
 export type NotificationKind =
   | "CREATED"
   | "UPDATED"
@@ -33,7 +36,11 @@ export interface Notification {
   post?: string;
 }
 
+export type EnrichedActor = Pick<Company | Speaker, "id" | "name"> & {
+  type: "company" | "speaker";
+  avatar?: string;
+};
 export interface EnrichedNotification extends Notification {
-  actor?: any; // populated user who triggered the notification
+  actor?: EnrichedActor; // populated user who triggered the notification
   message?: string; // short human-readable message
 }

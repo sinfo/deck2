@@ -19,7 +19,7 @@
       <!-- Error State -->
       <div v-else-if="error" class="text-center py-8">
         <p class="text-destructive">Failed to load user information</p>
-        <Button @click="refetch" variant="outline" class="mt-2">
+        <Button variant="outline" class="mt-2" @click="refetch">
           Try Again
         </Button>
       </div>
@@ -67,8 +67,8 @@
               <Button
                 variant="outline"
                 size="sm"
-                @click="isEditMode = !isEditMode"
                 :disabled="isSaving"
+                @click="isEditMode = !isEditMode"
               >
                 {{ isEditMode ? "Cancel" : "Edit" }}
               </Button>
@@ -239,9 +239,9 @@
               <div v-else class="text-center py-8 text-muted-foreground">
                 <p>No contact information available</p>
                 <Button
-                  @click="isEditMode = true"
                   variant="outline"
                   class="mt-2"
+                  @click="isEditMode = true"
                 >
                   Add Contact Information
                 </Button>
@@ -291,6 +291,7 @@ import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
 import { useAuthStore } from "@/stores/auth";
+import type { CreateCompanyRepData } from "@/dto/companies";
 
 const isEditMode = ref(false);
 const queryCache = useQueryCache();
@@ -318,7 +319,7 @@ const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
 });
 
 const authStore = useAuthStore();
-const handleUpdateContact = async (data: any) => {
+const handleUpdateContact = async (data: CreateCompanyRepData) => {
   if (!user.value?.data.contactObject?.id) return;
 
   // Extract contact data from the form data

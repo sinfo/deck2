@@ -5,8 +5,8 @@
   </div>
 
   <div
-    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
     v-if="!membersSorted.length && speakersLoading"
+    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
   >
     <Skeleton v-for="i in 21" :key="i" class="h-[260px] w-full rounded-lg" />
   </div>
@@ -21,7 +21,7 @@
     class="h-100"
     :min-item-size="1"
   >
-    <template v-slot="{ item }">
+    <template #default="{ item }">
       <MemberWithAvatar :member="item" with-separator />
 
       <div
@@ -57,7 +57,7 @@ const props = defineProps<{
 
 // TODO shift me to top
 const membersSorted = computed(() => {
-  return props.members?.sort((a, b) => a.name.localeCompare(b.name));
+  return [...props.members]?.sort((a, b) => a.name.localeCompare(b.name));
 });
 
 const membersMap = computed(() => {
