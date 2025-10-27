@@ -147,6 +147,6 @@ declare module "vue-virtual-scroller" {
    * @link https://github.com/Akryum/vue-virtual-scroller/blob/master/packages/vue-virtual-scroller/README.md#idstate
    */
   export function IdState(options?: {
-    idProp?: (value: any) => unknown;
+    idProp?: (value: unknown) => unknown;
   }): ComponentOptionsMixin;
 }

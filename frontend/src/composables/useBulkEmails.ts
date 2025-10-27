@@ -22,7 +22,9 @@ import { isEmailValid } from "@/lib/utils";
 import { Gender, Language } from "@/dto/contacts";
 
 // Generic types for bulk emails
-type BulkEmailEntity = CompanyWithParticipation | SpeakerWithParticipation;
+export type BulkEmailEntity =
+  | CompanyWithParticipation
+  | SpeakerWithParticipation;
 function isSpeaker(
   entity: BulkEmailEntity,
 ): entity is SpeakerWithParticipation {
@@ -76,8 +78,8 @@ const processEmail = <T extends BulkEmailEntity>(
     };
   }
 
-  let status: ProcessedEmailStatus[] = [];
-  let errors: string[] = [];
+  const status: ProcessedEmailStatus[] = [];
+  const errors: string[] = [];
 
   // Email address
   if (!email?.address) {

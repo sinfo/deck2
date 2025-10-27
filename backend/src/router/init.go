@@ -169,7 +169,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation", authCoordinator(deleteCompanyParticipation)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/participation/thread/{threadID}", authMember(deleteCompanyThread)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/participation/status/next", authMember(getCompanyValidSteps)).Methods("GET")
-	companyRouter.HandleFunc("/{id}/participation/status/{status}", authCoordinator(setCompanyStatus)).Methods("PUT")
+	companyRouter.HandleFunc("/{id}/participation/status/{status}", authMember(setCompanyStatus)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/billing", authCoordinator(addCompanyParticipationBilling)).Methods("POST")
@@ -250,6 +250,7 @@ func InitializeRouter() {
 	meRouter.HandleFunc("/image", authMember(setMyImage)).Methods("POST")
 	meRouter.HandleFunc("/notifications", authMember(getMyNotifications)).Methods("GET")
 	meRouter.HandleFunc("/notifications/{id}", authMember(deleteMyNotification)).Methods("DELETE")
+	meRouter.HandleFunc("/notifications", authMember(deleteAllMyNotifications)).Methods("DELETE")
 
 	// member handlers
 	memberRouter := r.PathPrefix("/members").Subrouter()

@@ -71,6 +71,23 @@
 
             <!-- Step 1: Configuration -->
             <div v-if="currentStep === 1" class="mt-6 space-y-6">
+              <div
+                v-if="showNoMemberContactWarning"
+                class="bg-red-50 rounded-lg p-4 max-h-40 overflow-y-auto"
+              >
+                <h1 class="text-xl font-semibold">⚠️ Important</h1>
+                <p class="mt-2 text-sm">
+                  You must
+                  <RouterLink
+                    :to="{ name: 'settings' }"
+                    class="font-medium text-blue-600 hover:underline"
+                    @click="handleCancel"
+                  >
+                    set your contact email and phone number</RouterLink
+                  >. Not doing so will fail later. You have been warned.
+                </p>
+              </div>
+
               <div>
                 <label
                   class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -335,9 +352,9 @@
                       Gmail drafts folder.
                     </p>
                     <Button
-                      @click="openGmailDrafts"
                       variant="outline"
                       class="mr-2"
+                      @click="openGmailDrafts"
                     >
                       Open Gmail Drafts
                     </Button>
@@ -373,12 +390,12 @@
 
               <Button
                 v-if="currentStep === 1"
-                @click="handleNext"
                 :disabled="
                   !selectedTemplate ||
                   selectedStatuses.length === 0 ||
                   isProcessing
                 "
+                @click="handleNext"
               >
                 {{ buttonText }}
               </Button>
@@ -389,8 +406,8 @@
                   processResult &&
                   processResult.ready.length > 0
                 "
-                @click="handleSendDrafts"
                 :disabled="isProcessing || isSending"
+                @click="handleSendDrafts"
               >
                 {{
                   isSending
@@ -439,6 +456,7 @@ import {
   useBulkSpeakerEmails,
   type BulkEmailResult,
 } from "@/composables/useBulkEmails";
+import { useAuthStore } from "@/stores/auth";
 
 interface Props {
   size?: "sm" | "default" | "lg" | "icon";
@@ -459,24 +477,98 @@ const emit = defineEmits<{
   success: [template: EmailTemplateCategory, result: BulkEmailResult];
 }>();
 
-// Use the appropriate composable based on entity type
-const bulkEmailComposable =
-  props.entityType === "companies"
-    ? useBulkCompanyEmails()
-    : useBulkSpeakerEmails();
+const authStore = useAuthStore();
+const showNoMemberContactWarning = computed(() => {
+  const { member } = authStore;
 
-const {
-  processBulkEmails,
-  sendProcessedEmails,
-  isProcessing,
-  isSending,
-  processResult,
-  result,
-  processedCount,
-  totalToProcess,
-  sentCount,
-  totalToSend,
-} = bulkEmailComposable;
+  if (!member?.contactObject) return true;
+
+  const hasMail =
+    member?.contactObject?.mails?.length > 0 &&
+    member.contactObject.mails[0].mail.trim() !== "";
+  const hasPhone =
+    member?.contactObject?.phones?.length > 0 &&
+    member.contactObject.phones[0].phone.trim() !== "";
+  return !hasMail || !hasPhone;
+});
+
+// We MUST separate the composable usages here, otherwise TypeScript infers incompatible types.
+const companyBulk = useBulkCompanyEmails();
+const speakerBulk = useBulkSpeakerEmails();
+
+const processBulkEmails = async (
+  templateCategory: EmailTemplateCategory,
+  statuses: ParticipationStatus[],
+  entities: CompanyWithParticipation[] | SpeakerWithParticipation[],
+) => {
+  if (props.entityType === "companies") {
+    return companyBulk.processBulkEmails(
+      templateCategory,
+      statuses,
+      entities as CompanyWithParticipation[],
+    );
+  }
+  return speakerBulk.processBulkEmails(
+    templateCategory,
+    statuses,
+    entities as SpeakerWithParticipation[],
+  );
+};
+
+const sendProcessedEmails = async () => {
+  if (props.entityType === "companies") {
+    return companyBulk.sendProcessedEmails();
+  }
+  return speakerBulk.sendProcessedEmails();
+};
+
+const isProcessing = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.isProcessing.value
+    : speakerBulk.isProcessing.value,
+);
+
+const isSending = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.isSending.value
+    : speakerBulk.isSending.value,
+);
+
+const processResult = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.processResult.value
+    : speakerBulk.processResult.value,
+);
+
+const result = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.result.value
+    : speakerBulk.result.value,
+);
+
+const processedCount = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.processedCount.value
+    : speakerBulk.processedCount.value,
+);
+
+const totalToProcess = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.totalToProcess.value
+    : speakerBulk.totalToProcess.value,
+);
+
+const sentCount = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.sentCount.value
+    : speakerBulk.sentCount.value,
+);
+
+const totalToSend = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.totalToSend.value
+    : speakerBulk.totalToSend.value,
+);
 
 const isDialogOpen = ref(false);
 const currentStep = ref(1);
@@ -574,13 +666,13 @@ const handleNext = async () => {
 
     // Process the bulk emails (this will verify emails and prepare data)
     if (props.entityType === "companies") {
-      await (processBulkEmails as any)(
+      await processBulkEmails(
         selectedTemplate.value,
         selectedStatuses.value,
         props.companies,
       );
     } else {
-      await (processBulkEmails as any)(
+      await processBulkEmails(
         selectedTemplate.value,
         selectedStatuses.value,
         props.speakers,

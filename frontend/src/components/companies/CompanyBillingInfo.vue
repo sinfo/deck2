@@ -12,8 +12,8 @@
           v-if="!isEditing && hasBillingInfo"
           variant="outline"
           size="sm"
-          @click="startEditing"
           :disabled="isUpdating"
+          @click="startEditing"
         >
           Edit
         </Button>

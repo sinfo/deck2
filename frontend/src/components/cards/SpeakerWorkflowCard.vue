@@ -6,8 +6,8 @@
     "
     :title="speaker.name"
     :current-status="speaker.participation?.status"
-    @status-change="updateSpeakerStatus(speaker, $event)"
     :to="{ name: 'speaker', params: { speakerId: speaker.id } }"
+    @status-change="updateSpeakerStatus(speaker, $event)"
   />
 </template>
 

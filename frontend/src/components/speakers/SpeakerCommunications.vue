@@ -1,6 +1,6 @@
 <template>
   <Communications
-    :entity-id="speaker.id"
+    :entity="speaker"
     entity-type="speaker"
     description="Communication history with speaker"
     :participations="speaker.participations"
@@ -17,11 +17,7 @@ import type { SpeakerWithParticipation } from "@/dto/speakers";
 import { useEventStore } from "@/stores/event";
 import { usePostSpeakerThreadMutation } from "@/mutations/speakers";
 import Communications from "../Communications.vue";
-import {
-  speakerTemplates,
-  createEmailVariable,
-  EmailTemplate,
-} from "@/lib/templates";
+import { speakerTemplates, createEmailVariable } from "@/lib/templates";
 import { computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
 
@@ -39,11 +35,11 @@ postThreadMutation.speakerId.value = props.speaker.id;
 const templates = computed(() =>
   speakerTemplates.map((it) => ({
     template: it,
-    variables: createSpeakerTemplateVariables(it),
+    variables: createSpeakerTemplateVariables(),
   })),
 );
 
-const createSpeakerTemplateVariables = (_template: EmailTemplate) => {
+const createSpeakerTemplateVariables = () => {
   const endDate = new Date(eventStore.selectedEvent?.end || 0);
 
   return [

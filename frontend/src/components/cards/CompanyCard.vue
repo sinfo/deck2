@@ -7,8 +7,8 @@
           v-if="!isEditing"
           variant="outline"
           size="sm"
-          @click="startEditing"
           :disabled="isUpdating"
+          @click="startEditing"
         >
           Edit
         </Button>
@@ -26,7 +26,7 @@
           mode="edit"
           @submit="handleSubmit"
           @cancel="cancelEditing"
-          @imageSelected="handleImageSelected"
+          @image-selected="handleImageSelected"
         />
       </div>
 
@@ -63,8 +63,8 @@
 
         <button
           v-if="shouldShowToggle"
-          @click="toggleDescription"
           class="text-primary hover:underline text-xs mt-1 focus:outline-none"
+          @click="toggleDescription"
         >
           {{ isDescriptionExpanded ? "Show less" : "Show more" }}
         </button>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, type FunctionalComponent } from "vue";
 import { Menu, X, LogOut, Settings } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import type { RouteLocationRaw } from "vue-router";
@@ -19,6 +19,7 @@ import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerAutocomple
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
 import { useMagicKeys } from "@vueuse/core";
+import Notification from "./navbar/Notification.vue";
 
 const isOpen = ref(false);
 const authStore = useAuthStore();
@@ -32,7 +33,7 @@ const logout = () => {
 interface NavigationItem {
   name: string;
   to: RouteLocationRaw;
-  icon?: any;
+  icon?: FunctionalComponent;
 }
 
 const navigation: NavigationItem[] = [
@@ -48,7 +49,9 @@ const { data: events, isLoading: eventsLoading } = useQuery({
 });
 
 const sortedEvents = computed(() =>
-  events.value?.data.sort((a, b) => b.begin?.localeCompare(a.begin || "") || 0),
+  [...(events.value?.data ?? [])].sort(
+    (a, b) => b.begin?.localeCompare(a.begin || "") || 0,
+  ),
 );
 
 const eventStore = useEventStore();
@@ -127,13 +130,14 @@ watch(shortcutLinux, () => {
           :force-show-suggestions="showSuggestions"
           class="hidden md:inline w-full px-3"
           placeholder="Search"
+          show-create
           @company-selected="companySelected"
           @speaker-selected="speakerSelected"
-          show-create
         />
 
         <!-- Desktop Navigation -->
         <div class="hidden md:flex items-center space-x-4">
+          <Notification />
           <RouterLink
             v-for="item in navigation"
             :key="item.name"
@@ -141,15 +145,15 @@ watch(shortcutLinux, () => {
             class="text-gray-600 hover:text-gray-900"
             :title="item.name"
           >
-            <component v-if="item.icon" :is="item.icon" class="h-5 w-5" />
+            <component :is="item.icon" v-if="item.icon" class="h-5 w-5" />
             <span v-else>{{ item.name }}</span>
           </RouterLink>
 
           <Button
             variant="ghost"
             size="sm"
-            @click="logout"
             class="text-gray-600 hover:text-gray-900"
+            @click="logout"
           >
             <LogOut class="h-4 w-4" />
           </Button>
@@ -157,6 +161,7 @@ watch(shortcutLinux, () => {
 
         <!-- Mobile Navigation Button -->
         <div class="md:hidden">
+          <Notification />
           <Button variant="ghost" @click="isOpen = !isOpen">
             <Menu v-if="!isOpen" class="h-6 w-6" />
             <X v-else class="h-6 w-6" />
@@ -184,15 +189,15 @@ watch(shortcutLinux, () => {
               :to="item.to"
               class="text-gray-600 hover:text-gray-900 flex items-center gap-2"
             >
-              <component v-if="item.icon" :is="item.icon" class="h-4 w-4" />
+              <component :is="item.icon" v-if="item.icon" class="h-4 w-4" />
               <span>{{ item.name }}</span>
             </RouterLink>
 
             <Button
               variant="ghost"
               size="sm"
-              @click="logout"
               class="text-gray-600 hover:text-gray-900 justify-start p-0"
+              @click="logout"
             >
               <LogOut class="h-4 w-4 mr-2" />
               Logout

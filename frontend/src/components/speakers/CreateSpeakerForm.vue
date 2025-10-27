@@ -89,10 +89,10 @@
 
       <!-- Step 1 Actions -->
       <div class="flex justify-between pt-4">
-        <Button variant="outline" @click="handleCancel" :disabled="isLoading">
+        <Button variant="outline" :disabled="isLoading" @click="handleCancel">
           Cancel
         </Button>
-        <Button @click="nextStep" :disabled="isLoading || !isStep1Valid">
+        <Button :disabled="isLoading || !isStep1Valid" @click="nextStep">
           Next
         </Button>
       </div>
@@ -106,8 +106,8 @@
           id="image"
           type="file"
           accept="image/*"
-          @change="handleImageChange"
           :disabled="isLoading"
+          @change="handleImageChange"
         />
         <p class="text-xs text-muted-foreground">
           Recommended: Square image, minimum 256x256px, max 10MB
@@ -131,11 +131,11 @@
 
       <!-- Step 2 Actions -->
       <div class="flex justify-between pt-4">
-        <Button variant="outline" @click="previousStep" :disabled="isLoading">
+        <Button variant="outline" :disabled="isLoading" @click="previousStep">
           Back
         </Button>
         <div class="flex gap-2">
-          <Button @click="nextStep" :disabled="isLoading">
+          <Button :disabled="isLoading" @click="nextStep">
             <span v-if="!imagePreview">Skip</span>
             <span v-else>Next</span>
           </Button>
@@ -147,20 +147,20 @@
     <div v-if="currentStep === 3" class="space-y-4">
       <!-- Contact Form -->
       <ContactForm
-        @updated="(newData) => (contactData = newData.contact!)"
-        withoutName
-        withoutAction
+        without-name
+        without-action
         :is-loading="isLoading"
         mode="create"
+        @updated="(newData) => (contactData = newData.contact!)"
       />
 
       <!-- Step 3 Actions -->
       <div class="flex justify-between pt-4">
-        <Button variant="outline" @click="previousStep" :disabled="isLoading">
+        <Button variant="outline" :disabled="isLoading" @click="previousStep">
           Back
         </Button>
         <div class="flex gap-2">
-          <Button @click="createSpeakerAndFinish" :disabled="isLoading">
+          <Button :disabled="isLoading" @click="createSpeakerAndFinish">
             <span>Create Speaker</span>
           </Button>
         </div>

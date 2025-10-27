@@ -264,3 +264,19 @@ func (n *NotificationsType) DeleteNotification(notificationID primitive.ObjectID
 
 	return &notification, nil
 }
+
+// DeleteAllMemberNotifications deletes all notifications for a member
+func (n *NotificationsType) DeleteAllMemberNotifications(memberID primitive.ObjectID) (int64, error) {
+	ctx = context.Background()
+
+	filter := bson.M{
+		"member": memberID,
+	}
+
+	deleteResult, err := n.Collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+
+	return deleteResult.DeletedCount, nil
+}

@@ -1,9 +1,9 @@
 <template>
   <MembersCompanies
     :companies="companiesList?.data || []"
-    :companiesLoading="isCompaniesLoading"
+    :companies-loading="isCompaniesLoading"
     :members="membersList?.data || []"
-    :eventId="eventStore.selectedEvent?.id || 0"
+    :event-id="eventStore.selectedEvent?.id || 0"
   />
 </template>
 

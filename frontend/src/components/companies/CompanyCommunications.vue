@@ -1,6 +1,6 @@
 <template>
   <Communications
-    :entity-id="company.id"
+    :entity="company"
     entity-type="company"
     description="Communication history with company representatives"
     :participations="company.participations"
@@ -17,11 +17,7 @@ import type { CompanyWithParticipation } from "@/dto/companies";
 import { useEventStore } from "@/stores/event";
 import { usePostCompanyThreadMutation } from "@/mutations/companies";
 import Communications from "../Communications.vue";
-import {
-  companyTemplates,
-  createEmailVariable,
-  EmailTemplate,
-} from "@/lib/templates";
+import { companyTemplates, createEmailVariable } from "@/lib/templates";
 import { computed } from "vue";
 
 const props = defineProps<{
@@ -37,11 +33,11 @@ postThreadMutation.companyId.value = props.company.id;
 const templates = computed(() =>
   companyTemplates.map((it) => ({
     template: it,
-    variables: createCompanyTemplateVariables(it),
+    variables: createCompanyTemplateVariables(),
   })),
 );
 
-const createCompanyTemplateVariables = (_template: EmailTemplate) => {
+const createCompanyTemplateVariables = () => {
   const endDate = new Date(eventStore.selectedEvent?.end || 0);
 
   return [

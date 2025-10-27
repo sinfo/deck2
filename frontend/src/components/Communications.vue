@@ -97,35 +97,31 @@
                 : 'justify-start',
           ]"
         >
-          <!-- Member avatar for outgoing messages (on the left side) -->
+          <!-- Author avatar for messages (on the left side) -->
           <div
-            v-if="
-              getMessageDirection(thread.kind) === 'outgoing' &&
-              thread.entry?.member &&
-              thread.kind !== ThreadKind.ThreadKindPhoneCall
-            "
+            v-if="thread.kind !== ThreadKind.ThreadKindPhoneCall"
             class="flex flex-col items-center gap-1"
           >
             <Image
-              v-if="getMemberById(thread.entry.member)?.img"
-              :src="getMemberById(thread.entry.member)?.img"
-              :alt="getMemberById(thread.entry.member)?.name || 'Member'"
-              class="w-8 h-8 rounded-full object-cover"
+              v-if="getAuthorAvatar(getMessageAuthor(thread))"
+              :src="getAuthorAvatar(getMessageAuthor(thread))"
+              :alt="getMessageAuthor(thread)?.name || 'Member'"
+              :class="avatarClasses(thread)"
             />
             <div
               v-else
               class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center"
             >
               <span class="text-sm font-medium">{{
-                getMemberById(thread.entry.member)?.name?.charAt(0) || "?"
+                getMessageAuthor(thread)?.name?.charAt(0) || "?"
               }}</span>
             </div>
             <div class="text-xs text-center max-w-20 leading-tight">
               <div>
-                {{ getFirstName(getMemberById(thread.entry.member)?.name) }}
+                {{ getFirstName(getMessageAuthor(thread)?.name) }}
               </div>
               <div>
-                {{ getLastName(getMemberById(thread.entry.member)?.name) }}
+                {{ getLastName(getMessageAuthor(thread)?.name) }}
               </div>
             </div>
           </div>
@@ -224,20 +220,20 @@
         <div class="flex flex-col sm:flex-row gap-2">
           <div class="flex-1">
             <Textarea
-              :disabled="selectedEventId !== latestEvent?.id"
               v-model="newMessage"
+              :disabled="selectedEventId !== latestEvent?.id"
               placeholder="Type your message..."
               class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px]"
               @keydown.enter.ctrl="sendMessage"
               @keydown.enter.meta="sendMessage"
               @input="
+                // eslint-disable-next-line vue/no-mutating-props
                 postThreadMutation && (postThreadMutation.error.value = null)
               "
             />
           </div>
           <div class="flex sm:flex-col gap-2">
             <Button
-              @click="sendMessage"
               :disabled="
                 selectedEventId !== latestEvent?.id ||
                 !newMessage.trim() ||
@@ -245,12 +241,13 @@
               "
               size="sm"
               class="px-3 flex-1 sm:flex-none"
+              @click="sendMessage"
             >
               {{ postThreadMutation?.isLoading.value ? "Sending..." : "Send" }}
             </Button>
             <select
-              :disabled="selectedEventId !== latestEvent?.id"
               v-model="messageKind"
+              :disabled="selectedEventId !== latestEvent?.id"
               class="text-xs border rounded px-2 py-1 flex-1 sm:flex-none"
             >
               <option :value="ThreadKind.ThreadKindTo">Outgoing</option>
@@ -282,7 +279,13 @@ import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
 import { ThreadKind, ThreadStatus } from "@/dto/threads";
-import type { ParticipationCommunications } from "@/dto/threads";
+import type {
+  ParticipationCommunications,
+  ThreadWithEntry,
+} from "@/dto/threads";
+import type { Speaker } from "@/dto/speakers";
+import type { Company } from "@/dto/companies";
+import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
 import Card from "./ui/card/Card.vue";
 import CardContent from "./ui/card/CardContent.vue";
@@ -313,7 +316,7 @@ interface TemplateWithVariables {
 }
 
 interface CommunicationsProps {
-  entityId: string;
+  entity: Company | Speaker;
   entityType: "company" | "speaker";
   description: string;
   participations?: Array<{ event: number }>;
@@ -322,12 +325,17 @@ interface CommunicationsProps {
   fetchCommunications: (
     id: string,
   ) => Promise<{ data: ParticipationCommunications[] }>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postThreadMutation?: any;
 }
+
+type Author = Member | Speaker | Company;
 
 const props = withDefaults(defineProps<CommunicationsProps>(), {
   canSendMessages: false,
   templates: () => [],
+  participations: () => [],
+  postThreadMutation: undefined,
 });
 
 const newMessage = ref("");
@@ -396,8 +404,8 @@ const {
   isLoading,
   error,
 } = useQuery({
-  key: () => [`${props.entityType}-communications`, props.entityId],
-  query: () => props.fetchCommunications(props.entityId).then((it) => it.data),
+  key: () => [`${props.entityType}-communications`, props.entity.id],
+  query: () => props.fetchCommunications(props.entity.id).then((it) => it.data),
 });
 
 const sortedCommunications = computed(() => {
@@ -473,6 +481,52 @@ const getMessageDirection = (kind: ThreadKind): "incoming" | "outgoing" => {
     kind === ThreadKind.ThreadKindTemplate
     ? "outgoing"
     : "incoming";
+};
+
+const getMessageAuthor = (thread: ThreadWithEntry): Author | null => {
+  const direction = getMessageDirection(thread.kind);
+
+  if (direction === "outgoing" && thread.entry?.member) {
+    return getMemberById(thread.entry?.member);
+  } else if (direction === "incoming") {
+    return props.entity;
+  }
+  return null;
+};
+
+const getAuthorAvatar = (entity: Author | null): string | undefined => {
+  if (!entity) return undefined;
+
+  if ("imgs" in entity) {
+    return entity.imgs?.internal;
+  } else if ("img" in entity) {
+    return entity.img;
+  }
+
+  return undefined;
+};
+
+const avatarClasses = (thread: ThreadWithEntry) => {
+  const direction = getMessageDirection(thread.kind);
+
+  // People related avatars: always circular
+  if (direction === "outgoing" || props.entityType === "speaker") {
+    return ["w-8 h-8 object-cover", "rounded-full"];
+  }
+
+  return [
+    "w-8 h-8 bg-white p-1",
+    "object-contain",
+    "rounded-sm",
+    "border border-gray-100",
+    "shadow-sm",
+    "sm:rounded-none",
+    "sm:w-9",
+    "sm:h-9",
+    "md:w-12",
+    "md:h-10",
+    "md:rounded-md",
+  ];
 };
 
 const getKindLabel = (kind: ThreadKind): string => {
@@ -564,6 +618,7 @@ const sendMessage = async () => {
 
   try {
     // Set the thread data for the mutation
+    // eslint-disable-next-line vue/no-mutating-props
     props.postThreadMutation.threadData.value = {
       text: newMessage.value,
       kind: messageKind.value,

@@ -19,7 +19,7 @@
       <!-- Error State -->
       <div v-else-if="error" class="text-center py-8">
         <p class="text-destructive">Failed to load user information</p>
-        <Button @click="refetch" variant="outline" class="mt-2">
+        <Button variant="outline" class="mt-2" @click="refetch">
           Try Again
         </Button>
       </div>
@@ -378,27 +378,16 @@ const {
   query: getMe,
 });
 
-const updateContactMutation = useUpdateContactMutation();
-const uploadImageMutation = useUploadImageMutation();
-
-const profileImageUrl = computed(() => {
-  return previewImageUrl.value || user.value?.data.img;
+// Update contact mutation
+const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
+  mutation: (variables: { id: string; data: CreateContactData }) =>
+    updateContact(variables.id, variables.data),
+  onSuccess: () => {
+    isEditMode.value = false;
+    // Invalidate the user query to refresh the data
+    queryCache.invalidateQueries({ key: ["me"] });
+  },
 });
-const isSaving = computed(() => updateContactMutation.isLoading.value);
-const isUploadingImage = computed(() => uploadImageMutation.isLoading.value);
-
-const handleImageUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement | null;
-  const file = target?.files?.[0];
-  if (!file) return;
-
-  if (previewImageUrl.value) {
-    URL.revokeObjectURL(previewImageUrl.value);
-  }
-
-  previewImageUrl.value = URL.createObjectURL(file);
-  uploadImageMutation.file.value = file;
-};
 
 const handleUpdateContact = async (data: any) => {
   if (!user.value?.data.contactObject?.id) return;
@@ -416,27 +405,12 @@ const handleUpdateContact = async (data: any) => {
   updateContactMutation.mutate();
 };
 
-const updateProfileChanges = () => {
-  if (uploadImageMutation.file.value) {
-    uploadImageMutation.mutate();
-  }
-  isEditingProfile.value = false;
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement;
+  img.src = "/src/assets/noImage.png"; // Fallback image
 };
 
-const triggerFileInput = () => {
-  fileInput.value?.click();
-};
-
-const cancelProfileEdit = () => {
-  if (previewImageUrl.value) {
-    URL.revokeObjectURL(previewImageUrl.value);
-    previewImageUrl.value = null;
-  }
-
-  if (fileInput.value) { fileInput.value.value = ""; }
-  isEditingProfile.value = false;
-};
-
+// Utility functions
 const formatGender = (gender: Gender): string => {
   switch (gender) {
     case "MALE":
