@@ -1,9 +1,9 @@
 <template>
   <MembersSpeakers
     :speakers="speakersList?.data || []"
-    :speakersLoading="isSpeakersLoading"
+    :speakers-loading="isSpeakersLoading"
     :members="membersList?.data || []"
-    :eventId="eventStore.selectedEvent?.id || 0"
+    :event-id="eventStore.selectedEvent?.id || 0"
   />
 </template>
 

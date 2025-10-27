@@ -47,13 +47,13 @@
 
     <!-- Form Actions -->
     <div class="flex justify-end gap-3 pt-6 border-t">
-      <Button variant="outline" @click="$emit('cancel')" :disabled="isLoading">
+      <Button variant="outline" :disabled="isLoading" @click="$emit('cancel')">
         Cancel
       </Button>
       <Button
-        @click="handleSubmit"
         :disabled="!isValid || isLoading"
         :loading="isLoading"
+        @click="handleSubmit"
       >
         {{ mode === "edit" ? "Update" : "Save" }} Billing Info
       </Button>
@@ -76,6 +76,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "create",
+  initialData: undefined,
 });
 
 const emit = defineEmits<{

@@ -56,7 +56,7 @@ export const withCurrentParticipation = <
 
 export const ordinalSuffix = (i: number): string => {
   // https://stackoverflow.com/a/13627586
-  let j = i % 10,
+  const j = i % 10,
     k = i % 100;
 
   if (j === 1 && k !== 11) {

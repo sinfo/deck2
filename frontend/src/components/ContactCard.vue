@@ -32,9 +32,9 @@
           </div>
 
           <!-- Action buttons -->
-          <div class="flex gap-2" v-if="canEdit">
+          <div v-if="canEdit" class="flex gap-2">
             <Popover v-model:open="isEditFormOpen">
-              <PopoverTrigger asChild>
+              <PopoverTrigger as-child>
                 <Button variant="outline" size="sm" :disabled="isSaving">
                   Edit
                 </Button>
@@ -54,8 +54,8 @@
                 </div>
                 <div class="flex-1 overflow-y-auto p-6 min-h-0">
                   <ContactForm
-                    without-name
                     v-if="contact"
+                    without-name
                     mode="edit"
                     :initial-data="{
                       id: contact.id,
@@ -71,7 +71,7 @@
             </Popover>
 
             <Popover v-if="canDelete" v-model:open="isDeleteConfirmOpen">
-              <PopoverTrigger asChild>
+              <PopoverTrigger as-child>
                 <Button
                   variant="outline"
                   size="sm"
@@ -253,6 +253,7 @@ import Badge from "./ui/badge/Badge.vue";
 import Button from "./ui/button/Button.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import ContactForm from "./companies/ContactForm.vue";
+import type { CreateCompanyRepData } from "@/dto/companies";
 
 interface Props {
   contact?: Contact;
@@ -268,6 +269,10 @@ const props = withDefaults(defineProps<Props>(), {
   canEdit: false,
   canDelete: false,
   isDeleting: false,
+  contact: undefined,
+  contactName: undefined,
+  entityId: undefined,
+  entityType: undefined,
 });
 
 const emit = defineEmits<{
@@ -312,7 +317,7 @@ const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
   },
 });
 
-const handleUpdateContact = async (data: any) => {
+const handleUpdateContact = async (data: CreateCompanyRepData) => {
   if (!props.contact?.id) return;
 
   // Extract contact data from the form data
