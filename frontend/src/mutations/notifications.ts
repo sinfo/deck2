@@ -8,7 +8,7 @@ import type { EnrichedNotification } from "@/dto/notifications";
 export const useDeleteNotificationMutation = defineMutation(() => {
   const queryCache = useQueryCache();
 
-  const { mutatee, ...mutation } = useMutation({
+  const { mutate, ...mutation } = useMutation({
     mutation: (id: string) => deleteMyNotification(id),
     onMutate: (id: string) => {
       // optimistic: remove the notification from the "notifications" query
