@@ -255,3 +255,28 @@ func deleteMyNotification(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(notification)
 }
+
+func deleteAllMyNotifications(w http.ResponseWriter, r *http.Request) {
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
+	if !ok {
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	memberID := credentials.ID
+
+	if _, err := mongodb.Members.GetMember(memberID); err != nil {
+		http.Error(w, "Could not find member: " + err.Error(), http.StatusNotFound)
+		return
+	}
+
+	count, err := mongodb.Notifications.DeleteAllMemberNotifications(memberID)
+	if err != nil {
+		http.Error(w, "Could not delete notifications: " + err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]int64{"deletedCount": count})
+}
