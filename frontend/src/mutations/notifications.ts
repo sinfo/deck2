@@ -18,7 +18,7 @@ export const useDeleteNotificationMutation = defineMutation(() => {
         data: [],
       };
       const newData = (prev.data || []).filter(
-        (n) => (n as Notification).id !== id,
+        (n: Notification) => n.id !== id,
       );
       queryCache.setQueryData(["notifications"], { ...prev, data: newData });
       // cancel ongoing queries

@@ -21,32 +21,33 @@ import Image from "../Image.vue";
 
 const getActor = (notification: Notification) => {
   if (notification.speaker && typeof notification.speaker === "object") {
+    const speaker = notification.speaker as Speaker;
     return {
-      id: (notification.speaker as Speaker).id,
-      name: (notification.speaker as Speaker).name,
-      avatar:
-        (notification.speaker as Speaker).imgs.internal ||
-        (notification.speaker as Speaker).imgs.speaker,
+      id: speaker.id,
+      name: speaker.name,
+      avatar: speaker.imgs.internal || speaker.imgs.speaker,
     };
   }
   if (notification.company && typeof notification.company === "object") {
+    const company = notification.company as Company;
     return {
-      id: (notification.company as Company).id,
-      name: (notification.company as Company).name,
-      avatar:
-        (notification.company as Company).imgs?.internal ||
-        (notification.company as Company).imgs?.public,
+      id: company.id,
+      name: company.name,
+      avatar: company.imgs?.internal || company.imgs?.public,
     };
   }
   return null;
 };
 
-const makeMessage = (notification: Notification) => {
+const makeMessage = (
+  notification: Notification,
+  actorArg?: { id?: string; name?: string; avatar?: string } | null,
+) => {
   const thread = notification.thread;
   const kind = notification.kind;
-  // Actor is the entity (company/speaker) related to the notification
-  const actor = getActor(notification);
-  const actorName = actor ? actor.name : "";
+  // Actor is the entity (company/speaker) related to the notification. Prefer the precomputed actor when provided.
+  const actor = actorArg ?? getActor(notification);
+  const actorName = actor && actor.name ? actor.name : "";
   const isActorPresent = actorName.length > 0;
 
   switch (kind) {
@@ -102,10 +103,18 @@ const { data: notifications } = useQuery({
   query: getMyNotifications,
 });
 
-const notificationItems = computed(() => {
+type NotificationEntry = {
+  n: Notification;
+  actor: { id?: string; name?: string; avatar?: string } | null;
+};
+
+const notificationItems = computed<NotificationEntry[]>(() => {
   const items = (notifications.value?.data as Notification[]) || [];
   // sort newest first — try common timestamp fields (date, createdAt, created_at)
-  return items.slice().sort((a, b) => b.date?.localeCompare(a.date ?? "") || 0);
+  const sorted = items
+    .slice()
+    .sort((a, b) => b.date?.localeCompare(a.date ?? "") || 0);
+  return sorted.map((n) => ({ n, actor: getActor(n) }));
 });
 
 const _deleteNotificationMutation = useDeleteNotificationMutation();
@@ -116,7 +125,7 @@ const removeNotification = async (id: string) => {
 };
 
 const removeAllNotifications = async () => {
-  const ids = notificationItems.value.map((i) => i.id);
+  const ids = notificationItems.value.map((i) => i.n.id);
   if (!ids.length) return;
   await _deleteAllNotificationsMutation.mutate();
 };
@@ -189,29 +198,31 @@ const onNotificationClick = async (n: Notification) => {
 
         <ul>
           <li
-            v-for="n in notificationItems"
-            :key="n.id"
+            v-for="entry in notificationItems"
+            :key="entry.n.id"
             class="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer"
-            @click="onNotificationClick(n)"
+            @click="onNotificationClick(entry.n)"
           >
             <div class="flex items-center gap-3">
               <Image
-                v-if="getActor(n)?.avatar"
-                :src="getActor(n)?.avatar"
+                v-if="entry.actor?.avatar"
+                :src="entry.actor?.avatar"
                 alt="actor"
                 class="h-8 w-8 rounded-full object-cover"
               />
               <div class="text-sm">
-                <div class="font-medium">{{ makeMessage(n) }}</div>
+                <div class="font-medium">
+                  {{ makeMessage(entry.n, entry.actor) }}
+                </div>
                 <div class="text-xs text-gray-500">
-                  {{ getActor(n)?.name || n.date }}
+                  {{ entry.actor?.name || entry.n.date }}
                 </div>
               </div>
             </div>
             <div>
               <button
                 class="text-red-500 text-sm"
-                @click.stop.prevent="removeNotification(n.id)"
+                @click.stop.prevent="removeNotification(entry.n.id)"
               >
                 <Trash :size="16" />
               </button>
