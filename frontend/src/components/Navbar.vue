@@ -19,6 +19,7 @@ import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerAutocomple
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
 import { useMagicKeys } from "@vueuse/core";
+import Notification from "./navbar/Notification.vue";
 
 const isOpen = ref(false);
 const authStore = useAuthStore();
@@ -136,6 +137,7 @@ watch(shortcutLinux, () => {
 
         <!-- Desktop Navigation -->
         <div class="hidden md:flex items-center space-x-4">
+          <Notification />
           <RouterLink
             v-for="item in navigation"
             :key="item.name"
@@ -159,6 +161,7 @@ watch(shortcutLinux, () => {
 
         <!-- Mobile Navigation Button -->
         <div class="md:hidden">
+          <Notification />
           <Button variant="ghost" @click="isOpen = !isOpen">
             <Menu v-if="!isOpen" class="h-6 w-6" />
             <X v-else class="h-6 w-6" />
