@@ -38,5 +38,49 @@
                 "description": "Unauthorized"
             }
         }
+    },
+    
+    "delete": {
+        "tags": [
+            "me",
+            "notifications"
+        ],
+        "summary": "Delete all my notifications",
+        "operationId": "deleteAllMyNotifications",
+        "consumes": [
+            "multipart/form-data"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [],
+        "responses": {
+            "200": {
+                "description": "Deleted notifications count",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "deletedCount": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                }
+            },
+            "417": {
+                "description": "Unable to delete notifications"
+            },
+            "404": {
+                "description": "Member not found"
+            },
+            "401": {
+                "description": "Unauthorized"
+            }
+        }
     }
 }
