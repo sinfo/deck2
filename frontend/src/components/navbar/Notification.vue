@@ -99,9 +99,11 @@ const { data: notifications } = useQuery({
   query: fetchEnrichedNotifications,
 });
 
-const notificationItems = computed(
-  () => (notifications.value?.data as EnrichedNotification[]) || [],
-);
+const notificationItems = computed(() => {
+  const items = (notifications.value?.data as EnrichedNotification[]) || [];
+  // sort newest first — try common timestamp fields (date, createdAt, created_at)
+  return items.slice().sort((a, b) => a.date?.localeCompare(b.date ?? "") || 0);
+});
 
 const _deleteNotificationMutation = useDeleteNotificationMutation();
 const _deleteAllNotificationsMutation = useDeleteAllNotificationsMutation();
