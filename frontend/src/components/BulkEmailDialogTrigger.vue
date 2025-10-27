@@ -492,24 +492,83 @@ const showNoMemberContactWarning = computed(() => {
   return !hasMail || !hasPhone;
 });
 
-// Use the appropriate composable based on entity type
-const bulkEmailComposable =
-  props.entityType === "companies"
-    ? useBulkCompanyEmails()
-    : useBulkSpeakerEmails();
+// We MUST separate the composable usages here, otherwise TypeScript infers incompatible types.
+const companyBulk = useBulkCompanyEmails();
+const speakerBulk = useBulkSpeakerEmails();
 
-const {
-  processBulkEmails,
-  sendProcessedEmails,
-  isProcessing,
-  isSending,
-  processResult,
-  result,
-  processedCount,
-  totalToProcess,
-  sentCount,
-  totalToSend,
-} = bulkEmailComposable;
+const processBulkEmails = async (
+  templateCategory: EmailTemplateCategory,
+  statuses: ParticipationStatus[],
+  entities: CompanyWithParticipation[] | SpeakerWithParticipation[],
+) => {
+  if (props.entityType === "companies") {
+    return companyBulk.processBulkEmails(
+      templateCategory,
+      statuses,
+      entities as CompanyWithParticipation[],
+    );
+  }
+  return speakerBulk.processBulkEmails(
+    templateCategory,
+    statuses,
+    entities as SpeakerWithParticipation[],
+  );
+};
+
+const sendProcessedEmails = async () => {
+  if (props.entityType === "companies") {
+    return companyBulk.sendProcessedEmails();
+  }
+  return speakerBulk.sendProcessedEmails();
+};
+
+const isProcessing = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.isProcessing.value
+    : speakerBulk.isProcessing.value,
+);
+
+const isSending = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.isSending.value
+    : speakerBulk.isSending.value,
+);
+
+const processResult = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.processResult.value
+    : speakerBulk.processResult.value,
+);
+
+const result = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.result.value
+    : speakerBulk.result.value,
+);
+
+const processedCount = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.processedCount.value
+    : speakerBulk.processedCount.value,
+);
+
+const totalToProcess = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.totalToProcess.value
+    : speakerBulk.totalToProcess.value,
+);
+
+const sentCount = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.sentCount.value
+    : speakerBulk.sentCount.value,
+);
+
+const totalToSend = computed(() =>
+  props.entityType === "companies"
+    ? companyBulk.totalToSend.value
+    : speakerBulk.totalToSend.value,
+);
 
 const isDialogOpen = ref(false);
 const currentStep = ref(1);

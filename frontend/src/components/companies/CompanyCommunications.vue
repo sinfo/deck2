@@ -33,7 +33,7 @@ postThreadMutation.companyId.value = props.company.id;
 const templates = computed(() =>
   companyTemplates.map((it) => ({
     template: it,
-    variables: createCompanyTemplateVariables(it),
+    variables: createCompanyTemplateVariables(),
   })),
 );
 

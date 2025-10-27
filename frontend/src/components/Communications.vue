@@ -325,7 +325,8 @@ interface CommunicationsProps {
   fetchCommunications: (
     id: string,
   ) => Promise<{ data: ParticipationCommunications[] }>;
-  postThreadMutation?: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  postThreadMutation?: any;
 }
 
 type Author = Member | Speaker | Company;
