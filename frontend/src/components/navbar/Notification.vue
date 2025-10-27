@@ -86,7 +86,7 @@ const fetchEnrichedNotifications = async () => {
       } catch {
         // ignore enrichment errors
       }
-      if (!enriched.message)
+      if (!enriched.message && enriched.actor)
         enriched.message = makeMessage(n.kind, enriched.actor);
       return enriched;
     }),
@@ -102,7 +102,7 @@ const { data: notifications } = useQuery({
 const notificationItems = computed(() => {
   const items = (notifications.value?.data as EnrichedNotification[]) || [];
   // sort newest first — try common timestamp fields (date, createdAt, created_at)
-  return items.slice().sort((a, b) => a.date?.localeCompare(b.date ?? "") || 0);
+  return items.slice().sort((a, b) => b.date?.localeCompare(a.date ?? "") || 0);
 });
 
 const _deleteNotificationMutation = useDeleteNotificationMutation();
