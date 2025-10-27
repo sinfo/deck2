@@ -6,11 +6,14 @@
           {{ getEventName(participation.event) }}
         </h4>
         <div class="flex items-center gap-2">
-          <Popover :open="isEditing && isStatusMenuOpen" @update:open="isStatusMenuOpen = $event">
-          <PopoverTrigger as-child>
+          <Popover
+            :open="isEditing && isStatusMenuOpen"
+            @update:open="isStatusMenuOpen = $event"
+          >
+            <PopoverTrigger as-child>
               <Badge
-                  :class="participationStatusColor[selectedStatus]?.background"
-                  class="text-xs flex items-center gap-1 cursor-pointer"
+                :class="participationStatusColor[selectedStatus]?.background"
+                class="text-xs flex items-center gap-1 cursor-pointer"
               >
                 {{ humanReadableParticipationStatus[selectedStatus] }}
                 <ChevronDown v-if="isEditing" class="w-3 h-3" />
@@ -19,13 +22,13 @@
             <PopoverContent class="w-56 p-0">
               <div class="flex flex-col">
                 <button
-                    v-for="(label, value) in humanReadableParticipationStatus"
-                    :key="value"
-                    @click="selectStatus(value as ParticipationStatus)"
-                    :class="[
-          'px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer',
-          selectedStatus === value && 'bg-accent'
-        ]"
+                  v-for="(label, value) in humanReadableParticipationStatus"
+                  :key="value"
+                  :class="[
+                    'px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer',
+                    selectedStatus === value && 'bg-accent',
+                  ]"
+                  @click="selectStatus(value as ParticipationStatus)"
                 >
                   {{ label }}
                 </button>
@@ -41,7 +44,7 @@
             Edit
           </Button>
           <div v-else class="flex gap-2">
-            <Button size="sm" @click="saveChanges" :disabled="isSaving">
+            <Button size="sm" :disabled="isSaving" @click="saveChanges">
               {{ isSaving ? "Saving..." : "Save" }}
             </Button>
             <Button variant="outline" size="sm" @click="cancelEditing">
@@ -181,7 +184,7 @@ import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
 import {
   useSpeakerParticipationMutation,
-  useSpeakerParticipationStatusMutation
+  useSpeakerParticipationStatusMutation,
 } from "@/mutations/speakers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -193,12 +196,17 @@ import type {
   UpdateSpeakerParticipationData,
 } from "@/dto/speakers";
 import {
-  humanReadableParticipationStatus, type ParticipationStatus,
+  humanReadableParticipationStatus,
+  type ParticipationStatus,
   participationStatusColor,
 } from "@/dto";
 import Image from "../Image.vue";
 import { ChevronDown } from "lucide-vue-next";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface Props {
   participation: SpeakerParticipation;
@@ -270,7 +278,6 @@ const saveChanges = async () => {
     isSaving.value = false;
   }
 };
-
 
 const selectStatus = (status: ParticipationStatus) => {
   selectedStatus.value = status;

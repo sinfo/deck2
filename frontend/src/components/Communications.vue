@@ -220,20 +220,20 @@
         <div class="flex flex-col sm:flex-row gap-2">
           <div class="flex-1">
             <Textarea
-              :disabled="selectedEventId !== latestEvent?.id"
               v-model="newMessage"
+              :disabled="selectedEventId !== latestEvent?.id"
               placeholder="Type your message..."
               class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px]"
               @keydown.enter.ctrl="sendMessage"
               @keydown.enter.meta="sendMessage"
               @input="
+                // eslint-disable-next-line vue/no-mutating-props
                 postThreadMutation && (postThreadMutation.error.value = null)
               "
             />
           </div>
           <div class="flex sm:flex-col gap-2">
             <Button
-              @click="sendMessage"
               :disabled="
                 selectedEventId !== latestEvent?.id ||
                 !newMessage.trim() ||
@@ -241,12 +241,13 @@
               "
               size="sm"
               class="px-3 flex-1 sm:flex-none"
+              @click="sendMessage"
             >
               {{ postThreadMutation?.isLoading.value ? "Sending..." : "Send" }}
             </Button>
             <select
-              :disabled="selectedEventId !== latestEvent?.id"
               v-model="messageKind"
+              :disabled="selectedEventId !== latestEvent?.id"
               class="text-xs border rounded px-2 py-1 flex-1 sm:flex-none"
             >
               <option :value="ThreadKind.ThreadKindTo">Outgoing</option>
@@ -278,7 +279,10 @@ import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
 import { ThreadKind, ThreadStatus } from "@/dto/threads";
-import type { ParticipationCommunications, ThreadWithEntry } from "@/dto/threads";
+import type {
+  ParticipationCommunications,
+  ThreadWithEntry,
+} from "@/dto/threads";
 import type { Speaker } from "@/dto/speakers";
 import type { Company } from "@/dto/companies";
 import type { Member } from "@/dto/members";
@@ -321,7 +325,7 @@ interface CommunicationsProps {
   fetchCommunications: (
     id: string,
   ) => Promise<{ data: ParticipationCommunications[] }>;
-  postThreadMutation?: any;
+  postThreadMutation?: unknown;
 }
 
 type Author = Member | Speaker | Company;
@@ -329,6 +333,8 @@ type Author = Member | Speaker | Company;
 const props = withDefaults(defineProps<CommunicationsProps>(), {
   canSendMessages: false,
   templates: () => [],
+  participations: () => [],
+  postThreadMutation: undefined,
 });
 
 const newMessage = ref("");
@@ -363,7 +369,6 @@ const { data: membersData } = useQuery({
   key: () => ["members"],
   query: () => getAllMembers(),
 });
-
 
 // Computed property to get events with participations
 const availableEvents = computed(() => {
@@ -612,6 +617,7 @@ const sendMessage = async () => {
 
   try {
     // Set the thread data for the mutation
+    // eslint-disable-next-line vue/no-mutating-props
     props.postThreadMutation.threadData.value = {
       text: newMessage.value,
       kind: messageKind.value,

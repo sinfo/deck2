@@ -76,8 +76,8 @@ const processEmail = <T extends BulkEmailEntity>(
     };
   }
 
-  let status: ProcessedEmailStatus[] = [];
-  let errors: string[] = [];
+  const status: ProcessedEmailStatus[] = [];
+  const errors: string[] = [];
 
   // Email address
   if (!email?.address) {
@@ -225,7 +225,7 @@ export const useBulkEmails = <T extends BulkEmailEntity>(
   const processBulkEmails = async (
     templateCategory: EmailTemplateCategory,
     statuses: ParticipationStatus[],
-    entities: T[],
+    entities: BulkEmailEntity[],
   ): Promise<BulkEmailProcessResult<T>> => {
     isProcessing.value = true;
     processedCount.value = 0;

@@ -36,8 +36,10 @@ export interface Speaker {
   participations: SpeakerParticipation[];
 }
 
-export const isSpeaker = (entity: any): entity is Speaker => {
-  return "companyName" in entity;
+export const isSpeaker = (entity: unknown): entity is Speaker => {
+  return (
+    typeof entity === "object" && entity !== null && "companyName" in entity
+  );
 };
 
 export interface SpeakerWithContactObject extends Speaker {

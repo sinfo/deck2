@@ -3,7 +3,7 @@
     <!-- Form Content - Scrollable -->
     <div class="flex-1 space-y-6">
       <!-- Name Field -->
-      <div class="space-y-2" v-if="!withoutName">
+      <div v-if="!withoutName" class="space-y-2">
         <Label for="name" class="text-sm font-medium">Name *</Label>
         <Input
           id="name"
@@ -64,9 +64,9 @@
             <Button
               variant="ghost"
               size="sm"
-              @click="addEmail"
               :disabled="isLoading"
               class="h-8 px-2 text-xs"
+              @click="addEmail"
             >
               + Add Email
             </Button>
@@ -101,9 +101,9 @@
                   v-if="formData.contact.mails.length > 1"
                   variant="ghost"
                   size="sm"
-                  @click="removeEmail(index)"
                   :disabled="isLoading"
                   class="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                  @click="removeEmail(index)"
                 >
                   ×
                 </Button>
@@ -119,9 +119,9 @@
             <Button
               variant="ghost"
               size="sm"
-              @click="addPhone"
               :disabled="isLoading"
               class="h-8 px-2 text-xs"
+              @click="addPhone"
             >
               + Add Phone
             </Button>
@@ -144,9 +144,9 @@
                 v-if="formData.contact.phones.length > 1"
                 variant="ghost"
                 size="sm"
-                @click="removePhone(index)"
                 :disabled="isLoading"
                 class="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                @click="removePhone(index)"
               >
                 ×
               </Button>
@@ -230,9 +230,9 @@
           <Button
             variant="ghost"
             size="sm"
-            @click="showMoreSocials = !showMoreSocials"
             :disabled="isLoading"
             class="h-8 px-2 text-xs text-muted-foreground"
+            @click="showMoreSocials = !showMoreSocials"
           >
             {{ showMoreSocials ? "- Less" : "+ More" }} social platforms
           </Button>
@@ -257,12 +257,12 @@
         <div class="flex gap-3">
           <Button
             variant="outline"
-            @click="$emit('cancel')"
             :disabled="isLoading"
+            @click="$emit('cancel')"
           >
             Cancel
           </Button>
-          <Button @click="handleSubmit" :disabled="isLoading || !isValid">
+          <Button :disabled="isLoading || !isValid" @click="handleSubmit">
             {{
               isLoading
                 ? mode === "edit"
@@ -300,6 +300,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "create",
+  initialData: undefined,
 });
 
 const emit = defineEmits<{
@@ -396,6 +397,7 @@ const handleSubmit = () => {
       mails: formData.contact.mails.filter((mail) => mail.mail.trim()),
       phones: formData.contact.phones.filter((phone) => phone.phone.trim()),
       socials: Object.fromEntries(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         Object.entries(formData.contact.socials).filter(([_, value]) =>
           value?.trim(),
         ),

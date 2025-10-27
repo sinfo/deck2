@@ -4,9 +4,9 @@
     :image="company.imgs?.internal || company.imgs?.public"
     :title="company.name"
     :current-status="company.participation?.status"
-    @status-change="updateCompanyStatus(company, $event)"
     :badge="company.participation?.partner ? 'Partner' : ''"
     :to="{ name: 'company', params: { companyId: company.id } }"
+    @status-change="updateCompanyStatus(company, $event)"
   />
 </template>
 
