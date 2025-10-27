@@ -194,7 +194,7 @@ func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data Creat
 		return
 	}
 
-	notification, err = n.GetNotification(insertResult.InsertedID.(primitive.ObjectID))
+	_, err = n.GetNotification(insertResult.InsertedID.(primitive.ObjectID))
 	if err != nil {
 		log.Println("unable to retrieve created notification: ", err.Error())
 		return
@@ -229,6 +229,16 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 		return nil, err
 	}
 
+	type savedNotif struct {
+		notifMap  map[string]interface{}
+		speakerID *primitive.ObjectID
+		companyID *primitive.ObjectID
+	}
+
+	var saved = make([]savedNotif, 0)
+	speakerSet := make(map[primitive.ObjectID]struct{})
+	companySet := make(map[primitive.ObjectID]struct{})
+
 	for cur.Next(ctx) {
 
 		// decode into models.Notification first
@@ -261,27 +271,81 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 			notifMap["session"] = notification.Session.Hex()
 		}
 
-		// Try to embed the speaker object if present
+		var sID *primitive.ObjectID
+		var cID *primitive.ObjectID
+
 		if notification.Speaker != nil {
-			if sp, err := Speakers.GetSpeaker(*notification.Speaker); err == nil {
-				// embed full speaker object
-				notifMap["speaker"] = sp
-			} else {
-				// fallback to id
-				notifMap["speaker"] = notification.Speaker.Hex()
-			}
+			sID = notification.Speaker
+			// tentatively store the hex (fallback) until we embed
+			notifMap["speaker"] = notification.Speaker.Hex()
+			speakerSet[*sID] = struct{}{}
 		}
 
-		// Try to embed the company object if present
 		if notification.Company != nil {
-			if co, err := Companies.GetCompany(*notification.Company); err == nil {
-				notifMap["company"] = co
-			} else {
-				notifMap["company"] = notification.Company.Hex()
+			cID = notification.Company
+			notifMap["company"] = notification.Company.Hex()
+			companySet[*cID] = struct{}{}
+		}
+
+		saved = append(saved, savedNotif{notifMap: notifMap, speakerID: sID, companyID: cID})
+	}
+
+	// If we encountered speaker or company IDs, fetch them in batch and embed
+	var speakersByID = make(map[primitive.ObjectID]*models.Speaker)
+	var companiesByID = make(map[primitive.ObjectID]*models.Company)
+
+	if len(speakerSet) > 0 {
+		ids := make([]primitive.ObjectID, 0, len(speakerSet))
+		for id := range speakerSet {
+			ids = append(ids, id)
+		}
+
+		// batch find speakers
+		spCur, err := Speakers.Collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
+		if err == nil {
+			for spCur.Next(ctx) {
+				var sp models.Speaker
+				if err := spCur.Decode(&sp); err == nil {
+					speakersByID[sp.ID] = &sp
+				}
+			}
+			spCur.Close(ctx)
+		}
+	}
+
+	if len(companySet) > 0 {
+		ids := make([]primitive.ObjectID, 0, len(companySet))
+		for id := range companySet {
+			ids = append(ids, id)
+		}
+
+		// batch find companies
+		coCur, err := Companies.Collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
+		if err == nil {
+			for coCur.Next(ctx) {
+				var co models.Company
+				if err := coCur.Decode(&co); err == nil {
+					companiesByID[co.ID] = &co
+				}
+			}
+			coCur.Close(ctx)
+		}
+	}
+
+	// build final notifications embedding the fetched objects when available
+	for _, s := range saved {
+		if s.speakerID != nil {
+			if sp, ok := speakersByID[*s.speakerID]; ok {
+				s.notifMap["speaker"] = sp
+			}
+		}
+		if s.companyID != nil {
+			if co, ok := companiesByID[*s.companyID]; ok {
+				s.notifMap["company"] = co
 			}
 		}
 
-		notifications = append(notifications, notifMap)
+		notifications = append(notifications, s.notifMap)
 	}
 
 	if err := cur.Err(); err != nil {
