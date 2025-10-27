@@ -77,6 +77,9 @@ func InitializeSpaces() {
 	for _, cdn := range cdns {
 		if strings.Contains(cdn.Origin, name) {
 			cdnBaseURL = cdn.CustomDomain
+			if cdnBaseURL == "" {
+				cdnBaseURL = cdn.Endpoint
+			}
 			endpoint = cdn.Origin[len(name)+1:]
 		}
 	}
