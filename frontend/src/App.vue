@@ -13,7 +13,7 @@
 import { PiniaColadaDevtools } from "@pinia/colada-devtools";
 import { useAuthStore } from "@/stores/auth";
 
-const authStore = useAuthStore();
+const authStore =    useAuthStore();
 
 // Initialize authentication on app start
 authStore.initialize();
