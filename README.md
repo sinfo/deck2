@@ -8,4 +8,4 @@ Version 2 of eventdeck
 
 ## Documentation
 
-- swagger: http://petstore.swagger.io/?url=http%3A%2F%2Flocalhost%3A8080%2Fstatic%2Fswagger.json#/auth/authCallback
+- swagger: make run-doc
