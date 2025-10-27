@@ -185,7 +185,7 @@ watch(shortcutLinux, () => {
                 </div>
                 <div>
                   <button class="text-red-500 text-sm" @click.stop.prevent="notificationsStore.remove(n.id)">
-                  <Trash size="16" />
+                  <Trash :size="16" />
                   </button>
                 </div>
                 </li>

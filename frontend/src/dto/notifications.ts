@@ -34,6 +34,6 @@ export interface Notification {
 }
 
 export interface EnrichedNotification extends Notification {
-  actor: any; // populated user who triggered the notification
-  message: string; // short human-readable message
+  actor?: any; // populated user who triggered the notification
+  message?: string; // short human-readable message
 }

@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { getMyNotifications, deleteMyNotification } from '@/api/notifications';
-import type { Notification } from '@/dto/notifications';
+import type { EnrichedNotification } from '@/dto/notifications';
 import { getSpeakerById } from '@/api/speakers';
 import { getCompanyById } from '@/api/companies';
 
 export const useNotificationsStore = defineStore('notifications', () => {
-  const items = ref<Notification[]>([]);
+  const items = ref<EnrichedNotification[]>([]);
   const loading = ref(false);
 
   const fetch = async () => {
