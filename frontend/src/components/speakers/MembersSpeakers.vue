@@ -4,6 +4,8 @@
     <CreateSpeakerDialogTrigger />
   </div>
 
+  <ParticipationChip v-model:selected="selectedStatus" />
+
   <div
     v-if="!membersSorted.length && speakersLoading"
     class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
@@ -28,7 +30,7 @@
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
       >
         <SpeakerWorkflowCard
-          v-for="speaker in participations?.get(item.id) || []"
+          v-for="speaker in participationsFiltered?.get(item.id) || []"
           :key="speaker.id"
           :speaker="speaker"
         />
@@ -38,7 +40,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
 import type { Member } from "@/dto/members";
 import MemberWithAvatar from "@/components/members/MemberWithAvatar.vue";
 import { DynamicScroller } from "vue-virtual-scroller";
@@ -47,6 +48,10 @@ import { useInsertionSort, useSortByParticipationStatus } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import SpeakerWorkflowCard from "../cards/SpeakerWorkflowCard.vue";
 import CreateSpeakerDialogTrigger from "./CreateSpeakerDialogTrigger.vue";
+import ParticipationChip from "@/components/ParticipationChip.vue";
+import { ref, computed, type ComputedRef } from "vue";
+import { useParticipationFilter } from "@/composables/useParticipationFilter";
+import type { ParticipationStatus } from "@/dto";
 
 const props = defineProps<{
   speakers: Speaker[];
@@ -95,5 +100,12 @@ const participations = computed(() =>
 
     return acc;
   }, new Map<string, SpeakerWithParticipation[]>()),
+);
+
+const selectedStatus = ref<ParticipationStatus | null>(null);
+
+const participationsFiltered = useParticipationFilter<SpeakerWithParticipation>(
+  participations as ComputedRef<Map<string, SpeakerWithParticipation[]>>,
+  selectedStatus,
 );
 </script>
