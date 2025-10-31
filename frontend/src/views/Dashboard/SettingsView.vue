@@ -368,17 +368,9 @@ const isEditingContacts = ref(false);
 
 const previewImageUrl = ref<string | null>(null);
 
-const profileImageUrl = computed(() => {
-  if (previewImageUrl.value) return previewImageUrl.value;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const u = user.value as any;
-  return (
-    u?.data?.img ||
-    u?.data?.imgs?.public ||
-    u?.data?.contactObject?.image ||
-    "/src/assets/noImage.png"
-  );
-});
+const profileImageUrl = computed(
+  () => previewImageUrl.value || user.value?.data.img,
+);
 
 onUnmounted(() => {
   if (previewImageUrl.value) {
@@ -407,25 +399,32 @@ const uploadImageMutation = useUploadImageMutation();
 const isSaving = updateContactMutation.isLoading;
 const isUploadingImage = uploadImageMutation.isLoading;
 
-const triggerFileInput = () => {
-  fileInput.value?.click();
+const triggerFileInput = () => fileInput.value?.click();
+
+const setPreviewImageUrl = (file?: File) => {
+  if (previewImageUrl.value) {
+    try {
+      URL.revokeObjectURL(previewImageUrl.value);
+    } catch {
+      /* ignore */
+    }
+    previewImageUrl.value = null;
+  }
+
+  if (!file) {
+    uploadImageMutation.file.value = undefined;
+    return;
+  }
+
+  uploadImageMutation.file.value = file;
+  previewImageUrl.value = URL.createObjectURL(file);
 };
 
 const handleImageUpload = (ev: Event) => {
   const input = ev.target as HTMLInputElement;
   const f = input.files && input.files[0];
   if (!f) return;
-  // set preview
-  try {
-    if (previewImageUrl.value) {
-      URL.revokeObjectURL(previewImageUrl.value);
-    }
-  } catch {
-    /* ignore */
-  }
-  previewImageUrl.value = URL.createObjectURL(f);
-  // store file in upload mutation
-  uploadImageMutation.file.value = f;
+  setPreviewImageUrl(f);
 };
 
 const cancelProfileEdit = () => {
@@ -452,7 +451,7 @@ const updateProfileChanges = async () => {
   }
   // after upload (or if none), close edit mode — `useUploadImageMutation` invalidates the `me` query on settled
   isEditingProfile.value = false;
-  previewImageUrl.value = null;
+  setPreviewImageUrl();
   if (fileInput.value) fileInput.value.value = "";
 };
 
