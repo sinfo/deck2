@@ -24,8 +24,8 @@ type Member struct {
 	SINFOID string `json:"sinfoid" bson:"sinfoid"`
 
 	// Contact is an _id of Contact (see models.Contact).
-	Contact primitive.ObjectID `json:"contact" bson:"contact"`
-	ContactObject *Contact `json:"contactObject,omitempty" bson:"-"`
+	Contact       primitive.ObjectID `json:"contact" bson:"contact"`
+	ContactObject *Contact           `json:"contactObject,omitempty" bson:"-"`
 }
 
 // MemberPublic is the public information about a member
@@ -37,6 +37,14 @@ type MemberPublic struct {
 	Image string `json:"img" bson:"img"`
 
 	Socials ContactSocials `json:"socials"`
+
+	// Team is the name of the team this member belongs to for the
+	// event being queried (when available). Omitted when not set.
+	Team string `json:"team,omitempty" bson:"-"`
+
+	// SinfoEmail is the member's full SINFO email (e.g. john.doe@sinfo.org).
+	// This is derived from the Member.SINFOID value.
+	SinfoEmail string `json:"sinfo_email,omitempty" bson:"-"`
 }
 
 type AuthorizationCredentials struct {
