@@ -7,3 +7,7 @@ export interface Post {
   posted: string;
   updated?: string;
 }
+
+export interface UpdatePostData {
+  text: string;
+}
