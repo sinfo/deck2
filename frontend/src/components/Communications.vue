@@ -5,7 +5,7 @@
         class="flex flex-col sm:flex-row sm:items-center justify-between gap-2"
       >
         <div class="flex-1">
-          <CardTitle class="text-base sm:text-lg"> Communications </CardTitle>
+          <CardTitle class="text-base sm:text-lg"> Communications</CardTitle>
           <CardDescription class="text-sm">
             {{ description }}
           </CardDescription>
@@ -167,7 +167,7 @@
                 <span>{{ formatDate(thread.posted) }}</span>
               </div>
 
-              <!-- EDIT MODE -->
+              <!-- Edit mode -->
               <div
                 v-if="editingThreadId === thread.id"
                 class="text-sm space-y-2"
@@ -181,6 +181,7 @@
                   <Button
                     variant="outline"
                     size="sm"
+                    class="text-primary"
                     :disabled="updatePostMutation?.isLoading?.value"
                     @click="cancelEdit"
                   >
@@ -188,6 +189,7 @@
                   </Button>
                   <Button
                     size="sm"
+                    class="border border-white"
                     :disabled="
                       !editText.trim() || updatePostMutation?.isLoading?.value
                     "
@@ -249,10 +251,15 @@
               </div>
             </div>
 
-            <!-- Actions BELOW the bubble (light gray pencil; reveal on hover) -->
+            <!-- Actions -->
             <div
               v-if="canEdit(thread)"
-              class="mt-1 opacity-0 group-hover/message:opacity-100 transition-opacity"
+              :class="[
+                'mt-1 transition-opacity',
+                editingThreadId === thread.id
+                  ? 'opacity-100'
+                  : 'opacity-0 group-hover/message:opacity-100',
+              ]"
             >
               <button
                 class="p-1 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/10 text-muted-foreground hover:opacity-80"
@@ -416,10 +423,7 @@ const editingThreadId = ref<string | null>(null);
 const editingPostId = ref<string | null>(null);
 const editText = ref("");
 
-const updatePostMutation = useUpdatePostMutation(() => [
-  `${props.entityType}-communications`,
-  props.entity.id,
-]);
+const updatePostMutation = useUpdatePostMutation();
 
 const scrollToBottom = () => {
   nextTick(() => {
