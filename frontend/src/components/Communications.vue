@@ -128,77 +128,140 @@
 
           <div
             :class="[
-              'max-w-[85%] sm:max-w-[80%] rounded-lg p-2 sm:p-3 space-y-2',
-              thread.kind === ThreadKind.ThreadKindPhoneCall
-                ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                : getMessageDirection(thread.kind) === 'outgoing'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted',
+              'max-w-[85%] sm:max-w-[80%] flex flex-col group/message',
+              getMessageDirection(thread.kind) === 'outgoing'
+                ? 'items-end'
+                : 'items-start',
             ]"
           >
-            <!-- Message header -->
-            <div class="flex items-center gap-2 text-xs opacity-75">
-              <div class="flex items-center gap-1">
-                <div
-                  :class="['w-2 h-2 rounded-full', getKindColor(thread.kind)]"
-                ></div>
-                <span>{{ getKindLabel(thread.kind) }}</span>
+            <!-- Bubble skin -->
+            <div
+              :class="[
+                'w-full rounded-lg p-2 sm:p-3 space-y-2',
+                thread.kind === ThreadKind.ThreadKindPhoneCall
+                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                  : getMessageDirection(thread.kind) === 'outgoing'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted',
+              ]"
+            >
+              <!-- Message header -->
+              <div class="flex items-center gap-2 text-xs opacity-75">
+                <div class="flex items-center gap-1">
+                  <div
+                    :class="['w-2 h-2 rounded-full', getKindColor(thread.kind)]"
+                  ></div>
+                  <span>{{ getKindLabel(thread.kind) }}</span>
+                </div>
+
+                <div class="flex items-center gap-1">
+                  <div
+                    :class="[
+                      'w-2 h-2 rounded-full',
+                      getStatusColor(thread.status),
+                    ]"
+                  ></div>
+                  <span>{{ getStatusLabel(thread.status) }}</span>
+                </div>
+
+                <span>{{ formatDate(thread.posted) }}</span>
               </div>
 
-              <div class="flex items-center gap-1">
-                <div
-                  :class="[
-                    'w-2 h-2 rounded-full',
-                    getStatusColor(thread.status),
-                  ]"
-                ></div>
-                <span>{{ getStatusLabel(thread.status) }}</span>
-              </div>
-
-              <span>{{ formatDate(thread.posted) }}</span>
-            </div>
-
-            <!-- Message content -->
-            <div v-if="thread.entry" class="text-sm">
-              <div class="whitespace-pre-wrap">{{ thread.entry.text }}</div>
+              <!-- EDIT MODE -->
               <div
-                v-if="
-                  thread.entry.updated &&
-                  thread.entry.updated !== thread.entry.posted
-                "
-                class="text-xs opacity-60 mt-1"
+                v-if="editingThreadId === thread.id"
+                class="text-sm space-y-2"
               >
-                Edited {{ formatDate(thread.entry.updated) }}
+                <Textarea
+                  v-model="editText"
+                  class="w-full resize-none min-h-[60px] max-h-[160px]"
+                  :disabled="updatePostMutation?.isLoading?.value"
+                />
+                <div class="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    :disabled="updatePostMutation?.isLoading?.value"
+                    @click="cancelEdit"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    :disabled="
+                      !editText.trim() || updatePostMutation?.isLoading?.value
+                    "
+                    @click="saveEdit"
+                  >
+                    {{
+                      updatePostMutation?.isLoading?.value
+                        ? "Saving..."
+                        : "Save"
+                    }}
+                  </Button>
+                </div>
+              </div>
+
+              <!-- VIEW MODE -->
+              <div v-else>
+                <!-- Message content -->
+                <div v-if="thread.entry" class="text-sm">
+                  <div class="whitespace-pre-wrap">{{ thread.entry.text }}</div>
+                  <div
+                    v-if="
+                      thread.entry.updated &&
+                      thread.entry.updated !== thread.entry.posted
+                    "
+                    class="text-xs opacity-60 mt-1"
+                  >
+                    Edited {{ formatDate(thread.entry.updated) }}
+                  </div>
+                </div>
+
+                <!-- Phone call indicator -->
+                <div
+                  v-else-if="thread.kind === ThreadKind.ThreadKindPhoneCall"
+                  class="text-sm italic flex items-center justify-center gap-2"
+                >
+                  <span class="text-lg">📞</span>
+                  <span>Phone call</span>
+                </div>
+
+                <!-- Meeting indicator -->
+                <div v-else-if="thread.meeting" class="text-sm italic">
+                  📅 Meeting scheduled
+                </div>
+
+                <!-- No content fallback -->
+                <div v-else class="text-sm italic opacity-60">
+                  No message content
+                </div>
+              </div>
+
+              <!-- Comments indicator -->
+              <div
+                v-if="thread.comments.length > 0"
+                class="text-xs opacity-75 border-t pt-2"
+              >
+                💬 {{ thread.comments.length }} comment{{
+                  thread.comments.length === 1 ? "" : "s"
+                }}
               </div>
             </div>
 
-            <!-- Phone call indicator -->
+            <!-- Actions BELOW the bubble (light gray pencil; reveal on hover) -->
             <div
-              v-else-if="thread.kind === ThreadKind.ThreadKindPhoneCall"
-              class="text-sm italic flex items-center justify-center gap-2"
+              v-if="canEdit(thread)"
+              class="mt-1 opacity-0 group-hover/message:opacity-100 transition-opacity"
             >
-              <span class="text-lg">📞</span>
-              <span>Phone call</span>
-            </div>
-
-            <!-- Meeting indicator -->
-            <div v-else-if="thread.meeting" class="text-sm italic">
-              📅 Meeting scheduled
-            </div>
-
-            <!-- No content fallback -->
-            <div v-else class="text-sm italic opacity-60">
-              No message content
-            </div>
-
-            <!-- Comments indicator -->
-            <div
-              v-if="thread.comments.length > 0"
-              class="text-xs opacity-75 border-t pt-2"
-            >
-              💬 {{ thread.comments.length }} comment{{
-                thread.comments.length === 1 ? "" : "s"
-              }}
+              <button
+                class="p-1 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/10 text-muted-foreground hover:opacity-80"
+                title="Edit"
+                aria-label="Edit message"
+                @click="startEdit(thread)"
+              >
+                <Pencil :size="16" :stroke-width="2" class="align-middle" />
+              </button>
             </div>
           </div>
         </div>
@@ -309,6 +372,8 @@ import {
 } from "@/lib/templates";
 import type { Event } from "@/dto/events";
 import Textarea from "./ui/textarea/Textarea.vue";
+import { useUpdatePostMutation } from "@/mutations/posts.ts";
+import { Pencil } from "lucide-vue-next";
 
 interface TemplateWithVariables {
   template: EmailTemplate;
@@ -347,7 +412,15 @@ const selectedEventId = ref<number | null>(
 );
 const selectedTemplate = ref<TemplateWithVariables>();
 
-// Function to scroll to bottom of messages with smooth animation
+const editingThreadId = ref<string | null>(null);
+const editingPostId = ref<string | null>(null);
+const editText = ref("");
+
+const updatePostMutation = useUpdatePostMutation(() => [
+  `${props.entityType}-communications`,
+  props.entity.id,
+]);
+
 const scrollToBottom = () => {
   nextTick(() => {
     if (messagesContainer.value) {
@@ -388,7 +461,6 @@ const availableEvents = computed(() => {
     }));
 });
 
-// Computed property to get members by ID
 const membersById = computed(() => {
   if (!membersData.value?.data) return new Map();
 
@@ -408,15 +480,54 @@ const {
   query: () => props.fetchCommunications(props.entity.id).then((it) => it.data),
 });
 
-const sortedCommunications = computed(() => {
+const sortedCommunications = computed<ThreadWithEntry[]>(() => {
   if (!communicationsData.value) return [];
   return [...communicationsData.value]
     .filter((it) => it.event === selectedEventId.value)
     .flatMap((it) => it.communications)
     .sort(
       (a, b) => new Date(a.posted).getTime() - new Date(b.posted).getTime(),
-    );
+    ) as ThreadWithEntry[];
 });
+
+const canEdit = (thread: ThreadWithEntry) =>
+  getMessageDirection(thread.kind) === "outgoing" && !!thread.entry;
+
+const startEdit = (thread: ThreadWithEntry) => {
+  if (!canEdit(thread) || !thread.entry) return;
+
+  editingThreadId.value = thread.id;
+  editingPostId.value = thread.entry.id;
+
+  editText.value = thread.entry.text ?? "";
+};
+
+const cancelEdit = () => {
+  editingThreadId.value = null;
+  editingPostId.value = null;
+  editText.value = "";
+};
+
+const saveEdit = async () => {
+  const id = editingPostId.value;
+  const text = editText.value.trim();
+  if (!id || !text) return;
+
+  updatePostMutation.postId.value = id;
+  updatePostMutation.text.value = text;
+
+  try {
+    updatePostMutation.mutate();
+  } catch (e) {
+    console.error("Edit failed:", e);
+    return;
+  } finally {
+    editingThreadId.value = null;
+    editingPostId.value = null;
+    editText.value = "";
+    scrollToBottom();
+  }
+};
 
 // Watch for changes in communications and scroll to bottom
 watch(
@@ -617,21 +728,17 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() || !props.postThreadMutation) return;
 
   try {
-    // Set the thread data for the mutation
     // eslint-disable-next-line vue/no-mutating-props
     props.postThreadMutation.threadData.value = {
       text: newMessage.value,
       kind: messageKind.value,
     };
 
-    // Execute the mutation
     await props.postThreadMutation.mutate();
 
-    // Clear the message input on success
     newMessage.value = "";
     selectedTemplate.value = undefined;
 
-    // Scroll to bottom after sending message
     scrollToBottom();
   } catch (error) {
     console.error("Failed to send message:", error);
