@@ -51,7 +51,6 @@ const (
 	keyPort string = "PORT"
 
 	keyDatabaseURI  string = "DB_URL"
-	deckDbURL string = "DECK_DB_URL"
 	keyDatabaseName string = "DB_NAME"
 	keyCallbackURL  string = "CALLBACK_URL"
 
@@ -67,6 +66,7 @@ const (
 	keySpacesKey    string = "DO_SPACES_KEY"
 
 	keyAuthRedirectionURL string = "AUTH_REDIRECTION_URL"
+	keyProduction         string = "PRODUCTION"
 )
 
 func set(variable *string, key string, mandatory bool) {
@@ -75,7 +75,17 @@ func set(variable *string, key string, mandatory bool) {
 	} else if viper.IsSet(key) {
 		*variable = viper.GetString(key)
 	} else if mandatory {
-		log.Fatal(fmt.Sprintf("%s", key) + " not set")
+		log.Fatalf("%s not set", key)
+	}
+}
+
+func setBool(variable *bool, key string, mandatory bool) {
+	if viper.IsSet(keyPrefix + "_" + key) {
+		*variable = viper.GetBool(keyPrefix + "_" + key)
+	} else if viper.IsSet(key) {
+		*variable = viper.GetBool(key)
+	} else if mandatory {
+		log.Fatalf("%s not set", key)
 	}
 }
 
@@ -89,13 +99,13 @@ func InitializeConfig(filename *string) {
 
 	if file {
 		if err := godotenv.Load(*filename); err != nil {
-            fmt.Printf("Error loading .env file: %v\n", err)
-        }
+			fmt.Printf("Error loading .env file: %v\n", err)
+		}
 	}
 
 	viper.SetEnvPrefix(keyPrefix)
 	viper.AutomaticEnv()
-	
+
 	set(&Host, keyHost, false)
 	set(&Port, keyPort, false)
 
@@ -116,6 +126,8 @@ func InitializeConfig(filename *string) {
 
 	set(&AuthRedirectionURL, keyAuthRedirectionURL, true)
 
+	// Load boolean flags from env
+	setBool(&Production, keyProduction, false)
 }
 
 func SetTestingEnv() {
