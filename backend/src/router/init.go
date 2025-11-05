@@ -114,11 +114,7 @@ func InitializeRouter() {
 
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	var allowedOrigins handlers.CORSOption
-	if config.Production {
-		allowedOrigins = handlers.AllowedOrigins([]string{"*sinfo.org"})
-	} else {
-		allowedOrigins = handlers.AllowedOrigins([]string{"*"})
-	}
+	allowedOrigins = handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 
 	authMember = checkAccessLevelWrapper(models.RoleMember)
