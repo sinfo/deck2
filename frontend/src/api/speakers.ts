@@ -10,7 +10,6 @@ import { instance } from ".";
 import {
   type ParticipationCommunications,
   type CreateThread,
-  type ThreadWithEntry,
 } from "@/dto/threads";
 
 export const getAllSpeakers = (filter: AllSpeakersFilter) =>
@@ -37,7 +36,7 @@ export const getSpeakerCommunications = (id: string) =>
   instance.get<ParticipationCommunications[]>(`/speakers/${id}/threads`);
 
 export const postSpeakerThread = (id: string, data: CreateThread) =>
-  instance.post<ThreadWithEntry>(`/speakers/${id}/thread`, data);
+  instance.post<Speaker>(`/speakers/${id}/thread`, data);
 
 export const createSpeakerParticipation = (id: string) =>
   instance.post(`/speakers/${id}/participation`);
