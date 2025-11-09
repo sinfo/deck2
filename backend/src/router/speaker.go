@@ -3,6 +3,7 @@ package router
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,7 +17,9 @@ import (
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/spaces"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func getSpeaker(w http.ResponseWriter, r *http.Request) {
@@ -27,13 +30,13 @@ func getSpeaker(w http.ResponseWriter, r *http.Request) {
 	speaker, err := mongodb.Speakers.GetSpeaker(speakerID)
 
 	if err != nil {
-		http.Error(w, "Unable to get speaker: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Unable to get speaker: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	contact, err := mongodb.Contacts.GetContact(*speaker.Contact)
 	if err != nil {
-		http.Error(w, "Unable to get contact: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Unable to get contact: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -49,7 +52,7 @@ func deleteSpeaker(w http.ResponseWriter, r *http.Request) {
 
 	deletedSpeaker, err := mongodb.Speakers.DeleteSpeaker(speakerID)
 	if err != nil {
-		http.Error(w, "Error deleting speaker: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Error deleting speaker: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -64,7 +67,7 @@ func getSpeakerPublic(w http.ResponseWriter, r *http.Request) {
 	speaker, err := mongodb.Speakers.GetSpeakerPublic(speakerID)
 
 	if err != nil {
-		http.Error(w, "Unable to get speaker: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Unable to get speaker: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -86,7 +89,7 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
 		if err != nil {
-			http.Error(w, "Invalid event ID format: " + err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid event ID format: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.EventID = &eventID
@@ -95,7 +98,7 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 	if len(member) > 0 {
 		memberID, err := primitive.ObjectIDFromHex(member)
 		if err != nil {
-			http.Error(w, "Invalid member ID format: " + err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid member ID format: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.MemberID = &memberID
@@ -108,7 +111,7 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 	if len(numRequests) > 0 {
 		numReq, err := strconv.ParseInt(numRequests, 10, 64)
 		if err != nil {
-			http.Error(w, "Number of Requests: Invalid Speaker ID format: " + err.Error(), http.StatusBadRequest)
+			http.Error(w, "Number of Requests: Invalid Speaker ID format: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.NumRequests = &numReq
@@ -117,7 +120,7 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 	if len(maxSpeaksInRequest) > 0 {
 		maxSpeaks, err := strconv.ParseInt(maxSpeaksInRequest, 10, 64)
 		if err != nil {
-			http.Error(w, "Max Speakers in Request: Invalid number format: " + err.Error(), http.StatusBadRequest)
+			http.Error(w, "Max Speakers in Request: Invalid number format: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.MaxSpeaksInRequest = &maxSpeaks
@@ -130,7 +133,7 @@ func getSpeakers(w http.ResponseWriter, r *http.Request) {
 	speakers, err := mongodb.Speakers.GetSpeakers(options)
 
 	if err != nil {
-		http.Error(w, "Unable to get speakers: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to get speakers: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -148,7 +151,7 @@ func getSpeakersPublic(w http.ResponseWriter, r *http.Request) {
 	if len(event) > 0 {
 		eventID, err := strconv.Atoi(event)
 		if err != nil {
-			http.Error(w, "Invalid event ID format: " + err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid event ID format: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 		options.EventID = &eventID
@@ -161,7 +164,7 @@ func getSpeakersPublic(w http.ResponseWriter, r *http.Request) {
 	publicSpeakers, err := mongodb.Speakers.GetPublicSpeakers(options)
 
 	if err != nil {
-		http.Error(w, "Unable to make query do database: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to make query do database: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -175,14 +178,14 @@ func createSpeaker(w http.ResponseWriter, r *http.Request) {
 	var cpd = &mongodb.CreateSpeakerData{}
 
 	if err := cpd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newSpeaker, err := mongodb.Speakers.CreateSpeaker(*cpd)
 
 	if err != nil {
-		http.Error(w, "Could not create speaker: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not create speaker: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -205,21 +208,21 @@ func updateSpeaker(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var usd = &mongodb.UpdateSpeakerData{}
 
 	if err := usd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedSpeaker, err := mongodb.Speakers.UpdateSpeaker(speakerID, *usd)
 
 	if err != nil {
-		http.Error(w, "Could not update speaker data: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not update speaker data: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -249,7 +252,7 @@ func addSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	updatedSpeaker, err := mongodb.Speakers.AddParticipation(speakerID, credentials.ID)
 
 	if err != nil {
-		http.Error(w, "Could not add participation to speaker: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not add participation to speaker: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -270,21 +273,21 @@ func updateSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var uspd = &mongodb.UpdateSpeakerParticipationData{}
 
 	if err := uspd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerParticipation(speakerID, *uspd)
 
 	if err != nil {
-		http.Error(w, "Could not update speaker data: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not update speaker data: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -312,17 +315,17 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
 		return
 	}
-	
+
 	speaker, err := mongodb.Speakers.DeleteSpeakerThread(id, threadID)
 	if err != nil {
-		http.Error(w, "Speaker or thread not found: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Speaker or thread not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
-	
-	// Delete thread and posts (comments) associated to it - only if 
+
+	// Delete thread and posts (comments) associated to it - only if
 	// thread was deleted sucessfully from speaker participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
-		http.Error(w, "Thread not found: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -336,19 +339,19 @@ func stepSpeakerStatus(w http.ResponseWriter, r *http.Request) {
 	step, err := strconv.Atoi(params["step"])
 
 	if err != nil {
-		http.Error(w, "Invalid step: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid step: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedSpeaker, err := mongodb.Speakers.StepStatus(speakerID, step)
 
 	if err != nil {
-		http.Error(w, "Could not update speaker status: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not update speaker status: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -369,7 +372,7 @@ func getSpeakerValidSteps(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -378,7 +381,7 @@ func getSpeakerValidSteps(w http.ResponseWriter, r *http.Request) {
 	steps, err := mongodb.Speakers.GetSpeakerParticipationStatusValidSteps(speakerID)
 
 	if err != nil {
-		http.Error(w, "Speaker without participation on the current event: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Speaker without participation on the current event: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -398,19 +401,19 @@ func setSpeakerStatus(w http.ResponseWriter, r *http.Request) {
 	err := status.Parse(params["status"])
 
 	if err != nil {
-		http.Error(w, "Invalid status: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid status: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerParticipationStatus(speakerID, *status)
 
 	if err != nil {
-		http.Error(w, "Could not update speaker status: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not update speaker status: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -431,7 +434,7 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -442,7 +445,7 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Invalid payload: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid payload: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -457,7 +460,7 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -467,7 +470,7 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -478,7 +481,7 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	kind, err := filetype.Match(bytes)
 	if err != nil {
-		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -490,7 +493,7 @@ func setSpeakerPrivateImage(w http.ResponseWriter, r *http.Request) {
 
 	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerInternalImage(speakerID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update speaker internal image: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update speaker internal image: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -511,7 +514,7 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -522,7 +525,7 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Invalid payload: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid payload: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -537,7 +540,7 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -547,7 +550,7 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -558,7 +561,7 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	kind, err := filetype.Match(bytes)
 	if err != nil {
-		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -570,7 +573,7 @@ func setSpeakerPublicImage(w http.ResponseWriter, r *http.Request) {
 
 	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerPublicImage(speakerID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update speaker internal image: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update speaker internal image: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -591,7 +594,7 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -602,7 +605,7 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Invalid payload: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid payload: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -617,7 +620,7 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -627,7 +630,7 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -638,7 +641,7 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 
 	kind, err := filetype.Match(bytes)
 	if err != nil {
-		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -650,7 +653,7 @@ func setSpeakerCompanyImage(w http.ResponseWriter, r *http.Request) {
 
 	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerCompanyImage(speakerID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update speaker internal image: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update speaker internal image: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -673,7 +676,7 @@ func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -687,14 +690,14 @@ func addSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 	newFlightInfo, err := mongodb.FlightInfo.CreateFlightInfo(*cfid)
 
 	if err != nil {
-		http.Error(w, "Could not create flight info: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not create flight info: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	updatedSpeaker, err := mongodb.Speakers.AddSpeakerFlightInfo(speakerID, newFlightInfo.ID)
 
 	if err != nil {
-		http.Error(w, "Could not add flight info to speaker: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not add flight info to speaker: "+err.Error(), http.StatusExpectationFailed)
 
 		// delete created flight info
 		if _, err := mongodb.FlightInfo.DeleteFlightInfo(newFlightInfo.ID); err != nil {
@@ -722,7 +725,7 @@ func deleteSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 	flightInfoID, _ := primitive.ObjectIDFromHex(params["flightInfoID"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -730,13 +733,13 @@ func deleteSpeakerFlightInfo(w http.ResponseWriter, r *http.Request) {
 
 	updatedSpeaker, err := mongodb.Speakers.RemoveSpeakerFlightInfo(speakerID, flightInfoID)
 	if err != nil {
-		http.Error(w, "Could not remove flight info from speaker: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not remove flight info from speaker: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	_, err = mongodb.FlightInfo.DeleteFlightInfo(flightInfoID)
 	if err != nil {
-		http.Error(w, "Could not delete flight info: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not delete flight info: "+err.Error(), http.StatusExpectationFailed)
 
 		if backupFlightInfo == nil {
 			log.Printf("no backup flight info to compensate the failed deletion of the flight info: %s\n", err.Error())
@@ -766,7 +769,6 @@ func getSpeakerThreads(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
-	// Retrieve the speaker document
 	speaker, err := mongodb.Speakers.GetSpeaker(speakerID)
 	if err != nil {
 		http.Error(w, "Unexpected error: "+err.Error(), http.StatusExpectationFailed)
@@ -786,31 +788,44 @@ func getSpeakerThreads(w http.ResponseWriter, r *http.Request) {
 		for _, threadID := range participation.Communications {
 			thread, err := mongodb.Threads.GetThread(threadID)
 			if err != nil {
+				if errors.Is(err, mongo.ErrNoDocuments) {
+					// remove stale ref and continue
+					_, _ = mongodb.Speakers.Collection.UpdateOne(
+						r.Context(),
+						bson.M{"_id": speakerID},
+						bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
+					)
+					continue
+				}
 				http.Error(w, "Could not get thread: "+err.Error(), http.StatusNotFound)
 				return
 			}
 
 			post, err := mongodb.Posts.GetPost(thread.Entry)
 			if err != nil {
+				if errors.Is(err, mongo.ErrNoDocuments) {
+					// if thread exists but its post is gone — also clean the ref
+					_, _ = mongodb.Speakers.Collection.UpdateOne(
+						r.Context(),
+						bson.M{"_id": speakerID},
+						bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
+					)
+					continue
+				}
 				http.Error(w, "Could not get post: "+err.Error(), http.StatusNotFound)
 				return
 			}
 
 			comms = append(comms, &models.ThreadWithEntry{
-				ID:      thread.ID,
-				Posted:  thread.Posted,
-				Entry:  post,
-				Meeting: thread.Meeting,
+				ID:       thread.ID,
+				Posted:   thread.Posted,
+				Entry:    post,
+				Meeting:  thread.Meeting,
 				Comments: thread.Comments,
-				Kind:    thread.Kind,
-				Status:  thread.Status,
+				Kind:     thread.Kind,
+				Status:   thread.Status,
 			})
 		}
-
-		participationComms = append(participationComms, &ParticipationCommunications{
-			Event: participation.Event,
-			Communications: comms,
-		})
 	}
 
 	json.NewEncoder(w).Encode(participationComms)
@@ -824,14 +839,14 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	var atd = &addThreadData{}
 
 	if err := atd.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -851,7 +866,7 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	newPost, err := mongodb.Posts.CreatePost(cpd)
 
 	if err != nil {
-		http.Error(w, "Could not create post: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not create post: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -860,14 +875,14 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	if *atd.Kind == models.ThreadKindMeeting {
 
 		if err := atd.Meeting.Validate(); err != nil {
-			http.Error(w, "Invalid meeting data: " + err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid meeting data: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
 		meeting, err := mongodb.Meetings.CreateMeeting(*atd.Meeting)
 
 		if err != nil {
-			http.Error(w, "Could not create meeting: " + err.Error(), http.StatusExpectationFailed)
+			http.Error(w, "Could not create meeting: "+err.Error(), http.StatusExpectationFailed)
 
 			// clean up the created post
 			if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -890,7 +905,7 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	newThread, err := mongodb.Threads.CreateThread(ctd)
 
 	if err != nil {
-		http.Error(w, "Could not create thread: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not create thread: "+err.Error(), http.StatusExpectationFailed)
 
 		// clean up the created post and possibly meeting
 		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -910,7 +925,7 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	updatedSpeaker, err := mongodb.Speakers.AddThread(speakerID, newThread.ID)
 
 	if err != nil {
-		http.Error(w, "Could not add thread to speaker: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not add thread to speaker: "+err.Error(), http.StatusExpectationFailed)
 
 		// clean up the created post, thread and possibly meeting
 		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
@@ -950,7 +965,7 @@ func subscribeToSpeaker(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -964,7 +979,7 @@ func subscribeToSpeaker(w http.ResponseWriter, r *http.Request) {
 	updatedSpeaker, err := mongodb.Speakers.Subscribe(speakerID, credentials.ID)
 
 	if err != nil {
-		http.Error(w, "Could not subscribe to speaker: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not subscribe to speaker: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -979,7 +994,7 @@ func unsubscribeToSpeaker(w http.ResponseWriter, r *http.Request) {
 	speakerID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
-		http.Error(w, "Invalid speaker ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid speaker ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -993,7 +1008,7 @@ func unsubscribeToSpeaker(w http.ResponseWriter, r *http.Request) {
 	updatedSpeaker, err := mongodb.Speakers.Unsubscribe(speakerID, credentials.ID)
 
 	if err != nil {
-		http.Error(w, "Could not subscribe to speaker: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not subscribe to speaker: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -1005,19 +1020,19 @@ func removeSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Speakers.GetSpeaker(id); err != nil {
-		http.Error(w, "Speaker not found: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Speaker not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	event, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Could not get current event: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not get current event: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	speaker, err := mongodb.Speakers.RemoveSpeakerParticipation(id, event.ID)
 	if err != nil {
-		http.Error(w, "Could not remove participation: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not remove participation: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

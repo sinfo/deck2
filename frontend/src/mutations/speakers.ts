@@ -120,58 +120,107 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
 
   const { mutate, ...mutation } = useMutation({
     mutation: () => postSpeakerThread(speakerId.value!, threadData.value!),
-    onMutate: () => {
-      const oldVal =
-        queryCache.getQueryData<ParticipationCommunications[]>([
-          "speaker-communications",
-          speakerId.value!,
-        ]) || [];
 
-      const valToAdd = {
-        id: crypto.randomUUID(),
-        kind: threadData.value?.kind,
+    onMutate: () => {
+      const key = ["speaker-communications", speakerId.value!] as const;
+
+      const oldVal =
+        queryCache.getQueryData<ParticipationCommunications[]>(key) || [];
+
+      const tempThreadId = crypto.randomUUID();
+      const tempPostId = crypto.randomUUID();
+
+      const kind = threadData.value?.kind;
+      if (!kind) {
+        throw new Error("Thread kind is required for optimistic update");
+      }
+
+      const valToAdd: ThreadWithEntry = {
+        id: tempThreadId,
+        kind: kind,
         comments: [],
         posted: new Date().toISOString(),
         status: ThreadStatus.ThreadStatusPending,
         entry: {
-          id: crypto.randomUUID(),
+          id: tempPostId,
           member: authStore.decoded?.id,
           posted: new Date().toISOString(),
           text: threadData.value?.text,
         },
-      } as ThreadWithEntry;
+      };
 
-      const event = oldVal.find(
-        (it) => it.event === eventStore.selectedEvent?.id,
-      );
+      const currentEventId = eventStore.selectedEvent?.id ?? 0;
+      const existingBucket = oldVal.find((it) => it.event === currentEventId);
+
       const newVal: ParticipationCommunications[] = [
-        ...oldVal.filter((it) => it.event !== eventStore.selectedEvent?.id),
+        ...oldVal.filter((it) => it.event !== currentEventId),
         {
-          event: eventStore.selectedEvent?.id || 0,
-          communications: event
-            ? event.communications.concat(valToAdd)
+          event: currentEventId,
+          communications: existingBucket
+            ? existingBucket.communications.concat(valToAdd)
             : [valToAdd],
         },
       ];
 
-      queryCache.setQueryData<ParticipationCommunications[]>(
-        ["speaker-communications", speakerId.value!],
-        newVal,
-      );
-      queryCache.cancelQueries({
-        key: ["speaker-communications", speakerId.value!],
-      });
+      queryCache.setQueryData<ParticipationCommunications[]>(key, newVal);
 
       return {
+        key,
         oldVal,
-        newVal,
+        currentEventId,
+        tempThreadId,
+        tempPostId,
       };
     },
-    onError: (err, _, { oldVal, newVal }) => {
-      console.error(
-        `An error occurred when updating ${oldVal} to ${newVal}`,
-        err,
+
+    onSuccess: (res, _vars, ctx) => {
+      if (!ctx) return;
+      const { key, oldVal, currentEventId, tempThreadId } = ctx;
+
+      const speaker = res.data;
+      const participation = speaker.participations.find(
+        (p) => p.event === currentEventId,
       );
+      if (!participation) return;
+
+      const commIdsFromSpeaker = participation.communications.map(String);
+
+      const oldBucket = (oldVal as ParticipationCommunications[]).find(
+        (b) => b.event === currentEventId,
+      );
+      const existingIds = new Set(
+        (oldBucket?.communications ?? []).map((c) => String(c.id)),
+      );
+
+      const newThreadId = commIdsFromSpeaker.find((id) => !existingIds.has(id));
+      if (!newThreadId) return;
+
+      const prev = queryCache.getQueryData<ParticipationCommunications[]>(key);
+      if (!prev) return;
+
+      const patched = prev.map((bucket) => {
+        if (bucket.event !== currentEventId) return bucket;
+        return {
+          ...bucket,
+          communications: bucket.communications.map((t) =>
+            String(t.id) === String(tempThreadId)
+              ? { ...t, id: newThreadId }
+              : t,
+          ),
+        };
+      });
+
+      queryCache.setQueryData<ParticipationCommunications[]>(key, patched);
+    },
+
+    onError: (err, _vars, ctx) => {
+      if (ctx?.key && ctx?.oldVal) {
+        queryCache.setQueryData<ParticipationCommunications[]>(
+          ctx.key,
+          ctx.oldVal,
+        );
+      }
+      console.error("Create speaker thread failed:", err);
     },
   });
 
