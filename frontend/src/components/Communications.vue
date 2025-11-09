@@ -265,9 +265,22 @@
                 class="p-1 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/10 text-muted-foreground hover:opacity-80"
                 title="Edit"
                 aria-label="Edit message"
+                :disabled="deleteThreadMutation?.isLoading?.value"
                 @click="startEdit(thread)"
               >
                 <Pencil :size="16" :stroke-width="2" class="align-middle" />
+              </button>
+              <button
+                class="p-1 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive/30 text-destructive hover:opacity-90 disabled:opacity-50"
+                title="Delete"
+                aria-label="Delete message"
+                :disabled="
+                  deleteThreadMutation?.isLoading?.value ||
+                  updatePostMutation?.isLoading?.value
+                "
+                @click="requestDelete(thread)"
+              >
+                <Trash2 :size="16" :stroke-width="2" class="align-middle" />
               </button>
             </div>
           </div>
@@ -296,10 +309,7 @@
               class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px]"
               @keydown.enter.ctrl="sendMessage"
               @keydown.enter.meta="sendMessage"
-              @input="
-                // eslint-disable-next-line vue/no-mutating-props
-                postThreadMutation && (postThreadMutation.error.value = null)
-              "
+              @input="onMessageInput"
             />
           </div>
           <div class="flex sm:flex-col gap-2">
@@ -380,7 +390,8 @@ import {
 import type { Event } from "@/dto/events";
 import Textarea from "./ui/textarea/Textarea.vue";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
-import { Pencil } from "lucide-vue-next";
+import { Pencil, Trash2 } from "lucide-vue-next";
+import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 
 interface TemplateWithVariables {
   template: EmailTemplate;
@@ -424,6 +435,7 @@ const editingPostId = ref<string | null>(null);
 const editText = ref("");
 
 const updatePostMutation = useUpdatePostMutation();
+const deleteThreadMutation = useDeleteThreadMutation();
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -494,6 +506,10 @@ const sortedCommunications = computed<ThreadWithEntry[]>(() => {
     ) as ThreadWithEntry[];
 });
 
+const onMessageInput = () => {
+  props.postThreadMutation?.reset?.();
+};
+
 const canEdit = (thread: ThreadWithEntry) =>
   getMessageDirection(thread.kind) === "outgoing" && !!thread.entry;
 
@@ -530,6 +546,22 @@ const saveEdit = async () => {
     editingPostId.value = null;
     editText.value = "";
     scrollToBottom();
+  }
+};
+
+const requestDelete = async (thread: ThreadWithEntry) => {
+  if (!canEdit(thread)) return;
+  const ok = window.confirm(
+    "Delete this message? This action cannot be undone.",
+  );
+  if (!ok) return;
+
+  deleteThreadMutation.threadId.value = thread.id;
+
+  try {
+    deleteThreadMutation.mutate();
+  } catch (e) {
+    console.error("Delete failed:", e);
   }
 };
 
