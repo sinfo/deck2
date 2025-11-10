@@ -437,6 +437,11 @@ const editText = ref("");
 const updatePostMutation = useUpdatePostMutation();
 const deleteThreadMutation = useDeleteThreadMutation();
 
+updatePostMutation.entityType.value = props.entityType;
+updatePostMutation.entityId.value = props.entity.id;
+deleteThreadMutation.entityType.value = props.entityType;
+deleteThreadMutation.entityId.value = props.entity.id;
+
 const scrollToBottom = () => {
   nextTick(() => {
     if (messagesContainer.value) {
@@ -589,7 +594,7 @@ watch(
 watch(
   () => isLoading.value,
   (loading, wasLoading) => {
-    // When loading finishes and we have data, scroll to bottom
+    // When loading finishes, and we have data, scroll to bottom
     if (wasLoading && !loading && sortedCommunications.value.length > 0) {
       // Add a small delay to ensure DOM has updated
       setTimeout(() => {
