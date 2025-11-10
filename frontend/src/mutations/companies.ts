@@ -176,6 +176,8 @@ export const useCompanyInfoMutation = defineMutation(() => {
   };
 });
 
+// Company
+
 export const usePostCompanyThreadMutation = defineMutation(() => {
   const companyId = ref<string>();
   const threadData = ref<CreateThread>();
@@ -185,12 +187,11 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
 
   const { mutate, ...mutation } = useMutation({
     mutation: () => postThread(companyId.value!, threadData.value!),
-
     onMutate: () => {
-      const key = ["company-communications", companyId.value!] as const;
+      const key = ["company-communications", companyId.value!];
 
       const oldVal =
-        queryCache.getQueryData<ParticipationCommunications[]>(key) || [];
+        queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
 
       const tempThreadId = crypto.randomUUID();
       const tempPostId = crypto.randomUUID();
@@ -202,7 +203,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
 
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
-        kind: kind,
+        kind,
         comments: [],
         posted: new Date().toISOString(),
         status: ThreadStatus.ThreadStatusPending,
@@ -235,32 +236,14 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
         oldVal,
         currentEventId,
         tempThreadId,
-        tempPostId,
       };
     },
 
     onSuccess: (res, _vars, ctx) => {
       if (!ctx) return;
-      const { key, oldVal, currentEventId, tempThreadId } = ctx;
+      const { key, currentEventId, tempThreadId } = ctx;
 
-      const company = res.data;
-      const participation = company.participations.find(
-        (p) => p.event === currentEventId,
-      );
-      if (!participation) return;
-
-      const commIdsFromCompany = participation.communications.map(String);
-
-      const oldBucket = (oldVal as ParticipationCommunications[]).find(
-        (b) => b.event === currentEventId,
-      );
-      const existingIds = new Set(
-        (oldBucket?.communications ?? []).map((c) => String(c.id)),
-      );
-
-      const newThreadId = commIdsFromCompany.find((id) => !existingIds.has(id));
-      if (!newThreadId) return;
-
+      const newThread = res.data;
       const prev = queryCache.getQueryData<ParticipationCommunications[]>(key);
       if (!prev) return;
 
@@ -269,9 +252,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
         return {
           ...bucket,
           communications: bucket.communications.map((t) =>
-            String(t.id) === String(tempThreadId)
-              ? { ...t, id: newThreadId }
-              : t,
+            String(t.id) === String(tempThreadId) ? newThread : t,
           ),
         };
       });
