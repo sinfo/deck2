@@ -176,8 +176,6 @@ export const useCompanyInfoMutation = defineMutation(() => {
   };
 });
 
-// Company
-
 export const usePostCompanyThreadMutation = defineMutation(() => {
   const companyId = ref<string>();
   const threadData = ref<CreateThread>();
@@ -200,12 +198,13 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       if (!kind) {
         throw new Error("Thread kind is required for optimistic update");
       }
+      const now = new Date().toISOString();
 
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
         comments: [],
-        posted: new Date().toISOString(),
+        posted: now,
         status: ThreadStatus.ThreadStatusPending,
         entry: {
           id: tempPostId,
