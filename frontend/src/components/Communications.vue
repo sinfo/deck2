@@ -600,6 +600,7 @@ const formatDate = (dateString: string): string => {
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
+      hour12: false,
     });
   } else if (diffInDays === 1) {
     return "Yesterday";
@@ -607,8 +608,8 @@ const formatDate = (dateString: string): string => {
     return date.toLocaleDateString("en-US", { weekday: "short" });
   } else {
     return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   }
 };
