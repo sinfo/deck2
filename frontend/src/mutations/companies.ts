@@ -203,7 +203,6 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
           member: authStore.decoded?.id,
           posted: new Date().toISOString(),
           text: threadData.value?.text,
-          updated: new Date(0).toISOString(),
         },
       } as ThreadWithEntry;
 
