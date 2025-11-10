@@ -10,7 +10,11 @@ import type {
   UpdateCompanyData,
   UpdateCompanyParticipationData,
 } from "@/dto/companies";
-import type { CreateThread, ParticipationCommunications } from "@/dto/threads";
+import type {
+  CreateThread,
+  ParticipationCommunications,
+  ThreadWithEntry,
+} from "@/dto/threads";
 
 export const getAllPublicCompanies = () =>
   instance.get<CompanyPublic[]>("/public/companies");
@@ -52,7 +56,7 @@ export const getCompanyCommunications = (id: string) =>
   instance.get<ParticipationCommunications[]>(`/companies/${id}/threads`);
 
 export const postThread = (id: string, data: CreateThread) =>
-  instance.post<Company>(`/companies/${id}/thread`, data);
+  instance.post<ThreadWithEntry>(`/companies/${id}/thread`, data);
 
 export const createCompanyRepresentative = (
   id: string,

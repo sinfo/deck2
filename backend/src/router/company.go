@@ -367,39 +367,39 @@ func (acd *addThreadData) ParseBody(body io.Reader) error {
 }
 
 func addCompanyThread(w http.ResponseWriter, r *http.Request) {
-
 	defer r.Body.Close()
 
 	params := mux.Vars(r)
-	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+	companyID, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid company ID", http.StatusBadRequest)
+		return
+	}
 
 	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
 		http.Error(w, "Invalid company ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
-	var atd = &addThreadData{}
-
+	var atd addThreadData
 	if err := atd.ParseBody(r.Body); err != nil {
 		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
-
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
 		return
 	}
 
 	// create the post first
-	var cpd = mongodb.CreatePostData{
+	cpd := mongodb.CreatePostData{
 		Member: credentials.ID,
 		Text:   *atd.Text,
 	}
 
 	newPost, err := mongodb.Posts.CreatePost(cpd)
-
 	if err != nil {
 		http.Error(w, "Could not create post: "+err.Error(), http.StatusExpectationFailed)
 		return
@@ -408,22 +408,22 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	// if applied, create the meeting
 	var meetingIDPointer *primitive.ObjectID
 	if *atd.Kind == models.ThreadKindMeeting {
-
 		if err := atd.Meeting.Validate(); err != nil {
 			http.Error(w, "Invalid meeting data: "+err.Error(), http.StatusBadRequest)
+			// clean up post
+			if _, derr := mongodb.Posts.DeletePost(newPost.ID); derr != nil {
+				log.Printf("error deleting post: %s\n", derr.Error())
+			}
 			return
 		}
 
 		meeting, err := mongodb.Meetings.CreateMeeting(*atd.Meeting)
-
 		if err != nil {
 			http.Error(w, "Could not create meeting: "+err.Error(), http.StatusExpectationFailed)
-
-			// clean up the created post
-			if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
-				log.Printf("error deleting post: %s\n", err.Error())
+			// clean up post
+			if _, derr := mongodb.Posts.DeletePost(newPost.ID); derr != nil {
+				log.Printf("error deleting post: %s\n", derr.Error())
 			}
-
 			return
 		}
 
@@ -431,56 +431,61 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// only then create the thread
-	var ctd = mongodb.CreateThreadData{
+	ctd := mongodb.CreateThreadData{
 		Entry:   newPost.ID,
 		Meeting: meetingIDPointer,
 		Kind:    *atd.Kind,
 	}
 
 	newThread, err := mongodb.Threads.CreateThread(ctd)
-
 	if err != nil {
 		http.Error(w, "Could not create thread: "+err.Error(), http.StatusExpectationFailed)
 
-		// clean up the created post and possibly meeting
-		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
-			log.Printf("error deleting post: %s\n", err.Error())
+		// clean up post and possibly meeting
+		if _, derr := mongodb.Posts.DeletePost(newPost.ID); derr != nil {
+			log.Printf("error deleting post: %s\n", derr.Error())
 		}
-
 		if meetingIDPointer != nil {
-			if _, err := mongodb.Meetings.DeleteMeeting(*meetingIDPointer); err != nil {
-				log.Printf("error deleting meeting: %s\n", err.Error())
+			if _, derr := mongodb.Meetings.DeleteMeeting(*meetingIDPointer); derr != nil {
+				log.Printf("error deleting meeting: %s\n", derr.Error())
 			}
 		}
-
 		return
 	}
 
-	// and finally update the company participation with the created thread
+	// attach the thread to the company participation
 	updatedCompany, err := mongodb.Companies.AddThread(companyID, newThread.ID)
-
 	if err != nil {
 		http.Error(w, "Could not add thread to company: "+err.Error(), http.StatusExpectationFailed)
 
-		// clean up the created post, thread and possibly meeting
-		if _, err := mongodb.Posts.DeletePost(newPost.ID); err != nil {
-			log.Printf("error deleting post: %s\n", err.Error())
+		// clean up post, thread and possibly meeting
+		if _, derr := mongodb.Posts.DeletePost(newPost.ID); derr != nil {
+			log.Printf("error deleting post: %s\n", derr.Error())
 		}
-
 		if meetingIDPointer != nil {
-			if _, err := mongodb.Meetings.DeleteMeeting(*meetingIDPointer); err != nil {
-				log.Printf("error deleting meeting: %s\n", err.Error())
+			if _, derr := mongodb.Meetings.DeleteMeeting(*meetingIDPointer); derr != nil {
+				log.Printf("error deleting meeting: %s\n", derr.Error())
 			}
 		}
-
-		if _, err := mongodb.Threads.DeleteThread(newThread.ID); err != nil {
-			log.Printf("error deleting thread: %s\n", err.Error())
+		if _, derr := mongodb.Threads.DeleteThread(newThread.ID); derr != nil {
+			log.Printf("error deleting thread: %s\n", derr.Error())
 		}
-
 		return
 	}
 
-	json.NewEncoder(w).Encode(updatedCompany)
+	threadWithEntry := models.ThreadWithEntry{
+		ID:       newThread.ID,
+		Posted:   newThread.Posted,
+		Entry:    newPost,
+		Meeting:  newThread.Meeting,
+		Comments: newThread.Comments,
+		Kind:     newThread.Kind,
+		Status:   newThread.Status,
+	}
+
+	_ = updatedCompany // used below in notification
+
+	json.NewEncoder(w).Encode(threadWithEntry)
 
 	// notify
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {

@@ -945,7 +945,18 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(updatedSpeaker)
+	// build ThreadWithEntry payload to return
+	threadWithEntry := models.ThreadWithEntry{
+		ID:       newThread.ID,
+		Posted:   newThread.Posted,
+		Entry:    newPost,
+		Meeting:  newThread.Meeting,
+		Comments: newThread.Comments,
+		Kind:     newThread.Kind,
+		Status:   newThread.Status,
+	}
+
+	json.NewEncoder(w).Encode(threadWithEntry)
 
 	// notify
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
