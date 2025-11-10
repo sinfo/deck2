@@ -24,16 +24,35 @@
     :min-item-size="1"
   >
     <template #default="{ item }">
-      <MemberWithAvatar :member="item" with-separator />
+      <div class="w-full border-b border-muted-foreground/10 pb-4 mb-4">
+        <div class="flex items-center justify-between w-full py-2">
+          <MemberWithAvatar :member="item" with-separator />
+          <button
+            type="button"
+            class="p-2 rounded-md hover:bg-slate-100"
+            :aria-expanded="isExpanded(item.id)"
+            @click="toggleExpanded(item.id)"
+          >
+            <ChevronDown
+              :class="[
+                'transition-transform',
+                isExpanded(item.id) ? 'rotate-180' : '',
+              ]"
+              class="w-5 h-5 text-muted-foreground"
+            />
+          </button>
+        </div>
 
-      <div
-        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 my-4"
-      >
-        <SpeakerWorkflowCard
-          v-for="speaker in participationsFiltered?.get(item.id) || []"
-          :key="speaker.id"
-          :speaker="speaker"
-        />
+        <div
+          v-if="isExpanded(item.id)"
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 mt-3"
+        >
+          <SpeakerWorkflowCard
+            v-for="speaker in participationsFiltered?.get(item.id) || []"
+            :key="speaker.id"
+            :speaker="speaker"
+          />
+        </div>
       </div>
     </template>
   </DynamicScroller>
@@ -50,6 +69,7 @@ import SpeakerWorkflowCard from "../cards/SpeakerWorkflowCard.vue";
 import CreateSpeakerDialogTrigger from "./CreateSpeakerDialogTrigger.vue";
 import ParticipationChip from "@/components/ParticipationChip.vue";
 import { ref, computed, type ComputedRef } from "vue";
+import { ChevronDown } from "lucide-vue-next";
 import { useParticipationFilter } from "@/composables/useParticipationFilter";
 import type { ParticipationStatus } from "@/dto";
 
@@ -108,4 +128,16 @@ const participationsFiltered = useParticipationFilter<SpeakerWithParticipation>(
   participations as ComputedRef<Map<string, SpeakerWithParticipation[]>>,
   selectedStatus,
 );
+
+const expanded = ref<Record<string, boolean>>({});
+
+function isExpanded(memberId: string) {
+  return expanded.value[memberId] !== undefined
+    ? expanded.value[memberId]
+    : true;
+}
+
+function toggleExpanded(memberId: string) {
+  expanded.value[memberId] = !isExpanded(memberId);
+}
 </script>
