@@ -1,58 +1,51 @@
 import { ref, computed } from "vue";
-import { useMutation, useQueryCache } from "@pinia/colada";
+import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
 import { updatePost } from "@/api/posts";
 import type {
   ParticipationCommunications,
   ThreadWithEntry,
 } from "@/dto/threads";
 import type { Post } from "@/dto/post.ts";
+import type { EntityType } from "@/mutations/threads.ts";
 
-type EntityType = "speaker" | "company";
-
-// type guard to narrow threads that actually have an entry
+// to get threads that actually have an entry
 const hasEntry = (t: ThreadWithEntry): t is ThreadWithEntry & { entry: Post } =>
   !!t.entry;
 
-export const useUpdatePostMutation = () => {
-  // inputs you set from the component before calling mutate()
+export const useUpdatePostMutation = defineMutation(() => {
   const postId = ref<string>();
   const text = ref<string>("");
 
-  // scope to decide which communications list to patch locally
   const entityType = ref<EntityType>("speaker");
   const entityId = ref<string>("");
 
   const queryCache = useQueryCache();
-  const commsKey = computed(() => [
-    `${entityType.value}-communications`,
-    entityId.value,
-  ]);
+  const commsKey = computed(
+    () => [`${entityType.value}-communications`, entityId.value] as const,
+  );
 
   const { mutate, ...mutation } = useMutation({
     mutation: () => updatePost(postId.value!, { text: text.value! }),
 
+    // optimistic update
     onMutate: () => {
+      const key = commsKey.value;
+
       const prev =
-        queryCache.getQueryData<ParticipationCommunications[]>(
-          commsKey.value,
-        ) || [];
+        queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
 
       const newText = text.value;
       const updatedAt = new Date().toISOString();
 
-      // Build next state:
-      //  - narrow with filter(hasEntry) for type safety
-      //  - compute updates for those with entry
-      //  - rebuild original array, replacing only the edited post
       const next = prev.map((bucket) => {
         const withEntry = bucket.communications.filter(hasEntry);
 
         const updates = new Map(
           withEntry.map((t) => {
-            const key = String(t.entry.id);
+            const k = String(t.entry.id);
             return [
-              key,
-              key === postId.value
+              k,
+              k === postId.value
                 ? {
                     ...t,
                     entry: { ...t.entry, text: newText, updated: updatedAt },
@@ -69,20 +62,19 @@ export const useUpdatePostMutation = () => {
         return { ...bucket, communications: merged };
       });
 
-      queryCache.setQueryData(commsKey.value, next);
-      queryCache.cancelQueries({ key: commsKey.value });
+      queryCache.setQueryData<ParticipationCommunications[]>(key, next);
 
-      return { prev };
+      return { key, prev };
     },
 
+    // rollback on error
     onError: (_err, _vars, ctx) => {
-      if (ctx?.prev) {
-        queryCache.setQueryData(commsKey.value, ctx.prev);
+      if (ctx?.key && ctx?.prev) {
+        queryCache.setQueryData<ParticipationCommunications[]>(
+          ctx.key,
+          ctx.prev,
+        );
       }
-    },
-
-    onSettled: () => {
-      queryCache.invalidateQueries({ key: commsKey.value }); // background reconcile
     },
   });
 
@@ -94,4 +86,4 @@ export const useUpdatePostMutation = () => {
     entityType,
     entityId,
   };
-};
+});
