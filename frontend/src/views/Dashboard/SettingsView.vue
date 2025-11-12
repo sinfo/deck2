@@ -29,19 +29,64 @@
         <!-- Personal Information Card -->
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
-              Basic information about your account
-            </CardDescription>
+            <div class="flex items-center justify-between">
+              <div>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  Basic information about your account
+                </CardDescription>
+              </div>
+              <Button
+                v-if="!isEditingProfile"
+                variant="outline"
+                size="sm"
+                :disabled="isUploadingImage"
+                @click="isEditingProfile = true"
+              >
+                Edit
+              </Button>
+            </div>
           </CardHeader>
           <CardContent class="space-y-4">
             <div class="flex items-center space-x-4">
-              <img
-                :src="user.data.img"
-                :alt="user.data.name"
-                class="w-16 h-16 rounded-full object-cover border-2 border-border"
-                @error="handleImageError"
-              />
+              <div class="relative group">
+                <Image
+                  :src="profileImageUrl"
+                  :alt="`${user.data.name} logo`"
+                  class="w-16 h-16 rounded-full object-cover border-2 border-border"
+                />
+                <div
+                  v-if="isEditingProfile"
+                  class="absolute inset-0 w-16 h-16 rounded-full bg-black/0 group-hover:bg-black/50 transition-all cursor-pointer flex items-center justify-center"
+                  :class="{ 'pointer-events-none': isUploadingImage }"
+                  @click="triggerFileInput"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <path
+                      d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"
+                    />
+                    <path d="m15 5 4 4" />
+                  </svg>
+                </div>
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handleImageUpload"
+                />
+              </div>
               <div>
                 <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
                 <p class="text-sm text-muted-foreground">
@@ -51,6 +96,28 @@
                   SINFO ID: {{ user.data.sinfoid }}
                 </p>
               </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div
+              v-if="isEditingProfile"
+              class="flex justify-end gap-2 pt-4 border-t"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                :disabled="isUploadingImage"
+                @click="cancelProfileEdit"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                :disabled="!previewImageUrl || isUploadingImage"
+                @click="updateProfileChanges"
+              >
+                {{ isUploadingImage ? "Uploading..." : "Update Profile" }}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -68,15 +135,15 @@
                 variant="outline"
                 size="sm"
                 :disabled="isSaving"
-                @click="isEditMode = !isEditMode"
+                @click="isEditingContacts = !isEditingContacts"
               >
-                {{ isEditMode ? "Cancel" : "Edit" }}
+                {{ isEditingContacts ? "Cancel" : "Edit" }}
               </Button>
             </div>
           </CardHeader>
           <CardContent>
             <!-- View Mode -->
-            <div v-if="!isEditMode" class="space-y-4">
+            <div v-if="!isEditingContacts" class="space-y-4">
               <!-- Contact Details Display -->
               <div v-if="user.data.contactObject" class="space-y-4">
                 <!-- Gender and Language -->
@@ -241,7 +308,7 @@
                 <Button
                   variant="outline"
                   class="mt-2"
-                  @click="isEditMode = true"
+                  @click="isEditingContacts = true"
                 >
                   Add Contact Information
                 </Button>
@@ -249,7 +316,7 @@
             </div>
 
             <!-- Edit Mode -->
-            <div v-if="isEditMode && user.data.contactObject">
+            <div v-if="isEditingContacts && user.data.contactObject">
               <ContactForm
                 mode="edit"
                 without-name
@@ -260,7 +327,7 @@
                 }"
                 :is-loading="isSaving"
                 @submit="handleUpdateContact"
-                @cancel="isEditMode = false"
+                @cancel="isEditingContacts = false"
               />
             </div>
           </CardContent>
@@ -271,10 +338,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useQuery, useMutation, useQueryCache } from "@pinia/colada";
-import { getMe } from "@/api/members";
-import { updateContact } from "@/api/contacts";
+import { computed, onUnmounted, ref } from "vue";
+import { useQuery } from "@pinia/colada";
+import { getMe } from "@/api/me";
 import type {
   ContactSocials,
   CreateContactData,
@@ -290,11 +356,32 @@ import Button from "@/components/ui/button/Button.vue";
 import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
-import { useAuthStore } from "@/stores/auth";
-import type { CreateCompanyRepData } from "@/dto/companies";
+import {
+  useUpdateContactMutation,
+  useUploadImageMutation,
+} from "@/mutations/me.ts";
+import Image from "@/components/Image.vue";
 
-const isEditMode = ref(false);
-const queryCache = useQueryCache();
+const isEditingProfile = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
+const isEditingContacts = ref(false);
+
+const previewImageUrl = ref<string | null>(null);
+
+const profileImageUrl = computed(
+  () => previewImageUrl.value || user.value?.data.img,
+);
+
+onUnmounted(() => {
+  if (previewImageUrl.value) {
+    try {
+      URL.revokeObjectURL(previewImageUrl.value);
+    } catch {
+      /* ignore */
+    }
+    previewImageUrl.value = null;
+  }
+});
 
 // Fetch user data
 const {
@@ -307,22 +394,71 @@ const {
   query: getMe,
 });
 
-// Update contact mutation
-const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
-  mutation: (variables: { id: string; data: CreateContactData }) =>
-    updateContact(variables.id, variables.data),
-  onSuccess: () => {
-    isEditMode.value = false;
-    // Invalidate the user query to refresh the data
-    queryCache.invalidateQueries({ key: ["me"] });
-  },
-});
+const updateContactMutation = useUpdateContactMutation();
+const uploadImageMutation = useUploadImageMutation();
+const isSaving = updateContactMutation.isLoading;
+const isUploadingImage = uploadImageMutation.isLoading;
 
-const authStore = useAuthStore();
-const handleUpdateContact = async (data: CreateCompanyRepData) => {
+const triggerFileInput = () => fileInput.value?.click();
+
+const setPreviewImageUrl = (file?: File) => {
+  if (previewImageUrl.value) {
+    try {
+      URL.revokeObjectURL(previewImageUrl.value);
+    } catch {
+      /* ignore */
+    }
+    previewImageUrl.value = null;
+  }
+
+  if (!file) {
+    uploadImageMutation.file.value = undefined;
+    return;
+  }
+
+  uploadImageMutation.file.value = file;
+  previewImageUrl.value = URL.createObjectURL(file);
+};
+
+const handleImageUpload = (ev: Event) => {
+  const input = ev.target as HTMLInputElement;
+  const f = input.files && input.files[0];
+  if (!f) return;
+  setPreviewImageUrl(f);
+};
+
+const cancelProfileEdit = () => {
+  isEditingProfile.value = false;
+  try {
+    if (previewImageUrl.value) {
+      URL.revokeObjectURL(previewImageUrl.value);
+    }
+  } catch (err) {
+    void err;
+  }
+  previewImageUrl.value = null;
+  uploadImageMutation.file.value = undefined;
+  if (fileInput.value) fileInput.value.value = "";
+};
+
+const updateProfileChanges = async () => {
+  if (uploadImageMutation.file.value) {
+    try {
+      await uploadImageMutation.mutate();
+    } catch {
+      /* ignore */
+    }
+  }
+  // after upload (or if none), close edit mode — `useUploadImageMutation` invalidates the `me` query on settled
+  isEditingProfile.value = false;
+  setPreviewImageUrl();
+  if (fileInput.value) fileInput.value.value = "";
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const handleUpdateContact = async (data: any) => {
   if (!user.value?.data.contactObject?.id) return;
 
-  // Extract contact data from the form data
   const contactData: CreateContactData = {
     gender: data.contact?.gender,
     language: data.contact?.language,
@@ -331,23 +467,9 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
     mails: data.contact?.mails || [],
   };
 
-  updateContactMutation({
-    id: user.value.data.contactObject.id,
-    data: contactData,
-  });
-
-  // Assert
-  if (!authStore.member) return;
-
-  authStore.member.contactObject = {
-    ...authStore.member?.contactObject,
-    ...contactData,
-  };
-};
-
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = "/src/assets/noImage.png"; // Fallback image
+  updateContactMutation.contactId.value = user.value.data.contactObject.id;
+  updateContactMutation.data.value = contactData;
+  updateContactMutation.mutate();
 };
 
 // Utility functions
