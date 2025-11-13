@@ -225,10 +225,8 @@ const contactId = computed(
 
 const { data: contact, isLoading: contactLoading } = useQuery({
   key: () => ["member-contact", contactId.value || ""],
-  query: () => {
-    if (!contactId.value) return Promise.resolve({ data: null });
-    return instance.get(`/contacts/${contactId.value}`);
-  },
+  enabled: () => !!contactId.value,
+  query: () => instance.get(`/contacts/${contactId.value}`),
 });
 
 const companiesFilters = computed(() => ({
