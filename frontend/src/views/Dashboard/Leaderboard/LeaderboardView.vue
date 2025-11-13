@@ -42,15 +42,19 @@ import { useQuery } from "@pinia/colada";
 import { getAllCompanies } from "@/api/companies";
 import { getAllSpeakers } from "@/api/speakers";
 import { getAllMembers } from "@/api/members";
-import type { Company, CompanyParticipation } from "@/dto/companies";
-import type { Speaker, SpeakerParticipation } from "@/dto/speakers";
+import type { Company } from "@/dto/companies";
+import type { Speaker } from "@/dto/speakers";
 import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
 import LeaderboardCard from "@/components/Leaderboard/LeaderboardCard.vue";
 import { humanReadableParticipationStatus } from "@/dto";
 // icons are used inside LeaderboardCard
 
-const BOT_ACCOUNTS = new Set(["ToolBot!", "zzPartnerships"]);
+const BOT_ACCOUNTS = new Set([
+  "ToolBot!",
+  "zzPartnerships",
+  "zzPartnernerships",
+]);
 
 const eventStore = useEventStore();
 const selectedStatus = ref<string>("");
@@ -105,17 +109,26 @@ function computeRanks(rows: LeaderRow[]): RankedLeaderRow[] {
   return ranked;
 }
 
-const companyLeaderboard = computed<RankedLeaderRow[]>(() => {
+// Generic helper to build leaderboards from any collection (companies or speakers)
+function computeLeaderboardFrom<
+  TItem,
+  TParticipation extends { event?: number; status?: string; member?: unknown },
+>(
+  items: TItem[],
+  getParticipations: (it: TItem) => TParticipation[] | undefined,
+  getName: (it: TItem) => string,
+  botSet = BOT_ACCOUNTS,
+): RankedLeaderRow[] {
   const rows = new Map<string, LeaderRow>();
   const eventId = eventStore.selectedEvent?.id;
-  const companies = (companiesData.value?.data || []) as Company[];
-  companies.forEach((c: Company) => {
-    (c.participations || []).forEach((p: CompanyParticipation) => {
+
+  items.forEach((it: TItem) => {
+    (getParticipations(it) || []).forEach((p: TParticipation) => {
       if (p.event !== eventId) return;
       if (selectedStatus.value && p.status !== selectedStatus.value) return;
       if (!p.member) return;
       const id = p.member as string;
-      const entry =
+      const entry: LeaderRow =
         rows.get(id) ||
         ({
           memberId: id,
@@ -124,7 +137,7 @@ const companyLeaderboard = computed<RankedLeaderRow[]>(() => {
           member: { id, name: "Unknown", img: "", sinfoid: "" } as Member,
         } as LeaderRow);
       entry.count += 1;
-      entry.items.push(c.name);
+      entry.items.push(getName(it));
       rows.set(id, entry);
     });
   });
@@ -141,52 +154,28 @@ const companyLeaderboard = computed<RankedLeaderRow[]>(() => {
   const filtered = arr.filter((r) => {
     const name = (r.member?.name || "") as string;
     const sinfoid = (r.member?.sinfoid || "") as string;
-    return !BOT_ACCOUNTS.has(name) && !BOT_ACCOUNTS.has(sinfoid);
+    return !botSet.has(name) && !botSet.has(sinfoid);
   });
 
   return computeRanks(filtered);
+}
+
+const companyLeaderboard = computed<RankedLeaderRow[]>(() => {
+  const companies = (companiesData.value?.data || []) as Company[];
+  return computeLeaderboardFrom(
+    companies,
+    (c: Company) => c.participations,
+    (c: Company) => c.name,
+  );
 });
 
 const speakerLeaderboard = computed<RankedLeaderRow[]>(() => {
-  const rows = new Map<string, LeaderRow>();
-  const eventId = eventStore.selectedEvent?.id;
   const speakers = (speakersData.value?.data || []) as Speaker[];
-  speakers.forEach((s: Speaker) => {
-    (s.participations || []).forEach((p: SpeakerParticipation) => {
-      if (p.event !== eventId) return;
-      if (selectedStatus.value && p.status !== selectedStatus.value) return;
-      if (!p.member) return;
-      const id = p.member as string;
-      const entry =
-        rows.get(id) ||
-        ({
-          memberId: id,
-          count: 0,
-          items: [] as string[],
-          member: { id, name: "Unknown", img: "", sinfoid: "" } as Member,
-        } as LeaderRow);
-      entry.count += 1;
-      entry.items.push(s.name);
-      rows.set(id, entry);
-    });
-  });
-
-  const arr = Array.from(rows.values());
-  arr.forEach((r) => {
-    r.member =
-      membersData.value?.data?.find((m: Member) => m.id === r.memberId) ||
-      ({ id: r.memberId, name: "Unknown", img: "", sinfoid: "" } as Member);
-  });
-
-  // filter out bot accounts by name or sinfoid
-  const bots = new Set(["ToolBot!", "zzPartnernerships"]);
-  const filtered = arr.filter((r) => {
-    const name = (r.member?.name || "") as string;
-    const sinfoid = (r.member?.sinfoid || "") as string;
-    return !bots.has(name) && !bots.has(sinfoid);
-  });
-
-  return computeRanks(filtered);
+  return computeLeaderboardFrom(
+    speakers,
+    (s: Speaker) => s.participations,
+    (s: Speaker) => s.name,
+  );
 });
 </script>
 
