@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, type FunctionalComponent } from "vue";
-import { Menu, X, LogOut, Settings } from "lucide-vue-next";
+import { Menu, X, LogOut, Settings, Trophy } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import type { RouteLocationRaw } from "vue-router";
 import { useQuery } from "@pinia/colada";
@@ -40,6 +40,7 @@ const navigation: NavigationItem[] = [
   { name: "Me", to: { name: "dashboard" } },
   { name: "Companies", to: { name: "companies" } },
   { name: "Speakers", to: { name: "speakers" } },
+  { name: "Leaderboard", to: { name: "leaderboard" }, icon: Trophy },
   { name: "Settings", to: { name: "settings" }, icon: Settings },
 ];
 

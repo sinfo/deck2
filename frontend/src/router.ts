@@ -46,6 +46,12 @@ const router = createRouter({
           name: "settings",
           component: () => import("./views/Dashboard/SettingsView.vue"),
         },
+        {
+          path: "leaderboard",
+          name: "leaderboard",
+          component: () =>
+            import("./views/Dashboard/Leaderboard/LeaderboardView.vue"),
+        },
       ],
     },
   ],
