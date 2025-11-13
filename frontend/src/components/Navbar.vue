@@ -15,9 +15,10 @@ import {
 import { useEventStore } from "@/stores/event";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
-import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerAutocompleteWithDialog.vue";
+import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerOrMemberAutocompleteWithDialog.vue";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
+import type { Member } from "@/dto/members";
 import { useMagicKeys } from "@vueuse/core";
 import Notification from "./navbar/Notification.vue";
 
@@ -72,6 +73,9 @@ const companySelected = (company: Company) =>
 
 const speakerSelected = (speaker: Speaker) =>
   router.push({ name: "speaker", params: { speakerId: speaker.id } });
+
+const memberSelected = (member: Member) =>
+  router.push({ name: "member", params: { memberId: member.id } });
 
 const keys = useMagicKeys();
 const shortcutMac = keys["meta+k"];
@@ -134,6 +138,7 @@ watch(shortcutLinux, () => {
           show-create
           @company-selected="companySelected"
           @speaker-selected="speakerSelected"
+          @member-selected="memberSelected"
         />
 
         <!-- Desktop Navigation -->
@@ -180,6 +185,7 @@ watch(shortcutLinux, () => {
           placeholder="Search"
           @company-selected="companySelected"
           @speaker-selected="speakerSelected"
+          @member-selected="memberSelected"
         />
 
         <div class="container mx-auto px-4">
