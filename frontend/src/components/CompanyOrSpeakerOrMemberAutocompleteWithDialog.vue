@@ -151,17 +151,50 @@
             </button>
           </div>
 
+          <!-- Members section -->
+          <div v-if="filteredMembers.length > 0">
+            <div
+              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+            >
+              Members
+            </div>
+            <button
+              v-for="member in filteredMembers"
+              :key="`member-${member.id}`"
+              type="button"
+              :class="[
+                'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
+                getItemIndex(member) === highlightedIndex
+                  ? 'bg-blue-50 border-blue-200'
+                  : 'hover:bg-gray-50',
+              ]"
+              @click="selectMember(member)"
+            >
+              <Image
+                :src="member.img"
+                :alt="member.name"
+                class="w-8 h-8 rounded object-cover border flex-shrink-0"
+              />
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-gray-900 truncate">
+                  {{ member.name }}
+                </div>
+              </div>
+            </button>
+          </div>
+
           <!-- No results -->
           <div
             v-if="
               !isLoading &&
               filteredCompanies.length === 0 &&
               filteredSpeakers.length === 0 &&
+              filteredMembers.length === 0 &&
               searchTerm.trim()
             "
             class="p-3 text-gray-500 text-center"
           >
-            No companies or speakers found
+            No companies, speakers or members found
           </div>
 
           <!-- Welcome message when no search term -->
@@ -170,11 +203,12 @@
               !isLoading &&
               !searchTerm.trim() &&
               filteredCompanies.length === 0 &&
-              filteredSpeakers.length === 0
+              filteredSpeakers.length === 0 &&
+              filteredMembers.length === 0
             "
             class="p-3 text-gray-500 text-center"
           >
-            Start typing to search companies and speakers...
+            Start typing to search companies, speakers and members...
           </div>
 
           <!-- Create options -->
@@ -255,6 +289,7 @@ import { ref, computed, watch, nextTick } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllCompanies } from "@/api/companies";
 import { getAllSpeakers } from "@/api/speakers";
+import { getAllMembers } from "@/api/members";
 import { useEventStore } from "@/stores/event";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -271,8 +306,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
+import type { Member } from "@/dto/members";
 
-type SelectedItem = Company | Speaker;
+type SelectedItem = Company | Speaker | Member;
 
 interface Props {
   modelValue?: string;
@@ -297,6 +333,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   companySelected: [value: Company];
   speakerSelected: [value: Speaker];
+  memberSelected: [value: Member];
   "update:modelValue": [value: string];
   companySuccess: [companyId: string];
   speakerSuccess: [speakerId: string];
@@ -335,8 +372,14 @@ const { data: speakersData, isLoading: speakersLoading } = useQuery({
   enabled: () => !!eventStore.selectedEvent?.id,
 });
 
+const { data: membersData, isLoading: membersLoading } = useQuery({
+  key: () => ["members"],
+  query: () => getAllMembers({}),
+  enabled: () => !!eventStore.selectedEvent?.id,
+});
+
 const isLoading = computed(
-  () => companiesLoading.value || speakersLoading.value,
+  () => companiesLoading.value || speakersLoading.value || membersLoading.value,
 );
 
 const filteredCompanies = computed(() => {
@@ -377,12 +420,37 @@ const filteredSpeakers = computed(() => {
     .slice(0, 5); // Limit to 5 results
 });
 
+const filteredMembers = computed(() => {
+  if (!membersData.value?.data) return [];
+
+  const term = searchTerm.value.toLowerCase();
+
+  if (!term) {
+    // Show recent members when no search term
+    return membersData.value.data.slice(0, 5);
+  }
+
+  return membersData.value.data
+    .filter((member: Member) => member.name.toLowerCase().includes(term))
+    .slice(0, 5);
+});
+
 const results = computed(() => [
-  ...filteredCompanies.value,
-  ...filteredSpeakers.value,
+  ...filteredCompanies.value.map((company: Company) => ({
+    ...company,
+    type: "company",
+  })),
+  ...filteredSpeakers.value.map((speaker: Speaker) => ({
+    ...speaker,
+    type: "speaker",
+  })),
+  ...filteredMembers.value.map((member: Member) => ({
+    ...member,
+    type: "member",
+  })),
 ]);
 
-const getItemIndex = (item: Company | Speaker) => {
+const getItemIndex = (item: SelectedItem) => {
   return results.value.findIndex((result) => result.id === item.id);
 };
 
@@ -396,6 +464,10 @@ const getItemImage = (item: SelectedItem) => {
       return item.imgs.internal || item.imgs.speaker;
     }
   }
+
+  // Member may have an `img` property
+  if ((item as Member).img) return (item as Member).img;
+
   return "";
 };
 
@@ -440,11 +512,11 @@ const handleKeydown = (event: KeyboardEvent) => {
       highlightedIndex.value < results.value.length
     ) {
       const selectedResult = results.value[highlightedIndex.value];
-      if ("companyName" in selectedResult) {
-        // It's a speaker
+      if (selectedResult.type === "speaker") {
         selectSpeaker(selectedResult as Speaker);
-      } else {
-        // It's a company
+      } else if (selectedResult.type === "member") {
+        selectMember(selectedResult as Member);
+      } else if (selectedResult.type === "company") {
         selectCompany(selectedResult as Company);
       }
     }
@@ -467,6 +539,15 @@ const selectSpeaker = (speaker: Speaker) => {
   highlightedIndex.value = -1;
   emit("speakerSelected", speaker);
   emit("update:modelValue", speaker.name);
+};
+
+const selectMember = (member: Member) => {
+  selectedItem.value = member;
+  searchTerm.value = member.name;
+  showSuggestions.value = false;
+  highlightedIndex.value = -1;
+  emit("memberSelected", member);
+  emit("update:modelValue", member.name);
 };
 
 const clearSelection = () => {
