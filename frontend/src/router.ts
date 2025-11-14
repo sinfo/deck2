@@ -42,6 +42,11 @@ const router = createRouter({
           component: () => import("./views/Dashboard/Speakers/SpeakerView.vue"),
         },
         {
+          path: "member/:memberId",
+          name: "member",
+          component: () => import("./views/Dashboard/Members/MemberView.vue"),
+        },
+        {
           path: "settings",
           name: "settings",
           component: () => import("./views/Dashboard/SettingsView.vue"),

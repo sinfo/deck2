@@ -26,7 +26,12 @@
     <template #default="{ item }">
       <div class="w-full border-b border-muted-foreground/10 pb-4 mb-4">
         <div class="flex items-center justify-between w-full py-2">
-          <MemberWithAvatar :member="item" with-separator />
+          <RouterLink
+            :to="{ name: 'member', params: { memberId: item.id } }"
+            class="flex items-center gap-3 no-underline"
+          >
+            <MemberWithAvatar :member="item" with-separator />
+          </RouterLink>
           <button
             type="button"
             class="p-2 rounded-md hover:bg-slate-100"
