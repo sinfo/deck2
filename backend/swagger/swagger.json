@@ -91,6 +91,10 @@
     {
       "name": "threads",
       "description": "Additional communication taken inside the posts"
+    },
+    {
+      "name": "logs",
+      "description": "Audit logs for actions taken in the system"
     }
   ],
   "schemes": ["http"],
@@ -356,6 +360,18 @@
     },
     "/public/speakers/{id}": {
       "$ref": "./public-speakers-id.json"
+    },
+    "/logs": {
+      "$ref": "./logs.json"
+    },
+    "/logs/{id}": {
+      "$ref": "./logs-id.json"
+    },
+    "/logs/speaker/{id}": {
+      "$ref": "./logs-speaker-id.json"
+    },
+    "/logs/company/{id}": {
+      "$ref": "./logs-company-id.json"
     },
     "/public/events/latest": {
       "$ref": "./public-events-latest.json"

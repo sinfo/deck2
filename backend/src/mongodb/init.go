@@ -48,6 +48,8 @@ var (
 	CompanyReps *CompanyRepsType
 	//Notifications is an instance of a mongodb collection
 	Notifications *NotificationsType
+	//Logs is an instance of a mongodb collection
+	Logs *LogsType
 	//Templates is an instance of a mongodb collection
 	Templates *TemplateType
 )
@@ -169,6 +171,10 @@ func InitializeDatabase() {
 		Collection: db.Collection("notifications"),
 	}
 
+	Logs = &LogsType{
+		Collection: db.Collection("logs"),
+	}
+
 	Templates = &TemplateType{
 		Collection: db.Collection("templates"),
 	}
@@ -178,6 +184,13 @@ func InitializeDatabase() {
 		mongo.IndexModel{
 			Keys:    bson.D{{Key: "name", Value: 1}},
 			Options: options.Index().SetUnique(true),
+		},
+	)
+
+	_, _ = Logs.Collection.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.D{{Key: "date", Value: -1}},
 		},
 	)
 

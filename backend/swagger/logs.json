@@ -1,0 +1,26 @@
+{
+  "get": {
+    "tags": ["logs"],
+    "summary": "Get logs",
+    "operationId": "getLogs",
+    "consumes": ["multipart/form-data"],
+    "produces": ["application/json"],
+    "security": [{ "Bearer": [] }],
+    "parameters": [
+      { "name": "resource", "in": "query", "type": "string" },
+      { "name": "action", "in": "query", "type": "string" },
+      { "name": "actor", "in": "query", "type": "string" },
+      { "name": "event", "in": "query", "type": "integer", "format": "int32" },
+      { "name": "limit", "in": "query", "type": "integer", "format": "int32" },
+      { "name": "skip", "in": "query", "type": "integer", "format": "int32" }
+    ],
+    "responses": {
+      "200": {
+        "description": "Logs",
+        "schema": { "type": "array", "items": { "$ref": "./models/log.json" } }
+      },
+      "417": { "description": "Unable to get logs" },
+      "401": { "description": "Unauthorized" }
+    }
+  }
+}

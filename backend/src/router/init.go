@@ -337,5 +337,13 @@ func InitializeRouter() {
 	templatesRouter.HandleFunc("/filled/{uuid}", getFilledTemplate).Methods("GET")
 
 	// save router instance
+
+	// logs (admin)
+	logsRouter := r.PathPrefix("/logs").Subrouter()
+	logsRouter.HandleFunc("", authAdmin(getLogs)).Methods("GET")
+	logsRouter.HandleFunc("/{id}", authAdmin(getLog)).Methods("GET")
+	logsRouter.HandleFunc("/speaker/{id}", authAdmin(getLogsBySpeaker)).Methods("GET")
+	logsRouter.HandleFunc("/company/{id}", authAdmin(getLogsByCompany)).Methods("GET")
+
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
 }
