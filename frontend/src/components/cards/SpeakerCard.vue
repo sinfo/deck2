@@ -52,21 +52,6 @@
           </div>
           <div class="flex flex-wrap gap-1 mt-2">
             <Badge v-if="speaker.companyName">{{ speaker.companyName }}</Badge>
-
-            <Badge
-              :class="
-                participationStatusColor[
-                  speaker.participation?.status || 'SUGGESTED'
-                ]?.background
-              "
-              class="text-xs"
-            >
-              {{
-                humanReadableParticipationStatus[
-                  speaker.participation?.status || "SUGGESTED"
-                ]
-              }}
-            </Badge>
           </div>
         </div>
       </div>
@@ -110,10 +95,6 @@ import type {
 } from "@/dto/speakers";
 import { useSpeakerInfoMutation } from "@/mutations/speakers";
 import { useSpeakerImageUploadMutation } from "@/mutations/speakers";
-import {
-  participationStatusColor,
-  humanReadableParticipationStatus,
-} from "@/dto";
 import Card from "../ui/card/Card.vue";
 import CardContent from "../ui/card/CardContent.vue";
 import CardDescription from "../ui/card/CardDescription.vue";
