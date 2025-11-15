@@ -102,7 +102,7 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 		if err != nil {
 			return nil, err
 		}
-		
+
 		dataQuery["contact"] = contact.ID
 	} else {
 		contact, err := Contacts.Collection.InsertOne(ctx, bson.M{
@@ -144,10 +144,8 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCompanyRepData) (*models.CompanyRep, error) {
 	ctx := context.Background()
 
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"name": data.Name,
-		},
+	setDoc := bson.M{
+		"name": data.Name,
 	}
 
 	if data.Contact != nil {
@@ -156,8 +154,11 @@ func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCom
 			return nil, err
 		}
 
-		updateQuery["$Set.contact"] = contact.ID
+		// add contact id to the $set document
+		setDoc["contact"] = contact.ID
 	}
+
+	var updateQuery = bson.M{"$set": setDoc}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)

@@ -141,6 +141,7 @@
               can-delete
               :entity-id="companyId"
               entity-type="company"
+              :rep-id="rep.id"
               :is-deleting="isDeleting"
               :class="{
                 'ml-2 md:ml-4': isReorderMode,
