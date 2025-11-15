@@ -21,7 +21,7 @@
                     Current
                   </h4>
                 </div>
-                <EditableParticipation
+                <EditableCompanyParticipation
                   v-if="isCompanyParticipation(currentParticipation)"
                   :participation="currentParticipation"
                   :company-id="entityId"
@@ -160,7 +160,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
-import EditableParticipation from "./companies/EditableParticipation.vue";
+import EditableCompanyParticipation from "./companies/EditableCompanyParticipation.vue";
 import EditableSpeakerParticipation from "./speakers/EditableSpeakerParticipation.vue";
 import type { CompanyParticipation } from "@/dto/companies";
 import type { SpeakerParticipation } from "@/dto/speakers";

@@ -7,7 +7,7 @@
         </h4>
         <div class="flex items-center gap-2">
           <Popover
-            :open="isEditing && isStatusMenuOpen"
+            :open="isStatusMenuOpen"
             @update:open="isStatusMenuOpen = $event"
           >
             <PopoverTrigger as-child>
@@ -16,7 +16,7 @@
                 class="text-xs flex items-center gap-1 cursor-pointer"
               >
                 {{ humanReadableParticipationStatus[selectedStatus] }}
-                <ChevronDown v-if="isEditing" class="w-3 h-3" />
+                <ChevronDown class="w-3 h-3" />
               </Badge>
             </PopoverTrigger>
             <PopoverContent class="w-56 p-0">
