@@ -66,6 +66,11 @@ export const createCompanyRepresentative = (
 export const deleteCompanyRepresentative = (id: string, repId: string) =>
   instance.delete(`/companies/${id}/employer/${repId}`);
 
+export const updateCompanyRepresentative = (
+  repId: string,
+  data: CreateCompanyRepData,
+) => instance.put(`/companyReps/${repId}`, data);
+
 export const updateRepresentativeOrder = (
   id: string,
   representativeIds: string[],

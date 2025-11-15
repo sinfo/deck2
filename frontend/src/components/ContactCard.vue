@@ -55,7 +55,7 @@
                 <div class="flex-1 overflow-y-auto p-6 min-h-0">
                   <ContactForm
                     v-if="contact"
-                    without-name
+                    :without-name="entityType !== 'company'"
                     mode="edit"
                     :initial-data="{
                       id: contact.id,
@@ -247,6 +247,7 @@ import type { Contact } from "@/dto/contacts";
 import type { ContactSocials, CreateContactData } from "@/dto/contacts";
 import { Gender, Language } from "@/dto/contacts";
 import { updateContact } from "@/api/contacts";
+import { updateCompanyRepresentative } from "@/api/companies";
 import Card from "./ui/card/Card.vue";
 import CardContent from "./ui/card/CardContent.vue";
 import Badge from "./ui/badge/Badge.vue";
@@ -262,6 +263,7 @@ interface Props {
   canDelete?: boolean;
   entityId?: string;
   entityType?: "company" | "speaker";
+  repId?: string;
   isDeleting?: boolean;
 }
 
@@ -273,6 +275,7 @@ const props = withDefaults(defineProps<Props>(), {
   contactName: undefined,
   entityId: undefined,
   entityType: undefined,
+  repId: undefined,
 });
 
 const emit = defineEmits<{
@@ -330,6 +333,28 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
   };
 
   updateContactMutation({ id: props.contact.id, data: contactData });
+
+  // If this contact is a company representative, also persist the representative's name
+  // through the companyRep endpoint so the rep name is updated.
+  if (props.entityType === "company" && props.repId) {
+    try {
+      await updateCompanyRepresentative(props.repId, {
+        name: data.name,
+        contact: data.contact,
+      });
+
+      // Invalidate representatives query for this company so UI refreshes
+      if (props.entityId) {
+        queryCache.invalidateQueries({
+          key: ["company-representatives", props.entityId],
+        });
+      }
+    } catch (err) {
+      // Log and continue — contact update already attempted
+      console.error("Failed to update company representative:", err);
+    }
+  }
+
   isEditFormOpen.value = false;
 };
 
