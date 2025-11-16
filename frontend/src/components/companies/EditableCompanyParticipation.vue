@@ -45,8 +45,18 @@
             Edit
           </Button>
           <div v-else class="flex gap-2">
-            <Button size="sm" :disabled="isSaving" @click="saveChanges">
-              {{ isSaving ? "Saving..." : "Save" }}
+            <Button
+              size="sm"
+              :disabled="isSaving || isStatusUpdating"
+              @click="saveChanges"
+            >
+              {{
+                isSaving
+                  ? "Saving..."
+                  : isStatusUpdating
+                    ? "Updating..."
+                    : "Save"
+              }}
             </Button>
             <Button variant="outline" size="sm" @click="cancelEditing">
               Cancel
@@ -183,6 +193,7 @@ const props = defineProps<Props>();
 const isEditing = ref(false);
 const isSaving = ref(false);
 const isStatusMenuOpen = ref(false);
+const isStatusUpdating = ref(false);
 const selectedStatus = ref<ParticipationStatus>(props.participation.status);
 
 const updateMutation = useCompanyParticipationMutation();
@@ -243,9 +254,21 @@ const { data: membersData } = useQuery({
   query: () => getAllMembers(),
 });
 
-const selectStatus = (status: ParticipationStatus) => {
+const selectStatus = async (status: ParticipationStatus) => {
+  const previous = selectedStatus.value;
   selectedStatus.value = status;
   isStatusMenuOpen.value = false;
+  try {
+    isStatusUpdating.value = true;
+    statusMutation.companyId.value = props.companyId;
+    await statusMutation.mutate(status);
+  } catch (err) {
+    console.error("Failed to update participation status:", err);
+    // revert value on error
+    selectedStatus.value = previous;
+  } finally {
+    isStatusUpdating.value = false;
+  }
 };
 
 const startEditing = () => {
@@ -267,10 +290,6 @@ const saveChanges = async () => {
   isSaving.value = true;
 
   try {
-    if (selectedStatus.value !== props.participation.status) {
-      statusMutation.mutate(selectedStatus.value);
-    }
-
     const dataToSend = {
       ...editForm,
       confirmed: convertDatetimeLocalToISO(editForm.confirmed!),
