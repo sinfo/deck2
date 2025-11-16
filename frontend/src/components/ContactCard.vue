@@ -126,6 +126,21 @@
                     >
                       {{ mail.mail }}
                     </a>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      class="h-6 w-6 p-0"
+                      :disabled="isSaving"
+                      :title="'Copy email'"
+                      @click="copyEmail(mail.mail)"
+                    >
+                      <template v-if="copiedEmail === mail.mail">
+                        <CheckIcon class="w-4 h-4 text-black" />
+                      </template>
+                      <template v-else>
+                        <ClipboardIcon class="w-4 h-4" />
+                      </template>
+                    </Button>
                     <div
                       v-if="mail.personal || !mail.valid"
                       class="flex gap-1 flex-shrink-0"
@@ -145,6 +160,9 @@
                         Invalid
                       </Badge>
                     </div>
+                  </div>
+                  <div v-if="copyError" class="text-xs text-destructive mt-1">
+                    {{ copyError }}
                   </div>
                 </div>
               </div>
@@ -255,6 +273,7 @@ import Button from "./ui/button/Button.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import ContactForm from "./companies/ContactForm.vue";
 import type { CreateCompanyRepData } from "@/dto/companies";
+import { ClipboardIcon, CheckIcon } from "lucide-vue-next";
 
 interface Props {
   contact?: Contact;
@@ -401,6 +420,27 @@ const hasSocials = (socials?: ContactSocials): boolean => {
     socials.github ||
     socials.skype
   );
+};
+
+const copiedEmail = ref<string | null>(null);
+const copyError = ref<string | null>(null);
+
+const copyEmail = async (email: string) => {
+  if (!navigator?.clipboard) {
+    copyError.value = "Clipboard not available";
+    setTimeout(() => (copyError.value = null), 2000);
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(email);
+    copiedEmail.value = email;
+    setTimeout(() => (copiedEmail.value = null), 2000);
+  } catch (err) {
+    copyError.value = "Failed to copy email";
+    setTimeout(() => (copyError.value = null), 2000);
+    console.error("Failed to copy email:", err);
+  }
 };
 
 const linkedinUrl = (username: string): string => {
