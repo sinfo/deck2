@@ -57,6 +57,17 @@ const router = createRouter({
           component: () =>
             import("./views/Dashboard/Leaderboard/LeaderboardView.vue"),
         },
+        {
+          path: "packages",
+          name: "event-packages",
+          component: () => import("./views/Dashboard/Events/PackagesView.vue"),
+        },
+        {
+          path: "items",
+          name: "packages-items",
+          component: () =>
+            import("./views/Dashboard/Items/PackageItemsView.vue"),
+        },
       ],
     },
   ],

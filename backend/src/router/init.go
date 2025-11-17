@@ -168,6 +168,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation/status/{status}", authMember(setCompanyStatus)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/package/{packageID}", authCoordinator(setCompanyPackage)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/billing", authCoordinator(addCompanyParticipationBilling)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/billing/{billingID}", authCoordinator(deleteCompanyParticipationBilling)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/threads", authMember(getCompanyThreads)).Methods("GET")
@@ -261,6 +262,10 @@ func InitializeRouter() {
 
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
+	itemRouter.HandleFunc("/categories", authMember(getItemCategories)).Methods("GET")
+	itemRouter.HandleFunc("/categories", authCoordinator(createItemCategory)).Methods("POST")
+	itemRouter.HandleFunc("/categories/{id}", authCoordinator(updateItemCategory)).Methods("PUT")
+	itemRouter.HandleFunc("/categories/{id}", authCoordinator(deleteItemCategory)).Methods("DELETE")
 	itemRouter.HandleFunc("", authMember(getItems)).Methods("GET")
 	itemRouter.HandleFunc("", authCoordinator(createItem)).Methods("POST")
 	itemRouter.HandleFunc("/{id}", authMember(getItem)).Methods("GET")

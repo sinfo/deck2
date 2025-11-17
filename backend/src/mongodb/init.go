@@ -28,6 +28,8 @@ var (
 	Members *MembersType
 	//Items is an instance of a mongodb collection
 	Items *ItemsType
+	//Categories is an instance for item categories
+	Categories *ItemCategoriesType
 	//Packages is an instance of a mongodb collection
 	Packages *PackagesType
 	//Meetings is an instance of a mongodb collection
@@ -129,6 +131,10 @@ func InitializeDatabase() {
 		Collection: db.Collection("items"),
 	}
 
+	Categories = &ItemCategoriesType{
+		Collection: db.Collection("itemCategories"),
+	}
+
 	Packages = &PackagesType{
 		Collection: db.Collection("packages"),
 	}
@@ -172,6 +178,33 @@ func InitializeDatabase() {
 	Templates = &TemplateType{
 		Collection: db.Collection("templates"),
 	}
+
+	// Ensure index for categories
+	if err := Categories.EnsureIndexes(); err != nil {
+		log.Println("Warning: failed to ensure categories indexes:", err)
+	}
+
+	// Seed default categories if none exist yet
+	func() {
+		ctx := context.Background()
+		cnt, err := Categories.Collection.CountDocuments(ctx, bson.M{})
+		if err != nil {
+			log.Println("Could not count categories:", err)
+			return
+		}
+		if cnt == 0 {
+			defaultCats := []interface{}{"Publicity", "Merchandise", "Stands", "Talk", "Sponsorship", "Service", "Other"}
+			docs := make([]interface{}, 0, len(defaultCats))
+			for _, c := range defaultCats {
+				docs = append(docs, bson.M{"name": c})
+			}
+			if len(docs) > 0 {
+				if _, err := Categories.Collection.InsertMany(ctx, docs); err != nil {
+					log.Println("Could not seed default categories:", err)
+				}
+			}
+		}
+	}()
 
 	_, err = Templates.Collection.Indexes().CreateOne(
 		context.Background(),

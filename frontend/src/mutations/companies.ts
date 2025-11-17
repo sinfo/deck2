@@ -1,6 +1,7 @@
 import {
   updateCompany,
   updateCompanyParticipation,
+  updateCompanyParticipationPackage,
   updateCompanyParticipationStatus,
   updateCompanyParticipationStep,
   createCompanyParticipation,
@@ -173,6 +174,28 @@ export const useCompanyInfoMutation = defineMutation(() => {
     ...mutation,
     companyId,
     companyData,
+  };
+});
+
+export const useCompanyParticipationPackageMutation = defineMutation(() => {
+  const companyId = ref<string>();
+  const packageId = ref<string>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: () =>
+      updateCompanyParticipationPackage(companyId.value!, packageId.value!),
+    onSettled: () => {
+      queryCache.invalidateQueries({ key: ["company", companyId.value!] });
+      queryCache.invalidateQueries({ key: ["companies"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    companyId,
+    packageId,
   };
 });
 

@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch, type FunctionalComponent } from "vue";
-import { Menu, X, LogOut, Settings, Trophy } from "lucide-vue-next";
+import {
+  Menu,
+  X,
+  LogOut,
+  Settings,
+  Trophy,
+  ChevronDown,
+} from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import type { RouteLocationRaw } from "vue-router";
 import { useQuery } from "@pinia/colada";
@@ -24,6 +31,11 @@ import Notification from "./navbar/Notification.vue";
 
 const isOpen = ref(false);
 const authStore = useAuthStore();
+
+const showCoordination = computed(() => {
+  const role = authStore.decoded?.role as string | undefined;
+  return role === "COORDINATOR" || role === "ADMIN";
+});
 const router = useRouter();
 
 const logout = () => {
@@ -144,6 +156,23 @@ watch(shortcutLinux, () => {
         <!-- Desktop Navigation -->
         <div class="hidden md:flex items-center space-x-4">
           <Notification />
+          <div v-if="showCoordination" class="relative group">
+            <button
+              class="text-gray-600 hover:text-gray-900 flex items-center gap-1"
+            >
+              Coordination
+              <ChevronDown class="h-4 w-4" />
+            </button>
+            <div
+              class="absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg invisible group-hover:visible group-hover:opacity-100 opacity-0 transition-all"
+            >
+              <RouterLink
+                :to="{ name: 'event-packages' }"
+                class="block px-4 py-2 text-sm hover:bg-gray-50"
+                >Packages</RouterLink
+              >
+            </div>
+          </div>
           <RouterLink
             v-for="item in navigation"
             :key="item.name"
@@ -199,6 +228,16 @@ watch(shortcutLinux, () => {
               <component :is="item.icon" v-if="item.icon" class="h-4 w-4" />
               <span>{{ item.name }}</span>
             </RouterLink>
+
+            <div v-if="showCoordination" class="pl-3">
+              <div class="text-sm font-medium text-gray-700">Coordination</div>
+              <RouterLink
+                :to="{ name: 'event-packages' }"
+                class="text-gray-600 hover:text-gray-900 flex items-center gap-2 pl-2"
+              >
+                Packages
+              </RouterLink>
+            </div>
 
             <Button
               variant="ghost"

@@ -545,6 +545,36 @@ func addCompanyPackage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// setCompanyPackage assigns an existing package (template) to a company's participation
+// on the current event. Expects the package ID in the URL path.
+func setCompanyPackage(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+	packageID, _ := primitive.ObjectIDFromHex(params["packageID"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdatePackage(companyID, packageID)
+	if err != nil {
+		http.Error(w, "Could not update company's package: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationPackage,
+			Company: &updatedCompany.ID,
+		})
+	}
+}
+
 func addCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
