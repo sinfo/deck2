@@ -43,6 +43,12 @@ export const updateCompanyParticipation = (
   data: UpdateCompanyParticipationData,
 ) => instance.put<Company>(`/companies/${id}/participation`, data);
 
+export const updateCompanyParticipationPackage = (
+  id: string,
+  packageId: string,
+) =>
+  instance.put<Company>(`/companies/${id}/participation/package/${packageId}`);
+
 export const updateCompanyParticipationStatus = (id: string, status: string) =>
   instance.put<Company>(`/companies/${id}/participation/status/${status}`);
 

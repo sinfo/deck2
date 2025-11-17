@@ -2,9 +2,8 @@
   <Card class="p-4">
     <div class="space-y-4">
       <div class="flex items-center justify-between">
-        <h4 class="font-medium">
-          {{ getEventName(participation.event) }}
-        </h4>
+        <h4 class="font-medium">{{ getEventName(participation.event) }}</h4>
+
         <div class="flex items-center gap-2">
           <Popover
             :open="isStatusMenuOpen"
@@ -44,6 +43,7 @@
           >
             Edit
           </Button>
+
           <div v-else class="flex gap-2">
             <Button
               size="sm"
@@ -58,9 +58,9 @@
                     : "Save"
               }}
             </Button>
-            <Button variant="outline" size="sm" @click="cancelEditing">
-              Cancel
-            </Button>
+            <Button variant="outline" size="sm" @click="cancelEditing"
+              >Cancel</Button
+            >
           </div>
         </div>
       </div>
@@ -84,8 +84,13 @@
 
           <div v-if="participation.confirmed" class="text-sm">
             <span class="font-medium">Confirmed:</span>
-            <div class="mt-1 text-muted-foreground">
-              {{ formatDate(participation.confirmed) }}
+            <div class="mt-1 text-muted-foreground flex items-center gap-4">
+              <span>{{ formatDate(participation.confirmed) }}</span>
+              <span
+                v-if="participation.package && packageName"
+                class="text-xs text-muted-foreground"
+                >· {{ packageName }}</span
+              >
             </div>
           </div>
 
@@ -136,6 +141,47 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-1 gap-4">
+          <div class="space-y-2">
+            <Label for="package-select">Package</Label>
+            <div>
+              <select
+                id="package-select"
+                v-model="selectedPackageId"
+                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                @change="onPackageChange"
+              >
+                <option value="">-- Select package --</option>
+                <option
+                  v-for="opt in packageOptions"
+                  :key="opt.id"
+                  :value="opt.id"
+                >
+                  {{ opt.name }}
+                </option>
+              </select>
+              <div
+                v-if="isPackageLoading"
+                class="text-xs text-muted-foreground mt-1"
+              >
+                Loading packages...
+              </div>
+              <div
+                v-if="isPackageUpdating"
+                class="text-xs text-muted-foreground mt-1"
+              >
+                Updating package...
+              </div>
+              <div
+                v-if="!isPackageLoading && packageOptions.length === 0"
+                class="text-xs text-muted-foreground mt-1"
+              >
+                No packages available for this event.
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="flex items-center space-x-2">
           <input
             id="partner-checkbox"
@@ -153,7 +199,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, watch } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
@@ -166,6 +212,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import MemberSelect from "@/components/members/MemberSelect.vue";
+import { useCompanyParticipationPackageMutation } from "@/mutations/companies";
+import { getPackageById } from "@/api/packages";
+import type { Package } from "@/dto/packages";
 import type {
   CompanyParticipation,
   UpdateCompanyParticipationData,
@@ -244,6 +293,16 @@ const editForm = reactive<UpdateCompanyParticipationData>({
   notes: props.participation.notes,
 });
 
+const packageOptions = ref<{ id: string; name: string }[]>([]);
+const selectedPackageId = ref<string>(
+  props.participation.package ? String(props.participation.package) : "",
+);
+const packageName = ref<string | null>(null);
+const isPackageLoading = ref(false);
+const isPackageUpdating = ref(false);
+const packageMutation = useCompanyParticipationPackageMutation();
+packageMutation.companyId.value = props.companyId;
+
 const { data: eventsData } = useQuery({
   key: () => ["events"],
   query: () => getAllEvents(),
@@ -272,6 +331,7 @@ const selectStatus = async (status: ParticipationStatus) => {
 };
 
 const startEditing = () => {
+  // entering edit mode for participation
   isEditing.value = true;
   selectedStatus.value = props.participation.status;
   editForm.member = props.participation.member;
@@ -280,6 +340,83 @@ const startEditing = () => {
   const confirmedDate = props.participation.confirmed;
   editForm.confirmed = formatToDatetimeLocal(confirmedDate);
   editForm.notes = props.participation.notes;
+
+  // Load event packages for selection (no-op if events not yet loaded)
+  loadEventPackages(props.participation.event);
+};
+
+const loadEventPackages = async (eventId: number) => {
+  packageOptions.value = [];
+  const ev = eventsData.value?.data?.find((e) => e.id === eventId);
+
+  if (!ev) return;
+
+  isPackageLoading.value = true;
+  try {
+    const all = await (await import("@/api/packages")).getPackages();
+    const allPkgs = all as Package[];
+    const name = String(ev.name || "");
+    const pkgs =
+      name.length > 0
+        ? allPkgs.filter((ap) => String(ap.name || "").startsWith(name))
+        : allPkgs;
+
+    packageOptions.value = pkgs.map((p) => ({
+      id: String(p.id),
+      name: p.name || "(no name)",
+    }));
+  } catch (err) {
+    console.error("Failed to load packages for event:", err);
+    packageOptions.value = [];
+  } finally {
+    isPackageLoading.value = false;
+  }
+};
+
+const loadPackageName = async (pkgId: string | null) => {
+  packageName.value = null;
+  if (!pkgId) return;
+  try {
+    const pkg = await getPackageById(pkgId);
+    packageName.value = pkg?.name || null;
+  } catch (err) {
+    console.error("Failed to load package name:", err);
+    packageName.value = null;
+  }
+};
+
+loadPackageName(
+  props.participation.package ? String(props.participation.package) : null,
+);
+
+watch(
+  () => props.participation.package,
+  (newVal) => {
+    loadPackageName(newVal ? String(newVal) : null);
+  },
+);
+
+watch(
+  () => eventsData.value?.data,
+  (newVal) => {
+    if (isEditing.value && newVal) {
+      loadEventPackages(props.participation.event);
+    }
+  },
+);
+
+const onPackageChange = async () => {
+  if (!selectedPackageId.value) return;
+  try {
+    isPackageUpdating.value = true;
+    packageMutation.packageId.value = selectedPackageId.value;
+    await packageMutation.mutate();
+    await loadPackageName(selectedPackageId.value);
+  } catch (err) {
+    console.error("Failed to update participation package:", err);
+  } finally {
+    isPackageUpdating.value = false;
+  }
 };
 
 const cancelEditing = () => {

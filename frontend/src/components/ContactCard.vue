@@ -82,32 +82,13 @@
                 </Button>
               </PopoverTrigger>
               <PopoverContent class="w-80">
-                <div class="space-y-3">
-                  <div>
-                    <h4 class="font-medium text-sm">Confirm deletion</h4>
-                    <p class="text-sm text-muted-foreground mt-1">
-                      Are you sure you want to remove this contact? This action
-                      cannot be undone.
-                    </p>
-                  </div>
-                  <div class="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      @click="isDeleteConfirmOpen = false"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      :disabled="isDeleting"
-                      @click="confirmDelete"
-                    >
-                      {{ isDeleting ? "Deleting..." : "Delete" }}
-                    </Button>
-                  </div>
-                </div>
+                <ConfirmDelete
+                  title="Confirm deletion"
+                  message="Are you sure you want to remove this contact? This action cannot be undone."
+                  :is-deleting="isDeleting"
+                  @cancel="isDeleteConfirmOpen = false"
+                  @confirm="confirmDelete"
+                />
               </PopoverContent>
             </Popover>
           </div>
@@ -272,6 +253,7 @@ import Badge from "./ui/badge/Badge.vue";
 import Button from "./ui/button/Button.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import ContactForm from "./companies/ContactForm.vue";
+import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { ClipboardIcon, CheckIcon } from "lucide-vue-next";
 
