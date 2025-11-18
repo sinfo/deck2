@@ -8,6 +8,13 @@
         @updated="handleCompanyUpdated"
       />
 
+      <DirectEmailDialogTrigger
+        v-if="companyWithParticipation"
+        :entity="companyWithParticipation"
+        entity-type="company"
+        button-class="w-full"
+      />
+
       <!-- Company Billing Information -->
       <CompanyBillingInfo
         :company="company?.data"
@@ -52,6 +59,7 @@ import CompanyBillingInfo from "@/components/companies/CompanyBillingInfo.vue";
 import CompanyContacts from "@/components/companies/CompanyContacts.vue";
 import CompanyCommunications from "@/components/companies/CompanyCommunications.vue";
 import ParticipationsCard from "@/components/ParticipationsCard.vue";
+import DirectEmailDialogTrigger from "@/components/DirectEmailDialogTrigger.vue";
 import type { CompanyWithParticipation } from "@/dto/companies";
 import { withCurrentParticipation } from "@/lib/utils";
 import { useEventStore } from "@/stores/event";
