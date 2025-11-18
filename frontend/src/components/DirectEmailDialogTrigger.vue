@@ -48,18 +48,21 @@
                 <div
                   v-for="email in availableEmails"
                   :key="email.address"
-                  class="flex items-center"
+                  class="flex items-center cursor-pointer hover:bg-gray-50 p-1 rounded"
+                  @click.prevent="toggleEmail(email)"
                 >
-                  <input
-                    :id="email.address"
-                    type="checkbox"
-                    class="h-4 w-4"
-                    :checked="
-                      selectedEmails.some((e) => e.address === email.address)
-                    "
-                    @change="handleCheckboxEvent(email, $event)"
-                  />
-                  <label :for="email.address" class="ml-2 text-sm">
+                  <div class="pointer-events-none">
+                    <Checkbox
+                      :id="email.address"
+                      :checked="
+                        selectedEmails.some((e) => e.address === email.address)
+                      "
+                    />
+                  </div>
+                  <label
+                    :for="email.address"
+                    class="ml-2 text-sm flex-1 cursor-pointer pointer-events-none"
+                  >
                     {{ email.name }} ({{ email.address }})
                   </label>
                 </div>
@@ -130,6 +133,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   useDirectEmail,
   type DirectEmailEntity,
@@ -210,11 +214,6 @@ watch(
   { deep: true },
 );
 
-// Debug: log template selection changes
-watch(selectedTemplate, (val) => {
-  console.log("selectedTemplate:", val);
-});
-
 // Debug: watch availableEmails to ensure fetch works
 watch(availableEmails, (val) => {
   try {
@@ -260,10 +259,11 @@ const handleCheckboxChange = (email: EmailWithDetails, checked: boolean) => {
   );
 };
 
-const handleCheckboxEvent = (email: EmailWithDetails, event: Event) => {
-  const target = event.target as HTMLInputElement | null;
-  const checked = !!(target && target.checked);
-  handleCheckboxChange(email, checked);
+const toggleEmail = (email: EmailWithDetails) => {
+  const isSelected = selectedEmails.value.some(
+    (e) => e.address === email.address,
+  );
+  handleCheckboxChange(email, !isSelected);
 };
 
 const handleSendEmail = async () => {
