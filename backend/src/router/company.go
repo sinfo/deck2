@@ -359,9 +359,9 @@ func (acd *addThreadData) ParseBody(body io.Reader) error {
 		return errors.New("invalid kind")
 	}
 
-	// if *acd.Kind == models.ThreadKindMeeting && acd.Meeting == nil {
-	// 	return errors.New("thread kind is meeting and meeting data is not given")
-	// }
+	if *acd.Kind == models.ThreadKindMeeting && acd.Meeting == nil {
+		return errors.New("thread kind is meeting and meeting data is not given")
+	}
 
 	return nil
 }
@@ -483,7 +483,7 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 		Status:   newThread.Status,
 	}
 
-	_ = updatedCompany // used below in notification
+	_ = updatedCompany
 
 	json.NewEncoder(w).Encode(threadWithEntry)
 

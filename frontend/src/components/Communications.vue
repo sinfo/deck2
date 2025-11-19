@@ -334,7 +334,7 @@
               <option :value="ThreadKind.ThreadKindPhoneCall">
                 Phone Call
               </option>
-              <option :value="ThreadKind.ThreadKindMeeting">Meeting</option>
+              <!-- Broken for now <option :value="ThreadKind.ThreadKindMeeting">Meeting</option> -->
               <option :value="ThreadKind.ThreadKindTemplate">Template</option>
             </select>
           </div>
