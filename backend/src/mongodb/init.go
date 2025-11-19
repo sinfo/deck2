@@ -193,10 +193,10 @@ func InitializeDatabase() {
 			return
 		}
 		if cnt == 0 {
-			defaultCats := []interface{}{"Publicity", "Merchandise", "Stands", "Talk", "Sponsorship", "Service", "Other"}
+			defaultCats := []string{"Publicity", "Merchandise", "Stands", "Talk", "Sponsorship", "Service", "Other"}
 			docs := make([]interface{}, 0, len(defaultCats))
-			for _, c := range defaultCats {
-				docs = append(docs, bson.M{"name": c})
+			for _, cat := range defaultCats {
+				docs = append(docs, bson.M{"name": cat})
 			}
 			if len(docs) > 0 {
 				if _, err := Categories.Collection.InsertMany(ctx, docs); err != nil {

@@ -48,7 +48,15 @@ export const getItemCategories = async () => {
 };
 
 export const createItemCategory = async (name: string) => {
-  const res = await instance.post(`/items/categories`, { name });
+  // Validate name: must be non-empty, trimmed, and not excessively long
+  const trimmedName = name.trim();
+  if (!trimmedName) {
+    throw new Error("Category name must not be empty.");
+  }
+  if (trimmedName.length > 100) {
+    throw new Error("Category name must not exceed 100 characters.");
+  }
+  const res = await instance.post(`/items/categories`, { name: trimmedName });
   return res.data;
 };
 
