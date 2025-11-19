@@ -357,9 +357,9 @@ const loadEventPackages = async (eventId: number) => {
     const allPkgs = all as Package[];
     const name = String(ev.name || "");
     const pkgs =
-      name.length > 0
-        ? allPkgs.filter((ap) => String(ap.name || "").startsWith(name))
-        : allPkgs;
+      eventId != null
+        ? allPkgs.filter((ap) => ap.eventId === eventId)
+        : [];
 
     packageOptions.value = pkgs.map((p) => ({
       id: String(p.id),

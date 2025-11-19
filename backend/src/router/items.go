@@ -260,7 +260,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !filetype.IsImage(bytes) {
-		http.Error(w, "Not an image: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Not an image", http.StatusBadRequest)
 		return
 	}
 
