@@ -253,7 +253,6 @@
 
             <!-- Actions -->
             <div
-              v-if="canEdit(thread)"
               :class="[
                 'mt-1 transition-opacity',
                 editingThreadId === thread.id
@@ -515,11 +514,8 @@ const onMessageInput = () => {
   props.postThreadMutation?.reset?.();
 };
 
-const canEdit = (thread: ThreadWithEntry) =>
-  getMessageDirection(thread.kind) === "outgoing" && !!thread.entry;
-
 const startEdit = (thread: ThreadWithEntry) => {
-  if (!canEdit(thread) || !thread.entry) return;
+  if (!thread.entry) return;
 
   editingThreadId.value = thread.id;
   editingPostId.value = thread.entry.id;
@@ -555,7 +551,7 @@ const saveEdit = async () => {
 };
 
 const requestDelete = async (thread: ThreadWithEntry) => {
-  if (!canEdit(thread)) return;
+  if (!thread.entry) return;
   const ok = window.confirm(
     "Delete this message? This action cannot be undone.",
   );

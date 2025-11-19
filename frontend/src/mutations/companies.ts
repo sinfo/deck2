@@ -195,9 +195,8 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       const tempPostId = crypto.randomUUID();
 
       const kind = threadData.value?.kind;
-      if (!kind) {
-        throw new Error("Thread kind is required for optimistic update");
-      }
+      if (!kind) throw new Error("Thread kind is required");
+
       const now = new Date().toISOString();
 
       const valToAdd: ThreadWithEntry = {
