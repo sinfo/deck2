@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { reactive, ref, onMounted, watch } from "vue";
 import { useEventStore } from "@/stores/event";
 import {
   createPackage,
@@ -192,6 +192,7 @@ const submit = async () => {
         name: finalName,
         price: Number(local.price || 0),
         vat: Number(local.vat || 0),
+        edition: eventStore.selectedEvent?.id || 0,
       });
       // Update items through dedicated endpoint
       const itemsToUpdate = (local.items || [])
@@ -272,6 +273,19 @@ const resetForm = () => {
     props.initial?.items ? JSON.parse(JSON.stringify(props.initial.items)) : []
   ) as PackageItem[];
 };
+
+// initialize/reset when component mounts or when the initial prop / event name changes
+onMounted(() => {
+  resetForm();
+});
+
+watch(
+  () => [props.initial, props.eventName, props.mode],
+  () => {
+    resetForm();
+  },
+  { immediate: true },
+);
 
 const handleCancel = () => {
   resetForm();

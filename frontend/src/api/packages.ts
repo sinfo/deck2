@@ -23,7 +23,7 @@ export const createPackage = async (data: {
 
 export const updatePackage = async (
   id: string,
-  data: { name: string; price: number; vat: number },
+  data: { name: string; price: number; vat: number; edition?: number },
 ) => {
   const res = await instance.put(`/packages/${id}`, data);
   return res.data as Package;
