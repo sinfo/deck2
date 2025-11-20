@@ -212,7 +212,7 @@
           </div>
 
           <!-- Create options -->
-          <div v-if="showCreate">
+          <div v-if="showCreate && searchTerm.trim()">
             <div class="border-t border-gray-200">
               <button
                 type="button"
