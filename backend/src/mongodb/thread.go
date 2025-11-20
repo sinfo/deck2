@@ -240,3 +240,27 @@ func (t *ThreadsType) UpdateThread(threadID primitive.ObjectID, data UpdateThrea
 	return &updatedThread, nil
 
 }
+
+// FindByPost finds the thread that contains the given post either as entry or as a comment
+func (t *ThreadsType) FindByPost(postID primitive.ObjectID) (*models.Thread, error) {
+	ctx := context.Background()
+
+	var thread models.Thread
+
+	filter := bson.M{
+		"$or": bson.A{
+			bson.M{"entry": postID},
+			bson.M{"comments": postID},
+		},
+	}
+
+	err := t.Collection.FindOne(ctx, filter).Decode(&thread)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &thread, nil
+}
