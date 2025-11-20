@@ -3,13 +3,25 @@
     <div class="grid grid-cols-1 gap-3">
       <div>
         <Label class="text-sm font-medium">Name</Label>
-        <Input
-          v-model="local.name"
-          placeholder="Package name (without event prefix)"
-        />
-        <p class="text-xs text-muted-foreground mt-1">
-          Name will be prefixed with the event name.
-        </p>
+        <!-- When editing, show the event prefix as read-only and allow editing only the suffix -->
+        <div v-if="props.mode === 'edit'" class="flex gap-2 items-center">
+          <span class="px-2 py-1 bg-gray-100 rounded text-sm">{{
+            eventNameTrimmed
+          }}</span>
+          <Input
+            v-model="local.nameSuffix"
+            placeholder="Package name (without event prefix)"
+          />
+        </div>
+        <div v-else>
+          <Input
+            v-model="local.name"
+            placeholder="Package name (without event prefix)"
+          />
+          <p class="text-xs text-muted-foreground mt-1">
+            Name will be prefixed with the event name.
+          </p>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3">
@@ -73,6 +85,7 @@
 
 <script setup lang="ts">
 import { reactive, ref } from "vue";
+import { useEventStore } from "@/stores/event";
 import {
   createPackage,
   updatePackage,
@@ -101,7 +114,10 @@ const emit = defineEmits(["saved", "cancel"] as const);
 
 const local = reactive({
   id: props.initial?.id as string | undefined,
+  // full name (used for create mode)
   name: (props.initial?.name as string) || "",
+  // suffix only (used for edit mode when prefix must not be changed)
+  nameSuffix: "",
   price: Number(props.initial?.price || 0),
   vat: Number(props.initial?.vat || 0),
   items: (props.initial?.items || []) as PackageItem[],
@@ -118,10 +134,27 @@ const ensurePrefixedName = (name: string) => {
   return `${prefix} ${name}`.trim();
 };
 
+const eventNameTrimmed = String(props.eventName || "").trim();
+
+const eventStore = useEventStore();
+
 const submit = async () => {
   isSaving.value = true;
   try {
-    const finalName = ensurePrefixedName(local.name);
+    // build finalName depending on mode
+    let finalName = "";
+    if (props.mode === "create") {
+      finalName = ensurePrefixedName(local.name);
+    } else {
+      // edit mode: keep prefix (event name) and only allow editing suffix
+      const prefix = eventNameTrimmed;
+      if (prefix) {
+        finalName = `${prefix} ${String(local.nameSuffix || "").trim()}`.trim();
+      } else {
+        finalName = String(local.nameSuffix || local.name).trim();
+      }
+    }
+
     if (props.mode === "create") {
       const payloadItems = (local.items || [])
         .map((i: PackageItem) => ({
@@ -149,6 +182,7 @@ const submit = async () => {
         price: Math.round(Number(local.price || 0)),
         vat: Math.round(Number(local.vat || 0)),
         items: payloadItems,
+        edition: eventStore.selectedEvent?.id || 0,
       };
 
       await createPackage(payload);
@@ -158,6 +192,7 @@ const submit = async () => {
         name: finalName,
         price: Number(local.price || 0),
         vat: Number(local.vat || 0),
+        edition: eventStore.selectedEvent?.id || 0,
       });
       // Update items through dedicated endpoint
       const itemsToUpdate = (local.items || [])
@@ -223,6 +258,14 @@ const removeItem = (idx: number) => {
 const resetForm = () => {
   local.id = props.initial?.id as string | undefined;
   local.name = (props.initial?.name as string) || "";
+  // when editing, extract suffix by removing the event prefix if present
+  const prefix = String(props.eventName || "").trim();
+  if (props.mode === "edit" && prefix && local.name.startsWith(prefix)) {
+    // remove prefix and optional following space
+    local.nameSuffix = local.name.slice(prefix.length).trim();
+  } else {
+    local.nameSuffix = (props.initial?.name as string) || "";
+  }
   local.price = Number(props.initial?.price || 0);
   local.vat = Number(props.initial?.vat || 0);
   // deep copy of items to avoid mutating prop
