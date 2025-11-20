@@ -146,7 +146,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
           id: tempPostId,
           member: authStore.decoded?.id,
           posted: new Date().toISOString(),
-          text: threadData.value?.text,
+          text: threadData.value?.text ?? "",
         },
       };
 
