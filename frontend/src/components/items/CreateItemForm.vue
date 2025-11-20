@@ -17,24 +17,29 @@
         <Label class="text-sm font-medium">Type *</Label>
         <div v-if="categories.length">
           <div class="flex gap-2 items-center">
-            <select
-              v-model="selectedCategory"
+            <Select
+              :model-value="selectedCategory"
               :disabled="isLoading"
-              class="flex-1 border rounded px-2 py-1"
+              @update:model-value="onUpdateSelectedCategory"
             >
-              <option value="">-- choose type --</option>
-              <option v-for="c in categories" :key="c" :value="c">
-                {{ c }}
-              </option>
-              <option value="__other__">Other (custom)</option>
-            </select>
+              <SelectTrigger class="flex-1 w-full">
+                <SelectValue placeholder="-- choose type --" />
+              </SelectTrigger>
+              <SelectContent>
+                <template v-for="c in categories" :key="c">
+                  <SelectItem :value="c">{{ c }}</SelectItem>
+                </template>
+                <SelectItem value="__other__">Other (custom)</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
               size="sm"
               variant="outline"
               :disabled="isLoading"
               @click.prevent="isCreateCategoryOpen = true"
-              >New</Button
             >
+              New
+            </Button>
           </div>
           <div v-if="isCustomType" class="mt-2">
             <Input
@@ -121,6 +126,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { createItem, getItemCategories, updateItem } from "@/api/items";
 import {
   AlertDialog,
@@ -339,4 +351,10 @@ const isFormValid = computed(() => {
     !!form.description && String(form.description).trim().length > 0;
   return nameOk && typeOk && descOk;
 });
+
+const onUpdateSelectedCategory = (val: unknown) => {
+  // the Select component may emit `string | null` or other acceptable values
+  const v = val == null ? "" : String(val);
+  selectedCategory.value = v;
+};
 </script>

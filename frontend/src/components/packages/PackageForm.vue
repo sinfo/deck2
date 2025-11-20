@@ -192,7 +192,6 @@ const submit = async () => {
         name: finalName,
         price: Number(local.price || 0),
         vat: Number(local.vat || 0),
-        edition: eventStore.selectedEvent?.id || 0,
       });
       // Update items through dedicated endpoint
       const itemsToUpdate = (local.items || [])
