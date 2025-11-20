@@ -358,7 +358,7 @@ const loadEventPackages = async (eventId: number) => {
     const name = String(ev.name || "");
     const pkgs =
       eventId != null
-        ? allPkgs.filter((ap) => ap.eventId === eventId)
+        ? allPkgs.filter((ap) => String(ap.name || "").startsWith(name))
         : [];
 
     packageOptions.value = pkgs.map((p) => ({
