@@ -826,6 +826,11 @@ func getSpeakerThreads(w http.ResponseWriter, r *http.Request) {
 				Status:   thread.Status,
 			})
 		}
+
+		participationComms = append(participationComms, &ParticipationCommunications{
+			Event:          participation.Event,
+			Communications: comms,
+		})
 	}
 
 	json.NewEncoder(w).Encode(participationComms)
