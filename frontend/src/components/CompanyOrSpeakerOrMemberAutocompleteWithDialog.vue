@@ -567,13 +567,13 @@ const hideSuggestions = () => {
 };
 
 const handleCreateCompany = (term: string) => {
-  createTerm.value = term.trim();;
+  createTerm.value = term.trim();
   isCompanyDialogOpen.value = true;
   showSuggestions.value = false;
 };
 
 const handleCreateSpeaker = (term: string) => {
-  createTerm.value = term.trim();;
+  createTerm.value = term.trim();
   isSpeakerDialogOpen.value = true;
   showSuggestions.value = false;
 };
