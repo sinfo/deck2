@@ -60,13 +60,14 @@ const router = createRouter({
         {
           path: "packages",
           name: "event-packages",
-          component: () => import("./views/Dashboard/Events/PackagesView.vue"),
+          component: () =>
+            import("./views/Dashboard/Packages/PackagesView.vue"),
         },
         {
           path: "items",
           name: "packages-items",
           component: () =>
-            import("./views/Dashboard/Items/PackageItemsView.vue"),
+            import("./views/Dashboard/Packages/Items/PackageItemsView.vue"),
         },
       ],
     },
