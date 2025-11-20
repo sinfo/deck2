@@ -252,14 +252,7 @@
             </div>
 
             <!-- Actions -->
-            <div
-              :class="[
-                'mt-1 transition-opacity',
-                editingThreadId === thread.id
-                  ? 'opacity-100'
-                  : 'opacity-0 group-hover/message:opacity-100',
-              ]"
-            >
+            <div :class="['mt-1 transition-opacity opacity-100']">
               <button
                 class="p-1 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/10 text-muted-foreground hover:opacity-80"
                 title="Edit"
