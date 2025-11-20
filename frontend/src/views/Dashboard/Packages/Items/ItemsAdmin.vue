@@ -18,63 +18,70 @@
 
     <div>
       <h3 class="font-medium mb-2">Items</h3>
-      <div class="space-y-2">
+      <div>
         <div v-if="isLoading">Loading...</div>
         <div v-else>
-          <div v-if="items.length === 0" class="text-sm text-muted-foreground">
-            No items found.
-          </div>
-          <div
-            v-for="it in items"
-            :key="it.id"
-            class="flex items-center justify-between border rounded p-2"
-          >
-            <div class="min-w-0">
-              <div class="font-medium truncate">{{ it.name }}</div>
-              <div class="text-xs text-muted-foreground">
-                {{ it.type }} • {{ formatPrice(it.price) }}
-              </div>
+          <div class="flex flex-col gap-2">
+            <div
+              v-if="items.length === 0"
+              class="text-sm text-muted-foreground"
+            >
+              No items found.
             </div>
-
-            <div class="flex items-center gap-2">
-              <!-- Mobile: compact actions (three dots) -->
-              <div class="md:hidden">
-                <Popover>
-                  <PopoverTrigger>
-                    <button class="p-1 rounded hover:bg-gray-100">
-                      <MoreVertical class="h-5 w-5 text-gray-600" />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent class="w-40">
-                    <div class="flex flex-col">
-                      <button
-                        class="text-left px-2 py-1 hover:bg-gray-50"
-                        @click="editItem(it)"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        class="text-left px-2 py-1 text-destructive hover:bg-gray-50"
-                        @click="openRemoveItem(it)"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+            <div
+              v-for="it in items"
+              :key="it.id"
+              class="flex items-center justify-between border rounded p-2 hover:bg-gray-50 transition-colors"
+            >
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="min-w-0">
+                  <div class="font-medium truncate">{{ it.name }}</div>
+                  <div class="text-xs text-muted-foreground">
+                    {{ it.type }} • {{ formatPrice(it.price) }}
+                  </div>
+                </div>
               </div>
 
-              <!-- Desktop: inline buttons -->
-              <div class="hidden md:flex items-center gap-2">
-                <Button size="sm" variant="ghost" @click="editItem(it)"
-                  >Edit</Button
-                >
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  @click="openRemoveItem(it)"
-                  >Delete</Button
-                >
+              <div class="flex items-center gap-2">
+                <!-- Mobile: compact actions (three dots) -->
+                <div class="md:hidden">
+                  <Popover>
+                    <PopoverTrigger>
+                      <button class="p-1 rounded hover:bg-gray-100">
+                        <MoreVertical class="h-5 w-5 text-gray-600" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent class="w-40">
+                      <div class="flex flex-col">
+                        <button
+                          class="text-left px-2 py-1 hover:bg-gray-50"
+                          @click="editItem(it)"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          class="text-left px-2 py-1 text-destructive hover:bg-gray-50"
+                          @click="openRemoveItem(it)"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <!-- Desktop: inline buttons -->
+                <div class="hidden md:flex items-center gap-2">
+                  <Button size="sm" variant="ghost" @click="editItem(it)"
+                    >Edit</Button
+                  >
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    @click="openRemoveItem(it)"
+                    >Delete</Button
+                  >
+                </div>
               </div>
             </div>
           </div>
