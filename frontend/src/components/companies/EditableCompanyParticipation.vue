@@ -145,21 +145,20 @@
           <div class="space-y-2">
             <Label for="package-select">Package</Label>
             <div>
-              <select
-                id="package-select"
-                v-model="selectedPackageId"
-                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                @change="onPackageChange"
-              >
-                <option value="">-- Select package --</option>
-                <option
-                  v-for="opt in packageOptions"
-                  :key="opt.id"
-                  :value="opt.id"
-                >
-                  {{ opt.name }}
-                </option>
-              </select>
+              <Select v-model="selectedPackageId">
+                <SelectTrigger>
+                  <SelectValue placeholder="-- Select package --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in packageOptions"
+                    :key="opt.id"
+                    :value="opt.id"
+                  >
+                    {{ opt.name }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
               <div
                 v-if="isPackageLoading"
                 class="text-xs text-muted-foreground mt-1"
@@ -231,6 +230,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Image from "../Image.vue";
 
 interface Props {
@@ -431,6 +437,12 @@ const onPackageChange = async () => {
     isPackageUpdating.value = false;
   }
 };
+
+// Watch for select changes (fires when user picks a package from the Select)
+watch(selectedPackageId, (newVal, oldVal) => {
+  if (newVal === oldVal) return;
+  onPackageChange();
+});
 
 const cancelEditing = () => {
   isEditing.value = false;
