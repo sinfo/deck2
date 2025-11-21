@@ -65,6 +65,12 @@ const makeMessage = (
       return "Meeting minute deleted";
     case "UPDATED_PRIVATE_IMAGE":
       return "Private image updated";
+    case "CREATED_PARTICIPATION_PACKAGE":
+      return "Participation package created";
+    case "UPDATED_PARTICIPATION_PACKAGE":
+      return "Participation package updated";
+    case "DELETED_PARTICIPATION_PACKAGE":
+      return "Participation package deleted";
     case "UPDATED":
       if (thread) {
         if (isActorPresent) {
