@@ -129,7 +129,7 @@ const items = ref<Item[]>([]);
 const isLoading = ref(false);
 const showSuggestions = ref(false);
 const selectedItem = ref<Item | null>(null);
-let searchTimeout: number | null = null;
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 watch(
   () => props.modelValue,
@@ -176,11 +176,8 @@ const handleInput = (ev: Event) => {
   searchTerm.value = val;
   if (selectedItem.value && val !== selectedItem.value.name)
     selectedItem.value = null;
-  if (searchTimeout) window.clearTimeout(searchTimeout);
-  searchTimeout = window.setTimeout(
-    () => search(val),
-    250,
-  ) as unknown as number;
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => search(val), 250);
 };
 
 const selectItem = (it: Item) => {
