@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, watch } from "vue";
+import { reactive, ref, onMounted, watch, computed } from "vue";
 import { findInvalidItemIds } from "@/lib/validators";
 import { useEventStore } from "@/stores/event";
 import {
@@ -126,7 +126,9 @@ const local = reactive({
 
 const isSaving = ref(false);
 
-const submitLabel = props.mode === "edit" ? "Update" : "Create";
+const submitLabel = computed(() =>
+  props.mode === "edit" ? "Update" : "Create",
+);
 
 const ensurePrefixedName = (name: string) => {
   const prefix = props.eventName ? String(props.eventName).trim() : "";
