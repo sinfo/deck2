@@ -140,11 +140,13 @@ import {
   AlertDialogTitle,
   AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/lib/toast";
 
 const categories = ref<Array<{ id: string; name: string }>>([]);
 const isDialogOpen = ref(false);
 const editIndex = ref(-1);
 const dialogName = ref("");
+const { toast } = useToast();
 
 const load = async () => {
   try {
@@ -162,6 +164,10 @@ const load = async () => {
     categories.value = out;
   } catch (err) {
     console.error("Could not load categories", err);
+    toast.error({
+      title: "Could not load item categories",
+      description: String(err),
+    });
   }
 };
 
@@ -198,7 +204,7 @@ const confirmDialog = async () => {
     closeDialog();
   } catch (err) {
     console.error("Failed to save category", err);
-    // show error (omitted)
+    toast.error({ title: "Failed to save category", description: String(err) });
   }
 };
 
@@ -227,7 +233,10 @@ const confirmRemove = async () => {
     closeDeleteDialog();
   } catch (err) {
     console.error("Failed to delete category", err);
-    alert("Failed to delete category");
+    toast.error({
+      title: "Failed to delete category",
+      description: String(err),
+    });
   } finally {
     isDeleting.value = false;
   }
