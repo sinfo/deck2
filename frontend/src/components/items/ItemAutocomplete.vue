@@ -11,12 +11,20 @@
           type="button"
           class="absolute left-3 top-1/2 transform -translate-y-1/2 z-10"
         >
-          <img
-            v-if="selectedItem.img"
-            :src="selectedItem.img"
-            :alt="selectedItem.name"
-            class="w-6 h-6 rounded object-cover border"
-          />
+          <template v-if="selectedItem?.img">
+            <Image
+              :src="selectedItem.img"
+              :alt="selectedItem.name"
+              class="w-6 h-6 rounded object-cover border"
+            />
+          </template>
+          <template v-else>
+            <div
+              class="w-6 h-6 flex items-center justify-center rounded bg-muted-foreground text-xs text-white border"
+            >
+              {{ selectedItem.name ? selectedItem.name.charAt(0) : "" }}
+            </div>
+          </template>
         </button>
 
         <button
@@ -61,9 +69,10 @@
             class="flex items-center gap-3 px-3 py-2 hover:bg-muted cursor-pointer"
             @click="selectItem(it)"
           >
-            <img
-              v-if="it.img"
+            <Image
+              v-if="it?.img"
               :src="it.img"
+              :alt="it.name"
               class="w-8 h-8 rounded-md object-cover border flex-shrink-0"
             />
             <div class="flex flex-col gap-1 min-w-0 flex-1">
@@ -105,6 +114,7 @@ import { getItems, getItemById } from "@/api/items";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import Image from "@/components/Image.vue";
 import type { Item } from "@/dto/item";
 
 interface Props {
