@@ -62,12 +62,14 @@ const router = createRouter({
           name: "event-packages",
           component: () =>
             import("./views/Dashboard/Packages/PackagesView.vue"),
+          meta: { roles: ["COORDINATOR", "ADMIN"] },
         },
         {
           path: "items",
           name: "packages-items",
           component: () =>
             import("./views/Dashboard/Packages/Items/PackageItemsView.vue"),
+          meta: { roles: ["COORDINATOR", "ADMIN"] },
         },
       ],
     },
@@ -92,6 +94,17 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: "landing", query: { to: to.fullPath || from.fullPath } });
     return;
+  }
+
+  // Role-based access control: if route defines allowed roles, verify user's role
+  const requiredRoles = to.meta?.roles as string[] | undefined;
+  if (requiredRoles && authStore.decoded) {
+    const userRole = authStore.decoded.role as string | undefined;
+    if (!userRole || !requiredRoles.includes(userRole)) {
+      // Not allowed: redirect to dashboard
+      next({ name: "dashboard" });
+      return;
+    }
   }
 
   next();
