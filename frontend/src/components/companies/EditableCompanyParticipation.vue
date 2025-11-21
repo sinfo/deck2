@@ -200,6 +200,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from "vue";
+import useToast from "@/lib/toast";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
@@ -302,6 +303,8 @@ const isPackageLoading = ref(false);
 const isPackageUpdating = ref(false);
 const packageMutation = useCompanyParticipationPackageMutation();
 packageMutation.companyId.value = props.companyId;
+
+const { toast } = useToast();
 
 const { data: eventsData } = useQuery({
   key: () => ["events"],
@@ -407,6 +410,9 @@ watch(
 
 const onPackageChange = async () => {
   if (!selectedPackageId.value) return;
+  const previous = props.participation.package
+    ? String(props.participation.package)
+    : "";
   try {
     isPackageUpdating.value = true;
     packageMutation.packageId.value = selectedPackageId.value;
@@ -414,6 +420,13 @@ const onPackageChange = async () => {
     await loadPackageName(selectedPackageId.value);
   } catch (err) {
     console.error("Failed to update participation package:", err);
+    selectedPackageId.value = previous;
+    await loadPackageName(previous || null);
+    toast.error({
+      title: "Failed to update package",
+      description:
+        "Could not update the participation package. Your selection was reverted.",
+    });
   } finally {
     isPackageUpdating.value = false;
   }
