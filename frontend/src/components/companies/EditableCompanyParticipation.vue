@@ -213,7 +213,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import MemberSelect from "@/components/members/MemberSelect.vue";
 import { useCompanyParticipationPackageMutation } from "@/mutations/companies";
-import { getPackageById } from "@/api/packages";
+import { getPackages, getPackageById } from "@/api/packages";
 import type { Package } from "@/dto/packages";
 import type {
   CompanyParticipation,
@@ -305,7 +305,6 @@ const selectedPackageId = ref<string>(
   props.participation.package ? String(props.participation.package) : "",
 );
 const packageName = ref<string | null>(null);
-const isPackageLoading = ref(false);
 const isPackageUpdating = ref(false);
 const packageMutation = useCompanyParticipationPackageMutation();
 packageMutation.companyId.value = props.companyId;
@@ -315,6 +314,11 @@ const { toast } = useToast();
 const { data: eventsData } = useQuery({
   key: () => ["events"],
   query: () => getAllEvents(),
+});
+
+const { data: packagesData, isLoading: isPackageLoading } = useQuery({
+  key: ["packages"],
+  query: () => getPackages(),
 });
 
 const { data: membersData } = useQuery({
@@ -360,10 +364,8 @@ const loadEventPackages = async (eventId: number) => {
 
   if (!ev) return;
 
-  isPackageLoading.value = true;
   try {
-    const all = await (await import("@/api/packages")).getPackages();
-    const allPkgs = all as Package[];
+    const allPkgs = (packagesData.value || []) as Package[];
     const name = String(ev.name || "");
     const pkgs =
       eventId != null
@@ -377,31 +379,27 @@ const loadEventPackages = async (eventId: number) => {
   } catch (err) {
     console.error("Failed to load packages for event:", err);
     packageOptions.value = [];
-  } finally {
-    isPackageLoading.value = false;
   }
 };
 
-const loadPackageName = async (pkgId: string | null) => {
-  packageName.value = null;
-  if (!pkgId) return;
-  try {
-    const pkg = await getPackageById(pkgId);
-    packageName.value = pkg?.name || null;
-  } catch (err) {
-    console.error("Failed to load package name:", err);
-    packageName.value = null;
-  }
-};
+const { data: packageData } = useQuery({
+  key: () => ["package", selectedPackageId.value || ""],
+  enabled: () => !!selectedPackageId.value,
+  query: () => getPackageById(selectedPackageId.value!),
+});
 
-loadPackageName(
-  props.participation.package ? String(props.participation.package) : null,
+watch(
+  () => packageData.value,
+  (val) => {
+    packageName.value = val?.name || null;
+  },
+  { immediate: true },
 );
 
 watch(
   () => props.participation.package,
   (newVal) => {
-    loadPackageName(newVal ? String(newVal) : null);
+    selectedPackageId.value = newVal ? String(newVal) : "";
   },
 );
 
@@ -423,11 +421,27 @@ const onPackageChange = async () => {
     isPackageUpdating.value = true;
     packageMutation.packageId.value = selectedPackageId.value;
     await packageMutation.mutate();
-    await loadPackageName(selectedPackageId.value);
+    try {
+      const pkg = await getPackageById(selectedPackageId.value);
+      packageName.value = pkg?.name || null;
+    } catch (err) {
+      console.error("Failed to load package name:", err);
+      packageName.value = null;
+    }
   } catch (err) {
     console.error("Failed to update participation package:", err);
     selectedPackageId.value = previous;
-    await loadPackageName(previous || null);
+    try {
+      if (previous) {
+        const pkg = await getPackageById(previous);
+        packageName.value = pkg?.name || null;
+      } else {
+        packageName.value = null;
+      }
+    } catch (err) {
+      console.error("Failed to load package name:", err);
+      packageName.value = null;
+    }
     toast.error({
       title: "Failed to update package",
       description:
