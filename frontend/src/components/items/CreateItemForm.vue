@@ -148,7 +148,8 @@ import {
 import CreateCategoryForm from "./CreateCategoryForm.vue";
 
 const props = defineProps<{
-  initialItem?: Item | null;
+  // allow partial item shape (editors may pass incomplete objects)
+  initialItem?: Partial<Item> | null;
   // backward compatibility: some callers pass only the name
   initialItemName?: string;
   headerTitle?: string;
