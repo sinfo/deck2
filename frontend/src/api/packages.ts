@@ -36,7 +36,7 @@ export const deletePackage = async (id: string) => {
 
 export const updatePackageItems = async (
   id: string,
-  data: { items: { item: string; quantity: number }[] },
+  data: { items: { item: string; quantity: number; public?: boolean }[] },
 ) => {
   const res = await instance.put(`/packages/${id}/items`, data);
   return res.data as Package;

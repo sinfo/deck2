@@ -59,8 +59,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useEventStore } from "@/stores/event";
-import { useQuery } from "@pinia/colada";
-import { getPackages } from "@/api/packages";
+import { usePackagesQuery } from "@/mutations/packages";
 import Card from "@/components/ui/card/Card.vue";
 import CardContent from "@/components/ui/card/CardContent.vue";
 import PackageForm from "@/components/packages/PackageForm.vue";
@@ -70,14 +69,7 @@ import type { Package } from "@/dto/packages";
 const eventStore = useEventStore();
 const eventName = computed(() => eventStore.selectedEvent?.name || "");
 
-const {
-  data: packagesData,
-  refetch,
-  isLoading,
-} = useQuery({
-  key: ["packages"],
-  query: () => getPackages(),
-});
+const { data: packagesData, refetch, isLoading } = usePackagesQuery();
 
 const filtered = computed(() => {
   if (!packagesData.value || !eventName.value) return [];

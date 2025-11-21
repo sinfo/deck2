@@ -123,7 +123,8 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, watch, computed } from "vue";
+import { reactive, ref, watch, computed } from "vue";
+import { useQuery } from "@pinia/colada";
 import type { Item } from "@/dto/item";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -291,49 +292,38 @@ const handleCreate = async () => {
   }
 };
 
-onMounted(() => {
-  // autofocus handled by input attribute; ensure initial name set
-  (async () => {
-    try {
-      const res = await getItemCategories();
-      // res can be array of strings or array of {id,name}
-      const names: string[] = [];
-      if (Array.isArray(res)) {
-        for (const it of res) {
-          if (typeof it === "string") names.push(it);
-          else if (it && typeof it === "object" && "name" in it)
-            names.push((it as { name?: string }).name || "");
-        }
-      }
-      categories.value = names;
-      // if initial type provided and exists in list, select it
-      if (form.type && categories.value.includes(form.type)) {
-        selectedCategory.value = form.type;
-      } else if (form.type) {
-        // treat as custom
-        selectedCategory.value = "__other__";
-        isCustomType.value = true;
-      }
-    } catch (err) {
-      // ignore, we'll keep the input as free text
-      console.error("Could not load item categories", err);
-    }
-  })();
+const { data: categoriesData, refetch: refetchCategories } = useQuery({
+  key: ["item-categories"],
+  query: () => getItemCategories(),
 });
 
-// handle category create dialog events
-const handleCategoryCreated = async (name: string) => {
-  try {
-    const res = await getItemCategories();
+watch(
+  () => categoriesData.value,
+  (val) => {
     const names: string[] = [];
-    if (Array.isArray(res)) {
-      for (const it of res) {
+    if (Array.isArray(val)) {
+      for (const it of val) {
         if (typeof it === "string") names.push(it);
         else if (it && typeof it === "object" && "name" in it)
           names.push((it as { name?: string }).name || "");
       }
     }
     categories.value = names;
+    // if initial type provided and exists in list, select it
+    if (form.type && categories.value.includes(form.type)) {
+      selectedCategory.value = form.type;
+    } else if (form.type) {
+      selectedCategory.value = "__other__";
+      isCustomType.value = true;
+    }
+  },
+  { immediate: true },
+);
+
+// handle category create dialog events
+const handleCategoryCreated = async (name: string) => {
+  try {
+    await refetchCategories();
     selectedCategory.value = name;
   } catch (err) {
     console.error("Could not refresh categories after creation", err);

@@ -89,10 +89,10 @@ import { findInvalidItemIds } from "@/lib/validators";
 import useToast from "@/lib/toast";
 import { useEventStore } from "@/stores/event";
 import {
-  createPackage,
-  updatePackage,
-  updatePackageItems,
-} from "@/api/packages";
+  useCreatePackageMutation,
+  useUpdatePackageMutation,
+  useUpdatePackageItemsMutation,
+} from "@/mutations/packages";
 import type { PackageItem } from "@/dto/packages";
 import Input from "@/components/ui/input/Input.vue";
 import Button from "@/components/ui/button/Button.vue";
@@ -144,6 +144,10 @@ const eventStore = useEventStore();
 
 const { toast } = useToast();
 
+const createPkg = useCreatePackageMutation();
+const updatePkg = useUpdatePackageMutation();
+const updateItems = useUpdatePackageItemsMutation();
+
 const submit = async () => {
   isSaving.value = true;
   try {
@@ -188,18 +192,20 @@ const submit = async () => {
         price: Math.round(Number(local.price || 0)),
         vat: Math.round(Number(local.vat || 0)),
         items: payloadItems,
-        edition: eventStore.selectedEvent?.id || 0,
       };
 
-      await createPackage(payload);
+      createPkg.data.value = payload;
+      await createPkg.mutate();
     } else {
       if (!local.id) throw new Error("Missing package id");
-      await updatePackage(local.id, {
+      updatePkg.packageId.value = local.id;
+      updatePkg.data.value = {
         name: finalName,
         price: Number(local.price || 0),
         vat: Number(local.vat || 0),
         edition: eventStore.selectedEvent?.id || 0,
-      });
+      };
+      await updatePkg.mutate();
       // Update items through dedicated endpoint
       const itemsToUpdate = (local.items || [])
         .map((i: unknown) => {
@@ -207,6 +213,7 @@ const submit = async () => {
           return {
             item: String(ii.item || "").trim(),
             quantity: Math.max(0, Number(ii.quantity || 0)),
+            public: Boolean(ii.public),
           };
         })
         .filter((it) => it.item.length > 0 && it.quantity > 0);
@@ -222,7 +229,9 @@ const submit = async () => {
         return;
       }
 
-      await updatePackageItems(local.id, { items: itemsToUpdate });
+      updateItems.packageId.value = local.id;
+      updateItems.items.value = itemsToUpdate;
+      await updateItems.mutate();
     }
 
     emit("saved");

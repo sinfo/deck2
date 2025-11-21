@@ -213,7 +213,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import MemberSelect from "@/components/members/MemberSelect.vue";
 import { useCompanyParticipationPackageMutation } from "@/mutations/companies";
-import { getPackages, getPackageById } from "@/api/packages";
+import { usePackagesQuery, usePackageQuery } from "@/mutations/packages";
 import type { Package } from "@/dto/packages";
 import type {
   CompanyParticipation,
@@ -316,10 +316,7 @@ const { data: eventsData } = useQuery({
   query: () => getAllEvents(),
 });
 
-const { data: packagesData, isLoading: isPackageLoading } = useQuery({
-  key: ["packages"],
-  query: () => getPackages(),
-});
+const { data: packagesData, isLoading: isPackageLoading } = usePackagesQuery();
 
 const { data: membersData } = useQuery({
   key: () => ["members"],
@@ -382,11 +379,8 @@ const loadEventPackages = async (eventId: number) => {
   }
 };
 
-const { data: packageData } = useQuery({
-  key: () => ["package", selectedPackageId.value || ""],
-  enabled: () => !!selectedPackageId.value,
-  query: () => getPackageById(selectedPackageId.value!),
-});
+const pkgQuery = usePackageQuery(selectedPackageId);
+const packageData = pkgQuery.data;
 
 watch(
   () => packageData.value,
@@ -422,8 +416,8 @@ const onPackageChange = async () => {
     packageMutation.packageId.value = selectedPackageId.value;
     await packageMutation.mutate();
     try {
-      const pkg = await getPackageById(selectedPackageId.value);
-      packageName.value = pkg?.name || null;
+      await pkgQuery.refetch();
+      packageName.value = packageData.value?.name || null;
     } catch (err) {
       console.error("Failed to load package name:", err);
       packageName.value = null;
@@ -432,12 +426,8 @@ const onPackageChange = async () => {
     console.error("Failed to update participation package:", err);
     selectedPackageId.value = previous;
     try {
-      if (previous) {
-        const pkg = await getPackageById(previous);
-        packageName.value = pkg?.name || null;
-      } else {
-        packageName.value = null;
-      }
+      await pkgQuery.refetch();
+      packageName.value = packageData.value?.name || null;
     } catch (err) {
       console.error("Failed to load package name:", err);
       packageName.value = null;

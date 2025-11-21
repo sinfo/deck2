@@ -41,7 +41,7 @@
               <ConfirmDelete
                 title="Confirm deletion"
                 message="Are you sure you want to delete this package? This action cannot be undone."
-                :is-deleting="isDeleting"
+                :is-deleting="deleteMutation.isLoading.value"
                 @cancel="isDeleteOpen = false"
                 @confirm="confirmDelete"
               />
@@ -86,7 +86,7 @@ import {
 } from "@/components/ui/popover";
 import PackageForm from "@/components/packages/PackageForm.vue";
 import ItemInline from "@/components/items/ItemInline.vue";
-import { deletePackage } from "@/api/packages";
+import { useDeletePackageMutation } from "@/mutations/packages";
 import type { Package } from "@/dto/packages";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 
@@ -100,7 +100,7 @@ const emit = defineEmits(["updated", "deleted"] as const);
 
 const isEditOpen = ref(false);
 const isDeleteOpen = ref(false);
-const isDeleting = ref(false);
+const deleteMutation = useDeletePackageMutation();
 
 const handleUpdated = () => {
   isEditOpen.value = false;
@@ -108,15 +108,13 @@ const handleUpdated = () => {
 };
 
 const confirmDelete = async () => {
-  isDeleting.value = true;
   try {
-    await deletePackage(String(props.pkg.id));
+    deleteMutation.packageId.value = String(props.pkg.id);
+    await deleteMutation.mutate();
     isDeleteOpen.value = false;
     emit("deleted");
   } catch (err) {
     console.error(err);
-  } finally {
-    isDeleting.value = false;
   }
 };
 </script>
