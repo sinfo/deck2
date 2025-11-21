@@ -86,6 +86,7 @@
 <script setup lang="ts">
 import { reactive, ref, onMounted, watch, computed } from "vue";
 import { findInvalidItemIds } from "@/lib/validators";
+import useToast from "@/lib/toast";
 import { useEventStore } from "@/stores/event";
 import {
   createPackage,
@@ -141,6 +142,8 @@ const eventNameTrimmed = String(props.eventName || "").trim();
 
 const eventStore = useEventStore();
 
+const { toast } = useToast();
+
 const submit = async () => {
   isSaving.value = true;
   try {
@@ -171,9 +174,11 @@ const submit = async () => {
       const invalidItems = findInvalidItemIds(payloadItems);
       if (invalidItems.length > 0) {
         const ids = invalidItems.join(", ");
-        window.alert(
-          `One or more item IDs are invalid. Item IDs must be MongoDB ObjectIDs (24 hex characters). Invalid: ${ids}`,
-        );
+        // show toast instead of alert
+        toast.error({
+          title: "Invalid items",
+          description: `One or more item IDs are invalid. Invalid: ${ids}`,
+        });
         isSaving.value = false;
         return;
       }
@@ -209,9 +214,10 @@ const submit = async () => {
       const invalidOnUpdate = findInvalidItemIds(itemsToUpdate);
       if (invalidOnUpdate.length > 0) {
         const ids = invalidOnUpdate.join(", ");
-        window.alert(
-          `One or more item IDs are invalid. Item IDs must be 24 hex characters. Invalid: ${ids}`,
-        );
+        toast.error({
+          title: "Invalid items",
+          description: `One or more item IDs are invalid. Invalid: ${ids}`,
+        });
         isSaving.value = false;
         return;
       }
