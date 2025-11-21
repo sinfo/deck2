@@ -124,6 +124,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted, watch, computed } from "vue";
+import type { Item } from "@/dto/item";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -146,14 +147,7 @@ import {
 import CreateCategoryForm from "./CreateCategoryForm.vue";
 
 const props = defineProps<{
-  initialItem?: {
-    id?: string;
-    name?: string;
-    type?: string;
-    description?: string;
-    price?: number;
-    vat?: number;
-  } | null;
+  initialItem?: Item | null;
   // backward compatibility: some callers pass only the name
   initialItemName?: string;
   headerTitle?: string;
