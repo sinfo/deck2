@@ -1,7 +1,9 @@
 <template>
   <div class="w-full max-w-md mx-auto p-4">
     <div class="mb-4">
-      <h3 class="text-lg font-medium">{{ headerTitle || "Create Item" }}</h3>
+      <h3 class="text-lg font-medium">
+        {{ props.headerTitle || "Create Item" }}
+      </h3>
     </div>
 
     <div class="space-y-4">
@@ -158,9 +160,6 @@ const props = defineProps<{
   mode?: "create" | "edit";
 }>();
 
-const headerTitle = props.headerTitle;
-const mode = props.mode || "create";
-
 const emit = defineEmits<{
   cancel: [];
   success: [itemId: string];
@@ -253,7 +252,11 @@ const handleCreate = async () => {
     };
 
     let result: unknown;
-    if (mode === "edit" && props.initialItem && props.initialItem.id) {
+    if (
+      (props.mode || "create") === "edit" &&
+      props.initialItem &&
+      props.initialItem.id
+    ) {
       // update existing item
       result = await updateItem(props.initialItem.id, payload);
     } else {
@@ -274,7 +277,12 @@ const handleCreate = async () => {
       }
     }
 
-    if (!id && mode === "edit" && props.initialItem && props.initialItem.id) {
+    if (
+      !id &&
+      (props.mode || "create") === "edit" &&
+      props.initialItem &&
+      props.initialItem.id
+    ) {
       // fallback: editing succeeded but API returned the updated object without id; use original id
       id = props.initialItem.id;
     }
