@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useEventStore } from "@/stores/event";
-import { useQuery, useQueryCache } from "@pinia/colada";
+import { useQuery } from "@pinia/colada";
 import { getPackages } from "@/api/packages";
 import Card from "@/components/ui/card/Card.vue";
 import CardContent from "@/components/ui/card/CardContent.vue";
@@ -86,11 +86,8 @@ const filtered = computed(() => {
   );
 });
 
-const queryCache = useQueryCache();
-
 const refetchPackages = async () => {
   await refetch();
-  queryCache.invalidateQueries({ key: ["packages"] });
 };
 
 const onCreated = () => refetchPackages();

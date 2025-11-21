@@ -5,7 +5,6 @@
   -->
   <!-- <AuthLoader v-if="authStore.isInitializing" /> -->
   <router-view />
-  <router-view />
 
   <ToastContainer />
   <PiniaColadaDevtools />
