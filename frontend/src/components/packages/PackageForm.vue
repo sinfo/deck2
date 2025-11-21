@@ -85,6 +85,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted, watch } from "vue";
+import { findInvalidItemIds } from "@/lib/validators";
 import { useEventStore } from "@/stores/event";
 import {
   createPackage,
@@ -165,11 +166,9 @@ const submit = async () => {
         .filter((i) => i.item.length > 0 && i.quantity > 0);
 
       // Validate item ids are 24-char hex ObjectIDs
-      const invalidItems = payloadItems.filter(
-        (it) => !/^[a-fA-F0-9]{24}$/.test(it.item),
-      );
+      const invalidItems = findInvalidItemIds(payloadItems);
       if (invalidItems.length > 0) {
-        const ids = invalidItems.map((i) => i.item).join(", ");
+        const ids = invalidItems.join(", ");
         window.alert(
           `One or more item IDs are invalid. Item IDs must be MongoDB ObjectIDs (24 hex characters). Invalid: ${ids}`,
         );
@@ -205,11 +204,9 @@ const submit = async () => {
         })
         .filter((it) => it.item.length > 0 && it.quantity > 0);
 
-      const invalidOnUpdate = itemsToUpdate.filter(
-        (it) => !/^[a-fA-F0-9]{24}$/.test(it.item),
-      );
+      const invalidOnUpdate = findInvalidItemIds(itemsToUpdate);
       if (invalidOnUpdate.length > 0) {
-        const ids = invalidOnUpdate.map((i) => i.item).join(", ");
+        const ids = invalidOnUpdate.join(", ");
         window.alert(
           `One or more item IDs are invalid. Item IDs must be 24 hex characters. Invalid: ${ids}`,
         );
