@@ -25,6 +25,7 @@ type addCoordinatedTeamBody struct {
 
 type setCoordinatorBody struct {
 	Member string `json:"member"`
+	Name   string `json:"name,omitempty"`
 }
 
 func getCoordinationTeams(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +102,7 @@ func createCoordinationTeam(w http.ResponseWriter, r *http.Request) {
 
 	// set coordinator
 	tm := models.TeamMember{Member: memberID, Role: models.RoleCoordinator}
-	ct, err = mongodb.CoordinationTeams.SetCoordinator(ct.ID, tm)
+	ct, err = mongodb.CoordinationTeams.SetCoordinator(ct.ID, tm, member.Name)
 	if err != nil {
 		http.Error(w, "Could not set coordinator: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -294,7 +295,18 @@ func setCoordinator(w http.ResponseWriter, r *http.Request) {
 
 	tm := models.TeamMember{Member: memberID, Role: models.RoleCoordinator}
 
-	ct, err := mongodb.CoordinationTeams.SetCoordinator(id, tm)
+	// determine name: prefer provided name (optional) else derive from member's Name
+	name := body.Name
+	if len(name) == 0 {
+		member, err := mongodb.Members.GetMember(memberID)
+		if err != nil {
+			http.Error(w, "Could not fetch coordinator member: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		name = member.Name
+	}
+
+	ct, err := mongodb.CoordinationTeams.SetCoordinator(id, tm, name)
 	if err != nil {
 		http.Error(w, "Could not set coordinator: "+err.Error(), http.StatusInternalServerError)
 		return
