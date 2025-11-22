@@ -52,6 +52,8 @@ var (
 	Notifications *NotificationsType
 	//Templates is an instance of a mongodb collection
 	Templates *TemplateType
+	// CoordinationTeams is an instance of coordination teams collection
+	CoordinationTeams *CoordinationTeamsType
 )
 
 var (
@@ -177,6 +179,10 @@ func InitializeDatabase() {
 
 	Templates = &TemplateType{
 		Collection: db.Collection("templates"),
+	}
+
+	CoordinationTeams = &CoordinationTeamsType{
+		Collection: db.Collection("coordinationTeams"),
 	}
 
 	// Ensure index for categories

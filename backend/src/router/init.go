@@ -239,6 +239,19 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}/meetings", authMember(addTeamMeeting)).Methods("POST")
 	teamRouter.HandleFunc("/{id}/meetings/{meetingID}", authTeamLeader(deleteTeamMeeting)).Methods("DELETE")
 
+	// coordination team handlers
+	coordRouter := r.PathPrefix("/coordinationTeams").Subrouter()
+	coordRouter.HandleFunc("", authMember(getCoordinationTeams)).Methods("GET")
+	coordRouter.HandleFunc("/me", authCoordinator(getMyCoordinationTeams)).Methods("GET")
+	coordRouter.HandleFunc("", authCoordinator(createCoordinationTeam)).Methods("POST")
+	coordRouter.HandleFunc("/{id}", authMember(getCoordinationTeam)).Methods("GET")
+	coordRouter.HandleFunc("/{id}", authCoordinator(updateCoordinationTeam)).Methods("PUT")
+	coordRouter.HandleFunc("/{id}", authCoordinator(deleteCoordinationTeam)).Methods("DELETE")
+	coordRouter.HandleFunc("/{id}/coordinatedMembers", authCoordinator(addCoordinatedTeam)).Methods("POST")
+	coordRouter.HandleFunc("/{id}/coordinatedMembers/{memberID}", authCoordinator(removeCoordinatedTeam)).Methods("DELETE")
+	coordRouter.HandleFunc("/{id}/coordinator", authCoordinator(setCoordinator)).Methods("POST")
+	coordRouter.HandleFunc("/{id}/coordinator/{memberID}", authCoordinator(removeCoordinator)).Methods("DELETE")
+
 	// me handlers
 	meRouter := r.PathPrefix("/me").Subrouter()
 	meRouter.HandleFunc("", authMember(getMe)).Methods("GET")
