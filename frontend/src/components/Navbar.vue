@@ -58,6 +58,11 @@ const navigation: NavigationItem[] = [
   { name: "Settings", to: { name: "settings" }, icon: Settings },
 ];
 
+const coordNavigation: NavigationItem[] = [
+  { name: "Packages", to: { name: "event-packages" } },
+  { name: "Coordination Teams", to: { name: "coordination-teams" } },
+];
+
 const { data: events, isLoading: eventsLoading } = useQuery({
   key: ["events"],
   query: getAllEvents,
@@ -169,10 +174,14 @@ watch(shortcutLinux, () => {
               class="absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg invisible group-hover:visible group-hover:opacity-100 opacity-0 transition-all"
             >
               <RouterLink
-                :to="{ name: 'event-packages' }"
+                v-for="item in coordNavigation"
+                :key="item.name"
+                :to="item.to"
                 class="block px-4 py-2 text-sm hover:bg-gray-50"
-                >Packages</RouterLink
+                :title="item.name"
               >
+                {{ item.name }}
+              </RouterLink>
             </div>
           </div>
           <RouterLink
@@ -245,10 +254,17 @@ watch(shortcutLinux, () => {
                 <PopoverContent side="bottom" align="start" class="p-0 w-56">
                   <div class="flex flex-col">
                     <RouterLink
-                      :to="{ name: 'event-packages' }"
-                      class="px-4 py-2 text-gray-700 hover:bg-gray-50"
+                      v-for="item in coordNavigation"
+                      :key="item.name"
+                      :to="item.to"
+                      class="text-gray-600 hover:text-gray-900 flex items-center gap-2"
                     >
-                      Packages
+                      <component
+                        :is="item.icon"
+                        v-if="item.icon"
+                        class="h-4 w-4"
+                      />
+                      <span>{{ item.name }}</span>
                     </RouterLink>
                   </div>
                 </PopoverContent>

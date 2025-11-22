@@ -16,5 +16,8 @@ export const getMe = () => instance.get<MemberWithContact>("/me");
 export const getMemberById = (id: string) =>
   instance.get<Member>(`/members/${id}`);
 
+export const getMemberRole = (id: string) =>
+  instance.get<{ role: string }>(`/members/${id}/role`);
+
 export const getMemberParticipations = (id: string) =>
   instance.get<MemberEventTeam[]>(`/members/${id}/participations`);
