@@ -10,8 +10,8 @@ type CoordinationTeam struct {
 	ID   primitive.ObjectID `json:"id" bson:"_id"`
 	Name string             `json:"name" bson:"name"`
 
-	// Coordinators are members that act as coordinators for the configured teams.
-	Coordinators []TeamMember `json:"coordinators" bson:"coordinators"`
+	// Coordinator is the single member that acts as coordinator for this coordination team.
+	Coordinator *TeamMember `json:"coordinator,omitempty" bson:"coordinator,omitempty"`
 
 	// CoordinatedMembers holds IDs of members (from models.Member) that belong to
 	// this coordination team for the current event.
@@ -20,12 +20,10 @@ type CoordinationTeam struct {
 
 // HasCoordinator returns true if the given member is a coordinator in this coordination team.
 func (ct *CoordinationTeam) HasCoordinator(member primitive.ObjectID) bool {
-	for _, c := range ct.Coordinators {
-		if c.Member == member {
-			return true
-		}
+	if ct.Coordinator == nil {
+		return false
 	}
-	return false
+	return ct.Coordinator.Member == member
 }
 
 // HasCoordinatedTeam returns true if this coordination team coordinates the provided team id.

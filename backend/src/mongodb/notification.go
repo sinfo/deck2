@@ -90,13 +90,14 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 	coordTeams, err := CoordinationTeams.GetCoordinationTeamsByMember(author)
 	if err == nil {
 		for _, coordTeam := range coordTeams {
-			for _, coordinator := range coordTeam.Coordinators {
-				// do not notify the author themselves in production
-				if config.Production && coordinator.Member == author {
-					continue
-				}
-				n.NotifyMember(coordinator.Member, data)
+			if coordTeam.Coordinator == nil {
+				continue
 			}
+			// do not notify the author themselves in production
+			if config.Production && coordTeam.Coordinator.Member == author {
+				continue
+			}
+			n.NotifyMember(coordTeam.Coordinator.Member, data)
 		}
 	}
 
