@@ -23,6 +23,7 @@ import { useEventStore } from "@/stores/event";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
 import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerOrMemberAutocompleteWithDialog.vue";
+import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
 import type { Member } from "@/dto/members";
@@ -157,12 +158,13 @@ watch(shortcutLinux, () => {
         <div class="hidden md:flex items-center space-x-4">
           <Notification />
           <div v-if="showCoordination" class="relative group">
-            <button
+            <Button
+              variant="ghost"
               class="text-gray-600 hover:text-gray-900 flex items-center gap-1"
             >
               Coordination
               <ChevronDown class="h-4 w-4" />
-            </button>
+            </Button>
             <div
               class="absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg invisible group-hover:visible group-hover:opacity-100 opacity-0 transition-all"
             >
@@ -230,13 +232,27 @@ watch(shortcutLinux, () => {
             </RouterLink>
 
             <div v-if="showCoordination" class="pl-3">
-              <div class="text-sm font-medium text-gray-700">Coordination</div>
-              <RouterLink
-                :to="{ name: 'event-packages' }"
-                class="text-gray-600 hover:text-gray-900 flex items-center gap-2 pl-2"
-              >
-                Packages
-              </RouterLink>
+              <Popover>
+                <PopoverTrigger as-child>
+                  <div
+                    class="text-gray-600 hover:text-gray-900 flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Coordination</span>
+                    <ChevronDown class="h-4 w-4 text-gray-500" />
+                  </div>
+                </PopoverTrigger>
+
+                <PopoverContent side="bottom" align="start" class="p-0 w-56">
+                  <div class="flex flex-col">
+                    <RouterLink
+                      :to="{ name: 'event-packages' }"
+                      class="px-4 py-2 text-gray-700 hover:bg-gray-50"
+                    >
+                      Packages
+                    </RouterLink>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <Button
