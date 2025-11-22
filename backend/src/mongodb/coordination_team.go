@@ -20,8 +20,8 @@ func (c *CoordinationTeamsType) CreateCoordinationTeam(name string) (*models.Coo
 	ctx := context.Background()
 
 	insertResult, err := c.Collection.InsertOne(ctx, bson.M{
-		"name":               name,
-		"coordinators":       []models.TeamMember{},
+		"name": name,
+		// coordinator is intentionally omitted until set
 		"coordinatedMembers": []primitive.ObjectID{},
 	})
 	if err != nil {
@@ -65,7 +65,7 @@ func (c *CoordinationTeamsType) GetCoordinationTeamsByMember(memberID primitive.
 // GetCoordinationTeamsByCoordinator finds coordination teams where the provided member is a coordinator
 func (c *CoordinationTeamsType) GetCoordinationTeamsByCoordinator(memberID primitive.ObjectID) ([]*models.CoordinationTeam, error) {
 	ctx := context.Background()
-	cur, err := c.Collection.Find(ctx, bson.M{"coordinators.member": memberID})
+	cur, err := c.Collection.Find(ctx, bson.M{"coordinator.member": memberID})
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (c *CoordinationTeamsType) SetCoordinator(coordTeamID primitive.ObjectID, m
 		member.Role = models.RoleCoordinator
 	}
 
-	set := bson.M{"coordinators": []models.TeamMember{member}}
+	set := bson.M{"coordinator": member}
 	if len(name) > 0 {
 		set["name"] = name
 	}
@@ -166,21 +166,12 @@ func (c *CoordinationTeamsType) RemoveCoordinator(coordTeamID, memberID primitiv
 		return nil, err
 	}
 
-	newList := make([]models.TeamMember, 0, len(ct.Coordinators))
-	found := false
-	for _, m := range ct.Coordinators {
-		if m.Member == memberID {
-			found = true
-			continue
-		}
-		newList = append(newList, m)
-	}
-
-	if !found {
+	if ct.Coordinator == nil || ct.Coordinator.Member != memberID {
 		return nil, errors.New("not found")
 	}
 
-	if _, err := c.Collection.UpdateOne(ctx, bson.M{"_id": coordTeamID}, bson.M{"$set": bson.M{"coordinators": newList}}); err != nil {
+	// unset the coordinator field
+	if _, err := c.Collection.UpdateOne(ctx, bson.M{"_id": coordTeamID}, bson.M{"$unset": bson.M{"coordinator": ""}}); err != nil {
 		return nil, err
 	}
 
