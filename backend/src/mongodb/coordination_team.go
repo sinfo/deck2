@@ -137,14 +137,20 @@ func (c *CoordinationTeamsType) RemoveCoordinatedMember(coordTeamID, memberID pr
 }
 
 // SetCoordinator sets the single coordinator for this coordination team. It replaces existing coordinators.
-func (c *CoordinationTeamsType) SetCoordinator(coordTeamID primitive.ObjectID, member models.TeamMember) (*models.CoordinationTeam, error) {
+// If name is non-empty it will also update the coordination team's name in the same operation.
+func (c *CoordinationTeamsType) SetCoordinator(coordTeamID primitive.ObjectID, member models.TeamMember, name string) (*models.CoordinationTeam, error) {
 	ctx := context.Background()
 
 	if member.Role != models.RoleCoordinator {
 		member.Role = models.RoleCoordinator
 	}
 
-	if _, err := c.Collection.UpdateOne(ctx, bson.M{"_id": coordTeamID}, bson.M{"$set": bson.M{"coordinators": []models.TeamMember{member}}}); err != nil {
+	set := bson.M{"coordinators": []models.TeamMember{member}}
+	if len(name) > 0 {
+		set["name"] = name
+	}
+
+	if _, err := c.Collection.UpdateOne(ctx, bson.M{"_id": coordTeamID}, bson.M{"$set": set}); err != nil {
 		return nil, err
 	}
 
