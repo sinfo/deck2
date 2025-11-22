@@ -54,8 +54,11 @@
                   <div class="pointer-events-none">
                     <Checkbox
                       :id="email.address"
-                      :checked="
+                      :model-value="
                         selectedEmails.some((e) => e.address === email.address)
+                      "
+                      @update:checked="
+                        (value: any) => handleCheckboxChange(email, value)
                       "
                     />
                   </div>
@@ -198,41 +201,12 @@ watch(isDialogOpen, (isOpen) => {
   }
 });
 
-// Debug: watch selectedEmails to log changes and help debug the disabled button
-watch(
-  selectedEmails,
-  (val) => {
-    try {
-      console.log(
-        "selectedEmails changed:",
-        val.map((e) => e.address),
-      );
-    } catch {
-      console.log("selectedEmails changed (raw):", val);
-    }
-  },
-  { deep: true },
-);
-
-// Debug: watch availableEmails to ensure fetch works
-watch(availableEmails, (val) => {
-  try {
-    console.log(
-      "availableEmails:",
-      val.map((e) => e.address),
-    );
-  } catch {
-    console.log("availableEmails changed:", val);
-  }
-});
-
 const canSend = computed(
   () =>
     !!selectedTemplate.value &&
     selectedEmails.value.length > 0 &&
     !isSending.value,
 );
-watch(canSend, (val) => console.log("canSend:", val));
 
 const sendResult = ref<{ success: boolean; error?: string } | null>(null);
 
@@ -241,7 +215,6 @@ const openGmailDrafts = () => {
 };
 
 const handleCheckboxChange = (email: EmailWithDetails, checked: boolean) => {
-  console.log("handleCheckboxChange for:", email.address, checked);
   if (checked) {
     selectedEmails.value = Array.from(
       new Map(
@@ -253,10 +226,6 @@ const handleCheckboxChange = (email: EmailWithDetails, checked: boolean) => {
       (e) => e.address !== email.address,
     );
   }
-  console.log(
-    "selectedEmails now:",
-    selectedEmails.value.map((e) => e.address),
-  );
 };
 
 const toggleEmail = (email: EmailWithDetails) => {
