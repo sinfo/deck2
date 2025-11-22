@@ -71,6 +71,15 @@ const router = createRouter({
             import("./views/Dashboard/Packages/Items/PackageItemsView.vue"),
           meta: { roles: ["COORDINATOR", "ADMIN"] },
         },
+        {
+          path: "coordination-teams",
+          name: "coordination-teams",
+          component: () =>
+            import(
+              "./views/Dashboard/CoordinationTeams/CoordinationTeamsView.vue"
+            ),
+          meta: { roles: ["COORDINATOR", "ADMIN"] },
+        },
       ],
     },
   ],
