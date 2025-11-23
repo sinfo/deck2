@@ -59,8 +59,9 @@ const navigation: NavigationItem[] = [
 ];
 
 const coordNavigation: NavigationItem[] = [
-  { name: "Packages", to: { name: "event-packages" } },
+  { name: "My Team", to: { name: "my-coordination-team" } },
   { name: "Coordination Teams", to: { name: "coordination-teams" } },
+  { name: "Packages", to: { name: "event-packages" } },
 ];
 
 const { data: events, isLoading: eventsLoading } = useQuery({
