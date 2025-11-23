@@ -16,6 +16,9 @@ import {
 export const getAllSpeakers = (filter: AllSpeakersFilter) =>
   instance.get<Speaker[]>("/speakers", { params: filter });
 
+export const getSpeakersByMembers = (members: string[], event?: number) =>
+  instance.post<Speaker[]>("/speakers/byMembers", { members, event });
+
 export const getSpeakerById = (id: string) =>
   instance.get<SpeakerWithContactObject>(`/speakers/${id}`);
 

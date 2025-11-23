@@ -284,6 +284,42 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 	return companies, nil
 }
 
+// GetCompaniesByMembers returns companies that have a participation with any of the provided member IDs.
+// If eventID is provided, only participations for that event are considered.
+func (c *CompaniesType) GetCompaniesByMembers(memberIDs []primitive.ObjectID, eventID *int) ([]*models.Company, error) {
+	ctx := context.Background()
+	var companies = make([]*models.Company, 0)
+
+	filter := bson.M{}
+
+	if eventID != nil {
+		filter["participations"] = bson.M{"$elemMatch": bson.M{"member": bson.M{"$in": memberIDs}, "event": *eventID}}
+	} else {
+		filter["participations.member"] = bson.M{"$in": memberIDs}
+	}
+
+	cur, err := c.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(ctx) {
+		var comp models.Company
+		if err := cur.Decode(&comp); err != nil {
+			return nil, err
+		}
+		companies = append(companies, &comp)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(ctx)
+
+	return companies, nil
+}
+
 // Transforms a models.Company into a models.CompanyPublic. If eventID != nil, returns only the participation for that event, if announced.
 // Otherwise, returns all participations in which they were announced
 func companyToPublic(company models.Company, eventID *int) (*models.CompanyPublic, error) {

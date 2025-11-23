@@ -156,6 +156,8 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}", authMember(getCompany)).Methods("GET")
 	companyRouter.HandleFunc("/{id}", authMember(updateCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}", authCoordinator(deleteCompany)).Methods("DELETE")
+	// query companies by multiple member IDs
+	companyRouter.HandleFunc("/byMembers", authMember(getCompaniesByMembers)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/subscribe", authMember(subscribeToCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/unsubscribe", authMember(unsubscribeToCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/image/internal", authMember(setCompanyPrivateImage)).Methods("POST")
@@ -183,6 +185,8 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("", authMember(getSpeakers)).Methods("GET")
 	speakerRouter.HandleFunc("", authMember(createSpeaker)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}", authMember(getSpeaker)).Methods("GET")
+	// query speakers by multiple member IDs
+	speakerRouter.HandleFunc("/byMembers", authMember(getSpeakersByMembers)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}", authCoordinator(deleteSpeaker)).Methods("DELETE")
 	speakerRouter.HandleFunc("/{id}", authMember(updateSpeaker)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/subscribe", authMember(subscribeToSpeaker)).Methods("PUT")
