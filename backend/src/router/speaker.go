@@ -171,6 +171,46 @@ func getSpeakersPublic(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(publicSpeakers)
 }
 
+// getSpeakersByMembers accepts a JSON body with { members: ["memberHex"], event?: number }
+// and returns speakers that have participations for any of these members (and optional event filter).
+func getSpeakersByMembers(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	var payload struct {
+		Members []string `json:"members"`
+		Event   *int     `json:"event,omitempty"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if len(payload.Members) == 0 {
+		// return empty list
+		json.NewEncoder(w).Encode([]*models.Speaker{})
+		return
+	}
+
+	memberIDs := make([]primitive.ObjectID, 0, len(payload.Members))
+	for _, m := range payload.Members {
+		id, err := primitive.ObjectIDFromHex(m)
+		if err != nil {
+			http.Error(w, "Invalid member ID format: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		memberIDs = append(memberIDs, id)
+	}
+
+	speakers, err := mongodb.Speakers.GetSpeakersByMembers(memberIDs, payload.Event)
+	if err != nil {
+		http.Error(w, "Unable to get speakers: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(speakers)
+}
+
 func createSpeaker(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()

@@ -24,6 +24,9 @@ export const getAllCompanies = (filters: AllCompaniesFilter) =>
     params: filters,
   });
 
+export const getCompaniesByMembers = (members: string[], event?: number) =>
+  instance.post<Company[]>("/companies/byMembers", { members, event });
+
 export const getCompanyById = (id: string) =>
   instance.get<Company>(`/companies/${id}`);
 
