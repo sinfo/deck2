@@ -26,7 +26,18 @@
             <Card class="p-3">
               <div class="flex justify-between items-start gap-4">
                 <div class="flex-1">
-                  <div class="font-semibold">{{ t.name }}</div>
+                  <div class="flex items-center gap-2">
+                    <Image
+                      v-if="t.coordinator && membersCache[t.coordinator.member]"
+                      :src="(membersCache[t.coordinator.member] as any)?.img"
+                      :alt="
+                        (membersCache[t.coordinator.member] as any)?.name ||
+                        'coordinator'
+                      "
+                      class="w-6 h-6 rounded-full object-cover border"
+                    />
+                    <div class="font-semibold">{{ t.name }}'s Team</div>
+                  </div>
                   <div class="text-sm text-zinc-600">Coordinated members:</div>
                   <ul class="mt-2">
                     <li
@@ -67,28 +78,6 @@
                       </Popover>
                     </li>
                   </ul>
-                  <div class="text-sm text-zinc-600 flex items-center gap-2">
-                    <span class="text-sm text-zinc-600">Coordinator:</span>
-                    <div class="flex items-center gap-2">
-                      <Image
-                        v-if="
-                          t.coordinator && membersCache[t.coordinator.member]
-                        "
-                        :src="membersCache[t.coordinator.member]?.img"
-                        :alt="
-                          membersCache[t.coordinator.member]?.name ||
-                          'coordinator'
-                        "
-                        class="w-6 h-6 rounded-full object-cover border"
-                      />
-                      <div class="text-sm text-zinc-700">
-                        {{
-                          membersCache[t.coordinator?.member || ""]?.name ||
-                          (t.coordinator ? t.coordinator.member : "—")
-                        }}
-                      </div>
-                    </div>
-                  </div>
 
                   <div class="mt-3 grid grid-cols-1 gap-2">
                     <div class="flex gap-2 items-center">
@@ -271,10 +260,11 @@ const deleting = reactive<Record<string, boolean>>({});
 const removeConfirmOpen = reactive<Record<string, boolean>>({});
 const deleteConfirmOpen = reactive<Record<string, boolean>>({});
 
+// cached member shape used in this view (subset of Member)
+type CachedMember = { id: string; name?: string; img?: string };
+
 // cache of fetched member objects by id
-const membersCache = reactive<
-  Record<string, { id: string; name: string; img?: string } | null>
->({});
+const membersCache = reactive<Record<string, CachedMember | null>>({});
 
 // load member details for any member ids present in teams
 const loadMembersForTeams = async () => {
