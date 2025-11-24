@@ -178,7 +178,6 @@ const submit = async () => {
       const invalidItems = findInvalidItemIds(payloadItems);
       if (invalidItems.length > 0) {
         const ids = invalidItems.join(", ");
-        // show toast instead of alert
         toast.error({
           title: "Invalid items",
           description: `One or more item IDs are invalid. Invalid: ${ids}`,
