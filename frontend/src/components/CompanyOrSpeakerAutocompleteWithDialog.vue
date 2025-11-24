@@ -178,7 +178,7 @@
           </div>
 
           <!-- Create options -->
-          <div v-if="showCreate">
+          <div v-if="showCreate && searchTerm.trim()">
             <div class="border-t border-gray-200">
               <button
                 type="button"
@@ -486,7 +486,7 @@ const hideSuggestions = () => {
 };
 
 const handleCreateCompany = (term: string) => {
-  createTerm.value = term;
+  createTerm.value = term.trim();
   isCompanyDialogOpen.value = true;
   showSuggestions.value = false;
 };
