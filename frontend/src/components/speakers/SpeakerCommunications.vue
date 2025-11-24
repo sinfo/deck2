@@ -58,6 +58,7 @@ const createSpeakerTemplateVariables = () => {
     createEmailVariable.speakerArticle(speakerGender),
     createEmailVariable.speakerSuffix(speakerGender),
     createEmailVariable.speaker(props.speaker),
+    createEmailVariable.test(""),
     createEmailVariable.edition(eventStore.selectedEvent?.id || 0),
     createEmailVariable.editionOrdinal(eventStore.selectedEvent?.id || 0),
     createEmailVariable.eventStartDay(
