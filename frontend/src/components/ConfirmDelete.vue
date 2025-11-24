@@ -21,7 +21,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits } from "vue";
 import Button from "@/components/ui/button/Button.vue";
 
 const props = defineProps({
