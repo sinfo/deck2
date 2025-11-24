@@ -8,17 +8,24 @@
         >
       </CardHeader>
       <CardContent>
-        <div class="mb-4 flex gap-2 items-center">
-          <div class="flex flex-col">
+        <div
+          class="mb-4 flex flex-col sm:flex-row gap-2 items-start sm:items-center"
+        >
+          <div class="flex flex-col w-full sm:w-auto">
             <label class="text-sm text-zinc-700 mb-1">Coordinator</label>
             <MemberSelect
               v-model="newCoordinator"
               :event-id="selectedEventId"
             />
           </div>
-          <Button :disabled="creating || !newCoordinator" @click="createTeam"
-            >Create</Button
-          >
+          <div class="w-full sm:w-auto">
+            <Button
+              class="w-full sm:w-auto"
+              :disabled="creating || !newCoordinator"
+              @click="createTeam"
+              >Create</Button
+            >
+          </div>
         </div>
 
         <div v-if="isLoading" class="py-6 text-center">Loading…</div>
@@ -30,7 +37,9 @@
         <ul>
           <li v-for="t in teams" :key="t.id" class="mb-4">
             <Card class="p-3">
-              <div class="flex justify-between items-start gap-4">
+              <div
+                class="flex flex-col md:flex-row justify-between items-start gap-4"
+              >
                 <div class="flex-1">
                   <div class="flex items-center gap-2">
                     <Image
@@ -107,12 +116,23 @@
                   </div>
                 </div>
 
-                <div class="flex-shrink-0">
-                  <div class="flex gap-2">
-                    <Button variant="outline" @click="openEdit(t)">Edit</Button>
+                <div
+                  class="flex-shrink-0 mt-3 md:mt-0 md:ml-4 w-full md:w-auto"
+                >
+                  <div
+                    class="flex flex-col md:flex-row gap-2 items-stretch md:items-center"
+                  >
+                    <Button
+                      class="w-full md:w-auto"
+                      variant="outline"
+                      @click="openEdit(t)"
+                      >Edit</Button
+                    >
                     <Popover v-model:open="deleteConfirmOpen[t.id]">
                       <PopoverTrigger as-child>
-                        <Button variant="destructive">Delete</Button>
+                        <Button class="w-full md:w-auto" variant="destructive"
+                          >Delete</Button
+                        >
                       </PopoverTrigger>
                       <PopoverContent class="w-80">
                         <ConfirmDelete
@@ -135,7 +155,7 @@
           v-if="editing"
           class="fixed inset-0 bg-black/40 flex items-center justify-center"
         >
-          <Card class="w-96 p-6">
+          <Card class="w-full max-w-md p-6">
             <h2 class="font-bold mb-3">Edit {{ editing.name }} Team</h2>
             <div class="mb-3">
               <label class="text-sm text-zinc-700 mb-1 block">Team name</label>
