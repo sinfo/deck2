@@ -173,6 +173,7 @@ import {
 } from "@/components/ui/popover";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import Image from "@/components/Image.vue";
+import { useToast } from "@/lib/toast";
 
 const queryCache = useQueryCache();
 
@@ -208,9 +209,10 @@ const createTeam = async () => {
     // validate selected member is a coordinator in the current event
     const roleRes = await getMemberRole(newCoordinator.value);
     if (roleRes.data?.role !== "COORDINATOR") {
-      alert(
-        "Selected member is not a coordinator for the current event. Please pick a coordinator.",
-      );
+      toast.error({
+        title: "Selected member is not a coordinator",
+        description: "Please pick a coordinator.",
+      });
       return;
     }
   } catch {
@@ -313,6 +315,7 @@ const eventStore = useEventStore();
 const selectedEventId = ref<number | undefined>(
   eventStore.selectedEvent?.id ?? undefined,
 );
+const { toast } = useToast();
 
 // Keep selectedEventId in sync with global selectedEvent
 watch(
@@ -364,6 +367,22 @@ const assignCoordinatorFor = async (t: CoordinationTeam) => {
   if (!memberId) return;
   settingCoordinator[t.id] = true;
   try {
+    try {
+      const roleRes = await getMemberRole(memberId);
+      if (roleRes.data?.role !== "COORDINATOR") {
+        toast.error({
+          title: "Selected member is not a coordinator",
+          description: "Please pick a coordinator.",
+        });
+        return;
+      }
+    } catch {
+      // If role check fails, log and attempt to set — server will return a clear error
+      console.warn(
+        "Could not validate member role before assigning coordinator",
+      );
+    }
+
     setCoordinatorMutate({ id: t.id, memberId });
     selectedCoordinator[t.id] = undefined;
     try {
