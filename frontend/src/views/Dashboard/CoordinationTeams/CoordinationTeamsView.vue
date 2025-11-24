@@ -150,6 +150,7 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from "vue";
+import { useEventStore } from "@/stores/event";
 import { useQuery, useMutation, useQueryCache } from "@pinia/colada";
 import type { CoordinationTeam } from "@/dto/coordinationTeams";
 import {
@@ -308,7 +309,20 @@ watch(teams, () => {
   loadMembersForTeams();
 });
 
-const selectedEventId: number | undefined = undefined; // MemberSelect requires eventId prop; undefined lists all members
+const eventStore = useEventStore();
+const selectedEventId = ref<number | undefined>(
+  eventStore.selectedEvent?.id ?? undefined,
+);
+
+// Keep selectedEventId in sync with global selectedEvent
+watch(
+  () => eventStore.selectedEvent,
+  (newEvent) => {
+    const newId = newEvent?.id ?? undefined;
+    if (selectedEventId.value !== newId) selectedEventId.value = newId;
+  },
+  { immediate: true },
+);
 
 const { mutate: addCoordinatedMutate } = useMutation({
   mutation: (vars: { id: string; memberId: string }) =>
