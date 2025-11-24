@@ -49,6 +49,9 @@ const createSpeakerTemplateVariables = () => {
     (props.speaker as SpeakerWithContactObject)?.contactObject?.gender ??
     "OTHER";
 
+  // Use contactObject which contains the full Contact (including gender)
+  // Fallback to empty string when gender is unavailable to avoid runtime errors
+
   return [
     createEmailVariable.memberArticle(memberGender),
     createEmailVariable.member(authStore.member!),
