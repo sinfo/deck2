@@ -45,8 +45,15 @@
                       :key="mId"
                       class="flex items-center gap-2"
                     >
-                      <div class="text-sm text-zinc-700">
-                        {{ membersCache[mId]?.name || mId }}
+                      <div class="flex items-center gap-2">
+                        <MemberWithAvatar
+                          v-if="membersCache[mId]"
+                          :member="membersCache[mId] as any"
+                          size="sm"
+                        />
+                        <div v-else class="text-sm text-zinc-700">
+                          {{ mId }}
+                        </div>
                       </div>
                       <Popover
                         v-model:open="removeConfirmOpen[t.id + '_' + mId]"
@@ -173,6 +180,7 @@ import {
 } from "@/components/ui/popover";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import Image from "@/components/Image.vue";
+import MemberWithAvatar from "@/components/members/MemberWithAvatar.vue";
 import { useToast } from "@/lib/toast";
 
 const queryCache = useQueryCache();
