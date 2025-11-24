@@ -13,7 +13,10 @@
 
 <script setup lang="ts">
 import { getSpeakerCommunications } from "@/api/speakers";
-import type { SpeakerWithParticipation } from "@/dto/speakers";
+import type {
+  SpeakerWithParticipation,
+  SpeakerWithContactObject,
+} from "@/dto/speakers";
 import { useEventStore } from "@/stores/event";
 import { usePostSpeakerThreadMutation } from "@/mutations/speakers";
 import Communications from "../Communications.vue";
@@ -41,9 +44,19 @@ const templates = computed(() =>
 
 const createSpeakerTemplateVariables = () => {
   const endDate = new Date(eventStore.selectedEvent?.end || 0);
+  const memberGender = authStore.member?.contactObject?.gender ?? "OTHER";
+  const speakerGender =
+    (props.speaker as SpeakerWithContactObject)?.contactObject?.gender ??
+    "OTHER";
+
+  // Use contactObject which contains the full Contact (including gender)
+  // Fallback to empty string when gender is unavailable to avoid runtime errors
 
   return [
+    createEmailVariable.memberArticle(memberGender),
     createEmailVariable.member(authStore.member!),
+    createEmailVariable.speakerArticle(speakerGender),
+    createEmailVariable.speakerSuffix(speakerGender),
     createEmailVariable.speaker(props.speaker),
     createEmailVariable.edition(eventStore.selectedEvent?.id || 0),
     createEmailVariable.editionOrdinal(eventStore.selectedEvent?.id || 0),
