@@ -9,7 +9,13 @@
       </CardHeader>
       <CardContent>
         <div class="mb-4 flex gap-2 items-center">
-          <MemberSelect v-model="newCoordinator" :event-id="selectedEventId" />
+          <div class="flex flex-col">
+            <label class="text-sm text-zinc-700 mb-1">Coordinator</label>
+            <MemberSelect
+              v-model="newCoordinator"
+              :event-id="selectedEventId"
+            />
+          </div>
           <Button :disabled="creating || !newCoordinator" @click="createTeam"
             >Create</Button
           >
@@ -98,18 +104,6 @@
                         >Add</Button
                       >
                     </div>
-
-                    <div class="flex gap-2 items-center">
-                      <MemberSelect
-                        v-model="selectedCoordinator[t.id]"
-                        :event-id="selectedEventId"
-                      />
-                      <Button
-                        :disabled="settingCoordinator[t.id]"
-                        @click="assignCoordinatorFor(t)"
-                        >Set coordinator</Button
-                      >
-                    </div>
                   </div>
                 </div>
 
@@ -142,11 +136,25 @@
           class="fixed inset-0 bg-black/40 flex items-center justify-center"
         >
           <Card class="w-96 p-6">
-            <h2 class="font-bold mb-3">Edit {{ editing.name }}</h2>
-            <Input v-model="editingName" class="mb-3" />
+            <h2 class="font-bold mb-3">Edit {{ editing.name }} Team</h2>
+            <div class="mb-3">
+              <label class="text-sm text-zinc-700 mb-1 block">Team name</label>
+              <Input v-model="editingName" />
+            </div>
+            <div class="mb-3">
+              <label class="text-sm text-zinc-700 mb-1 block"
+                >Coordinator</label
+              >
+              <MemberSelect
+                v-model="editingCoordinator"
+                :event-id="selectedEventId"
+              />
+            </div>
             <div class="flex gap-2 justify-end">
               <Button variant="outline" @click="closeEdit">Cancel</Button>
-              <Button :disabled="saving" @click="saveEdit">Save</Button>
+              <Button :disabled="saving || savingEdit" @click="saveEdit"
+                >Save</Button
+              >
             </div>
           </Card>
         </div>
@@ -188,6 +196,10 @@ const queryCache = useQueryCache();
 const newCoordinator = ref<string | undefined>(undefined);
 const editing = ref<CoordinationTeam | null>(null);
 const editingName = ref("");
+// coordinator being edited in the modal and original for change detection
+const editingCoordinator = ref<string | undefined>(undefined);
+const editingOriginalCoordinator = ref<string | undefined>(undefined);
+const savingEdit = ref(false);
 
 const { data, isLoading } = useQuery({
   key: ["coordinationTeams"],
@@ -236,17 +248,16 @@ const createTeam = async () => {
 const openEdit = (t: CoordinationTeam) => {
   editing.value = t;
   editingName.value = t.name;
+  // prefill coordinator selection in the edit modal
+  editingCoordinator.value = t.coordinator?.member;
+  editingOriginalCoordinator.value = t.coordinator?.member;
 };
 
 const closeEdit = () => {
   editing.value = null;
   editingName.value = "";
-};
-
-const saveEdit = async () => {
-  if (!editing.value) return;
-  updateMutate({ id: editing.value.id, data: { name: editingName.value } });
-  closeEdit();
+  editingCoordinator.value = undefined;
+  editingOriginalCoordinator.value = undefined;
 };
 
 // (variables returned from hooks above are directly usable in the template)
@@ -261,9 +272,7 @@ import { getMemberById, getMemberRole } from "@/api/members";
 
 // selected maps and per-team loading states
 const selectedTeamToAdd = reactive<Record<string, string | undefined>>({});
-const selectedCoordinator = reactive<Record<string, string | undefined>>({});
 const adding = reactive<Record<string, boolean>>({});
-const settingCoordinator = reactive<Record<string, boolean>>({});
 const removing = reactive<Record<string, boolean>>({});
 const deleting = reactive<Record<string, boolean>>({});
 
@@ -370,41 +379,56 @@ const addCoordinatedTeamFor = async (t: CoordinationTeam) => {
   }
 };
 
-const assignCoordinatorFor = async (t: CoordinationTeam) => {
-  const memberId = selectedCoordinator[t.id];
-  if (!memberId) return;
-  settingCoordinator[t.id] = true;
+// save edited team name and (optionally) coordinator
+const saveEdit = async () => {
+  if (!editing.value) return;
+  savingEdit.value = true;
   try {
-    try {
-      const roleRes = await getMemberRole(memberId);
-      if (roleRes.data?.role !== "COORDINATOR") {
-        toast.error({
-          title: "Selected member is not a coordinator",
-          description: "Please pick a coordinator.",
-        });
-        return;
-      }
-    } catch {
-      // If role check fails, log and attempt to set — server will return a clear error
-      console.warn(
-        "Could not validate member role before assigning coordinator",
-      );
+    // update name if it changed
+    if (editingName.value !== editing.value.name) {
+      updateMutate({ id: editing.value.id, data: { name: editingName.value } });
     }
 
-    setCoordinatorMutate({ id: t.id, memberId });
-    selectedCoordinator[t.id] = undefined;
-    try {
-      const res = await getMemberById(memberId);
-      membersCache[memberId] = {
-        id: res.data.id,
-        name: res.data.name,
-        img: res.data.img,
-      };
-    } catch {
-      membersCache[memberId] = null;
+    // if coordinator changed, validate and set
+    if (
+      editingCoordinator.value !== editingOriginalCoordinator.value &&
+      editingCoordinator.value
+    ) {
+      try {
+        const roleRes = await getMemberRole(editingCoordinator.value);
+        if (roleRes.data?.role !== "COORDINATOR") {
+          toast.error({
+            title: "Selected member is not a coordinator",
+            description: "Please pick a coordinator.",
+          });
+          savingEdit.value = false;
+          return;
+        }
+      } catch {
+        console.warn(
+          "Could not validate member role before assigning coordinator",
+        );
+      }
+
+      setCoordinatorMutate({
+        id: editing.value.id,
+        memberId: editingCoordinator.value,
+      });
+      // optimistic fetch for UI
+      try {
+        const res = await getMemberById(editingCoordinator.value);
+        membersCache[editingCoordinator.value] = {
+          id: res.data.id,
+          name: res.data.name,
+          img: res.data.img,
+        };
+      } catch {
+        membersCache[editingCoordinator.value] = null;
+      }
     }
   } finally {
-    settingCoordinator[t.id] = false;
+    savingEdit.value = false;
+    closeEdit();
   }
 };
 
