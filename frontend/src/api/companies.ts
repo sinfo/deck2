@@ -90,3 +90,11 @@ export const updateRepresentativeOrder = (
 
 export const uploadCompanyInternalImage = (id: string, data: FormData) =>
   instance.post<Company>(`/companies/${id}/image/internal`, data);
+
+export const generateCompanyContract = (
+  companyId: string,
+  data: { language?: string },
+) =>
+  instance.post(`/public/companies/${companyId}/contract/pdf`, data, {
+    responseType: "blob",
+  });
