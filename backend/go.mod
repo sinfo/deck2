@@ -15,8 +15,8 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/h2non/filetype v1.0.10
 	github.com/joho/godotenv v1.5.1
-	github.com/jung-kurt/gofpdf v1.0.0
 	github.com/minio/minio-go v0.0.0-20190523192347-c6c2912aa552
+	github.com/nguyenthenguyen/docx v0.0.0-20230621112118-9c8e795a11db
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/phpdave11/gofpdf v1.4.3
 	github.com/spf13/viper v1.4.0

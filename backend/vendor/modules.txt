@@ -165,8 +165,6 @@ github.com/jmespath/go-jmespath
 # github.com/joho/godotenv v1.5.1
 ## explicit; go 1.12
 github.com/joho/godotenv
-# github.com/jung-kurt/gofpdf v1.0.0
-## explicit
 # github.com/klauspost/compress v1.16.7
 ## explicit; go 1.18
 github.com/klauspost/compress
@@ -193,6 +191,9 @@ github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.5.0
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
+# github.com/nguyenthenguyen/docx v0.0.0-20230621112118-9c8e795a11db
+## explicit; go 1.16
+github.com/nguyenthenguyen/docx
 # github.com/patrickmn/go-cache v2.1.0+incompatible
 ## explicit
 github.com/patrickmn/go-cache
