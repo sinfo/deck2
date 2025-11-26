@@ -119,9 +119,11 @@ const { mutate: generateMutate, isLoading: generating } = useMutation({
       language: variables.language,
     }),
   onSuccess: (res: AxiosResponse<Blob>) => {
-    // res is an axios response with blob data
+    // res is an axios response with blob data (DOCX)
     try {
-      const blob = new Blob([res.data], { type: "application/pdf" });
+      const blob = new Blob([res.data], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -130,13 +132,13 @@ const { mutate: generateMutate, isLoading: generating } = useMutation({
         companyWithParticipation.value?.name ||
         "contract"
       ).replace(/[^a-z0-9_-]/gi, "-");
-      link.download = `contract-${name}.pdf`;
+      link.download = `contract-${name}.docx`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (e) {
-      console.error("Error downloading generated PDF", e);
+      console.error("Error downloading generated DOCX", e);
     }
   },
 });

@@ -18,6 +18,7 @@ import (
 	gooxml "baliance.com/gooxml"
 	docx "baliance.com/gooxml/document"
 	"github.com/gorilla/mux"
+	docxfill "github.com/nguyenthenguyen/docx"
 	"github.com/phpdave11/gofpdf"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -152,41 +153,14 @@ func generateCompanyContractPDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// extract styled paragraphs from modified docx and render a PDF (basic styling)
-	paragraphs, err := extractStyledParagraphsFromDocx(modifiedDocx)
-	if err != nil {
-		// fallback: try plain-text extraction and render a simple pdf
-		text, err2 := extractPlainTextFromDocx(modifiedDocx)
-		if err2 != nil {
-			log.Printf("extractStyledParagraphsFromDocx failed: %v; extractPlainTextFromDocx also failed: %v", err, err2)
-			http.Error(w, "error extracting text from template", http.StatusInternalServerError)
-			return
-		}
-		pdfBytes, err := renderPDFfromText(text)
-		if err != nil {
-			log.Printf("renderPDFfromText error: %v", err)
-			http.Error(w, "error generating pdf", http.StatusInternalServerError)
-			return
-		}
-		filename := fmt.Sprintf("contract-%s.pdf", sanitizeFilename(companyName))
-		w.Header().Set("Content-Type", "application/pdf")
-		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-		w.Write(pdfBytes)
-		return
-	}
-
-	pdfBytes, err := renderPDFfromStyledParagraphs(paragraphs)
-	if err != nil {
-		log.Printf("renderPDFfromStyledParagraphs error: %v", err)
-		http.Error(w, "error generating pdf", http.StatusInternalServerError)
-		return
-	}
-
-	filename := fmt.Sprintf("contract-%s.pdf", sanitizeFilename(companyName))
-
-	w.Header().Set("Content-Type", "application/pdf")
+	// Return the filled DOCX directly as a download (simpler than rendering PDF)
+	filename := fmt.Sprintf("contract-%s.docx", sanitizeFilename(companyName))
+	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-	w.Write(pdfBytes)
+	if _, err := w.Write(modifiedDocx); err != nil {
+		log.Printf("error writing modified docx response: %v", err)
+	}
+	return
 }
 
 func sanitizeFilename(name string) string {
@@ -201,56 +175,50 @@ func sanitizeFilename(name string) string {
 }
 
 func replaceDocxPlaceholders(docxBytes []byte, replacements map[string]string, plain map[string]string) ([]byte, error) {
-	r, err := zip.NewReader(bytes.NewReader(docxBytes), int64(len(docxBytes)))
+	// Use github.com/nguyenthenguyen/docx to perform placeholder replacements
+	// Write incoming bytes to a temp file because the library operates on files.
+	tmpSrc, err := ioutil.TempFile("", "template-*.docx")
 	if err != nil {
 		return nil, err
 	}
+	tmpSrcName := tmpSrc.Name()
+	defer func() {
+		tmpSrc.Close()
+		_ = os.Remove(tmpSrcName)
+	}()
 
-	buf := new(bytes.Buffer)
-	zw := zip.NewWriter(buf)
-	defer zw.Close()
-
-	for _, f := range r.File {
-		fr, err := f.Open()
-		if err != nil {
-			return nil, err
-		}
-		data, err := ioutil.ReadAll(fr)
-		fr.Close()
-		if err != nil {
-			return nil, err
-		}
-
-		name := f.Name
-
-		// only attempt replacements in word document parts
-		if name == "word/document.xml" || strings.HasPrefix(name, "word/header") || strings.HasPrefix(name, "word/footer") {
-			s := string(data)
-			s = replacePlaceholdersInXML(s, replacements, plain)
-			data = []byte(s)
-		}
-
-		// prepare header
-		fh := &zip.FileHeader{
-			Name:   name,
-			Method: f.Method,
-		}
-		fh.SetModTime(f.Modified)
-
-		w, err := zw.CreateHeader(fh)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := w.Write(data); err != nil {
-			return nil, err
-		}
-	}
-
-	if err := zw.Close(); err != nil {
+	if _, err := tmpSrc.Write(docxBytes); err != nil {
 		return nil, err
 	}
 
-	return buf.Bytes(), nil
+	// Read and get editable document
+	r, err := docxfill.ReadDocxFile(tmpSrcName)
+	if err != nil {
+		return nil, err
+	}
+	ed := r.Editable()
+
+	// Apply replacements: first full-brace placeholders, then plain keys
+	for k, v := range replacements {
+		ed.Replace(k, v, -1)
+	}
+	for k, v := range plain {
+		ed.Replace("{{"+k+"}}", v, -1)
+		ed.Replace(k, v, -1)
+	}
+
+	// Write to a temp output file and return its bytes
+	tmpOutName := tmpSrcName + ".out.docx"
+	if err := ed.WriteToFile(tmpOutName); err != nil {
+		return nil, err
+	}
+	defer func() { _ = os.Remove(tmpOutName) }()
+
+	outBytes, err := ioutil.ReadFile(tmpOutName)
+	if err != nil {
+		return nil, err
+	}
+	return outBytes, nil
 }
 
 func xmlEscape(s string) string {
