@@ -16,5 +16,19 @@ export const uploadTemplate = (
   });
 };
 
+export const uploadTemplateByName = (
+  name: string,
+  eventId: number,
+  file: File,
+) => {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("name", name);
+  return instance.post(`/templates/upload-by-name`, fd, {
+    params: { event: eventId },
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
 export const downloadTemplate = (templateId: string) =>
   instance.get(`/templates/${templateId}/download`, { responseType: "blob" });
