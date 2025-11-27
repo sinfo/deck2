@@ -81,6 +81,15 @@ const router = createRouter({
           meta: { roles: ["COORDINATOR", "ADMIN"] },
         },
         {
+          path: "contract-templates",
+          name: "contract-templates",
+          component: () =>
+            import(
+              "./views/Dashboard/ContractTemplates/ContractTemplatesView.vue"
+            ),
+          meta: { roles: ["COORDINATOR", "ADMIN"] },
+        },
+        {
           path: "me/coord-team",
           name: "my-coordination-team",
           component: () =>
