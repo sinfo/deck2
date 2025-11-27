@@ -136,7 +136,7 @@ func InitializeRouter() {
 	publicRouter.HandleFunc("/members", getMembersPublic).Methods("GET")
 	publicRouter.HandleFunc("/sessions", getPublicSessions).Methods("GET")
 	publicRouter.HandleFunc("/companies/{id}", getCompanyPublic).Methods("GET")
-	publicRouter.HandleFunc("/companies/{id}/contract/pdf", generateCompanyContractPDF).Methods("POST")
+	publicRouter.HandleFunc("/companies/{id}/contract/docx", generateCompanyContractDocx).Methods("POST")
 	publicRouter.HandleFunc("/sessions/{id}", getSessionPublic).Methods("GET")
 	publicRouter.HandleFunc("/speakers/{id}", getSpeakerPublic).Methods("GET")
 	publicRouter.HandleFunc("/events/latest", getLatestEvent).Methods("GET")

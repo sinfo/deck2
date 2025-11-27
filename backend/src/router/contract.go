@@ -30,20 +30,21 @@ type contractRequest struct {
 	PackagePrice   string `json:"packagePrice"`
 }
 
-// generateCompanyContractPDF downloads a DOCX template, replaces variables and returns a PDF stream.
-func generateCompanyContractPDF(w http.ResponseWriter, r *http.Request) {
+// generateCompanyContractDocx downloads a DOCX template, replaces variables and
+// returns the filled DOCX as a download.
+func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	// Disable verbose logging from gooxml (library prints warnings about
 	// unsupported Office XML elements which are harmless for our use).
 	gooxml.DisableLogging()
 	// Recover from panics to ensure we log the error and return 500.
 	defer func() {
 		if rec := recover(); rec != nil {
-			log.Printf("panic in generateCompanyContractPDF: %v", rec)
+			log.Printf("panic in generateCompanyContractDocx: %v", rec)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 	}()
 
-	log.Printf("generateCompanyContractPDF: %s %s", r.Method, r.URL.Path)
+	log.Printf("generateCompanyContractDocx: %s %s", r.Method, r.URL.Path)
 	// Read company ID from path and fetch server-side data.
 	params := mux.Vars(r)
 	companyHex, ok := params["id"]
