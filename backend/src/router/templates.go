@@ -11,9 +11,12 @@ import (
 	"text/template"
 	"time"
 
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/patrickmn/go-cache"
+	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/spaces"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -228,6 +231,113 @@ func uploadTemplateFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update template url in DB
+	updated, err := mongodb.Templates.UpdateTemplateUrl(templateId, *url)
+	if err != nil {
+		http.Error(w, "unable to update template url in db", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updated)
+}
+
+func uploadTemplateFileByName(w http.ResponseWriter, r *http.Request) {
+	eventStr := r.URL.Query().Get("event")
+	if eventStr == "" {
+		http.Error(w, "missing event query parameter", http.StatusBadRequest)
+		return
+	}
+
+	eventID, err := strconv.Atoi(eventStr)
+	if err != nil {
+		http.Error(w, "invalid event id", http.StatusBadRequest)
+		return
+	}
+
+	// Parse multipart form
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "invalid multipart form", http.StatusBadRequest)
+		return
+	}
+
+	// template name can be provided as form value
+	name := r.FormValue("name")
+	if name == "" {
+		// fallback to query param
+		name = r.URL.Query().Get("name")
+	}
+
+	if name == "" {
+		http.Error(w, "template name is required", http.StatusBadRequest)
+		return
+	}
+
+	// find template by name and event
+	opts := mongodb.GetTemplatesOptions{}
+	opts.Name = &name
+	opts.EventID = &eventID
+
+	templates, err := mongodb.Templates.GetTemplates(opts)
+	if err != nil {
+		http.Error(w, "unable to lookup template", http.StatusInternalServerError)
+		return
+	}
+
+	var templateId primitive.ObjectID
+
+	if len(templates) == 0 {
+		// create a new template when none exists for this name+event
+		kind := ""
+		lname := strings.ToLower(name)
+		if strings.Contains(lname, "company contract") {
+			kind = "companyContract"
+		}
+
+		newT := models.Template{
+			ID:           primitive.NewObjectID(),
+			Name:         name,
+			Url:          "",
+			Event:        eventID,
+			Requirements: []models.Requirement{},
+			Kind:         kind,
+		}
+
+		created, err := mongodb.Templates.CreateTemplate(newT)
+		if err != nil {
+			http.Error(w, "unable to create template", http.StatusInternalServerError)
+			return
+		}
+
+		templateId = created.ID
+	} else {
+		// use the first match
+		templateId = templates[0].ID
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "file field is required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		http.Error(w, "unable to read file", http.StatusInternalServerError)
+		return
+	}
+
+	mime := header.Header.Get("Content-Type")
+	if mime == "" {
+		mime = "application/octet-stream"
+	}
+
+	url, err := spaces.UploadTemplateFile(eventID, templateId.Hex(), bytes.NewReader(b), int64(len(b)), mime)
+	if err != nil {
+		http.Error(w, "unable to upload to spaces", http.StatusBadGateway)
+		return
+	}
+
 	updated, err := mongodb.Templates.UpdateTemplateUrl(templateId, *url)
 	if err != nil {
 		http.Error(w, "unable to update template url in db", http.StatusInternalServerError)
