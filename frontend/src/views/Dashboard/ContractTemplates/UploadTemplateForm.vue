@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import Input from "@/components/ui/input/Input.vue";
 import { uploadTemplate } from "@/api/templates";
 
 interface Template {
@@ -51,20 +59,21 @@ async function submit() {
 
     <div class="mb-2">
       <label class="block text-sm text-gray-600">Template record</label>
-      <select
-        v-model="selectedTemplate"
-        class="mt-1 w-full border rounded px-2 py-1"
-      >
-        <option disabled value="">-- select template --</option>
-        <option v-for="t in props.templates" :key="t.id" :value="t.id">
-          {{ t.name }}
-        </option>
-      </select>
+      <Select v-model="selectedTemplate" :disabled="!props.eventId">
+        <SelectTrigger class="mt-1 w-full border rounded px-2 py-1">
+          <SelectValue placeholder="-- select template --" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="t in props.templates" :key="t.id" :value="t.id">
+            {{ t.name }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </div>
 
     <div class="mb-2">
       <label class="block text-sm text-gray-600">File (.docx)</label>
-      <input
+      <Input
         type="file"
         accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         @change="onFileChange"
