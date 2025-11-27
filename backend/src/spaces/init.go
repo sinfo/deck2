@@ -76,17 +76,19 @@ func InitializeSpaces() {
 
 	for _, cdn := range cdns {
 		if strings.Contains(cdn.Origin, name) {
-			// Prefer an explicitly configured custom domain for the CDN
+			// Determine the endpoint host by removing the bucket prefix if present.
+			if strings.HasPrefix(cdn.Origin, name+".") {
+				endpoint = cdn.Origin[len(name)+1:]
+			} else {
+				endpoint = cdn.Origin
+			}
+
+			// Prefer an explicitly configured custom domain for the CDN base URL
 			if cdn.CustomDomain != "" {
 				cdnBaseURL = cdn.CustomDomain
 			} else {
 				// Fallback: construct base URL from bucket name + endpoint
-				endpoint = cdn.Origin[len(name)+1:]
 				cdnBaseURL = fmt.Sprintf("%s.%s", name, endpoint)
-			}
-			// Ensure endpoint is set for MinIO client initialization
-			if endpoint == "" {
-				endpoint = cdn.Origin
 			}
 		}
 	}
