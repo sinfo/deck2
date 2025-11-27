@@ -197,6 +197,12 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// If no package was found for the requested event, return an explicit error.
+	if packageName == "" {
+		writeJSONError(w, http.StatusUnprocessableEntity, fmt.Sprintf("company has no package for event %d", eventID))
+		return
+	}
+
 	replacements := map[string]string{
 		"{{companyNif}}":     companyNif,
 		"{{companyAddress}}": companyAddress,
