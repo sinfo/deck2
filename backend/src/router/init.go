@@ -361,6 +361,7 @@ func InitializeRouter() {
 
 	// upload/download template files (coordination only)
 	templatesRouter.HandleFunc("/{id}/upload", authCoordinator(uploadTemplateFile)).Methods("POST")
+	templatesRouter.HandleFunc("/upload-by-name", authCoordinator(uploadTemplateFileByName)).Methods("POST")
 	templatesRouter.HandleFunc("/{id}/download", authCoordinator(downloadTemplateFile)).Methods("GET")
 
 	// save router instance
