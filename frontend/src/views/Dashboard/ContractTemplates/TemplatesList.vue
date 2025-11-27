@@ -42,16 +42,12 @@ async function download(t: Template) {
       <thead>
         <tr class="text-left text-sm text-gray-600">
           <th class="py-1">Name</th>
-          <th class="py-1">URL</th>
           <th class="py-1">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="t in templates" :key="t.id" class="border-t">
           <td class="py-2">{{ t.name }}</td>
-          <td class="py-2 text-sm text-blue-600 truncate max-w-xl">
-            {{ t.url }}
-          </td>
           <td class="py-2">
             <Button size="sm" @click.prevent="download(t)">Download</Button>
           </td>
