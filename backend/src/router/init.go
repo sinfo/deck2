@@ -136,7 +136,6 @@ func InitializeRouter() {
 	publicRouter.HandleFunc("/members", getMembersPublic).Methods("GET")
 	publicRouter.HandleFunc("/sessions", getPublicSessions).Methods("GET")
 	publicRouter.HandleFunc("/companies/{id}", getCompanyPublic).Methods("GET")
-	publicRouter.HandleFunc("/companies/{id}/contract/docx", generateCompanyContractDocx).Methods("POST")
 	publicRouter.HandleFunc("/sessions/{id}", getSessionPublic).Methods("GET")
 	publicRouter.HandleFunc("/speakers/{id}", getSpeakerPublic).Methods("GET")
 	publicRouter.HandleFunc("/events/latest", getLatestEvent).Methods("GET")
@@ -180,6 +179,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/employers", authMember(updateEmployersOrder)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
+	companyRouter.HandleFunc("/{id}/contract/docx", authMember(generateCompanyContractDocx)).Methods("POST")
 
 	// speaker handlers
 	speakerRouter := r.PathPrefix("/speakers").Subrouter()

@@ -23,11 +23,18 @@ import (
 
 type contractRequest struct {
 	Language       string `json:"language"`
+	EventID        int    `json:"eventId"`
 	CompanyNif     string `json:"companyNif"`
 	CompanyAddress string `json:"companyAddress"`
 	CompanyName    string `json:"companyName"`
 	PackageName    string `json:"packageName"`
 	PackagePrice   string `json:"packagePrice"`
+}
+
+func writeJSONError(w http.ResponseWriter, status int, msg string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	fmt.Fprintf(w, `{"message":%q}`, msg)
 }
 
 // generateCompanyContractDocx downloads a DOCX template, replaces variables and
@@ -56,22 +63,22 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	companyID, err := primitive.ObjectIDFromHex(companyHex)
 	if err != nil {
 		log.Printf("invalid company id '%s': %v", companyHex, err)
-		http.Error(w, "invalid company id", http.StatusBadRequest)
+		writeJSONError(w, http.StatusBadRequest, "invalid company id")
 		return
 	}
 
 	company, err := mongodb.Companies.GetCompany(companyID)
 	if err != nil {
 		log.Printf("unable to find company %s: %v", companyID.Hex(), err)
-		http.Error(w, "unable to find company: "+err.Error(), http.StatusNotFound)
+		writeJSONError(w, http.StatusNotFound, "unable to find company: "+err.Error())
 		return
 	}
 
 	defer r.Body.Close()
 
 	var req contractRequest
-	// body is optional; if present it may contain language
 	_ = json.NewDecoder(r.Body).Decode(&req)
+	log.Printf("generateCompanyContractDocx: request body: %+v", req)
 
 	// Prefer templates stored in DB (which should point to Spaces CDN).
 	templateURL := ""
@@ -83,35 +90,105 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	// Try to resolve template by event (company participation) and fixed name.
 	// Use standard names per edition: Portuguese -> "Contrato_empresa.docx", English -> "Company_contract.docx".
 	var eventID int
-	if len(company.Participations) > 0 {
+	if req.EventID != 0 {
+		eventID = req.EventID
+		log.Printf("generateCompanyContractDocx: using eventId from request: %d", eventID)
+	} else if len(company.Participations) > 0 {
 		eventID = company.Participations[0].Event
+		log.Printf("generateCompanyContractDocx: using eventId from company participation: %d", eventID)
+	} else {
+		log.Printf("generateCompanyContractDocx: no eventId in request and company has no participations: company=%s (%s)", company.Name, company.ID.Hex())
 	}
 
 	if eventID != 0 {
-		if err != nil {
-			log.Printf("unable to find event %d: %v", eventID, err)
-			http.Error(w, "unable to find event for company participation", http.StatusNotFound)
-			return
-		}
-
-		desiredName := "Company Contract [EN]"
-		if isPT {
-			desiredName = "Company Contract [PT]"
-		}
-
 		opts := mongodb.GetTemplatesOptions{}
 		opts.EventID = &eventID
-		opts.Name = &desiredName
-		if templates, err := mongodb.Templates.GetTemplates(opts); err == nil && len(templates) > 0 {
-			// prefer first match
-			if templates[0].Url != "" {
-				templateURL = templates[0].Url
+		templates, err := mongodb.Templates.GetTemplates(opts)
+		if err != nil {
+			log.Printf("unable to retrieve templates for event %d: %v", eventID, err)
+			writeJSONError(w, http.StatusNotFound, "unable to find template for event")
+			return
+		}
+		log.Printf("generateCompanyContractDocx: found %d templates for event %d", len(templates), eventID)
+
+		// filter to templates of kind `companyContract` (case-insensitive)
+		var eventTemplates []struct{ Name, Url, Kind string }
+		for _, t := range templates {
+			if strings.ToLower(t.Kind) == "companycontract" {
+				eventTemplates = append(eventTemplates, struct{ Name, Url, Kind string }{t.Name, t.Url, t.Kind})
 			}
+		}
+		log.Printf("generateCompanyContractDocx: found %d event templates of kind=companyContract", len(eventTemplates))
+		// if none found, continue and try global templates as a fallback
+
+		wanted := "en"
+		if isPT {
+			wanted = "pt"
+		}
+		picked := -1
+		for i, t := range eventTemplates {
+			name := strings.ToLower(t.Name)
+			log.Printf("generateCompanyContractDocx: examining eventTemplate[%d]=%s", i, t.Name)
+			if strings.Contains(name, "["+wanted+"]") || strings.Contains(name, " "+wanted+" ") || strings.HasSuffix(name, "_"+wanted) || strings.Contains(name, "-"+wanted) || strings.Contains(name, wanted+">") {
+				picked = i
+				break
+			}
+			if !isPT && (strings.Contains(name, "company") || strings.Contains(name, "contract")) {
+				if picked == -1 {
+					picked = i
+				}
+			}
+			if isPT && (strings.Contains(name, "contrato") || strings.Contains(name, "empresa") || strings.Contains(name, "contrato_empresa")) {
+				if picked == -1 {
+					picked = i
+				}
+			}
+		}
+
+		if picked == -1 && len(eventTemplates) > 0 {
+			picked = 0
+		}
+
+		if picked != -1 && eventTemplates[picked].Url != "" {
+			templateURL = eventTemplates[picked].Url
+			log.Printf("generateCompanyContractDocx: picked event template index=%d name=%s url=%s", picked, eventTemplates[picked].Name, templateURL)
+		} else if picked != -1 {
+			log.Printf("generateCompanyContractDocx: picked event template index=%d name=%s but no url", picked, eventTemplates[picked].Name)
 		}
 	} else {
 		// No participation / event associated with this company.
 		http.Error(w, "no template available: company has no participation/event", http.StatusNotFound)
 		return
+	}
+
+	if templateURL == "" {
+		opts := mongodb.GetTemplatesOptions{}
+		// fetch all templates (no EventID filter)
+		if globalTemplates, err := mongodb.Templates.GetTemplates(opts); err == nil && len(globalTemplates) > 0 {
+			picked := -1
+			wanted := "en"
+			if isPT {
+				wanted = "pt"
+			}
+			for i, t := range globalTemplates {
+				// only consider company templates
+				if strings.ToLower(t.Kind) != "companycontract" {
+					continue
+				}
+				name := strings.ToLower(t.Name)
+				if strings.Contains(name, wanted) || strings.Contains(name, "company") || strings.Contains(name, "contrato") || strings.Contains(name, "contract") {
+					picked = i
+					break
+				}
+				if picked == -1 {
+					picked = i
+				}
+			}
+			if picked != -1 && globalTemplates[picked].Url != "" {
+				templateURL = globalTemplates[picked].Url
+				log.Printf("generateCompanyContractDocx: picked global template index=%d name=%s url=%s", picked, globalTemplates[picked].Name, templateURL)
+			}
+		}
 	}
 
 	// If no template URL was resolved from DB, return an explicit error.
@@ -120,6 +197,7 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("generateCompanyContractDocx: using template URL %s", templateURL)
 	resp, err := http.Get(templateURL)
 	if err != nil || resp.StatusCode >= 400 {
 		if err != nil {
