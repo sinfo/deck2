@@ -28,9 +28,16 @@ async function download(language: string) {
   isLoading.value = true;
   try {
     const eventId = eventStore.selectedEvent?.id;
+    if (!eventId) {
+      toast.error({
+        title: "Error",
+        description: "Select an event before generating the contract",
+      });
+      return;
+    }
 
     const payload = {
-      language,
+      language: String(language).toLowerCase(),
       eventId,
     };
 
@@ -65,11 +72,29 @@ async function download(language: string) {
     console.error("Download contract failed", err);
     let message = "Unable to download contract";
     if (err) {
-      const maybeErr = err as Error & {
-        response?: { data?: { message?: string } };
-      };
-      message =
-        maybeErr?.response?.data?.message || maybeErr?.message || message;
+      const maybeErr = err as Error & { response?: { data?: unknown } };
+      const data = maybeErr?.response?.data;
+      // Axios returns a Blob for non-2xx responses when responseType is 'blob'.
+      // If we received a Blob, try to read it as text and parse JSON.
+      if (data && typeof (data as Blob).text === "function") {
+        try {
+          const text = await (data as Blob).text();
+          try {
+            const parsed = JSON.parse(text);
+            message =
+              (parsed as { message?: string })?.message || text || message;
+          } catch {
+            message = text || message;
+          }
+        } catch {
+          // ignore read errors and fall back
+        }
+      } else if (data && typeof data === "object") {
+        const obj = data as { message?: string };
+        message = obj?.message || maybeErr.message || message;
+      } else {
+        message = maybeErr.message || message;
+      }
     }
     toast.error({ title: "Error", description: String(message) });
   } finally {

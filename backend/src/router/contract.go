@@ -56,7 +56,7 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	companyHex, ok := params["id"]
 	if !ok || companyHex == "" {
-		http.Error(w, "company id missing in path", http.StatusBadRequest)
+		writeJSONError(w, http.StatusBadRequest, "company id missing in path")
 		return
 	}
 
@@ -82,118 +82,57 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 
 	// Prefer templates stored in DB (which should point to Spaces CDN).
 	templateURL := ""
-	isPT := false
-	if strings.ToLower(req.Language) == "pt" || strings.ToLower(req.Language) == "pt-pt" || strings.ToLower(req.Language) == "pt_br" {
-		isPT = true
-	}
 
-	// Try to resolve template by event (company participation) and fixed name.
-	// Use standard names per edition: Portuguese -> "Contrato_empresa.docx", English -> "Company_contract.docx".
-	var eventID int
-	if req.EventID != 0 {
-		eventID = req.EventID
-		log.Printf("generateCompanyContractDocx: using eventId from request: %d", eventID)
-	} else if len(company.Participations) > 0 {
-		eventID = company.Participations[0].Event
-		log.Printf("generateCompanyContractDocx: using eventId from company participation: %d", eventID)
-	} else {
-		log.Printf("generateCompanyContractDocx: no eventId in request and company has no participations: company=%s (%s)", company.Name, company.ID.Hex())
-	}
-
-	if eventID != 0 {
-		opts := mongodb.GetTemplatesOptions{}
-		opts.EventID = &eventID
-		templates, err := mongodb.Templates.GetTemplates(opts)
-		if err != nil {
-			log.Printf("unable to retrieve templates for event %d: %v", eventID, err)
-			writeJSONError(w, http.StatusNotFound, "unable to find template for event")
-			return
-		}
-		log.Printf("generateCompanyContractDocx: found %d templates for event %d", len(templates), eventID)
-
-		// filter to templates of kind `companyContract` (case-insensitive)
-		var eventTemplates []struct{ Name, Url, Kind string }
-		for _, t := range templates {
-			if strings.ToLower(t.Kind) == "companycontract" {
-				eventTemplates = append(eventTemplates, struct{ Name, Url, Kind string }{t.Name, t.Url, t.Kind})
-			}
-		}
-		log.Printf("generateCompanyContractDocx: found %d event templates of kind=companyContract", len(eventTemplates))
-		// if none found, continue and try global templates as a fallback
-
-		wanted := "en"
-		if isPT {
-			wanted = "pt"
-		}
-		picked := -1
-		for i, t := range eventTemplates {
-			name := strings.ToLower(t.Name)
-			log.Printf("generateCompanyContractDocx: examining eventTemplate[%d]=%s", i, t.Name)
-			if strings.Contains(name, "["+wanted+"]") || strings.Contains(name, " "+wanted+" ") || strings.HasSuffix(name, "_"+wanted) || strings.Contains(name, "-"+wanted) || strings.Contains(name, wanted+">") {
-				picked = i
-				break
-			}
-			if !isPT && (strings.Contains(name, "company") || strings.Contains(name, "contract")) {
-				if picked == -1 {
-					picked = i
-				}
-			}
-			if isPT && (strings.Contains(name, "contrato") || strings.Contains(name, "empresa") || strings.Contains(name, "contrato_empresa")) {
-				if picked == -1 {
-					picked = i
-				}
-			}
-		}
-
-		if picked == -1 && len(eventTemplates) > 0 {
-			picked = 0
-		}
-
-		if picked != -1 && eventTemplates[picked].Url != "" {
-			templateURL = eventTemplates[picked].Url
-			log.Printf("generateCompanyContractDocx: picked event template index=%d name=%s url=%s", picked, eventTemplates[picked].Name, templateURL)
-		} else if picked != -1 {
-			log.Printf("generateCompanyContractDocx: picked event template index=%d name=%s but no url", picked, eventTemplates[picked].Name)
-		}
-	} else {
-		// No participation / event associated with this company.
-		http.Error(w, "no template available: company has no participation/event", http.StatusNotFound)
+	// Require explicit eventId in the request. There must be exactly one
+	// `companyContract` template for the given event.
+	if req.EventID == 0 {
+		log.Printf("generateCompanyContractDocx: missing required eventId in request")
+		writeJSONError(w, http.StatusBadRequest, "eventId is required")
 		return
 	}
+	eventID := req.EventID
+	log.Printf("generateCompanyContractDocx: using eventId from request: %d", eventID)
 
-	if templateURL == "" {
-		opts := mongodb.GetTemplatesOptions{}
-		// fetch all templates (no EventID filter)
-		if globalTemplates, err := mongodb.Templates.GetTemplates(opts); err == nil && len(globalTemplates) > 0 {
-			picked := -1
-			wanted := "en"
-			if isPT {
-				wanted = "pt"
-			}
-			for i, t := range globalTemplates {
-				// only consider company templates
-				if strings.ToLower(t.Kind) != "companycontract" {
-					continue
-				}
-				name := strings.ToLower(t.Name)
-				if strings.Contains(name, wanted) || strings.Contains(name, "company") || strings.Contains(name, "contrato") || strings.Contains(name, "contract") {
-					picked = i
-					break
-				}
-				if picked == -1 {
-					picked = i
-				}
-			}
-			if picked != -1 && globalTemplates[picked].Url != "" {
-				templateURL = globalTemplates[picked].Url
-				log.Printf("generateCompanyContractDocx: picked global template index=%d name=%s url=%s", picked, globalTemplates[picked].Name, templateURL)
-			}
+	opts := mongodb.GetTemplatesOptions{}
+	opts.EventID = &eventID
+	templates, err := mongodb.Templates.GetTemplates(opts)
+	if err != nil {
+		log.Printf("unable to retrieve templates for event %d: %v", eventID, err)
+		writeJSONError(w, http.StatusInternalServerError, "unable to retrieve templates for event")
+		return
+	}
+	log.Printf("generateCompanyContractDocx: found %d templates for event %d", len(templates), eventID)
+
+	// filter to templates of kind `companyContract` (case-insensitive)
+	var eventTemplates []struct{ Name, Url, Kind string }
+	for _, t := range templates {
+		if strings.ToLower(t.Kind) == "companycontract" {
+			eventTemplates = append(eventTemplates, struct{ Name, Url, Kind string }{t.Name, t.Url, t.Kind})
 		}
 	}
+	log.Printf("generateCompanyContractDocx: found %d event templates of kind=companyContract", len(eventTemplates))
 
-	// If no template URL was resolved from DB, return an explicit error.
+	if len(eventTemplates) == 0 {
+		writeJSONError(w, http.StatusUnprocessableEntity, fmt.Sprintf("no companyContract template found for event %d", eventID))
+		return
+	}
+	if len(eventTemplates) > 1 {
+		writeJSONError(w, http.StatusConflict, fmt.Sprintf("multiple companyContract templates found for event %d; expected exactly one", eventID))
+		return
+	}
+	// use the single template
+	if eventTemplates[0].Url == "" {
+		writeJSONError(w, http.StatusUnprocessableEntity, "template has no URL")
+		return
+	}
+	templateURL = eventTemplates[0].Url
+	log.Printf("generateCompanyContractDocx: picked event template name=%s url=%s", eventTemplates[0].Name, templateURL)
+
+	// No global fallback: templates must be event-scoped and of kind `companyContract`.
+
+	// If no template URL was resolved from DB, return an explicit JSON error.
 	if templateURL == "" {
-		http.Error(w, "no template found for this event and language", http.StatusNotFound)
+		writeJSONError(w, http.StatusUnprocessableEntity, "no template found for this event and language")
 		return
 	}
 
@@ -205,7 +144,7 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Printf("error downloading template %s: status=%d", templateURL, resp.StatusCode)
 		}
-		http.Error(w, "unable to download template", http.StatusBadGateway)
+		writeJSONError(w, http.StatusBadGateway, "unable to download template")
 		return
 	}
 	defer resp.Body.Close()
@@ -213,7 +152,7 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("unable to read template body from %s: %v", templateURL, err)
-		http.Error(w, "unable to read template", http.StatusInternalServerError)
+		writeJSONError(w, http.StatusInternalServerError, "unable to read template")
 		return
 	}
 
@@ -262,7 +201,7 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	modifiedDocx, err := replaceDocxPlaceholders(b, replacements, replacementsPlain)
 	if err != nil {
 		log.Printf("replaceDocxPlaceholders error: %v", err)
-		http.Error(w, "error processing template", http.StatusInternalServerError)
+		writeJSONError(w, http.StatusInternalServerError, "error processing template")
 		return
 	}
 
