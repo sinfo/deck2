@@ -215,7 +215,7 @@ func InitializeDatabase() {
 	_, err = Templates.Collection.Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
-			Keys:    bson.D{{Key: "name", Value: 1}},
+			Keys:    bson.D{{Key: "event", Value: 1}, {Key: "kind", Value: 1}, {Key: "name", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	)
