@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
@@ -98,8 +99,15 @@ func InitializeConfig(filename *string) {
 	}
 
 	if file {
-		if err := godotenv.Load(*filename); err != nil {
-			fmt.Printf("Error loading .env file: %v\n", err)
+		// If a filename was provided but the file doesn't exist, silently ignore it.
+		// In Kubernetes/staging we rely on environment variables provided by the
+		// runtime, so a missing .env file is not an error.
+		if _, statErr := os.Stat(*filename); os.IsNotExist(statErr) {
+			// No .env file present; ignore
+		} else {
+			if err := godotenv.Load(*filename); err != nil {
+				fmt.Printf("Error loading .env file: %v\n", err)
+			}
 		}
 	}
 
