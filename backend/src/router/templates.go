@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"text/template"
@@ -14,6 +15,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/patrickmn/go-cache"
 	"github.com/sinfo/deck2/src/mongodb"
+	"github.com/sinfo/deck2/src/spaces"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -168,4 +170,109 @@ func getTemplates(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(templates)
+}
+
+// uploadTemplateFile uploads the provided file to Spaces for the given template ID
+// and associates the returned CDN URL with the template document in DB. Requires
+// query parameter `event` (integer) to determine the event (edition) path.
+func uploadTemplateFile(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	templateId, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "invalid template id", http.StatusBadRequest)
+		return
+	}
+
+	eventStr := r.URL.Query().Get("event")
+	if eventStr == "" {
+		http.Error(w, "missing event query parameter", http.StatusBadRequest)
+		return
+	}
+
+	eventID, err := strconv.Atoi(eventStr)
+	if err != nil {
+		http.Error(w, "invalid event id", http.StatusBadRequest)
+		return
+	}
+
+	// Parse multipart form
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "invalid multipart form", http.StatusBadRequest)
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, "file field is required", http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Read file bytes
+	b, err := ioutil.ReadAll(file)
+	if err != nil {
+		http.Error(w, "unable to read file", http.StatusInternalServerError)
+		return
+	}
+
+	// upload to spaces
+	mime := header.Header.Get("Content-Type")
+	if mime == "" {
+		mime = "application/octet-stream"
+	}
+
+	url, err := spaces.UploadTemplateFile(eventID, templateId.Hex(), bytes.NewReader(b), int64(len(b)), mime)
+	if err != nil {
+		http.Error(w, "unable to upload to spaces", http.StatusBadGateway)
+		return
+	}
+
+	// update template url in DB
+	updated, err := mongodb.Templates.UpdateTemplateUrl(templateId, *url)
+	if err != nil {
+		http.Error(w, "unable to update template url in db", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updated)
+}
+
+// downloadTemplateFile streams the template file stored at template.Url as an attachment.
+func downloadTemplateFile(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	templateId, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "invalid template id", http.StatusBadRequest)
+		return
+	}
+
+	tmpl, err := mongodb.Templates.GetTemplate(templateId)
+	if err != nil {
+		http.Error(w, "template not found", http.StatusNotFound)
+		return
+	}
+
+	if tmpl.Url == "" {
+		http.Error(w, "template has no associated file URL", http.StatusNotFound)
+		return
+	}
+
+	resp, err := http.Get(tmpl.Url)
+	if err != nil || resp.StatusCode >= 400 {
+		http.Error(w, "unable to download template file", http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Use the template name as filename fallback
+	filename := tmpl.Name
+	if filename == "" {
+		filename = "template.docx"
+	}
+
+	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+
+	io.Copy(w, resp.Body)
 }
