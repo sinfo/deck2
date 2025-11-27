@@ -1,11 +1,9 @@
 package router
 
 import (
-	"archive/zip"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,7 +11,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"unicode/utf16"
 
 	gooxml "baliance.com/gooxml"
 	docx "baliance.com/gooxml/document"
@@ -90,17 +87,15 @@ func generateCompanyContractPDF(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if eventID != 0 {
-		// Resolve event name to build template public name pattern.
-		eventObj, err := mongodb.Events.GetEvent(eventID)
 		if err != nil {
 			log.Printf("unable to find event %d: %v", eventID, err)
 			http.Error(w, "unable to find event for company participation", http.StatusNotFound)
 			return
 		}
 
-		desiredName := fmt.Sprintf("[%s] Company Contract [EN]", eventObj.Name)
+		desiredName := "Company Contract [EN]"
 		if isPT {
-			desiredName = fmt.Sprintf("[%s] Company Contract [PT]", eventObj.Name)
+			desiredName = "Company Contract [PT]"
 		}
 
 		opts := mongodb.GetTemplatesOptions{}
@@ -199,7 +194,6 @@ func generateCompanyContractPDF(w http.ResponseWriter, r *http.Request) {
 	if _, err := w.Write(modifiedDocx); err != nil {
 		log.Printf("error writing modified docx response: %v", err)
 	}
-	return
 }
 
 func sanitizeFilename(name string) string {
@@ -258,148 +252,6 @@ func replaceDocxPlaceholders(docxBytes []byte, replacements map[string]string, p
 		return nil, err
 	}
 	return outBytes, nil
-}
-
-func xmlEscape(s string) string {
-	// basic replacements for ampersand and angle brackets
-	s = strings.ReplaceAll(s, "&", "&amp;")
-	s = strings.ReplaceAll(s, "<", "&lt;")
-	s = strings.ReplaceAll(s, ">", "&gt;")
-	return s
-}
-
-// replacePlaceholdersInXML does a best-effort replacement of placeholders inside
-// the raw Word XML parts. It is intentionally simple: it replaces exact matches
-// of placeholders (with or without braces) and XML-escapes the replacement text.
-// Note: this does not handle placeholders split across runs — gooxml parsing
-// is used after replacement for more accurate text extraction.
-func replacePlaceholdersInXML(s string, replacements map[string]string, plain map[string]string) string {
-	for k, v := range replacements {
-		s = strings.ReplaceAll(s, k, xmlEscape(v))
-	}
-	for k, v := range plain {
-		// match {{key}} and key
-		s = strings.ReplaceAll(s, "{{"+k+"}}", xmlEscape(v))
-		s = strings.ReplaceAll(s, k, xmlEscape(v))
-	}
-	return s
-}
-
-// utf16beHex returns a PDF hex string literal for the given UTF-8 string
-// using UTF-16BE with BOM (FEFF). Example output: <FEFF00E700E9>
-func utf16beHex(s string) string {
-	runes := []rune(s)
-	u16 := utf16.Encode(runes)
-	buf := bytes.Buffer{}
-	buf.WriteString("<FEFF")
-	for _, v := range u16 {
-		hi := byte(v >> 8)
-		lo := byte(v & 0xff)
-		buf.WriteString(fmt.Sprintf("%02X%02X", hi, lo))
-	}
-	buf.WriteString(">")
-	return buf.String()
-}
-
-func extractPlainTextFromDocx(docxBytes []byte) (string, error) {
-	r, err := zip.NewReader(bytes.NewReader(docxBytes), int64(len(docxBytes)))
-	if err != nil {
-		return "", err
-	}
-
-	var docXml []byte
-	for _, f := range r.File {
-		if f.Name == "word/document.xml" {
-			fr, err := f.Open()
-			if err != nil {
-				return "", err
-			}
-			docXml, err = ioutil.ReadAll(fr)
-			fr.Close()
-			if err != nil {
-				return "", err
-			}
-			break
-		}
-	}
-
-	if len(docXml) == 0 {
-		return "", fmt.Errorf("document.xml not found")
-	}
-
-	// strip tags
-	re := regexp.MustCompile("<[^>]+>")
-	text := re.ReplaceAllString(string(docXml), "")
-	// unescape html entities
-	text = html.UnescapeString(text)
-
-	// normalize whitespace a bit
-	text = strings.ReplaceAll(text, "\r", "")
-	text = strings.ReplaceAll(text, "\n\n", "\n")
-
-	// ensure fallback if empty
-	if strings.TrimSpace(text) == "" {
-		return "", fmt.Errorf("extracted empty text")
-	}
-
-	return text, nil
-}
-
-func renderPDFfromText(text string) ([]byte, error) {
-	// very small PDF writer using built-in Helvetica; suitable for simple text contracts
-	lines := strings.Split(text, "\n")
-
-	buf := new(bytes.Buffer)
-	// PDF header
-	buf.WriteString("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n")
-
-	objs := make([][]byte, 0)
-
-	objs = append(objs, []byte("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"))
-	objs = append(objs, []byte("2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"))
-	page := "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n"
-	objs = append(objs, []byte(page))
-	objs = append(objs, []byte("4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n"))
-
-	var contentBuf bytes.Buffer
-	contentBuf.WriteString("BT\n/F1 12 Tf\n50 800 Td\n")
-	for i, line := range lines {
-		// escape parentheses and backslashes
-		esc := strings.ReplaceAll(line, "\\", "\\\\")
-		esc = strings.ReplaceAll(esc, "(", "\\(")
-		esc = strings.ReplaceAll(esc, ")", "\\)")
-		if i > 0 {
-			// move to next line using T*
-			contentBuf.WriteString("T* ")
-		}
-		contentBuf.WriteString(fmt.Sprintf("(%s) Tj\n", esc))
-	}
-	contentBuf.WriteString("ET\n")
-
-	contentBytes := contentBuf.Bytes()
-	stream := fmt.Sprintf("5 0 obj\n<< /Length %d >>\nstream\n%s\nendstream\nendobj\n", len(contentBytes), contentBytes)
-	objs = append(objs, []byte(stream))
-
-	offsets := make([]int, len(objs)+1)
-	for i, o := range objs {
-		offsets[i+1] = buf.Len()
-		buf.Write(o)
-	}
-
-	xrefStart := buf.Len()
-	buf.WriteString("xref\n")
-	buf.WriteString(fmt.Sprintf("0 %d\n", len(objs)+1))
-	buf.WriteString("0000000000 65535 f \n")
-	for i := 1; i <= len(objs); i++ {
-		buf.WriteString(fmt.Sprintf("%010d 00000 n \n", offsets[i]))
-	}
-
-	buf.WriteString("trailer\n<< /Size ")
-	buf.WriteString(fmt.Sprintf("%d", len(objs)+1))
-	buf.WriteString(" /Root 1 0 R >>\nstartxref\n")
-	buf.WriteString(fmt.Sprintf("%d\n%%%%EOF", xrefStart))
-
-	return buf.Bytes(), nil
 }
 
 // Basic styled types
