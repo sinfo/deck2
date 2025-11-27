@@ -18,8 +18,3 @@ export const uploadTemplate = (
 
 export const downloadTemplate = (templateId: string) =>
   instance.get(`/templates/${templateId}/download`, { responseType: "blob" });
-
-export const createDefaultTemplates = (eventId: number) =>
-  instance.post(`/templates/create-defaults`, null, {
-    params: { event: eventId },
-  });
