@@ -93,6 +93,13 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	eventID := req.EventID
 	log.Printf("generateCompanyContractDocx: using eventId from request: %d", eventID)
 
+	// Require language in the request (e.g. "en" or "pt").
+	if strings.TrimSpace(req.Language) == "" {
+		log.Printf("generateCompanyContractDocx: missing required language in request")
+		writeJSONError(w, http.StatusBadRequest, "language is required")
+		return
+	}
+
 	opts := mongodb.GetTemplatesOptions{}
 	opts.EventID = &eventID
 	templates, err := mongodb.Templates.GetTemplates(opts)
