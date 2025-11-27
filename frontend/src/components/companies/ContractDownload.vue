@@ -37,7 +37,7 @@ async function download(language: string) {
     }
 
     const payload = {
-      language: String(language).toLowerCase(),
+      language,
       eventId,
     };
 
@@ -53,6 +53,9 @@ async function download(language: string) {
     // try to use filename from header, fallback to generated name
     const cd = res.headers["content-disposition"];
     let filename = `contract-${props.companyId}.docx`;
+    if (language === "pt") {
+      filename = `contrato-${props.companyId}.docx`;
+    }
     if (cd) {
       const m =
         /filename\*=UTF-8''(.+)$/.exec(cd) || /filename="?([^";]+)"?/.exec(cd);
@@ -64,10 +67,6 @@ async function download(language: string) {
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
-    toast.success({
-      title: "Download started",
-      description: `Contract (${language.toUpperCase()}) is downloading`,
-    });
   } catch (err: unknown) {
     console.error("Download contract failed", err);
     let message = "Unable to download contract";
