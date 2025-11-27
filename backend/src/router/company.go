@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -905,7 +904,7 @@ func setCompanyPrivateImage(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 	checker := io.TeeReader(file, &buf)
 
-	bytes, err := ioutil.ReadAll(checker)
+	bytes, err := io.ReadAll(checker)
 	if err != nil {
 		http.Error(w, "Unable to read the file: "+err.Error(), http.StatusExpectationFailed)
 		return
@@ -985,7 +984,7 @@ func setCompanyPublicImage(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
 	checker := io.TeeReader(file, &buf)
 
-	bytes, err := ioutil.ReadAll(checker)
+	bytes, err := io.ReadAll(checker)
 	if err != nil {
 		http.Error(w, "Unable to read the file: "+err.Error(), http.StatusExpectationFailed)
 		return
