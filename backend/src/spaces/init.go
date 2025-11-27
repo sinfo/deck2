@@ -67,11 +67,11 @@ func InitializeSpaces() {
 	opt := &godo.ListOptions{}
 	cdns, _, err := godoClient.CDNs.List(context.Background(), opt)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed listing DigitalOcean CDNs: %v", err)
 	}
 
 	if len(cdns) == 0 {
-		log.Fatal("no CDNs")
+		log.Fatalf("no CDNs returned by DigitalOcean for token owner")
 	}
 
 	for _, cdn := range cdns {
@@ -91,17 +91,21 @@ func InitializeSpaces() {
 		}
 	}
 
+	if cdnBaseURL == "" || endpoint == "" {
+		log.Fatalf("no CDN or endpoint found for Spaces bucket '%s' (SpacesName=%s)", name, name)
+	}
+
 	// Initialize a client using DigitalOcean Spaces.
 
 	client, err = minio.New(endpoint, accessKey, secret, ssl)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed initializing MinIO client (endpoint=%s): %v", endpoint, err)
 	}
 
 	exists, err := client.BucketExists(name)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error checking bucket existence for '%s': %v", name, err)
 	}
 
 	if !exists {
