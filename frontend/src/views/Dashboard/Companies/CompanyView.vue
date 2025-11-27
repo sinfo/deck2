@@ -21,10 +21,6 @@
         @updated="handleCompanyUpdated"
       />
 
-      <div class="mt-4">
-        <ContractDownload :company-id="companyId as string" />
-      </div>
-
       <!-- Company Contacts -->
       <!-- prettier-ignore -->
       <CompanyContacts
@@ -64,7 +60,6 @@ import CompanyContacts from "@/components/companies/CompanyContacts.vue";
 import CompanyCommunications from "@/components/companies/CompanyCommunications.vue";
 import ParticipationsCard from "@/components/ParticipationsCard.vue";
 import DirectEmailDialogTrigger from "@/components/DirectEmailDialogTrigger.vue";
-import ContractDownload from "@/components/companies/ContractDownload.vue";
 import type { CompanyWithParticipation } from "@/dto/companies";
 import { withCurrentParticipation } from "@/lib/utils";
 import { useEventStore } from "@/stores/event";

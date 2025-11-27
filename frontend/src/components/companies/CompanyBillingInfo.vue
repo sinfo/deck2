@@ -61,6 +61,11 @@
             <p class="text-sm">{{ company?.billingInfo?.tin }}</p>
           </div>
         </div>
+
+        <ContractDownload
+          v-if="canSeeContract"
+          :company-id="company?.id as string"
+        />
       </div>
 
       <!-- No Billing Info State -->
@@ -75,6 +80,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import { useAuthStore } from "@/stores/auth";
 import { useCompanyBillingMutation } from "@/mutations/companies";
 import type { Company, CompanyBillingInfo } from "@/dto/companies";
 import Card from "../ui/card/Card.vue";
@@ -85,6 +91,7 @@ import CardTitle from "../ui/card/CardTitle.vue";
 import Button from "../ui/button/Button.vue";
 import BillingForm from "./BillingForm.vue";
 import EmptyStateCard from "../ui/EmptyStateCard.vue";
+import ContractDownload from "./ContractDownload.vue";
 
 interface Props {
   company?: Company;
@@ -114,6 +121,14 @@ const hasBillingInfo = computed(() => {
 
 const billingMutation = useCompanyBillingMutation();
 const { mutate: updateBilling, isLoading: isUpdating } = billingMutation;
+
+const authStore = useAuthStore();
+const canSeeContract = computed(
+  () =>
+    authStore.isAuthenticated &&
+    authStore.decoded &&
+    (authStore.decoded as { role?: string }).role === "COORDINATOR",
+);
 
 const startEditing = () => {
   isEditing.value = true;
