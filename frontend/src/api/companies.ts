@@ -104,7 +104,12 @@ export interface GenerateCompanyContractData {
 export const generateCompanyContract = (
   companyId: string,
   data: GenerateCompanyContractData,
-) =>
-  instance.post(`/companies/${companyId}/contract/docx`, data, {
+) => {
+  const payload = {
+    ...data,
+    language: (data.language ?? "en").toLowerCase(),
+  } as GenerateCompanyContractData;
+  return instance.post(`/companies/${companyId}/contract/docx`, payload, {
     responseType: "blob",
   });
+};
