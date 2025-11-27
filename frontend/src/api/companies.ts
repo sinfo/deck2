@@ -92,13 +92,8 @@ export const uploadCompanyInternalImage = (id: string, data: FormData) =>
   instance.post<Company>(`/companies/${id}/image/internal`, data);
 
 export interface GenerateCompanyContractData {
-  language?: string;
-  eventId?: number;
-  companyNif?: string;
-  companyAddress?: string;
-  companyName?: string;
-  packageName?: string;
-  packagePrice?: string;
+  language: string;
+  eventId: number;
 }
 
 export const generateCompanyContract = (
