@@ -9,20 +9,26 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import Input from "@/components/ui/input/Input.vue";
-import { uploadTemplate } from "@/api/templates";
+import { uploadTemplateByName } from "@/api/templates";
 
 interface Template {
   id: number | string;
   name?: string;
 }
 
-const props = defineProps<{ eventId: number | null; templates: Template[] }>();
+const props = defineProps<{ eventId: number | null; templates?: Template[] }>();
 
 const emit = defineEmits<{ (e: "uploaded"): void }>();
 
 const selectedTemplate = ref<string | number | null>(null);
 const file = ref<File | null>(null);
 const uploading = ref(false);
+
+// Use a fixed list of template items rather than fetching from props
+const definedTemplates: Template[] = [
+  { id: "Company Contract [EN]", name: "Company Contract [EN]" },
+  { id: "Company Contract [PT]", name: "Company Contract [PT]" },
+];
 
 function onFileChange(e: Event) {
   const t = e.target as HTMLInputElement;
@@ -38,7 +44,11 @@ async function submit() {
 
   uploading.value = true;
   try {
-    await uploadTemplate(String(selectedTemplate.value), eventId, file.value);
+    await uploadTemplateByName(
+      String(selectedTemplate.value),
+      eventId,
+      file.value,
+    );
     emit("uploaded");
   } catch (err: unknown) {
     console.error(err);
@@ -64,7 +74,7 @@ async function submit() {
           <SelectValue placeholder="-- select template --" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="t in props.templates" :key="t.id" :value="t.id">
+          <SelectItem v-for="t in definedTemplates" :key="t.id" :value="t.id">
             {{ t.name }}
           </SelectItem>
         </SelectContent>
