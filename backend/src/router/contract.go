@@ -24,11 +24,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const (
-	contractPTURL  = "https://sinfo-staging.ams3.cdn.digitaloceanspaces.com/deck2-dev/sinfo-33/contract/Contrato_participação.docx"
-	contractENGURL = "https://sinfo-staging.ams3.cdn.digitaloceanspaces.com/deck2-dev/sinfo-33/contract/Participation_Contract.docx"
-)
-
 type contractRequest struct {
 	Language       string `json:"language"`
 	CompanyNif     string `json:"companyNif"`
@@ -80,9 +75,53 @@ func generateCompanyContractPDF(w http.ResponseWriter, r *http.Request) {
 	// body is optional; if present it may contain language
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	templateURL := contractENGURL
+	// Prefer templates stored in DB (which should point to Spaces CDN).
+	templateURL := ""
+	isPT := false
 	if strings.ToLower(req.Language) == "pt" || strings.ToLower(req.Language) == "pt-pt" || strings.ToLower(req.Language) == "pt_br" {
-		templateURL = contractPTURL
+		isPT = true
+	}
+
+	// Try to resolve template by event (company participation) and fixed name.
+	// Use standard names per edition: Portuguese -> "Contrato_empresa.docx", English -> "Company_contract.docx".
+	var eventID int
+	if len(company.Participations) > 0 {
+		eventID = company.Participations[0].Event
+	}
+
+	if eventID != 0 {
+		// Resolve event name to build template public name pattern.
+		eventObj, err := mongodb.Events.GetEvent(eventID)
+		if err != nil {
+			log.Printf("unable to find event %d: %v", eventID, err)
+			http.Error(w, "unable to find event for company participation", http.StatusNotFound)
+			return
+		}
+
+		desiredName := fmt.Sprintf("[%s] Company Contract [EN]", eventObj.Name)
+		if isPT {
+			desiredName = fmt.Sprintf("[%s] Company Contract [PT]", eventObj.Name)
+		}
+
+		opts := mongodb.GetTemplatesOptions{}
+		opts.EventID = &eventID
+		opts.Name = &desiredName
+		if templates, err := mongodb.Templates.GetTemplates(opts); err == nil && len(templates) > 0 {
+			// prefer first match
+			if templates[0].Url != "" {
+				templateURL = templates[0].Url
+			}
+		}
+	} else {
+		// No participation / event associated with this company.
+		http.Error(w, "no template available: company has no participation/event", http.StatusNotFound)
+		return
+	}
+
+	// If no template URL was resolved from DB, return an explicit error.
+	if templateURL == "" {
+		http.Error(w, "no template found for this event and language", http.StatusNotFound)
+		return
 	}
 
 	resp, err := http.Get(templateURL)
