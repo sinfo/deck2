@@ -131,17 +131,45 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusUnprocessableEntity, fmt.Sprintf("no companyContract template found for event %d", eventID))
 		return
 	}
-	if len(eventTemplates) > 1 {
-		writeJSONError(w, http.StatusConflict, fmt.Sprintf("multiple companyContract templates found for event %d; expected exactly one", eventID))
+
+	// Among eventTemplates, pick the one that matches the requested language.
+	// Allow both an EN and a PT template to exist for the same event, but require
+	// exactly one template for the requested language.
+	var candidates []struct{ Name, Url, Kind string }
+	// language regexes
+	reEn := regexp.MustCompile(`(?i)\b(en|english|ingles)\b`)
+	rePt := regexp.MustCompile(`(?i)\b(pt|pt_pt|ptbr|pt_br|portuguese|portugues)\b`)
+	for _, t := range eventTemplates {
+		name := strings.ToLower(t.Name)
+		// match name tokens against requested language
+		if lowerLang == "pt" {
+			if rePt.MatchString(name) {
+				candidates = append(candidates, t)
+			}
+		} else { // en
+			if reEn.MatchString(name) {
+				candidates = append(candidates, t)
+			}
+		}
+	}
+
+	if len(candidates) == 0 {
+		// no template for requested language
+		writeJSONError(w, http.StatusUnprocessableEntity, fmt.Sprintf("no companyContract template found for event %d and language %s", eventID, lowerLang))
 		return
 	}
-	// use the single template
-	if eventTemplates[0].Url == "" {
+	if len(candidates) > 1 {
+		writeJSONError(w, http.StatusConflict, fmt.Sprintf("multiple companyContract templates found for event %d and language %s; expected exactly one", eventID, lowerLang))
+		return
+	}
+
+	// use the single matching template
+	if candidates[0].Url == "" {
 		writeJSONError(w, http.StatusUnprocessableEntity, "template has no URL")
 		return
 	}
-	templateURL = eventTemplates[0].Url
-	log.Printf("generateCompanyContractDocx: picked event template name=%s url=%s", eventTemplates[0].Name, templateURL)
+	templateURL = candidates[0].Url
+	log.Printf("generateCompanyContractDocx: picked event template name=%s url=%s", candidates[0].Name, templateURL)
 
 	// No global fallback: templates must be event-scoped and of kind `companyContract`.
 
