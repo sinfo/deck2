@@ -100,6 +100,14 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate allowed language values (only 'en' and 'pt' supported).
+	lowerLang := strings.ToLower(strings.TrimSpace(req.Language))
+	if lowerLang != "en" && lowerLang != "pt" {
+		log.Printf("generateCompanyContractDocx: unsupported language '%s'", req.Language)
+		writeJSONError(w, http.StatusUnprocessableEntity, "unsupported language; allowed values are: en, pt")
+		return
+	}
+
 	opts := mongodb.GetTemplatesOptions{}
 	opts.EventID = &eventID
 	templates, err := mongodb.Templates.GetTemplates(opts)
