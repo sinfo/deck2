@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,13 +21,8 @@ import (
 )
 
 type contractRequest struct {
-	Language       string `json:"language"`
-	EventID        int    `json:"eventId"`
-	CompanyNif     string `json:"companyNif"`
-	CompanyAddress string `json:"companyAddress"`
-	CompanyName    string `json:"companyName"`
-	PackageName    string `json:"packageName"`
-	PackagePrice   string `json:"packagePrice"`
+	Language string `json:"language"`
+	EventID  int    `json:"eventId"`
 }
 
 func writeJSONError(w http.ResponseWriter, status int, msg string) {
@@ -40,18 +34,14 @@ func writeJSONError(w http.ResponseWriter, status int, msg string) {
 // generateCompanyContractDocx downloads a DOCX template, replaces variables and
 // returns the filled DOCX as a download.
 func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
-	// Disable verbose logging from gooxml (library prints warnings about
-	// unsupported Office XML elements which are harmless for our use).
 	gooxml.DisableLogging()
 	// Recover from panics to ensure we log the error and return 500.
 	defer func() {
 		if rec := recover(); rec != nil {
-			log.Printf("panic in generateCompanyContractDocx: %v", rec)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 		}
 	}()
 
-	log.Printf("generateCompanyContractDocx: %s %s", r.Method, r.URL.Path)
 	// Read company ID from path and fetch server-side data.
 	params := mux.Vars(r)
 	companyHex, ok := params["id"]
@@ -62,14 +52,12 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 
 	companyID, err := primitive.ObjectIDFromHex(companyHex)
 	if err != nil {
-		log.Printf("invalid company id '%s': %v", companyHex, err)
 		writeJSONError(w, http.StatusBadRequest, "invalid company id")
 		return
 	}
 
 	company, err := mongodb.Companies.GetCompany(companyID)
 	if err != nil {
-		log.Printf("unable to find company %s: %v", companyID.Hex(), err)
 		writeJSONError(w, http.StatusNotFound, "unable to find company: "+err.Error())
 		return
 	}
@@ -78,7 +66,6 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 
 	var req contractRequest
 	_ = json.NewDecoder(r.Body).Decode(&req)
-	log.Printf("generateCompanyContractDocx: request body: %+v", req)
 
 	// Prefer templates stored in DB (which should point to Spaces CDN).
 	templateURL := ""
@@ -86,16 +73,13 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	// Require explicit eventId in the request. There must be exactly one
 	// `companyContract` template for the given event.
 	if req.EventID == 0 {
-		log.Printf("generateCompanyContractDocx: missing required eventId in request")
 		writeJSONError(w, http.StatusBadRequest, "eventId is required")
 		return
 	}
 	eventID := req.EventID
-	log.Printf("generateCompanyContractDocx: using eventId from request: %d", eventID)
 
 	// Require language in the request (e.g. "en" or "pt").
 	if strings.TrimSpace(req.Language) == "" {
-		log.Printf("generateCompanyContractDocx: missing required language in request")
 		writeJSONError(w, http.StatusBadRequest, "language is required")
 		return
 	}
@@ -103,7 +87,6 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	// Validate allowed language values (only 'en' and 'pt' supported).
 	lowerLang := strings.ToLower(strings.TrimSpace(req.Language))
 	if lowerLang != "en" && lowerLang != "pt" {
-		log.Printf("generateCompanyContractDocx: unsupported language '%s'", req.Language)
 		writeJSONError(w, http.StatusUnprocessableEntity, "unsupported language; allowed values are: en, pt")
 		return
 	}
@@ -112,11 +95,9 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	opts.EventID = &eventID
 	templates, err := mongodb.Templates.GetTemplates(opts)
 	if err != nil {
-		log.Printf("unable to retrieve templates for event %d: %v", eventID, err)
 		writeJSONError(w, http.StatusInternalServerError, "unable to retrieve templates for event")
 		return
 	}
-	log.Printf("generateCompanyContractDocx: found %d templates for event %d", len(templates), eventID)
 
 	// filter to templates of kind `companyContract` (case-insensitive)
 	var eventTemplates []struct{ Name, Url, Kind string }
@@ -125,7 +106,6 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 			eventTemplates = append(eventTemplates, struct{ Name, Url, Kind string }{t.Name, t.Url, t.Kind})
 		}
 	}
-	log.Printf("generateCompanyContractDocx: found %d event templates of kind=companyContract", len(eventTemplates))
 
 	if len(eventTemplates) == 0 {
 		writeJSONError(w, http.StatusUnprocessableEntity, fmt.Sprintf("no companyContract template found for event %d", eventID))
@@ -169,7 +149,6 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	templateURL = candidates[0].Url
-	log.Printf("generateCompanyContractDocx: picked event template name=%s url=%s", candidates[0].Name, templateURL)
 
 	// No global fallback: templates must be event-scoped and of kind `companyContract`.
 
@@ -179,14 +158,8 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("generateCompanyContractDocx: using template URL %s", templateURL)
 	resp, err := http.Get(templateURL)
 	if err != nil || resp.StatusCode >= 400 {
-		if err != nil {
-			log.Printf("error downloading template %s: %v", templateURL, err)
-		} else {
-			log.Printf("error downloading template %s: status=%d", templateURL, resp.StatusCode)
-		}
 		writeJSONError(w, http.StatusBadGateway, "unable to download template")
 		return
 	}
@@ -194,7 +167,6 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("unable to read template body from %s: %v", templateURL, err)
 		writeJSONError(w, http.StatusInternalServerError, "unable to read template")
 		return
 	}
@@ -243,7 +215,6 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 
 	modifiedDocx, err := replaceDocxPlaceholders(b, replacements, replacementsPlain)
 	if err != nil {
-		log.Printf("replaceDocxPlaceholders error: %v", err)
 		writeJSONError(w, http.StatusInternalServerError, "error processing template")
 		return
 	}
@@ -253,7 +224,6 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	if _, err := w.Write(modifiedDocx); err != nil {
-		log.Printf("error writing modified docx response: %v", err)
 	}
 }
 

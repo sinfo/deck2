@@ -175,9 +175,7 @@ func getTemplates(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(templates)
 }
 
-// uploadTemplateFile uploads the provided file to Spaces for the given template ID
-// and associates the returned CDN URL with the template document in DB. Requires
-// query parameter `event` (integer) to determine the event (edition) path.
+
 func uploadTemplateFile(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	templateId, err := primitive.ObjectIDFromHex(params["id"])
@@ -212,7 +210,7 @@ func uploadTemplateFile(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Read file bytes
-	b, err := ioutil.ReadAll(file)
+	b, err := io.ReadAll(file)
 	if err != nil {
 		http.Error(w, "unable to read file", http.StatusInternalServerError)
 		return
@@ -321,7 +319,7 @@ func uploadTemplateFileByName(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	b, err := ioutil.ReadAll(file)
+	b, err := io.ReadAll(file)
 	if err != nil {
 		http.Error(w, "unable to read file", http.StatusInternalServerError)
 		return
@@ -348,7 +346,6 @@ func uploadTemplateFileByName(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updated)
 }
 
-// downloadTemplateFile streams the template file stored at template.Url as an attachment.
 func downloadTemplateFile(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	templateId, err := primitive.ObjectIDFromHex(params["id"])

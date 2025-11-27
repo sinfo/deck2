@@ -60,7 +60,6 @@
 import { getCompanyById, getCompanyRepresentatives } from "@/api/companies";
 import CompanyCard from "@/components/cards/CompanyCard.vue";
 import CompanyBillingInfo from "@/components/companies/CompanyBillingInfo.vue";
-// Button import removed; ContractDownload provides buttons
 import CompanyContacts from "@/components/companies/CompanyContacts.vue";
 import CompanyCommunications from "@/components/companies/CompanyCommunications.vue";
 import ParticipationsCard from "@/components/ParticipationsCard.vue";
