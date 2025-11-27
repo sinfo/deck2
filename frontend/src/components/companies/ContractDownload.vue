@@ -1,11 +1,21 @@
 <template>
-  <div class="flex gap-2">
-    <Button :disabled="isLoading" @click="download('pt')"
-      >Generate Contract (PT)</Button
+  <div class="flex flex-col gap-2">
+    <Button
+      size="sm"
+      class="w-full"
+      :disabled="isLoading"
+      @click="download('pt')"
     >
-    <Button :disabled="isLoading" @click="download('en')"
-      >Generate Contract (EN)</Button
+      Generate Contract (PT)
+    </Button>
+    <Button
+      size="sm"
+      class="w-full"
+      :disabled="isLoading"
+      @click="download('en')"
     >
+      Generate Contract (EN)
+    </Button>
   </div>
 </template>
 
