@@ -359,6 +359,10 @@ func InitializeRouter() {
 	templatesRouter.HandleFunc("/fill/{id}", fillTemplate).Methods("POST")
 	templatesRouter.HandleFunc("/filled/{uuid}", getFilledTemplate).Methods("GET")
 
+	// upload/download template files (coordination only)
+	templatesRouter.HandleFunc("/{id}/upload", authCoordinator(uploadTemplateFile)).Methods("POST")
+	templatesRouter.HandleFunc("/{id}/download", authCoordinator(downloadTemplateFile)).Methods("GET")
+
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)
 }

@@ -109,10 +109,9 @@ func (t *TemplateType) GetTemplates(tempOptions GetTemplatesOptions) ([]*models.
 	ctx := context.Background()
 
 	filter := bson.M{}
-	elemMatch := bson.M{}
 
 	if tempOptions.EventID != nil {
-		elemMatch["event"] = tempOptions.EventID
+		filter["event"] = *tempOptions.EventID
 	}
 
 	if tempOptions.Name != nil {
@@ -146,4 +145,38 @@ func (t *TemplateType) GetTemplates(tempOptions GetTemplatesOptions) ([]*models.
 	cur.Close(ctx)
 
 	return template, nil
+}
+
+// CreateTemplate inserts a new template document and returns it.
+func (t *TemplateType) CreateTemplate(template models.Template) (*models.Template, error) {
+	ctx := context.Background()
+
+	// ensure an ID is set
+	if template.ID.IsZero() {
+		template.ID = primitive.NewObjectID()
+	}
+
+	if _, err := t.Collection.InsertOne(ctx, template); err != nil {
+		return nil, err
+	}
+
+	return &template, nil
+}
+
+// UpdateTemplate updates name/event/kind fields of a template
+func (t *TemplateType) UpdateTemplate(templateID primitive.ObjectID, update bson.M) (*models.Template, error) {
+	ctx := context.Background()
+
+	var filterQuery = bson.M{"_id": templateID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	var updatedTemplate models.Template
+
+	if err := t.Collection.FindOneAndUpdate(ctx, filterQuery, bson.M{"$set": update}, optionsQuery).Decode(&updatedTemplate); err != nil {
+		return nil, err
+	}
+
+	return &updatedTemplate, nil
 }
