@@ -21,13 +21,8 @@
         @updated="handleCompanyUpdated"
       />
 
-      <div class="mt-4 flex gap-2">
-        <Button :disabled="generating" @click.prevent="generateContract('pt')"
-          >Generate Contract (PT)</Button
-        >
-        <Button :disabled="generating" @click.prevent="generateContract('en')"
-          >Generate Contract (EN)</Button
-        >
+      <div class="mt-4">
+        <ContractDownload :company-id="companyId as string" />
       </div>
 
       <!-- Company Contacts -->
@@ -65,19 +60,17 @@
 import { getCompanyById, getCompanyRepresentatives } from "@/api/companies";
 import CompanyCard from "@/components/cards/CompanyCard.vue";
 import CompanyBillingInfo from "@/components/companies/CompanyBillingInfo.vue";
-import Button from "@/components/ui/button/Button.vue";
+// Button import removed; ContractDownload provides buttons
 import CompanyContacts from "@/components/companies/CompanyContacts.vue";
 import CompanyCommunications from "@/components/companies/CompanyCommunications.vue";
 import ParticipationsCard from "@/components/ParticipationsCard.vue";
 import DirectEmailDialogTrigger from "@/components/DirectEmailDialogTrigger.vue";
+import ContractDownload from "@/components/companies/ContractDownload.vue";
 import type { CompanyWithParticipation } from "@/dto/companies";
 import { withCurrentParticipation } from "@/lib/utils";
 import { useEventStore } from "@/stores/event";
 
 import { useQuery, useQueryCache } from "@pinia/colada";
-import { useMutation } from "@pinia/colada";
-import { generateCompanyContract } from "@/api/companies";
-import type { AxiosResponse } from "axios";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
@@ -112,40 +105,4 @@ const companyWithParticipation = computed(() => {
     eventStore.selectedEvent,
   ) as CompanyWithParticipation;
 });
-
-const { mutate: generateMutate, isLoading: generating } = useMutation({
-  mutation: (variables: { companyId: string; language: string }) =>
-    generateCompanyContract(variables.companyId as string, {
-      language: variables.language,
-    }),
-  onSuccess: (res: AxiosResponse<Blob>) => {
-    // res is an axios response with blob data (DOCX)
-    try {
-      const blob = new Blob([res.data], {
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      const name = (
-        companyWithParticipation.value?.billingInfo?.name ||
-        companyWithParticipation.value?.name ||
-        "contract"
-      ).replace(/[^a-z0-9_-]/gi, "-");
-      link.download = `contract-${name}.docx`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error("Error downloading generated DOCX", e);
-    }
-  },
-});
-
-const generateContract = (lang: string) => {
-  if (!companyWithParticipation.value) return;
-
-  generateMutate({ companyId: companyId as string, language: lang });
-};
 </script>
