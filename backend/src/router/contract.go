@@ -182,17 +182,18 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 	companyNif = company.BillingInfo.TIN
 	companyAddress = company.BillingInfo.Address
 
-	// package info: try to fetch participation package name
 	packageName := ""
 	packagePrice := ""
-	if len(company.Participations) > 0 {
-		p := company.Participations[0]
-		if p.Package != nil {
-			if pkg, err := mongodb.Packages.GetPackage(*p.Package); err == nil {
-				packageName = pkg.Name
-				// pkg.Price is in cents (int). Format as euros with cents.
-				packagePrice = fmt.Sprintf("%d.%02d€", pkg.Price/100, pkg.Price%100)
+	for _, p := range company.Participations {
+		if p.Event == eventID {
+			if p.Package != nil {
+				if pkg, err := mongodb.Packages.GetPackage(*p.Package); err == nil {
+					packageName = pkg.Name
+					// pkg.Price is in cents (int). Format as euros with cents.
+					packagePrice = fmt.Sprintf("%d.%02d€", pkg.Price/100, pkg.Price%100)
+				}
 			}
+			break
 		}
 	}
 
