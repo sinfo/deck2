@@ -4,7 +4,6 @@ import { useEventStore } from "@/stores/event";
 import { getTemplates } from "@/api/templates";
 import UploadTemplateForm from "./UploadTemplateForm.vue";
 import TemplatesList from "./TemplatesList.vue";
-import { createDefaultTemplates } from "@/api/templates";
 
 const eventStore = useEventStore();
 
@@ -54,23 +53,6 @@ onMounted(() => {
 function onUploaded() {
   loadTemplates();
 }
-
-const createDefaults = async () => {
-  const ev = eventStore.selectedEvent;
-  if (!ev || !ev.id) return alert("Select an event/edition first");
-  try {
-    await createDefaultTemplates(ev.id);
-    await loadTemplates();
-    alert("Created default Company Contract templates (EN/PT)");
-  } catch (err: unknown) {
-    console.error(err);
-    const msg =
-      (err as { response?: { data?: unknown } }).response?.data ||
-      String(err) ||
-      "Unable to create templates";
-    alert(msg);
-  }
-};
 </script>
 
 <template>
@@ -86,13 +68,6 @@ const createDefaults = async () => {
             :templates="allTemplates"
             @uploaded="onUploaded"
           />
-
-          <button
-            class="w-full bg-blue-600 text-white px-3 py-2 rounded"
-            @click="createDefaults"
-          >
-            Create default templates
-          </button>
         </div>
       </div>
     </div>
