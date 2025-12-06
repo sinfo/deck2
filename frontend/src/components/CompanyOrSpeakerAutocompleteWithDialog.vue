@@ -271,6 +271,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
+import createFuzzySearch from "@nozbe/microfuzz";
 
 type SelectedItem = Company | Speaker;
 
@@ -315,10 +316,15 @@ const highlightedIndex = ref(-1);
 
 // Detect platform for keyboard shortcut
 const isMac = computed(() => {
-  return (
-    typeof navigator !== "undefined" &&
-    navigator.platform.toUpperCase().indexOf("MAC") >= 0
-  );
+  if (typeof navigator === "undefined") return false;
+
+  const uaData = navigator.userAgentData;
+  if (uaData && typeof uaData.platform === "string") {
+    return uaData.platform === "macOS";
+  }
+
+  const ua = navigator.userAgent || "";
+  return /\bMacintosh\b|\bMac OS X\b/.test(ua);
 });
 
 // Companies query
@@ -339,41 +345,51 @@ const isLoading = computed(
   () => companiesLoading.value || speakersLoading.value,
 );
 
+const companyFuzzy = computed(() => {
+  const list = companiesData.value?.data ?? [];
+  if (!list.length) return null;
+
+  return createFuzzySearch(list, {
+    // match on multiple fields
+    getText: (company: Company) => [company.name, company.description ?? ""],
+  });
+});
+
+const speakerFuzzy = computed(() => {
+  const list = speakersData.value?.data ?? [];
+  if (!list.length) return null;
+
+  return createFuzzySearch(list, {
+    getText: (speaker: Speaker) => [speaker.name, speaker.companyName ?? ""],
+  });
+});
+
 const filteredCompanies = computed(() => {
-  if (!companiesData.value?.data) return [];
+  const list = companiesData.value?.data ?? [];
+  const term = searchTerm.value.trim();
 
-  const term = searchTerm.value.toLowerCase();
+  // Show recent companies when no search term
+  if (!term) return list.slice(0, 5);
 
-  if (!term) {
-    // Show recent companies when no search term
-    return companiesData.value.data.slice(0, 5);
-  }
+  const fuzzy = companyFuzzy.value;
+  if (!fuzzy) return [];
 
-  return companiesData.value.data
-    .filter(
-      (company: Company) =>
-        company.name.toLowerCase().includes(term) ||
-        company.description?.toLowerCase().includes(term),
-    )
+  return fuzzy(term)
+    .map((res) => res.item)
     .slice(0, 5); // Limit to 5 results
 });
 
 const filteredSpeakers = computed(() => {
-  if (!speakersData.value?.data) return [];
+  const list = speakersData.value?.data ?? [];
+  const term = searchTerm.value.trim();
 
-  const term = searchTerm.value.toLowerCase();
+  if (!term) return list.slice(0, 5);
 
-  if (!term) {
-    // Show recent speakers when no search term
-    return speakersData.value.data.slice(0, 5);
-  }
+  const fuzzy = speakerFuzzy.value;
+  if (!fuzzy) return [];
 
-  return speakersData.value.data
-    .filter(
-      (speaker: Speaker) =>
-        speaker.name.toLowerCase().includes(term) ||
-        speaker.companyName?.toLowerCase().includes(term),
-    )
+  return fuzzy(term)
+    .map((res) => res.item)
     .slice(0, 5); // Limit to 5 results
 });
 
