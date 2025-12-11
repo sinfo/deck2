@@ -345,25 +345,39 @@ const isLoading = computed(
   () => companiesLoading.value || speakersLoading.value,
 );
 
-const companyFuzzy = computed(() => {
-  const list = companiesData.value?.data ?? [];
-  if (!list.length) return null;
+// Memoized fuzzy search instances
+import { ref, watch } from "vue";
 
-  return createFuzzySearch(list, {
-    // match on multiple fields
-    getText: (company: Company) => [company.name, company.description ?? ""],
-  });
-});
+const companyFuzzy = ref(null);
+watch(
+  () => companiesData.value?.data,
+  (list) => {
+    if (!list || !list.length) {
+      companyFuzzy.value = null;
+    } else {
+      companyFuzzy.value = createFuzzySearch(list, {
+        // match on multiple fields
+        getText: (company: Company) => [company.name, company.description ?? ""],
+      });
+    }
+  },
+  { immediate: true }
+);
 
-const speakerFuzzy = computed(() => {
-  const list = speakersData.value?.data ?? [];
-  if (!list.length) return null;
-
-  return createFuzzySearch(list, {
-    getText: (speaker: Speaker) => [speaker.name, speaker.companyName ?? ""],
-  });
-});
-
+const speakerFuzzy = ref(null);
+watch(
+  () => speakersData.value?.data,
+  (list) => {
+    if (!list || !list.length) {
+      speakerFuzzy.value = null;
+    } else {
+      speakerFuzzy.value = createFuzzySearch(list, {
+        getText: (speaker: Speaker) => [speaker.name, speaker.companyName ?? ""],
+      });
+    }
+  },
+  { immediate: true }
+);
 const filteredCompanies = computed(() => {
   const list = companiesData.value?.data ?? [];
   const term = searchTerm.value.trim();
