@@ -5,7 +5,7 @@
     "start:db": "docker compose -f docker-compose.test.yml up -d mongodb",
     "start:backend": "cd backend && go run src/main.go",
     "start:frontend": "cd frontend && npm run dev",
-    "dev": "concurrently \"npm run start:db\" \"npm run start:backend\" \"npm run start:frontend\"",
+    "dev": "npx concurrently \"npm run start:db\" \"npm run start:backend\" \"npm run start:frontend\"",
     "stop": "docker compose -f docker-compose.test.yml down"
   },
   "devDependencies": {

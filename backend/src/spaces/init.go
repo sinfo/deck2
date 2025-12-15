@@ -67,31 +67,47 @@ func InitializeSpaces() {
 	opt := &godo.ListOptions{}
 	cdns, _, err := godoClient.CDNs.List(context.Background(), opt)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed listing DigitalOcean CDNs: %v", err)
 	}
 
 	if len(cdns) == 0 {
-		log.Fatal("no CDNs")
+		log.Fatalf("no CDNs returned by DigitalOcean for token owner")
 	}
 
 	for _, cdn := range cdns {
 		if strings.Contains(cdn.Origin, name) {
-			cdnBaseURL = cdn.CustomDomain
-			endpoint = cdn.Origin[len(name)+1:]
+			// Determine the endpoint host by removing the bucket prefix if present.
+			if strings.HasPrefix(cdn.Origin, name+".") {
+				endpoint = cdn.Origin[len(name)+1:]
+			} else {
+				endpoint = cdn.Origin
+			}
+
+			// Prefer an explicitly configured custom domain for the CDN base URL
+			if cdn.CustomDomain != "" {
+				cdnBaseURL = cdn.CustomDomain
+			} else {
+				// Fallback: construct base URL from bucket name + endpoint
+				cdnBaseURL = fmt.Sprintf("%s.%s", name, endpoint)
+			}
 		}
+	}
+
+	if cdnBaseURL == "" || endpoint == "" {
+		log.Fatalf("no CDN or endpoint found for Spaces bucket '%s' (SpacesName=%s)", name, name)
 	}
 
 	// Initialize a client using DigitalOcean Spaces.
 
 	client, err = minio.New(endpoint, accessKey, secret, ssl)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed initializing MinIO client (endpoint=%s): %v", endpoint, err)
 	}
 
 	exists, err := client.BucketExists(name)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("error checking bucket existence for '%s': %v", name, err)
 	}
 
 	if !exists {

@@ -8,6 +8,13 @@
         @updated="handleSpeakerUpdated"
       />
 
+      <DirectEmailDialogTrigger
+        v-if="speakerWithParticipation"
+        :entity="speakerWithParticipation"
+        entity-type="speaker"
+        button-class="w-full"
+      />
+
       <!-- Speaker Contact -->
       <ContactCard
         v-if="speakerWithParticipation.contactObject"
@@ -38,6 +45,7 @@ import { getSpeakerById } from "@/api/speakers";
 import SpeakerCard from "@/components/cards/SpeakerCard.vue";
 import ContactCard from "@/components/ContactCard.vue";
 import ParticipationsCard from "@/components/ParticipationsCard.vue";
+import DirectEmailDialogTrigger from "@/components/DirectEmailDialogTrigger.vue";
 import type {
   SpeakerWithContactObject,
   SpeakerWithParticipation,

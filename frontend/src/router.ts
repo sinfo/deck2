@@ -42,9 +42,61 @@ const router = createRouter({
           component: () => import("./views/Dashboard/Speakers/SpeakerView.vue"),
         },
         {
+          path: "member/:memberId",
+          name: "member",
+          component: () => import("./views/Dashboard/Members/MemberView.vue"),
+        },
+        {
           path: "settings",
           name: "settings",
           component: () => import("./views/Dashboard/SettingsView.vue"),
+        },
+        {
+          path: "leaderboard",
+          name: "leaderboard",
+          component: () =>
+            import("./views/Dashboard/Leaderboard/LeaderboardView.vue"),
+        },
+        {
+          path: "packages",
+          name: "event-packages",
+          component: () =>
+            import("./views/Dashboard/Packages/PackagesView.vue"),
+          meta: { roles: ["COORDINATOR", "ADMIN"] },
+        },
+        {
+          path: "items",
+          name: "packages-items",
+          component: () =>
+            import("./views/Dashboard/Packages/Items/PackageItemsView.vue"),
+          meta: { roles: ["COORDINATOR", "ADMIN"] },
+        },
+        {
+          path: "coord-teams",
+          name: "coordination-teams",
+          component: () =>
+            import(
+              "./views/Dashboard/CoordinationTeams/CoordinationTeamsView.vue"
+            ),
+          meta: { roles: ["COORDINATOR", "ADMIN"] },
+        },
+        {
+          path: "contract-templates",
+          name: "contract-templates",
+          component: () =>
+            import(
+              "./views/Dashboard/ContractTemplates/ContractTemplatesView.vue"
+            ),
+          meta: { roles: ["COORDINATOR", "ADMIN"] },
+        },
+        {
+          path: "me/coord-team",
+          name: "my-coordination-team",
+          component: () =>
+            import(
+              "./views/Dashboard/CoordinationTeams/CoordinatorTeamView.vue"
+            ),
+          meta: { roles: ["COORDINATOR"] },
         },
       ],
     },
@@ -69,6 +121,17 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: "landing", query: { to: to.fullPath || from.fullPath } });
     return;
+  }
+
+  // Role-based access control: if route defines allowed roles, verify user's role
+  const requiredRoles = to.meta?.roles as string[] | undefined;
+  if (requiredRoles && authStore.decoded) {
+    const userRole = authStore.decoded.role as string | undefined;
+    if (!userRole || !requiredRoles.includes(userRole)) {
+      // Not allowed: redirect to dashboard
+      next({ name: "dashboard" });
+      return;
+    }
   }
 
   next();

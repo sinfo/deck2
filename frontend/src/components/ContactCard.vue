@@ -55,7 +55,7 @@
                 <div class="flex-1 overflow-y-auto p-6 min-h-0">
                   <ContactForm
                     v-if="contact"
-                    without-name
+                    :without-name="entityType !== 'company'"
                     mode="edit"
                     :initial-data="{
                       id: contact.id,
@@ -82,32 +82,13 @@
                 </Button>
               </PopoverTrigger>
               <PopoverContent class="w-80">
-                <div class="space-y-3">
-                  <div>
-                    <h4 class="font-medium text-sm">Confirm deletion</h4>
-                    <p class="text-sm text-muted-foreground mt-1">
-                      Are you sure you want to remove this contact? This action
-                      cannot be undone.
-                    </p>
-                  </div>
-                  <div class="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      @click="isDeleteConfirmOpen = false"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      :disabled="isDeleting"
-                      @click="confirmDelete"
-                    >
-                      {{ isDeleting ? "Deleting..." : "Delete" }}
-                    </Button>
-                  </div>
-                </div>
+                <ConfirmDelete
+                  title="Confirm deletion"
+                  message="Are you sure you want to remove this contact? This action cannot be undone."
+                  :is-deleting="isDeleting"
+                  @cancel="isDeleteConfirmOpen = false"
+                  @confirm="confirmDelete"
+                />
               </PopoverContent>
             </Popover>
           </div>
@@ -126,6 +107,21 @@
                     >
                       {{ mail.mail }}
                     </a>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      class="h-6 w-6 p-0"
+                      :disabled="isSaving"
+                      :title="'Copy email'"
+                      @click="copyEmail(mail.mail)"
+                    >
+                      <template v-if="copiedEmail === mail.mail">
+                        <CheckIcon class="w-4 h-4 text-black" />
+                      </template>
+                      <template v-else>
+                        <ClipboardIcon class="w-4 h-4" />
+                      </template>
+                    </Button>
                     <div
                       v-if="mail.personal || !mail.valid"
                       class="flex gap-1 flex-shrink-0"
@@ -145,6 +141,9 @@
                         Invalid
                       </Badge>
                     </div>
+                  </div>
+                  <div v-if="copyError" class="text-xs text-destructive mt-1">
+                    {{ copyError }}
                   </div>
                 </div>
               </div>
@@ -247,13 +246,16 @@ import type { Contact } from "@/dto/contacts";
 import type { ContactSocials, CreateContactData } from "@/dto/contacts";
 import { Gender, Language } from "@/dto/contacts";
 import { updateContact } from "@/api/contacts";
+import { updateCompanyRepresentative } from "@/api/companies";
 import Card from "./ui/card/Card.vue";
 import CardContent from "./ui/card/CardContent.vue";
 import Badge from "./ui/badge/Badge.vue";
 import Button from "./ui/button/Button.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import ContactForm from "./companies/ContactForm.vue";
+import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import type { CreateCompanyRepData } from "@/dto/companies";
+import { ClipboardIcon, CheckIcon } from "lucide-vue-next";
 
 interface Props {
   contact?: Contact;
@@ -262,6 +264,7 @@ interface Props {
   canDelete?: boolean;
   entityId?: string;
   entityType?: "company" | "speaker";
+  repId?: string;
   isDeleting?: boolean;
 }
 
@@ -273,6 +276,7 @@ const props = withDefaults(defineProps<Props>(), {
   contactName: undefined,
   entityId: undefined,
   entityType: undefined,
+  repId: undefined,
 });
 
 const emit = defineEmits<{
@@ -330,6 +334,28 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
   };
 
   updateContactMutation({ id: props.contact.id, data: contactData });
+
+  // If this contact is a company representative, also persist the representative's name
+  // through the companyRep endpoint so the rep name is updated.
+  if (props.entityType === "company" && props.repId) {
+    try {
+      await updateCompanyRepresentative(props.repId, {
+        name: data.name,
+        contact: data.contact,
+      });
+
+      // Invalidate representatives query for this company so UI refreshes
+      if (props.entityId) {
+        queryCache.invalidateQueries({
+          key: ["company-representatives", props.entityId],
+        });
+      }
+    } catch (err) {
+      // Log and continue — contact update already attempted
+      console.error("Failed to update company representative:", err);
+    }
+  }
+
   isEditFormOpen.value = false;
 };
 
@@ -376,6 +402,27 @@ const hasSocials = (socials?: ContactSocials): boolean => {
     socials.github ||
     socials.skype
   );
+};
+
+const copiedEmail = ref<string | null>(null);
+const copyError = ref<string | null>(null);
+
+const copyEmail = async (email: string) => {
+  if (!navigator?.clipboard) {
+    copyError.value = "Clipboard not available";
+    setTimeout(() => (copyError.value = null), 2000);
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(email);
+    copiedEmail.value = email;
+    setTimeout(() => (copiedEmail.value = null), 2000);
+  } catch (err) {
+    copyError.value = "Failed to copy email";
+    setTimeout(() => (copyError.value = null), 2000);
+    console.error("Failed to copy email:", err);
+  }
 };
 
 const linkedinUrl = (username: string): string => {

@@ -9,8 +9,9 @@ type Template struct {
 	// template's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
-	Name         string        `json:"name" bson:"name"`
-	Url          string        `json:"url" bson:"url"`
+	Name string `json:"name" bson:"name"`
+	Url  string `json:"url" bson:"url"`
+	Event        int           `json:"event,omitempty" bson:"event,omitempty"`
 	Requirements []Requirement `json:"requirements" bson:"requirements"`
 	Kind         string        `json:"kind" bson:"kind"`
 }

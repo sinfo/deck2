@@ -15,6 +15,7 @@ import (
 	"github.com/sinfo/deck2/src/mongodb"
 	"github.com/sinfo/deck2/src/spaces"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func createItem(w http.ResponseWriter, r *http.Request) {
@@ -24,14 +25,14 @@ func createItem(w http.ResponseWriter, r *http.Request) {
 	var cid = &mongodb.CreateItemData{}
 
 	if err := cid.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	newItem, err := mongodb.Items.CreateItem(*cid)
 
 	if err != nil {
-		http.Error(w, "Could not create item: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Could not create item: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -57,11 +58,104 @@ func getItems(w http.ResponseWriter, r *http.Request) {
 	items, err := mongodb.Items.GetItems(options)
 
 	if err != nil {
-		http.Error(w, "Could not get items: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Could not get items: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
 	json.NewEncoder(w).Encode(items)
+}
+
+// getItemCategories returns the configured list of item categories
+func getItemCategories(w http.ResponseWriter, r *http.Request) {
+	if mongodb.Categories == nil {
+		// no categories collection initialized
+		json.NewEncoder(w).Encode([]map[string]string{})
+		return
+	}
+	cats, err := mongodb.Categories.GetCategories()
+	if err != nil {
+		http.Error(w, "Could not get categories: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(cats)
+}
+
+func createItemCategory(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var data struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(data.Name) == 0 {
+		http.Error(w, "invalid name", http.StatusBadRequest)
+		return
+	}
+	if mongodb.Categories == nil {
+		http.Error(w, "categories not initialized", http.StatusInternalServerError)
+		return
+	}
+	if _, err := mongodb.Categories.CreateCategory(data.Name); err != nil {
+		http.Error(w, "Could not create category: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func updateItemCategory(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	params := mux.Vars(r)
+	idStr := params["id"]
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+	var data struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(data.Name) == 0 {
+		http.Error(w, "invalid name", http.StatusBadRequest)
+		return
+	}
+	if mongodb.Categories == nil {
+		http.Error(w, "categories not initialized", http.StatusInternalServerError)
+		return
+	}
+	if err := mongodb.Categories.UpdateCategory(id, data.Name); err != nil {
+		http.Error(w, "Could not update category: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+func deleteItemCategory(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	idStr := params["id"]
+	id, err := primitive.ObjectIDFromHex(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+	if mongodb.Categories == nil {
+		http.Error(w, "categories not initialized", http.StatusInternalServerError)
+		return
+	}
+	if err := mongodb.Categories.DeleteCategory(id); err != nil {
+		if err == mongo.ErrNoDocuments {
+			http.Error(w, "category not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Could not delete category: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
 func getItem(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +166,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 	item, err := mongodb.Items.GetItem(id)
 
 	if err != nil {
-		http.Error(w, "Could not find item: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Could not find item: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -89,14 +183,14 @@ func updateItem(w http.ResponseWriter, r *http.Request) {
 	var uid = &mongodb.UpdateItemData{}
 
 	if err := uid.ParseBody(r.Body); err != nil {
-		http.Error(w, "Could not parse body: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	updatedItem, err := mongodb.Items.UpdateItem(id, *uid)
 
 	if err != nil {
-		http.Error(w, "Could not update item: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Could not update item: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -110,7 +204,7 @@ func deleteItem(w http.ResponseWriter, r *http.Request) {
 
 	item, err := mongodb.Items.DeleteItem(id)
 	if err != nil {
-		http.Error(w, "Could not find item: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Could not find item: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -123,7 +217,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 	itemID, _ := primitive.ObjectIDFromHex(params["id"])
 
 	if _, err := mongodb.Items.GetItem(itemID); err != nil {
-		http.Error(w, "Invalid item ID: " + err.Error(), http.StatusNotFound)
+		http.Error(w, "Invalid item ID: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -134,7 +228,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Invalid payload: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid payload: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -151,7 +245,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	currentEvent, err := mongodb.Events.GetCurrentEvent()
 	if err != nil {
-		http.Error(w, "Couldn't fetch current event: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Couldn't fetch current event: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -161,18 +255,18 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	bytes, err := ioutil.ReadAll(checker)
 	if err != nil {
-		http.Error(w, "Unable to read the file: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to read the file: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
 	if !filetype.IsImage(bytes) {
-		http.Error(w, "Not an image: " + err.Error(), http.StatusBadRequest)
+		http.Error(w, "Not an image", http.StatusBadRequest)
 		return
 	}
 
 	kind, err := filetype.Match(bytes)
 	if err != nil {
-		http.Error(w, "Unable to get file type: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Unable to get file type: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
@@ -184,7 +278,7 @@ func uploadItemImage(w http.ResponseWriter, r *http.Request) {
 
 	updatedItem, err := mongodb.Items.UpdateItemImage(itemID, *url)
 	if err != nil {
-		http.Error(w, "Couldn't update item image: " + err.Error(), http.StatusExpectationFailed)
+		http.Error(w, "Couldn't update item image: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

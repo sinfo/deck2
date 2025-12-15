@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-//SpeakersType contains database information on speakers
+// SpeakersType contains database information on speakers
 type SpeakersType struct {
 	Collection *mongo.Collection
 }
@@ -25,7 +25,7 @@ type SpeakersType struct {
 // Cached version of the public speakers for the current event
 var currentPublicSpeakers *[]*models.SpeakerPublic
 
-//ResetCurrentPublicSpeakers resets current public speakers
+// ResetCurrentPublicSpeakers resets current public speakers
 func ResetCurrentPublicSpeakers() {
 	currentPublicSpeakers = nil
 }
@@ -33,11 +33,11 @@ func ResetCurrentPublicSpeakers() {
 func speakerToPublic(speaker models.Speaker, eventID *int) (*models.SpeakerPublic, error) {
 
 	public := models.SpeakerPublic{
-		ID:    speaker.ID,
-		Name:  speaker.Name,
-		Bio:  speaker.Bio,
-		Title: speaker.Title,
-    CompanyName: speaker.CompanyName,
+		ID:          speaker.ID,
+		Name:        speaker.Name,
+		Bio:         speaker.Bio,
+		Title:       speaker.Title,
+		CompanyName: speaker.CompanyName,
 		Images: models.SpeakerImagesPublic{
 			Speaker: speaker.Images.Speaker,
 			Company: speaker.Images.Company,
@@ -73,12 +73,12 @@ func speakerToPublic(speaker models.Speaker, eventID *int) (*models.SpeakerPubli
 	return &public, nil
 }
 
-//CreateSpeakerData holds data needed to create a speaker
+// CreateSpeakerData holds data needed to create a speaker
 type CreateSpeakerData struct {
-	Name  *string `json:"name"`
-	Title *string `json:"title"`
-	Bio   *string `json:"bio"`
-	CompanyName *string `json:"companyName"`
+	Name        *string         `json:"name"`
+	Title       *string         `json:"title"`
+	Bio         *string         `json:"bio"`
+	CompanyName *string         `json:"companyName"`
 	Contact     *models.Contact `json:"contact,omitempty"`
 }
 
@@ -104,7 +104,7 @@ func (cpd *CreateSpeakerData) ParseBody(body io.Reader) error {
 	// Don't enforce yet, deck2 flutter doesn't submit companyName
 	/* if cpd.CompanyName == nil || len(*cpd.CompanyName) == 0 {
 		return errors.New("invalid company name")
-	} */ 
+	} */
 
 	if cpd.Contact != nil {
 		for _, s := range cpd.Contact.Phones {
@@ -339,6 +339,44 @@ func (s *SpeakersType) GetSpeakers(speakOptions GetSpeakersOptions) ([]*models.S
 	return speakers, nil
 }
 
+// GetSpeakersByMembers returns speakers that have a participation with any of the provided member IDs.
+// If eventID is provided, only participations for that event are considered.
+func (s *SpeakersType) GetSpeakersByMembers(memberIDs []primitive.ObjectID, eventID *int) ([]*models.Speaker, error) {
+	ctx := context.Background()
+	var speakers = make([]*models.Speaker, 0)
+
+	filter := bson.M{}
+
+	if eventID != nil {
+		// match participations where member in list AND event equals provided
+		filter["participations"] = bson.M{"$elemMatch": bson.M{"member": bson.M{"$in": memberIDs}, "event": *eventID}}
+	} else {
+		// match any document with participations.member in provided list
+		filter["participations.member"] = bson.M{"$in": memberIDs}
+	}
+
+	cur, err := s.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(ctx) {
+		var sp models.Speaker
+		if err := cur.Decode(&sp); err != nil {
+			return nil, err
+		}
+		speakers = append(speakers, &sp)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(ctx)
+
+	return speakers, nil
+}
+
 // GetSpeakersPublicOptions is the options to give to GetCompanies.
 // All the fields are optional, and as such we use pointers as a "hack" to deal
 // with non-existent fields.
@@ -441,39 +479,39 @@ func (s *SpeakersType) DeleteSpeaker(speakerID primitive.ObjectID) (*models.Spea
 
 	var speaker models.Speaker
 
-  currentSpeaker, err := s.GetSpeaker(speakerID)
-  if err != nil {
-    return nil, err
-  }
+	currentSpeaker, err := s.GetSpeaker(speakerID)
+	if err != nil {
+		return nil, err
+	}
 
-  for _, participation := range currentSpeaker.Participations {
-    _, err = s.RemoveSpeakerParticipation(speakerID, participation.Event)
-    if err != nil {
-      return nil, err
-    }
-  }
+	for _, participation := range currentSpeaker.Participations {
+		_, err = s.RemoveSpeakerParticipation(speakerID, participation.Event)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	sessions, err := Sessions.GetSessions(GetSessionsOptions{Speaker: &speakerID})
 	if err != nil {
 		return nil, err
 	}
 
-  for _, session := range sessions {
-    _, err := Sessions.DeleteSession(session.ID)
-    if err != nil {
-      return nil, err
-    }
-  }
+	for _, session := range sessions {
+		_, err := Sessions.DeleteSession(session.ID)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	err = s.Collection.FindOneAndDelete(ctx, bson.M{"_id": speakerID}).Decode(&speaker)
 	if err != nil {
 		return nil, err
 	}
 
-  _, err = Contacts.DeleteContact(*speaker.Contact)
-  if err != nil {
-    return nil, err
-  }
+	_, err = Contacts.DeleteContact(*speaker.Contact)
+	if err != nil {
+		return nil, err
+	}
 
 	return &speaker, nil
 }
@@ -498,10 +536,10 @@ func (s *SpeakersType) GetSpeakerPublic(speakerID primitive.ObjectID) (*models.S
 
 // UpdateSpeakerData is the data used to update a speaker, using the method UpdateSpeaker.
 type UpdateSpeakerData struct {
-	Name  *string
-	Bio   *string
-	Title *string
-	Notes *string
+	Name        *string
+	Bio         *string
+	Title       *string
+	Notes       *string
 	CompanyName *string
 }
 
@@ -666,7 +704,7 @@ func (s *SpeakersType) AddParticipation(speakerID primitive.ObjectID, memberID p
 	return &updatedSpeaker, nil
 }
 
-//UpdateSpeakerParticipationData holds data needed to update a speakers' participation
+// UpdateSpeakerParticipationData holds data needed to update a speakers' participation
 type UpdateSpeakerParticipationData struct {
 	Member   *primitive.ObjectID              `json:"member"`
 	Feedback *string                          `json:"feedback"`
@@ -1084,7 +1122,7 @@ func (s *SpeakersType) RemoveCommunication(speakerID primitive.ObjectID, threadI
 	return &updatedSpeaker, nil
 }
 
-//FindThread finds a thread in a speaker
+// FindThread finds a thread in a speaker
 func (s *SpeakersType) FindThread(threadID primitive.ObjectID) (*models.Speaker, error) {
 	ctx := context.Background()
 	filter := bson.M{
@@ -1120,18 +1158,18 @@ func (s *SpeakersType) RemoveSpeakerParticipation(speakerID primitive.ObjectID, 
 
 	for _, p := range speaker.Participations {
 		if p.Event == eventID {
-      for _, f := range p.Flights {
-        _, err := s.RemoveSpeakerFlightInfo(speakerID, f)
-        if err != nil {
-          return nil, err
-        }
-      }
-      for _, c := range p.Communications {
-        _, err := s.DeleteSpeakerThread(speakerID, c)
-        if err != nil {
-          return nil, err
-        }
-      }
+			for _, f := range p.Flights {
+				_, err := s.RemoveSpeakerFlightInfo(speakerID, f)
+				if err != nil {
+					return nil, err
+				}
+			}
+			for _, c := range p.Communications {
+				_, err := s.DeleteSpeakerThread(speakerID, c)
+				if err != nil {
+					return nil, err
+				}
+			}
 			break
 		}
 	}

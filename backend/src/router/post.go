@@ -65,11 +65,53 @@ func updatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(updatedPost)
+	// attempt to enrich response with thread and actor (speaker/company)
+	var threadID *primitive.ObjectID
+	var speakerID *primitive.ObjectID
+	var companyID *primitive.ObjectID
 
-	// notify
-	mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-		Kind: models.NotificationKindUpdated,
-		Post: &updatedPost.ID,
-	})
+	if thread, terr := mongodb.Threads.FindByPost(updatedPost.ID); terr == nil && thread != nil {
+		threadID = &thread.ID
+
+		// try to find owning speaker/company for this thread
+		if sp, _ := mongodb.Speakers.FindThread(thread.ID); sp != nil {
+			sid := sp.ID
+			speakerID = &sid
+		}
+		if co, _ := mongodb.Companies.FindThread(thread.ID); co != nil && speakerID == nil {
+			cid := co.ID
+			companyID = &cid
+		}
+	}
+
+	// build response payload keeping backward compatibility intent minimal
+	resp := map[string]interface{}{
+		"post": updatedPost,
+	}
+	if threadID != nil {
+		resp["thread"] = threadID.Hex()
+	}
+	if speakerID != nil {
+		resp["speaker"] = speakerID.Hex()
+	}
+	if companyID != nil {
+		resp["company"] = companyID.Hex()
+	}
+
+	json.NewEncoder(w).Encode(resp)
+
+	// notify with enriched context so notifications have thread/actor
+	notif := mongodb.CreateNotificationData{
+		Kind:   models.NotificationKindUpdated,
+		Post:   &updatedPost.ID,
+		Thread: threadID,
+	}
+	if speakerID != nil {
+		notif.Speaker = speakerID
+	}
+	if companyID != nil {
+		notif.Company = companyID
+	}
+
+	mongodb.Notifications.Notify(credentials.ID, notif)
 }

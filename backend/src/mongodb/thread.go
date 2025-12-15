@@ -21,7 +21,7 @@ type ThreadsType struct {
 	Collection *mongo.Collection
 }
 
-//CreateThreadData holds data needed to create a thread
+// CreateThreadData holds data needed to create a thread
 type CreateThreadData struct {
 	Entry   primitive.ObjectID
 	Meeting *primitive.ObjectID
@@ -96,23 +96,42 @@ func (t *ThreadsType) GetThread(threadID primitive.ObjectID) (*models.Thread, er
 	return &thread, nil
 }
 
-// DeleteThread deletes a thread by its ID.
+// DeleteThread deletes a thread by its ID and cleans up related data.
 func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread, error) {
 	ctx := context.Background()
 
 	var thread models.Thread
-
-	err := t.Collection.FindOneAndDelete(ctx, bson.M{"_id": threadID}).Decode(&thread)
-	if err != nil {
+	if err := t.Collection.
+		FindOneAndDelete(ctx, bson.M{"_id": threadID}).
+		Decode(&thread); err != nil {
 		return nil, err
 	}
 
-  for _, comment := range thread.Comments {
-    _, err := Posts.DeletePost(comment)
-    if err != nil {
-      return nil, err
-    }
-  }
+	if thread.Entry != primitive.NilObjectID {
+		if _, err := Posts.DeletePost(thread.Entry); err != nil {
+			// ignore not found; return only on unexpected errors if you prefer
+			var cmdErr mongo.CommandError
+			if !errors.Is(err, mongo.ErrNoDocuments) && !errors.As(err, &cmdErr) {
+				return nil, err
+			}
+		}
+	}
+
+	for _, comment := range thread.Comments {
+		if _, err := Posts.DeletePost(comment); err != nil {
+			var cmdErr mongo.CommandError
+			if !errors.Is(err, mongo.ErrNoDocuments) && !errors.As(err, &cmdErr) {
+				return nil, err
+			}
+		}
+	}
+
+	// Clean up stale references in participations
+	_, _ = Speakers.Collection.UpdateMany(
+		ctx,
+		bson.M{"participations.communications": threadID},
+		bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
+	)
 
 	return &thread, nil
 }
@@ -220,4 +239,28 @@ func (t *ThreadsType) UpdateThread(threadID primitive.ObjectID, data UpdateThrea
 
 	return &updatedThread, nil
 
+}
+
+// FindByPost finds the thread that contains the given post either as entry or as a comment
+func (t *ThreadsType) FindByPost(postID primitive.ObjectID) (*models.Thread, error) {
+	ctx := context.Background()
+
+	var thread models.Thread
+
+	filter := bson.M{
+		"$or": bson.A{
+			bson.M{"entry": postID},
+			bson.M{"comments": postID},
+		},
+	}
+
+	err := t.Collection.FindOne(ctx, filter).Decode(&thread)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &thread, nil
 }

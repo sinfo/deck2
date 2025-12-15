@@ -84,23 +84,20 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 		}
 	}
 
-	// notify coordination on the author's team
-	for _, teamID := range event.Teams {
-		team, err := Teams.GetTeam(teamID)
-		if err != nil || !team.HasMember(author) {
-			continue
-		}
-
-		coordinators := team.GetMembersByRole(models.RoleCoordinator)
-
-		for _, coordinator := range coordinators {
-
-			// notify authors only if not running on production mode
-			if config.Production && coordinator.Member == author {
+	// Notify coordination teams: coordination logic lives in separate collection
+	// Find coordination teams that include the author as a coordinated member
+	// and notify those coordination teams' coordinators only.
+	coordTeams, err := CoordinationTeams.GetCoordinationTeamsByMember(author)
+	if err == nil {
+		for _, coordTeam := range coordTeams {
+			if coordTeam.Coordinator == nil {
 				continue
 			}
-
-			n.NotifyMember(coordinator.Member, data)
+			// do not notify the author themselves in production
+			if config.Production && coordTeam.Coordinator.Member == author {
+				continue
+			}
+			n.NotifyMember(coordTeam.Coordinator.Member, data)
 		}
 	}
 

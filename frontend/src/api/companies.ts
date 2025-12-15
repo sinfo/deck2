@@ -24,6 +24,9 @@ export const getAllCompanies = (filters: AllCompaniesFilter) =>
     params: filters,
   });
 
+export const getCompaniesByMembers = (members: string[], event?: number) =>
+  instance.post<Company[]>("/companies/byMembers", { members, event });
+
 export const getCompanyById = (id: string) =>
   instance.get<Company>(`/companies/${id}`);
 
@@ -42,6 +45,12 @@ export const updateCompanyParticipation = (
   id: string,
   data: UpdateCompanyParticipationData,
 ) => instance.put<Company>(`/companies/${id}/participation`, data);
+
+export const updateCompanyParticipationPackage = (
+  id: string,
+  packageId: string,
+) =>
+  instance.put<Company>(`/companies/${id}/participation/package/${packageId}`);
 
 export const updateCompanyParticipationStatus = (id: string, status: string) =>
   instance.put<Company>(`/companies/${id}/participation/status/${status}`);
@@ -66,6 +75,11 @@ export const createCompanyRepresentative = (
 export const deleteCompanyRepresentative = (id: string, repId: string) =>
   instance.delete(`/companies/${id}/employer/${repId}`);
 
+export const updateCompanyRepresentative = (
+  repId: string,
+  data: CreateCompanyRepData,
+) => instance.put(`/companyReps/${repId}`, data);
+
 export const updateRepresentativeOrder = (
   id: string,
   representativeIds: string[],
@@ -76,3 +90,21 @@ export const updateRepresentativeOrder = (
 
 export const uploadCompanyInternalImage = (id: string, data: FormData) =>
   instance.post<Company>(`/companies/${id}/image/internal`, data);
+
+export interface GenerateCompanyContractData {
+  language: string;
+  eventId: number;
+}
+
+export const generateCompanyContract = (
+  companyId: string,
+  data: GenerateCompanyContractData,
+) => {
+  const payload = {
+    ...data,
+    language: (data.language ?? "en").toLowerCase(),
+  } as GenerateCompanyContractData;
+  return instance.post(`/companies/${companyId}/contract/docx`, payload, {
+    responseType: "blob",
+  });
+};

@@ -28,6 +28,8 @@ var (
 	Members *MembersType
 	//Items is an instance of a mongodb collection
 	Items *ItemsType
+	//Categories is an instance for item categories
+	Categories *ItemCategoriesType
 	//Packages is an instance of a mongodb collection
 	Packages *PackagesType
 	//Meetings is an instance of a mongodb collection
@@ -50,6 +52,8 @@ var (
 	Notifications *NotificationsType
 	//Templates is an instance of a mongodb collection
 	Templates *TemplateType
+	// CoordinationTeams is an instance of coordination teams collection
+	CoordinationTeams *CoordinationTeamsType
 )
 
 var (
@@ -129,6 +133,10 @@ func InitializeDatabase() {
 		Collection: db.Collection("items"),
 	}
 
+	Categories = &ItemCategoriesType{
+		Collection: db.Collection("itemCategories"),
+	}
+
 	Packages = &PackagesType{
 		Collection: db.Collection("packages"),
 	}
@@ -173,10 +181,41 @@ func InitializeDatabase() {
 		Collection: db.Collection("templates"),
 	}
 
+	CoordinationTeams = &CoordinationTeamsType{
+		Collection: db.Collection("coordinationTeams"),
+	}
+
+	// Ensure index for categories
+	if err := Categories.EnsureIndexes(); err != nil {
+		log.Println("Warning: failed to ensure categories indexes:", err)
+	}
+
+	// Seed default categories if none exist yet
+	func() {
+		ctx := context.Background()
+		cnt, err := Categories.Collection.CountDocuments(ctx, bson.M{})
+		if err != nil {
+			log.Println("Could not count categories:", err)
+			return
+		}
+		if cnt == 0 {
+			defaultCats := []string{"Publicity", "Merchandise", "Stands", "Talk", "Sponsorship", "Service", "Other"}
+			docs := make([]interface{}, 0, len(defaultCats))
+			for _, cat := range defaultCats {
+				docs = append(docs, bson.M{"name": cat})
+			}
+			if len(docs) > 0 {
+				if _, err := Categories.Collection.InsertMany(ctx, docs); err != nil {
+					log.Println("Could not seed default categories:", err)
+				}
+			}
+		}
+	}()
+
 	_, err = Templates.Collection.Indexes().CreateOne(
 		context.Background(),
 		mongo.IndexModel{
-			Keys:    bson.D{{Key: "name", Value: 1}},
+			Keys:    bson.D{{Key: "event", Value: 1}, {Key: "kind", Value: 1}, {Key: "name", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 	)

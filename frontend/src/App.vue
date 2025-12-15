@@ -6,12 +6,14 @@
   <!-- <AuthLoader v-if="authStore.isInitializing" /> -->
   <router-view />
 
+  <ToastContainer />
   <PiniaColadaDevtools />
 </template>
 
 <script lang="ts" setup>
 import { PiniaColadaDevtools } from "@pinia/colada-devtools";
 import { useAuthStore } from "@/stores/auth";
+import ToastContainer from "@/components/ui/toast/ToastContainer.vue";
 
 const authStore = useAuthStore();
 
