@@ -400,11 +400,14 @@ watch(
     } else {
       companyFuzzy.value = createFuzzySearch(list, {
         // match on multiple fields
-        getText: (company: Company) => [company.name, company.description ?? ""],
+        getText: (company: Company) => [
+          company.name,
+          company.description ?? "",
+        ],
       });
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 const speakerFuzzy = ref(null);
@@ -415,11 +418,14 @@ watch(
       speakerFuzzy.value = null;
     } else {
       speakerFuzzy.value = createFuzzySearch(list, {
-        getText: (speaker: Speaker) => [speaker.name, speaker.companyName ?? ""],
+        getText: (speaker: Speaker) => [
+          speaker.name,
+          speaker.companyName ?? "",
+        ],
       });
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 const filteredCompanies = computed(() => {
   const list = companiesData.value?.data ?? [];
