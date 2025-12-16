@@ -306,7 +306,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
-import createFuzzySearch from "@nozbe/microfuzz";
+import createFuzzySearch, { type FuzzySearcher } from "@nozbe/microfuzz";
 import type { Member } from "@/dto/members";
 
 type SelectedItem = Company | Speaker | Member;
@@ -388,10 +388,7 @@ const isLoading = computed(
   () => companiesLoading.value || speakersLoading.value || membersLoading.value,
 );
 
-// Memoized fuzzy search instances
-import { ref, watch } from "vue";
-
-const companyFuzzy = ref(null);
+const companyFuzzy = ref<FuzzySearcher<Company> | null>(null);
 watch(
   () => companiesData.value?.data,
   (list) => {
@@ -410,7 +407,7 @@ watch(
   { immediate: true },
 );
 
-const speakerFuzzy = ref(null);
+const speakerFuzzy = ref<FuzzySearcher<Speaker> | null>(null);
 watch(
   () => speakersData.value?.data,
   (list) => {
@@ -438,7 +435,7 @@ const filteredCompanies = computed(() => {
   if (!fuzzy) return [];
 
   return fuzzy(term)
-    .map((res) => res.item)
+    .map((res: { item: Company }) => res.item)
     .slice(0, 5); // Limit to 5 results
 });
 
@@ -452,7 +449,7 @@ const filteredSpeakers = computed(() => {
   if (!fuzzy) return [];
 
   return fuzzy(term)
-    .map((res) => res.item)
+    .map((res: { item: Speaker }) => res.item)
     .slice(0, 5); // Limit to 5 results
 });
 
