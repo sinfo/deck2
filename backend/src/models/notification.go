@@ -73,6 +73,10 @@ type Notification struct {
 
 	Date time.Time `json:"date" bson:"date"`
 
+	// Optional human-friendly name of the target entity.
+	// Useful for deleted entities (company/speaker) that no longer exist.
+	Name string `json:"name,omitempty" bson:"name,omitempty"`
+
 	// Signature is used to verify if 2 notifications are equal
 	Signature string `json:"signature" bson:"signature"`
 }
