@@ -50,3 +50,6 @@ export const createSpeaker = (data: CreateSpeakerData) =>
 
 export const uploadSpeakerInternalImage = (id: string, data: FormData) =>
   instance.post<Speaker>(`/speakers/${id}/image/internal`, data);
+
+export const deleteSpeaker = (id: string) =>
+  instance.delete<Speaker>(`/speakers/${id}`);
