@@ -57,6 +57,15 @@ func deleteSpeaker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(deletedSpeaker)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindDeleted,
+			Speaker: &deletedSpeaker.ID,
+			Name:    deletedSpeaker.Name,
+		})
+	}
 }
 
 func getSpeakerPublic(w http.ResponseWriter, r *http.Request) {
