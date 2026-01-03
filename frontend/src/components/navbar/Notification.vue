@@ -95,6 +95,8 @@ const makeMessage = (
           return "Communication deleted";
         }
         return "Thread deleted";
+      } else if (notification.name) {
+        return `${notification.name} was deleted`;
       }
       return "Deleted";
     case "TAGGED":
