@@ -143,6 +143,8 @@ type CreateNotificationData struct {
 	Company *primitive.ObjectID
 	Meeting *primitive.ObjectID
 	Session *primitive.ObjectID
+	// Optional human-friendly name of the target entity
+	Name string
 }
 
 // NotifyMember adds a notification to a member
@@ -158,6 +160,7 @@ func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data Creat
 		Company: data.Company,
 		Meeting: data.Meeting,
 		Session: data.Session,
+		Name:    data.Name,
 	}
 
 	if err := notification.Validate(); err != nil {
@@ -181,6 +184,7 @@ func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data Creat
 		"company":   data.Company,
 		"meeting":   data.Meeting,
 		"session":   data.Session,
+		"name":      data.Name,
 		"signature": signature,
 		"date":      time.Now().UTC(),
 	}
@@ -253,6 +257,8 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 			"signature": notification.Signature,
 			"member":    notification.Member.Hex(),
 			"date":      notification.Date.Format(time.RFC3339),
+			// include optional human-friendly name for deleted entities
+			"name": notification.Name,
 		}
 
 		if notification.Post != nil {

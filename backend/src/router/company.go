@@ -731,6 +731,7 @@ func deleteCompany(w http.ResponseWriter, r *http.Request) {
 		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 			Kind:    models.NotificationKindDeleted,
 			Company: &deletedCompany.ID,
+			Name:    deletedCompany.Name,
 		})
 	}
 }
