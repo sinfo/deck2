@@ -1,17 +1,47 @@
 <template>
+  <div
+    v-if="isDeleteConfirmOpen"
+    class="fixed inset-0 bg-black/20 z-40 transition-opacity duration-200"
+    @click="isDeleteConfirmOpen = false"
+  ></div>
   <Card class="w-full hover:shadow-lg transition-shadow duration-200">
     <CardHeader>
       <div class="flex items-center justify-between mb-4">
         <CardTitle class="text-lg">Company Information</CardTitle>
-        <Button
-          v-if="!isEditing"
-          variant="outline"
-          size="sm"
-          :disabled="isUpdating"
-          @click="startEditing"
-        >
-          Edit
-        </Button>
+        <div class="flex items-center gap-2">
+          <Button
+            v-if="!isEditing"
+            variant="outline"
+            size="sm"
+            :disabled="isUpdating"
+            @click="startEditing"
+          >
+            Edit
+          </Button>
+          <Popover v-if="canDelete" v-model:open="isDeleteConfirmOpen">
+            <PopoverTrigger as-child>
+              <Button
+                variant="outline"
+                size="sm"
+                :disabled="isDeleting"
+                class="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                aria-label="Delete company"
+                :title="isDeleting ? 'Deleting...' : 'Delete company'"
+              >
+                <TrashIcon class="w-4 h-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-80 z-50">
+              <ConfirmDelete
+                title="Delete Company"
+                :message="`Are you sure you want to delete ${company.name}? This action cannot be undone.`"
+                :is-deleting="isDeleting"
+                @cancel="isDeleteConfirmOpen = false"
+                @confirm="handleDelete"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       <!-- Editing Form -->
@@ -95,6 +125,10 @@ import type {
 } from "@/dto/companies";
 import { useCompanyInfoMutation } from "@/mutations/companies";
 import { useCompanyImageUploadMutation } from "@/mutations/companies";
+import { deleteCompany } from "@/api/companies";
+import { useAuthStore } from "@/stores/auth";
+import { useQueryCache } from "@pinia/colada";
+import { useRouter } from "vue-router";
 import Card from "../ui/card/Card.vue";
 import CardContent from "../ui/card/CardContent.vue";
 import CardDescription from "../ui/card/CardDescription.vue";
@@ -104,6 +138,9 @@ import Badge from "../ui/badge/Badge.vue";
 import Button from "../ui/button/Button.vue";
 import Image from "../Image.vue";
 import CompanyInfoForm from "../companies/CompanyInfoForm.vue";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { TrashIcon } from "lucide-vue-next";
+import ConfirmDelete from "@/components/ConfirmDelete.vue";
 
 const props = defineProps<{
   company: CompanyWithParticipation;
@@ -111,10 +148,29 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   updated: [];
+  deleted: [];
 }>();
 
 const isDescriptionExpanded = ref(false);
 const isEditing = ref(false);
+const isDeleteConfirmOpen = ref(false);
+const isDeleting = ref(false);
+const authStore = useAuthStore();
+const queryCache = useQueryCache();
+const router = useRouter();
+
+const navigateBackWithReload = (fallback: string) => {
+  try {
+    if (window.history.length > 1) {
+      router.back();
+      setTimeout(() => window.location.reload(), 50);
+    } else {
+      router.push(fallback).then(() => window.location.reload());
+    }
+  } catch {
+    router.push(fallback).then(() => window.location.reload());
+  }
+};
 
 const companyInfoMutation = useCompanyInfoMutation();
 const { mutate: updateCompanyInfo, isLoading: isUpdating } =
@@ -188,6 +244,29 @@ const formatWebsite = (url: string): string => {
     return urlObj.hostname;
   } catch {
     return url;
+  }
+};
+
+const canDelete = computed(() => {
+  if (!authStore.decoded) return false;
+  const role = (authStore.decoded as { role?: string }).role;
+  return role === "COORDINATOR" || role === "ADMIN";
+});
+
+const handleDelete = async () => {
+  if (!props.company?.id) return;
+  isDeleting.value = true;
+  try {
+    await deleteCompany(props.company.id);
+    // Invalidate cache and navigate to list
+    queryCache.invalidateQueries({ key: ["companies"] });
+    navigateBackWithReload("/companies");
+    emit("deleted");
+  } catch (error) {
+    console.error("Error deleting company:", error);
+  } finally {
+    isDeleting.value = false;
+    isDeleteConfirmOpen.value = false;
   }
 };
 </script>
