@@ -35,4 +35,5 @@ export interface Notification {
   meeting?: string;
   thread?: string;
   post?: string;
+  name?: string; // human-friendly name of the target entity
 }
