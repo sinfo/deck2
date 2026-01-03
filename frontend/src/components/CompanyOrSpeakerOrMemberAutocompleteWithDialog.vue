@@ -30,7 +30,7 @@
 
         <!-- Keyboard shortcut badge (when empty and not focused) -->
         <div
-          class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none"
+          class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none hidden sm:block"
         >
           <Badge variant="secondary" class="text-xs flex items-center gap-1">
             <span class="font-mono">{{ isMac ? "⌘" : "Ctrl" }}</span>
@@ -60,7 +60,11 @@
           (showSuggestions &&
             (results.length > 0 || isLoading || (searchTerm && showCreate)))
         "
-        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto"
+        ref="listRef"
+        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto overscroll-contain touch-pan-y max-h-[65vh] sm:max-h-[24rem]"
+        role="listbox"
+        tabindex="-1"
+        aria-label="Search results for companies, speakers, and members"
       >
         <!-- Loading state -->
         <div v-if="isLoading" class="p-3 text-center text-gray-500">
@@ -75,7 +79,7 @@
           <!-- Companies section -->
           <div v-if="filteredCompanies.length > 0">
             <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
             >
               Companies
             </div>
@@ -89,6 +93,9 @@
                   ? 'bg-blue-50 border-blue-200'
                   : 'hover:bg-gray-50',
               ]"
+              :data-result-index="getItemIndex(company)"
+              role="option"
+              :aria-selected="getItemIndex(company) === highlightedIndex"
               @click="selectCompany(company)"
             >
               <Image
@@ -113,7 +120,7 @@
           <!-- Speakers section -->
           <div v-if="filteredSpeakers.length > 0">
             <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
             >
               Speakers
             </div>
@@ -127,6 +134,9 @@
                   ? 'bg-blue-50 border-blue-200'
                   : 'hover:bg-gray-50',
               ]"
+              :data-result-index="getItemIndex(speaker)"
+              role="option"
+              :aria-selected="getItemIndex(speaker) === highlightedIndex"
               @click="selectSpeaker(speaker)"
             >
               <Image
@@ -154,7 +164,7 @@
           <!-- Members section -->
           <div v-if="filteredMembers.length > 0">
             <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
             >
               Members
             </div>
@@ -168,6 +178,9 @@
                   ? 'bg-blue-50 border-blue-200'
                   : 'hover:bg-gray-50',
               ]"
+              :data-result-index="getItemIndex(member)"
+              role="option"
+              :aria-selected="getItemIndex(member) === highlightedIndex"
               @click="selectMember(member)"
             >
               <Image
@@ -285,7 +298,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch, nextTick, onBeforeUnmount } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllCompanies } from "@/api/companies";
 import { getAllSpeakers } from "@/api/speakers";
@@ -348,8 +361,10 @@ const selectedItem = ref<SelectedItem | null>(null);
 const isCompanyDialogOpen = ref(false);
 const isSpeakerDialogOpen = ref(false);
 const createTerm = ref("");
-const inputRef = ref<HTMLInputElement>();
 const highlightedIndex = ref(-1);
+const inputRef = ref<HTMLInputElement | null>(null);
+const listRef = ref<HTMLElement | null>(null);
+const scrollAnimationFrameId = ref<number | null>(null);
 
 // Detect platform for keyboard shortcut
 const isMac = computed(() => {
@@ -670,4 +685,42 @@ watch(
     highlightedIndex.value = -1;
   },
 );
+
+watch(
+  () => highlightedIndex.value,
+  (idx) => {
+    const container = listRef.value;
+    if (!container || idx < 0) return;
+
+    if (scrollAnimationFrameId.value !== null) {
+      cancelAnimationFrame(scrollAnimationFrameId.value);
+      scrollAnimationFrameId.value = null;
+    }
+
+    scrollAnimationFrameId.value = requestAnimationFrame(() => {
+      const el = container.querySelector(
+        `[data-result-index="${idx}"]`,
+      ) as HTMLElement | null;
+      if (!el) return;
+
+      const elTop = el.offsetTop;
+      const elBottom = elTop + el.offsetHeight;
+      const viewTop = container.scrollTop;
+      const viewBottom = viewTop + container.clientHeight;
+
+      if (elTop < viewTop) {
+        container.scrollTop = elTop;
+      } else if (elBottom > viewBottom) {
+        container.scrollTop = elBottom - container.clientHeight;
+      }
+    });
+  },
+);
+
+onBeforeUnmount(() => {
+  if (scrollAnimationFrameId.value !== null) {
+    cancelAnimationFrame(scrollAnimationFrameId.value);
+    scrollAnimationFrameId.value = null;
+  }
+});
 </script>
