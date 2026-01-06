@@ -78,65 +78,69 @@ watch(
 </script>
 
 <template>
-  <Card
-    :class="[
-      'ring',
-      'h-full',
-      'relative',
-      participationStatusColor[selectedStatus].ring,
-    ]"
+  <component
+    :is="props.to ? 'RouterLink' : 'div'"
+    :to="props.to"
+    :class="['block', props.to ? 'cursor-pointer' : '']"
   >
-    <!-- Confetti explosion for accepted/announced states -->
-    <div
-      v-if="showConfetti"
-      class="absolute left-1/2 top-1/2 pointer-events-none z-50 -translate-x-1/2 -translate-y-1/2"
+    <Card
+      :class="[
+        'ring',
+        'h-full',
+        'relative',
+        participationStatusColor[selectedStatus].ring,
+      ]"
     >
-      <ConfettiExplosion />
-    </div>
+      <div
+        v-if="showConfetti"
+        class="absolute left-1/2 top-1/2 pointer-events-none z-50 -translate-x-1/2 -translate-y-1/2"
+      >
+        <ConfettiExplosion />
+      </div>
 
-    <CardContent>
-      <Select v-model="selectedStatus" class="relative z-10">
-        <SelectTrigger
+      <CardContent>
+        <div
+          v-if="!possibleStates.length"
           :class="[
-            'w-full',
+            'w-full flex items-center rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs pointer-events-none',
             participationStatusColor[selectedStatus].background,
           ]"
         >
-          <SelectValue placeholder="State">
-            {{ humanReadableParticipationStatus[selectedStatus] }}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent v-if="possibleStates.length">
-          <SelectItem
-            v-for="(state, i) in possibleStates"
-            :key="state"
-            :value="i + 1"
+          {{ humanReadableParticipationStatus[selectedStatus] }}
+        </div>
+        <Select v-else v-model="selectedStatus" class="relative z-10">
+          <SelectTrigger
+            :class="[
+              'w-full',
+              participationStatusColor[selectedStatus].background,
+            ]"
           >
-            {{ humanReadableParticipationStatus[state] }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
+            <SelectValue placeholder="State">
+              {{ humanReadableParticipationStatus[selectedStatus] }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="(state, i) in possibleStates"
+              :key="state"
+              :value="i + 1"
+            >
+              {{ humanReadableParticipationStatus[state] }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
-      <component
-        :is="props.to ? 'RouterLink' : 'div'"
-        :to="props.to"
-        :class="['block w-full', props.to ? 'cursor-pointer' : '']"
-      >
-        <Image
-          :src="image"
-          class="w-full h-32 object-contain rounded-lg pt-2"
-        />
-      </component>
-    </CardContent>
-    <component
-      :is="props.to ? 'RouterLink' : 'div'"
-      :to="props.to"
-      :class="['block', props.to ? 'cursor-pointer' : '']"
-    >
+        <div class="block w-full">
+          <Image
+            :src="image"
+            class="w-full h-32 object-contain rounded-lg pt-2"
+          />
+        </div>
+      </CardContent>
       <CardHeader>
         <CardTitle>{{ title }}</CardTitle>
         <Badge v-if="badge">{{ badge }}</Badge>
       </CardHeader>
-    </component>
-  </Card>
+    </Card>
+  </component>
 </template>
