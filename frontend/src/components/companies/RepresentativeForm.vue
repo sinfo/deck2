@@ -240,8 +240,8 @@ const showMoreSocials = ref(false);
 const formData = reactive<Required<CreateCompanyRepData>>({
   name: "",
   contact: {
-    mails: [{ mail: "", personal: false, valid: true }],
-    phones: [{ phone: "", valid: true }],
+    mails: [{ mail: "", personal: false }],
+    phones: [{ phone: "" }],
     socials: {
       linkedin: "",
       twitter: "",
@@ -266,7 +266,7 @@ const validationMessage = computed(() => {
 });
 
 const addEmail = () => {
-  formData.contact.mails.push({ mail: "", personal: false, valid: true });
+  formData.contact.mails.push({ mail: "", personal: false });
 };
 
 const removeEmail = (index: number) => {
@@ -274,7 +274,7 @@ const removeEmail = (index: number) => {
 };
 
 const addPhone = () => {
-  formData.contact.phones.push({ phone: "", valid: true });
+  formData.contact.phones.push({ phone: "" });
 };
 
 const removePhone = (index: number) => {
