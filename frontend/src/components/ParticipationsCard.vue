@@ -1,63 +1,44 @@
 <template>
   <Card class="w-full py-0">
-    <CardHeader class="w-full">
-      <Accordion type="single" collapsible class="w-full">
-        <AccordionItem value="participations">
-          <AccordionTrigger class="text-lg font-semibold px-0 cursor-pointer">
-            Participations
-          </AccordionTrigger>
-          <AccordionContent class="px-0">
-            <div
-              v-if="sortedParticipations.length === 0"
-              class="text-muted-foreground p-4"
-            >
-              No participations found.
-            </div>
-            <div v-else class="space-y-4">
-              <!-- Current participation - Editable or Create -->
-              <div v-if="currentParticipation">
-                <div class="flex items-center gap-2 mb-3">
-                  <h4 class="text-sm font-medium text-muted-foreground">
-                    Current
-                  </h4>
-                </div>
-                <EditableCompanyParticipation
-                  v-if="isCompanyParticipation(currentParticipation)"
-                  :participation="currentParticipation"
-                  :company-id="entityId"
-                />
-                <EditableSpeakerParticipation
-                  v-else-if="isSpeakerParticipation(currentParticipation)"
-                  :participation="currentParticipation"
-                  :speaker-id="entityId"
-                />
-              </div>
-
-              <!-- Create participation if no current participation exists -->
-              <div v-else-if="getCurrentEvent()">
-                <div class="flex items-center gap-2 mb-3">
-                  <h4 class="text-sm font-medium text-muted-foreground">
-                    Current
-                  </h4>
-                </div>
-
-                <EmptyStateCard
-                  title="Create Participation"
-                  :description="`Click to participate in ${getEventName(getCurrentEvent()?.id || 0)}`"
-                  :loading="isCreatingParticipation"
-                  loading-text="Creating..."
-                  @click="createParticipation"
-                />
-              </div>
-
-              <!-- Past participations - Read-only -->
-              <div v-if="pastParticipations.length > 0">
-                <h4
-                  v-if="currentParticipation || getCurrentEvent()"
-                  class="text-sm font-medium text-muted-foreground mb-3 mt-6"
-                >
-                  Past Participations
-                </h4>
+    <CardHeader class="w-full pt-6">
+      <h2 class="text-lg font-semibold mb-4">Participations</h2>
+      <div v-if="sortedParticipations.length > 0" class="space-y-4">
+        <div v-if="currentParticipation">
+          <div class="flex items-center gap-2 mb-3">
+            <h4 class="text-sm font-medium text-muted-foreground">Current</h4>
+          </div>
+          <EditableCompanyParticipation
+            v-if="isCompanyParticipation(currentParticipation)"
+            :participation="currentParticipation"
+            :company-id="entityId"
+          />
+          <EditableSpeakerParticipation
+            v-else-if="isSpeakerParticipation(currentParticipation)"
+            :participation="currentParticipation"
+            :speaker-id="entityId"
+          />
+        </div>
+        <div v-else-if="getCurrentEvent()">
+          <div class="flex items-center gap-2 mb-3">
+            <h4 class="text-sm font-medium text-muted-foreground">Current</h4>
+          </div>
+          <EmptyStateCard
+            title="Create Participation"
+            :description="`Click to participate in ${getEventName(getCurrentEvent()?.id || 0)}`"
+            :loading="isCreatingParticipation"
+            loading-text="Creating..."
+            @click="createParticipation"
+          />
+        </div>
+        <div v-if="pastParticipations.length > 0">
+          <Accordion type="single" collapsible class="w-full">
+            <AccordionItem value="pastParticipations">
+              <AccordionTrigger
+                class="text-sm font-semibold px-0 cursor-pointer"
+              >
+                Past Participations
+              </AccordionTrigger>
+              <AccordionContent class="px-0 pt-4">
                 <div class="space-y-4">
                   <Card
                     v-for="participation in pastParticipations"
@@ -138,11 +119,14 @@
                     </div>
                   </Card>
                 </div>
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      </div>
+      <div v-else class="text-muted-foreground p-4">
+        No participations found.
+      </div>
     </CardHeader>
   </Card>
 </template>
