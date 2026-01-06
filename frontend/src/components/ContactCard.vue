@@ -133,13 +133,6 @@
                       >
                         Personal
                       </Badge>
-                      <Badge
-                        v-if="!mail.valid"
-                        variant="destructive"
-                        class="text-xs"
-                      >
-                        Invalid
-                      </Badge>
                     </div>
                   </div>
                   <div v-if="copyError" class="text-xs text-destructive mt-1">
@@ -168,15 +161,6 @@
                     >
                       {{ phone.phone }}
                     </a>
-                    <div v-if="!phone.valid" class="flex gap-1 flex-shrink-0">
-                      <Badge
-                        v-if="!phone.valid"
-                        variant="destructive"
-                        class="text-xs"
-                      >
-                        Invalid
-                      </Badge>
-                    </div>
                   </div>
                 </div>
               </div>
