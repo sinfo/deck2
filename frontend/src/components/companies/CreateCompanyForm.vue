@@ -70,6 +70,20 @@
         }}</span>
       </div>
 
+      <div class="space-y-2">
+        <Label for="linkedin" class="text-sm font-medium">LinkedIn</Label>
+        <Input
+          id="linkedin"
+          v-model="formData.linkedin"
+          placeholder="username or profile URL"
+          type="text"
+          :disabled="isLoading"
+        />
+        <span v-if="errors.linkedin" class="text-sm text-destructive">{{
+          errors.linkedin
+        }}</span>
+      </div>
+
       <!-- Step 1 Actions -->
       <div class="flex justify-between pt-4">
         <Button
@@ -328,6 +342,7 @@ const formData = ref<CreateCompanyData>({
   name: props.initialCompanyName || "",
   description: "",
   site: "",
+  linkedin: "",
 });
 
 // Image preview and file

@@ -51,6 +51,7 @@
             name: company.name,
             description: company.description,
             site: company.site,
+            linkedin: company.linkedin,
           }"
           :is-loading="isUpdating || isUploadingImage"
           mode="edit"
@@ -110,6 +111,18 @@
             class="text-primary hover:underline truncate"
           >
             {{ formatWebsite(company.site) }}
+          </a>
+        </div>
+
+        <div v-if="company.linkedin" class="flex items-center gap-2">
+          <span class="text-muted-foreground">LinkedIn:</span>
+          <a
+            :href="company.linkedin"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary hover:underline truncate"
+          >
+            {{ formatLinkedIn(company.linkedin) }}
           </a>
         </div>
       </div>
@@ -197,7 +210,7 @@ const handleImageSelected = (file: File) => {
 };
 
 const handleSubmit = async (
-  data: Pick<UpdateCompanyData, "name" | "description" | "site">,
+  data: Pick<UpdateCompanyData, "name" | "description" | "site" | "linkedin">,
 ) => {
   if (!props.company?.id) return;
 
@@ -242,6 +255,16 @@ const formatWebsite = (url: string): string => {
   try {
     const urlObj = new URL(url);
     return urlObj.hostname;
+  } catch {
+    return url;
+  }
+};
+
+const formatLinkedIn = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    const path = urlObj.pathname.replace(/^\//, "");
+    return `${urlObj.hostname}/${path}`;
   } catch {
     return url;
   }

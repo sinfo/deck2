@@ -141,7 +141,7 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 	if data.Contact != nil {
 		contact["phones"] = data.Contact.Phones
 		contact["mails"] = data.Contact.Mails
-		contact["socials"] = data.Contact.Socials
+		contact["socials"] = formatContactSocials(data.Contact.Socials)
 	}
 
 	createdContact, err := Contacts.Collection.InsertOne(ctx, contact)
