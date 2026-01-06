@@ -43,6 +43,20 @@
         />
       </div>
 
+      <!-- LinkedIn Field -->
+      <div class="space-y-2">
+        <Label for="company-linkedin" class="text-sm font-medium"
+          >LinkedIn</Label
+        >
+        <Input
+          id="company-linkedin"
+          v-model="formData.linkedin"
+          placeholder="username or profile URL"
+          type="text"
+          :disabled="isLoading"
+        />
+      </div>
+
       <!-- Image Upload Field -->
       <ImageUpload
         label="Company Logo"
@@ -82,7 +96,10 @@ import ImageUpload from "@/components/ImageUpload.vue";
 interface Props {
   isLoading?: boolean;
   mode?: "create" | "edit";
-  initialData?: Pick<UpdateCompanyData, "name" | "description" | "site">;
+  initialData?: Pick<
+    UpdateCompanyData,
+    "name" | "description" | "site" | "linkedin"
+  >;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -91,7 +108,9 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  submit: [data: Pick<UpdateCompanyData, "name" | "description" | "site">];
+  submit: [
+    data: Pick<UpdateCompanyData, "name" | "description" | "site" | "linkedin">,
+  ];
   cancel: [];
   imageSelected: [file: File];
 }>();
@@ -102,11 +121,12 @@ const handleImageSelected = (file: File) => {
 };
 
 const formData = reactive<
-  Pick<UpdateCompanyData, "name" | "description" | "site">
+  Pick<UpdateCompanyData, "name" | "description" | "site" | "linkedin">
 >({
   name: "",
   description: "",
   site: "",
+  linkedin: "",
 });
 
 // Initialize form data when in edit mode or when initial data changes
@@ -117,6 +137,7 @@ watch(
       formData.name = newData.name || "";
       formData.description = newData.description || "";
       formData.site = newData.site || "";
+      formData.linkedin = newData.linkedin || "";
     }
   },
   { immediate: true },
@@ -132,6 +153,7 @@ const handleSubmit = () => {
       name: formData.name?.trim() || undefined,
       description: formData.description?.trim() || "",
       site: formData.site?.trim() || "",
+      linkedin: formData.linkedin?.trim() || "",
     });
   }
 };

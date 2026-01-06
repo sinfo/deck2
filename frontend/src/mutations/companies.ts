@@ -148,7 +148,9 @@ export const useCompanyBillingMutation = defineMutation(() => {
 export const useCompanyInfoMutation = defineMutation(() => {
   const companyId = ref<string>();
   const companyData =
-    ref<Pick<UpdateCompanyData, "name" | "description" | "site">>();
+    ref<
+      Pick<UpdateCompanyData, "name" | "description" | "site" | "linkedin">
+    >();
   const queryCache = useQueryCache();
 
   const { mutate, ...mutation } = useMutation({
@@ -157,6 +159,7 @@ export const useCompanyInfoMutation = defineMutation(() => {
         name: companyData.value?.name,
         description: companyData.value?.description,
         site: companyData.value?.site,
+        linkedin: companyData.value?.linkedin,
         billingInfo: undefined,
       };
       return updateCompany(companyId.value!, updateData);

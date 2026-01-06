@@ -105,23 +105,18 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 
 		dataQuery["contact"] = contact.ID
 	} else {
-		contact, err := Contacts.Collection.InsertOne(ctx, bson.M{
-			"phones": []models.ContactPhone{},
-			"socials": bson.M{
-				"facebook": "",
-				"skype":    "",
-				"github":   "",
-				"twitter":  "",
-				"linkedin": "",
-			},
-			"mails": []models.ContactMail{},
-		})
-
+		// Create empty contact using CreateContact to ensure proper initialization
+		emptyContact := CreateContactData{
+			Phones:  []models.ContactPhone{},
+			Socials: models.ContactSocials{},
+			Mails:   []models.ContactMail{},
+		}
+		contact, err := Contacts.CreateContact(emptyContact)
 		if err != nil {
 			return nil, err
 		}
 
-		dataQuery["contact"] = contact.InsertedID.(primitive.ObjectID)
+		dataQuery["contact"] = contact.ID
 	}
 
 	insertResult, err := c.Collection.InsertOne(ctx, dataQuery)
@@ -140,7 +135,7 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 	return newRep, nil
 }
 
-// UpdateCompanyRep creates a contact and adds it to a companyRep
+// UpdateCompanyRep updates a company rep and its contact
 func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCompanyRepData) (*models.CompanyRep, error) {
 	ctx := context.Background()
 
@@ -149,13 +144,17 @@ func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCom
 	}
 
 	if data.Contact != nil {
-		contact, err := Contacts.CreateContact(*data.Contact)
+		// Get the existing rep to find its contact ID
+		existingRep, err := c.GetCompanyRep(id)
 		if err != nil {
 			return nil, err
 		}
 
-		// add contact id to the $set document
-		setDoc["contact"] = contact.ID
+		// Update the existing contact instead of creating a new one
+		_, err = Contacts.UpdateContact(existingRep.Contact, *data.Contact)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var updateQuery = bson.M{"$set": setDoc}

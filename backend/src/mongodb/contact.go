@@ -16,6 +16,41 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+func formatSocialURL(platform, url string) string {
+	if url == "" {
+		return ""
+	}
+
+	trimmed := strings.TrimSpace(url)
+	if strings.HasPrefix(strings.ToLower(trimmed), "http://") || strings.HasPrefix(strings.ToLower(trimmed), "https://") {
+		return trimmed
+	}
+
+	switch strings.ToLower(platform) {
+	case "linkedin":
+		return "https://linkedin.com/in/" + strings.TrimPrefix(trimmed, "@")
+	case "twitter":
+		return "https://twitter.com/" + strings.TrimPrefix(trimmed, "@")
+	case "facebook":
+		return "https://facebook.com/" + strings.TrimPrefix(trimmed, "@")
+	case "github":
+		return "https://github.com/" + strings.TrimPrefix(trimmed, "@")
+	default:
+		return trimmed
+	}
+}
+
+// formatContactSocials formats all social media links in a contact
+func formatContactSocials(socials models.ContactSocials) models.ContactSocials {
+	return models.ContactSocials{
+		LinkedIn: formatSocialURL("linkedin", socials.LinkedIn),
+		Twitter:  formatSocialURL("twitter", socials.Twitter),
+		Facebook: formatSocialURL("facebook", socials.Facebook),
+		Github:   formatSocialURL("github", socials.Github),
+		Skype:    socials.Skype,
+	}
+}
+
 // ContactsType stores importat db information on contacts
 type ContactsType struct {
 	Collection *mongo.Collection
@@ -127,7 +162,7 @@ func (c *ContactsType) CreateContact(data CreateContactData) (*models.Contact, e
 	ctx := context.Background()
 	var insertData = bson.M{}
 	insertData["phones"] = data.Phones
-	insertData["socials"] = data.Socials
+	insertData["socials"] = formatContactSocials(data.Socials)
 	insertData["mails"] = data.Mails
 	insertData["gender"] = data.Gender
 	insertData["language"] = data.Language
@@ -150,10 +185,10 @@ func (c *ContactsType) UpdateContact(contactID primitive.ObjectID, data CreateCo
 	ctx := context.Background()
 	var updateQuery = bson.M{
 		"$set": bson.M{
-			"phones":  data.Phones,
-			"socials": data.Socials,
-			"mails":   data.Mails,
-			"gender":  data.Gender,
+			"phones":   data.Phones,
+			"socials":  formatContactSocials(data.Socials),
+			"mails":    data.Mails,
+			"gender":   data.Gender,
 			"language": data.Language,
 		},
 	}
