@@ -56,16 +56,44 @@
         <Label for="speaker-image" class="text-sm font-medium"
           >Speaker Image</Label
         >
-        <Input
-          id="speaker-image"
-          type="file"
-          accept="image/*"
-          :disabled="isLoading"
-          @change="handleImageChange"
-        />
-        <p class="text-xs text-muted-foreground">
-          Recommended: Square image, minimum 256x256px, max 10MB
-        </p>
+        <Tabs v-model="imageInputMode" class="w-full">
+          <TabsList class="grid w-full grid-cols-2">
+            <TabsTrigger value="file">Upload File</TabsTrigger>
+            <TabsTrigger value="url">From URL</TabsTrigger>
+          </TabsList>
+          <TabsContent value="file" class="space-y-2">
+            <Input
+              id="speaker-image"
+              type="file"
+              accept="image/*"
+              :disabled="isLoading"
+              @change="handleImageChange"
+            />
+            <p class="text-xs text-muted-foreground">
+              Recommended: Square image, minimum 256x256px, max 10MB
+            </p>
+          </TabsContent>
+          <TabsContent value="url" class="space-y-2">
+            <Input
+              id="imageUrl"
+              v-model="imageUrl"
+              type="url"
+              placeholder="https://example.com/image.jpg"
+              :disabled="isLoading || isLoadingImageUrl"
+              @blur="handleImageUrlChange"
+              @keyup.enter="handleImageUrlChange"
+            />
+            <p class="text-xs text-muted-foreground">
+              Enter the URL of an image to use
+            </p>
+            <p
+              v-if="isLoadingImageUrl"
+              class="text-xs text-muted-foreground flex items-center gap-1"
+            >
+              Loading image...
+            </p>
+          </TabsContent>
+        </Tabs>
         <span v-if="errors.image" class="text-sm text-destructive">{{
           errors.image
         }}</span>
@@ -119,6 +147,7 @@ import type { UpdateSpeakerData } from "@/dto/speakers";
 import Button from "../ui/button/Button.vue";
 import Input from "../ui/input/Input.vue";
 import Label from "../ui/label/Label.vue";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Props {
   isLoading?: boolean;
@@ -149,6 +178,9 @@ const emit = defineEmits<{
 const imagePreview = ref<string>("");
 const selectedImageFile = ref<File | null>(null);
 const errors = ref<Record<string, string>>({});
+const imageInputMode = ref<string>("file");
+const imageUrl = ref<string>("");
+const isLoadingImageUrl = ref<boolean>(false);
 
 const formData = reactive<
   Pick<UpdateSpeakerData, "name" | "title" | "bio" | "companyName" | "notes">
@@ -203,6 +235,73 @@ const handleImageChange = (event: Event) => {
 
     // Emit the selected file to parent component
     emit("imageSelected", file);
+  }
+};
+
+// Handle image URL input
+const handleImageUrlChange = async () => {
+  const url = imageUrl.value.trim();
+  if (!url) {
+    return;
+  }
+
+  // Validate URL format
+  try {
+    new URL(url);
+  } catch {
+    errors.value.image = "Please enter a valid URL";
+    return;
+  }
+
+  isLoadingImageUrl.value = true;
+  delete errors.value.image;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Failed to fetch image");
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.startsWith("image/")) {
+      throw new Error("URL does not point to a valid image");
+    }
+
+    const blob = await response.blob();
+
+    // Check file size (10MB limit)
+    if (blob.size > 10 << 20) {
+      errors.value.image = "Image file size must be less than 10MB";
+      return;
+    }
+
+    // Extract filename from URL or use a default
+    const urlPath = new URL(url).pathname;
+    const filename = urlPath.split("/").pop() || "image";
+    const extension = contentType.split("/")[1] || "png";
+    const finalFilename = filename.includes(".")
+      ? filename
+      : `${filename}.${extension}`;
+
+    // Create a File object from the blob
+    const file = new File([blob], finalFilename, { type: contentType });
+    selectedImageFile.value = file;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      imagePreview.value = e.target?.result as string;
+    };
+    reader.readAsDataURL(blob);
+
+    // Emit the selected file to parent component
+    emit("imageSelected", file);
+  } catch (error) {
+    console.error("Error fetching image from URL:", error);
+    errors.value.image =
+      "Failed to load image from URL. Please check the URL and try again.";
+  } finally {
+    isLoadingImageUrl.value = false;
   }
 };
 
