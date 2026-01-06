@@ -2,7 +2,6 @@ import type { ObjectID } from ".";
 
 export interface ContactPhone {
   phone: string;
-  valid: boolean;
 }
 
 export interface ContactSocials {
@@ -16,7 +15,6 @@ export interface ContactSocials {
 export interface ContactMail {
   mail: string;
   personal: boolean;
-  valid: boolean;
 }
 
 export enum Gender {

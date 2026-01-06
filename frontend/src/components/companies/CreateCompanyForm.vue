@@ -403,7 +403,6 @@ const addEmail = (repIndex: number) => {
   representatives.value[repIndex].contact!.mails.push({
     mail: "",
     personal: false,
-    valid: true,
   });
 };
 
@@ -414,7 +413,6 @@ const removeEmail = (repIndex: number, emailIndex: number) => {
 const addPhone = (repIndex: number) => {
   representatives.value[repIndex].contact!.phones.push({
     phone: "",
-    valid: true,
   });
 };
 
