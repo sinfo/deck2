@@ -122,10 +122,7 @@
                         <ClipboardIcon class="w-4 h-4" />
                       </template>
                     </Button>
-                    <div
-                      v-if="mail.personal || !mail.valid"
-                      class="flex gap-1 flex-shrink-0"
-                    >
+                    <div v-if="mail.personal" class="flex gap-1 flex-shrink-0">
                       <Badge
                         v-if="mail.personal"
                         variant="secondary"
