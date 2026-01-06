@@ -72,6 +72,7 @@ export function useImageUpload() {
       // Check file size (10MB limit)
       if (blob.size > MAX_FILE_SIZE) {
         setError("Image file size must be less than 10MB");
+        isLoadingImageUrl.value = false;
         return;
       }
 
