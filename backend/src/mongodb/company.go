@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -31,11 +32,26 @@ func ResetCurrentPublicCompanies() {
 	currentPublicCompanies = nil
 }
 
+func formatLinkedInURL(url *string) *string {
+	if url == nil || *url == "" {
+		return url
+	}
+
+	trimmed := strings.TrimSpace(*url)
+	if strings.HasPrefix(strings.ToLower(trimmed), "http://") || strings.HasPrefix(strings.ToLower(trimmed), "https://") {
+		return &trimmed
+	}
+
+	formatted := "https://linkedin.com/company/" + strings.TrimPrefix(trimmed, "@")
+	return &formatted
+}
+
 // CreateCompanyData holds data needed to create a company
 type CreateCompanyData struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	Site        *string `json:"site"`
+	LinkedIn    *string `json:"linkedin"`
 }
 
 // ParseBody fills the CreateCompanyData from a body
@@ -80,10 +96,17 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 		return nil, err
 	}
 
+	var linkedinValue interface{} = nil
+	formattedLinkedin := formatLinkedInURL(data.LinkedIn)
+	if formattedLinkedin != nil {
+		linkedinValue = *formattedLinkedin
+	}
+
 	insertResult, err := c.Collection.InsertOne(ctx, bson.M{
 		"name":           data.Name,
 		"description":    data.Description,
 		"site":           data.Site,
+		"linkedin":       linkedinValue,
 		"employers":      []primitive.ObjectID{},
 		"participations": []models.CompanyParticipation{},
 		"contact":        createdContact.InsertedID.(primitive.ObjectID),
@@ -325,11 +348,10 @@ func (c *CompaniesType) GetCompaniesByMembers(memberIDs []primitive.ObjectID, ev
 func companyToPublic(company models.Company, eventID *int) (*models.CompanyPublic, error) {
 
 	public := models.CompanyPublic{
-		ID:          company.ID,
-		Name:        company.Name,
-		Image:       company.Images.Public,
-		Site:        company.Site,
-		Description: company.Description,
+		ID:    company.ID,
+		Name:  company.Name,
+		Image: company.Images.Public,
+		Site:  company.Site,
 	}
 
 	var participation *models.CompanyParticipation
@@ -860,10 +882,11 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
 type UpdateCompanyData struct {
-	Name        *string
-	Description *string
-	Site        *string
-	BillingInfo *models.CompanyBillingInfo
+	Name        *string                 `json:"name"`
+	Description *string                 `json:"description"`
+	Site        *string                 `json:"site"`
+	LinkedIn    *string                 `json:"linkedin"`
+	BillingInfo *models.CompanyBillingInfo `json:"billingInfo"`
 }
 
 // ParseBody fills the UpdateCompanyData from a body
@@ -892,6 +915,12 @@ func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateC
 	}
 	if data.Site != nil {
 		updateFields["site"] = *data.Site
+	}
+	if data.LinkedIn != nil {
+		formattedLinkedin := formatLinkedInURL(data.LinkedIn)
+		if formattedLinkedin != nil {
+			updateFields["linkedin"] = *formattedLinkedin
+		}
 	}
 	if data.BillingInfo != nil {
 		billingInfo := *data.BillingInfo

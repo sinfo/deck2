@@ -45,6 +45,7 @@ export interface Company {
   description: string;
   imgs?: CompanyImages;
   site: string;
+  linkedin?: string;
   employers?: ObjectID[];
   billingInfo?: CompanyBillingInfo;
   participations: CompanyParticipation[];
@@ -62,7 +63,6 @@ export interface CompanyParticipationPublic {
 export interface CompanyPublic {
   id: ObjectID;
   name: string;
-  description: string;
   img?: string;
   site?: string;
   participation?: CompanyParticipationPublic[];
@@ -105,6 +105,7 @@ export interface UpdateCompanyData {
   name?: string;
   description?: string;
   site?: string;
+  linkedin?: string;
   billingInfo?: CompanyBillingInfo;
 }
 
@@ -112,4 +113,5 @@ export interface CreateCompanyData {
   name: string;
   description?: string;
   site?: string;
+  linkedin?: string;
 }

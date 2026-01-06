@@ -104,6 +104,8 @@ type Company struct {
 
 	Site string `json:"site" bson:"site"`
 
+	LinkedIn string `json:"linkedin,omitempty" bson:"linkedin,omitempty"`
+
 	// Company's contacts is an array of CompanyRep _id (see models.CompanyRep).
 	Employers []primitive.ObjectID `json:"employers,omitempty" bson:"employers,omitempty"`
 
@@ -139,8 +141,6 @@ type CompanyPublic struct {
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
 	Name string `json:"name"`
-
-	Description string `json:"description"`
 
 	// Company's image (public).
 	Image string `json:"img,omitempty"`
