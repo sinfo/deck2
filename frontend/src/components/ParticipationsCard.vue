@@ -1,6 +1,6 @@
 <template>
   <Card class="w-full py-0">
-    <CardHeader class="w-full pt-6">
+    <CardHeader :class="['pt-6', { 'pb-6': pastParticipations.length === 0 }]">
       <h2 class="text-lg font-semibold mb-4">Participations</h2>
       <div v-if="sortedParticipations.length > 0" class="space-y-4">
         <div v-if="currentParticipation">
