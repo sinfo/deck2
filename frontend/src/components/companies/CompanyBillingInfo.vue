@@ -127,7 +127,8 @@ const canSeeContract = computed(
   () =>
     authStore.isAuthenticated &&
     authStore.decoded &&
-    (authStore.decoded as { role?: string }).role === "COORDINATOR",
+    ((authStore.decoded as { role?: string }).role === "COORDINATOR" ||
+      (authStore.decoded as { role?: string }).role === "ADMIN"),
 );
 
 const startEditing = () => {
