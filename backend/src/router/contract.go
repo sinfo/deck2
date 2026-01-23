@@ -254,11 +254,14 @@ func replaceDocxPlaceholders(docxBytes []byte, replacements map[string]string, p
 	}
 	tmpSrcName := tmpSrc.Name()
 	defer func() {
-		tmpSrc.Close()
 		_ = os.Remove(tmpSrcName)
 	}()
 
 	if _, err := tmpSrc.Write(docxBytes); err != nil {
+		tmpSrc.Close()
+		return nil, err
+	}
+	if err := tmpSrc.Close(); err != nil {
 		return nil, err
 	}
 
