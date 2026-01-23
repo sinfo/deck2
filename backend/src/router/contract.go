@@ -222,7 +222,7 @@ func generateCompanyContractDocx(w http.ResponseWriter, r *http.Request) {
 
 	modifiedDocx, err := replaceDocxPlaceholders(b, replacements, replacementsPlain)
 	if err != nil {
-		writeJSONError(w, http.StatusInternalServerError, "error processing template")
+		writeJSONError(w, http.StatusInternalServerError, "error processing template: "+err.Error())
 		return
 	}
 
