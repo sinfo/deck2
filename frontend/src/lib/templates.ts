@@ -1,4 +1,4 @@
-import { type Speaker } from "@/dto/speakers";
+import type { SpeakerWithContactAndParticipation } from "@/dto/speakers";
 import type { Company } from "../dto/companies";
 import { ordinalSuffix } from "./utils";
 import {
@@ -27,8 +27,8 @@ export const templateHumanReadableNames: Record<EmailTemplate, string> = {
 
 // 3. Set the template paths here
 export const templatePaths: Record<EmailTemplate, string> = {
-  [EmailTemplate.COMPANIES_EN]: "/companies/33-en.html",
-  [EmailTemplate.COMPANIES_PT]: "/companies/33-pt.html",
+  [EmailTemplate.COMPANIES_EN]: "/companies/32-en.html",
+  [EmailTemplate.COMPANIES_PT]: "/companies/32-pt.html",
   [EmailTemplate.SPEAKERS_EN]: "/speakers/33-en.html",
   [EmailTemplate.SPEAKERS_PT]: "/speakers/33-pt.html",
 };
@@ -91,7 +91,11 @@ export enum EmailVariableKey {
 
   Company = "Company",
 
+  SpeakerArticle = "SpeakerArticle", // speaker article (e.g., o/a/e)
+  SpeakerSuffix = "SpeakerSuffix", // speaker suffix (e.g., (a))
   Speaker = "Speaker", // speaker name
+  MemberArticle = "MemberArticle", // member article (e.g., o/a/e)
+  MemberSuffix = "MemberSuffix", // member suffix (e.g., (a))
   Member = "Member", // member name
   MemberEmail = "MemberEmail", // member email, has default value
   MemberPhoneNumber = "MemberPhoneNumber", // member phone number, has default value
@@ -108,7 +112,11 @@ export interface EmailVariableValueMap {
   [EmailVariableKey.EventEndDay]: Date;
   [EmailVariableKey.EventEndMonth]: Date;
   [EmailVariableKey.EventEndYear]: Date;
-  [EmailVariableKey.Speaker]: Speaker;
+  [EmailVariableKey.SpeakerArticle]: string;
+  [EmailVariableKey.SpeakerSuffix]: string;
+  [EmailVariableKey.Speaker]: SpeakerWithContactAndParticipation;
+  [EmailVariableKey.MemberArticle]: string;
+  [EmailVariableKey.MemberSuffix]: string;
   [EmailVariableKey.Member]: MemberWithContact;
   [EmailVariableKey.MemberEmail]: MemberWithContact;
   [EmailVariableKey.MemberPhoneNumber]: MemberWithContact;
@@ -122,7 +130,7 @@ export interface VariablesInput {
   member: MemberWithContact;
 }
 export interface SpeakerVariablesInput extends VariablesInput {
-  speaker: Speaker;
+  speaker: SpeakerWithContactAndParticipation;
   paragraph?: string; // Optional paragraph for speaker emails
 }
 const isSpeakerVariablesInput = (
@@ -150,6 +158,8 @@ export const getVariablesFromType = <T extends VariablesInput>(
     createEmailVariable.eventEndDay(end),
     createEmailVariable.eventEndMonth(end),
     createEmailVariable.eventEndYear(end),
+    createEmailVariable.memberArticle(input.member.contactObject.gender),
+    createEmailVariable.memberSuffix(input.member.contactObject.gender),
     createEmailVariable.member(input.member),
     createEmailVariable.memberEmail(input.member),
     createEmailVariable.memberPhoneNumber(input.member),
@@ -159,7 +169,12 @@ export const getVariablesFromType = <T extends VariablesInput>(
     if (input.paragraph)
       vars.push(createEmailVariable.paragraph(input.paragraph));
 
-    return [...vars, createEmailVariable.speaker(input.speaker)];
+    return [
+      ...vars,
+      createEmailVariable.speaker(input.speaker),
+      createEmailVariable.speakerArticle(input.speaker.contactObject.gender),
+      createEmailVariable.speakerSuffix(input.speaker.contactObject.gender),
+    ];
   }
 
   if (isCompanyVariablesInput(input)) {
@@ -287,8 +302,24 @@ const getValueFromVariable = (
       return variable.value.getFullYear().toString();
     }
 
+    case EmailVariableKey.SpeakerArticle: {
+      return genderToArticleSuffix(variable.value as string).article;
+    }
+
+    case EmailVariableKey.SpeakerSuffix: {
+      return genderToArticleSuffix(variable.value as string).suffix;
+    }
+
     case EmailVariableKey.Speaker: {
       return variable.value.name;
+    }
+
+    case EmailVariableKey.MemberArticle: {
+      return genderToArticleSuffix(variable.value as string).article;
+    }
+
+    case EmailVariableKey.MemberSuffix: {
+      return genderToArticleSuffix(variable.value as string).suffix;
     }
 
     case EmailVariableKey.Member: {
@@ -316,6 +347,21 @@ const getValueFromVariable = (
       const exhaustiveCheck: never = variable;
       throw new Error(`Unhandled variable key: ${exhaustiveCheck}`);
     }
+  }
+};
+
+const genderToArticleSuffix = (
+  gender: string,
+): { article: string; suffix: string } => {
+  switch (gender) {
+    case "MALE":
+      return { article: "o", suffix: "" };
+    case "FEMALE":
+      return { article: "a", suffix: "a" };
+    case "OTHER":
+      return { article: "e", suffix: "e" };
+    default:
+      return { article: "o/a/e", suffix: "(a)" };
   }
 };
 
@@ -413,7 +459,11 @@ export type AnyEmailVariableInput =
   | EmailVariableInput<EmailVariableKey.EventEndDay>
   | EmailVariableInput<EmailVariableKey.EventEndMonth>
   | EmailVariableInput<EmailVariableKey.EventEndYear>
+  | EmailVariableInput<EmailVariableKey.SpeakerArticle>
+  | EmailVariableInput<EmailVariableKey.SpeakerSuffix>
   | EmailVariableInput<EmailVariableKey.Speaker>
+  | EmailVariableInput<EmailVariableKey.MemberArticle>
+  | EmailVariableInput<EmailVariableKey.MemberSuffix>
   | EmailVariableInput<EmailVariableKey.Member>
   | EmailVariableInput<EmailVariableKey.MemberEmail>
   | EmailVariableInput<EmailVariableKey.MemberPhoneNumber>
@@ -467,8 +517,38 @@ export const createEmailVariable = {
     value,
   }),
 
-  speaker: (value: Speaker): EmailVariableInput<EmailVariableKey.Speaker> => ({
+  speakerArticle: (
+    value: string,
+  ): EmailVariableInput<EmailVariableKey.SpeakerArticle> => ({
+    key: EmailVariableKey.SpeakerArticle,
+    value,
+  }),
+
+  speakerSuffix: (
+    value: string,
+  ): EmailVariableInput<EmailVariableKey.SpeakerSuffix> => ({
+    key: EmailVariableKey.SpeakerSuffix,
+    value,
+  }),
+
+  speaker: (
+    value: SpeakerWithContactAndParticipation,
+  ): EmailVariableInput<EmailVariableKey.Speaker> => ({
     key: EmailVariableKey.Speaker,
+    value,
+  }),
+
+  memberArticle: (
+    value: string,
+  ): EmailVariableInput<EmailVariableKey.MemberArticle> => ({
+    key: EmailVariableKey.MemberArticle,
+    value,
+  }),
+
+  memberSuffix: (
+    value: string,
+  ): EmailVariableInput<EmailVariableKey.MemberSuffix> => ({
+    key: EmailVariableKey.MemberSuffix,
     value,
   }),
 
