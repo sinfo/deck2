@@ -210,18 +210,6 @@
                   <span>{{ getKindLabel(thread.kind) }}</span>
                 </div>
 
-                <div class="flex items-center gap-1">
-                  <div
-                    :class="[
-                      'w-2 h-2 rounded-full',
-                      getStatusColor(thread.status),
-                    ]"
-                  ></div>
-                </div>
-
-                <span>{{ formatDate(thread.posted) }}</span>
-              </div>
-
               <!-- Edit mode -->
               <div
                 v-if="editingThreadId === thread.id"
@@ -413,15 +401,6 @@ import { ref, computed, watch, nextTick } from "vue";
 import { useQuery, useQueryCache } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import {
-  updateCompanyGmailThreadIds,
-  syncCompanyGmailMessages,
-  type GmailMessageData,
-} from "@/api/companies";
-import {
-  updateSpeakerGmailThreadIds,
-  syncSpeakerGmailMessages,
-} from "@/api/speakers";
 import { ThreadKind, ThreadStatus } from "@/dto/threads";
 import type {
   ParticipationCommunications,
@@ -1046,6 +1025,19 @@ const getKindColor = (kind: ThreadKind): string => {
   }
 };
 
+const getStatusLabel = (status: ThreadStatus): string => {
+  switch (status) {
+    case ThreadStatus.ThreadStatusApproved:
+      return "Approved";
+    case ThreadStatus.ThreadStatusReviewed:
+      return "Reviewed";
+    case ThreadStatus.ThreadStatusPending:
+      return "Pending";
+    default:
+      return "Unknown";
+  }
+};
+
 const getStatusColor = (status: ThreadStatus): string => {
   switch (status) {
     case ThreadStatus.ThreadStatusApproved:
@@ -1057,7 +1049,7 @@ const getStatusColor = (status: ThreadStatus): string => {
     default:
       return "bg-gray-400";
   }
-};
+};*/
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);

@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { getSpeakerCommunications } from "@/api/speakers";
-import type { SpeakerWithParticipation } from "@/dto/speakers";
+import type { SpeakerWithContactObject } from "@/dto/speakers";
 import { useEventStore } from "@/stores/event";
 import { usePostSpeakerThreadMutation } from "@/mutations/speakers";
 import Communications from "../Communications.vue";
@@ -22,7 +22,7 @@ import { computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps<{
-  speaker: SpeakerWithParticipation;
+  speaker: SpeakerWithContactObject;
 }>();
 
 const eventStore = useEventStore();
@@ -41,9 +41,18 @@ const templates = computed(() =>
 
 const createSpeakerTemplateVariables = () => {
   const endDate = new Date(eventStore.selectedEvent?.end || 0);
+  const memberGender = authStore.member!.contactObject.gender;
+  const speakerGender = props.speaker.contactObject.gender;
+
+  // Use contactObject which contains the full Contact (including gender)
+  // Fallback to empty string when gender is unavailable to avoid runtime errors
 
   return [
+    createEmailVariable.memberArticle(memberGender),
+    createEmailVariable.memberSuffix(memberGender),
     createEmailVariable.member(authStore.member!),
+    createEmailVariable.speakerArticle(speakerGender),
+    createEmailVariable.speakerSuffix(speakerGender),
     createEmailVariable.speaker(props.speaker),
     createEmailVariable.edition(eventStore.selectedEvent?.id || 0),
     createEmailVariable.editionOrdinal(eventStore.selectedEvent?.id || 0),

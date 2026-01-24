@@ -4,7 +4,10 @@ import { useAuthStore } from "@/stores/auth";
 import { useEventStore } from "@/stores/event";
 import { getCompanyRepresentatives } from "@/api/companies";
 import type { CompanyWithParticipation } from "@/dto/companies";
-import type { Speaker, SpeakerWithParticipation } from "@/dto/speakers";
+import type {
+  Speaker,
+  SpeakerWithContactAndParticipation,
+} from "@/dto/speakers";
 import type { ParticipationStatus } from "@/dto/index";
 import {
   EmailTemplateCategory,
@@ -24,10 +27,10 @@ import { Gender, Language } from "@/dto/contacts";
 // Generic types for bulk emails
 export type BulkEmailEntity =
   | CompanyWithParticipation
-  | SpeakerWithParticipation;
+  | SpeakerWithContactAndParticipation;
 function isSpeaker(
   entity: BulkEmailEntity,
-): entity is SpeakerWithParticipation {
+): entity is SpeakerWithContactAndParticipation {
   return (entity as Speaker).companyName !== undefined;
 }
 
@@ -176,9 +179,9 @@ const companyEmailFetcher: EmailFetcher<CompanyWithParticipation> = {
 };
 
 // Speaker email fetcher
-const speakerEmailFetcher: EmailFetcher<SpeakerWithParticipation> = {
+const speakerEmailFetcher: EmailFetcher<SpeakerWithContactAndParticipation> = {
   getEmail: async (
-    speaker: SpeakerWithParticipation,
+    speaker: SpeakerWithContactAndParticipation,
   ): Promise<EmailWithDetails | null> => {
     try {
       const response = await getSpeakerById(speaker.id);
@@ -201,7 +204,8 @@ const speakerEmailFetcher: EmailFetcher<SpeakerWithParticipation> = {
       );
     }
   },
-  getEntityName: (speaker: SpeakerWithParticipation): string => speaker.name,
+  getEntityName: (speaker: SpeakerWithContactAndParticipation): string =>
+    speaker.name,
 };
 
 export const useBulkEmails = <T extends BulkEmailEntity>(
