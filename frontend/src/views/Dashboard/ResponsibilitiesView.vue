@@ -150,7 +150,7 @@ import BulkEmailDialogTrigger from "@/components/BulkEmailDialogTrigger.vue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CompanyWithParticipation } from "@/dto/companies";
-import type { SpeakerWithParticipation } from "@/dto/speakers";
+import type { SpeakerWithContactAndParticipation } from "@/dto/speakers";
 import { useSortByParticipationStatus } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { useEventStore } from "@/stores/event";
@@ -245,7 +245,7 @@ const currentSpeakersParticipation = computed(() =>
             (participation) =>
               participation.event === eventStore.selectedEvent?.id,
           ),
-        }) as SpeakerWithParticipation,
+        }) as SpeakerWithContactAndParticipation,
     )
     .filter(
       (speaker) =>

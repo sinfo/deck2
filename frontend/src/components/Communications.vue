@@ -154,7 +154,8 @@
                   <span>{{ getKindLabel(thread.kind) }}</span>
                 </div>
 
-                <div class="flex items-center gap-1">
+                <!-- Pending Status -->
+                <!--<div class="flex items-center gap-1">
                   <div
                     :class="[
                       'w-2 h-2 rounded-full',
@@ -162,7 +163,7 @@
                     ]"
                   ></div>
                   <span>{{ getStatusLabel(thread.status) }}</span>
-                </div>
+                </div>-->
 
                 <span>{{ formatDate(thread.posted) }}</span>
               </div>
@@ -350,7 +351,7 @@ import { ref, computed, watch, nextTick } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import { ThreadKind, ThreadStatus } from "@/dto/threads";
+import { ThreadKind } from "@/dto/threads";
 import type {
   ParticipationCommunications,
   ThreadWithEntry,
@@ -704,7 +705,7 @@ const getKindColor = (kind: ThreadKind): string => {
   }
 };
 
-const getStatusLabel = (status: ThreadStatus): string => {
+/*const getStatusLabel = (status: ThreadStatus): string => {
   switch (status) {
     case ThreadStatus.ThreadStatusApproved:
       return "Approved";
@@ -728,7 +729,7 @@ const getStatusColor = (status: ThreadStatus): string => {
     default:
       return "bg-gray-400";
   }
-};
+};*/
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);

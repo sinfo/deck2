@@ -16,7 +16,7 @@
 
       <!-- Gender Field -->
       <div class="space-y-2">
-        <Label class="text-sm font-medium">Gender</Label>
+        <Label class="text-sm font-medium">Gender *</Label>
         <ToggleGroup
           v-model="formData.contact.gender"
           type="single"
@@ -38,7 +38,7 @@
 
       <!-- Language Field -->
       <div class="space-y-2">
-        <Label class="text-sm font-medium">Language</Label>
+        <Label class="text-sm font-medium">Language *</Label>
         <ToggleGroup
           v-model="formData.contact.language"
           type="single"

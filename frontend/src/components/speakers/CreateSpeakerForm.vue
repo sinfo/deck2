@@ -144,7 +144,10 @@
           Back
         </Button>
         <div class="flex gap-2">
-          <Button :disabled="isLoading" @click="createSpeakerAndFinish">
+          <Button
+            :disabled="isLoading || !isStep3Valid"
+            @click="createSpeakerAndFinish"
+          >
             <span>Create Speaker</span>
           </Button>
         </div>
@@ -257,6 +260,13 @@ const isStep1Valid = computed(() => {
   );
 });
 
+const isStep3Valid = computed(() => {
+  return (
+    contactData.value.gender != undefined &&
+    contactData.value.language != undefined
+  );
+});
+
 // Step navigation
 const nextStep = () => {
   if (currentStep.value === 1 && validateStep1()) {
@@ -319,6 +329,8 @@ const createSpeakerAndFinish = async () => {
         (phone) => phone.phone && phone.phone.trim().length > 0,
       ),
       socials: contactData.value.socials || {},
+      gender: contactData.value.gender,
+      language: contactData.value.language,
     };
 
     const createData: CreateSpeakerData = {
