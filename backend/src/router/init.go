@@ -223,6 +223,7 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("", authCoordinator(updateEvent)).Methods("PUT")
 	eventRouter.HandleFunc("/{id:[0-9]+}", authMember(getEvent)).Methods("GET")
 	eventRouter.HandleFunc("/{id:[0-9]+}", authAdmin(deleteEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/{id:[0-9]+}/gmail-threads", authMember(getLinkedGmailThreads)).Methods("GET")
 	eventRouter.HandleFunc("/themes", authCoordinator(updateEventThemes)).Methods("PUT")
 	eventRouter.HandleFunc("/packages", authCoordinator(addPackageToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/packages/{id}", authCoordinator(removePackageFromEvent)).Methods("DELETE")
