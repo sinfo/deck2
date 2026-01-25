@@ -879,6 +879,7 @@ func getSpeakerThreads(w http.ResponseWriter, r *http.Request) {
 		participationComms = append(participationComms, &ParticipationCommunications{
 			Event:          participation.Event,
 			Communications: comms,
+			GmailThreadIds: participation.GmailThreadIds,
 		})
 	}
 
@@ -1098,6 +1099,41 @@ func removeSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	speaker, err := mongodb.Speakers.RemoveSpeakerParticipation(id, event.ID)
 	if err != nil {
 		http.Error(w, "Could not remove participation: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(speaker)
+}
+
+func updateSpeakerGmailThreadIds(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	speakerID, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid speaker id", http.StatusBadRequest)
+		return
+	}
+
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	if !ok {
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		return
+	}
+
+	// Verify speaker exists
+	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+		http.Error(w, "Speaker not found: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var data = &updateGmailThreadIdsData{}
+	if err := data.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	speaker, err := mongodb.Speakers.UpdateSpeakerGmailThreadIds(speakerID, data.GmailThreadIds)
+	if err != nil {
+		http.Error(w, "Could not update gmail thread IDs: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 

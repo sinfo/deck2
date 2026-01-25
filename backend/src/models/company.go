@@ -39,6 +39,10 @@ type CompanyParticipation struct {
 	// Some random notes about this participation.
 	Notes string `json:"notes" bson:"notes"`
 
+	// GmailThreadIds is an array of Gmail thread IDs linked to this participation.
+	// These are used to sync communications with Gmail.
+	GmailThreadIds []string `json:"gmailThreadIds,omitempty" bson:"gmailThreadIds,omitempty"`
+
   // Stand details
   StandDetails StandDetails `json:"standDetails,omitempty" bson:"standDetails,omitempty"`
 

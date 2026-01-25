@@ -824,6 +824,35 @@ func (c *CompaniesType) DeleteCompanyThread(id, threadID primitive.ObjectID) (*m
 	return &updatedCompany, nil
 }
 
+// UpdateCompanyGmailThreadIds updates the gmail thread IDs for a company's current participation
+func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID, gmailThreadIds []string) (*models.Company, error) {
+	ctx := context.Background()
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.gmailThreadIds": gmailThreadIds,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating company gmail thread IDs:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
 // UpdateCompanyParticipationStatus updates a company's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
