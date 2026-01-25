@@ -775,8 +775,14 @@ const syncGmailMessages = async () => {
         }
 
         // Clean up the body further - remove excessive quoted content
+        // First, normalize multi-line quote headers (e.g., "On Fri, 16 Jan 2026 at 09:40, Name <\nemail@example.com> wrote:")
+        const normalizedBody = body.replace(
+          /^(On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2},\s+[^<]+)<\s*\n\s*([^>]+@[^>]+)>\s*wrote:/gim,
+          "$1<$2> wrote:",
+        );
+
         // Remove common email quote markers
-        const lines = body.split("\n");
+        const lines = normalizedBody.split("\n");
         const cleanedLines: string[] = [];
         let foundQuoteStart = false;
 
@@ -787,13 +793,18 @@ const syncGmailMessages = async () => {
             line.match(/^On\s+\w{3},?\s+\w{3}\s+\d{1,2},?\s+\d{4}/i) || // "On Wed, Nov 26, 2025" or "On Wed Nov 26 2025"
             line.match(/^On\s+\w{3},?\s+\d{1,2}\s+\w{3}/i) || // "On Wed, 17 Dec" (start of quote attribution)
             line.match(/^On\s+\d{1,2}\s+\w{3}\s+\d{4}/i) || // "On 17 Dec 2025"
+            line.match(
+              /^On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2}/i,
+            ) || // "On Fri, 16 Jan 2026 at 09:40"
             line.match(/wrote:\s*$/) || // Any line ending with "wrote:"
             line.match(/^>/) || // Quoted line starting with >
             line.match(/^-{3,}\s*Original Message\s*-{3,}$/i) ||
             line.match(/^_{3,}$/) ||
             line.match(/^From:.*Sent:.*To:/i) ||
             line.match(/^-{2,}\s*Forwarded message\s*-{2,}$/i) ||
-            line.match(/<[^>]+@[^>]+>\s*wrote:?\s*$/i) // "<email@example.com> wrote:"
+            line.match(/<[^>]+@[^>]+>\s*wrote:?\s*$/i) || // "<email@example.com> wrote:"
+            line.match(/^[^>]*<\s*$/) || // Line ending with just "<" (email split across lines)
+            line.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+>\s*wrote:?\s*$/i) // "email@example.com> wrote:" (continuation of split line)
           ) {
             foundQuoteStart = true;
           }
