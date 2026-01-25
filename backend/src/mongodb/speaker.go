@@ -862,6 +862,35 @@ func (s *SpeakersType) GetSpeakerParticipationStatusValidSteps(speakerID primiti
 	return nil, errors.New("No participation found")
 }
 
+// UpdateSpeakerGmailThreadIds updates the gmail thread IDs for a speaker's current participation
+func (s *SpeakersType) UpdateSpeakerGmailThreadIds(speakerID primitive.ObjectID, gmailThreadIds []string) (*models.Speaker, error) {
+	ctx := context.Background()
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.gmailThreadIds": gmailThreadIds,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error updating speaker gmail thread IDs:", err)
+		return nil, err
+	}
+
+	return &updatedSpeaker, nil
+}
+
 // UpdateSpeakerParticipationStatus updates a speaker's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
