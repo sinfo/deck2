@@ -7,10 +7,12 @@ import type { CompanyWithParticipation } from "@/dto/companies";
 import type { Speaker, SpeakerWithParticipation } from "@/dto/speakers";
 import {
   EmailTemplateCategory,
+  EmailVariableKey,
   getVariablesFromType,
   loadSignature,
   loadTemplateAndReplace,
   templateCategoryTemplates,
+  type AnyEmailVariableInput,
   type CompanyVariablesInput,
   type SpeakerVariablesInput,
   type VariablesInput,
@@ -97,6 +99,7 @@ export const useDirectEmail = (entity: DirectEmailEntity) => {
   const sendEmail = async (
     templateCategory: EmailTemplateCategory,
     selectedEmails: EmailWithDetails[],
+    customVariables?: Record<EmailVariableKey, boolean>,
   ): Promise<SendEmailResult> => {
     if (selectedEmails.length === 0) {
       throw new Error("No email selected.");
@@ -121,6 +124,7 @@ export const useDirectEmail = (entity: DirectEmailEntity) => {
         templateCategory,
         entity,
         selectedEmails[0], // Assuming template variables are based on the first selected contact
+        customVariables,
       );
 
       const draftOptions: DraftEmailOptions = {
@@ -147,17 +151,35 @@ export const useDirectEmail = (entity: DirectEmailEntity) => {
     templateCategory: EmailTemplateCategory,
     entity: DirectEmailEntity,
     email: EmailWithDetails,
+    customVariables?: Record<EmailVariableKey, boolean>,
   ): Promise<{ subject: string; body: string }> => {
-    const template =
-      templateCategoryTemplates[templateCategory][
-        email.language || Language.ENGLISH
-      ];
+    if (!email.language) {
+      throw new Error(
+        `Contact "${email.name}" has no language set. Please set a language for this contact before sending emails.`,
+      );
+    }
+
+    const categoryTemplates = templateCategoryTemplates[templateCategory];
+
+    if (!categoryTemplates) {
+      throw new Error(`No templates found for category: ${templateCategory}`);
+    }
+
+    const template = categoryTemplates[email.language];
+
+    if (!template) {
+      const availableLanguages = Object.keys(categoryTemplates).join(", ");
+      throw new Error(
+        `No template available for language "${email.language}". Available languages: ${availableLanguages}`,
+      );
+    }
+
     const varsInput: VariablesInput = {
       event: eventStore.selectedEvent!,
       member: authStore.member!,
     };
 
-    const variables = isSpeaker(entity)
+    let variables = isSpeaker(entity)
       ? getVariablesFromType<SpeakerVariablesInput>({
           ...varsInput,
           speaker: entity,
@@ -165,7 +187,19 @@ export const useDirectEmail = (entity: DirectEmailEntity) => {
       : getVariablesFromType<CompanyVariablesInput>({
           ...varsInput,
           company: entity,
+          contactName: email.name, // Pass the contact/representative name
         });
+
+    // Add custom boolean variables from form fields
+    if (customVariables) {
+      const customVars = Object.entries(customVariables).map(
+        ([key, value]) => ({
+          key: key as EmailVariableKey,
+          value,
+        }),
+      ) as AnyEmailVariableInput[];
+      variables = [...variables, ...customVars];
+    }
 
     return await loadTemplateAndReplace(template, variables);
   };
