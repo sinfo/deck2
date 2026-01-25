@@ -2,6 +2,7 @@ export type ObjectID = string;
 
 export interface Participation {
   event: number;
+  gmailThreadIds?: string[];
 }
 
 export interface ImplementsParticipationStatus {
