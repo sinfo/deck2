@@ -682,7 +682,7 @@ const getThreadParticipants = (thread: GmailThread): string => {
 };
 
 const getThreadLabels = (thread: GmailThread): string[] => {
-  const displayLabels = ["IMPORTANT", "STARRED", "UNREAD"];
+  const displayLabels = ["STARRED", "UNREAD"];
   const labels = new Set<string>();
   for (const msg of thread.messages) {
     if (msg.labelIds) {
