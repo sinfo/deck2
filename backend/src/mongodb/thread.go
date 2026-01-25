@@ -23,9 +23,11 @@ type ThreadsType struct {
 
 // CreateThreadData holds data needed to create a thread
 type CreateThreadData struct {
-	Entry   primitive.ObjectID
-	Meeting *primitive.ObjectID
-	Kind    models.ThreadKind
+	Entry          primitive.ObjectID
+	Meeting        *primitive.ObjectID
+	Kind           models.ThreadKind
+	GmailMessageId string
+	Posted         *time.Time
 }
 
 type UpdateThreadData struct {
@@ -55,16 +57,25 @@ func (utd *UpdateThreadData) ParseBody(body io.Reader) error {
 func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error) {
 	ctx := context.Background()
 
+	postedTime := time.Now().UTC()
+	if data.Posted != nil {
+		postedTime = *data.Posted
+	}
+
 	query := bson.M{
 		"entry":    data.Entry,
 		"comments": []primitive.ObjectID{},
 		"status":   models.ThreadStatusPending,
 		"kind":     data.Kind,
-		"posted":   time.Now().UTC(),
+		"posted":   postedTime,
 	}
 
 	if data.Meeting != nil {
 		query["meeting"] = *data.Meeting
+	}
+
+	if data.GmailMessageId != "" {
+		query["gmailMessageId"] = data.GmailMessageId
 	}
 
 	insertResult, err := t.Collection.InsertOne(ctx, query)
@@ -94,6 +105,48 @@ func (t *ThreadsType) GetThread(threadID primitive.ObjectID) (*models.Thread, er
 	}
 
 	return &thread, nil
+}
+
+// GetThreadByGmailMessageId finds a thread by its Gmail message ID.
+func (t *ThreadsType) GetThreadByGmailMessageId(gmailMessageId string) (*models.Thread, error) {
+	ctx := context.Background()
+	var thread models.Thread
+
+	err := t.Collection.FindOne(ctx, bson.M{"gmailMessageId": gmailMessageId}).Decode(&thread)
+	if err != nil {
+		return nil, err
+	}
+
+	return &thread, nil
+}
+
+// GetThreadsByGmailMessageIds finds threads by multiple Gmail message IDs.
+// Returns a map of gmailMessageId -> thread for quick lookup.
+func (t *ThreadsType) GetThreadsByGmailMessageIds(gmailMessageIds []string) (map[string]*models.Thread, error) {
+	ctx := context.Background()
+	result := make(map[string]*models.Thread)
+
+	if len(gmailMessageIds) == 0 {
+		return result, nil
+	}
+
+	cursor, err := t.Collection.Find(ctx, bson.M{
+		"gmailMessageId": bson.M{"$in": gmailMessageIds},
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var thread models.Thread
+		if err := cursor.Decode(&thread); err != nil {
+			continue
+		}
+		result[thread.GmailMessageId] = &thread
+	}
+
+	return result, cursor.Err()
 }
 
 // DeleteThread deletes a thread by its ID and cleans up related data.

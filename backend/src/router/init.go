@@ -176,6 +176,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/threads", authMember(getCompanyThreads)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/gmail-threads", authMember(updateCompanyGmailThreadIds)).Methods("PUT")
+	companyRouter.HandleFunc("/{id}/participation/gmail-sync", authMember(syncCompanyGmailMessages)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employers", authMember(getCompanyEmployers)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/employers", authMember(updateEmployersOrder)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
@@ -207,6 +208,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/threads", authMember(getSpeakerThreads)).Methods("GET")
 	speakerRouter.HandleFunc("/{id}/thread", authMember(addSpeakerThread)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation/gmail-threads", authMember(updateSpeakerGmailThreadIds)).Methods("PUT")
+	speakerRouter.HandleFunc("/{id}/participation/gmail-sync", authMember(syncSpeakerGmailMessages)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation", authCoordinator(removeSpeakerParticipation)).Methods("DELETE")
 
 	// flightInfo handlers
