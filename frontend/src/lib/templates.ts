@@ -116,7 +116,46 @@ export interface EmailVariableValueMap {
   [EmailVariableKey.Paragraph]: string;
 }
 
-// 6.2 Update the variables of each entity (company/speaker)
+// 6.2 Define form fields for templates that need custom user input
+export interface TemplateFormField {
+  key: EmailVariableKey;
+  label: string;
+  type: "checkbox";
+  defaultValue: boolean;
+}
+
+export const templateCategoryFormFields: Partial<
+  Record<EmailTemplateCategory, TemplateFormField[]>
+> = {
+  [EmailTemplateCategory.CONTACT_COMPANY_MISSINGINFO]: [
+    {
+      key: EmailVariableKey.NeedsContract,
+      label: "Needs to send participation contract",
+      type: "checkbox",
+      defaultValue: true,
+    },
+    {
+      key: EmailVariableKey.NeedsPayment,
+      label: "Needs to pay",
+      type: "checkbox",
+      defaultValue: true,
+    },
+    {
+      key: EmailVariableKey.NeedsSessionNames,
+      label: "Needs to send session names",
+      type: "checkbox",
+      defaultValue: true,
+    },
+    {
+      key: EmailVariableKey.NeedsSessionInfo,
+      label: "Needs to send session info (speaker name, position, abstract)",
+      type: "checkbox",
+      defaultValue: false,
+    },
+  ],
+};
+
+// 6.3 Update the variables of each entity (company/speaker)
 export interface VariablesInput {
   event: Event;
   member: MemberWithContact;

@@ -36,6 +36,42 @@
               </Select>
             </div>
 
+            <!-- Template-specific form fields -->
+            <div
+              v-if="currentFormFields.length > 0"
+              class="border rounded-md p-3 bg-gray-50"
+            >
+              <label class="text-sm font-medium mb-2 block"
+                >Template Options</label
+              >
+              <div class="space-y-2">
+                <div
+                  v-for="field in currentFormFields"
+                  :key="field.key"
+                  class="flex items-center cursor-pointer hover:bg-gray-100 p-1 rounded"
+                  @click.prevent="
+                    formFieldValues[field.key] = !formFieldValues[field.key]
+                  "
+                >
+                  <div class="pointer-events-none">
+                    <Checkbox
+                      :id="field.key"
+                      :model-value="formFieldValues[field.key]"
+                      @update:checked="
+                        (value: any) => (formFieldValues[field.key] = value)
+                      "
+                    />
+                  </div>
+                  <label
+                    :for="field.key"
+                    class="ml-2 text-sm flex-1 cursor-pointer pointer-events-none"
+                  >
+                    {{ field.label }}
+                  </label>
+                </div>
+              </div>
+            </div>
+
             <div v-if="isFetchingEmails">
               <p>Loading recipients...</p>
             </div>
@@ -147,6 +183,9 @@ import {
   speakerTemplateCategories,
   EmailTemplateCategory,
   templateCategoryHumanReadable,
+  templateCategoryFormFields,
+  type TemplateFormField,
+  EmailVariableKey,
 } from "@/lib/templates";
 
 interface Props {
@@ -169,6 +208,9 @@ const emit = defineEmits<{
 const isDialogOpen = ref(false);
 const selectedTemplate = ref<EmailTemplateCategory | null>(null);
 const selectedEmails = ref<EmailWithDetails[]>([]);
+const formFieldValues = ref<Record<EmailVariableKey, boolean>>(
+  {} as Record<EmailVariableKey, boolean>,
+);
 
 const {
   isFetchingEmails,
@@ -189,6 +231,11 @@ const availableTemplates = computed(() => {
   }));
 });
 
+const currentFormFields = computed((): TemplateFormField[] => {
+  if (!selectedTemplate.value) return [];
+  return templateCategoryFormFields[selectedTemplate.value] || [];
+});
+
 const openDialog = () => {
   isDialogOpen.value = true;
 };
@@ -198,6 +245,21 @@ watch(isDialogOpen, (isOpen) => {
     fetchAvailableEmails();
     selectedEmails.value = [];
     selectedTemplate.value = null;
+    formFieldValues.value = {} as Record<EmailVariableKey, boolean>;
+  }
+});
+
+// Reset form field values with defaults when template changes
+watch(selectedTemplate, (template) => {
+  if (template) {
+    const fields = templateCategoryFormFields[template] || [];
+    const newValues = {} as Record<EmailVariableKey, boolean>;
+    fields.forEach((field) => {
+      newValues[field.key] = field.defaultValue;
+    });
+    formFieldValues.value = newValues;
+  } else {
+    formFieldValues.value = {} as Record<EmailVariableKey, boolean>;
   }
 });
 
@@ -243,7 +305,16 @@ const handleSendEmail = async () => {
   // reset previous result
   sendResult.value = null;
 
-  const result = await sendEmail(selectedTemplate.value, selectedEmails.value);
+  // Build custom variables from form field values
+  const customVariables: Record<EmailVariableKey, boolean> = {
+    ...formFieldValues.value,
+  };
+
+  const result = await sendEmail(
+    selectedTemplate.value,
+    selectedEmails.value,
+    customVariables,
+  );
 
   sendResult.value = { success: result.success, error: result.error };
 
