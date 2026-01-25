@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SINFO {{.Edition}} - Missing Information</title>
+  </head>
+  <body>
+    <p>Hi {{.ContactName}},</p>
+
+    <p>Hope you are doing fine!</p>
+
+    <p>I'd like to remind you, as previously discussed, that we are still waiting for:
+    <ul>
+      {{if .NeedsContract}}<li>The signed participation contract</li>{{end}}
+      {{if .NeedsPayment}}<li>The payment</li>{{end}}
+      {{if .NeedsSessionNames}}<li>The sessions (Presentation and Workshop) names (in English and up to 30 characters, including whitespaces)</li>{{end}}
+    </ul>
+    </p>
+
+    <p>It is really important that you provide us with this information, so that we can organize our event in the best way possible.</p>
+
+    {{if .NeedsSessionInfo}}<p>Regarding the sessions, we kindly ask you to send us the speaker's name, their position and a session abstract, all of this as soon as possible.</p>{{end}}
+
+    <p>Soon we will send you a Sponsor's Guide with the most relevant information about the event. Additionally, we will send you a form where we'll ask you to give us some logistical information.</p>
+
+    <p>Best regards,</p>
+  </body>
+</html>

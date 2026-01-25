@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SINFO {{.Edition}} - Informações em Falta</title>
+  </head>
+  <body>
+    <p>Bom dia {{.ContactName}},</p>
+
+    <p>Espero que se encontre bem!</p>
+
+    <p>Venho reforçar que ainda aguardamos, como já anteriormente discutido:
+    <ul>
+      {{if .NeedsContract}}<li>O envio do contrato de participação assinado</li>{{end}}
+      {{if .NeedsPayment}}<li>O pagamento</li>{{end}}
+      {{if .NeedsSessionNames}}<li>O envio do nome das sessões (em inglês e até 30 caracteres, incluindo espaços)</li>{{end}}
+    </ul>
+    </p>
+
+    <p>É da mais alta importância que nos façam chegar estas informações, de modo a conseguirmos organizar o nosso evento da melhor forma possível.</p>
+
+    {{if .NeedsSessionInfo}}<p>Relativamente às sessões, pedimos também que enviem o nome do orador, o cargo do orador e a descrição da sessão com a maior brevidade possível.</p>{{end}}
+
+    <p>Em breve será disponibilizado um Guia de Sponsors com as informações mais importantes do evento e da sua preparação. Adicionalmente, iremos enviar-vos um formulário para que possam preencher alguns detalhes logísticos necessários da nossa parte.</p>
+
+    <p>Cumprimentos,</p>
+  </body>
+</html>
