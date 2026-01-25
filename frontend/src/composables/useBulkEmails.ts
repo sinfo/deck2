@@ -207,8 +207,9 @@ const speakerEmailFetcher: EmailFetcher<SpeakerWithParticipation> = {
 export const useBulkEmails = <T extends BulkEmailEntity>(
   emailFetcher: EmailFetcher<T>,
 ) => {
-  const { createBulkDraftEmails, isLoading, error } = useGmailDrafts();
-  const { signInWithGoogle, isSigningIn } = useGoogleAuth();
+  const { createBulkDraftEmails, isLoading, error, needsReauth } =
+    useGmailDrafts();
+  const { signInWithGoogle, requestGoogleToken, isSigningIn } = useGoogleAuth();
   const authStore = useAuthStore();
   const eventStore = useEventStore();
 
@@ -221,7 +222,7 @@ export const useBulkEmails = <T extends BulkEmailEntity>(
   const sentCount = ref(0);
   const totalToSend = ref(0);
 
-  const isGoogleConnected = computed(() => !!authStore.googleAccessToken);
+  const isGoogleConnected = computed(() => authStore.isGoogleAuthenticated);
 
   // Generic function to process and verify bulk emails before sending
   const processBulkEmails = async (
@@ -367,12 +368,33 @@ export const useBulkEmails = <T extends BulkEmailEntity>(
       }
 
       // Create bulk draft emails with progress tracking
-      const bulkResult = await createBulkDraftEmails(
-        draftEmails,
-        (completed) => {
-          sentCount.value = completed;
-        },
-      );
+      let bulkResult = await createBulkDraftEmails(draftEmails, (completed) => {
+        sentCount.value = completed;
+      });
+
+      // Handle re-authentication if token expired during bulk send
+      if (needsReauth.value) {
+        const reauthSuccess = await requestGoogleToken();
+        if (!reauthSuccess) {
+          throw new Error(
+            "Google session expired. Please re-authenticate and try again.",
+          );
+        }
+        // Retry the remaining emails after re-authentication
+        const remainingEmails = draftEmails.slice(sentCount.value);
+        if (remainingEmails.length > 0) {
+          const retryResult = await createBulkDraftEmails(
+            remainingEmails,
+            (completed) => {
+              sentCount.value = sentCount.value + completed;
+            },
+          );
+          bulkResult = {
+            success: [...bulkResult.success, ...retryResult.success],
+            failed: [...bulkResult.failed, ...retryResult.failed],
+          };
+        }
+      }
 
       const finalResult: BulkEmailResult = {
         success: bulkResult.success as { entityInfo: EntityInfo }[],
