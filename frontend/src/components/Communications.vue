@@ -652,7 +652,7 @@ const handleGmailThreadsSave = async (threadIds: string[]) => {
 // Gmail sync functionality
 const authStore = useAuthStore();
 const gmailComposable = useGmailMessages();
-const { requestGoogleToken } = useGoogleAuth();
+const { requestGoogleToken, error: googleAuthError } = useGoogleAuth();
 const isSyncing = ref(false);
 
 /**
@@ -706,7 +706,10 @@ const syncGmailMessages = async () => {
   if (!authStore.isGoogleAuthenticated) {
     const success = await requestGoogleToken();
     if (!success) {
-      console.error("Failed to authenticate with Google");
+      console.error(
+        "Failed to authenticate with Google: ",
+        googleAuthError.value,
+      );
       return;
     }
   }
