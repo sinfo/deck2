@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/spaces"
@@ -1315,4 +1316,141 @@ func updateCompanyGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(company)
+}
+
+// GmailMessageData represents a Gmail message to be synced
+type GmailMessageData struct {
+	MessageId  string `json:"messageId"`
+	ThreadId   string `json:"threadId"`
+	Subject    string `json:"subject"`
+	From       string `json:"from"`
+	To         string `json:"to"`
+	Date       string `json:"date"`
+	Body       string `json:"body"`
+	IsOutgoing bool   `json:"isOutgoing"`
+}
+
+type syncGmailMessagesData struct {
+	Messages []GmailMessageData `json:"messages"`
+}
+
+func (sgmd *syncGmailMessagesData) ParseBody(body io.Reader) error {
+	if err := json.NewDecoder(body).Decode(sgmd); err != nil {
+		return err
+	}
+	return nil
+}
+
+func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid company id", http.StatusBadRequest)
+		return
+	}
+
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	if !ok {
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		return
+	}
+
+	// Verify company exists
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Company not found: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var data = &syncGmailMessagesData{}
+	if err := data.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get existing synced messages to avoid duplicates
+	messageIds := make([]string, len(data.Messages))
+	for i, msg := range data.Messages {
+		messageIds[i] = msg.MessageId
+	}
+	existingThreads, err := mongodb.Threads.GetThreadsByGmailMessageIds(messageIds)
+	if err != nil {
+		log.Println("Error checking existing gmail threads:", err)
+	}
+
+	var syncedCount int
+	for _, msg := range data.Messages {
+		// Skip if already synced
+		if _, exists := existingThreads[msg.MessageId]; exists {
+			continue
+		}
+
+		// Parse the date
+		var postedTime *time.Time
+		if msg.Date != "" {
+			if parsed, err := time.Parse(time.RFC3339, msg.Date); err == nil {
+				postedTime = &parsed
+			}
+		}
+
+		// Determine thread kind based on direction
+		kind := models.ThreadKindFrom
+		if msg.IsOutgoing {
+			kind = models.ThreadKindTo
+		}
+
+		// Format the message text - just subject as header and body content
+		var formattedText string
+		if msg.Subject != "" && msg.Subject != "(No subject)" {
+			formattedText = fmt.Sprintf("📧 %s\n\n%s", msg.Subject, msg.Body)
+		} else {
+			formattedText = msg.Body
+		}
+
+		// Create post
+		cpd := mongodb.CreatePostData{
+			Member: credentials.ID,
+			Text:   formattedText,
+		}
+
+		newPost, err := mongodb.Posts.CreatePost(cpd)
+		if err != nil {
+			log.Printf("Error creating post for gmail message %s: %s", msg.MessageId, err)
+			continue
+		}
+
+		// Create thread
+		ctd := mongodb.CreateThreadData{
+			Entry:          newPost.ID,
+			Kind:           kind,
+			GmailMessageId: msg.MessageId,
+			Posted:         postedTime,
+		}
+
+		newThread, err := mongodb.Threads.CreateThread(ctd)
+		if err != nil {
+			log.Printf("Error creating thread for gmail message %s: %s", msg.MessageId, err)
+			// Clean up post
+			mongodb.Posts.DeletePost(newPost.ID)
+			continue
+		}
+
+		// Attach thread to company participation
+		_, err = mongodb.Companies.AddThread(companyID, newThread.ID)
+		if err != nil {
+			log.Printf("Error attaching thread to company for gmail message %s: %s", msg.MessageId, err)
+			// Clean up
+			mongodb.Posts.DeletePost(newPost.ID)
+			mongodb.Threads.DeleteThread(newThread.ID)
+			continue
+		}
+
+		syncedCount++
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"synced": syncedCount,
+		"total":  len(data.Messages),
+	})
 }
