@@ -44,8 +44,8 @@ export interface SendEmailResult {
 }
 
 export const useDirectEmail = (entity: DirectEmailEntity) => {
-  const { createDraftEmail, isLoading } = useGmailDrafts();
-  const { signInWithGoogle, isSigningIn } = useGoogleAuth();
+  const { createDraftEmail, isLoading, needsReauth } = useGmailDrafts();
+  const { signInWithGoogle, requestGoogleToken, isSigningIn } = useGoogleAuth();
   const authStore = useAuthStore();
   const eventStore = useEventStore();
 
@@ -54,7 +54,7 @@ export const useDirectEmail = (entity: DirectEmailEntity) => {
   const isSending = ref(false);
   const result = ref<SendEmailResult | null>(null);
 
-  const isGoogleConnected = computed(() => !!authStore.googleAccessToken);
+  const isGoogleConnected = computed(() => authStore.isGoogleAuthenticated);
 
   const fetchAvailableEmails = async () => {
     isFetchingEmails.value = true;
@@ -129,7 +129,21 @@ export const useDirectEmail = (entity: DirectEmailEntity) => {
         body: `${body}<br/>${signature}`,
       };
 
-      await createDraftEmail(draftOptions);
+      let draftResult = await createDraftEmail(draftOptions);
+
+      // Handle re-authentication if token expired during request
+      if (needsReauth.value) {
+        const reauthSuccess = await requestGoogleToken();
+        if (!reauthSuccess) {
+          throw new Error("Google re-authentication failed.");
+        }
+        // Retry after re-authentication
+        draftResult = await createDraftEmail(draftOptions);
+      }
+
+      if (!draftResult) {
+        throw new Error("Failed to create email draft.");
+      }
 
       const sendResult = { success: true };
       result.value = sendResult;
