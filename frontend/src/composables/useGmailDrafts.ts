@@ -31,17 +31,44 @@ export const useGmailDrafts = () => {
   const authStore = useAuthStore();
   const isLoading = ref(false);
   const error = ref<string | null>(null);
+  const needsReauth = ref(false);
+
+  /**
+   * Check if Google token is valid before making requests
+   */
+  const checkAuth = (): boolean => {
+    if (!authStore.isGoogleAuthenticated) {
+      error.value = "Google authentication required";
+      needsReauth.value = true;
+      return false;
+    }
+    return true;
+  };
+
+  /**
+   * Handle API response and check for auth errors
+   */
+  const handleAuthError = (response: Response): boolean => {
+    if (response.status === 401) {
+      // Token is invalid or expired
+      authStore.clearGoogleToken();
+      error.value = "Google session expired. Please re-authenticate.";
+      needsReauth.value = true;
+      return true;
+    }
+    return false;
+  };
 
   const createDraftEmail = async (
     options: DraftEmailOptions,
   ): Promise<GmailDraftResponse | null> => {
-    if (!authStore.googleAccessToken) {
-      error.value = "Google access token not available";
+    if (!checkAuth()) {
       return null;
     }
 
     isLoading.value = true;
     error.value = null;
+    needsReauth.value = false;
 
     try {
       // Create the email message in RFC 2822 format
@@ -79,6 +106,10 @@ export const useGmailDrafts = () => {
           body: JSON.stringify(draftData),
         },
       );
+
+      if (handleAuthError(response)) {
+        return null;
+      }
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -132,6 +163,11 @@ export const useGmailDrafts = () => {
           email,
           error: error.value || "Unknown error",
         });
+
+        // If re-auth is needed, stop processing and return early
+        if (needsReauth.value) {
+          break;
+        }
       }
 
       // Call progress callback if provided
@@ -149,6 +185,7 @@ export const useGmailDrafts = () => {
   return {
     isLoading,
     error,
+    needsReauth,
     createDraftEmail,
     createBulkDraftEmails,
   };
