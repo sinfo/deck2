@@ -53,3 +53,35 @@ export const uploadSpeakerInternalImage = (id: string, data: FormData) =>
 
 export const deleteSpeaker = (id: string) =>
   instance.delete<Speaker>(`/speakers/${id}`);
+
+export const updateSpeakerGmailThreadIds = (
+  id: string,
+  gmailThreadIds: string[],
+) =>
+  instance.put<Speaker>(`/speakers/${id}/participation/gmail-threads`, {
+    gmailThreadIds,
+  });
+
+export interface GmailMessageData {
+  messageId: string;
+  threadId: string;
+  subject: string;
+  from: string;
+  to: string;
+  date: string;
+  body: string;
+  isOutgoing: boolean;
+}
+
+export interface SyncGmailResponse {
+  synced: number;
+  total: number;
+}
+
+export const syncSpeakerGmailMessages = (
+  id: string,
+  messages: GmailMessageData[],
+) =>
+  instance.post<SyncGmailResponse>(`/speakers/${id}/participation/gmail-sync`, {
+    messages,
+  });

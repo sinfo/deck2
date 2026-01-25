@@ -99,6 +99,39 @@ export interface GenerateCompanyContractData {
   eventId: number;
 }
 
+export const updateCompanyGmailThreadIds = (
+  id: string,
+  gmailThreadIds: string[],
+) =>
+  instance.put<Company>(`/companies/${id}/participation/gmail-threads`, {
+    gmailThreadIds,
+  });
+
+export interface GmailMessageData {
+  messageId: string;
+  threadId: string;
+  subject: string;
+  from: string;
+  to: string;
+  date: string;
+  body: string;
+  isOutgoing: boolean;
+}
+
+export interface SyncGmailResponse {
+  synced: number;
+  total: number;
+}
+
+export const syncCompanyGmailMessages = (
+  id: string,
+  messages: GmailMessageData[],
+) =>
+  instance.post<SyncGmailResponse>(
+    `/companies/${id}/participation/gmail-sync`,
+    { messages },
+  );
+
 export const generateCompanyContract = (
   companyId: string,
   data: GenerateCompanyContractData,
