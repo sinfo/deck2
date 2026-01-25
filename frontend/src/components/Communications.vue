@@ -1061,8 +1061,9 @@ const formatDate = (dateString: string): string => {
     return date.toLocaleDateString("en-US", { weekday: "short" });
   } else {
     return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   }
 };
