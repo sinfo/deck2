@@ -220,7 +220,6 @@
                       getStatusColor(thread.status),
                     ]"
                   ></div>
-                  <span>{{ getStatusLabel(thread.status) }}</span>
                 </div>
 
                 <span>{{ formatDate(thread.posted) }}</span>
@@ -1027,19 +1026,6 @@ const getKindColor = (kind: ThreadKind): string => {
       return "bg-gray-500";
     default:
       return "bg-gray-400";
-  }
-};
-
-const getStatusLabel = (status: ThreadStatus): string => {
-  switch (status) {
-    case ThreadStatus.ThreadStatusApproved:
-      return "Approved";
-    case ThreadStatus.ThreadStatusReviewed:
-      return "Reviewed";
-    case ThreadStatus.ThreadStatusPending:
-      return "Pending";
-    default:
-      return "Unknown";
   }
 };
 
