@@ -1195,6 +1195,7 @@ func unsubscribeToCompany(w http.ResponseWriter, r *http.Request) {
 type ParticipationCommunications struct {
 	Event          int                       `json:"event"`
 	Communications []*models.ThreadWithEntry `json:"communications"`
+	GmailThreadIds []string                  `json:"gmailThreadIds,omitempty"`
 }
 
 func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
@@ -1263,8 +1264,55 @@ func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 		participationComms = append(participationComms, &ParticipationCommunications{
 			Event:          participation.Event,
 			Communications: comms,
+			GmailThreadIds: participation.GmailThreadIds,
 		})
 	}
 
 	json.NewEncoder(w).Encode(participationComms)
+}
+
+type updateGmailThreadIdsData struct {
+	GmailThreadIds []string `json:"gmailThreadIds"`
+}
+
+func (ugtd *updateGmailThreadIdsData) ParseBody(body io.Reader) error {
+	if err := json.NewDecoder(body).Decode(ugtd); err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateCompanyGmailThreadIds(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	companyID, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid company id", http.StatusBadRequest)
+		return
+	}
+
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	if !ok {
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		return
+	}
+
+	// Verify company exists
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Company not found: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	var data = &updateGmailThreadIdsData{}
+	if err := data.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	company, err := mongodb.Companies.UpdateCompanyGmailThreadIds(companyID, data.GmailThreadIds)
+	if err != nil {
+		http.Error(w, "Could not update gmail thread IDs: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(company)
 }

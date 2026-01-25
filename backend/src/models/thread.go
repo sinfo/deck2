@@ -66,6 +66,10 @@ type Thread struct {
 	// REVIEWED => thread is posted, but some changed must be made before it's ready to be approved.
 	// PENDING => thread is posted and is waiting for the coordination's approval/review.
 	Status ThreadStatus `json:"status" bson:"status"`
+
+	// GmailMessageId is the ID of the Gmail message this thread was synced from.
+	// This is used to prevent duplicate syncs.
+	GmailMessageId string `json:"gmailMessageId,omitempty" bson:"gmailMessageId,omitempty"`
 }
 
 type ThreadWithEntry struct {

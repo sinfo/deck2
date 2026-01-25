@@ -40,6 +40,10 @@ type SpeakerParticipation struct {
 
 	// Hotel information regarding this speaker.
 	Room SpeakerParticipationRoom `json:"room" bson:"room"`
+
+	// GmailThreadIds is an array of Gmail thread IDs linked to this participation.
+	// These are used to sync communications with Gmail.
+	GmailThreadIds []string `json:"gmailThreadIds,omitempty" bson:"gmailThreadIds,omitempty"`
 }
 
 type SpeakerImages struct {
