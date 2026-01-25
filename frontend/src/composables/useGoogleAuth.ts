@@ -49,14 +49,20 @@ export const useGoogleAuth = () => {
     try {
       const jwt = await generateJwt({ access_token: response.access_token });
       authStore.setToken(jwt.data.deck_token);
-      // Store Google token with expiration (expires_in is in seconds, default 3600)
+    } catch (err) {
+      console.error("Failed to generate JWT:", err);
+      throw new Error("Failed to complete authentication");
+    }
+
+    // Store Google token with expiration (expires_in is in seconds, default 3600)
+    try {
       const expiresIn = response.expires_in
         ? Number(response.expires_in)
         : 3600;
       authStore.setGoogleToken(response.access_token, expiresIn);
     } catch (err) {
-      console.error("Failed to generate JWT:", err);
-      throw new Error("Failed to complete authentication");
+      console.error("Failed to store Google token:", err);
+      throw new Error("Failed to store Google authentication token");
     }
   };
 
