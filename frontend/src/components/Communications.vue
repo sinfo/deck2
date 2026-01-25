@@ -48,6 +48,28 @@
       </div>
     </CardHeader>
 
+    <!-- Warnings for template variables using first values -->
+    <div
+      v-if="templateWarnings.length > 0"
+      class="mx-4 mb-2 p-3 bg-amber-50 border border-amber-200 rounded-lg"
+    >
+      <div class="flex items-start gap-2">
+        <span class="text-amber-600 text-lg">⚠️</span>
+        <div class="flex-1">
+          <p class="text-sm font-medium text-amber-800">
+            Template uses contact info from the first entry in the list
+          </p>
+          <ul class="mt-1 text-xs text-amber-700 space-y-1">
+            <li v-for="warning in templateWarnings" :key="warning.variableName">
+              <strong>{{ warning.variableName }}:</strong>
+              {{ warning.value }}
+              <span class="text-amber-600">({{ warning.description }})</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <CardContent class="flex-1 flex flex-col overflow-hidden p-0">
       <div v-if="isLoading" class="flex-1 flex items-center justify-center">
         <div class="text-muted-foreground">Loading communications...</div>
@@ -377,7 +399,9 @@ import {
   EmailTemplate,
   openTemplateInNewTab,
   templateHumanReadableNames,
+  getFirstValueWarnings,
   type AnyEmailVariableInput,
+  type FirstValueWarning,
 } from "@/lib/templates";
 import type { Event } from "@/dto/events";
 import Textarea from "./ui/textarea/Textarea.vue";
@@ -421,6 +445,7 @@ const selectedEventId = ref<number | null>(
   eventStore.selectedEvent?.id ?? null,
 );
 const selectedTemplate = ref<TemplateWithVariables>();
+const templateWarnings = ref<FirstValueWarning[]>([]);
 
 const editingThreadId = ref<string | null>(null);
 const editingPostId = ref<string | null>(null);
@@ -801,9 +826,16 @@ const getEventName = (eventId: number): string => {
 watch(
   () => selectedTemplate.value,
   (newTemplate) => {
-    if (!newTemplate) return;
+    if (!newTemplate) {
+      templateWarnings.value = [];
+      return;
+    }
 
     const { template, variables } = newTemplate;
+
+    // Get warnings for variables that use "first value" from a list
+    templateWarnings.value = getFirstValueWarnings(variables);
+
     openTemplateInNewTab(template, variables);
 
     messageKind.value = ThreadKind.ThreadKindTemplate;
