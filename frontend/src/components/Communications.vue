@@ -29,6 +29,65 @@
             </SelectContent>
           </Select>
         </div>
+        <div class="flex-shrink-0 flex gap-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  :class="[
+                    currentParticipationGmailThreadIds.length > 0
+                      ? 'text-blue-500 border-blue-500'
+                      : '',
+                  ]"
+                  :disabled="!selectedEventId"
+                  @click="openGmailPicker"
+                >
+                  <Mail :size="16" :stroke-width="2" class="mr-1" />
+                  <span v-if="currentParticipationGmailThreadIds.length > 0">
+                    {{ currentParticipationGmailThreadIds.length }} Gmail
+                  </span>
+                  <span v-else>Link Gmail</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {{
+                    currentParticipationGmailThreadIds.length > 0
+                      ? `${currentParticipationGmailThreadIds.length} Gmail thread(s) linked`
+                      : "Link Gmail threads to this participation"
+                  }}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  :disabled="
+                    !selectedEventId ||
+                    currentParticipationGmailThreadIds.length === 0 ||
+                    isSyncing
+                  "
+                  @click="syncGmailMessages"
+                >
+                  <RefreshCw
+                    :size="16"
+                    :stroke-width="2"
+                    :class="[isSyncing ? 'animate-spin' : '']"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Sync Gmail messages to communications</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         <div class="flex-shrink-0">
           <Select v-model="selectedEventId">
             <SelectTrigger>
@@ -343,13 +402,30 @@
       </div>
     </CardContent>
   </Card>
+
+  <!-- Gmail Thread Picker Modal -->
+  <GmailThreadPicker
+    v-model:open="isGmailPickerOpen"
+    :initial-thread-ids="gmailPickerThreadIds"
+    :default-search-query="gmailPickerDefaultQuery"
+    @save="handleGmailThreadsSave"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from "vue";
-import { useQuery } from "@pinia/colada";
+import { useQuery, useQueryCache } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
+import {
+  updateCompanyGmailThreadIds,
+  syncCompanyGmailMessages,
+  type GmailMessageData,
+} from "@/api/companies";
+import {
+  updateSpeakerGmailThreadIds,
+  syncSpeakerGmailMessages,
+} from "@/api/speakers";
 import { ThreadKind, ThreadStatus } from "@/dto/threads";
 import type {
   ParticipationCommunications,
@@ -359,6 +435,9 @@ import type { Speaker } from "@/dto/speakers";
 import type { Company } from "@/dto/companies";
 import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
+import { useAuthStore } from "@/stores/auth";
+import { useGmailMessages } from "@/composables/useGmailMessages";
+import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import Card from "./ui/card/Card.vue";
 import CardContent from "./ui/card/CardContent.vue";
 import CardDescription from "./ui/card/CardDescription.vue";
@@ -382,8 +461,15 @@ import {
 import type { Event } from "@/dto/events";
 import Textarea from "./ui/textarea/Textarea.vue";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
-import { Pencil, Trash2 } from "lucide-vue-next";
+import { Pencil, Trash2, Mail, RefreshCw } from "lucide-vue-next";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
+import GmailThreadPicker from "./GmailThreadPicker.vue";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 interface TemplateWithVariables {
   template: EmailTemplate;
@@ -425,6 +511,12 @@ const selectedTemplate = ref<TemplateWithVariables>();
 const editingThreadId = ref<string | null>(null);
 const editingPostId = ref<string | null>(null);
 const editText = ref("");
+
+// Gmail thread picker state
+const isGmailPickerOpen = ref(false);
+const gmailPickerThreadIds = ref<string[]>([]);
+const gmailPickerDefaultQuery = ref("");
+const queryCache = useQueryCache();
 
 const updatePostMutation = useUpdatePostMutation();
 const deleteThreadMutation = useDeleteThreadMutation();
@@ -520,6 +612,240 @@ const cancelEdit = () => {
   editingThreadId.value = null;
   editingPostId.value = null;
   editText.value = "";
+};
+
+// Gmail picker functions
+const currentParticipationGmailThreadIds = computed(() => {
+  if (!communicationsData.value || !selectedEventId.value) return [];
+  const participation = communicationsData.value.find(
+    (p) => p.event === selectedEventId.value,
+  );
+  return participation?.gmailThreadIds || [];
+});
+
+const openGmailPicker = () => {
+  gmailPickerThreadIds.value = [...currentParticipationGmailThreadIds.value];
+  // Default search query is the company/speaker name
+  gmailPickerDefaultQuery.value = props.entity.name;
+  isGmailPickerOpen.value = true;
+};
+
+const handleGmailThreadsSave = async (threadIds: string[]) => {
+  try {
+    if (props.entityType === "company") {
+      await updateCompanyGmailThreadIds(props.entity.id, threadIds);
+    } else {
+      await updateSpeakerGmailThreadIds(props.entity.id, threadIds);
+    }
+    // Invalidate the communications query to refresh data
+    queryCache.invalidateQueries({
+      key: [`${props.entityType}-communications`, props.entity.id],
+    });
+    // Auto-sync after linking
+    await syncGmailMessages();
+  } catch (err) {
+    console.error("Failed to update Gmail thread IDs:", err);
+  } finally {
+    gmailPickerThreadIds.value = [];
+  }
+};
+
+// Gmail sync functionality
+const authStore = useAuthStore();
+const gmailComposable = useGmailMessages();
+const { requestGoogleToken } = useGoogleAuth();
+const isSyncing = ref(false);
+
+/**
+ * Strips HTML tags and converts to clean plain text
+ */
+const stripHtmlToText = (html: string): string => {
+  // Create a temporary element to parse HTML
+  const doc = new DOMParser().parseFromString(html, "text/html");
+
+  // Remove script and style elements
+  doc.querySelectorAll("script, style").forEach((el) => el.remove());
+
+  // Replace common block elements with newlines
+  doc.querySelectorAll("br").forEach((el) => el.replaceWith("\n"));
+  doc.querySelectorAll("p, div, tr, li").forEach((el) => {
+    el.prepend(document.createTextNode("\n"));
+    el.append(document.createTextNode("\n"));
+  });
+
+  // Get text content
+  let text = doc.body.textContent || "";
+
+  // Clean up whitespace
+  text = text
+    .replace(/\r\n/g, "\n") // Normalize line endings
+    .replace(/\n{3,}/g, "\n\n") // Max 2 consecutive newlines
+    .replace(/[ \t]+/g, " ") // Collapse multiple spaces/tabs
+    .replace(/^ +/gm, "") // Remove leading spaces on each line
+    .replace(/ +$/gm, "") // Remove trailing spaces on each line
+    .trim();
+
+  return text;
+};
+
+/**
+ * Extracts a clean display name from an email address
+ * "John Doe <john@example.com>" -> "John Doe"
+ * "john@example.com" -> "john@example.com"
+ */
+const extractEmailName = (email: string): string => {
+  const match = email.match(/^"?([^"<]+)"?\s*<[^>]+>$/);
+  return match ? match[1].trim() : email;
+};
+
+const syncGmailMessages = async () => {
+  if (!currentParticipationGmailThreadIds.value.length) {
+    return;
+  }
+
+  // Check if Google authentication is needed
+  if (!authStore.isGoogleAuthenticated) {
+    const success = await requestGoogleToken();
+    if (!success) {
+      console.error("Failed to authenticate with Google");
+      return;
+    }
+  }
+
+  isSyncing.value = true;
+
+  try {
+    // Fetch all messages from linked Gmail threads
+    const allMessages: GmailMessageData[] = [];
+
+    for (const gmailThreadId of currentParticipationGmailThreadIds.value) {
+      // Get all messages in this thread using the threads API
+      const threadMessages = await gmailComposable.getMessagesByThreadId(
+        gmailThreadId,
+        { format: "full" },
+      );
+
+      // Check if re-authentication is needed (token expired during request)
+      if (gmailComposable.needsReauth.value) {
+        const success = await requestGoogleToken();
+        if (!success) {
+          console.error("Failed to re-authenticate with Google");
+          return;
+        }
+        // Retry the current thread after re-authentication
+        const retryMessages = await gmailComposable.getMessagesByThreadId(
+          gmailThreadId,
+          { format: "full" },
+        );
+        if (gmailComposable.needsReauth.value) {
+          console.error("Still unable to authenticate after retry");
+          return;
+        }
+        threadMessages.push(...retryMessages);
+      }
+
+      for (const msg of threadMessages) {
+        const from = gmailComposable.getHeaderValue(msg, "From") || "Unknown";
+        const to = gmailComposable.getHeaderValue(msg, "To") || "";
+        const subject =
+          gmailComposable.getHeaderValue(msg, "Subject") || "(No subject)";
+        const dateStr = gmailComposable.getHeaderValue(msg, "Date") || "";
+
+        // Parse date to ISO format
+        let isoDate = "";
+        if (dateStr) {
+          try {
+            isoDate = new Date(dateStr).toISOString();
+          } catch {
+            isoDate = new Date(parseInt(msg.internalDate)).toISOString();
+          }
+        } else {
+          isoDate = new Date(parseInt(msg.internalDate)).toISOString();
+        }
+
+        // Get message body - prefer plain text, fallback to HTML
+        let body =
+          gmailComposable.getMessageBody(msg, false) || msg.snippet || "";
+
+        // If the body looks like HTML, convert it to plain text
+        if (body.includes("<") && body.includes(">")) {
+          body = stripHtmlToText(body);
+        }
+
+        // Clean up the body further - remove excessive quoted content
+        // Remove common email quote markers
+        const lines = body.split("\n");
+        const cleanedLines: string[] = [];
+        let foundQuoteStart = false;
+
+        for (const line of lines) {
+          // Detect start of quoted content
+          if (
+            line.match(/^On\s+.+\s+wrote:?\s*$/i) || // "On Wed, 17 Dec 2025 at 07:05, Name wrote:"
+            line.match(/^On\s+\w{3},?\s+\w{3}\s+\d{1,2},?\s+\d{4}/i) || // "On Wed, Nov 26, 2025" or "On Wed Nov 26 2025"
+            line.match(/^On\s+\w{3},?\s+\d{1,2}\s+\w{3}/i) || // "On Wed, 17 Dec" (start of quote attribution)
+            line.match(/^On\s+\d{1,2}\s+\w{3}\s+\d{4}/i) || // "On 17 Dec 2025"
+            line.match(/wrote:\s*$/) || // Any line ending with "wrote:"
+            line.match(/^>/) || // Quoted line starting with >
+            line.match(/^-{3,}\s*Original Message\s*-{3,}$/i) ||
+            line.match(/^_{3,}$/) ||
+            line.match(/^From:.*Sent:.*To:/i) ||
+            line.match(/^-{2,}\s*Forwarded message\s*-{2,}$/i) ||
+            line.match(/<[^>]+@[^>]+>\s*wrote:?\s*$/i) // "<email@example.com> wrote:"
+          ) {
+            foundQuoteStart = true;
+          }
+
+          if (!foundQuoteStart) {
+            cleanedLines.push(line);
+          }
+        }
+
+        // Use cleaned content if we removed quotes, otherwise use original
+        const cleanBody =
+          cleanedLines.length > 0 ? cleanedLines.join("\n").trim() : body;
+
+        // Determine if outgoing (sent by us)
+        const userEmail = authStore.member?.sinfoid
+          ? `${authStore.member.sinfoid}@sinfo.org`
+          : "";
+        const isOutgoing =
+          from.toLowerCase().includes("@sinfo.org") ||
+          from.toLowerCase().includes(userEmail.toLowerCase());
+
+        allMessages.push({
+          messageId: msg.id,
+          threadId: msg.threadId,
+          subject,
+          from: extractEmailName(from),
+          to: extractEmailName(to),
+          date: isoDate,
+          body: cleanBody,
+          isOutgoing,
+        });
+      }
+    }
+
+    if (allMessages.length === 0) {
+      return;
+    }
+
+    // Send to backend for sync
+    if (props.entityType === "company") {
+      await syncCompanyGmailMessages(props.entity.id, allMessages);
+    } else {
+      await syncSpeakerGmailMessages(props.entity.id, allMessages);
+    }
+
+    // Refresh communications
+    queryCache.invalidateQueries({
+      key: [`${props.entityType}-communications`, props.entity.id],
+    });
+  } catch (err) {
+    console.error("Failed to sync Gmail messages:", err);
+  } finally {
+    isSyncing.value = false;
+  }
 };
 
 const saveEdit = async () => {
