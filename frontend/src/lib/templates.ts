@@ -372,10 +372,8 @@ const genderToArticleSuffix = (
       return { article: "o", suffix: "" };
     case "FEMALE":
       return { article: "a", suffix: "a" };
-    case "OTHER":
-      return { article: "e", suffix: "e" };
     default:
-      return { article: "o/a/e", suffix: "(a)" };
+      return { article: "e", suffix: "e" };
   }
 };
 

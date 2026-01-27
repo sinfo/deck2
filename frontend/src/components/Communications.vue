@@ -1025,32 +1025,6 @@ const getKindColor = (kind: ThreadKind): string => {
   }
 };
 
-const getStatusLabel = (status: ThreadStatus): string => {
-  switch (status) {
-    case ThreadStatus.ThreadStatusApproved:
-      return "Approved";
-    case ThreadStatus.ThreadStatusReviewed:
-      return "Reviewed";
-    case ThreadStatus.ThreadStatusPending:
-      return "Pending";
-    default:
-      return "Unknown";
-  }
-};
-
-const getStatusColor = (status: ThreadStatus): string => {
-  switch (status) {
-    case ThreadStatus.ThreadStatusApproved:
-      return "bg-green-500";
-    case ThreadStatus.ThreadStatusReviewed:
-      return "bg-yellow-500";
-    case ThreadStatus.ThreadStatusPending:
-      return "bg-red-500";
-    default:
-      return "bg-gray-400";
-  }
-};*/
-
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
