@@ -44,9 +44,6 @@ const createSpeakerTemplateVariables = () => {
   const memberGender = authStore.member!.contactObject.gender;
   const speakerGender = props.speaker.contactObject.gender;
 
-  // Use contactObject which contains the full Contact (including gender)
-  // Fallback to empty string when gender is unavailable to avoid runtime errors
-
   return [
     createEmailVariable.memberArticle(memberGender),
     createEmailVariable.memberSuffix(memberGender),

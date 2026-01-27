@@ -153,18 +153,6 @@
                   ></div>
                   <span>{{ getKindLabel(thread.kind) }}</span>
                 </div>
-
-                <!-- Pending Status -->
-                <!--<div class="flex items-center gap-1">
-                  <div
-                    :class="[
-                      'w-2 h-2 rounded-full',
-                      getStatusColor(thread.status),
-                    ]"
-                  ></div>
-                  <span>{{ getStatusLabel(thread.status) }}</span>
-                </div>-->
-
                 <span>{{ formatDate(thread.posted) }}</span>
               </div>
 
@@ -704,32 +692,6 @@ const getKindColor = (kind: ThreadKind): string => {
       return "bg-gray-400";
   }
 };
-
-/*const getStatusLabel = (status: ThreadStatus): string => {
-  switch (status) {
-    case ThreadStatus.ThreadStatusApproved:
-      return "Approved";
-    case ThreadStatus.ThreadStatusReviewed:
-      return "Reviewed";
-    case ThreadStatus.ThreadStatusPending:
-      return "Pending";
-    default:
-      return "Unknown";
-  }
-};
-
-const getStatusColor = (status: ThreadStatus): string => {
-  switch (status) {
-    case ThreadStatus.ThreadStatusApproved:
-      return "bg-green-500";
-    case ThreadStatus.ThreadStatusReviewed:
-      return "bg-yellow-500";
-    case ThreadStatus.ThreadStatusPending:
-      return "bg-red-500";
-    default:
-      return "bg-gray-400";
-  }
-};*/
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
