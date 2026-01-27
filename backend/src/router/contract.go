@@ -261,6 +261,9 @@ func replaceDocxPlaceholders(docxBytes []byte, replacements map[string]string, p
 	if _, err := tmpSrc.Write(docxBytes); err != nil {
 		return nil, err
 	}
+	if err := tmpSrc.Close(); err != nil {
+		return nil, err
+	}
 
 	// Read and get editable document
 	r, err := docxfill.ReadDocxFile(tmpSrcName)
@@ -321,6 +324,9 @@ func extractStyledParagraphsFromDocx(docxBytes []byte) ([]Paragraph, error) {
 	}()
 
 	if _, err := tmp.Write(docxBytes); err != nil {
+		return nil, err
+	}
+	if err := tmp.Close(); err != nil {
 		return nil, err
 	}
 
