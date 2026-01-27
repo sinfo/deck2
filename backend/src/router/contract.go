@@ -250,19 +250,27 @@ func replaceDocxPlaceholders(docxBytes []byte, replacements map[string]string, p
 	// Write incoming bytes to a temp file because the library operates on files.
 	tmpSrc, err := ioutil.TempFile("", "template-*.docx")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create temp file: %v", err)
 	}
 	tmpSrcName := tmpSrc.Name()
 	defer func() {
-		tmpSrc.Close()
+		// Attempt to remove the file on exit
 		_ = os.Remove(tmpSrcName)
 	}()
 
 	if _, err := tmpSrc.Write(docxBytes); err != nil {
-		return nil, err
+		tmpSrc.Close()
+		return nil, fmt.Errorf("failed to write docx bytes to temp file: %v", err)
 	}
+
+	// Close explicitly to flush to disk.
 	if err := tmpSrc.Close(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to close temp file: %v", err)
+	}
+
+	// Verify file existence (debug step)
+	if _, err := os.Stat(tmpSrcName); os.IsNotExist(err) {
+		return nil, fmt.Errorf("docx temp file does not exist after simple close: %s", tmpSrcName)
 	}
 
 	// Read and get editable document
