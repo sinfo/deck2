@@ -6,6 +6,7 @@ FROM golang:1.23-alpine AS builder
 
 # Create user
 RUN adduser -D -g '' myuser
+RUN mkdir /tmp-dir && chmod 777 /tmp-dir
 
 WORKDIR /app
 COPY go.mod go.sum ./
@@ -44,6 +45,7 @@ WORKDIR /app
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/deck2 /app/deck2
 COPY --from=swagger-builder /app/swagger.json /app/static/swagger.json
+COPY --from=builder /tmp-dir /tmp
 
 # Use an unprivileged user.
 USER myuser
