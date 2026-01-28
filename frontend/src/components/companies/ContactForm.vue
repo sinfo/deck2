@@ -407,7 +407,6 @@ const removePhone = (index: number) => {
 };
 
 const handleSubmit = () => {
-  console.log("isValid", isValid.value);
   if (!isValid.value) return;
 
   // Clean up empty fields
