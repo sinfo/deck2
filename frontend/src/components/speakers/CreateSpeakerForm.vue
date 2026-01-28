@@ -272,7 +272,11 @@ const isStep1Valid = computed(() => {
 const isStep3Valid = computed(() => {
   return (
     contactData.value.gender != undefined &&
-    contactData.value.language != undefined
+    contactData.value.language != undefined &&
+    contactData.value.mails &&
+    contactData.value.mails.some(
+      (mail) => mail.mail && mail.mail.trim().length > 0,
+    )
   );
 });
 

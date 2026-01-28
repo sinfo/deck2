@@ -237,6 +237,18 @@
             {{ showMoreSocials ? "- Less" : "+ More" }} social platforms
           </Button>
         </div>
+
+        <!-- Validation Message (Visible in embedded mode) -->
+        <div
+          v-if="withoutAction && !isValid && validationMessage"
+          class="rounded-md bg-destructive/15 p-3 mt-4"
+        >
+          <p
+            class="text-sm font-medium text-destructive flex items-center gap-2"
+          >
+            {{ validationMessage }}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -350,20 +362,29 @@ watch(
   { immediate: true },
 );
 
-watch(
-  () => formData,
-  (newData) => emit("updated", newData),
-  { deep: true, immediate: true },
-);
-
 const isValid = computed(() => {
   const hasName = props.withoutName || formData.name?.trim();
   const hasEmail = formData.contact.mails.some((mail) => mail.mail.trim());
-  return hasName && hasEmail;
+  const hasGender = !!formData.contact.gender;
+  const hasLanguage = !!formData.contact.language;
+
+  return hasName && hasEmail && hasGender && hasLanguage;
 });
+
+watch(
+  () => formData,
+  (newData) => {
+    if (isValid.value) {
+      emit("updated", newData);
+    }
+  },
+  { deep: true, immediate: true },
+);
 
 const validationMessage = computed(() => {
   if (!props.withoutName && !formData.name?.trim()) return "Name is required";
+  if (!formData.contact.gender) return "Gender is required";
+  if (!formData.contact.language) return "Language is required";
   if (!formData.contact.mails.some((mail) => mail.mail.trim()))
     return "At least one email is required";
   return "";
@@ -386,6 +407,7 @@ const removePhone = (index: number) => {
 };
 
 const handleSubmit = () => {
+  console.log("isValid", isValid.value);
   if (!isValid.value) return;
 
   // Clean up empty fields
