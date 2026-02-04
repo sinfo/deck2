@@ -31,6 +31,12 @@ const router = createRouter({
             import("./views/Dashboard/Companies/CompanyView.vue"),
         },
         {
+          path: "multimedia",
+          name: "multimedia",
+          component: () =>
+            import("./views/Dashboard/Multimedia/MultimediaView.vue"),
+        },
+        {
           path: "speakers",
           name: "speakers",
           component: () =>
