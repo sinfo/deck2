@@ -125,7 +125,8 @@
               id="confirmed-date"
               v-model="editForm.confirmed"
               type="datetime-local"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              :disabled="!canEditConfirmedDate"
             />
           </div>
 
@@ -198,9 +199,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, computed } from "vue";
 import useToast from "@/lib/toast";
 import { useQuery } from "@pinia/colada";
+import { useAuthStore } from "@/stores/auth";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
 import {
@@ -245,6 +247,12 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const authStore = useAuthStore();
+const canEditConfirmedDate = computed(() => {
+  const role = authStore.decoded?.role;
+  return role === "COORDINATOR" || role === "ADMIN";
+});
 
 const isEditing = ref(false);
 const isSaving = ref(false);
