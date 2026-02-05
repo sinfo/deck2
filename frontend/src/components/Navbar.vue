@@ -30,14 +30,13 @@ import type { Speaker } from "@/dto/speakers";
 import type { Member } from "@/dto/members";
 import { useMagicKeys } from "@vueuse/core";
 import Notification from "./navbar/Notification.vue";
+import { usePermissions } from "@/composables/usePermissions";
 
 const isOpen = ref(false);
 const authStore = useAuthStore();
+const { isCoordinatorOrAdmin } = usePermissions();
 
-const showCoordination = computed(() => {
-  const role = authStore.decoded?.role as string | undefined;
-  return role === "COORDINATOR" || role === "ADMIN";
-});
+const showCoordination = computed(() => isCoordinatorOrAdmin.value === true);
 const router = useRouter();
 
 const logout = () => {

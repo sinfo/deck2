@@ -202,7 +202,6 @@
 import { ref, reactive, watch, computed } from "vue";
 import useToast from "@/lib/toast";
 import { useQuery } from "@pinia/colada";
-import { useAuthStore } from "@/stores/auth";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
 import {
@@ -216,6 +215,7 @@ import { Label } from "@/components/ui/label";
 import MemberSelect from "@/components/members/MemberSelect.vue";
 import { useCompanyParticipationPackageMutation } from "@/mutations/companies";
 import { usePackagesQuery, usePackageQuery } from "@/mutations/packages";
+import { usePermissions } from "@/composables/usePermissions";
 import type { Package } from "@/dto/packages";
 import type {
   CompanyParticipation,
@@ -248,10 +248,9 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const authStore = useAuthStore();
+const { isCoordinatorOrAdmin } = usePermissions();
 const canEditConfirmedDate = computed(() => {
-  const role = authStore.decoded?.role;
-  return role === "COORDINATOR" || role === "ADMIN";
+  return isCoordinatorOrAdmin.value === true;
 });
 
 const isEditing = ref(false);
