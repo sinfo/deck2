@@ -1,8 +1,9 @@
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-row flex-wrap w-full gap-2">
     <Button
       size="sm"
-      class="w-full"
+      variant="outline"
+      class="flex-1 min-w-fit"
       :disabled="isLoading"
       @click="download('pt')"
     >
@@ -10,7 +11,8 @@
     </Button>
     <Button
       size="sm"
-      class="w-full"
+      variant="outline"
+      class="flex-1 min-w-fit"
       :disabled="isLoading"
       @click="download('en')"
     >
