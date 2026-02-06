@@ -12,6 +12,11 @@ export interface Package {
   items: PackageItem[];
   price: number;
   vat: number;
+
+  /**
+   * Computed locally
+   */
+  event: string;
 }
 
 export interface PackageItemPublic {

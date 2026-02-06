@@ -13,7 +13,9 @@ import {
   deletePackage,
   updatePackageItems,
 } from "@/api/packages";
-import type { PackageItem } from "@/dto/packages";
+import type { Package, PackageItem } from "@/dto/packages";
+import { useEventStore } from "@/stores/event";
+import { computed } from "vue";
 
 // Shared packages list query
 export const usePackagesQuery = (params?: Record<string, unknown>) =>
@@ -21,6 +23,44 @@ export const usePackagesQuery = (params?: Record<string, unknown>) =>
     key: ["packages", params ? JSON.stringify(params) : ""],
     query: () => getPackages(params),
   });
+
+// Extract "SINFO XX" event prefix from package name
+const extractEventName = (name: string) => {
+  const match = name.match(/^(SINFO\s*\d+)\s*/i);
+  return match ? match[1] : "";
+};
+
+// Remove "SINFO XX " prefix from package name
+const formatPackageName = (name: string) => {
+  return name.replace(/^SINFO\s*\d+\s*/i, "").trim();
+};
+
+// Packages query filtered by current event
+export const useEventPackagesQuery = () => {
+  const eventStore = useEventStore();
+  const eventName = computed(() => eventStore.selectedEvent?.name || "");
+
+  const query = useQuery({
+    key: () => ["packages", "event", eventName.value],
+    query: () => getPackages(),
+  });
+
+  const data = computed(() => {
+    if (!query.data.value || !eventName.value) return [];
+    return (query.data.value as Package[])
+      .filter((p) => String(p.name || "").startsWith(eventName.value))
+      .map((p) => ({
+        ...p,
+        name: formatPackageName(p.name),
+        event: extractEventName(p.name),
+      }));
+  });
+
+  return {
+    ...query,
+    data,
+  };
+};
 
 // Single package query by id
 export const usePackageQuery = (
@@ -32,20 +72,29 @@ export const usePackageQuery = (
     (v as Record<string, unknown>) &&
     "value" in (v as Record<string, unknown>);
 
-  return useQuery({
+  const query = useQuery({
     key: () => [
       "package",
       isRef(id) ? (id as Ref<string | null | undefined>).value || "" : id || "",
     ],
     enabled: () =>
       isRef(id) ? !!(id as Ref<string | null | undefined>).value : !!id,
-    query: () =>
-      getPackageById(
+    query: async () => {
+      const pkg = await getPackageById(
         isRef(id)
           ? (id as Ref<string | null | undefined>).value!
           : (id as string)!,
-      ),
+      );
+      // Format the package name to remove "SINFO XX " prefix
+      return {
+        ...pkg,
+        name: formatPackageName(pkg.name),
+        event: extractEventName(pkg.name),
+      };
+    },
   });
+
+  return query;
 };
 
 export const useCreatePackageMutation = defineMutation(() => {

@@ -8,24 +8,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { computed, watch, ref } from "vue";
+import { computed, watch, ref, type Component } from "vue";
 import {
   humanReadableParticipationStatus,
   participationNextValues,
   participationStatusColor,
   type ParticipationStatus,
 } from "@/dto";
-import { Badge } from "../ui/badge";
 import type { RouteLocationRaw } from "vue-router";
 import ConfettiExplosion from "vue-confetti-explosion";
 import confettiAudio from "@/assets/audio/confetti.mp3";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+import { Loader2 } from "lucide-vue-next";
+
+export interface WorkflowBadge {
+  icon: Component;
+  label: string;
+  color?: string;
+  bgColor?: string;
+}
 
 const props = defineProps<{
   title: string;
   currentStatus?: ParticipationStatus;
   image?: string;
-  loading?: boolean;
-  badge?: string;
+  isLoading?: boolean;
+  badges?: WorkflowBadge[];
   to?: RouteLocationRaw;
 }>();
 
@@ -102,13 +115,18 @@ watch(
         <div
           v-if="!possibleStates.length"
           :class="[
-            'w-full flex items-center rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs pointer-events-none',
+            'w-full flex items-center rounded-md border px-3 py-2 text-sm shadow-xs pointer-events-none',
             participationStatusColor[selectedStatus].background,
           ]"
         >
           {{ humanReadableParticipationStatus[selectedStatus] }}
         </div>
-        <Select v-else v-model="selectedStatus" class="relative z-10">
+        <Select
+          v-else
+          v-model="selectedStatus"
+          class="relative z-10"
+          :disabled="isLoading"
+        >
           <SelectTrigger
             :class="[
               'w-full',
@@ -116,7 +134,10 @@ watch(
             ]"
           >
             <SelectValue placeholder="State">
-              {{ humanReadableParticipationStatus[selectedStatus] }}
+              <span class="flex items-center gap-2">
+                {{ humanReadableParticipationStatus[selectedStatus] }}
+                <Loader2 v-if="isLoading" class="w-3 h-3 animate-spin" />
+              </span>
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -139,7 +160,27 @@ watch(
       </CardContent>
       <CardHeader>
         <CardTitle>{{ title }}</CardTitle>
-        <Badge v-if="badge">{{ badge }}</Badge>
+        <div v-if="badges?.length" class="flex flex-wrap gap-1">
+          <TooltipProvider v-for="badge in badges" :key="badge.label">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <div
+                  class="inline-flex items-center justify-center w-6 h-6 rounded-full transition-colors"
+                  :class="badge.bgColor || 'bg-muted hover:bg-muted/80'"
+                >
+                  <component
+                    :is="badge.icon"
+                    class="w-3.5 h-3.5"
+                    :class="badge.color || 'text-muted-foreground'"
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{{ badge.label }}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </CardHeader>
     </Card>
   </component>

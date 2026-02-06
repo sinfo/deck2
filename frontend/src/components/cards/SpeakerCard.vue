@@ -81,6 +81,13 @@
             {{ speaker.title }}
           </div>
           <div class="flex flex-wrap gap-1 mt-2">
+            <ParticipationStatusBadge
+              v-if="speaker.participation?.status"
+              :status="speaker.participation.status"
+              :entity-id="speaker.id"
+              entity-type="speaker"
+              @updated="emit('updated')"
+            />
             <Badge v-if="speaker.companyName">{{ speaker.companyName }}</Badge>
           </div>
         </div>
@@ -141,6 +148,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import { usePermissions } from "@/composables/usePermissions";
+import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
 
 const props = defineProps<{
   speaker: SpeakerWithParticipation;

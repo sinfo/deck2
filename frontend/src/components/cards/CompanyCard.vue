@@ -73,6 +73,16 @@
         <div class="flex-1 min-w-0">
           <CardTitle class="text-lg truncate">{{ company.name }}</CardTitle>
           <div class="flex flex-wrap gap-1 mt-2">
+            <ParticipationStatusBadge
+              v-if="company.participation?.status"
+              :status="company.participation.status"
+              :entity-id="company.id"
+              entity-type="company"
+              @updated="emit('updated')"
+            />
+            <Badge v-if="packageData?.name" variant="outline">
+              {{ packageData.name }}
+            </Badge>
             <Badge v-if="company.participation?.partner" variant="secondary">
               Partner
             </Badge>
@@ -138,6 +148,7 @@ import type {
 } from "@/dto/companies";
 import { useCompanyInfoMutation } from "@/mutations/companies";
 import { useCompanyImageUploadMutation } from "@/mutations/companies";
+import { usePackageQuery } from "@/mutations/packages";
 import { deleteCompany } from "@/api/companies";
 import { usePermissions } from "@/composables/usePermissions";
 import { useQueryCache } from "@pinia/colada";
@@ -154,6 +165,7 @@ import CompanyInfoForm from "../companies/CompanyInfoForm.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
+import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
 
 const props = defineProps<{
   company: CompanyWithParticipation;
@@ -163,6 +175,10 @@ const emit = defineEmits<{
   updated: [];
   deleted: [];
 }>();
+
+// Fetch package data if the company has a package
+const packageId = computed(() => props.company.participation?.package);
+const { data: packageData } = usePackageQuery(packageId);
 
 const isDescriptionExpanded = ref(false);
 const isEditing = ref(false);
