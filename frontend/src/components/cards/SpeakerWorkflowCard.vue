@@ -6,12 +6,14 @@
     "
     :title="speaker.name"
     :current-status="speaker.participation?.status"
+    :is-loading="isUpdatingStatus"
     :to="{ name: 'speaker', params: { speakerId: speaker.id } }"
     @status-change="updateSpeakerStatus(speaker, $event)"
   />
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import WorkflowCard from "./WorkflowCard.vue";
 import type { SpeakerWithParticipation } from "@/dto/speakers";
 import { useSpeakerParticipationStepMutation } from "@/mutations/speakers";
@@ -21,12 +23,19 @@ defineProps<{
 }>();
 
 const speakerParticipationStepMutation = useSpeakerParticipationStepMutation();
-const updateSpeakerStatus = (
+const isUpdatingStatus = ref(false);
+
+const updateSpeakerStatus = async (
   speaker: SpeakerWithParticipation,
   step: number,
 ) => {
   speakerParticipationStepMutation.speakerId.value = speaker.id;
   speakerParticipationStepMutation.step.value = step;
-  speakerParticipationStepMutation.mutate();
+  isUpdatingStatus.value = true;
+  try {
+    await speakerParticipationStepMutation.mutateAsync();
+  } finally {
+    isUpdatingStatus.value = false;
+  }
 };
 </script>
