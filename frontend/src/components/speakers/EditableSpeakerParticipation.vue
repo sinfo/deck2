@@ -20,18 +20,8 @@
             Edit
           </Button>
           <div v-else class="flex gap-2">
-            <Button
-              size="sm"
-              :disabled="isSaving || isStatusUpdating"
-              @click="saveChanges"
-            >
-              {{
-                isSaving
-                  ? "Saving..."
-                  : isStatusUpdating
-                    ? "Updating..."
-                    : "Save"
-              }}
+            <Button size="sm" :disabled="isSaving" @click="saveChanges">
+              {{ isSaving ? "Saving..." : "Save Changes" }}
             </Button>
             <Button variant="outline" size="sm" @click="cancelEditing">
               Cancel
