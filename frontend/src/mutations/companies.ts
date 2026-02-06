@@ -32,7 +32,7 @@ export const useCompanyParticipationMutation = defineMutation(() => {
   const data = ref<UpdateCompanyParticipationData>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
+  const { mutate, mutateAsync, ...mutation } = useMutation({
     mutation: () => updateCompanyParticipation(companyId.value!, data.value!),
     onSettled: () => {
       queryCache.invalidateQueries({ key: ["company", companyId.value!] });
@@ -43,6 +43,7 @@ export const useCompanyParticipationMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
     data,
@@ -185,7 +186,7 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
   const packageId = ref<string>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
+  const { mutate, mutateAsync, ...mutation } = useMutation({
     mutation: () =>
       updateCompanyParticipationPackage(companyId.value!, packageId.value!),
     onSettled: () => {
@@ -196,6 +197,7 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
     packageId,
