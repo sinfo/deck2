@@ -5,13 +5,14 @@
     :title="company.name"
     :current-status="company.participation?.status"
     :badges="badges"
+    :is-loading="isUpdatingStatus"
     :to="{ name: 'company', params: { companyId: company.id } }"
     @status-change="updateCompanyStatus(company, $event)"
   />
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { CompanyWithParticipation } from "@/dto/companies";
 import { useCompanyParticipationStepMutation } from "@/mutations/companies";
 import { usePackageQuery } from "@/mutations/packages";
@@ -81,12 +82,19 @@ const badges = computed(() => {
 });
 
 const companyParticipationStepMutation = useCompanyParticipationStepMutation();
-const updateCompanyStatus = (
+const isUpdatingStatus = ref(false);
+
+const updateCompanyStatus = async (
   company: CompanyWithParticipation,
   step: number,
 ) => {
   companyParticipationStepMutation.companyId.value = company.id;
   companyParticipationStepMutation.step.value = step;
-  companyParticipationStepMutation.mutate();
+  isUpdatingStatus.value = true;
+  try {
+    await companyParticipationStepMutation.mutateAsync();
+  } finally {
+    isUpdatingStatus.value = false;
+  }
 };
 </script>

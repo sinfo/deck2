@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { Loader2 } from "lucide-vue-next";
 
 export interface WorkflowBadge {
   icon: Component;
@@ -36,7 +37,7 @@ const props = defineProps<{
   title: string;
   currentStatus?: ParticipationStatus;
   image?: string;
-  loading?: boolean;
+  isLoading?: boolean;
   badges?: WorkflowBadge[];
   to?: RouteLocationRaw;
 }>();
@@ -120,7 +121,12 @@ watch(
         >
           {{ humanReadableParticipationStatus[selectedStatus] }}
         </div>
-        <Select v-else v-model="selectedStatus" class="relative z-10">
+        <Select
+          v-else
+          v-model="selectedStatus"
+          class="relative z-10"
+          :disabled="isLoading"
+        >
           <SelectTrigger
             :class="[
               'w-full',
@@ -128,7 +134,10 @@ watch(
             ]"
           >
             <SelectValue placeholder="State">
-              {{ humanReadableParticipationStatus[selectedStatus] }}
+              <span class="flex items-center gap-2">
+                {{ humanReadableParticipationStatus[selectedStatus] }}
+                <Loader2 v-if="isLoading" class="w-3 h-3 animate-spin" />
+              </span>
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
