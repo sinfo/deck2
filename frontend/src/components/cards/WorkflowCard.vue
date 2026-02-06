@@ -115,7 +115,7 @@ watch(
         <div
           v-if="!possibleStates.length"
           :class="[
-            'w-full flex items-center rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs pointer-events-none',
+            'w-full flex items-center rounded-md border px-3 py-2 text-sm shadow-xs pointer-events-none',
             participationStatusColor[selectedStatus].background,
           ]"
         >
