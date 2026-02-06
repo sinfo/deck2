@@ -1,7 +1,7 @@
 <template>
   <div v-if="companyWithParticipation" class="flex flex-col lg:flex-row gap-6">
     <!-- Company information section -->
-    <div class="space-y-6 w-full lg:w-96 lg:flex-shrink-0">
+    <div class="space-y-4 w-full lg:w-96 lg:flex-shrink-0">
       <!-- Company Card -->
       <CompanyCard
         :company="companyWithParticipation"
@@ -15,24 +15,59 @@
         button-class="w-full"
       />
 
-      <!-- Company Billing Information -->
-      <CompanyBillingInfo
-        :company="company?.data"
-        @updated="handleCompanyUpdated"
-      />
+      <!-- Mobile: Accordion for Billing Info and Contacts -->
+      <Accordion type="multiple" class="lg:hidden" collapsible>
+        <AccordionItem value="billing">
+          <AccordionTrigger>Billing Information</AccordionTrigger>
+          <AccordionContent>
+            <CompanyBillingInfo
+              :company="company?.data"
+              @updated="handleCompanyUpdated"
+            />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="contacts">
+          <AccordionTrigger>Contacts</AccordionTrigger>
+          <AccordionContent>
+            <!-- prettier-ignore -->
+            <CompanyContacts
+              v-if="representatives"
+              :representatives="representatives"
+              :company-id="(companyId as string)"
+            />
+            <div
+              v-else-if="isRepresentativesLoading"
+              class="flex items-center justify-center p-8"
+            >
+              <div class="text-muted-foreground">
+                Loading representatives...
+              </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
-      <!-- Company Contacts -->
-      <!-- prettier-ignore -->
-      <CompanyContacts
-        v-if="representatives"
-        :representatives="representatives"
-        :company-id="(companyId as string)"
-      />
-      <div
-        v-else-if="isRepresentativesLoading"
-        class="flex items-center justify-center p-8"
-      >
-        <div class="text-muted-foreground">Loading representatives...</div>
+      <!-- Desktop: Regular display for Billing Info and Contacts -->
+      <div class="hidden lg:block space-y-6">
+        <!-- Company Billing Information -->
+        <CompanyBillingInfo
+          :company="company?.data"
+          @updated="handleCompanyUpdated"
+        />
+
+        <!-- Company Contacts -->
+        <!-- prettier-ignore -->
+        <CompanyContacts
+          v-if="representatives"
+          :representatives="representatives"
+          :company-id="(companyId as string)"
+        />
+        <div
+          v-else-if="isRepresentativesLoading"
+          class="flex items-center justify-center p-8"
+        >
+          <div class="text-muted-foreground">Loading representatives...</div>
+        </div>
       </div>
     </div>
 
@@ -67,6 +102,10 @@ import { useEventStore } from "@/stores/event";
 import { useQuery, useQueryCache } from "@pinia/colada";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
+import Accordion from "@/components/ui/accordion/Accordion.vue";
+import AccordionItem from "@/components/ui/accordion/AccordionItem.vue";
+import AccordionTrigger from "@/components/ui/accordion/AccordionTrigger.vue";
+import AccordionContent from "@/components/ui/accordion/AccordionContent.vue";
 
 const route = useRoute();
 const queryCache = useQueryCache();
