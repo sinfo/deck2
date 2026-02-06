@@ -22,6 +22,11 @@ export const usePackagesQuery = (params?: Record<string, unknown>) =>
     query: () => getPackages(params),
   });
 
+// Remove "SINFO XX " prefix from package name
+const formatPackageName = (name: string) => {
+  return name.replace(/^SINFO\s*\d+\s*/i, "").trim();
+};
+
 // Single package query by id
 export const usePackageQuery = (
   id: string | Ref<string | null | undefined> | null | undefined,
@@ -32,20 +37,28 @@ export const usePackageQuery = (
     (v as Record<string, unknown>) &&
     "value" in (v as Record<string, unknown>);
 
-  return useQuery({
+  const query = useQuery({
     key: () => [
       "package",
       isRef(id) ? (id as Ref<string | null | undefined>).value || "" : id || "",
     ],
     enabled: () =>
       isRef(id) ? !!(id as Ref<string | null | undefined>).value : !!id,
-    query: () =>
-      getPackageById(
+    query: async () => {
+      const pkg = await getPackageById(
         isRef(id)
           ? (id as Ref<string | null | undefined>).value!
           : (id as string)!,
-      ),
+      );
+      // Format the package name to remove "SINFO XX " prefix
+      return {
+        ...pkg,
+        name: formatPackageName(pkg.name),
+      };
+    },
   });
+
+  return query;
 };
 
 export const useCreatePackageMutation = defineMutation(() => {
