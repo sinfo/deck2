@@ -6,35 +6,11 @@
           {{ getEventName(participation.event) }}
         </h4>
         <div class="flex items-center gap-2">
-          <Popover
-            :open="isStatusMenuOpen"
-            @update:open="isStatusMenuOpen = $event"
-          >
-            <PopoverTrigger as-child>
-              <Badge
-                :class="participationStatusColor[selectedStatus]?.background"
-                class="text-xs flex items-center gap-1 cursor-pointer"
-              >
-                {{ humanReadableParticipationStatus[selectedStatus] }}
-                <ChevronDown class="w-3 h-3" />
-              </Badge>
-            </PopoverTrigger>
-            <PopoverContent class="w-56 p-0">
-              <div class="flex flex-col">
-                <button
-                  v-for="(label, value) in humanReadableParticipationStatus"
-                  :key="value"
-                  :class="[
-                    'px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer',
-                    selectedStatus === value && 'bg-accent',
-                  ]"
-                  @click="selectStatus(value as ParticipationStatus)"
-                >
-                  {{ label }}
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <ParticipationStatusBadge
+            :status="participation.status"
+            :entity-id="speakerId"
+            entity-type="speaker"
+          />
           <Button
             v-if="!isEditing"
             variant="outline"
@@ -192,10 +168,7 @@ import { ref, reactive } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import {
-  useSpeakerParticipationMutation,
-  useSpeakerParticipationStatusMutation,
-} from "@/mutations/speakers";
+import { useSpeakerParticipationMutation } from "@/mutations/speakers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -205,18 +178,8 @@ import type {
   SpeakerParticipation,
   UpdateSpeakerParticipationData,
 } from "@/dto/speakers";
-import {
-  humanReadableParticipationStatus,
-  type ParticipationStatus,
-  participationStatusColor,
-} from "@/dto";
 import Image from "../Image.vue";
-import { ChevronDown } from "lucide-vue-next";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
 
 interface Props {
   participation: SpeakerParticipation;
@@ -226,9 +189,6 @@ interface Props {
 const props = defineProps<Props>();
 const isEditing = ref(false);
 const isSaving = ref(false);
-const isStatusMenuOpen = ref(false);
-const isStatusUpdating = ref(false);
-const selectedStatus = ref<ParticipationStatus>(props.participation.status);
 
 const editForm = reactive<UpdateSpeakerParticipationData>({
   member: props.participation.member,
@@ -251,15 +211,12 @@ const { data: membersData } = useQuery({
 });
 
 const updateMutation = useSpeakerParticipationMutation();
-const statusMutation = useSpeakerParticipationStatusMutation();
 
 updateMutation.speakerId.value = props.speakerId;
-statusMutation.speakerId.value = props.speakerId;
 
 const startEditing = () => {
   isEditing.value = true;
-  // Reset form and status to current values
-  selectedStatus.value = props.participation.status;
+  // Reset form to current values
   editForm.member = props.participation.member;
   editForm.feedback = props.participation.feedback;
   editForm.room = {
@@ -283,23 +240,6 @@ const saveChanges = async () => {
     console.error("Failed to update speaker participation:", error);
   } finally {
     isSaving.value = false;
-  }
-};
-
-const selectStatus = async (status: ParticipationStatus) => {
-  const previous = selectedStatus.value;
-  selectedStatus.value = status;
-  isStatusMenuOpen.value = false;
-
-  try {
-    isStatusUpdating.value = true;
-    statusMutation.speakerId.value = props.speakerId;
-    await statusMutation.mutate(status);
-  } catch (err) {
-    console.error("Failed to update participation status:", err);
-    selectedStatus.value = previous;
-  } finally {
-    isStatusUpdating.value = false;
   }
 };
 
