@@ -63,20 +63,11 @@
                 v-else
                 class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
               >
-                <RouterLink
-                  v-for="s in speakers?.data || []"
+                <SpeakerWorkflowCard
+                  v-for="s in speakersWithParticipation || []"
                   :key="s.id"
-                  :to="{ name: 'speaker', params: { speakerId: s.id } }"
-                  class="block p-2 border rounded-md hover:shadow-sm bg-white"
-                >
-                  <Image
-                    :src="
-                      s.imgs?.speaker || s.imgs?.internal || s.imgs?.company
-                    "
-                    class="w-full h-16 object-contain mb-2"
-                  />
-                  <div class="text-sm font-medium truncate">{{ s.name }}</div>
-                </RouterLink>
+                  :speaker="s"
+                />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -118,20 +109,11 @@
                 v-else
                 class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
               >
-                <RouterLink
-                  v-for="company in companies?.data || []"
+                <CompanyWorkflowCard
+                  v-for="company in companiesWithParticipation || []"
                   :key="company.id"
-                  :to="{ name: 'company', params: { companyId: company.id } }"
-                  class="block p-2 border rounded-md hover:shadow-sm bg-white"
-                >
-                  <Image
-                    :src="company.imgs?.internal || company.imgs?.public"
-                    class="w-full h-16 object-contain mb-2"
-                  />
-                  <div class="text-sm font-medium truncate">
-                    {{ company.name }}
-                  </div>
-                </RouterLink>
+                  :company="company"
+                />
               </div>
             </AccordionContent>
           </AccordionItem>
@@ -185,6 +167,10 @@ import { useQuery } from "@pinia/colada";
 import { getMemberById, getMemberParticipations } from "@/api/members";
 import { getAllSpeakers } from "@/api/speakers";
 import { getAllCompanies } from "@/api/companies";
+import SpeakerWorkflowCard from "@/components/cards/SpeakerWorkflowCard.vue";
+import CompanyWorkflowCard from "@/components/cards/CompanyWorkflowCard.vue";
+import type { SpeakerWithParticipation } from "@/dto/speakers";
+import type { CompanyWithParticipation } from "@/dto/companies";
 import { useEventStore } from "@/stores/event";
 import {
   Accordion,
@@ -238,6 +224,35 @@ const { data: companies, isLoading: companiesLoading } = useQuery({
   key: () => ["member-companies", JSON.stringify(companiesFilters.value)],
   query: () => getAllCompanies(companiesFilters.value),
 });
+
+// Map speakers/companies to include the participation for the currently selected event
+const speakersWithParticipation = computed(() =>
+  (speakers.value?.data || []).map(
+    (s) =>
+      ({
+        ...s,
+        participation: s.participations
+          ? s.participations.find(
+              (p) => p.event === eventStore.selectedEvent?.id,
+            )
+          : undefined,
+      }) as SpeakerWithParticipation,
+  ),
+);
+
+const companiesWithParticipation = computed(() =>
+  (companies.value?.data || []).map(
+    (c) =>
+      ({
+        ...c,
+        participation: c.participations
+          ? c.participations.find(
+              (p) => p.event === eventStore.selectedEvent?.id,
+            )
+          : undefined,
+      }) as CompanyWithParticipation,
+  ),
+);
 
 // Collapsible implemented with Accordion UI - no local toggles needed
 
