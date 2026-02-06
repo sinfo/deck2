@@ -50,13 +50,8 @@
 
           <div v-if="participation.confirmed" class="text-sm">
             <span class="font-medium">Confirmed:</span>
-            <div class="mt-1 text-muted-foreground flex items-center gap-4">
+            <div class="mt-1 text-muted-foreground">
               <span>{{ formatDate(participation.confirmed) }}</span>
-              <span
-                v-if="participation.package && packageName"
-                class="text-xs text-muted-foreground"
-                >· {{ packageName }}</span
-              >
             </div>
           </div>
 
@@ -68,8 +63,19 @@
           </div>
         </div>
 
-        <div v-if="participation.partner" class="flex items-center gap-1">
-          <Badge variant="secondary" class="text-xs">Partner</Badge>
+        <div
+          v-if="participation.partner || packageName"
+          class="flex items-center gap-1"
+        >
+          <Badge
+            v-if="participation.partner"
+            variant="secondary"
+            class="text-xs"
+            >Partner</Badge
+          >
+          <Badge v-if="packageName" variant="outline" class="text-xs">{{
+            packageName
+          }}</Badge>
         </div>
       </div>
 
