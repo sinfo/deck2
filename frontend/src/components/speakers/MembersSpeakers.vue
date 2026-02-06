@@ -4,7 +4,7 @@
     <CreateSpeakerDialogTrigger />
   </div>
 
-  <ParticipationChip v-model:selected="selectedStatus" />
+  <ParticipationFilters v-model:selected="selectedStatus" />
 
   <div
     v-if="!membersSorted.length && speakersLoading"
@@ -69,14 +69,14 @@ import MemberWithAvatar from "@/components/members/MemberWithAvatar.vue";
 import { DynamicScroller } from "vue-virtual-scroller";
 import type { Speaker, SpeakerWithParticipation } from "@/dto/speakers";
 import { useInsertionSort, useSortByParticipationStatus } from "@/lib/utils";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import SpeakerWorkflowCard from "../cards/SpeakerWorkflowCard.vue";
 import CreateSpeakerDialogTrigger from "./CreateSpeakerDialogTrigger.vue";
-import ParticipationChip from "@/components/ParticipationChip.vue";
 import { ref, computed, type ComputedRef } from "vue";
 import { ChevronDown } from "lucide-vue-next";
 import { useParticipationFilter } from "@/composables/useParticipationFilter";
 import type { ParticipationStatus } from "@/dto";
+import ParticipationFilters from "@/components/ParticipationFilters.vue";
 
 const props = defineProps<{
   speakers: Speaker[];

@@ -4,7 +4,11 @@
     <CreateCompanyDialogTrigger />
   </div>
 
-  <ParticipationChip v-model:selected="selectedStatus" />
+  <ParticipationFilters
+    v-model:selected="selectedStatus"
+    v-model:selected-package="selectedPackage"
+    :packages="packages"
+  />
 
   <div
     v-if="!membersSorted.length && companiesLoading"
@@ -69,14 +73,15 @@ import type { Member } from "@/dto/members";
 import MemberWithAvatar from "@/components/members/MemberWithAvatar.vue";
 import { DynamicScroller } from "vue-virtual-scroller";
 import { useInsertionSort, useSortByParticipationStatus } from "@/lib/utils";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import CompanyWorkflowCard from "../cards/CompanyWorkflowCard.vue";
 import CreateCompanyDialogTrigger from "./CreateCompanyDialogTrigger.vue";
-import ParticipationChip from "@/components/ParticipationChip.vue";
 import { ref, computed, type ComputedRef } from "vue";
 import { ChevronDown } from "lucide-vue-next";
 import { useParticipationFilter } from "@/composables/useParticipationFilter";
-import type { ParticipationStatus } from "@/dto";
+import type { ObjectID, ParticipationStatus } from "@/dto";
+import ParticipationFilters from "@/components/ParticipationFilters.vue";
+import { useEventPackagesQuery } from "@/mutations/packages";
 
 const props = defineProps<{
   companies: Company[];
@@ -132,10 +137,15 @@ const participations = computed(() =>
 );
 
 const selectedStatus = ref<ParticipationStatus | null>(null);
+const selectedPackage = ref<ObjectID | null>(null);
+
+// Fetch packages for filter, pre-filtered by current event
+const { data: packages } = useEventPackagesQuery();
 
 const participationsFiltered = useParticipationFilter<CompanyWithParticipation>(
   participations as ComputedRef<Map<string, CompanyWithParticipation[]>>,
   selectedStatus,
+  selectedPackage,
 );
 
 // Track expanded/collapsed state per member. Default to expanded (true)
