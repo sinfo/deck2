@@ -1,0 +1,252 @@
+<template>
+  <TaskTimelineItem
+    :step-number="1"
+    title="Confirmation"
+    :is-complete="isComplete"
+  >
+    <template #icon>
+      <CalendarCheck class="w-4 h-4" />
+    </template>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Package Selection -->
+      <div class="space-y-2">
+        <Label for="package-select">Package</Label>
+        <Select
+          v-model="selectedPackageId"
+          :disabled="isPackageUpdating"
+          @update:model-value="onPackageChange"
+        >
+          <SelectTrigger :loading="isPackageUpdating">
+            <SelectValue placeholder="Select a package" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="pkg in packageOptions"
+              :key="pkg.id"
+              :value="pkg.id"
+            >
+              {{ pkg.name }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <!-- Confirmation Date -->
+      <div class="space-y-2">
+        <Label for="confirmed-date">Confirmation Date</Label>
+        <DatePicker
+          v-model="confirmedDate"
+          :loading="isDateUpdating"
+          placeholder="Pick a date"
+          show-time
+          @update:model-value="onConfirmedDateChange"
+        />
+      </div>
+    </div>
+  </TaskTimelineItem>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch } from "vue";
+import { useQuery } from "@pinia/colada";
+import { getAllEvents } from "@/api/events";
+import { getItemById } from "@/api/items";
+import type { Item } from "@/dto/item";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
+import type { CompanyParticipation } from "@/dto/companies";
+import type { Package } from "@/dto/packages";
+import {
+  useCompanyParticipationPackageMutation,
+  useCompanyParticipationMutation,
+} from "@/mutations/companies";
+import { usePackagesQuery } from "@/mutations/packages";
+import useToast from "@/lib/toast";
+import TaskTimelineItem from "./TaskTimelineItem.vue";
+import { CalendarCheck } from "lucide-vue-next";
+
+interface Props {
+  companyId: string;
+  participation?: CompanyParticipation;
+}
+
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  packageChanged: [packageName: string, packageItems: Item[]];
+}>();
+
+const { toast } = useToast();
+
+// Package data
+const { data: packagesData } = usePackagesQuery();
+const { data: eventsData } = useQuery({
+  key: () => ["events"],
+  query: () => getAllEvents(),
+});
+
+const packageOptions = computed(() => {
+  const allPkgs = (packagesData.value || []) as Package[];
+  const eventId = props.participation?.event;
+  if (!eventId) return [];
+
+  const ev = eventsData.value?.data?.find((e) => e.id === eventId);
+  if (!ev) return allPkgs.map((p) => ({ id: String(p.id), name: p.name }));
+
+  const name = String(ev.name || "");
+  const pkgs = allPkgs.filter((ap) => String(ap.name || "").startsWith(name));
+
+  return pkgs.map((p) => ({ id: String(p.id), name: p.name }));
+});
+
+// Package mutation
+const packageMutation = useCompanyParticipationPackageMutation();
+packageMutation.companyId.value = props.companyId;
+
+const selectedPackageId = ref<string>(
+  props.participation?.package ? String(props.participation.package) : "",
+);
+const isPackageUpdating = ref(false);
+
+// Get package name from the packages data
+const currentPackageName = computed(() => {
+  if (!selectedPackageId.value || !packagesData.value) return "";
+  const pkg = (packagesData.value as Package[]).find(
+    (p) => String(p.id) === selectedPackageId.value,
+  );
+  return pkg?.name?.toLowerCase() || "";
+});
+
+// Get current package items
+const currentPackage = computed(() => {
+  if (!selectedPackageId.value || !packagesData.value) return null;
+  return (
+    (packagesData.value as Package[]).find(
+      (p) => String(p.id) === selectedPackageId.value,
+    ) || null
+  );
+});
+
+// Fetch full item details for the current package
+const packageItemsWithDetails = ref<Item[]>([]);
+
+const fetchPackageItems = async () => {
+  const pkg = currentPackage.value;
+  if (!pkg || !pkg.items || pkg.items.length === 0) {
+    packageItemsWithDetails.value = [];
+    return;
+  }
+
+  try {
+    const itemPromises = pkg.items.map((pi) => getItemById(String(pi.item)));
+    packageItemsWithDetails.value = await Promise.all(itemPromises);
+  } catch (err) {
+    console.error("Failed to fetch package items:", err);
+    packageItemsWithDetails.value = [];
+  }
+};
+
+// Watch for package changes and fetch items
+watch(
+  currentPackage,
+  () => {
+    fetchPackageItems();
+  },
+  { immediate: true },
+);
+
+// Emit package name and items changes
+watch(
+  [currentPackageName, packageItemsWithDetails],
+  ([newName, newItems]) => {
+    emit("packageChanged", newName, newItems);
+  },
+  { immediate: true },
+);
+
+// Confirmation date
+const parseIsoToDate = (isoString: string | null): Date | null => {
+  if (!isoString) return null;
+  try {
+    return new Date(isoString);
+  } catch {
+    return null;
+  }
+};
+
+const confirmedDate = ref<Date | null>(
+  parseIsoToDate(props.participation?.confirmed || null),
+);
+const isDateUpdating = ref(false);
+
+// Participation mutation for updating confirmed date
+const participationMutation = useCompanyParticipationMutation();
+participationMutation.companyId.value = props.companyId;
+
+const onConfirmedDateChange = async (newValue: Date | null) => {
+  if (!newValue) return;
+  try {
+    isDateUpdating.value = true;
+    const isoDate = newValue.toISOString();
+    participationMutation.data.value = {
+      ...props.participation,
+      confirmed: isoDate,
+    };
+    await participationMutation.mutateAsync();
+    toast.success({ title: "Confirmation date updated" });
+  } catch (err) {
+    console.error("Failed to update confirmation date:", err);
+    toast.error({ title: "Failed to update confirmation date" });
+  } finally {
+    isDateUpdating.value = false;
+  }
+};
+
+const onPackageChange = async (newValue: unknown) => {
+  const v = newValue == null ? "" : String(newValue);
+  if (!v) return;
+  try {
+    isPackageUpdating.value = true;
+    packageMutation.packageId.value = v;
+    await packageMutation.mutateAsync();
+    toast.success({ title: "Package updated" });
+  } catch (err) {
+    console.error("Failed to update package:", err);
+    toast.error({ title: "Failed to update package" });
+  } finally {
+    isPackageUpdating.value = false;
+  }
+};
+
+// Watch for participation changes to sync local state from props
+watch(
+  () => props.participation?.package,
+  (newVal) => {
+    selectedPackageId.value = newVal ? String(newVal) : "";
+  },
+);
+
+watch(
+  () => props.participation?.confirmed,
+  (newVal) => {
+    confirmedDate.value = parseIsoToDate(newVal || null);
+  },
+);
+
+// Completion state
+const isComplete = computed(() => {
+  return !!selectedPackageId.value && !!confirmedDate.value;
+});
+
+defineExpose({
+  isComplete,
+  currentPackageName,
+});
+</script>
