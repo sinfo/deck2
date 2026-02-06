@@ -31,7 +31,7 @@
         </div>
       </div>
 
-      <ParticipationChip v-model:selected="selectedStatus" />
+      <ParticipationFilters v-model:selected="selectedStatus" />
 
       <TabsContent value="companies">
         <div v-if="isTeamsLoading || isMembersLoading" class="py-6 text-center">
@@ -214,7 +214,7 @@ import { DynamicScroller } from "vue-virtual-scroller";
 import MemberWithAvatar from "@/components/members/MemberWithAvatar.vue";
 import SpeakerWorkflowCard from "@/components/cards/SpeakerWorkflowCard.vue";
 import CompanyWorkflowCard from "@/components/cards/CompanyWorkflowCard.vue";
-import ParticipationChip from "@/components/ParticipationChip.vue";
+import ParticipationFilters from "@/components/ParticipationFilters.vue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronDown } from "lucide-vue-next";
 import { useInsertionSort, useSortByParticipationStatus } from "@/lib/utils";
