@@ -150,7 +150,7 @@ import { useCompanyInfoMutation } from "@/mutations/companies";
 import { useCompanyImageUploadMutation } from "@/mutations/companies";
 import { usePackageQuery } from "@/mutations/packages";
 import { deleteCompany } from "@/api/companies";
-import { useAuthStore } from "@/stores/auth";
+import { usePermissions } from "@/composables/usePermissions";
 import { useQueryCache } from "@pinia/colada";
 import { useRouter } from "vue-router";
 import Card from "../ui/card/Card.vue";
@@ -184,7 +184,7 @@ const isDescriptionExpanded = ref(false);
 const isEditing = ref(false);
 const isDeleteConfirmOpen = ref(false);
 const isDeleting = ref(false);
-const authStore = useAuthStore();
+const { isCoordinatorOrAdmin } = usePermissions();
 const queryCache = useQueryCache();
 const router = useRouter();
 
@@ -287,9 +287,7 @@ const formatLinkedIn = (url: string): string => {
 };
 
 const canDelete = computed(() => {
-  if (!authStore.decoded) return false;
-  const role = (authStore.decoded as { role?: string }).role;
-  return role === "COORDINATOR" || role === "ADMIN";
+  return isCoordinatorOrAdmin.value === true;
 });
 
 const handleDelete = async () => {

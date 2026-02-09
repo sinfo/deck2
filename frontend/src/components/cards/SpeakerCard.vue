@@ -133,7 +133,6 @@ import type {
 import { useSpeakerInfoMutation } from "@/mutations/speakers";
 import { useSpeakerImageUploadMutation } from "@/mutations/speakers";
 import { deleteSpeaker } from "@/api/speakers";
-import { useAuthStore } from "@/stores/auth";
 import { useQueryCache } from "@pinia/colada";
 import { useRouter } from "vue-router";
 import Card from "../ui/card/Card.vue";
@@ -148,6 +147,7 @@ import SpeakerInfoForm from "../speakers/SpeakerInfoForm.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
+import { usePermissions } from "@/composables/usePermissions";
 import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
 
 const props = defineProps<{
@@ -163,7 +163,7 @@ const isBioExpanded = ref(false);
 const isEditing = ref(false);
 const isDeleteConfirmOpen = ref(false);
 const isDeleting = ref(false);
-const authStore = useAuthStore();
+const { isCoordinatorOrAdmin } = usePermissions();
 const queryCache = useQueryCache();
 const router = useRouter();
 
@@ -250,9 +250,7 @@ const toggleBio = () => {
 };
 
 const canDelete = computed(() => {
-  if (!authStore.decoded) return false;
-  const role = (authStore.decoded as { role?: string }).role;
-  return role === "COORDINATOR" || role === "ADMIN";
+  return isCoordinatorOrAdmin.value === true;
 });
 
 const handleDelete = async () => {

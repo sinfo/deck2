@@ -97,7 +97,8 @@
               id="confirmed-date"
               v-model="editForm.confirmed"
               type="datetime-local"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              :disabled="!canEditConfirmedDate"
             />
           </div>
 
@@ -170,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, computed } from "vue";
 import useToast from "@/lib/toast";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
@@ -183,6 +184,7 @@ import { Label } from "@/components/ui/label";
 import MemberSelect from "@/components/members/MemberSelect.vue";
 import { useCompanyParticipationPackageMutation } from "@/mutations/companies";
 import { usePackagesQuery, usePackageQuery } from "@/mutations/packages";
+import { usePermissions } from "@/composables/usePermissions";
 import type { Package } from "@/dto/packages";
 import type {
   CompanyParticipation,
@@ -204,6 +206,11 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { isCoordinatorOrAdmin } = usePermissions();
+const canEditConfirmedDate = computed(() => {
+  return isCoordinatorOrAdmin.value === true;
+});
 
 const isEditing = ref(false);
 const isSaving = ref(false);
