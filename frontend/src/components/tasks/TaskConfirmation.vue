@@ -105,6 +105,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { CompanyParticipation } from "@/dto/companies";
 import type { SpeakerParticipation } from "@/dto/speakers";
+import type { Contact } from "@/dto/contacts";
 import type { EntityType } from "@/dto/tasks";
 import type { Package } from "@/dto/packages";
 import {
@@ -121,6 +122,7 @@ interface Props {
   entityId: string;
   entityType: EntityType;
   participation?: CompanyParticipation | SpeakerParticipation;
+  contact?: Contact;
 }
 
 const props = defineProps<Props>();
@@ -325,11 +327,30 @@ const isComplete = computed(() => {
   return !!confirmedDate.value;
 });
 
-// Speaker-only fields
-const speakerPhone = ref<string>("");
+// Speaker-only fields (synced from contact)
+const speakerPhone = ref<string>(props.contact?.phones?.[0]?.phone ?? "");
 const speakerObservations = ref<string>("");
-const linkedinUrl = ref<string>("");
+const linkedinUrl = ref<string>(props.contact?.socials?.linkedin ?? "");
 const wantsLinkedinTag = ref<boolean>(false);
+
+// Keep phone and linkedin in sync when contact prop changes
+watch(
+  () => props.contact?.phones?.[0]?.phone,
+  (newVal) => {
+    if (newVal !== undefined) {
+      speakerPhone.value = newVal;
+    }
+  },
+);
+
+watch(
+  () => props.contact?.socials?.linkedin,
+  (newVal) => {
+    if (newVal !== undefined) {
+      linkedinUrl.value = newVal;
+    }
+  },
+);
 
 defineExpose({
   isComplete,

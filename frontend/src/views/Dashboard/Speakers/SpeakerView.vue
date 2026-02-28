@@ -51,6 +51,7 @@
             entity-type="speaker"
             :entity-id="speakerWithParticipation.id"
             :participation="speakerWithParticipation.participation"
+            :contact="speakerWithParticipation.contactObject"
           />
         </TabsContent>
       </Tabs>

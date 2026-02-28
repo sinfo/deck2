@@ -15,6 +15,7 @@
         :entity-id="entityId"
         :entity-type="entityType"
         :participation="currentParticipation"
+        :contact="contact"
         @package-changed="onPackageChanged"
       />
 
@@ -68,6 +69,7 @@ import { ref, computed } from "vue";
 import type { EntityType } from "@/dto/tasks";
 import type { CompanyBillingInfo, CompanyParticipation } from "@/dto/companies";
 import type { SpeakerParticipation } from "@/dto/speakers";
+import type { Contact } from "@/dto/contacts";
 import type { Item } from "@/dto/item";
 import { Stepper } from "@/components/ui/stepper";
 import TaskConfirmation from "./TaskConfirmation.vue";
@@ -86,6 +88,7 @@ interface Props {
   entityId: string;
   participation?: CompanyParticipation | SpeakerParticipation;
   billingInfo?: CompanyBillingInfo;
+  contact?: Contact;
 }
 
 const props = defineProps<Props>();
