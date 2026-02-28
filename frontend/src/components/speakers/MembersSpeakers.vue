@@ -4,7 +4,24 @@
     <CreateSpeakerDialogTrigger />
   </div>
 
-  <ParticipationFilters v-model:selected="selectedStatus" />
+  <div class="flex flex-wrap gap-3 mb-4 items-center">
+    <ParticipationFilters v-model:selected="selectedStatus" />
+    <Select v-model="selectedTeamId">
+      <SelectTrigger class="w-52">
+        <SelectValue placeholder="All teams" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All teams</SelectItem>
+        <SelectItem
+          v-for="team in coordinationTeams"
+          :key="team.id"
+          :value="team.id"
+        >
+          {{ team.name }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
 
   <div
     v-if="!membersSorted.length && speakersLoading"
@@ -19,8 +36,9 @@
 
   <DynamicScroller
     v-else
+    :key="selectedTeamId"
     :items="membersSorted"
-    class="h-100"
+    page-mode
     :min-item-size="1"
   >
     <template #default="{ item }">
@@ -65,6 +83,7 @@
 
 <script setup lang="ts">
 import type { Member } from "@/dto/members";
+import type { CoordinationTeam } from "@/dto/coordinationTeams";
 import MemberWithAvatar from "@/components/members/MemberWithAvatar.vue";
 import { DynamicScroller } from "vue-virtual-scroller";
 import type { Speaker, SpeakerWithParticipation } from "@/dto/speakers";
@@ -77,17 +96,34 @@ import { ChevronDown } from "lucide-vue-next";
 import { useParticipationFilter } from "@/composables/useParticipationFilter";
 import type { ParticipationStatus } from "@/dto";
 import ParticipationFilters from "@/components/ParticipationFilters.vue";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const props = defineProps<{
   speakers: Speaker[];
   speakersLoading?: boolean;
   members: Member[];
   eventId: number;
+  coordinationTeams?: CoordinationTeam[];
 }>();
 
 // TODO shift me to top
 const membersSorted = computed(() => {
-  return [...props.members]?.sort((a, b) => a.name.localeCompare(b.name));
+  const sorted = [...props.members]?.sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  if (!selectedTeamId.value || selectedTeamId.value === "all") return sorted;
+  const team = props.coordinationTeams?.find(
+    (t) => t.id === selectedTeamId.value,
+  );
+  if (!team) return sorted;
+  const teamMemberSet = new Set(team.coordinatedMembers);
+  return sorted.filter((m) => teamMemberSet.has(m.id));
 });
 
 const membersMap = computed(() => {
@@ -100,6 +136,11 @@ const membersMap = computed(() => {
   );
 });
 
+// Set of member IDs visible after team filtering
+const visibleMemberIds = computed(
+  () => new Set(membersSorted.value.map((m) => m.id)),
+);
+
 const participations = computed(() =>
   props.speakers?.reduce((acc, speaker) => {
     const currParticipation = speaker.participations.find(
@@ -109,6 +150,7 @@ const participations = computed(() =>
     if (currParticipation && currParticipation.member in membersMap.value!) {
       const member = membersMap.value?.[currParticipation.member];
       if (!member) return acc; // Skip if member not found
+      if (!visibleMemberIds.value.has(member.id)) return acc; // skip filtered-out members
 
       if (!acc.has(member.id)) acc.set(member.id, []);
 
@@ -128,6 +170,7 @@ const participations = computed(() =>
 );
 
 const selectedStatus = ref<ParticipationStatus | null>(null);
+const selectedTeamId = ref<string>("all");
 
 const participationsFiltered = useParticipationFilter<SpeakerWithParticipation>(
   participations as ComputedRef<Map<string, SpeakerWithParticipation[]>>,
