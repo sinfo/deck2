@@ -26,21 +26,33 @@
 
       <TaskContract :entity-type="entityType" :entity-id="entityId" />
 
-      <TaskSessionTitles
-        v-if="showSessionTitles"
-        :package-items="packageItems"
-      />
+      <!-- Company-only steps -->
+      <template v-if="entityType === 'company'">
+        <TaskSessionTitles
+          v-if="showSessionTitles"
+          :package-items="packageItems"
+        />
 
-      <TaskCorlief
-        :entity-id="entityId"
-        :step-number="showSessionTitles ? 5 : 4"
-      />
+        <TaskCorlief
+          :entity-id="entityId"
+          :step-number="showSessionTitles ? 5 : 4"
+        />
 
-      <TaskLogistics
-        :entity-id="entityId"
-        :step-number="showSessionTitles ? 6 : 5"
-        :is-last="true"
-      />
+        <TaskLogistics
+          :entity-id="entityId"
+          :step-number="showSessionTitles ? 6 : 5"
+          :is-last="true"
+        />
+      </template>
+
+      <!-- Speaker-only steps -->
+      <template v-if="entityType === 'speaker'">
+        <TaskFlights :entity-id="entityId" :step-number="4" />
+
+        <TaskMaterials :entity-id="entityId" :step-number="5" />
+
+        <TaskHotel :entity-id="entityId" :step-number="6" :is-last="true" />
+      </template>
     </Stepper>
   </div>
 </template>
@@ -58,6 +70,9 @@ import TaskContract from "./TaskContract.vue";
 import TaskSessionTitles from "./TaskSessionTitles.vue";
 import TaskCorlief from "./TaskCorlief.vue";
 import TaskLogistics from "./TaskLogistics.vue";
+import TaskFlights from "./TaskFlights.vue";
+import TaskMaterials from "./TaskMaterials.vue";
+import TaskHotel from "./TaskHotel.vue";
 
 interface Props {
   entityType: EntityType;
