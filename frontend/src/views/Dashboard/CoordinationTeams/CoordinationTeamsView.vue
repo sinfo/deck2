@@ -79,9 +79,7 @@
         :key="team.id"
         class="overflow-hidden hover:shadow-lg transition-shadow border-2"
       >
-        <CardHeader
-          class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border-b-2 pb-4"
-        >
+        <CardHeader class="border-b-2 pb-4">
           <div class="flex items-start justify-between gap-2 sm:gap-4">
             <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
               <div
@@ -105,6 +103,13 @@
                 <CardTitle class="text-lg sm:text-xl font-bold truncate">{{
                   team.name
                 }}</CardTitle>
+                <p
+                  v-if="team.coordinator && membersMap[team.coordinator.member]"
+                  class="text-sm text-muted-foreground"
+                >
+                  Coordinator:
+                  {{ membersMap[team.coordinator.member]?.name }}
+                </p>
               </div>
             </div>
             <div class="flex gap-1 flex-shrink-0">
@@ -166,7 +171,7 @@
             </div>
             <div
               v-if="team.coordinatedMembers?.length"
-              class="space-y-2 max-h-72 overflow-y-auto pr-2 custom-scrollbar"
+              class="space-y-2 max-h-72 overflow-y-auto pr-2"
             >
               <div
                 v-for="memberId in team.coordinatedMembers"
@@ -275,12 +280,10 @@
     <!-- Edit modal -->
     <div
       v-if="editing"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       @click.self="closeEdit"
     >
-      <Card
-        class="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200"
-      >
+      <Card class="w-full max-w-md shadow-2xl">
         <CardHeader class="border-b bg-gradient-to-r from-blue-50 to-indigo-50">
           <CardTitle class="text-2xl">Edit Team</CardTitle>
           <p class="text-sm text-muted-foreground mt-1">
@@ -607,56 +610,3 @@ const deleteTeamConfirm = async (t: CoordinationTeam) => {
   }
 };
 </script>
-
-<style scoped>
-.custom-scrollbar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.animate-in {
-  animation-duration: 200ms;
-  animation-fill-mode: both;
-}
-
-.fade-in {
-  animation-name: fadeIn;
-}
-
-.zoom-in-95 {
-  animation-name: zoomIn95;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes zoomIn95 {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-</style>
