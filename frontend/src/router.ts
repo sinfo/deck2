@@ -90,15 +90,6 @@ const router = createRouter({
           meta: { roles: ["COORDINATOR", "ADMIN"] },
         },
         {
-          path: "me/coord-team",
-          name: "my-coordination-team",
-          component: () =>
-            import(
-              "./views/Dashboard/CoordinationTeams/CoordinatorTeamView.vue"
-            ),
-          meta: { roles: ["COORDINATOR"] },
-        },
-        {
           path: "gmail",
           name: "gmail-messages",
           component: () =>
