@@ -30,7 +30,7 @@
 
         <!-- Keyboard shortcut badge (when empty and not focused) -->
         <div
-          class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none hidden sm:block"
+          class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none"
         >
           <Badge variant="secondary" class="text-xs flex items-center gap-1">
             <span class="font-mono">{{ isMac ? "⌘" : "Ctrl" }}</span>
@@ -60,11 +60,7 @@
           (showSuggestions &&
             (results.length > 0 || isLoading || (searchTerm && showCreate)))
         "
-        ref="listRef"
-        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto overscroll-contain touch-pan-y max-h-[65vh] sm:max-h-[24rem]"
-        role="listbox"
-        tabindex="-1"
-        aria-label="Search results for companies, speakers, and members"
+        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto"
       >
         <!-- Loading state -->
         <div v-if="isLoading" class="p-3 text-center text-gray-500">
@@ -79,7 +75,7 @@
           <!-- Companies section -->
           <div v-if="filteredCompanies.length > 0">
             <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
+              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
             >
               Companies
             </div>
@@ -93,9 +89,6 @@
                   ? 'bg-blue-50 border-blue-200'
                   : 'hover:bg-gray-50',
               ]"
-              :data-result-index="getItemIndex(company)"
-              role="option"
-              :aria-selected="getItemIndex(company) === highlightedIndex"
               @click="selectCompany(company)"
             >
               <Image
@@ -120,7 +113,7 @@
           <!-- Speakers section -->
           <div v-if="filteredSpeakers.length > 0">
             <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
+              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
             >
               Speakers
             </div>
@@ -134,9 +127,6 @@
                   ? 'bg-blue-50 border-blue-200'
                   : 'hover:bg-gray-50',
               ]"
-              :data-result-index="getItemIndex(speaker)"
-              role="option"
-              :aria-selected="getItemIndex(speaker) === highlightedIndex"
               @click="selectSpeaker(speaker)"
             >
               <Image
@@ -164,7 +154,7 @@
           <!-- Members section -->
           <div v-if="filteredMembers.length > 0">
             <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
+              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
             >
               Members
             </div>
@@ -178,9 +168,6 @@
                   ? 'bg-blue-50 border-blue-200'
                   : 'hover:bg-gray-50',
               ]"
-              :data-result-index="getItemIndex(member)"
-              role="option"
-              :aria-selected="getItemIndex(member) === highlightedIndex"
               @click="selectMember(member)"
             >
               <Image
@@ -298,7 +285,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onBeforeUnmount } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllCompanies } from "@/api/companies";
 import { getAllSpeakers } from "@/api/speakers";
@@ -319,7 +306,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
-import createFuzzySearch, { type FuzzySearcher } from "@nozbe/microfuzz";
+import createFuzzySearch, { type FuzzyResult } from "@nozbe/microfuzz";
 import type { Member } from "@/dto/members";
 
 type SelectedItem = Company | Speaker | Member;
@@ -361,10 +348,8 @@ const selectedItem = ref<SelectedItem | null>(null);
 const isCompanyDialogOpen = ref(false);
 const isSpeakerDialogOpen = ref(false);
 const createTerm = ref("");
+const inputRef = ref<HTMLInputElement>();
 const highlightedIndex = ref(-1);
-const inputRef = ref<HTMLInputElement | null>(null);
-const listRef = ref<HTMLElement | null>(null);
-const scrollAnimationFrameId = ref<number | null>(null);
 
 // Detect platform for keyboard shortcut
 const isMac = computed(() => {
@@ -403,7 +388,7 @@ const isLoading = computed(
   () => companiesLoading.value || speakersLoading.value || membersLoading.value,
 );
 
-const companyFuzzy = ref<FuzzySearcher<Company> | null>(null);
+const companyFuzzy = ref<null | ((q: string) => FuzzyResult<Company>[])>(null);
 watch(
   () => companiesData.value?.data,
   (list) => {
@@ -411,7 +396,6 @@ watch(
       companyFuzzy.value = null;
     } else {
       companyFuzzy.value = createFuzzySearch(list, {
-        // match on multiple fields
         getText: (company: Company) => [
           company.name,
           company.description ?? "",
@@ -422,7 +406,7 @@ watch(
   { immediate: true },
 );
 
-const speakerFuzzy = ref<FuzzySearcher<Speaker> | null>(null);
+const speakerFuzzy = ref<null | ((q: string) => FuzzyResult<Speaker>[])>(null);
 watch(
   () => speakersData.value?.data,
   (list) => {
@@ -439,64 +423,125 @@ watch(
   },
   { immediate: true },
 );
-const filteredCompanies = computed(() => {
+
+// Raw fuzzy results (item + score) for current term
+const companyResults = computed<FuzzyResult<Company>[]>(() => {
+  const term = searchTerm.value.trim();
+  const fuzzy = companyFuzzy.value;
+  if (!term || !fuzzy) return [];
+  return fuzzy(term);
+});
+
+const speakerResults = computed<FuzzyResult<Speaker>[]>(() => {
+  const term = searchTerm.value.trim();
+  const fuzzy = speakerFuzzy.value;
+  if (!term || !fuzzy) return [];
+  return fuzzy(term);
+});
+
+const filteredCompanies = computed<Company[]>(() => {
   const list = companiesData.value?.data ?? [];
   const term = searchTerm.value.trim();
 
   // Show recent companies when no search term
   if (!term) return list.slice(0, 5);
 
-  const fuzzy = companyFuzzy.value;
-  if (!fuzzy) return [];
-
-  return fuzzy(term)
-    .map((res: { item: Company }) => res.item)
-    .slice(0, 5); // Limit to 5 results
+  return companyResults.value.map((res) => res.item).slice(0, 5); // Limit to 5 results
 });
 
-const filteredSpeakers = computed(() => {
+const filteredSpeakers = computed<Speaker[]>(() => {
   const list = speakersData.value?.data ?? [];
   const term = searchTerm.value.trim();
 
   if (!term) return list.slice(0, 5);
 
-  const fuzzy = speakerFuzzy.value;
-  if (!fuzzy) return [];
-
-  return fuzzy(term)
-    .map((res: { item: Speaker }) => res.item)
-    .slice(0, 5); // Limit to 5 results
+  return speakerResults.value.map((res) => res.item).slice(0, 5);
 });
 
-const filteredMembers = computed(() => {
+const filteredMembers = computed<Member[]>(() => {
   if (!membersData.value?.data) return [];
 
   const term = searchTerm.value.toLowerCase();
 
-  if (!term) {
-    // Show recent members when no search term
-    return membersData.value.data.slice(0, 5);
-  }
+  if (!term) return membersData.value.data.slice(0, 5);
 
   return membersData.value.data
     .filter((member: Member) => member.name.toLowerCase().includes(term))
     .slice(0, 5);
 });
 
-const results = computed(() => [
-  ...filteredCompanies.value.map((company: Company) => ({
-    ...company,
-    type: "company",
-  })),
-  ...filteredSpeakers.value.map((speaker: Speaker) => ({
-    ...speaker,
-    type: "speaker",
-  })),
-  ...filteredMembers.value.map((member: Member) => ({
-    ...member,
-    type: "member",
-  })),
-]);
+const bestCompanyScore = computed(() => companyResults.value[0]?.score ?? 0);
+const bestSpeakerScore = computed(() => speakerResults.value[0]?.score ?? 0);
+
+type GroupId = "companies" | "speakers" | "members";
+
+const orderedGroups = computed<GroupId[]>(() => {
+  const term = searchTerm.value.trim();
+  const baseOrder: GroupId[] = ["companies", "speakers", "members"];
+
+  if (!term) {
+    // No search term: keep existing visual order
+    return baseOrder;
+  }
+
+  const entries: { id: GroupId; score: number }[] = [
+    { id: "companies", score: bestCompanyScore.value },
+    { id: "speakers", score: bestSpeakerScore.value },
+    // We could compute a score for members too; for now keep them last
+    { id: "members", score: 0 },
+  ];
+
+  // Sort by score desc; for ties, keep base order stable
+  entries.sort((a, b) => {
+    if (b.score === a.score) {
+      return baseOrder.indexOf(a.id) - baseOrder.indexOf(b.id);
+    }
+    return b.score - a.score;
+  });
+
+  // Remove groups that have no results at all
+  return entries
+    .filter((entry) => {
+      if (entry.id === "companies") return filteredCompanies.value.length > 0;
+      if (entry.id === "speakers") return filteredSpeakers.value.length > 0;
+      if (entry.id === "members") return filteredMembers.value.length > 0;
+      return false;
+    })
+    .map((entry) => entry.id);
+});
+
+const results = computed(() => {
+  const out: Array<
+    (Company | Speaker | Member) & { type: "company" | "speaker" | "member" }
+  > = [];
+
+  for (const group of orderedGroups.value) {
+    if (group === "companies") {
+      out.push(
+        ...filteredCompanies.value.map((company) => ({
+          ...company,
+          type: "company" as const,
+        })),
+      );
+    } else if (group === "speakers") {
+      out.push(
+        ...filteredSpeakers.value.map((speaker) => ({
+          ...speaker,
+          type: "speaker" as const,
+        })),
+      );
+    } else if (group === "members") {
+      out.push(
+        ...filteredMembers.value.map((member) => ({
+          ...member,
+          type: "member" as const,
+        })),
+      );
+    }
+  }
+
+  return out;
+});
 
 const getItemIndex = (item: SelectedItem) => {
   return results.value.findIndex((result) => result.id === item.id);
@@ -685,42 +730,4 @@ watch(
     highlightedIndex.value = -1;
   },
 );
-
-watch(
-  () => highlightedIndex.value,
-  (idx) => {
-    const container = listRef.value;
-    if (!container || idx < 0) return;
-
-    if (scrollAnimationFrameId.value !== null) {
-      cancelAnimationFrame(scrollAnimationFrameId.value);
-      scrollAnimationFrameId.value = null;
-    }
-
-    scrollAnimationFrameId.value = requestAnimationFrame(() => {
-      const el = container.querySelector(
-        `[data-result-index="${idx}"]`,
-      ) as HTMLElement | null;
-      if (!el) return;
-
-      const elTop = el.offsetTop;
-      const elBottom = elTop + el.offsetHeight;
-      const viewTop = container.scrollTop;
-      const viewBottom = viewTop + container.clientHeight;
-
-      if (elTop < viewTop) {
-        container.scrollTop = elTop;
-      } else if (elBottom > viewBottom) {
-        container.scrollTop = elBottom - container.clientHeight;
-      }
-    });
-  },
-);
-
-onBeforeUnmount(() => {
-  if (scrollAnimationFrameId.value !== null) {
-    cancelAnimationFrame(scrollAnimationFrameId.value);
-    scrollAnimationFrameId.value = null;
-  }
-});
 </script>
