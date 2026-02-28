@@ -911,10 +911,10 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
 type UpdateCompanyData struct {
-	Name        *string                 `json:"name"`
-	Description *string                 `json:"description"`
-	Site        *string                 `json:"site"`
-	LinkedIn    *string                 `json:"linkedin"`
+	Name        *string                    `json:"name"`
+	Description *string                    `json:"description"`
+	Site        *string                    `json:"site"`
+	LinkedIn    *string                    `json:"linkedin"`
 	BillingInfo *models.CompanyBillingInfo `json:"billingInfo"`
 }
 
@@ -1432,6 +1432,52 @@ func (c *CompaniesType) DeleteCompanyParticipation(companyID primitive.ObjectID,
 	}
 
 	return &updatedCompany, nil
+}
+
+// AnnounceAcceptedCompanies changes all companies with ACCEPTED status on the
+// current event to ANNOUNCED. Returns the number of companies updated.
+func (c *CompaniesType) AnnounceAcceptedCompanies() (int64, error) {
+	ctx := context.Background()
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return 0, err
+	}
+
+	filter := bson.M{
+		"participations": bson.M{
+			"$elemMatch": bson.M{
+				"event":  currentEvent.ID,
+				"status": models.Accepted,
+			},
+		},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"participations.$[elem].status": models.Announced,
+		},
+	}
+
+	arrayFilters := options.ArrayFilters{
+		Filters: []interface{}{
+			bson.M{
+				"elem.event":  currentEvent.ID,
+				"elem.status": models.Accepted,
+			},
+		},
+	}
+
+	opts := options.Update().SetArrayFilters(arrayFilters)
+
+	result, err := c.Collection.UpdateMany(ctx, filter, update, opts)
+	if err != nil {
+		return 0, err
+	}
+
+	ResetCurrentPublicCompanies()
+
+	return result.ModifiedCount, nil
 }
 
 // FindThread finds a thread in a company

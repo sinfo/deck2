@@ -1,7 +1,38 @@
 <template>
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">Companies</h1>
-    <CreateCompanyDialogTrigger />
+    <div class="flex items-center gap-2">
+      <AlertDialog v-if="isCoordinator" v-model:open="showAnnounceDialog">
+        <AlertDialogTrigger as-child>
+          <Button
+            size="sm"
+            variant="outline"
+            :disabled="announcing || acceptedCount === 0"
+          >
+            <Megaphone class="w-4 h-4 mr-1" />
+            Announce All ({{ acceptedCount }})
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Announce All Accepted Companies</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will change
+              <strong>{{ acceptedCount }}</strong> accepted
+              {{ acceptedCount === 1 ? "company" : "companies" }} to announced
+              for the current event. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel :disabled="announcing">Cancel</AlertDialogCancel>
+            <Button :disabled="announcing" @click="handleAnnounce">
+              {{ announcing ? "Announcing..." : "Announce All" }}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <CreateCompanyDialogTrigger />
+    </div>
   </div>
 
   <div class="flex flex-wrap gap-3 mb-4 items-center">
@@ -94,7 +125,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CompanyWorkflowCard from "../cards/CompanyWorkflowCard.vue";
 import CreateCompanyDialogTrigger from "./CreateCompanyDialogTrigger.vue";
 import { ref, computed, type ComputedRef } from "vue";
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown, Megaphone } from "lucide-vue-next";
 import { useParticipationFilter } from "@/composables/useParticipationFilter";
 import type { ObjectID, ParticipationStatus } from "@/dto";
 import ParticipationFilters from "@/components/ParticipationFilters.vue";
@@ -106,6 +137,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuthStore } from "@/stores/auth";
+import { useQueryCache } from "@pinia/colada";
+import { announceAcceptedCompanies } from "@/api/companies";
+import { useToast } from "@/lib/toast";
+import Button from "@/components/ui/button/Button.vue";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const props = defineProps<{
   companies: Company[];
@@ -114,6 +160,49 @@ const props = defineProps<{
   eventId: number;
   coordinationTeams?: CoordinationTeam[];
 }>();
+
+// Coordinator check
+const authStore = useAuthStore();
+const isCoordinator = computed(() => {
+  const role = authStore.decoded?.role as string | undefined;
+  return role === "COORDINATOR" || role === "ADMIN";
+});
+
+// Count of accepted companies in current event
+const acceptedCount = computed(() => {
+  return props.companies.filter((c) =>
+    c.participations.some(
+      (p) => p.event === props.eventId && p.status === "ACCEPTED",
+    ),
+  ).length;
+});
+
+// Announce all accepted companies
+const showAnnounceDialog = ref(false);
+const announcing = ref(false);
+const queryCache = useQueryCache();
+const { toast } = useToast();
+
+async function handleAnnounce() {
+  announcing.value = true;
+  try {
+    const res = await announceAcceptedCompanies();
+    const count = res.data.announced;
+    toast.success({
+      title: "Companies announced",
+      description: `${count} ${count === 1 ? "company" : "companies"} changed from accepted to announced.`,
+    });
+    queryCache.invalidateQueries({ key: ["companies"] });
+  } catch (err) {
+    toast.error({
+      title: "Failed to announce companies",
+      description: err instanceof Error ? err.message : "An error occurred",
+    });
+  } finally {
+    announcing.value = false;
+    showAnnounceDialog.value = false;
+  }
+}
 
 // TODO shift me to top
 const membersSorted = computed(() => {
