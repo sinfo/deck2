@@ -573,17 +573,16 @@ const handleKeydown = (event: KeyboardEvent) => {
   const hasResults = list.length > 0;
   const maxIndex = list.length - 1;
 
-  const setHighlighted = (nextIndex: number) => {
-    // allow -1 meaning nothing highlighted
-    const normalizeIndex = (value: number) =>
-      Math.min(Math.max(value, -1), maxIndex);
-    highlightedIndex.value = normalizeIndex(nextIndex);
-  };
+  const normalizeIndex = (value: number) =>
+    Math.min(Math.max(value, -1), maxIndex);
+
+  const setHighlighted = (nextIndex: number) =>
+    (highlightedIndex.value = normalizeIndex(nextIndex));
 
   const closeSuggestions = () => {
     showSuggestions.value = false;
     highlightedIndex.value = -1;
-    (event.target as HTMLInputElement | null)?.blur();
+    (event.target as HTMLInputElement).blur();
   };
 
   const selectResult = (item: (typeof list)[number]) => {
@@ -620,10 +619,11 @@ const handleKeydown = (event: KeyboardEvent) => {
       event.preventDefault();
       if (!hasResults) return;
 
-      const idx = highlightedIndex.value;
-      if (idx < 0 || idx > maxIndex) return;
+      // if nothing is highlighted, select the first item
+      const idx = highlightedIndex.value >= 0 ? highlightedIndex.value : 0;
 
       selectResult(list[idx]);
+      highlightedIndex.value = idx;
       return;
     }
 
