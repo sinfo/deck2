@@ -293,7 +293,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch, nextTick, type ComputedRef } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllCompanies } from "@/api/companies";
 import { getAllSpeakers } from "@/api/speakers";
@@ -400,155 +400,97 @@ const isLoading = computed(
 /**
  * NOTE: microfuzz score semantics:
  * - Lower score = better match (exact match is ~0)
- * So we always sort scores ASC, and use Infinity for “no results”.
+ * So we always sort scores ASC, and use Infinity for no results.
  */
 
-// ----- Companies fuzzy -----
-const companyFuzzy = ref<null | ((q: string) => FuzzyResult<Company>[])>(null);
-watch(
-  () => companiesData.value?.data,
-  (list) => {
-    if (!list || !list.length) {
-      companyFuzzy.value = null;
-    } else {
-      companyFuzzy.value = createFuzzySearch(list, {
-        getText: (company: Company) => [
-          company.name,
-          company.description ?? "",
-        ],
-      });
-    }
-  },
-  { immediate: true },
-);
+const LIMIT = 5;
+const q = computed(() => searchTerm.value.trim()); // query
 
-// ----- Speakers fuzzy -----
-const speakerFuzzy = ref<null | ((q: string) => FuzzyResult<Speaker>[])>(null);
-watch(
-  () => speakersData.value?.data,
-  (list) => {
-    if (!list || !list.length) {
-      speakerFuzzy.value = null;
-    } else {
-      speakerFuzzy.value = createFuzzySearch(list, {
-        getText: (speaker: Speaker) => [
-          speaker.name,
-          speaker.companyName ?? "",
-        ],
-      });
-    }
-  },
-  { immediate: true },
-);
+function useFuzzy<T>(
+  src: ComputedRef<T[]>,
+  getText: (item: T) => string[],
+  bias = 0,
+) {
+  const f = ref<null | ((q: string) => FuzzyResult<T>[])>(null);
 
-// ----- Members fuzzy (NEW) -----
-const memberFuzzy = ref<null | ((q: string) => FuzzyResult<Member>[])>(null);
-watch(
-  () => membersData.value?.data,
-  (list) => {
-    if (!list || !list.length) {
-      memberFuzzy.value = null;
-    } else {
-      memberFuzzy.value = createFuzzySearch(list, {
-        getText: (member: Member) => [member.name],
-      });
-    }
-  },
-  { immediate: true },
-);
+  watch(
+    () => src.value,
+    (list) => {
+      f.value = list.length ? createFuzzySearch(list, { getText }) : null;
+    },
+    { immediate: true },
+  );
 
-// Raw fuzzy results (item + score) for current term
-const companyResults = computed<FuzzyResult<Company>[]>(() => {
-  const term = searchTerm.value.trim();
-  const fuzzy = companyFuzzy.value;
-  if (!term || !fuzzy) return [];
-  return fuzzy(term);
-});
+  const res = computed<FuzzyResult<T>[]>(() => {
+    const term = q.value;
+    const fn = f.value;
+    if (!term || !fn) return [];
+    return fn(term);
+  });
 
-const speakerResults = computed<FuzzyResult<Speaker>[]>(() => {
-  const term = searchTerm.value.trim();
-  const fuzzy = speakerFuzzy.value;
-  if (!term || !fuzzy) return [];
-  return fuzzy(term);
-});
+  const items = computed<T[]>(() => {
+    const list = src.value;
+    if (!q.value) return list.slice(0, LIMIT);
+    return res.value.map((r) => r.item).slice(0, LIMIT);
+  });
 
-const memberResults = computed<FuzzyResult<Member>[]>(() => {
-  const term = searchTerm.value.trim();
-  const fuzzy = memberFuzzy.value;
-  if (!term || !fuzzy) return [];
-  return fuzzy(term);
-});
+  const best = computed(() => (res.value[0]?.score ?? Infinity) + bias);
 
-// Visible lists (limit to 5)
-const filteredCompanies = computed<Company[]>(() => {
-  const list = companiesData.value?.data ?? [];
-  const term = searchTerm.value.trim();
+  return { items, best };
+}
 
-  if (!term) return list.slice(0, 5);
-  return companyResults.value.map((res) => res.item).slice(0, 5);
-});
+const companies = computed(() => companiesData.value?.data ?? []);
+const speakers = computed(() => speakersData.value?.data ?? []);
+const members = computed(() => membersData.value?.data ?? []);
 
-const filteredSpeakers = computed<Speaker[]>(() => {
-  const list = speakersData.value?.data ?? [];
-  const term = searchTerm.value.trim();
+const MEMBER_BIAS = 0.15;
 
-  if (!term) return list.slice(0, 5);
-  return speakerResults.value.map((res) => res.item).slice(0, 5);
-});
+const c = useFuzzy(companies, (x: Company) => [x.name, x.description ?? ""]);
+const s = useFuzzy(speakers, (x: Speaker) => [x.name, x.companyName ?? ""]);
+const m = useFuzzy(members, (x: Member) => [x.name], MEMBER_BIAS);
 
-const filteredMembers = computed<Member[]>(() => {
-  const list = membersData.value?.data ?? [];
-  const term = searchTerm.value.trim();
+const filteredCompanies = c.items;
+const filteredSpeakers = s.items;
+const filteredMembers = m.items;
 
-  if (!term) return list.slice(0, 5);
-  return memberResults.value.map((res) => res.item).slice(0, 5);
-});
-
-// Best scores for ordering groups (lower = better, Infinity = “no match”)
-const bestCompanyScore = computed(
-  () => companyResults.value[0]?.score ?? Infinity,
-);
-const bestSpeakerScore = computed(
-  () => speakerResults.value[0]?.score ?? Infinity,
-);
-const bestMemberScore = computed(
-  () => memberResults.value[0]?.score ?? Infinity,
-);
+const bestCompanyScore = c.best;
+const bestSpeakerScore = s.best;
+const bestMemberScore = m.best;
 
 type GroupId = "companies" | "speakers" | "members";
 
+const ord: Record<GroupId, number> = {
+  companies: 0,
+  speakers: 1,
+  members: 2,
+};
+
 const orderedGroups = computed<GroupId[]>(() => {
-  const term = searchTerm.value.trim();
-  const baseOrder: GroupId[] = ["companies", "speakers", "members"];
+  if (!q.value) return ["companies", "speakers", "members"];
 
-  if (!term) {
-    // No search term: keep existing visual order
-    return baseOrder;
-  }
-
-  const entries: { id: GroupId; score: number }[] = [
-    { id: "companies", score: bestCompanyScore.value },
-    { id: "speakers", score: bestSpeakerScore.value },
-    { id: "members", score: bestMemberScore.value },
+  const entries: { id: GroupId; score: number; len: number }[] = [
+    {
+      id: "companies",
+      score: bestCompanyScore.value,
+      len: filteredCompanies.value.length,
+    },
+    {
+      id: "speakers",
+      score: bestSpeakerScore.value,
+      len: filteredSpeakers.value.length,
+    },
+    {
+      id: "members",
+      score: bestMemberScore.value,
+      len: filteredMembers.value.length,
+    },
   ];
 
-  // Sort by score ASC; tie-breaker = baseOrder stability
-  entries.sort((a, b) => {
-    if (a.score === b.score) {
-      return baseOrder.indexOf(a.id) - baseOrder.indexOf(b.id);
-    }
-    return a.score - b.score;
-  });
+  entries.sort((a, b) =>
+    a.score === b.score ? ord[a.id] - ord[b.id] : a.score - b.score,
+  );
 
-  // Only keep groups that have something to show
-  return entries
-    .filter((entry) => {
-      if (entry.id === "companies") return filteredCompanies.value.length > 0;
-      if (entry.id === "speakers") return filteredSpeakers.value.length > 0;
-      if (entry.id === "members") return filteredMembers.value.length > 0;
-      return false;
-    })
-    .map((entry) => entry.id);
+  return entries.filter((e) => e.len > 0).map((e) => e.id);
 });
 
 const results = computed(() => {
@@ -556,28 +498,36 @@ const results = computed(() => {
     (Company | Speaker | Member) & { type: "company" | "speaker" | "member" }
   > = [];
 
-  for (const group of orderedGroups.value) {
-    if (group === "companies") {
-      out.push(
-        ...filteredCompanies.value.map((company) => ({
-          ...company,
-          type: "company" as const,
-        })),
-      );
-    } else if (group === "speakers") {
-      out.push(
-        ...filteredSpeakers.value.map((speaker) => ({
-          ...speaker,
-          type: "speaker" as const,
-        })),
-      );
-    } else if (group === "members") {
-      out.push(
-        ...filteredMembers.value.map((member) => ({
-          ...member,
-          type: "member" as const,
-        })),
-      );
+  const addToResults = (...items: typeof out) => out.push(...items);
+
+  for (const g of orderedGroups.value) {
+    switch (g) {
+      case "companies":
+        addToResults(
+          ...filteredCompanies.value.map((x) => ({
+            ...x,
+            type: "company" as const,
+          })),
+        );
+        break;
+
+      case "speakers":
+        addToResults(
+          ...filteredSpeakers.value.map((x) => ({
+            ...x,
+            type: "speaker" as const,
+          })),
+        );
+        break;
+
+      case "members":
+        addToResults(
+          ...filteredMembers.value.map((x) => ({
+            ...x,
+            type: "member" as const,
+          })),
+        );
+        break;
     }
   }
 
@@ -618,39 +568,67 @@ const handleFocus = () => {
 };
 
 const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === "Escape") {
+  const { key } = event;
+  const list = results.value;
+  const hasResults = list.length > 0;
+  const maxIndex = list.length - 1;
+
+  const setHighlighted = (nextIndex: number) => {
+    // allow -1 meaning nothing highlighted
+    const normalizeIndex = (value: number) =>
+      Math.min(Math.max(value, -1), maxIndex);
+    highlightedIndex.value = normalizeIndex(nextIndex);
+  };
+
+  const closeSuggestions = () => {
     showSuggestions.value = false;
     highlightedIndex.value = -1;
-    const input = event.target as HTMLInputElement;
-    if (input) input.blur();
-  } else if (event.key === "ArrowDown") {
-    event.preventDefault();
-    if (results.value.length > 0) {
-      highlightedIndex.value = Math.min(
-        highlightedIndex.value + 1,
-        results.value.length - 1,
-      );
+    (event.target as HTMLInputElement | null)?.blur();
+  };
+
+  const selectResult = (item: (typeof list)[number]) => {
+    switch (item.type) {
+      case "speaker":
+        selectSpeaker(item as Speaker);
+        return;
+      case "member":
+        selectMember(item as Member);
+        return;
+      case "company":
+        selectCompany(item as Company);
+        return;
     }
-  } else if (event.key === "ArrowUp") {
-    event.preventDefault();
-    if (results.value.length > 0) {
-      highlightedIndex.value = Math.max(highlightedIndex.value - 1, -1);
+  };
+
+  switch (key) {
+    case "Escape": {
+      closeSuggestions();
+      return;
     }
-  } else if (event.key === "Enter") {
-    event.preventDefault();
-    if (
-      highlightedIndex.value >= 0 &&
-      highlightedIndex.value < results.value.length
-    ) {
-      const selectedResult = results.value[highlightedIndex.value];
-      if (selectedResult.type === "speaker") {
-        selectSpeaker(selectedResult as Speaker);
-      } else if (selectedResult.type === "member") {
-        selectMember(selectedResult as Member);
-      } else if (selectedResult.type === "company") {
-        selectCompany(selectedResult as Company);
-      }
+
+    case "ArrowDown":
+    case "ArrowUp": {
+      event.preventDefault();
+      if (!hasResults) return;
+
+      const delta = key === "ArrowDown" ? 1 : -1;
+      setHighlighted(highlightedIndex.value + delta);
+      return;
     }
+
+    case "Enter": {
+      event.preventDefault();
+      if (!hasResults) return;
+
+      const idx = highlightedIndex.value;
+      if (idx < 0 || idx > maxIndex) return;
+
+      selectResult(list[idx]);
+      return;
+    }
+
+    default:
+      return;
   }
 };
 
