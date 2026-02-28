@@ -43,6 +43,30 @@
         />
       </div>
     </div>
+
+    <!-- Speaker-only fields -->
+    <template v-if="entityType === 'speaker'">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div class="space-y-2">
+          <Label for="speaker-phone">Phone</Label>
+          <Input
+            id="speaker-phone"
+            v-model="speakerPhone"
+            placeholder="Phone number"
+          />
+        </div>
+      </div>
+
+      <div class="space-y-2 mt-4">
+        <Label for="speaker-observations">Observations</Label>
+        <Textarea
+          id="speaker-observations"
+          v-model="speakerObservations"
+          placeholder="Any observations about the speaker"
+          :rows="3"
+        />
+      </div>
+    </template>
   </TaskTimelineItem>
 </template>
 
@@ -61,6 +85,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { CompanyParticipation } from "@/dto/companies";
 import type { SpeakerParticipation } from "@/dto/speakers";
 import type { EntityType } from "@/dto/tasks";
@@ -282,6 +308,10 @@ const isComplete = computed(() => {
   // For speakers, just the date is enough
   return !!confirmedDate.value;
 });
+
+// Speaker-only fields
+const speakerPhone = ref<string>("");
+const speakerObservations = ref<string>("");
 
 defineExpose({
   isComplete,

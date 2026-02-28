@@ -49,9 +49,11 @@
       <template v-if="entityType === 'speaker'">
         <TaskFlights :entity-id="entityId" :step-number="4" />
 
-        <TaskMaterials :entity-id="entityId" :step-number="5" />
+        <TaskCoverage :entity-id="entityId" :step-number="5" />
 
-        <TaskHotel :entity-id="entityId" :step-number="6" :is-last="true" />
+        <TaskMaterials :entity-id="entityId" :step-number="6" />
+
+        <TaskHotel :entity-id="entityId" :step-number="7" :is-last="true" />
       </template>
     </Stepper>
   </div>
@@ -71,6 +73,7 @@ import TaskSessionTitles from "./TaskSessionTitles.vue";
 import TaskCorlief from "./TaskCorlief.vue";
 import TaskLogistics from "./TaskLogistics.vue";
 import TaskFlights from "./TaskFlights.vue";
+import TaskCoverage from "./TaskCoverage.vue";
 import TaskMaterials from "./TaskMaterials.vue";
 import TaskHotel from "./TaskHotel.vue";
 

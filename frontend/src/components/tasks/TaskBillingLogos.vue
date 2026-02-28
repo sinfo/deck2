@@ -109,6 +109,28 @@
           </Label>
         </div>
       </div>
+
+      <!-- LinkedIn Section (speakers only) -->
+      <template v-if="entityType === 'speaker'">
+        <Separator />
+
+        <div class="space-y-2">
+          <Label for="linkedin-url" class="text-sm font-medium">
+            LinkedIn
+          </Label>
+          <Input
+            id="linkedin-url"
+            v-model="linkedinUrl"
+            placeholder="LinkedIn profile URL (for tagging)"
+          />
+          <div class="flex items-center space-x-2">
+            <Checkbox id="wants-linkedin-tag" v-model="wantsLinkedinTag" />
+            <Label for="wants-linkedin-tag" class="text-sm">
+              Wants to be tagged
+            </Label>
+          </div>
+        </div>
+      </template>
     </div>
   </TaskTimelineItem>
 </template>
@@ -130,6 +152,7 @@ import type { EntityType } from "@/dto/tasks";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import BillingForm from "@/components/companies/BillingForm.vue";
 import Button from "@/components/ui/button/Button.vue";
+import { Input } from "@/components/ui/input";
 import EmptyStateCard from "@/components/ui/EmptyStateCard.vue";
 import StatusToggleBadge from "./StatusToggleBadge.vue";
 import { useCompanyBillingMutation } from "@/mutations/companies";
@@ -188,6 +211,10 @@ const handleBillingSubmit = async (data: CompanyBillingInfo) => {
 const hasAskedForBillingInfo = ref(false);
 const logosReceived = ref(false);
 const logosNeedReviewing = ref(false);
+
+// LinkedIn (speakers only)
+const linkedinUrl = ref<string>("");
+const wantsLinkedinTag = ref<boolean>(false);
 
 // Completion state
 const isComplete = computed(() => {
