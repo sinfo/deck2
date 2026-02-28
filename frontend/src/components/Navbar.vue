@@ -61,7 +61,6 @@ const navigation: NavigationItem[] = [
 ];
 
 const coordNavigation: NavigationItem[] = [
-  { name: "My Team", to: { name: "my-coordination-team" } },
   { name: "Coordination Teams", to: { name: "coordination-teams" } },
   { name: "Packages", to: { name: "event-packages" } },
   { name: "Templates", to: { name: "contract-templates" } },
