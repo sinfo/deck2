@@ -34,55 +34,54 @@
     <Skeleton v-for="i in 21" :key="i" class="h-[260px] w-full rounded-lg" />
   </div>
 
-  <div v-else-if="!companies.length && !companiesLoading" class="text-center">
+  <div
+    v-else-if="!membersWithParticipations.length && !companiesLoading"
+    class="text-center"
+  >
     <p>No companies found</p>
   </div>
 
-  <DynamicScroller
-    v-else
-    :key="selectedTeamId"
-    :items="membersSorted"
-    page-mode
-    :min-item-size="1"
-  >
-    <template #default="{ item }">
-      <div class="w-full border-b border-muted-foreground/10 pb-4 mb-4">
-        <div class="flex items-center justify-between w-full py-2">
-          <RouterLink
-            :to="{ name: 'member', params: { memberId: item.id } }"
-            class="flex items-center gap-3 no-underline"
-          >
-            <MemberWithAvatar :member="item" with-separator />
-          </RouterLink>
-          <button
-            type="button"
-            class="p-2 rounded-md hover:bg-slate-100"
-            :aria-expanded="isExpanded(item.id)"
-            @click="toggleExpanded(item.id)"
-          >
-            <ChevronDown
-              :class="[
-                'transition-transform',
-                isExpanded(item.id) ? 'rotate-180' : '',
-              ]"
-              class="w-5 h-5 text-muted-foreground"
-            />
-          </button>
-        </div>
-
-        <div
-          v-if="isExpanded(item.id)"
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 mt-3"
+  <div v-else>
+    <div
+      v-for="item in membersWithParticipations"
+      :key="item.id"
+      class="w-full border-b border-muted-foreground/10 pb-4 mb-4"
+    >
+      <div class="flex items-center justify-between w-full py-2">
+        <RouterLink
+          :to="{ name: 'member', params: { memberId: item.id } }"
+          class="flex items-center gap-3 no-underline"
         >
-          <CompanyWorkflowCard
-            v-for="company in participationsFiltered?.get(item.id) || []"
-            :key="company.id"
-            :company="company"
+          <MemberWithAvatar :member="item" with-separator />
+        </RouterLink>
+        <button
+          type="button"
+          class="p-2 rounded-md hover:bg-slate-100"
+          :aria-expanded="isExpanded(item.id)"
+          @click="toggleExpanded(item.id)"
+        >
+          <ChevronDown
+            :class="[
+              'transition-transform',
+              isExpanded(item.id) ? 'rotate-180' : '',
+            ]"
+            class="w-5 h-5 text-muted-foreground"
           />
-        </div>
+        </button>
       </div>
-    </template>
-  </DynamicScroller>
+
+      <div
+        v-if="isExpanded(item.id)"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 mt-3"
+      >
+        <CompanyWorkflowCard
+          v-for="company in participationsFiltered?.get(item.id) || []"
+          :key="company.id"
+          :company="company"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -90,7 +89,6 @@ import type { Company, CompanyParticipation } from "@/dto/companies";
 import type { Member } from "@/dto/members";
 import type { CoordinationTeam } from "@/dto/coordinationTeams";
 import MemberWithAvatar from "@/components/members/MemberWithAvatar.vue";
-import { DynamicScroller } from "vue-virtual-scroller";
 import { useInsertionSort, useSortByParticipationStatus } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import CompanyWorkflowCard from "../cards/CompanyWorkflowCard.vue";
@@ -190,6 +188,14 @@ const participationsFiltered = useParticipationFilter<CompanyWithParticipation>(
   selectedStatus,
   selectedPackage,
 );
+
+// Only show members that have participations after filtering
+const membersWithParticipations = computed(() => {
+  if (!participationsFiltered.value) return [];
+  return membersSorted.value.filter((member) =>
+    participationsFiltered.value.has(member.id),
+  );
+});
 
 // Track expanded/collapsed state per member. Default to expanded (true)
 const expanded = ref<Record<string, boolean>>({});
