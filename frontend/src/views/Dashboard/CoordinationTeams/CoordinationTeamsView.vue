@@ -36,9 +36,7 @@
             @click="createTeam"
           >
             <span v-if="creating" class="flex items-center gap-2">
-              <div
-                class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"
-              ></div>
+              <Loader2 :size="16" class="animate-spin" />
               Creating...
             </span>
             <span v-else>Create Team</span>
@@ -52,9 +50,7 @@
       v-if="isLoading"
       class="flex flex-col items-center justify-center py-20"
     >
-      <div
-        class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-primary"
-      ></div>
+      <Loader2 :size="48" class="animate-spin text-primary" />
       <p class="mt-4 text-muted-foreground font-medium">Loading teams...</p>
     </div>
 
@@ -66,20 +62,7 @@
       <div
         class="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-8 w-8 text-muted-foreground"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
+        <Users :size="32" class="text-muted-foreground" />
       </div>
       <p class="text-muted-foreground text-lg font-medium">
         No coordination teams yet
@@ -119,21 +102,9 @@
                 >
               </div>
               <div class="min-w-0 flex-1">
-                <CardTitle class="text-lg sm:text-xl font-bold truncate"
-                  >{{ team.name }}'s Team</CardTitle
-                >
-                <p
-                  v-if="team.coordinator && membersMap[team.coordinator.member]"
-                  class="text-xs sm:text-sm text-muted-foreground font-medium truncate mt-1"
-                >
-                  {{ membersMap[team.coordinator.member]?.name }}
-                </p>
-                <p
-                  v-else
-                  class="text-xs sm:text-sm text-muted-foreground italic mt-1"
-                >
-                  No coordinator
-                </p>
+                <CardTitle class="text-lg sm:text-xl font-bold truncate">{{
+                  team.name
+                }}</CardTitle>
               </div>
             </div>
             <div class="flex gap-1 flex-shrink-0">
@@ -143,20 +114,7 @@
                 class="hover:bg-white/80 hidden sm:flex"
                 @click="openEdit(team)"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
+                <PencilLine :size="16" />
                 <span class="ml-1.5">Edit</span>
               </Button>
               <Button
@@ -165,20 +123,7 @@
                 class="hover:bg-white/80 sm:hidden p-2"
                 @click="openEdit(team)"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
+                <PencilLine :size="16" />
               </Button>
               <Popover v-model:open="deleteConfirmOpen[team.id]">
                 <PopoverTrigger as-child>
@@ -187,20 +132,7 @@
                     variant="ghost"
                     class="text-red-600 hover:text-red-700 hover:bg-red-50 p-2"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
+                    <Trash2 :size="16" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent class="w-80">
@@ -224,20 +156,7 @@
               <h4
                 class="text-sm font-bold text-foreground flex items-center gap-2"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
+                <Users :size="16" />
                 Team Members
               </h4>
               <span
@@ -282,20 +201,7 @@
                       class="flex-shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                       :disabled="removing[team.id + '_' + memberId]"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      <X :size="16" />
                       <span class="ml-1 hidden sm:inline">{{
                         removing[team.id + "_" + memberId]
                           ? "Removing..."
@@ -321,20 +227,7 @@
               v-else
               class="flex flex-col items-center justify-center py-8 px-4 border-2 border-dashed rounded-lg bg-blue-50/30"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-10 w-10 text-indigo-300 mb-2"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+              <Users :size="40" class="text-indigo-300 mb-2" />
               <p class="text-sm text-muted-foreground font-medium">
                 No members assigned yet
               </p>
@@ -349,20 +242,7 @@
             <h4
               class="text-sm font-bold text-foreground mb-3 flex items-center gap-2"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
+              <Plus :size="16" />
               Add Member
             </h4>
             <div class="flex flex-col sm:flex-row gap-3">
@@ -378,26 +258,11 @@
                 @click="addCoordinatedTeamFor(team)"
               >
                 <span v-if="adding[team.id]" class="flex items-center gap-2">
-                  <div
-                    class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"
-                  ></div>
+                  <Loader2 :size="16" class="animate-spin" />
                   Adding...
                 </span>
                 <span v-else class="flex items-center gap-1.5">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
+                  <Plus :size="16" />
                   Add
                 </span>
               </Button>
@@ -454,9 +319,7 @@
               @click="saveEdit"
             >
               <span v-if="savingEdit" class="flex items-center gap-2">
-                <div
-                  class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"
-                ></div>
+                <Loader2 :size="16" class="animate-spin" />
                 Saving...
               </span>
               <span v-else>Save Changes</span>
@@ -483,6 +346,7 @@ import {
   removeCoordinatedTeam,
 } from "@/api/coordinationTeams";
 import { getAllMembers, getMemberRole } from "@/api/members";
+import { Users, PencilLine, Trash2, X, Plus, Loader2 } from "lucide-vue-next";
 
 import Card from "@/components/ui/card/Card.vue";
 import CardContent from "@/components/ui/card/CardContent.vue";
