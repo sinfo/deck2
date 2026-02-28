@@ -306,7 +306,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
-import createFuzzySearch from "@nozbe/microfuzz";
+import createFuzzySearch, { type FuzzyResult } from "@nozbe/microfuzz";
 import type { Member } from "@/dto/members";
 
 type SelectedItem = Company | Speaker | Member;
@@ -388,10 +388,7 @@ const isLoading = computed(
   () => companiesLoading.value || speakersLoading.value || membersLoading.value,
 );
 
-// Memoized fuzzy search instances
-import { ref, watch } from "vue";
-
-const companyFuzzy = ref(null);
+const companyFuzzy = ref<null | ((q: string) => FuzzyResult<Company>[])>(null);
 watch(
   () => companiesData.value?.data,
   (list) => {
@@ -399,15 +396,17 @@ watch(
       companyFuzzy.value = null;
     } else {
       companyFuzzy.value = createFuzzySearch(list, {
-        // match on multiple fields
-        getText: (company: Company) => [company.name, company.description ?? ""],
+        getText: (company: Company) => [
+          company.name,
+          company.description ?? "",
+        ],
       });
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
-const speakerFuzzy = ref(null);
+const speakerFuzzy = ref<null | ((q: string) => FuzzyResult<Speaker>[])>(null);
 watch(
   () => speakersData.value?.data,
   (list) => {
@@ -415,70 +414,134 @@ watch(
       speakerFuzzy.value = null;
     } else {
       speakerFuzzy.value = createFuzzySearch(list, {
-        getText: (speaker: Speaker) => [speaker.name, speaker.companyName ?? ""],
+        getText: (speaker: Speaker) => [
+          speaker.name,
+          speaker.companyName ?? "",
+        ],
       });
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
-const filteredCompanies = computed(() => {
+
+// Raw fuzzy results (item + score) for current term
+const companyResults = computed<FuzzyResult<Company>[]>(() => {
+  const term = searchTerm.value.trim();
+  const fuzzy = companyFuzzy.value;
+  if (!term || !fuzzy) return [];
+  return fuzzy(term);
+});
+
+const speakerResults = computed<FuzzyResult<Speaker>[]>(() => {
+  const term = searchTerm.value.trim();
+  const fuzzy = speakerFuzzy.value;
+  if (!term || !fuzzy) return [];
+  return fuzzy(term);
+});
+
+const filteredCompanies = computed<Company[]>(() => {
   const list = companiesData.value?.data ?? [];
   const term = searchTerm.value.trim();
 
   // Show recent companies when no search term
   if (!term) return list.slice(0, 5);
 
-  const fuzzy = companyFuzzy.value;
-  if (!fuzzy) return [];
-
-  return fuzzy(term)
-    .map((res) => res.item)
-    .slice(0, 5); // Limit to 5 results
+  return companyResults.value.map((res) => res.item).slice(0, 5); // Limit to 5 results
 });
 
-const filteredSpeakers = computed(() => {
+const filteredSpeakers = computed<Speaker[]>(() => {
   const list = speakersData.value?.data ?? [];
   const term = searchTerm.value.trim();
 
   if (!term) return list.slice(0, 5);
 
-  const fuzzy = speakerFuzzy.value;
-  if (!fuzzy) return [];
-
-  return fuzzy(term)
-    .map((res) => res.item)
-    .slice(0, 5); // Limit to 5 results
+  return speakerResults.value.map((res) => res.item).slice(0, 5);
 });
 
-const filteredMembers = computed(() => {
+const filteredMembers = computed<Member[]>(() => {
   if (!membersData.value?.data) return [];
 
   const term = searchTerm.value.toLowerCase();
 
-  if (!term) {
-    // Show recent members when no search term
-    return membersData.value.data.slice(0, 5);
-  }
+  if (!term) return membersData.value.data.slice(0, 5);
 
   return membersData.value.data
     .filter((member: Member) => member.name.toLowerCase().includes(term))
     .slice(0, 5);
 });
 
-const results = computed(() => [
-  ...filteredCompanies.value.map((company: Company) => ({
-    ...company,
-    type: "company",
-  })),
-  ...filteredSpeakers.value.map((speaker: Speaker) => ({
-    ...speaker,
-    type: "speaker",
-  })),
-  ...filteredMembers.value.map((member: Member) => ({
-    ...member,
-    type: "member",
-  })),
-]);
+const bestCompanyScore = computed(() => companyResults.value[0]?.score ?? 0);
+const bestSpeakerScore = computed(() => speakerResults.value[0]?.score ?? 0);
+
+type GroupId = "companies" | "speakers" | "members";
+
+const orderedGroups = computed<GroupId[]>(() => {
+  const term = searchTerm.value.trim();
+  const baseOrder: GroupId[] = ["companies", "speakers", "members"];
+
+  if (!term) {
+    // No search term: keep existing visual order
+    return baseOrder;
+  }
+
+  const entries: { id: GroupId; score: number }[] = [
+    { id: "companies", score: bestCompanyScore.value },
+    { id: "speakers", score: bestSpeakerScore.value },
+    // We could compute a score for members too; for now keep them last
+    { id: "members", score: 0 },
+  ];
+
+  // Sort by score desc; for ties, keep base order stable
+  entries.sort((a, b) => {
+    if (b.score === a.score) {
+      return baseOrder.indexOf(a.id) - baseOrder.indexOf(b.id);
+    }
+    return b.score - a.score;
+  });
+
+  // Remove groups that have no results at all
+  return entries
+    .filter((entry) => {
+      if (entry.id === "companies") return filteredCompanies.value.length > 0;
+      if (entry.id === "speakers") return filteredSpeakers.value.length > 0;
+      if (entry.id === "members") return filteredMembers.value.length > 0;
+      return false;
+    })
+    .map((entry) => entry.id);
+});
+
+const results = computed(() => {
+  const out: Array<
+    (Company | Speaker | Member) & { type: "company" | "speaker" | "member" }
+  > = [];
+
+  for (const group of orderedGroups.value) {
+    if (group === "companies") {
+      out.push(
+        ...filteredCompanies.value.map((company) => ({
+          ...company,
+          type: "company" as const,
+        })),
+      );
+    } else if (group === "speakers") {
+      out.push(
+        ...filteredSpeakers.value.map((speaker) => ({
+          ...speaker,
+          type: "speaker" as const,
+        })),
+      );
+    } else if (group === "members") {
+      out.push(
+        ...filteredMembers.value.map((member) => ({
+          ...member,
+          type: "member" as const,
+        })),
+      );
+    }
+  }
+
+  return out;
+});
 
 const getItemIndex = (item: SelectedItem) => {
   return results.value.findIndex((result) => result.id === item.id);
