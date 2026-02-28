@@ -51,9 +51,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useQuery } from "@pinia/colada";
-import { getAllMembers } from "@/api/members";
+import { getAllMembers, getMemberRole } from "@/api/members";
+import type { TeamRole } from "@/dto/teams";
 import {
   Select,
   SelectContent,
@@ -70,6 +71,7 @@ interface Props {
   placeholder?: string;
   disabled?: boolean;
   eventId?: number;
+  roleFilter?: TeamRole; // Filter members by role
 }
 
 const props = defineProps<Props>();
@@ -85,10 +87,55 @@ const { data: membersData } = useQuery({
   query: () => getAllMembers({ event: props.eventId }),
 });
 
+// Store member roles when filtering by role
+const memberRoles = ref<Record<string, TeamRole>>({});
+const loadingRoles = ref(false);
+
+// Fetch roles for all members when roleFilter is provided
+watch(
+  () => [membersData.value, props.roleFilter] as const,
+  async ([data, roleFilter]) => {
+    if (!data?.data || !roleFilter) {
+      memberRoles.value = {};
+      return;
+    }
+
+    loadingRoles.value = true;
+    const roles: Record<string, TeamRole> = {};
+
+    try {
+      await Promise.all(
+        data.data.map(async (member) => {
+          try {
+            const response = await getMemberRole(member.id);
+            if (response.data?.role) {
+              roles[member.id] = response.data.role as TeamRole;
+            }
+          } catch {
+            // Member might not have a role, skip
+          }
+        }),
+      );
+    } finally {
+      memberRoles.value = roles;
+      loadingRoles.value = false;
+    }
+  },
+  { immediate: true },
+);
+
 const sortedMembers = computed(() => {
   if (!membersData.value?.data) return [];
 
-  const members = membersData.value.data;
+  let members = membersData.value.data;
+
+  // Filter by role if specified
+  if (props.roleFilter && !loadingRoles.value) {
+    members = members.filter(
+      (member) => memberRoles.value[member.id] === props.roleFilter,
+    );
+  }
+
   return members.sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
   );
