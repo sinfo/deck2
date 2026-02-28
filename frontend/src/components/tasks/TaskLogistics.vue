@@ -63,7 +63,7 @@ import {
 import { Truck } from "lucide-vue-next";
 
 interface Props {
-  companyId: string;
+  entityId: string;
   stepNumber?: number;
   isLast?: boolean;
 }

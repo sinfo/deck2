@@ -1,7 +1,7 @@
 <template>
   <TaskTimelineItem
     :step-number="2"
-    title="Billing & Logos"
+    :title="entityType === 'company' ? 'Billing & Logos' : 'Logos'"
     :is-complete="isComplete"
   >
     <template #icon>
@@ -10,68 +10,74 @@
     <template #header-actions>
       <StatusToggleBadge
         v-model="hasAskedForBillingInfo"
-        description="Mark whether you've asked the company for billing info and logos."
+        :description="
+          entityType === 'company'
+            ? 'Mark whether you\'ve asked the company for billing info and logos.'
+            : 'Mark whether you\'ve asked the speaker for logos.'
+        "
       />
     </template>
 
     <div class="space-y-4">
-      <!-- Billing Section -->
-      <div class="space-y-2">
-        <!-- Billing Header -->
-        <div class="flex items-center justify-between">
-          <span class="text-sm font-medium">Billing Information</span>
+      <!-- Billing Section (companies only) -->
+      <template v-if="entityType === 'company'">
+        <div class="space-y-2">
+          <!-- Billing Header -->
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium">Billing Information</span>
 
-          <Button
+            <Button
+              v-if="hasBillingInfo && !isEditingBilling"
+              variant="outline"
+              size="sm"
+              class="h-7 text-xs"
+              @click="startEditingBilling"
+            >
+              Edit
+            </Button>
+          </div>
+
+          <!-- Billing Info Display -->
+          <div
             v-if="hasBillingInfo && !isEditingBilling"
-            variant="outline"
-            size="sm"
-            class="h-7 text-xs"
-            @click="startEditingBilling"
+            class="p-3 bg-muted/50 rounded-md space-y-1"
           >
-            Edit
-          </Button>
-        </div>
+            <p class="text-sm">
+              <span class="font-medium">Name:</span>
+              {{ billingInfo?.name }}
+            </p>
+            <p class="text-sm">
+              <span class="font-medium">Address:</span>
+              {{ billingInfo?.address }}
+            </p>
+            <p class="text-sm">
+              <span class="font-medium">TIN:</span>
+              {{ billingInfo?.tin }}
+            </p>
+          </div>
 
-        <!-- Billing Info Display -->
-        <div
-          v-if="hasBillingInfo && !isEditingBilling"
-          class="p-3 bg-muted/50 rounded-md space-y-1"
-        >
-          <p class="text-sm">
-            <span class="font-medium">Name:</span>
-            {{ billingInfo?.name }}
-          </p>
-          <p class="text-sm">
-            <span class="font-medium">Address:</span>
-            {{ billingInfo?.address }}
-          </p>
-          <p class="text-sm">
-            <span class="font-medium">TIN:</span>
-            {{ billingInfo?.tin }}
-          </p>
-        </div>
+          <!-- Billing Form (for editing) -->
+          <div v-else-if="isEditingBilling" class="border rounded-md p-3">
+            <BillingForm
+              :initial-data="billingInfo"
+              :is-loading="isUpdatingBilling"
+              :mode="hasBillingInfo ? 'edit' : 'create'"
+              @submit="handleBillingSubmit"
+              @cancel="cancelEditingBilling"
+            />
+          </div>
 
-        <!-- Billing Form (for editing) -->
-        <div v-else-if="isEditingBilling" class="border rounded-md p-3">
-          <BillingForm
-            :initial-data="billingInfo"
-            :is-loading="isUpdatingBilling"
-            :mode="hasBillingInfo ? 'edit' : 'create'"
-            @submit="handleBillingSubmit"
-            @cancel="cancelEditingBilling"
+          <!-- Empty State -->
+          <EmptyStateCard
+            v-else
+            title="Click here to add billing information"
+            @click="startEditingBilling"
           />
         </div>
 
-        <!-- Empty State -->
-        <EmptyStateCard
-          v-else
-          title="Click here to add billing information"
-          @click="startEditingBilling"
-        />
-      </div>
-
-      <!-- Separator -->
-      <Separator />
+        <!-- Separator -->
+        <Separator />
+      </template>
 
       <!-- Logos Section -->
       <div class="space-y-3">
@@ -93,8 +99,9 @@
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>
-                    Check this if the company wants to review their logos before
-                    publishing
+                    Check this if the
+                    {{ entityType === "company" ? "company" : "speaker" }} wants
+                    to review their logos before publishing
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -119,6 +126,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Info, Receipt } from "lucide-vue-next";
 import type { CompanyBillingInfo } from "@/dto/companies";
+import type { EntityType } from "@/dto/tasks";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import BillingForm from "@/components/companies/BillingForm.vue";
 import Button from "@/components/ui/button/Button.vue";
@@ -127,8 +135,9 @@ import StatusToggleBadge from "./StatusToggleBadge.vue";
 import { useCompanyBillingMutation } from "@/mutations/companies";
 
 interface Props {
+  entityType: EntityType;
   billingInfo?: CompanyBillingInfo;
-  companyId?: string;
+  entityId?: string;
 }
 
 const props = defineProps<Props>();
@@ -161,9 +170,9 @@ const cancelEditingBilling = () => {
 };
 
 const handleBillingSubmit = async (data: CompanyBillingInfo) => {
-  if (!props.companyId) return;
+  if (!props.entityId) return;
 
-  billingMutation.companyId.value = props.companyId;
+  billingMutation.companyId.value = props.entityId;
   billingMutation.billingInfo.value = data;
 
   try {
@@ -182,7 +191,11 @@ const logosNeedReviewing = ref(false);
 
 // Completion state
 const isComplete = computed(() => {
-  return hasBillingInfo.value && logosReceived.value;
+  if (props.entityType === "company") {
+    return hasBillingInfo.value && logosReceived.value;
+  }
+  // For speakers, only logos matter
+  return logosReceived.value;
 });
 
 defineExpose({

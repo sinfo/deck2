@@ -34,7 +34,7 @@ import { Label } from "@/components/ui/label";
 import { Building2 } from "lucide-vue-next";
 
 interface Props {
-  companyId: string;
+  entityId: string;
   stepNumber?: number;
 }
 

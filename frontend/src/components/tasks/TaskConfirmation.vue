@@ -8,8 +8,8 @@
       <CalendarCheck class="w-4 h-4" />
     </template>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <!-- Package Selection -->
-      <div class="space-y-2">
+      <!-- Package Selection (companies only) -->
+      <div v-if="entityType === 'company'" class="space-y-2">
         <Label for="package-select">Package</Label>
         <Select
           v-model="selectedPackageId"
@@ -62,19 +62,23 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import type { CompanyParticipation } from "@/dto/companies";
+import type { SpeakerParticipation } from "@/dto/speakers";
+import type { EntityType } from "@/dto/tasks";
 import type { Package } from "@/dto/packages";
 import {
   useCompanyParticipationPackageMutation,
   useCompanyParticipationMutation,
 } from "@/mutations/companies";
+import { useSpeakerParticipationMutation } from "@/mutations/speakers";
 import { usePackagesQuery } from "@/mutations/packages";
 import useToast from "@/lib/toast";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import { CalendarCheck } from "lucide-vue-next";
 
 interface Props {
-  companyId: string;
-  participation?: CompanyParticipation;
+  entityId: string;
+  entityType: EntityType;
+  participation?: CompanyParticipation | SpeakerParticipation;
 }
 
 const props = defineProps<Props>();
@@ -85,7 +89,14 @@ const emit = defineEmits<{
 
 const { toast } = useToast();
 
-// Package data
+// Helper to check if participation is company type
+const isCompanyParticipation = (
+  p?: CompanyParticipation | SpeakerParticipation,
+): p is CompanyParticipation => {
+  return !!p && "confirmed" in p;
+};
+
+// Package data (only used for companies)
 const { data: packagesData } = usePackagesQuery();
 const { data: eventsData } = useQuery({
   key: () => ["events"],
@@ -93,6 +104,7 @@ const { data: eventsData } = useQuery({
 });
 
 const packageOptions = computed(() => {
+  if (props.entityType !== "company") return [];
   const allPkgs = (packagesData.value || []) as Package[];
   const eventId = props.participation?.event;
   if (!eventId) return [];
@@ -106,17 +118,20 @@ const packageOptions = computed(() => {
   return pkgs.map((p) => ({ id: String(p.id), name: p.name }));
 });
 
-// Package mutation
+// Package mutation (companies only)
 const packageMutation = useCompanyParticipationPackageMutation();
-packageMutation.companyId.value = props.companyId;
+packageMutation.companyId.value = props.entityId;
 
 const selectedPackageId = ref<string>(
-  props.participation?.package ? String(props.participation.package) : "",
+  isCompanyParticipation(props.participation) && props.participation?.package
+    ? String(props.participation.package)
+    : "",
 );
 const isPackageUpdating = ref(false);
 
 // Get package name from the packages data
 const currentPackageName = computed(() => {
+  if (props.entityType !== "company") return "";
   if (!selectedPackageId.value || !packagesData.value) return "";
   const pkg = (packagesData.value as Package[]).find(
     (p) => String(p.id) === selectedPackageId.value,
@@ -126,6 +141,7 @@ const currentPackageName = computed(() => {
 
 // Get current package items
 const currentPackage = computed(() => {
+  if (props.entityType !== "company") return null;
   if (!selectedPackageId.value || !packagesData.value) return null;
   return (
     (packagesData.value as Package[]).find(
@@ -182,24 +198,36 @@ const parseIsoToDate = (isoString: string | null): Date | null => {
 };
 
 const confirmedDate = ref<Date | null>(
-  parseIsoToDate(props.participation?.confirmed || null),
+  isCompanyParticipation(props.participation)
+    ? parseIsoToDate(props.participation?.confirmed || null)
+    : null,
 );
 const isDateUpdating = ref(false);
 
-// Participation mutation for updating confirmed date
-const participationMutation = useCompanyParticipationMutation();
-participationMutation.companyId.value = props.companyId;
+// Participation mutations for updating confirmed date
+const companyParticipationMutation = useCompanyParticipationMutation();
+companyParticipationMutation.companyId.value = props.entityId;
+
+const speakerParticipationMutation = useSpeakerParticipationMutation();
+speakerParticipationMutation.speakerId.value = props.entityId;
 
 const onConfirmedDateChange = async (newValue: Date | null) => {
   if (!newValue) return;
   try {
     isDateUpdating.value = true;
     const isoDate = newValue.toISOString();
-    participationMutation.data.value = {
-      ...props.participation,
-      confirmed: isoDate,
-    };
-    await participationMutation.mutateAsync();
+
+    if (props.entityType === "company") {
+      companyParticipationMutation.data.value = {
+        ...props.participation,
+        confirmed: isoDate,
+      };
+      await companyParticipationMutation.mutateAsync();
+    } else {
+      // Speakers don't have a confirmed field in the API,
+      // but we store the date locally
+    }
+
     toast.success({ title: "Confirmation date updated" });
   } catch (err) {
     console.error("Failed to update confirmation date:", err);
@@ -227,14 +255,20 @@ const onPackageChange = async (newValue: unknown) => {
 
 // Watch for participation changes to sync local state from props
 watch(
-  () => props.participation?.package,
+  () =>
+    isCompanyParticipation(props.participation)
+      ? props.participation?.package
+      : undefined,
   (newVal) => {
     selectedPackageId.value = newVal ? String(newVal) : "";
   },
 );
 
 watch(
-  () => props.participation?.confirmed,
+  () =>
+    isCompanyParticipation(props.participation)
+      ? props.participation?.confirmed
+      : undefined,
   (newVal) => {
     confirmedDate.value = parseIsoToDate(newVal || null);
   },
@@ -242,7 +276,11 @@ watch(
 
 // Completion state
 const isComplete = computed(() => {
-  return !!selectedPackageId.value && !!confirmedDate.value;
+  if (props.entityType === "company") {
+    return !!selectedPackageId.value && !!confirmedDate.value;
+  }
+  // For speakers, just the date is enough
+  return !!confirmedDate.value;
 });
 
 defineExpose({

@@ -8,7 +8,7 @@
         v-model="hasSentContract"
         active-label="Sent"
         inactive-label="Not Sent"
-        description="Mark whether you've sent the contract to the company."
+        :description="`Mark whether you've sent the contract to the ${entityType}.`"
       />
     </template>
 
@@ -30,7 +30,10 @@
         <Label for="receipt-sent" class="text-sm">Receipt sent</Label>
       </div>
 
-      <ContractDownload :company-id="props.companyId" />
+      <ContractDownload
+        v-if="entityType === 'company'"
+        :company-id="props.entityId"
+      />
     </div>
   </TaskTimelineItem>
 </template>
@@ -43,8 +46,12 @@ import { FileText } from "lucide-vue-next";
 import ContractDownload from "../companies/ContractDownload.vue";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import type { EntityType } from "@/dto/tasks";
 
-const props = defineProps<{ companyId: string }>();
+const props = defineProps<{
+  entityId: string;
+  entityType: EntityType;
+}>();
 
 // Contract states
 const hasCreatedContract = ref(false);

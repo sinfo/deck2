@@ -25,17 +25,35 @@
       />
     </div>
 
-    <!-- Communications section -->
+    <!-- Info/Tasks section -->
     <div class="flex-1 min-w-0">
-      <ParticipationsCard
-        v-if="speakerWithParticipation?.participations"
-        :participations="speakerWithParticipation.participations"
-        :entity-id="speakerId as string"
-        entity-type="speaker"
-        class="mb-5"
-      />
+      <Tabs v-model="activeTab" default-value="info" class="w-full">
+        <TabsList class="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="info"> Info </TabsTrigger>
+          <TabsTrigger value="tasks"> Tasks </TabsTrigger>
+        </TabsList>
 
-      <SpeakerCommunications :speaker="speakerWithParticipation" />
+        <TabsContent value="info">
+          <div class="space-y-5">
+            <ParticipationsCard
+              v-if="speakerWithParticipation?.participations"
+              :participations="speakerWithParticipation.participations"
+              :entity-id="speakerId as string"
+              entity-type="speaker"
+            />
+
+            <SpeakerCommunications :speaker="speakerWithParticipation" />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="tasks">
+          <Tasks
+            entity-type="speaker"
+            :entity-id="speakerWithParticipation.id"
+            :participation="speakerWithParticipation.participation"
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   </div>
 </template>
@@ -46,6 +64,7 @@ import SpeakerCard from "@/components/cards/SpeakerCard.vue";
 import ContactCard from "@/components/ContactCard.vue";
 import ParticipationsCard from "@/components/ParticipationsCard.vue";
 import DirectEmailDialogTrigger from "@/components/DirectEmailDialogTrigger.vue";
+import Tasks from "@/components/tasks/Tasks.vue";
 import type {
   SpeakerWithContactObject,
   SpeakerWithParticipation,
@@ -54,12 +73,14 @@ import { withCurrentParticipation } from "@/lib/utils";
 import { useEventStore } from "@/stores/event";
 
 import { useQuery, useQueryCache } from "@pinia/colada";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import SpeakerCommunications from "@/components/speakers/SpeakerCommunications.vue";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const route = useRoute();
 const queryCache = useQueryCache();
+const activeTab = ref("info");
 
 const speakerId = route.params.speakerId;
 const { data: speaker } = useQuery({
