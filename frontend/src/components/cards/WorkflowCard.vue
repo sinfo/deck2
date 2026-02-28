@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { computed, watch, ref, type Component } from "vue";
+import { computed, watch, type Component } from "vue";
 import {
   humanReadableParticipationStatus,
   participationNextValues,
@@ -16,8 +16,7 @@ import {
   type ParticipationStatus,
 } from "@/dto";
 import type { RouteLocationRaw } from "vue-router";
-import ConfettiExplosion from "vue-confetti-explosion";
-import confettiAudio from "@/assets/audio/confetti.mp3";
+import { useConfetti } from "@/composables/useConfetti";
 import {
   Tooltip,
   TooltipContent,
@@ -42,19 +41,8 @@ const props = defineProps<{
   to?: RouteLocationRaw;
 }>();
 
-// Track confetti state
-const showConfetti = ref(false);
-
-// Function to play confetti sound
-const playConfettiSound = () => {
-  try {
-    const audio = new Audio(confettiAudio);
-    audio.volume = 0.5; // Set volume to 50%
-    audio.play().catch(console.error);
-  } catch (error) {
-    console.error("Error playing confetti sound:", error);
-  }
-};
+// Singleton confetti – only one explosion + sound across all cards
+const { trigger: triggerConfetti } = useConfetti();
 
 const selectedStatus = computed({
   get: () => props.currentStatus || "SUGGESTED",
@@ -77,12 +65,7 @@ watch(
   (newStatus, oldStatus) => {
     if (oldStatus && newStatus && oldStatus !== newStatus) {
       if (newStatus === "ACCEPTED" || newStatus === "ANNOUNCED") {
-        showConfetti.value = true;
-        playConfettiSound(); // Play the confetti sound
-        // Reset confetti after animation
-        setTimeout(() => {
-          showConfetti.value = false;
-        }, 4000);
+        triggerConfetti();
       }
     }
   },
@@ -104,13 +87,6 @@ watch(
         participationStatusColor[selectedStatus].ring,
       ]"
     >
-      <div
-        v-if="showConfetti"
-        class="absolute left-1/2 top-1/2 pointer-events-none z-50 -translate-x-1/2 -translate-y-1/2"
-      >
-        <ConfettiExplosion />
-      </div>
-
       <CardContent>
         <div
           v-if="!possibleStates.length"
