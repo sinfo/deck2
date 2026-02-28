@@ -24,7 +24,11 @@
         :entity-id="entityId"
       />
 
-      <TaskContract :entity-type="entityType" :entity-id="entityId" />
+      <TaskContract
+        v-if="entityType === 'company'"
+        :entity-type="entityType"
+        :entity-id="entityId"
+      />
 
       <!-- Company-only steps -->
       <template v-if="entityType === 'company'">
@@ -47,13 +51,13 @@
 
       <!-- Speaker-only steps -->
       <template v-if="entityType === 'speaker'">
-        <TaskFlights :entity-id="entityId" :step-number="4" />
+        <TaskFlights :entity-id="entityId" :step-number="3" />
 
-        <TaskCoverage :entity-id="entityId" :step-number="5" />
+        <TaskCoverage :entity-id="entityId" :step-number="4" />
 
-        <TaskMaterials :entity-id="entityId" :step-number="6" />
+        <TaskMaterials :entity-id="entityId" :step-number="5" />
 
-        <TaskHotel :entity-id="entityId" :step-number="7" :is-last="true" />
+        <TaskHotel :entity-id="entityId" :step-number="6" :is-last="true" />
       </template>
     </Stepper>
   </div>

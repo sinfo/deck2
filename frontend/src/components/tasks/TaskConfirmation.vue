@@ -55,6 +55,21 @@
             placeholder="Phone number"
           />
         </div>
+
+        <div class="space-y-2">
+          <Label for="linkedin-url">LinkedIn</Label>
+          <Input
+            id="linkedin-url"
+            v-model="linkedinUrl"
+            placeholder="LinkedIn profile URL"
+          />
+          <div class="flex items-center space-x-2">
+            <Checkbox id="wants-linkedin-tag" v-model="wantsLinkedinTag" />
+            <Label for="wants-linkedin-tag" class="text-sm">
+              Wants to be tagged
+            </Label>
+          </div>
+        </div>
       </div>
 
       <div class="space-y-2 mt-4">
@@ -87,6 +102,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { CompanyParticipation } from "@/dto/companies";
 import type { SpeakerParticipation } from "@/dto/speakers";
 import type { EntityType } from "@/dto/tasks";
@@ -312,6 +328,8 @@ const isComplete = computed(() => {
 // Speaker-only fields
 const speakerPhone = ref<string>("");
 const speakerObservations = ref<string>("");
+const linkedinUrl = ref<string>("");
+const wantsLinkedinTag = ref<boolean>(false);
 
 defineExpose({
   isComplete,
