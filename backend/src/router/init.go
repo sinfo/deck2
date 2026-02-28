@@ -158,6 +158,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}", authCoordinator(deleteCompany)).Methods("DELETE")
 	// query companies by multiple member IDs
 	companyRouter.HandleFunc("/byMembers", authMember(getCompaniesByMembers)).Methods("POST")
+	companyRouter.HandleFunc("/announce", authCoordinator(announceAcceptedCompanies)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/subscribe", authMember(subscribeToCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/unsubscribe", authMember(unsubscribeToCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/image/internal", authMember(setCompanyPrivateImage)).Methods("POST")

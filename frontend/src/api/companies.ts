@@ -144,3 +144,6 @@ export const generateCompanyContract = (
     responseType: "blob",
   });
 };
+
+export const announceAcceptedCompanies = () =>
+  instance.post<{ announced: number }>("/companies/announce");

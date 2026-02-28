@@ -1454,3 +1454,17 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		"total":  len(data.Messages),
 	})
 }
+
+// announceAcceptedCompanies changes all companies with ACCEPTED participation
+// on the current event to ANNOUNCED. Coordinator-only.
+func announceAcceptedCompanies(w http.ResponseWriter, r *http.Request) {
+	count, err := mongodb.Companies.AnnounceAcceptedCompanies()
+	if err != nil {
+		http.Error(w, "Could not announce accepted companies: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"announced": count,
+	})
+}
