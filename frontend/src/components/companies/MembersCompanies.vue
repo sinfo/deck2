@@ -137,11 +137,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAuthStore } from "@/stores/auth";
 import { useQueryCache } from "@pinia/colada";
 import { announceAcceptedCompanies } from "@/api/companies";
 import { useToast } from "@/lib/toast";
 import Button from "@/components/ui/button/Button.vue";
+import { usePermissions } from "@/composables/usePermissions";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -162,11 +162,7 @@ const props = defineProps<{
 }>();
 
 // Coordinator check
-const authStore = useAuthStore();
-const isCoordinator = computed(() => {
-  const role = authStore.decoded?.role as string | undefined;
-  return role === "COORDINATOR" || role === "ADMIN";
-});
+const { isCoordinatorOrAdmin: isCoordinator } = usePermissions();
 
 // Count of accepted companies in current event
 const acceptedCount = computed(() => {
