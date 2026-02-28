@@ -6,228 +6,236 @@
 
     <div class="relative">
       <div class="relative">
-        <!-- Selected item image (when selected) -->
-        <div
-          v-if="selectedItem"
-          class="absolute left-3 top-1/2 transform -translate-y-1/2 z-10"
-        >
-          <Image
-            :src="getItemImage(selectedItem)"
-            :alt="selectedItem.name"
-            class="w-6 h-6 rounded object-cover border"
+        <div class="relative">
+          <!-- Selected item image (when selected) -->
+          <div
+            v-if="selectedItem"
+            class="absolute left-3 top-1/2 transform -translate-y-1/2 z-10"
+          >
+            <Image
+              :src="getItemImage(selectedItem)"
+              :alt="selectedItem.name"
+              class="w-6 h-6 rounded object-cover border"
+            />
+          </div>
+
+          <!-- Clear button (when selected) -->
+          <button
+            v-if="selectedItem"
+            type="button"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
+            @click="clearSelection"
+          >
+            ×
+          </button>
+
+          <!-- Keyboard shortcut badge (when empty and not focused) -->
+          <div
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none"
+          >
+            <Badge variant="secondary" class="text-xs flex items-center gap-1">
+              <span class="font-mono">{{ isMac ? "⌘" : "Ctrl" }}</span>
+              <span class="font-mono">+ K</span>
+            </Badge>
+          </div>
+
+          <Input
+            :id="inputId"
+            ref="inputRef"
+            v-model="searchTerm"
+            :placeholder="placeholder || 'Search companies or speakers...'"
+            :class="['w-full', selectedItem ? 'pl-12 pr-8' : '']"
+            :disabled="disabled"
+            :autofocus="props.autofocus"
+            @input="handleInput"
+            @blur="hideSuggestions"
+            @focus="handleFocus"
+            @keydown="handleKeydown"
           />
         </div>
 
-        <!-- Clear button (when selected) -->
-        <button
-          v-if="selectedItem"
-          type="button"
-          class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
-          @click="clearSelection"
-        >
-          ×
-        </button>
-
-        <!-- Keyboard shortcut badge (when empty and not focused) -->
+        <!-- Results dropdown -->
         <div
-          class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none"
+          v-if="
+            forceShowSuggestions ||
+            (showSuggestions &&
+              (results.length > 0 || isLoading || (searchTerm && showCreate)))
+          "
+          class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto"
         >
-          <Badge variant="secondary" class="text-xs flex items-center gap-1">
-            <span class="font-mono">{{ isMac ? "⌘" : "Ctrl" }}</span>
-            <span class="font-mono">+ K</span>
-          </Badge>
-        </div>
-
-        <Input
-          :id="inputId"
-          ref="inputRef"
-          v-model="searchTerm"
-          :placeholder="placeholder || 'Search companies or speakers...'"
-          :class="['w-full', selectedItem ? 'pl-12 pr-8' : '']"
-          :disabled="disabled"
-          :autofocus="props.autofocus"
-          @input="handleInput"
-          @blur="hideSuggestions"
-          @focus="handleFocus"
-          @keydown="handleKeydown"
-        />
-      </div>
-
-      <!-- Results dropdown -->
-      <div
-        v-if="
-          forceShowSuggestions ||
-          (showSuggestions &&
-            (results.length > 0 || isLoading || (searchTerm && showCreate)))
-        "
-        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto"
-      >
-        <!-- Loading state -->
-        <div v-if="isLoading" class="p-3 text-center text-gray-500">
-          <div
-            class="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
-          ></div>
-          <span class="ml-2">Searching...</span>
-        </div>
-
-        <!-- Results -->
-        <div v-else>
-          <!-- Companies section -->
-          <div v-if="filteredCompanies.length > 0">
+          <!-- Loading state -->
+          <div v-if="isLoading" class="p-3 text-center text-gray-500">
             <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
-            >
-              Companies
-            </div>
-            <button
-              v-for="company in filteredCompanies"
-              :key="`company-${company.id}`"
-              type="button"
-              :class="[
-                'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
-                getItemIndex(company) === highlightedIndex
-                  ? 'bg-blue-50 border-blue-200'
-                  : 'hover:bg-gray-50',
-              ]"
-              @click="selectCompany(company)"
-            >
-              <Image
-                :src="company.imgs?.internal || company.imgs?.public"
-                :alt="company.name"
-                class="w-8 h-8 rounded object-cover border flex-shrink-0"
-              />
-              <div class="flex-1 min-w-0">
-                <div class="font-medium text-gray-900 truncate">
-                  {{ company.name }}
-                </div>
+              class="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
+            ></div>
+            <span class="ml-2">Searching...</span>
+          </div>
+
+          <!-- Results -->
+          <div v-else>
+            <template v-for="group in orderedGroups" :key="group">
+              <!-- Companies section -->
+              <div v-if="group === 'companies' && filteredCompanies.length > 0">
                 <div
-                  v-if="company.description"
-                  class="text-sm text-gray-500 truncate"
+                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
                 >
-                  {{ company.description }}
+                  Companies
                 </div>
+                <button
+                  v-for="company in filteredCompanies"
+                  :key="`company-${company.id}`"
+                  type="button"
+                  :class="[
+                    'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
+                    getItemIndex(company) === highlightedIndex
+                      ? 'bg-blue-50 border-blue-200'
+                      : 'hover:bg-gray-50',
+                  ]"
+                  @click="selectCompany(company)"
+                >
+                  <Image
+                    :src="company.imgs?.internal || company.imgs?.public"
+                    :alt="company.name"
+                    class="w-8 h-8 rounded object-cover border flex-shrink-0"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-gray-900 truncate">
+                      {{ company.name }}
+                    </div>
+                    <div
+                      v-if="company.description"
+                      class="text-sm text-gray-500 truncate"
+                    >
+                      {{ company.description }}
+                    </div>
+                  </div>
+                </button>
               </div>
-            </button>
-          </div>
 
-          <!-- Speakers section -->
-          <div v-if="filteredSpeakers.length > 0">
-            <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
-            >
-              Speakers
-            </div>
-            <button
-              v-for="speaker in filteredSpeakers"
-              :key="`speaker-${speaker.id}`"
-              type="button"
-              :class="[
-                'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
-                getItemIndex(speaker) === highlightedIndex
-                  ? 'bg-blue-50 border-blue-200'
-                  : 'hover:bg-gray-50',
-              ]"
-              @click="selectSpeaker(speaker)"
-            >
-              <Image
-                :src="speaker.imgs?.internal || speaker.imgs?.speaker"
-                :alt="speaker.name"
-                class="w-8 h-8 rounded object-cover border flex-shrink-0"
-              />
-              <div class="flex-1 min-w-0">
-                <span class="font-medium truncate">{{ speaker.name }}</span>
+              <!-- Speakers section -->
+              <div
+                v-else-if="group === 'speakers' && filteredSpeakers.length > 0"
+              >
                 <div
-                  class="flex items-center gap-2 text-xs text-muted-foreground"
+                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
                 >
-                  <span v-if="speaker.title" class="truncate">
-                    {{ speaker.title }}
-                  </span>
-                  <span v-if="speaker.title && speaker.companyName">•</span>
-                  <span v-if="speaker.companyName" class="truncate">
-                    {{ speaker.companyName }}
-                  </span>
+                  Speakers
                 </div>
+                <button
+                  v-for="speaker in filteredSpeakers"
+                  :key="`speaker-${speaker.id}`"
+                  type="button"
+                  :class="[
+                    'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
+                    getItemIndex(speaker) === highlightedIndex
+                      ? 'bg-blue-50 border-blue-200'
+                      : 'hover:bg-gray-50',
+                  ]"
+                  @click="selectSpeaker(speaker)"
+                >
+                  <Image
+                    :src="speaker.imgs?.internal || speaker.imgs?.speaker"
+                    :alt="speaker.name"
+                    class="w-8 h-8 rounded object-cover border flex-shrink-0"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <span class="font-medium truncate">{{ speaker.name }}</span>
+                    <div
+                      class="flex items-center gap-2 text-xs text-muted-foreground"
+                    >
+                      <span v-if="speaker.title" class="truncate">
+                        {{ speaker.title }}
+                      </span>
+                      <span v-if="speaker.title && speaker.companyName">•</span>
+                      <span v-if="speaker.companyName" class="truncate">
+                        {{ speaker.companyName }}
+                      </span>
+                    </div>
+                  </div>
+                </button>
               </div>
-            </button>
-          </div>
 
-          <!-- Members section -->
-          <div v-if="filteredMembers.length > 0">
+              <!-- Members section -->
+              <div
+                v-else-if="group === 'members' && filteredMembers.length > 0"
+              >
+                <div
+                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+                >
+                  Members
+                </div>
+                <button
+                  v-for="member in filteredMembers"
+                  :key="`member-${member.id}`"
+                  type="button"
+                  :class="[
+                    'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
+                    getItemIndex(member) === highlightedIndex
+                      ? 'bg-blue-50 border-blue-200'
+                      : 'hover:bg-gray-50',
+                  ]"
+                  @click="selectMember(member)"
+                >
+                  <Image
+                    :src="member.img"
+                    :alt="member.name"
+                    class="w-8 h-8 rounded object-cover border flex-shrink-0"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <div class="font-medium text-gray-900 truncate">
+                      {{ member.name }}
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </template>
+
+            <!-- No results -->
             <div
-              class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+              v-if="
+                !isLoading &&
+                filteredCompanies.length === 0 &&
+                filteredSpeakers.length === 0 &&
+                filteredMembers.length === 0 &&
+                searchTerm.trim()
+              "
+              class="p-3 text-gray-500 text-center"
             >
-              Members
+              No companies, speakers or members found
             </div>
-            <button
-              v-for="member in filteredMembers"
-              :key="`member-${member.id}`"
-              type="button"
-              :class="[
-                'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
-                getItemIndex(member) === highlightedIndex
-                  ? 'bg-blue-50 border-blue-200'
-                  : 'hover:bg-gray-50',
-              ]"
-              @click="selectMember(member)"
+
+            <!-- Welcome message when no search term -->
+            <div
+              v-if="
+                !isLoading &&
+                !searchTerm.trim() &&
+                filteredCompanies.length === 0 &&
+                filteredSpeakers.length === 0 &&
+                filteredMembers.length === 0
+              "
+              class="p-3 text-gray-500 text-center"
             >
-              <Image
-                :src="member.img"
-                :alt="member.name"
-                class="w-8 h-8 rounded object-cover border flex-shrink-0"
-              />
-              <div class="flex-1 min-w-0">
-                <div class="font-medium text-gray-900 truncate">
-                  {{ member.name }}
-                </div>
+              Start typing to search companies, speakers and members...
+            </div>
+
+            <!-- Create options -->
+            <div v-if="showCreate && searchTerm.trim()">
+              <div class="border-t border-gray-200">
+                <button
+                  type="button"
+                  class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium"
+                  @click="handleCreateCompany(searchTerm)"
+                >
+                  Create company "{{ searchTerm }}"
+                </button>
+                <button
+                  type="button"
+                  class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium border-t border-gray-100"
+                  @click="handleCreateSpeaker(searchTerm)"
+                >
+                  Create speaker "{{ searchTerm }}"
+                </button>
               </div>
-            </button>
-          </div>
-
-          <!-- No results -->
-          <div
-            v-if="
-              !isLoading &&
-              filteredCompanies.length === 0 &&
-              filteredSpeakers.length === 0 &&
-              filteredMembers.length === 0 &&
-              searchTerm.trim()
-            "
-            class="p-3 text-gray-500 text-center"
-          >
-            No companies, speakers or members found
-          </div>
-
-          <!-- Welcome message when no search term -->
-          <div
-            v-if="
-              !isLoading &&
-              !searchTerm.trim() &&
-              filteredCompanies.length === 0 &&
-              filteredSpeakers.length === 0 &&
-              filteredMembers.length === 0
-            "
-            class="p-3 text-gray-500 text-center"
-          >
-            Start typing to search companies, speakers and members...
-          </div>
-
-          <!-- Create options -->
-          <div v-if="showCreate && searchTerm.trim()">
-            <div class="border-t border-gray-200">
-              <button
-                type="button"
-                class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium"
-                @click="handleCreateCompany(searchTerm)"
-              >
-                Create company "{{ searchTerm }}"
-              </button>
-              <button
-                type="button"
-                class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium border-t border-gray-100"
-                @click="handleCreateSpeaker(searchTerm)"
-              >
-                Create speaker "{{ searchTerm }}"
-              </button>
             </div>
           </div>
         </div>
@@ -306,8 +314,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
-import createFuzzySearch, { type FuzzyResult } from "@nozbe/microfuzz";
 import type { Member } from "@/dto/members";
+import createFuzzySearch, { type FuzzyResult } from "@nozbe/microfuzz";
 
 type SelectedItem = Company | Speaker | Member;
 
@@ -378,6 +386,7 @@ const { data: speakersData, isLoading: speakersLoading } = useQuery({
   enabled: () => !!eventStore.selectedEvent?.id,
 });
 
+// Members query
 const { data: membersData, isLoading: membersLoading } = useQuery({
   key: () => ["members"],
   query: () => getAllMembers({}),
@@ -388,6 +397,13 @@ const isLoading = computed(
   () => companiesLoading.value || speakersLoading.value || membersLoading.value,
 );
 
+/**
+ * NOTE: microfuzz score semantics:
+ * - Lower score = better match (exact match is ~0)
+ * So we always sort scores ASC, and use Infinity for “no results”.
+ */
+
+// ----- Companies fuzzy -----
 const companyFuzzy = ref<null | ((q: string) => FuzzyResult<Company>[])>(null);
 watch(
   () => companiesData.value?.data,
@@ -406,6 +422,7 @@ watch(
   { immediate: true },
 );
 
+// ----- Speakers fuzzy -----
 const speakerFuzzy = ref<null | ((q: string) => FuzzyResult<Speaker>[])>(null);
 watch(
   () => speakersData.value?.data,
@@ -418,6 +435,22 @@ watch(
           speaker.name,
           speaker.companyName ?? "",
         ],
+      });
+    }
+  },
+  { immediate: true },
+);
+
+// ----- Members fuzzy (NEW) -----
+const memberFuzzy = ref<null | ((q: string) => FuzzyResult<Member>[])>(null);
+watch(
+  () => membersData.value?.data,
+  (list) => {
+    if (!list || !list.length) {
+      memberFuzzy.value = null;
+    } else {
+      memberFuzzy.value = createFuzzySearch(list, {
+        getText: (member: Member) => [member.name],
       });
     }
   },
@@ -439,14 +472,20 @@ const speakerResults = computed<FuzzyResult<Speaker>[]>(() => {
   return fuzzy(term);
 });
 
+const memberResults = computed<FuzzyResult<Member>[]>(() => {
+  const term = searchTerm.value.trim();
+  const fuzzy = memberFuzzy.value;
+  if (!term || !fuzzy) return [];
+  return fuzzy(term);
+});
+
+// Visible lists (limit to 5)
 const filteredCompanies = computed<Company[]>(() => {
   const list = companiesData.value?.data ?? [];
   const term = searchTerm.value.trim();
 
-  // Show recent companies when no search term
   if (!term) return list.slice(0, 5);
-
-  return companyResults.value.map((res) => res.item).slice(0, 5); // Limit to 5 results
+  return companyResults.value.map((res) => res.item).slice(0, 5);
 });
 
 const filteredSpeakers = computed<Speaker[]>(() => {
@@ -454,24 +493,27 @@ const filteredSpeakers = computed<Speaker[]>(() => {
   const term = searchTerm.value.trim();
 
   if (!term) return list.slice(0, 5);
-
   return speakerResults.value.map((res) => res.item).slice(0, 5);
 });
 
 const filteredMembers = computed<Member[]>(() => {
-  if (!membersData.value?.data) return [];
+  const list = membersData.value?.data ?? [];
+  const term = searchTerm.value.trim();
 
-  const term = searchTerm.value.toLowerCase();
-
-  if (!term) return membersData.value.data.slice(0, 5);
-
-  return membersData.value.data
-    .filter((member: Member) => member.name.toLowerCase().includes(term))
-    .slice(0, 5);
+  if (!term) return list.slice(0, 5);
+  return memberResults.value.map((res) => res.item).slice(0, 5);
 });
 
-const bestCompanyScore = computed(() => companyResults.value[0]?.score ?? 0);
-const bestSpeakerScore = computed(() => speakerResults.value[0]?.score ?? 0);
+// Best scores for ordering groups (lower = better, Infinity = “no match”)
+const bestCompanyScore = computed(
+  () => companyResults.value[0]?.score ?? Infinity,
+);
+const bestSpeakerScore = computed(
+  () => speakerResults.value[0]?.score ?? Infinity,
+);
+const bestMemberScore = computed(
+  () => memberResults.value[0]?.score ?? Infinity,
+);
 
 type GroupId = "companies" | "speakers" | "members";
 
@@ -487,19 +529,18 @@ const orderedGroups = computed<GroupId[]>(() => {
   const entries: { id: GroupId; score: number }[] = [
     { id: "companies", score: bestCompanyScore.value },
     { id: "speakers", score: bestSpeakerScore.value },
-    // We could compute a score for members too; for now keep them last
-    { id: "members", score: 0 },
+    { id: "members", score: bestMemberScore.value },
   ];
 
-  // Sort by score desc; for ties, keep base order stable
+  // Sort by score ASC; tie-breaker = baseOrder stability
   entries.sort((a, b) => {
-    if (b.score === a.score) {
+    if (a.score === b.score) {
       return baseOrder.indexOf(a.id) - baseOrder.indexOf(b.id);
     }
-    return b.score - a.score;
+    return a.score - b.score;
   });
 
-  // Remove groups that have no results at all
+  // Only keep groups that have something to show
   return entries
     .filter((entry) => {
       if (entry.id === "companies") return filteredCompanies.value.length > 0;
@@ -580,11 +621,8 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === "Escape") {
     showSuggestions.value = false;
     highlightedIndex.value = -1;
-    // Also blur the input to remove focus
     const input = event.target as HTMLInputElement;
-    if (input) {
-      input.blur();
-    }
+    if (input) input.blur();
   } else if (event.key === "ArrowDown") {
     event.preventDefault();
     if (results.value.length > 0) {
@@ -652,7 +690,6 @@ const clearSelection = () => {
 };
 
 const hideSuggestions = () => {
-  // Delay hiding to allow for click events
   setTimeout(() => {
     showSuggestions.value = false;
     highlightedIndex.value = -1;
@@ -710,14 +747,11 @@ watch(
     if (newValue) {
       showSuggestions.value = true;
       highlightedIndex.value = -1;
-      // Focus the input when force show suggestions is triggered
       nextTick(() => {
         const input = document.getElementById(
           inputId.value,
         ) as HTMLInputElement;
-        if (input) {
-          input.focus();
-        }
+        if (input) input.focus();
       });
     }
   },
