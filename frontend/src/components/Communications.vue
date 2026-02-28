@@ -156,11 +156,8 @@
                 : 'justify-start',
           ]"
         >
-          <!-- Author avatar for messages (on the left side) -->
-          <div
-            v-if="thread.kind !== ThreadKind.ThreadKindPhoneCall"
-            class="flex flex-col items-center gap-1"
-          >
+          <!-- Author avatar for messages (including phone calls) -->
+          <div class="flex flex-col items-center gap-1">
             <Image
               v-if="getAuthorAvatar(getMessageAuthor(thread))"
               :src="getAuthorAvatar(getMessageAuthor(thread))"
@@ -958,13 +955,19 @@ watch(
 
 const getMessageDirection = (kind: ThreadKind): "incoming" | "outgoing" => {
   return kind === ThreadKind.ThreadKindTo ||
-    kind === ThreadKind.ThreadKindTemplate
+    kind === ThreadKind.ThreadKindTemplate ||
+    kind === ThreadKind.ThreadKindPhoneCall
     ? "outgoing"
     : "incoming";
 };
 
 const getMessageAuthor = (thread: ThreadWithEntry): Author | null => {
   const direction = getMessageDirection(thread.kind);
+
+  // For phone calls, always show the member who made the call
+  if (thread.kind === ThreadKind.ThreadKindPhoneCall && thread.entry?.member) {
+    return getMemberById(thread.entry.member);
+  }
 
   if (direction === "outgoing" && thread.entry?.member) {
     return getMemberById(thread.entry?.member);
