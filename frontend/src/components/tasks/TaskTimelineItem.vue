@@ -22,6 +22,10 @@
           >
             <h3 class="font-medium flex items-center gap-2">
               {{ title }}
+              <Loader2
+                v-if="isSaving"
+                class="w-3 h-3 animate-spin text-muted-foreground"
+              />
             </h3>
             <div class="flex items-center gap-2">
               <div @click.stop>
@@ -36,7 +40,9 @@
             </div>
           </div>
           <CollapsibleContent class="mt-4">
-            <slot />
+            <div :class="{ 'pointer-events-none opacity-50': isSaving }">
+              <slot />
+            </div>
           </CollapsibleContent>
         </Card>
       </Collapsible>
@@ -54,7 +60,9 @@ import {
   StepperIndicator,
   StepperSeparator,
 } from "@/components/ui/stepper";
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown, Loader2 } from "lucide-vue-next";
+import { inject } from "vue";
+import { TASKS_SAVING_KEY } from "@/composables/useTasksSaving";
 
 interface Props {
   stepNumber: number;
@@ -66,6 +74,9 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   isLast: false,
 });
+
+// Injected from Tasks.vue — undefined outside the tasks context
+const isSaving = inject(TASKS_SAVING_KEY);
 
 // Start collapsed if complete, open if incomplete
 const isOpen = ref(!props.isComplete);
