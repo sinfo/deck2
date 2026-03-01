@@ -52,6 +52,7 @@
             :entity-id="speakerWithParticipation.id"
             :participation="speakerWithParticipation.participation"
             :contact="speakerWithParticipation.contactObject"
+            :speaker-imgs="speakerWithParticipation.imgs"
           />
         </TabsContent>
       </Tabs>
@@ -74,14 +75,25 @@ import { withCurrentParticipation } from "@/lib/utils";
 import { useEventStore } from "@/stores/event";
 
 import { useQuery, useQueryCache } from "@pinia/colada";
-import { computed, ref } from "vue";
-import { useRoute } from "vue-router";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import SpeakerCommunications from "@/components/speakers/SpeakerCommunications.vue";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const route = useRoute();
+const router = useRouter();
 const queryCache = useQueryCache();
-const activeTab = ref("info");
+
+const validTabs = ["info", "tasks"] as const;
+type TabValue = (typeof validTabs)[number];
+const activeTab = ref<TabValue>(
+  validTabs.includes(route.query.tab as TabValue)
+    ? (route.query.tab as TabValue)
+    : "info",
+);
+watch(activeTab, (tab) => {
+  router.replace({ query: { ...route.query, tab } });
+});
 
 const speakerId = route.params.speakerId;
 const { data: speaker } = useQuery({

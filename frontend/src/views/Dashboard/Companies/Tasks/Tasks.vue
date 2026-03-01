@@ -4,6 +4,7 @@
     :entity-id="companyWithParticipation.id"
     :participation="currentParticipation"
     :billing-info="companyWithParticipation.billingInfo"
+    :company-imgs="companyWithParticipation.imgs"
   />
 </template>
 
