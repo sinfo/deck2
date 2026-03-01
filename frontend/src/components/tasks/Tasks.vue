@@ -4,15 +4,13 @@
       <h2 class="text-lg font-semibold">
         {{ entityType === "company" ? "Company" : "Speaker" }} Tasks Timeline
       </h2>
-      <Button
-        variant="default"
-        size="sm"
-        :disabled="isSaving"
-        @click="saveTasks"
+      <span
+        v-if="isSaving"
+        class="text-xs text-muted-foreground flex items-center gap-1"
       >
-        <Save class="w-4 h-4 mr-1" />
-        {{ isSaving ? "Saving…" : "Save Tasks" }}
-      </Button>
+        <Loader2 class="w-3 h-3 animate-spin" /> Saving…
+      </span>
+      <span v-else class="text-xs text-muted-foreground">Auto-saved</span>
     </div>
 
     <!-- Stepper Container -->
@@ -42,6 +40,7 @@
         :speaker-tasks="speakerTasks"
         @update:logos="onLogosUpdate"
         @update:asked-for-info="onAskedForInfoUpdate"
+        @update:po="onPoUpdate"
       />
 
       <TaskContract
@@ -71,7 +70,6 @@
         <TaskLogistics
           :entity-id="entityId"
           :step-number="showSessionTitles ? 6 : 5"
-          :is-last="true"
           :company-tasks="companyTasks"
           @update:logistics="onLogisticsUpdate"
         />
@@ -103,17 +101,48 @@
         <TaskHotel
           :entity-id="entityId"
           :step-number="6"
-          :is-last="true"
           :speaker-tasks="speakerTasks"
           @update:hotel="onHotelUpdate"
         />
+
+        <TaskTestSchedule
+          :entity-id="entityId"
+          :step-number="7"
+          :speaker-tasks="speakerTasks"
+          @update:test-schedule="onTestScheduleUpdate"
+        />
       </template>
+
+      <!-- Images (both entities) -->
+      <TaskImages
+        :entity-id="entityId"
+        :entity-type="entityType"
+        :step-number="
+          entityType === 'company' ? (showSessionTitles ? 7 : 6) : 8
+        "
+        :is-last="true"
+        :company-public-img-url="
+          entityType === 'company'
+            ? (companyImgs?.public ?? undefined)
+            : undefined
+        "
+        :speaker-img-url="
+          entityType === 'speaker'
+            ? (speakerImgs?.speaker ?? undefined)
+            : undefined
+        "
+        :speaker-company-img-url="
+          entityType === 'speaker'
+            ? (speakerImgs?.company ?? undefined)
+            : undefined
+        "
+      />
     </Stepper>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from "vue";
+import { ref, computed, reactive, watch, provide } from "vue";
 import type { EntityType } from "@/dto/tasks";
 import {
   type CompanyTasks,
@@ -132,15 +161,19 @@ import {
   emptyCompanyTasks,
   emptySpeakerTasks,
 } from "@/dto/tasks";
-import type { CompanyBillingInfo, CompanyParticipation } from "@/dto/companies";
-import type { SpeakerParticipation } from "@/dto/speakers";
+import type {
+  CompanyBillingInfo,
+  CompanyImages,
+  CompanyParticipation,
+} from "@/dto/companies";
+import type { SpeakerImages, SpeakerParticipation } from "@/dto/speakers";
 import type { Contact } from "@/dto/contacts";
 import type { Item } from "@/dto/item";
-import { Button } from "@/components/ui/button";
 import { Stepper } from "@/components/ui/stepper";
-import { Save } from "lucide-vue-next";
+import { Loader2 } from "lucide-vue-next";
 import { useCompanyTasksMutation } from "@/mutations/companies";
 import { useSpeakerTasksMutation } from "@/mutations/speakers";
+import { TASKS_SAVING_KEY } from "@/composables/useTasksSaving";
 import useToast from "@/lib/toast";
 import TaskConfirmation from "./TaskConfirmation.vue";
 import TaskBillingLogos from "./TaskBillingLogos.vue";
@@ -152,6 +185,8 @@ import TaskFlights from "./TaskFlights.vue";
 import TaskCoverage from "./TaskCoverage.vue";
 import TaskMaterials from "./TaskMaterials.vue";
 import TaskHotel from "./TaskHotel.vue";
+import TaskTestSchedule from "./TaskTestSchedule.vue";
+import TaskImages from "./TaskImages.vue";
 
 interface Props {
   entityType: EntityType;
@@ -159,6 +194,8 @@ interface Props {
   participation?: CompanyParticipation | SpeakerParticipation;
   billingInfo?: CompanyBillingInfo;
   contact?: Contact;
+  companyImgs?: CompanyImages;
+  speakerImgs?: SpeakerImages;
 }
 
 const props = defineProps<Props>();
@@ -186,21 +223,6 @@ const speakerTasks = reactive<SpeakerTasks>(
     : emptySpeakerTasks(),
 );
 
-// Sync when participation changes externally
-watch(
-  () => props.participation,
-  (p) => {
-    if (props.entityType === "company" && p) {
-      const saved = (p as CompanyParticipation).tasks;
-      if (saved) Object.assign(companyTasks, saved);
-    }
-    if (props.entityType === "speaker" && p) {
-      const saved = (p as SpeakerParticipation).tasks;
-      if (saved) Object.assign(speakerTasks, saved);
-    }
-  },
-);
-
 // ——————————————————————————————————————
 // Save mutations
 // ——————————————————————————————————————
@@ -212,22 +234,72 @@ speakerMutation.speakerId.value = props.entityId;
 
 const isSaving = ref(false);
 
-async function saveTasks() {
-  isSaving.value = true;
-  try {
-    if (props.entityType === "company") {
-      await companyMutation.mutate({ ...companyTasks });
-    } else {
-      await speakerMutation.mutate({ ...speakerTasks });
+// Provide saving state to all child task components so they can disable themselves
+provide(TASKS_SAVING_KEY, isSaving);
+
+// ——————————————————————————————————————
+// Sync when participation refreshes from server (post-save cache invalidation)
+// Guard with isSaving to avoid triggering the save watcher (infinite loop)
+// ——————————————————————————————————————
+let isSyncing = false;
+
+watch(
+  () => props.participation,
+  (p) => {
+    if (isSaving.value) return; // server refresh caused by our own save — ignore
+    isSyncing = true;
+    if (props.entityType === "company" && p) {
+      const saved = (p as CompanyParticipation).tasks;
+      if (saved) Object.assign(companyTasks, saved);
     }
-    toast.success({ title: "Tasks saved" });
-  } catch (err) {
-    console.error("Failed to save tasks:", err);
-    toast.error({ title: "Failed to save tasks" });
-  } finally {
-    isSaving.value = false;
-  }
+    if (props.entityType === "speaker" && p) {
+      const saved = (p as SpeakerParticipation).tasks;
+      if (saved) Object.assign(speakerTasks, saved);
+    }
+    // Use nextTick boundary — reset flag after the watch flush
+    setTimeout(() => {
+      isSyncing = false;
+    }, 0);
+  },
+);
+
+// ——————————————————————————————————————
+// Debounced auto-save
+// ——————————————————————————————————————
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleSave(delayMs = 600) {
+  if (isSyncing) return; // don't schedule while applying server data
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    saveTimer = null;
+    if (isSaving.value) return; // already saving
+    isSaving.value = true;
+    try {
+      if (props.entityType === "company") {
+        await companyMutation.mutateAsync({ ...companyTasks });
+      } else {
+        await speakerMutation.mutateAsync({ ...speakerTasks });
+      }
+    } catch (err) {
+      console.error("Auto-save failed:", err);
+      toast.error({ title: "Auto-save failed" });
+    } finally {
+      isSaving.value = false;
+    }
+  }, delayMs);
 }
+
+watch(
+  () => JSON.stringify(companyTasks),
+  () => scheduleSave(600),
+  { deep: true },
+);
+watch(
+  () => JSON.stringify(speakerTasks),
+  () => scheduleSave(600),
+  { deep: true },
+);
 
 // ——————————————————————————————————————
 // Child update handlers (company)
@@ -266,9 +338,13 @@ function onMaterialsUpdate(v: SpeakerTaskMaterials) {
 function onHotelUpdate(v: SpeakerTaskHotel) {
   Object.assign(speakerTasks.hotel, v);
 }
+function onTestScheduleUpdate(schedule: string, done: boolean) {
+  speakerTasks.materials.testSchedule = schedule;
+  speakerTasks.materials.testDone = done;
+}
 
 // ——————————————————————————————————————
-// Shared update handlers (logos / askedForInfo)
+// Shared update handlers
 // ——————————————————————————————————————
 function onLogosUpdate(v: TaskLogos) {
   if (props.entityType === "company") {
@@ -283,6 +359,9 @@ function onAskedForInfoUpdate(v: boolean) {
   } else {
     speakerTasks.askedForInfo = v;
   }
+}
+function onPoUpdate(v: string) {
+  companyTasks.po = v;
 }
 
 // ——————————————————————————————————————
