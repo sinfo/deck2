@@ -1,6 +1,11 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
+)
 
 // ============================================================
 // Shared task fields (used by both companies and speakers)
@@ -27,6 +32,7 @@ type CompanyTaskContract struct {
 	Created     bool `json:"created" bson:"created"`
 	Signed      bool `json:"signed" bson:"signed"`
 	ReceiptSent bool `json:"receiptSent" bson:"receiptSent"`
+	Paid        bool `json:"paid" bson:"paid"`
 }
 
 // CompanyTaskSessionTitles tracks session / workshop titles.
@@ -57,6 +63,7 @@ type CompanyTasks struct {
 	SessionTitles CompanyTaskSessionTitles `json:"sessionTitles" bson:"sessionTitles"`
 	Corlief       CompanyTaskCorlief       `json:"corlief" bson:"corlief"`
 	Logistics     CompanyTaskLogistics     `json:"logistics" bson:"logistics"`
+	PO            string                   `json:"po" bson:"po"`
 }
 
 // ============================================================
@@ -67,8 +74,61 @@ type CompanyTasks struct {
 type SpeakerTaskConfirmation struct {
 	Phone         string `json:"phone" bson:"phone"`
 	LinkedIn      string `json:"linkedin" bson:"linkedin"`
-	WantsLinkedIn bool   `json:"wantsLinkedinTag" bson:"wantsLinkedinTag"`
+	WantsLinkedIn string `json:"wantsLinkedinTag" bson:"wantsLinkedinTag"` // "not_responded", "yes", "no"
 	Observations  string `json:"observations" bson:"observations"`
+}
+
+// UnmarshalBSON handles legacy bool values stored for WantsLinkedIn.
+func (s *SpeakerTaskConfirmation) UnmarshalBSON(data []byte) error {
+	var raw bson.Raw
+	if err := bson.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	decodeString := func(key string) string {
+		val, err := raw.LookupErr(key)
+		if err != nil {
+			return ""
+		}
+		if val.Type == bsontype.String {
+			v, _ := val.StringValueOK()
+			return v
+		}
+		return ""
+	}
+
+	decodeLinkedIn := func(key string) string {
+		val, err := raw.LookupErr(key)
+		if err != nil {
+			return "not_responded"
+		}
+		switch val.Type {
+		case bsontype.Boolean:
+			b, _ := val.BooleanOK()
+			return boolToString(b)
+		case bsontype.String:
+			v, _ := val.StringValueOK()
+			return v
+		default:
+			return "not_responded"
+		}
+	}
+
+	s.Phone = decodeString("phone")
+	s.LinkedIn = decodeString("linkedin")
+	s.WantsLinkedIn = decodeLinkedIn("wantsLinkedinTag")
+	s.Observations = decodeString("observations")
+	return nil
+}
+
+// MarshalBSON always writes string values.
+func (s SpeakerTaskConfirmation) MarshalBSON() ([]byte, error) {
+	return bson.Marshal(bson.D{
+		{Key: "phone", Value: s.Phone},
+		{Key: "linkedin", Value: s.LinkedIn},
+		{Key: "wantsLinkedinTag", Value: s.WantsLinkedIn},
+		{Key: "observations", Value: s.Observations},
+	})
 }
 
 // SpeakerTaskFlightLeg stores one leg (arrival or departure).
@@ -97,18 +157,73 @@ type SpeakerTaskFlightRefund struct {
 
 // SpeakerTaskFlights stores everything flight-related.
 type SpeakerTaskFlights struct {
-	Requested bool                     `json:"requested" bson:"requested"`
-	Arrival   SpeakerTaskFlightLeg     `json:"arrival" bson:"arrival"`
-	Departure SpeakerTaskFlightLeg     `json:"departure" bson:"departure"`
-	Details   SpeakerTaskFlightDetails `json:"details" bson:"details"`
-	Refund    SpeakerTaskFlightRefund  `json:"refund" bson:"refund"`
+	NeedsFlights string                   `json:"needsFlights" bson:"needsFlights"` // "not_responded", "yes", "no"
+	Requested    bool                     `json:"requested" bson:"requested"`
+	Arrival      SpeakerTaskFlightLeg     `json:"arrival" bson:"arrival"`
+	Departure    SpeakerTaskFlightLeg     `json:"departure" bson:"departure"`
+	Details      SpeakerTaskFlightDetails `json:"details" bson:"details"`
+	Refund       SpeakerTaskFlightRefund  `json:"refund" bson:"refund"`
 }
 
 // SpeakerTaskCoverage tracks video/photo coverage confirmation.
 type SpeakerTaskCoverage struct {
-	Video     bool `json:"video" bson:"video"`
-	Streaming bool `json:"streaming" bson:"streaming"`
-	Photo     bool `json:"photo" bson:"photo"`
+	Video     string `json:"video" bson:"video"`         // "not_responded", "yes", "no"
+	Streaming string `json:"streaming" bson:"streaming"` // "not_responded", "yes", "no"
+	Photo     string `json:"photo" bson:"photo"`         // "not_responded", "yes", "no"
+}
+
+// boolToString converts legacy boolean values to the new string format.
+func boolToString(v interface{}) string {
+	switch b := v.(type) {
+	case bool:
+		if b {
+			return "yes"
+		}
+		return "no"
+	case string:
+		return b
+	default:
+		return "not_responded"
+	}
+}
+
+// UnmarshalBSON handles legacy boolean fields being decoded into string fields.
+func (c *SpeakerTaskCoverage) UnmarshalBSON(data []byte) error {
+	var raw bson.Raw
+	if err := bson.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+
+	decodeField := func(key string) string {
+		val, err := raw.LookupErr(key)
+		if err != nil {
+			return "not_responded"
+		}
+		switch val.Type {
+		case bsontype.Boolean:
+			b, _ := val.BooleanOK()
+			return boolToString(b)
+		case bsontype.String:
+			s, _ := val.StringValueOK()
+			return s
+		default:
+			return "not_responded"
+		}
+	}
+
+	c.Video = decodeField("video")
+	c.Streaming = decodeField("streaming")
+	c.Photo = decodeField("photo")
+	return nil
+}
+
+// MarshalBSON always writes string values.
+func (c SpeakerTaskCoverage) MarshalBSON() ([]byte, error) {
+	return bson.Marshal(bson.D{
+		{Key: "video", Value: c.Video},
+		{Key: "streaming", Value: c.Streaming},
+		{Key: "photo", Value: c.Photo},
+	})
 }
 
 // SpeakerTaskMaterials tracks talk info and materials delivery.
@@ -123,6 +238,7 @@ type SpeakerTaskMaterials struct {
 
 // SpeakerTaskHotel stores hotel / booking / payment info.
 type SpeakerTaskHotel struct {
+	NeedsHotel string     `json:"needsHotel" bson:"needsHotel"` // "not_responded", "yes", "no"
 	Requested  bool       `json:"requested" bson:"requested"`
 	HotelName  string     `json:"hotelName" bson:"hotelName"`
 	RoomType   string     `json:"roomType" bson:"roomType"`
