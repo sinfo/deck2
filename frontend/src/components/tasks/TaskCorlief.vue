@@ -27,25 +27,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Building2 } from "lucide-vue-next";
+import type { CompanyTasks, CompanyTaskCorlief } from "@/dto/tasks";
 
 interface Props {
   entityId: string;
   stepNumber?: number;
+  companyTasks?: CompanyTasks;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   stepNumber: 5,
+  companyTasks: undefined,
 });
 
+const emit = defineEmits<{
+  "update:corlief": [value: CompanyTaskCorlief];
+}>();
+
 // Corlief states
-const hasPreNotice = ref<boolean>(false);
-const hasScheduled = ref<boolean>(false);
-const hasReserved = ref<boolean>(false);
+const hasPreNotice = ref<boolean>(
+  props.companyTasks?.corlief?.preNotice ?? false,
+);
+const hasScheduled = ref<boolean>(
+  props.companyTasks?.corlief?.scheduled ?? false,
+);
+const hasReserved = ref<boolean>(
+  props.companyTasks?.corlief?.reserved ?? false,
+);
+
+watch([hasPreNotice, hasScheduled, hasReserved], () => {
+  emit("update:corlief", {
+    preNotice: hasPreNotice.value,
+    scheduled: hasScheduled.value,
+    reserved: hasReserved.value,
+  });
+});
 
 const isComplete = computed(() => {
   return (

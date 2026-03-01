@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import StatusToggleBadge from "./StatusToggleBadge.vue";
 import { Label } from "@/components/ui/label";
@@ -61,26 +61,47 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Truck } from "lucide-vue-next";
+import type { CompanyTasks, CompanyTaskLogistics } from "@/dto/tasks";
 
 interface Props {
   entityId: string;
   stepNumber?: number;
   isLast?: boolean;
+  companyTasks?: CompanyTasks;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   stepNumber: 6,
   isLast: false,
+  companyTasks: undefined,
 });
+
+const emit = defineEmits<{
+  "update:logistics": [value: CompanyTaskLogistics];
+}>();
 
 type CarStatus = "not_responded" | "wants" | "not_wants";
 
 // Request status (whether email was sent)
-const hasRequestedInfo = ref<boolean>(false);
+const hasRequestedInfo = ref<boolean>(
+  props.companyTasks?.logistics?.requestedInfo ?? false,
+);
 
 // Form data
-const carStatus = ref<CarStatus>("not_responded");
-const licensePlate = ref<string>("");
+const carStatus = ref<CarStatus>(
+  (props.companyTasks?.logistics?.carStatus as CarStatus) ?? "not_responded",
+);
+const licensePlate = ref<string>(
+  props.companyTasks?.logistics?.licensePlate ?? "",
+);
+
+watch([hasRequestedInfo, carStatus, licensePlate], () => {
+  emit("update:logistics", {
+    requestedInfo: hasRequestedInfo.value,
+    carStatus: carStatus.value,
+    licensePlate: licensePlate.value,
+  });
+});
 
 const isComplete = computed(() => {
   if (carStatus.value === "not_responded") return false;

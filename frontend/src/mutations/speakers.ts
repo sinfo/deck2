@@ -6,11 +6,13 @@ import {
   postSpeakerThread,
   uploadSpeakerInternalImage,
   updateSpeakerParticipationStatus,
+  updateSpeakerTasks,
 } from "@/api/speakers";
 import type {
   UpdateSpeakerData,
   UpdateSpeakerParticipationData,
 } from "@/dto/speakers";
+import type { SpeakerTasks } from "@/dto/tasks";
 import {
   ThreadStatus,
   type CreateThread,
@@ -257,5 +259,27 @@ export const useSpeakerImageUploadMutation = defineMutation(() => {
     ...mutation,
     speakerId,
     imageData,
+  };
+});
+
+export const useSpeakerTasksMutation = defineMutation(() => {
+  const speakerId = ref<string>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: (tasks: SpeakerTasks) =>
+      updateSpeakerTasks(speakerId.value!, tasks),
+    onSettled: () => {
+      if (speakerId.value) {
+        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    speakerId,
   };
 });

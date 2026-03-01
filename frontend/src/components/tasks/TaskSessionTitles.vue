@@ -58,18 +58,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Presentation } from "lucide-vue-next";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import type { Item } from "@/dto/item";
+import type { CompanyTasks, CompanyTaskSessionTitles } from "@/dto/tasks";
 
 interface Props {
   packageItems: Item[];
+  companyTasks?: CompanyTasks;
 }
 
 const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  "update:sessionTitles": [value: CompanyTaskSessionTitles];
+}>();
 
 // Check if package includes presentation or workshop items by type
 const hasPresentation = computed(() =>
@@ -82,8 +88,19 @@ const hasWorkshop = computed(() =>
 );
 
 // Session titles
-const presentationTitle = ref("");
-const workshopTitle = ref("");
+const presentationTitle = ref(
+  props.companyTasks?.sessionTitles?.presentationTitle ?? "",
+);
+const workshopTitle = ref(
+  props.companyTasks?.sessionTitles?.workshopTitle ?? "",
+);
+
+watch([presentationTitle, workshopTitle], () => {
+  emit("update:sessionTitles", {
+    presentationTitle: presentationTitle.value,
+    workshopTitle: workshopTitle.value,
+  });
+});
 
 const isPresentationTitleTooLong = computed(
   () => presentationTitle.value.length > 30,

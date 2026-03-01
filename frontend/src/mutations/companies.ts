@@ -8,6 +8,7 @@ import {
   postThread,
   uploadCompanyInternalImage,
   updateRepresentativeOrder,
+  updateCompanyTasks,
 } from "@/api/companies";
 import type { ParticipationStatus } from "@/dto";
 import type {
@@ -16,6 +17,7 @@ import type {
   AddParticipationData,
   CompanyBillingInfo,
 } from "@/dto/companies";
+import type { CompanyTasks } from "@/dto/tasks";
 import {
   ThreadStatus,
   type CreateThread,
@@ -349,5 +351,27 @@ export const useUpdateRepresentativeOrderMutation = defineMutation(() => {
     ...mutation,
     companyId,
     representativeIds,
+  };
+});
+
+export const useCompanyTasksMutation = defineMutation(() => {
+  const companyId = ref<string>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: (tasks: CompanyTasks) =>
+      updateCompanyTasks(companyId.value!, tasks),
+    onSettled: () => {
+      if (companyId.value) {
+        queryCache.invalidateQueries({ key: ["company", companyId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["companies"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    companyId,
   };
 });

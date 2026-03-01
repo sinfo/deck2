@@ -10,6 +10,7 @@ import type {
   UpdateCompanyData,
   UpdateCompanyParticipationData,
 } from "@/dto/companies";
+import type { CompanyTasks } from "@/dto/tasks";
 import type {
   CreateThread,
   ParticipationCommunications,
@@ -144,3 +145,6 @@ export const generateCompanyContract = (
     responseType: "blob",
   });
 };
+
+export const updateCompanyTasks = (id: string, tasks: CompanyTasks) =>
+  instance.put<Company>(`/companies/${id}/participation/tasks`, { tasks });

@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import StatusToggleBadge from "./StatusToggleBadge.vue";
 import { Label } from "@/components/ui/label";
@@ -208,42 +208,145 @@ import {
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Plane } from "lucide-vue-next";
+import type { SpeakerTasks, SpeakerTaskFlights } from "@/dto/tasks";
 
 interface Props {
   entityId: string;
   stepNumber?: number;
+  speakerTasks?: SpeakerTasks;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   stepNumber: 3,
+  speakerTasks: undefined,
 });
 
+const emit = defineEmits<{
+  "update:flights": [value: SpeakerTaskFlights];
+}>();
+
+const parseDate = (v: string | null | undefined): Date | null => {
+  if (!v) return null;
+  try {
+    return new Date(v);
+  } catch {
+    return null;
+  }
+};
+
 // Request status
-const hasRequestedFlights = ref<boolean>(false);
+const hasRequestedFlights = ref<boolean>(
+  props.speakerTasks?.flights?.requested ?? false,
+);
 
 // Arrival
-const arrivalAirport = ref<string>("");
-const arrivalFlightNumber = ref<string>("");
-const arrivalDate = ref<Date | null>(null);
-const arrivalTime = ref<string>("");
+const arrivalAirport = ref<string>(
+  props.speakerTasks?.flights?.arrival?.airport ?? "",
+);
+const arrivalFlightNumber = ref<string>(
+  props.speakerTasks?.flights?.arrival?.flightNumber ?? "",
+);
+const arrivalDate = ref<Date | null>(
+  parseDate(props.speakerTasks?.flights?.arrival?.date),
+);
+const arrivalTime = ref<string>(
+  props.speakerTasks?.flights?.arrival?.time ?? "",
+);
 
 // Departure
-const departureAirport = ref<string>("");
-const departureFlightNumber = ref<string>("");
-const departureDate = ref<Date | null>(null);
-const departureTime = ref<string>("");
+const departureAirport = ref<string>(
+  props.speakerTasks?.flights?.departure?.airport ?? "",
+);
+const departureFlightNumber = ref<string>(
+  props.speakerTasks?.flights?.departure?.flightNumber ?? "",
+);
+const departureDate = ref<Date | null>(
+  parseDate(props.speakerTasks?.flights?.departure?.date),
+);
+const departureTime = ref<string>(
+  props.speakerTasks?.flights?.departure?.time ?? "",
+);
 
 // Details
-const flightPrice = ref<string>("");
-const flightStatus = ref<string>("pending");
-const flightLink = ref<string>("");
-const flightBookingRef = ref<string>("");
+const flightPrice = ref<string>(
+  props.speakerTasks?.flights?.details?.price ?? "",
+);
+const flightStatus = ref<string>(
+  props.speakerTasks?.flights?.details?.status ?? "pending",
+);
+const flightLink = ref<string>(
+  props.speakerTasks?.flights?.details?.link ?? "",
+);
+const flightBookingRef = ref<string>(
+  props.speakerTasks?.flights?.details?.bookingRef ?? "",
+);
 
 // Refund
-const refundAmount = ref<string>("");
-const refundMethod = ref<string>("");
-const refundInfoNeeded = ref<string>("");
-const refundStatus = ref<string>("not_started");
+const refundAmount = ref<string>(
+  props.speakerTasks?.flights?.refund?.amount ?? "",
+);
+const refundMethod = ref<string>(
+  props.speakerTasks?.flights?.refund?.method ?? "",
+);
+const refundInfoNeeded = ref<string>(
+  props.speakerTasks?.flights?.refund?.infoNeeded ?? "",
+);
+const refundStatus = ref<string>(
+  props.speakerTasks?.flights?.refund?.status ?? "not_started",
+);
+
+function emitFlights() {
+  emit("update:flights", {
+    requested: hasRequestedFlights.value,
+    arrival: {
+      airport: arrivalAirport.value,
+      flightNumber: arrivalFlightNumber.value,
+      date: arrivalDate.value?.toISOString() ?? null,
+      time: arrivalTime.value,
+    },
+    departure: {
+      airport: departureAirport.value,
+      flightNumber: departureFlightNumber.value,
+      date: departureDate.value?.toISOString() ?? null,
+      time: departureTime.value,
+    },
+    details: {
+      price: flightPrice.value,
+      status: flightStatus.value,
+      link: flightLink.value,
+      bookingRef: flightBookingRef.value,
+    },
+    refund: {
+      amount: refundAmount.value,
+      method: refundMethod.value,
+      infoNeeded: refundInfoNeeded.value,
+      status: refundStatus.value,
+    },
+  });
+}
+
+watch(
+  [
+    hasRequestedFlights,
+    arrivalAirport,
+    arrivalFlightNumber,
+    arrivalDate,
+    arrivalTime,
+    departureAirport,
+    departureFlightNumber,
+    departureDate,
+    departureTime,
+    flightPrice,
+    flightStatus,
+    flightLink,
+    flightBookingRef,
+    refundAmount,
+    refundMethod,
+    refundInfoNeeded,
+    refundStatus,
+  ],
+  emitFlights,
+);
 
 const isComplete = computed(() => {
   return flightStatus.value === "bought";

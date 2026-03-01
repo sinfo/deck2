@@ -42,26 +42,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Camera } from "lucide-vue-next";
+import type { SpeakerTasks, SpeakerTaskCoverage } from "@/dto/tasks";
 
 interface Props {
   entityId: string;
   stepNumber?: number;
+  speakerTasks?: SpeakerTasks;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   stepNumber: 5,
+  speakerTasks: undefined,
 });
 
+const emit = defineEmits<{
+  "update:coverage": [value: SpeakerTaskCoverage];
+}>();
+
 // Coverage states
-const videoCoverage = ref<boolean>(false);
-const streaming = ref<boolean>(false);
-const photoCoverage = ref<boolean>(false);
+const videoCoverage = ref<boolean>(
+  props.speakerTasks?.coverage?.video ?? false,
+);
+const streaming = ref<boolean>(
+  props.speakerTasks?.coverage?.streaming ?? false,
+);
+const photoCoverage = ref<boolean>(
+  props.speakerTasks?.coverage?.photo ?? false,
+);
+
+watch([videoCoverage, streaming, photoCoverage], () => {
+  emit("update:coverage", {
+    video: videoCoverage.value,
+    streaming: streaming.value,
+    photo: photoCoverage.value,
+  });
+});
 
 const isComplete = computed(() => {
   return (

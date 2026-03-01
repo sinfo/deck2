@@ -6,6 +6,7 @@ import type {
   UpdateSpeakerData,
   UpdateSpeakerParticipationData,
 } from "@/dto/speakers";
+import type { SpeakerTasks } from "@/dto/tasks";
 import { instance } from ".";
 import {
   type ParticipationCommunications,
@@ -85,3 +86,6 @@ export const syncSpeakerGmailMessages = (
   instance.post<SyncGmailResponse>(`/speakers/${id}/participation/gmail-sync`, {
     messages,
   });
+
+export const updateSpeakerTasks = (id: string, tasks: SpeakerTasks) =>
+  instance.put<Speaker>(`/speakers/${id}/participation/tasks`, { tasks });

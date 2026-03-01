@@ -39,25 +39,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import StatusToggleBadge from "./StatusToggleBadge.vue";
 import { FileText } from "lucide-vue-next";
 import ContractDownload from "../companies/ContractDownload.vue";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import type { EntityType } from "@/dto/tasks";
+import type {
+  EntityType,
+  CompanyTasks,
+  CompanyTaskContract,
+} from "@/dto/tasks";
 
 const props = defineProps<{
   entityId: string;
   entityType: EntityType;
+  companyTasks?: CompanyTasks;
+}>();
+
+const emit = defineEmits<{
+  "update:contract": [value: CompanyTaskContract];
 }>();
 
 // Contract states
-const hasCreatedContract = ref(false);
-const hasSentContract = ref(false);
-const hasSigned = ref(false);
-const hasReceiptSent = ref(false);
+const hasCreatedContract = ref(props.companyTasks?.contract?.created ?? false);
+const hasSentContract = ref(props.companyTasks?.contract?.sent ?? false);
+const hasSigned = ref(props.companyTasks?.contract?.signed ?? false);
+const hasReceiptSent = ref(props.companyTasks?.contract?.receiptSent ?? false);
+
+watch([hasCreatedContract, hasSentContract, hasSigned, hasReceiptSent], () => {
+  emit("update:contract", {
+    created: hasCreatedContract.value,
+    sent: hasSentContract.value,
+    signed: hasSigned.value,
+    receiptSent: hasReceiptSent.value,
+  });
+});
 
 const isComplete = computed(() => {
   return (

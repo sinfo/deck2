@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import StatusToggleBadge from "./StatusToggleBadge.vue";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -91,27 +91,63 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Package } from "lucide-vue-next";
+import type { SpeakerTasks, SpeakerTaskMaterials } from "@/dto/tasks";
 
 interface Props {
   entityId: string;
   stepNumber?: number;
+  speakerTasks?: SpeakerTasks;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   stepNumber: 5,
+  speakerTasks: undefined,
 });
 
+const emit = defineEmits<{
+  "update:materials": [value: SpeakerTaskMaterials];
+}>();
+
 // Materials states
-const hasRequestedMaterials = ref<boolean>(false);
-const materialsReceived = ref<boolean>(false);
+const hasRequestedMaterials = ref<boolean>(
+  props.speakerTasks?.materials?.requested ?? false,
+);
+const materialsReceived = ref<boolean>(
+  props.speakerTasks?.materials?.received ?? false,
+);
 
 // Talk info
-const talkTitle = ref<string>("");
-const talkDescription = ref<string>("");
+const talkTitle = ref<string>(props.speakerTasks?.materials?.talkTitle ?? "");
+const talkDescription = ref<string>(
+  props.speakerTasks?.materials?.talkDescription ?? "",
+);
 
 // Test schedule
-const testSchedule = ref<string>("");
-const testDone = ref<boolean>(false);
+const testSchedule = ref<string>(
+  props.speakerTasks?.materials?.testSchedule ?? "",
+);
+const testDone = ref<boolean>(props.speakerTasks?.materials?.testDone ?? false);
+
+watch(
+  [
+    hasRequestedMaterials,
+    materialsReceived,
+    talkTitle,
+    talkDescription,
+    testSchedule,
+    testDone,
+  ],
+  () => {
+    emit("update:materials", {
+      requested: hasRequestedMaterials.value,
+      received: materialsReceived.value,
+      talkTitle: talkTitle.value,
+      talkDescription: talkDescription.value,
+      testSchedule: testSchedule.value,
+      testDone: testDone.value,
+    });
+  },
+);
 
 const isComplete = computed(() => {
   return materialsReceived.value === true && testDone.value === true;

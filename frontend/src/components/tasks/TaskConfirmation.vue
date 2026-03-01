@@ -106,7 +106,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { CompanyParticipation } from "@/dto/companies";
 import type { SpeakerParticipation } from "@/dto/speakers";
 import type { Contact } from "@/dto/contacts";
-import type { EntityType } from "@/dto/tasks";
+import type {
+  EntityType,
+  CompanyTasks,
+  SpeakerTasks,
+  CompanyTaskConfirmation,
+  SpeakerTaskConfirmation,
+} from "@/dto/tasks";
 import type { Package } from "@/dto/packages";
 import {
   useCompanyParticipationPackageMutation,
@@ -123,12 +129,16 @@ interface Props {
   entityType: EntityType;
   participation?: CompanyParticipation | SpeakerParticipation;
   contact?: Contact;
+  companyTasks?: CompanyTasks;
+  speakerTasks?: SpeakerTasks;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   packageChanged: [packageName: string, packageItems: Item[]];
+  "update:companyConfirmation": [value: CompanyTaskConfirmation];
+  "update:speakerConfirmation": [value: SpeakerTaskConfirmation];
 }>();
 
 const { toast } = useToast();
@@ -327,17 +337,29 @@ const isComplete = computed(() => {
   return !!confirmedDate.value;
 });
 
-// Speaker-only fields (synced from contact)
-const speakerPhone = ref<string>(props.contact?.phones?.[0]?.phone ?? "");
-const speakerObservations = ref<string>("");
-const linkedinUrl = ref<string>(props.contact?.socials?.linkedin ?? "");
-const wantsLinkedinTag = ref<boolean>(false);
+// Speaker-only fields (synced from saved tasks first, fallback to contact)
+const speakerPhone = ref<string>(
+  props.speakerTasks?.confirmation?.phone ||
+    props.contact?.phones?.[0]?.phone ||
+    "",
+);
+const speakerObservations = ref<string>(
+  props.speakerTasks?.confirmation?.observations ?? "",
+);
+const linkedinUrl = ref<string>(
+  props.speakerTasks?.confirmation?.linkedin ||
+    props.contact?.socials?.linkedin ||
+    "",
+);
+const wantsLinkedinTag = ref<boolean>(
+  props.speakerTasks?.confirmation?.wantsLinkedinTag ?? false,
+);
 
-// Keep phone and linkedin in sync when contact prop changes
+// Keep phone and linkedin in sync when contact prop changes (only if empty)
 watch(
   () => props.contact?.phones?.[0]?.phone,
   (newVal) => {
-    if (newVal !== undefined) {
+    if (newVal !== undefined && !speakerPhone.value) {
       speakerPhone.value = newVal;
     }
   },
@@ -346,8 +368,23 @@ watch(
 watch(
   () => props.contact?.socials?.linkedin,
   (newVal) => {
-    if (newVal !== undefined) {
+    if (newVal !== undefined && !linkedinUrl.value) {
       linkedinUrl.value = newVal;
+    }
+  },
+);
+
+// Emit speaker confirmation changes
+watch(
+  [speakerPhone, linkedinUrl, wantsLinkedinTag, speakerObservations],
+  () => {
+    if (props.entityType === "speaker") {
+      emit("update:speakerConfirmation", {
+        phone: speakerPhone.value,
+        linkedin: linkedinUrl.value,
+        wantsLinkedinTag: wantsLinkedinTag.value,
+        observations: speakerObservations.value,
+      });
     }
   },
 );

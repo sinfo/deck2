@@ -121,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import StatusToggleBadge from "./StatusToggleBadge.vue";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -131,39 +131,96 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Hotel } from "lucide-vue-next";
+import type { SpeakerTasks, SpeakerTaskHotel } from "@/dto/tasks";
 
 interface Props {
   entityId: string;
   stepNumber?: number;
   isLast?: boolean;
+  speakerTasks?: SpeakerTasks;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   stepNumber: 6,
   isLast: false,
+  speakerTasks: undefined,
 });
 
+const emit = defineEmits<{
+  "update:hotel": [value: SpeakerTaskHotel];
+}>();
+
+const parseDate = (v: string | null | undefined): Date | null => {
+  if (!v) return null;
+  try {
+    return new Date(v);
+  } catch {
+    return null;
+  }
+};
+
 // Request status
-const hasRequestedHotelInfo = ref<boolean>(false);
+const hasRequestedHotelInfo = ref<boolean>(
+  props.speakerTasks?.hotel?.requested ?? false,
+);
 
 // Hotel details
-const hotelName = ref<string>("");
-const roomType = ref<string>("");
-const hotelPrice = ref<string>("");
+const hotelName = ref<string>(props.speakerTasks?.hotel?.hotelName ?? "");
+const roomType = ref<string>(props.speakerTasks?.hotel?.roomType ?? "");
+const hotelPrice = ref<string>(props.speakerTasks?.hotel?.price ?? "");
 
 // Booking
-const checkInDate = ref<Date | null>(null);
-const checkOutDate = ref<Date | null>(null);
-const numNights = ref<string>("");
-const numGuests = ref<string>("");
-const guestNames = ref<string>("");
+const checkInDate = ref<Date | null>(
+  parseDate(props.speakerTasks?.hotel?.checkIn),
+);
+const checkOutDate = ref<Date | null>(
+  parseDate(props.speakerTasks?.hotel?.checkOut),
+);
+const numNights = ref<string>(props.speakerTasks?.hotel?.numNights ?? "");
+const numGuests = ref<string>(props.speakerTasks?.hotel?.numGuests ?? "");
+const guestNames = ref<string>(props.speakerTasks?.hotel?.guestNames ?? "");
 
 // Payment
-const hasInvoice = ref<boolean>(false);
-const isPaid = ref<boolean>(false);
+const hasInvoice = ref<boolean>(props.speakerTasks?.hotel?.invoice ?? false);
+const isPaid = ref<boolean>(props.speakerTasks?.hotel?.paid ?? false);
 
 // Notes
-const hotelNotes = ref<string>("");
+const hotelNotes = ref<string>(props.speakerTasks?.hotel?.notes ?? "");
+
+function emitHotel() {
+  emit("update:hotel", {
+    requested: hasRequestedHotelInfo.value,
+    hotelName: hotelName.value,
+    roomType: roomType.value,
+    price: hotelPrice.value,
+    checkIn: checkInDate.value?.toISOString() ?? null,
+    checkOut: checkOutDate.value?.toISOString() ?? null,
+    numNights: numNights.value,
+    numGuests: numGuests.value,
+    guestNames: guestNames.value,
+    invoice: hasInvoice.value,
+    paid: isPaid.value,
+    notes: hotelNotes.value,
+  });
+}
+
+watch(
+  [
+    hasRequestedHotelInfo,
+    hotelName,
+    roomType,
+    hotelPrice,
+    checkInDate,
+    checkOutDate,
+    numNights,
+    numGuests,
+    guestNames,
+    hasInvoice,
+    isPaid,
+    hotelNotes,
+  ],
+  emitHotel,
+);
 
 const isComplete = computed(() => {
   return (

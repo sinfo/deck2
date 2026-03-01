@@ -114,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -126,7 +126,12 @@ import {
 } from "@/components/ui/tooltip";
 import { Info, Receipt } from "lucide-vue-next";
 import type { CompanyBillingInfo } from "@/dto/companies";
-import type { EntityType } from "@/dto/tasks";
+import type {
+  EntityType,
+  CompanyTasks,
+  SpeakerTasks,
+  TaskLogos,
+} from "@/dto/tasks";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import BillingForm from "@/components/companies/BillingForm.vue";
 import Button from "@/components/ui/button/Button.vue";
@@ -138,12 +143,16 @@ interface Props {
   entityType: EntityType;
   billingInfo?: CompanyBillingInfo;
   entityId?: string;
+  companyTasks?: CompanyTasks;
+  speakerTasks?: SpeakerTasks;
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   billingUpdated: [];
+  "update:logos": [value: TaskLogos];
+  "update:askedForInfo": [value: boolean];
 }>();
 
 // Billing info
@@ -184,10 +193,32 @@ const handleBillingSubmit = async (data: CompanyBillingInfo) => {
   }
 };
 
-// Task states (these would be persisted in the backend in a real implementation)
-const hasAskedForBillingInfo = ref(false);
-const logosReceived = ref(false);
-const logosNeedReviewing = ref(false);
+// Initialise from saved tasks
+const savedLogos =
+  props.entityType === "company"
+    ? props.companyTasks?.logos
+    : props.speakerTasks?.logos;
+
+const savedAsked =
+  props.entityType === "company"
+    ? props.companyTasks?.confirmation?.askedForInfo
+    : props.speakerTasks?.askedForInfo;
+
+// Task states
+const hasAskedForBillingInfo = ref(savedAsked ?? false);
+const logosReceived = ref(savedLogos?.received ?? false);
+const logosNeedReviewing = ref(savedLogos?.needsReviewing ?? false);
+
+watch(hasAskedForBillingInfo, (v) => {
+  emit("update:askedForInfo", v);
+});
+
+watch([logosReceived, logosNeedReviewing], () => {
+  emit("update:logos", {
+    received: logosReceived.value,
+    needsReviewing: logosNeedReviewing.value,
+  });
+});
 
 // Completion state
 const isComplete = computed(() => {

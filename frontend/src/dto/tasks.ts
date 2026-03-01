@@ -23,3 +23,200 @@ export interface TaskEntity {
   participation?: Participation;
   billingInfo?: CompanyBillingInfo;
 }
+
+// ============================================================
+// Shared
+// ============================================================
+
+export interface TaskLogos {
+  received: boolean;
+  needsReviewing: boolean;
+}
+
+// ============================================================
+// Company task types
+// ============================================================
+
+export interface CompanyTaskConfirmation {
+  askedForInfo: boolean;
+}
+
+export interface CompanyTaskContract {
+  sent: boolean;
+  created: boolean;
+  signed: boolean;
+  receiptSent: boolean;
+}
+
+export interface CompanyTaskSessionTitles {
+  presentationTitle: string;
+  workshopTitle: string;
+}
+
+export interface CompanyTaskCorlief {
+  preNotice: boolean;
+  scheduled: boolean;
+  reserved: boolean;
+}
+
+export interface CompanyTaskLogistics {
+  requestedInfo: boolean;
+  carStatus: string; // "not_responded" | "wants" | "not_wants"
+  licensePlate: string;
+}
+
+export interface CompanyTasks {
+  confirmation: CompanyTaskConfirmation;
+  logos: TaskLogos;
+  contract: CompanyTaskContract;
+  sessionTitles: CompanyTaskSessionTitles;
+  corlief: CompanyTaskCorlief;
+  logistics: CompanyTaskLogistics;
+}
+
+// ============================================================
+// Speaker task types
+// ============================================================
+
+export interface SpeakerTaskConfirmation {
+  phone: string;
+  linkedin: string;
+  wantsLinkedinTag: boolean;
+  observations: string;
+}
+
+export interface SpeakerTaskFlightLeg {
+  airport: string;
+  flightNumber: string;
+  date: string | null;
+  time: string;
+}
+
+export interface SpeakerTaskFlightDetails {
+  price: string;
+  status: string; // "pending" | "received" | "approved" | "bought"
+  link: string;
+  bookingRef: string;
+}
+
+export interface SpeakerTaskFlightRefund {
+  amount: string;
+  method: string;
+  infoNeeded: string;
+  status: string; // "not_started" | "receipt_requested" | "info_requested" | "done"
+}
+
+export interface SpeakerTaskFlights {
+  requested: boolean;
+  arrival: SpeakerTaskFlightLeg;
+  departure: SpeakerTaskFlightLeg;
+  details: SpeakerTaskFlightDetails;
+  refund: SpeakerTaskFlightRefund;
+}
+
+export interface SpeakerTaskCoverage {
+  video: boolean;
+  streaming: boolean;
+  photo: boolean;
+}
+
+export interface SpeakerTaskMaterials {
+  requested: boolean;
+  talkTitle: string;
+  talkDescription: string;
+  received: boolean;
+  testSchedule: string;
+  testDone: boolean;
+}
+
+export interface SpeakerTaskHotel {
+  requested: boolean;
+  hotelName: string;
+  roomType: string;
+  price: string;
+  checkIn: string | null;
+  checkOut: string | null;
+  numNights: string;
+  numGuests: string;
+  guestNames: string;
+  invoice: boolean;
+  paid: boolean;
+  notes: string;
+}
+
+export interface SpeakerTasks {
+  confirmation: SpeakerTaskConfirmation;
+  logos: TaskLogos;
+  askedForInfo: boolean;
+  flights: SpeakerTaskFlights;
+  coverage: SpeakerTaskCoverage;
+  materials: SpeakerTaskMaterials;
+  hotel: SpeakerTaskHotel;
+}
+
+// ============================================================
+// Helpers – build zero-value task objects
+// ============================================================
+
+export function emptyCompanyTasks(): CompanyTasks {
+  return {
+    confirmation: { askedForInfo: false },
+    logos: { received: false, needsReviewing: false },
+    contract: {
+      sent: false,
+      created: false,
+      signed: false,
+      receiptSent: false,
+    },
+    sessionTitles: { presentationTitle: "", workshopTitle: "" },
+    corlief: { preNotice: false, scheduled: false, reserved: false },
+    logistics: {
+      requestedInfo: false,
+      carStatus: "not_responded",
+      licensePlate: "",
+    },
+  };
+}
+
+export function emptySpeakerTasks(): SpeakerTasks {
+  return {
+    confirmation: {
+      phone: "",
+      linkedin: "",
+      wantsLinkedinTag: false,
+      observations: "",
+    },
+    logos: { received: false, needsReviewing: false },
+    askedForInfo: false,
+    flights: {
+      requested: false,
+      arrival: { airport: "", flightNumber: "", date: null, time: "" },
+      departure: { airport: "", flightNumber: "", date: null, time: "" },
+      details: { price: "", status: "pending", link: "", bookingRef: "" },
+      refund: { amount: "", method: "", infoNeeded: "", status: "not_started" },
+    },
+    coverage: { video: false, streaming: false, photo: false },
+    materials: {
+      requested: false,
+      talkTitle: "",
+      talkDescription: "",
+      received: false,
+      testSchedule: "",
+      testDone: false,
+    },
+    hotel: {
+      requested: false,
+      hotelName: "",
+      roomType: "",
+      price: "",
+      checkIn: null,
+      checkOut: null,
+      numNights: "",
+      numGuests: "",
+      guestNames: "",
+      invoice: false,
+      paid: false,
+      notes: "",
+    },
+  };
+}
