@@ -101,8 +101,8 @@ import { withCurrentParticipation } from "@/lib/utils";
 import { useEventStore } from "@/stores/event";
 
 import { useQuery, useQueryCache } from "@pinia/colada";
-import { computed, ref } from "vue";
-import { useRoute } from "vue-router";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import Info from "./Info/Info.vue";
 import TabsList from "@/components/ui/tabs/TabsList.vue";
 import TabsTrigger from "@/components/ui/tabs/TabsTrigger.vue";
@@ -115,8 +115,19 @@ import AccordionTrigger from "@/components/ui/accordion/AccordionTrigger.vue";
 import AccordionContent from "@/components/ui/accordion/AccordionContent.vue";
 
 const route = useRoute();
+const router = useRouter();
 const queryCache = useQueryCache();
-const activeTab = ref("info");
+
+const validTabs = ["info", "tasks"] as const;
+type TabValue = (typeof validTabs)[number];
+const activeTab = ref<TabValue>(
+  validTabs.includes(route.query.tab as TabValue)
+    ? (route.query.tab as TabValue)
+    : "info",
+);
+watch(activeTab, (tab) => {
+  router.replace({ query: { ...route.query, tab } });
+});
 
 const companyId = route.params.companyId;
 const { data: company } = useQuery({
