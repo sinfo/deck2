@@ -30,6 +30,11 @@
         <Label for="receipt-sent" class="text-sm">Receipt sent</Label>
       </div>
 
+      <div class="flex items-center space-x-2">
+        <Checkbox id="company-paid" v-model="hasPaid" />
+        <Label for="company-paid" class="text-sm">Company has paid</Label>
+      </div>
+
       <ContractDownload
         v-if="entityType === 'company'"
         :company-id="props.entityId"
@@ -67,15 +72,20 @@ const hasCreatedContract = ref(props.companyTasks?.contract?.created ?? false);
 const hasSentContract = ref(props.companyTasks?.contract?.sent ?? false);
 const hasSigned = ref(props.companyTasks?.contract?.signed ?? false);
 const hasReceiptSent = ref(props.companyTasks?.contract?.receiptSent ?? false);
+const hasPaid = ref(props.companyTasks?.contract?.paid ?? false);
 
-watch([hasCreatedContract, hasSentContract, hasSigned, hasReceiptSent], () => {
-  emit("update:contract", {
-    created: hasCreatedContract.value,
-    sent: hasSentContract.value,
-    signed: hasSigned.value,
-    receiptSent: hasReceiptSent.value,
-  });
-});
+watch(
+  [hasCreatedContract, hasSentContract, hasSigned, hasReceiptSent, hasPaid],
+  () => {
+    emit("update:contract", {
+      created: hasCreatedContract.value,
+      sent: hasSentContract.value,
+      signed: hasSigned.value,
+      receiptSent: hasReceiptSent.value,
+      paid: hasPaid.value,
+    });
+  },
+);
 
 const isComplete = computed(() => {
   return (
