@@ -13,8 +13,8 @@
             class="absolute left-3 top-1/2 transform -translate-y-1/2 z-10"
           >
             <Image
-              :src="getItemImage(selectedItem)"
               :alt="selectedItem.name"
+              :src="getItemImage(selectedItem)"
               class="w-6 h-6 rounded object-cover border"
             />
           </div>
@@ -22,8 +22,8 @@
           <!-- Clear button (when selected) -->
           <button
             v-if="selectedItem"
-            type="button"
             class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
+            type="button"
             @click="clearSelection"
           >
             ×
@@ -31,9 +31,9 @@
 
           <!-- Keyboard shortcut badge (when empty and not focused) -->
           <div
-            class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none hidden sm:block"
           >
-            <Badge variant="secondary" class="text-xs flex items-center gap-1">
+            <Badge class="text-xs flex items-center gap-1" variant="secondary">
               <span class="font-mono">{{ isMac ? "⌘" : "Ctrl" }}</span>
               <span class="font-mono">+ K</span>
             </Badge>
@@ -43,13 +43,13 @@
             :id="inputId"
             ref="inputRef"
             v-model="searchTerm"
-            :placeholder="placeholder || 'Search companies or speakers...'"
+            :autofocus="props.autofocus"
             :class="['w-full', selectedItem ? 'pl-12 pr-8' : '']"
             :disabled="disabled"
-            :autofocus="props.autofocus"
-            @input="handleInput"
+            :placeholder="placeholder || 'Search companies or speakers...'"
             @blur="hideSuggestions"
             @focus="handleFocus"
+            @input="handleInput"
             @keydown="handleKeydown"
           />
         </div>
@@ -61,7 +61,11 @@
             (showSuggestions &&
               (results.length > 0 || isLoading || (searchTerm && showCreate)))
           "
-          class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto"
+          ref="listRef"
+          aria-label="Search results for companies, speakers, and members"
+          class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto overscroll-contain touch-pan-y max-h-[65vh] sm:max-h-[24rem]"
+          role="listbox"
+          tabindex="-1"
         >
           <!-- Loading state -->
           <div v-if="isLoading" class="p-3 text-center text-gray-500">
@@ -77,7 +81,7 @@
               <!-- Companies section -->
               <div v-if="group === 'companies' && filteredCompanies.length > 0">
                 <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
                 >
                   Companies
                 </div>
@@ -91,11 +95,14 @@
                       ? 'bg-blue-50 border-blue-200'
                       : 'hover:bg-gray-50',
                   ]"
+                  :data-result-index="getItemIndex(company)"
+                  role="option"
+                  :aria-selected="getItemIndex(company) === highlightedIndex"
                   @click="selectCompany(company)"
                 >
                   <Image
-                    :src="company.imgs?.internal || company.imgs?.public"
                     :alt="company.name"
+                    :src="company.imgs?.internal || company.imgs?.public"
                     class="w-8 h-8 rounded object-cover border flex-shrink-0"
                   />
                   <div class="flex-1 min-w-0">
@@ -117,7 +124,7 @@
                 v-else-if="group === 'speakers' && filteredSpeakers.length > 0"
               >
                 <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
                 >
                   Speakers
                 </div>
@@ -131,11 +138,14 @@
                       ? 'bg-blue-50 border-blue-200'
                       : 'hover:bg-gray-50',
                   ]"
+                  :data-result-index="getItemIndex(speaker)"
+                  role="option"
+                  :aria-selected="getItemIndex(speaker) === highlightedIndex"
                   @click="selectSpeaker(speaker)"
                 >
                   <Image
-                    :src="speaker.imgs?.internal || speaker.imgs?.speaker"
                     :alt="speaker.name"
+                    :src="speaker.imgs?.internal || speaker.imgs?.speaker"
                     class="w-8 h-8 rounded object-cover border flex-shrink-0"
                   />
                   <div class="flex-1 min-w-0">
@@ -160,7 +170,7 @@
                 v-else-if="group === 'members' && filteredMembers.length > 0"
               >
                 <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b"
+                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
                 >
                   Members
                 </div>
@@ -174,11 +184,14 @@
                       ? 'bg-blue-50 border-blue-200'
                       : 'hover:bg-gray-50',
                   ]"
+                  :data-result-index="getItemIndex(member)"
+                  role="option"
+                  :aria-selected="getItemIndex(member) === highlightedIndex"
                   @click="selectMember(member)"
                 >
                   <Image
-                    :src="member.img"
                     :alt="member.name"
+                    :src="member.img"
                     class="w-8 h-8 rounded object-cover border flex-shrink-0"
                   />
                   <div class="flex-1 min-w-0">
@@ -222,15 +235,15 @@
             <div v-if="showCreate && searchTerm.trim()">
               <div class="border-t border-gray-200">
                 <button
-                  type="button"
                   class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium"
+                  type="button"
                   @click="handleCreateCompany(searchTerm)"
                 >
                   Create company "{{ searchTerm }}"
                 </button>
                 <button
-                  type="button"
                   class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium border-t border-gray-100"
+                  type="button"
                   @click="handleCreateSpeaker(searchTerm)"
                 >
                   Create speaker "{{ searchTerm }}"
@@ -292,8 +305,15 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, watch, nextTick, type ComputedRef } from "vue";
+<script lang="ts" setup>
+import {
+  ref,
+  computed,
+  watch,
+  nextTick,
+  onBeforeUnmount,
+  type ComputedRef,
+} from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllCompanies } from "@/api/companies";
 import { getAllSpeakers } from "@/api/speakers";
@@ -349,13 +369,18 @@ const emit = defineEmits<{
 }>();
 
 const eventStore = useEventStore();
+
 const inputId = ref(`company-speaker-autocomplete-${Math.random()}`);
 const searchTerm = ref(props.modelValue || "");
+const createTerm = ref("");
 const showSuggestions = ref(false);
 const selectedItem = ref<SelectedItem | null>(null);
+
 const isCompanyDialogOpen = ref(false);
 const isSpeakerDialogOpen = ref(false);
-const createTerm = ref("");
+
+const listRef = ref<HTMLElement | null>(null);
+const scrollAnimationFrameId = ref<number | null>(null);
 const inputRef = ref<HTMLInputElement>();
 const highlightedIndex = ref(-1);
 
@@ -668,6 +693,7 @@ const clearSelection = () => {
 };
 
 const hideSuggestions = () => {
+  // Delay hiding to allow for click events
   setTimeout(() => {
     showSuggestions.value = false;
     highlightedIndex.value = -1;
@@ -725,6 +751,7 @@ watch(
     if (newValue) {
       showSuggestions.value = true;
       highlightedIndex.value = -1;
+      // Focus the input when force show suggestions is triggered
       nextTick(() => {
         const input = document.getElementById(
           inputId.value,
@@ -742,4 +769,43 @@ watch(
     highlightedIndex.value = -1;
   },
 );
+
+// Scroll highlighted item into view
+watch(
+  () => highlightedIndex.value,
+  (idx) => {
+    const container = listRef.value;
+    if (!container || idx < 0) return;
+
+    if (scrollAnimationFrameId.value !== null) {
+      cancelAnimationFrame(scrollAnimationFrameId.value);
+      scrollAnimationFrameId.value = null;
+    }
+
+    scrollAnimationFrameId.value = requestAnimationFrame(() => {
+      const el = container.querySelector(
+        `[data-result-index="${idx}"]`,
+      ) as HTMLElement | null;
+      if (!el) return;
+
+      const elTop = el.offsetTop;
+      const elBottom = elTop + el.offsetHeight;
+      const viewTop = container.scrollTop;
+      const viewBottom = viewTop + container.clientHeight;
+
+      if (elTop < viewTop) {
+        container.scrollTop = elTop;
+      } else if (elBottom > viewBottom) {
+        container.scrollTop = elBottom - container.clientHeight;
+      }
+    });
+  },
+);
+
+onBeforeUnmount(() => {
+  if (scrollAnimationFrameId.value !== null) {
+    cancelAnimationFrame(scrollAnimationFrameId.value);
+    scrollAnimationFrameId.value = null;
+  }
+});
 </script>
