@@ -46,6 +46,7 @@ export interface CompanyTaskContract {
   created: boolean;
   signed: boolean;
   receiptSent: boolean;
+  paid: boolean;
 }
 
 export interface CompanyTaskSessionTitles {
@@ -72,6 +73,7 @@ export interface CompanyTasks {
   sessionTitles: CompanyTaskSessionTitles;
   corlief: CompanyTaskCorlief;
   logistics: CompanyTaskLogistics;
+  po: string;
 }
 
 // ============================================================
@@ -81,7 +83,7 @@ export interface CompanyTasks {
 export interface SpeakerTaskConfirmation {
   phone: string;
   linkedin: string;
-  wantsLinkedinTag: boolean;
+  wantsLinkedinTag: string; // "not_responded" | "yes" | "no"
   observations: string;
 }
 
@@ -107,6 +109,7 @@ export interface SpeakerTaskFlightRefund {
 }
 
 export interface SpeakerTaskFlights {
+  needsFlights: string; // "not_responded" | "yes" | "no"
   requested: boolean;
   arrival: SpeakerTaskFlightLeg;
   departure: SpeakerTaskFlightLeg;
@@ -115,9 +118,9 @@ export interface SpeakerTaskFlights {
 }
 
 export interface SpeakerTaskCoverage {
-  video: boolean;
-  streaming: boolean;
-  photo: boolean;
+  video: string; // "not_responded" | "yes" | "no"
+  streaming: string; // "not_responded" | "yes" | "no"
+  photo: string; // "not_responded" | "yes" | "no"
 }
 
 export interface SpeakerTaskMaterials {
@@ -130,6 +133,7 @@ export interface SpeakerTaskMaterials {
 }
 
 export interface SpeakerTaskHotel {
+  needsHotel: string; // "not_responded" | "yes" | "no"
   requested: boolean;
   hotelName: string;
   roomType: string;
@@ -167,6 +171,7 @@ export function emptyCompanyTasks(): CompanyTasks {
       created: false,
       signed: false,
       receiptSent: false,
+      paid: false,
     },
     sessionTitles: { presentationTitle: "", workshopTitle: "" },
     corlief: { preNotice: false, scheduled: false, reserved: false },
@@ -175,6 +180,7 @@ export function emptyCompanyTasks(): CompanyTasks {
       carStatus: "not_responded",
       licensePlate: "",
     },
+    po: "",
   };
 }
 
@@ -183,19 +189,24 @@ export function emptySpeakerTasks(): SpeakerTasks {
     confirmation: {
       phone: "",
       linkedin: "",
-      wantsLinkedinTag: false,
+      wantsLinkedinTag: "not_responded",
       observations: "",
     },
     logos: { received: false, needsReviewing: false },
     askedForInfo: false,
     flights: {
+      needsFlights: "not_responded",
       requested: false,
       arrival: { airport: "", flightNumber: "", date: null, time: "" },
       departure: { airport: "", flightNumber: "", date: null, time: "" },
       details: { price: "", status: "pending", link: "", bookingRef: "" },
       refund: { amount: "", method: "", infoNeeded: "", status: "not_started" },
     },
-    coverage: { video: false, streaming: false, photo: false },
+    coverage: {
+      video: "not_responded",
+      streaming: "not_responded",
+      photo: "not_responded",
+    },
     materials: {
       requested: false,
       talkTitle: "",
@@ -205,6 +216,7 @@ export function emptySpeakerTasks(): SpeakerTasks {
       testDone: false,
     },
     hotel: {
+      needsHotel: "not_responded",
       requested: false,
       hotelName: "",
       roomType: "",

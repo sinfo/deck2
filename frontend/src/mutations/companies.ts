@@ -7,6 +7,7 @@ import {
   createCompanyParticipation,
   postThread,
   uploadCompanyInternalImage,
+  uploadCompanyPublicImage,
   updateRepresentativeOrder,
   updateCompanyTasks,
 } from "@/api/companies";
@@ -330,6 +331,30 @@ export const useCompanyImageUploadMutation = defineMutation(() => {
   };
 });
 
+export const useCompanyPublicImageUploadMutation = defineMutation(() => {
+  const companyId = ref<string>();
+  const imageData = ref<FormData>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: () =>
+      uploadCompanyPublicImage(companyId.value!, imageData.value!),
+    onSettled: () => {
+      if (companyId.value) {
+        queryCache.invalidateQueries({ key: ["company", companyId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["companies"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    companyId,
+    imageData,
+  };
+});
+
 export const useUpdateRepresentativeOrderMutation = defineMutation(() => {
   const companyId = ref<string>();
   const representativeIds = ref<string[]>();
@@ -358,7 +383,7 @@ export const useCompanyTasksMutation = defineMutation(() => {
   const companyId = ref<string>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
+  const { mutate, mutateAsync, ...mutation } = useMutation({
     mutation: (tasks: CompanyTasks) =>
       updateCompanyTasks(companyId.value!, tasks),
     onSettled: () => {
@@ -371,6 +396,7 @@ export const useCompanyTasksMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
   };

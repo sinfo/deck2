@@ -5,6 +5,8 @@ import {
   createSpeakerParticipation,
   postSpeakerThread,
   uploadSpeakerInternalImage,
+  uploadSpeakerPublicImage,
+  uploadSpeakerCompanyImage,
   updateSpeakerParticipationStatus,
   updateSpeakerTasks,
 } from "@/api/speakers";
@@ -262,11 +264,59 @@ export const useSpeakerImageUploadMutation = defineMutation(() => {
   };
 });
 
+export const useSpeakerPublicImageUploadMutation = defineMutation(() => {
+  const speakerId = ref<string>();
+  const imageData = ref<FormData>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: () =>
+      uploadSpeakerPublicImage(speakerId.value!, imageData.value!),
+    onSettled: () => {
+      if (speakerId.value) {
+        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    speakerId,
+    imageData,
+  };
+});
+
+export const useSpeakerCompanyImageUploadMutation = defineMutation(() => {
+  const speakerId = ref<string>();
+  const imageData = ref<FormData>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: () =>
+      uploadSpeakerCompanyImage(speakerId.value!, imageData.value!),
+    onSettled: () => {
+      if (speakerId.value) {
+        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    speakerId,
+    imageData,
+  };
+});
+
 export const useSpeakerTasksMutation = defineMutation(() => {
   const speakerId = ref<string>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
+  const { mutate, mutateAsync, ...mutation } = useMutation({
     mutation: (tasks: SpeakerTasks) =>
       updateSpeakerTasks(speakerId.value!, tasks),
     onSettled: () => {
@@ -279,6 +329,7 @@ export const useSpeakerTasksMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     speakerId,
   };
