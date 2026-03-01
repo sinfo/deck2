@@ -55,7 +55,6 @@
               {{ billingInfo?.tin }}
             </p>
           </div>
-
           <!-- Billing Form (for editing) -->
           <div v-else-if="isEditingBilling" class="border rounded-md p-3">
             <BillingForm
@@ -73,6 +72,12 @@
             title="Click here to add billing information"
             @click="startEditingBilling"
           />
+        </div>
+
+        <!-- PO Number -->
+        <div class="space-y-1">
+          <Label class="text-sm font-medium">Purchase Order (PO)</Label>
+          <Input v-model="poNumber" placeholder="PO number" />
         </div>
 
         <!-- Separator -->
@@ -118,6 +123,7 @@ import { ref, computed, watch } from "vue";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import {
   Tooltip,
   TooltipContent,
@@ -153,6 +159,7 @@ const emit = defineEmits<{
   billingUpdated: [];
   "update:logos": [value: TaskLogos];
   "update:askedForInfo": [value: boolean];
+  "update:po": [value: string];
 }>();
 
 // Billing info
@@ -208,6 +215,7 @@ const savedAsked =
 const hasAskedForBillingInfo = ref(savedAsked ?? false);
 const logosReceived = ref(savedLogos?.received ?? false);
 const logosNeedReviewing = ref(savedLogos?.needsReviewing ?? false);
+const poNumber = ref(props.companyTasks?.po ?? "");
 
 watch(hasAskedForBillingInfo, (v) => {
   emit("update:askedForInfo", v);
@@ -218,6 +226,10 @@ watch([logosReceived, logosNeedReviewing], () => {
     received: logosReceived.value,
     needsReviewing: logosNeedReviewing.value,
   });
+});
+
+watch(poNumber, (v) => {
+  emit("update:po", v);
 });
 
 // Completion state
