@@ -5,250 +5,245 @@
     </Label>
 
     <div class="relative">
-      <div class="relative">
-        <div class="relative">
-          <!-- Selected item image (when selected) -->
+      <!-- Selected item image (when selected) -->
+      <div
+        v-if="selectedItem"
+        class="absolute left-3 top-1/2 transform -translate-y-1/2 z-10"
+      >
+        <Image
+          :alt="selectedItem.name"
+          :src="getItemImage(selectedItem)"
+          class="w-6 h-6 rounded object-cover border"
+        />
+      </div>
+
+      <!-- Clear button (when selected) -->
+      <button
+        v-if="selectedItem"
+        class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
+        type="button"
+        @click="clearSelection"
+      >
+        ×
+      </button>
+
+      <!-- Keyboard shortcut badge (when empty and not focused) -->
+      <div
+        v-if="!selectedItem"
+        class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none hidden sm:block"
+      >
+        <Badge class="text-xs flex items-center gap-1" variant="secondary">
+          <span class="font-mono">{{ isMac ? "⌘" : "Ctrl" }}</span>
+          <span class="font-mono">+ K</span>
+        </Badge>
+      </div>
+
+      <Input
+        :id="inputId"
+        ref="inputRef"
+        v-model="searchTerm"
+        :autofocus="props.autofocus"
+        :class="['w-full', selectedItem ? 'pl-12 pr-8' : '']"
+        :disabled="disabled"
+        :placeholder="placeholder || 'Search companies or speakers...'"
+        @blur="hideSuggestions"
+        @focus="handleFocus"
+        @input="handleInput"
+        @keydown="handleKeydown"
+      />
+
+      <!-- Results dropdown -->
+      <div
+        v-if="
+          forceShowSuggestions ||
+          (showSuggestions &&
+            (results.length > 0 || isLoading || (searchTerm && showCreate)))
+        "
+        ref="listRef"
+        aria-label="Search results for companies, speakers, and members"
+        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto overscroll-contain touch-pan-y max-h-[65vh] sm:max-h-[24rem]"
+        role="listbox"
+        tabindex="-1"
+      >
+        <!-- Loading state -->
+        <div v-if="isLoading" class="p-3 text-center text-gray-500">
           <div
-            v-if="selectedItem"
-            class="absolute left-3 top-1/2 transform -translate-y-1/2 z-10"
-          >
-            <Image
-              :alt="selectedItem.name"
-              :src="getItemImage(selectedItem)"
-              class="w-6 h-6 rounded object-cover border"
-            />
-          </div>
-
-          <!-- Clear button (when selected) -->
-          <button
-            v-if="selectedItem"
-            class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 text-muted-foreground hover:text-foreground"
-            type="button"
-            @click="clearSelection"
-          >
-            ×
-          </button>
-
-          <!-- Keyboard shortcut badge (when empty and not focused) -->
-          <div
-            class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none hidden sm:block"
-          >
-            <Badge class="text-xs flex items-center gap-1" variant="secondary">
-              <span class="font-mono">{{ isMac ? "⌘" : "Ctrl" }}</span>
-              <span class="font-mono">+ K</span>
-            </Badge>
-          </div>
-
-          <Input
-            :id="inputId"
-            ref="inputRef"
-            v-model="searchTerm"
-            :autofocus="props.autofocus"
-            :class="['w-full', selectedItem ? 'pl-12 pr-8' : '']"
-            :disabled="disabled"
-            :placeholder="placeholder || 'Search companies or speakers...'"
-            @blur="hideSuggestions"
-            @focus="handleFocus"
-            @input="handleInput"
-            @keydown="handleKeydown"
-          />
+            class="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
+          ></div>
+          <span class="ml-2">Searching...</span>
         </div>
 
-        <!-- Results dropdown -->
-        <div
-          v-if="
-            forceShowSuggestions ||
-            (showSuggestions &&
-              (results.length > 0 || isLoading || (searchTerm && showCreate)))
-          "
-          ref="listRef"
-          aria-label="Search results for companies, speakers, and members"
-          class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg overflow-y-auto overscroll-contain touch-pan-y max-h-[65vh] sm:max-h-[24rem]"
-          role="listbox"
-          tabindex="-1"
-        >
-          <!-- Loading state -->
-          <div v-if="isLoading" class="p-3 text-center text-gray-500">
+        <!-- Results -->
+        <div v-else>
+          <template v-for="group in orderedGroups" :key="group">
+            <!-- Companies section -->
+            <div v-if="group === 'companies' && filteredCompanies.length > 0">
+              <div
+                class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
+              >
+                Companies
+              </div>
+              <button
+                v-for="company in filteredCompanies"
+                :key="`company-${company.id}`"
+                type="button"
+                :class="[
+                  'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
+                  getItemIndex(company) === highlightedIndex
+                    ? 'bg-blue-50 border-blue-200'
+                    : 'hover:bg-gray-50',
+                ]"
+                :data-result-index="getItemIndex(company)"
+                role="option"
+                :aria-selected="getItemIndex(company) === highlightedIndex"
+                @click="selectCompany(company)"
+              >
+                <Image
+                  :alt="company.name"
+                  :src="company.imgs?.internal || company.imgs?.public"
+                  class="w-8 h-8 rounded object-cover border flex-shrink-0"
+                />
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-gray-900 truncate">
+                    {{ company.name }}
+                  </div>
+                  <div
+                    v-if="company.description"
+                    class="text-sm text-gray-500 truncate"
+                  >
+                    {{ company.description }}
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Speakers section -->
             <div
-              class="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"
-            ></div>
-            <span class="ml-2">Searching...</span>
+              v-else-if="group === 'speakers' && filteredSpeakers.length > 0"
+            >
+              <div
+                class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
+              >
+                Speakers
+              </div>
+              <button
+                v-for="speaker in filteredSpeakers"
+                :key="`speaker-${speaker.id}`"
+                type="button"
+                :class="[
+                  'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
+                  getItemIndex(speaker) === highlightedIndex
+                    ? 'bg-blue-50 border-blue-200'
+                    : 'hover:bg-gray-50',
+                ]"
+                :data-result-index="getItemIndex(speaker)"
+                role="option"
+                :aria-selected="getItemIndex(speaker) === highlightedIndex"
+                @click="selectSpeaker(speaker)"
+              >
+                <Image
+                  :alt="speaker.name"
+                  :src="speaker.imgs?.internal || speaker.imgs?.speaker"
+                  class="w-8 h-8 rounded object-cover border flex-shrink-0"
+                />
+                <div class="flex-1 min-w-0">
+                  <span class="font-medium truncate">{{ speaker.name }}</span>
+                  <div
+                    class="flex items-center gap-2 text-xs text-muted-foreground"
+                  >
+                    <span v-if="speaker.title" class="truncate">
+                      {{ speaker.title }}
+                    </span>
+                    <span v-if="speaker.title && speaker.companyName">•</span>
+                    <span v-if="speaker.companyName" class="truncate">
+                      {{ speaker.companyName }}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <!-- Members section -->
+            <div v-else-if="group === 'members' && filteredMembers.length > 0">
+              <div
+                class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
+              >
+                Members
+              </div>
+              <button
+                v-for="member in filteredMembers"
+                :key="`member-${member.id}`"
+                type="button"
+                :class="[
+                  'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
+                  getItemIndex(member) === highlightedIndex
+                    ? 'bg-blue-50 border-blue-200'
+                    : 'hover:bg-gray-50',
+                ]"
+                :data-result-index="getItemIndex(member)"
+                role="option"
+                :aria-selected="getItemIndex(member) === highlightedIndex"
+                @click="selectMember(member)"
+              >
+                <Image
+                  :alt="member.name"
+                  :src="member.img"
+                  class="w-8 h-8 rounded object-cover border flex-shrink-0"
+                />
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-gray-900 truncate">
+                    {{ member.name }}
+                  </div>
+                </div>
+              </button>
+            </div>
+          </template>
+
+          <!-- No results -->
+          <div
+            v-if="
+              !isLoading &&
+              filteredCompanies.length === 0 &&
+              filteredSpeakers.length === 0 &&
+              filteredMembers.length === 0 &&
+              searchTerm.trim()
+            "
+            class="p-3 text-gray-500 text-center"
+          >
+            No companies, speakers or members found
           </div>
 
-          <!-- Results -->
-          <div v-else>
-            <template v-for="group in orderedGroups" :key="group">
-              <!-- Companies section -->
-              <div v-if="group === 'companies' && filteredCompanies.length > 0">
-                <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
-                >
-                  Companies
-                </div>
-                <button
-                  v-for="company in filteredCompanies"
-                  :key="`company-${company.id}`"
-                  type="button"
-                  :class="[
-                    'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
-                    getItemIndex(company) === highlightedIndex
-                      ? 'bg-blue-50 border-blue-200'
-                      : 'hover:bg-gray-50',
-                  ]"
-                  :data-result-index="getItemIndex(company)"
-                  role="option"
-                  :aria-selected="getItemIndex(company) === highlightedIndex"
-                  @click="selectCompany(company)"
-                >
-                  <Image
-                    :alt="company.name"
-                    :src="company.imgs?.internal || company.imgs?.public"
-                    class="w-8 h-8 rounded object-cover border flex-shrink-0"
-                  />
-                  <div class="flex-1 min-w-0">
-                    <div class="font-medium text-gray-900 truncate">
-                      {{ company.name }}
-                    </div>
-                    <div
-                      v-if="company.description"
-                      class="text-sm text-gray-500 truncate"
-                    >
-                      {{ company.description }}
-                    </div>
-                  </div>
-                </button>
-              </div>
+          <!-- Welcome message when no search term -->
+          <div
+            v-if="
+              !isLoading &&
+              !searchTerm.trim() &&
+              filteredCompanies.length === 0 &&
+              filteredSpeakers.length === 0 &&
+              filteredMembers.length === 0
+            "
+            class="p-3 text-gray-500 text-center"
+          >
+            Start typing to search companies, speakers and members...
+          </div>
 
-              <!-- Speakers section -->
-              <div
-                v-else-if="group === 'speakers' && filteredSpeakers.length > 0"
+          <!-- Create options -->
+          <div v-if="showCreate && searchTerm.trim()">
+            <div class="border-t border-gray-200">
+              <button
+                class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium"
+                type="button"
+                @click="handleCreateCompany(searchTerm)"
               >
-                <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
-                >
-                  Speakers
-                </div>
-                <button
-                  v-for="speaker in filteredSpeakers"
-                  :key="`speaker-${speaker.id}`"
-                  type="button"
-                  :class="[
-                    'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
-                    getItemIndex(speaker) === highlightedIndex
-                      ? 'bg-blue-50 border-blue-200'
-                      : 'hover:bg-gray-50',
-                  ]"
-                  :data-result-index="getItemIndex(speaker)"
-                  role="option"
-                  :aria-selected="getItemIndex(speaker) === highlightedIndex"
-                  @click="selectSpeaker(speaker)"
-                >
-                  <Image
-                    :alt="speaker.name"
-                    :src="speaker.imgs?.internal || speaker.imgs?.speaker"
-                    class="w-8 h-8 rounded object-cover border flex-shrink-0"
-                  />
-                  <div class="flex-1 min-w-0">
-                    <span class="font-medium truncate">{{ speaker.name }}</span>
-                    <div
-                      class="flex items-center gap-2 text-xs text-muted-foreground"
-                    >
-                      <span v-if="speaker.title" class="truncate">
-                        {{ speaker.title }}
-                      </span>
-                      <span v-if="speaker.title && speaker.companyName">•</span>
-                      <span v-if="speaker.companyName" class="truncate">
-                        {{ speaker.companyName }}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              </div>
-
-              <!-- Members section -->
-              <div
-                v-else-if="group === 'members' && filteredMembers.length > 0"
+                Create company "{{ searchTerm }}"
+              </button>
+              <button
+                class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium border-t border-gray-100"
+                type="button"
+                @click="handleCreateSpeaker(searchTerm)"
               >
-                <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 bg-gray-50 border-b sticky top-0 z-10"
-                >
-                  Members
-                </div>
-                <button
-                  v-for="member in filteredMembers"
-                  :key="`member-${member.id}`"
-                  type="button"
-                  :class="[
-                    'w-full text-left px-3 py-2 border-b border-gray-100 last:border-b-0 flex items-center gap-3',
-                    getItemIndex(member) === highlightedIndex
-                      ? 'bg-blue-50 border-blue-200'
-                      : 'hover:bg-gray-50',
-                  ]"
-                  :data-result-index="getItemIndex(member)"
-                  role="option"
-                  :aria-selected="getItemIndex(member) === highlightedIndex"
-                  @click="selectMember(member)"
-                >
-                  <Image
-                    :alt="member.name"
-                    :src="member.img"
-                    class="w-8 h-8 rounded object-cover border flex-shrink-0"
-                  />
-                  <div class="flex-1 min-w-0">
-                    <div class="font-medium text-gray-900 truncate">
-                      {{ member.name }}
-                    </div>
-                  </div>
-                </button>
-              </div>
-            </template>
-
-            <!-- No results -->
-            <div
-              v-if="
-                !isLoading &&
-                filteredCompanies.length === 0 &&
-                filteredSpeakers.length === 0 &&
-                filteredMembers.length === 0 &&
-                searchTerm.trim()
-              "
-              class="p-3 text-gray-500 text-center"
-            >
-              No companies, speakers or members found
-            </div>
-
-            <!-- Welcome message when no search term -->
-            <div
-              v-if="
-                !isLoading &&
-                !searchTerm.trim() &&
-                filteredCompanies.length === 0 &&
-                filteredSpeakers.length === 0 &&
-                filteredMembers.length === 0
-              "
-              class="p-3 text-gray-500 text-center"
-            >
-              Start typing to search companies, speakers and members...
-            </div>
-
-            <!-- Create options -->
-            <div v-if="showCreate && searchTerm.trim()">
-              <div class="border-t border-gray-200">
-                <button
-                  class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium"
-                  type="button"
-                  @click="handleCreateCompany(searchTerm)"
-                >
-                  Create company "{{ searchTerm }}"
-                </button>
-                <button
-                  class="w-full text-left px-3 py-2 hover:bg-gray-50 text-blue-600 font-medium border-t border-gray-100"
-                  type="button"
-                  @click="handleCreateSpeaker(searchTerm)"
-                >
-                  Create speaker "{{ searchTerm }}"
-                </button>
-              </div>
+                Create speaker "{{ searchTerm }}"
+              </button>
             </div>
           </div>
         </div>
@@ -559,8 +554,16 @@ const results = computed(() => {
   return out;
 });
 
+type AnyId = Company["id"] | Speaker["id"] | Member["id"];
+
+const indexById = computed(() => {
+  const m = new Map<AnyId, number>(); // build lookup table to instantly find index
+  results.value.forEach((r, i) => m.set(r.id as AnyId, i));
+  return m;
+});
+
 const getItemIndex = (item: SelectedItem) => {
-  return results.value.findIndex((result) => result.id === item.id);
+  return indexById.value.get(item.id as AnyId) ?? -1;
 };
 
 const getItemImage = (item: SelectedItem) => {
