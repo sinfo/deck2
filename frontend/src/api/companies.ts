@@ -92,6 +92,9 @@ export const updateRepresentativeOrder = (
 export const uploadCompanyInternalImage = (id: string, data: FormData) =>
   instance.post<Company>(`/companies/${id}/image/internal`, data);
 
+export const uploadCompanyPublicImage = (id: string, data: FormData) =>
+  instance.post<Company>(`/companies/${id}/image/public`, data);
+
 export const deleteCompany = (id: string) =>
   instance.delete<Company>(`/companies/${id}`);
 
