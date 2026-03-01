@@ -11,17 +11,33 @@
     <div class="space-y-4">
       <div class="space-y-3">
         <span class="text-sm font-medium">Video</span>
-
-        <div class="flex items-center space-x-2">
-          <Checkbox id="video-coverage" v-model="videoCoverage" />
-          <Label for="video-coverage" class="text-sm">
-            Video coverage confirmed
-          </Label>
-        </div>
-
-        <div class="flex items-center space-x-2">
-          <Checkbox id="streaming" v-model="streaming" />
-          <Label for="streaming" class="text-sm"> Streaming confirmed </Label>
+        <div class="flex flex-wrap gap-4">
+          <div class="space-y-1">
+            <Label class="text-xs">Video Coverage</Label>
+            <Select v-model="videoCoverage">
+              <SelectTrigger class="w-[160px]">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="not_responded">Didn't respond</SelectItem>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="no">No</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="space-y-1">
+            <Label class="text-xs">Streaming</Label>
+            <Select v-model="streaming">
+              <SelectTrigger class="w-[160px]">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="not_responded">Didn't respond</SelectItem>
+                <SelectItem value="yes">Yes</SelectItem>
+                <SelectItem value="no">No</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -29,12 +45,18 @@
 
       <div class="space-y-3">
         <span class="text-sm font-medium">Photo</span>
-
-        <div class="flex items-center space-x-2">
-          <Checkbox id="photo-coverage" v-model="photoCoverage" />
-          <Label for="photo-coverage" class="text-sm">
-            Photo coverage confirmed
-          </Label>
+        <div class="space-y-1">
+          <Label class="text-xs">Photo Coverage</Label>
+          <Select v-model="photoCoverage">
+            <SelectTrigger class="w-[160px]">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="not_responded">Didn't respond</SelectItem>
+              <SelectItem value="yes">Yes</SelectItem>
+              <SelectItem value="no">No</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
@@ -44,9 +66,15 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Camera } from "lucide-vue-next";
 import type { SpeakerTasks, SpeakerTaskCoverage } from "@/dto/tasks";
 
@@ -57,7 +85,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  stepNumber: 5,
+  stepNumber: 4,
   speakerTasks: undefined,
 });
 
@@ -65,15 +93,16 @@ const emit = defineEmits<{
   "update:coverage": [value: SpeakerTaskCoverage];
 }>();
 
-// Coverage states
-const videoCoverage = ref<boolean>(
-  props.speakerTasks?.coverage?.video ?? false,
+type CoverageValue = "not_responded" | "yes" | "no";
+
+const videoCoverage = ref<CoverageValue>(
+  (props.speakerTasks?.coverage?.video as CoverageValue) ?? "not_responded",
 );
-const streaming = ref<boolean>(
-  props.speakerTasks?.coverage?.streaming ?? false,
+const streaming = ref<CoverageValue>(
+  (props.speakerTasks?.coverage?.streaming as CoverageValue) ?? "not_responded",
 );
-const photoCoverage = ref<boolean>(
-  props.speakerTasks?.coverage?.photo ?? false,
+const photoCoverage = ref<CoverageValue>(
+  (props.speakerTasks?.coverage?.photo as CoverageValue) ?? "not_responded",
 );
 
 watch([videoCoverage, streaming, photoCoverage], () => {
@@ -86,9 +115,9 @@ watch([videoCoverage, streaming, photoCoverage], () => {
 
 const isComplete = computed(() => {
   return (
-    videoCoverage.value === true &&
-    streaming.value === true &&
-    photoCoverage.value === true
+    videoCoverage.value !== "not_responded" &&
+    streaming.value !== "not_responded" &&
+    photoCoverage.value !== "not_responded"
   );
 });
 
