@@ -31,8 +31,8 @@
         </Select>
       </div>
 
-      <!-- Confirmation Date -->
-      <div class="space-y-2">
+      <!-- Confirmation Date (companies only) -->
+      <div v-if="entityType === 'company'" class="space-y-2">
         <Label for="confirmed-date">Confirmation Date</Label>
         <DatePicker
           v-model="confirmedDate"
@@ -46,30 +46,48 @@
 
     <!-- Speaker-only fields -->
     <template v-if="entityType === 'speaker'">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div class="space-y-2">
-          <Label for="speaker-phone">Phone</Label>
-          <Input
-            id="speaker-phone"
-            v-model="speakerPhone"
-            placeholder="Phone number"
-          />
-        </div>
-
-        <div class="space-y-2">
-          <Label for="linkedin-url">LinkedIn</Label>
-          <Input
-            id="linkedin-url"
-            v-model="linkedinUrl"
-            placeholder="LinkedIn profile URL"
-          />
-          <div class="flex items-center space-x-2">
-            <Checkbox id="wants-linkedin-tag" v-model="wantsLinkedinTag" />
-            <Label for="wants-linkedin-tag" class="text-sm">
-              Wants to be tagged
-            </Label>
+      <!-- Phone & LinkedIn editable, saved to contact -->
+      <div class="mt-4 space-y-2">
+        <span class="text-sm font-medium">Contact Details</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <Label for="speaker-phone" class="text-xs">Phone</Label>
+            <Input
+              id="speaker-phone"
+              v-model="speakerPhone"
+              placeholder="+351 900 000 000"
+              @blur="saveContact"
+            />
+          </div>
+          <div class="space-y-1">
+            <Label for="speaker-linkedin" class="text-xs">LinkedIn</Label>
+            <Input
+              id="speaker-linkedin"
+              v-model="speakerLinkedin"
+              placeholder="username or profile URL"
+              @blur="saveContact"
+            />
           </div>
         </div>
+        <p v-if="isSavingContact" class="text-xs text-muted-foreground">
+          Saving…
+        </p>
+      </div>
+
+      <div class="space-y-1 mt-4">
+        <Label class="text-sm font-medium"
+          >Wants to be tagged on LinkedIn</Label
+        >
+        <Select v-model="wantsLinkedinTag">
+          <SelectTrigger class="w-[200px]">
+            <SelectValue placeholder="Select…" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="not_responded">Didn't respond</SelectItem>
+            <SelectItem value="yes">Yes</SelectItem>
+            <SelectItem value="no">No</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div class="space-y-2 mt-4">
@@ -92,6 +110,7 @@ import { getAllEvents } from "@/api/events";
 import { getItemById } from "@/api/items";
 import type { Item } from "@/dto/item";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -100,9 +119,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import type { CompanyParticipation } from "@/dto/companies";
 import type { SpeakerParticipation } from "@/dto/speakers";
 import type { Contact } from "@/dto/contacts";
@@ -118,8 +135,8 @@ import {
   useCompanyParticipationPackageMutation,
   useCompanyParticipationMutation,
 } from "@/mutations/companies";
-import { useSpeakerParticipationMutation } from "@/mutations/speakers";
 import { usePackagesQuery } from "@/mutations/packages";
+import { updateContact } from "@/api/contacts";
 import useToast from "@/lib/toast";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import { CalendarCheck } from "lucide-vue-next";
@@ -258,30 +275,20 @@ const confirmedDate = ref<Date | null>(
 );
 const isDateUpdating = ref(false);
 
-// Participation mutations for updating confirmed date
+// Participation mutation for updating confirmed date (companies only)
 const companyParticipationMutation = useCompanyParticipationMutation();
 companyParticipationMutation.companyId.value = props.entityId;
-
-const speakerParticipationMutation = useSpeakerParticipationMutation();
-speakerParticipationMutation.speakerId.value = props.entityId;
 
 const onConfirmedDateChange = async (newValue: Date | null) => {
   if (!newValue) return;
   try {
     isDateUpdating.value = true;
     const isoDate = newValue.toISOString();
-
-    if (props.entityType === "company") {
-      companyParticipationMutation.data.value = {
-        ...props.participation,
-        confirmed: isoDate,
-      };
-      await companyParticipationMutation.mutateAsync();
-    } else {
-      // Speakers don't have a confirmed field in the API,
-      // but we store the date locally
-    }
-
+    companyParticipationMutation.data.value = {
+      ...props.participation,
+      confirmed: isoDate,
+    };
+    await companyParticipationMutation.mutateAsync();
     toast.success({ title: "Confirmation date updated" });
   } catch (err) {
     console.error("Failed to update confirmation date:", err);
@@ -333,61 +340,79 @@ const isComplete = computed(() => {
   if (props.entityType === "company") {
     return !!selectedPackageId.value && !!confirmedDate.value;
   }
-  // For speakers, just the date is enough
-  return !!confirmedDate.value;
+  // For speakers, no date needed
+  return true;
 });
 
-// Speaker-only fields (synced from saved tasks first, fallback to contact)
-const speakerPhone = ref<string>(
-  props.speakerTasks?.confirmation?.phone ||
-    props.contact?.phones?.[0]?.phone ||
-    "",
-);
+// Speaker-only fields
 const speakerObservations = ref<string>(
   props.speakerTasks?.confirmation?.observations ?? "",
 );
-const linkedinUrl = ref<string>(
-  props.speakerTasks?.confirmation?.linkedin ||
-    props.contact?.socials?.linkedin ||
-    "",
-);
-const wantsLinkedinTag = ref<boolean>(
-  props.speakerTasks?.confirmation?.wantsLinkedinTag ?? false,
+const wantsLinkedinTag = ref<string>(
+  props.speakerTasks?.confirmation?.wantsLinkedinTag ?? "not_responded",
 );
 
-// Keep phone and linkedin in sync when contact prop changes (only if empty)
+// Speaker contact detail shortcuts — editable, saved back to contact
+const speakerPhone = ref<string>(props.contact?.phones?.[0]?.phone ?? "");
+const speakerLinkedin = ref<string>(props.contact?.socials?.linkedin ?? "");
+const isSavingContact = ref(false);
+
+// Sync if contact prop changes externally
 watch(
-  () => props.contact?.phones?.[0]?.phone,
-  (newVal) => {
-    if (newVal !== undefined && !speakerPhone.value) {
-      speakerPhone.value = newVal;
-    }
+  () => props.contact,
+  (c) => {
+    speakerPhone.value = c?.phones?.[0]?.phone ?? "";
+    speakerLinkedin.value = c?.socials?.linkedin ?? "";
   },
 );
 
-watch(
-  () => props.contact?.socials?.linkedin,
-  (newVal) => {
-    if (newVal !== undefined && !linkedinUrl.value) {
-      linkedinUrl.value = newVal;
-    }
-  },
-);
+const saveContact = async () => {
+  if (!props.contact?.id) return;
+  // Only save if something actually changed
+  const origPhone = props.contact?.phones?.[0]?.phone ?? "";
+  const origLinkedin = props.contact?.socials?.linkedin ?? "";
+  if (
+    speakerPhone.value === origPhone &&
+    speakerLinkedin.value === origLinkedin
+  )
+    return;
+
+  isSavingContact.value = true;
+  try {
+    // Build updated contact data, preserving all other fields
+    const phones = speakerPhone.value.trim()
+      ? [{ phone: speakerPhone.value.trim() }]
+      : (props.contact.phones ?? []);
+    await updateContact(String(props.contact.id), {
+      gender: props.contact.gender,
+      language: props.contact.language,
+      mails: props.contact.mails ?? [],
+      phones,
+      socials: {
+        ...props.contact.socials,
+        linkedin: speakerLinkedin.value.trim() || undefined,
+      },
+    });
+    toast.success({ title: "Contact details saved" });
+  } catch (err) {
+    console.error("Failed to save contact:", err);
+    toast.error({ title: "Failed to save contact details" });
+  } finally {
+    isSavingContact.value = false;
+  }
+};
 
 // Emit speaker confirmation changes
-watch(
-  [speakerPhone, linkedinUrl, wantsLinkedinTag, speakerObservations],
-  () => {
-    if (props.entityType === "speaker") {
-      emit("update:speakerConfirmation", {
-        phone: speakerPhone.value,
-        linkedin: linkedinUrl.value,
-        wantsLinkedinTag: wantsLinkedinTag.value,
-        observations: speakerObservations.value,
-      });
-    }
-  },
-);
+watch([wantsLinkedinTag, speakerObservations], () => {
+  if (props.entityType === "speaker") {
+    emit("update:speakerConfirmation", {
+      phone: speakerPhone.value,
+      linkedin: speakerLinkedin.value,
+      wantsLinkedinTag: wantsLinkedinTag.value,
+      observations: speakerObservations.value,
+    });
+  }
+});
 
 defineExpose({
   isComplete,
