@@ -23,7 +23,7 @@ import {
 import { useEventStore } from "@/stores/event";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
-import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerOrMemberAutocompleteWithDialog.vue";
+import CompanySpeakerMemberAutocompleteWithDialog from "./CompanySpeakerMemberAutocompleteWithDialog.vue";
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
@@ -150,7 +150,7 @@ watch(shortcutLinux, () => {
           </Select>
         </div>
 
-        <CompanyOrSpeakerAutocompleteWithDialog
+        <CompanySpeakerMemberAutocompleteWithDialog
           :autofocus="showSuggestions"
           :force-show-suggestions="showSuggestions"
           class="hidden md:inline w-full px-3"
@@ -222,7 +222,7 @@ watch(shortcutLinux, () => {
         v-if="isOpen"
         class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 py-4"
       >
-        <CompanyOrSpeakerAutocompleteWithDialog
+        <CompanySpeakerMemberAutocompleteWithDialog
           class="w-full px-3 pb-3"
           placeholder="Search"
           @company-selected="companySelected"
