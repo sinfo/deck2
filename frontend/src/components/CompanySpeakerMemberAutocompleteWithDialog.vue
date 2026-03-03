@@ -301,14 +301,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  ref,
-  computed,
-  watch,
-  nextTick,
-  onBeforeUnmount,
-  type ComputedRef,
-} from "vue";
+import { ref, computed, watch, nextTick, onBeforeUnmount } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllCompanies } from "@/api/companies";
 import { getAllSpeakers } from "@/api/speakers";
@@ -330,7 +323,10 @@ import {
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
 import type { Member } from "@/dto/members";
-import createFuzzySearch, { type FuzzyResult } from "@nozbe/microfuzz";
+import {
+  useCompanySpeakerMemberSearch,
+  type ResultItem,
+} from "@/composables/useCompanySpeakerMemberSearch";
 
 type SelectedItem = Company | Speaker | Member;
 
@@ -370,16 +366,14 @@ const searchTerm = ref(props.modelValue || "");
 const createTerm = ref("");
 const showSuggestions = ref(false);
 const selectedItem = ref<SelectedItem | null>(null);
-
 const isCompanyDialogOpen = ref(false);
 const isSpeakerDialogOpen = ref(false);
-
 const listRef = ref<HTMLElement | null>(null);
 const scrollAnimationFrameId = ref<number | null>(null);
 const inputRef = ref<HTMLInputElement>();
 const highlightedIndex = ref(-1);
 
-// Detect platform for keyboard shortcut
+// Detect platform for keyboard shortcut display
 const isMac = computed(() => {
   if (typeof navigator === "undefined") return false;
 
@@ -392,21 +386,18 @@ const isMac = computed(() => {
   return /\bMacintosh\b|\bMac OS X\b/.test(ua);
 });
 
-// Companies query
 const { data: companiesData, isLoading: companiesLoading } = useQuery({
   key: () => ["companies"],
   query: () => getAllCompanies({}),
   enabled: () => !!eventStore.selectedEvent?.id,
 });
 
-// Speakers query
 const { data: speakersData, isLoading: speakersLoading } = useQuery({
   key: () => ["speakers"],
   query: () => getAllSpeakers({}),
   enabled: () => !!eventStore.selectedEvent?.id,
 });
 
-// Members query
 const { data: membersData, isLoading: membersLoading } = useQuery({
   key: () => ["members"],
   query: () => getAllMembers({}),
@@ -417,170 +408,38 @@ const isLoading = computed(
   () => companiesLoading.value || speakersLoading.value || membersLoading.value,
 );
 
-/**
- * NOTE: microfuzz score semantics:
- * - Lower score = better match (exact match is ~0)
- * So we always sort scores ASC, and use Infinity for no results.
- */
-
-const LIMIT = 5;
-const q = computed(() => searchTerm.value.trim()); // query
-
-function useFuzzy<T>(
-  src: ComputedRef<T[]>,
-  getText: (item: T) => string[],
-  bias = 0,
-) {
-  const f = ref<null | ((q: string) => FuzzyResult<T>[])>(null);
-
-  watch(
-    () => src.value,
-    (list) => {
-      f.value = list.length ? createFuzzySearch(list, { getText }) : null;
-    },
-    { immediate: true },
-  );
-
-  const res = computed<FuzzyResult<T>[]>(() => {
-    const term = q.value;
-    const fn = f.value;
-    if (!term || !fn) return [];
-    return fn(term);
-  });
-
-  const items = computed<T[]>(() => {
-    const list = src.value;
-    if (!q.value) return list.slice(0, LIMIT);
-    return res.value.map((r) => r.item).slice(0, LIMIT);
-  });
-
-  const best = computed(() => (res.value[0]?.score ?? Infinity) + bias);
-
-  return { items, best };
-}
-
 const companies = computed(() => companiesData.value?.data ?? []);
 const speakers = computed(() => speakersData.value?.data ?? []);
 const members = computed(() => membersData.value?.data ?? []);
 
-const MEMBER_BIAS = 0.15;
-
-const c = useFuzzy(companies, (x: Company) => [x.name, x.description ?? ""]);
-const s = useFuzzy(speakers, (x: Speaker) => [x.name, x.companyName ?? ""]);
-const m = useFuzzy(members, (x: Member) => [x.name], MEMBER_BIAS);
-
-const filteredCompanies = c.items;
-const filteredSpeakers = s.items;
-const filteredMembers = m.items;
-
-const bestCompanyScore = c.best;
-const bestSpeakerScore = s.best;
-const bestMemberScore = m.best;
-
-type GroupId = "companies" | "speakers" | "members";
-
-const ord: Record<GroupId, number> = {
-  companies: 0,
-  speakers: 1,
-  members: 2,
-};
-
-const orderedGroups = computed<GroupId[]>(() => {
-  if (!q.value) return ["companies", "speakers", "members"];
-
-  const entries: { id: GroupId; score: number; len: number }[] = [
-    {
-      id: "companies",
-      score: bestCompanyScore.value,
-      len: filteredCompanies.value.length,
-    },
-    {
-      id: "speakers",
-      score: bestSpeakerScore.value,
-      len: filteredSpeakers.value.length,
-    },
-    {
-      id: "members",
-      score: bestMemberScore.value,
-      len: filteredMembers.value.length,
-    },
-  ];
-
-  entries.sort((a, b) =>
-    a.score === b.score ? ord[a.id] - ord[b.id] : a.score - b.score,
-  );
-
-  return entries.filter((e) => e.len > 0).map((e) => e.id);
+const {
+  filteredCompanies,
+  filteredSpeakers,
+  filteredMembers,
+  orderedGroups,
+  results,
+  getItemIndex,
+} = useCompanySpeakerMemberSearch({
+  searchTerm,
+  companies,
+  speakers,
+  members,
+  limit: 5,
+  memberBias: 0.15,
 });
 
-const results = computed(() => {
-  const out: Array<
-    (Company | Speaker | Member) & { type: "company" | "speaker" | "member" }
-  > = [];
-
-  const addToResults = (...items: typeof out) => out.push(...items);
-
-  for (const g of orderedGroups.value) {
-    switch (g) {
-      case "companies":
-        addToResults(
-          ...filteredCompanies.value.map((x) => ({
-            ...x,
-            type: "company" as const,
-          })),
-        );
-        break;
-
-      case "speakers":
-        addToResults(
-          ...filteredSpeakers.value.map((x) => ({
-            ...x,
-            type: "speaker" as const,
-          })),
-        );
-        break;
-
-      case "members":
-        addToResults(
-          ...filteredMembers.value.map((x) => ({
-            ...x,
-            type: "member" as const,
-          })),
-        );
-        break;
-    }
-  }
-
-  return out;
-});
-
-type AnyId = Company["id"] | Speaker["id"] | Member["id"];
-
-const indexById = computed(() => {
-  const m = new Map<AnyId, number>(); // build lookup table to instantly find index
-  results.value.forEach((r, i) => m.set(r.id as AnyId, i));
-  return m;
-});
-
-const getItemIndex = (item: SelectedItem) => {
-  return indexById.value.get(item.id as AnyId) ?? -1;
-};
-
-const getItemImage = (item: SelectedItem) => {
+const getItemImage = (item: SelectedItem): string => {
   if ("imgs" in item && item.imgs) {
     if ("public" in item.imgs) {
-      // Company
+      // Company: prefer internal, fall back to public
       return item.imgs.internal || item.imgs.public;
     } else {
-      // Speaker
+      // Speaker: prefer internal, fall back to speaker
       return item.imgs.internal || item.imgs.speaker;
     }
   }
 
-  // Member may have an `img` property
-  if ((item as Member).img) return (item as Member).img;
-
-  return "";
+  return (item as Member).img ?? "";
 };
 
 const handleInput = () => {
@@ -595,69 +454,20 @@ const handleFocus = () => {
   highlightedIndex.value = -1;
 };
 
-const handleKeydown = (event: KeyboardEvent) => {
-  const { key } = event;
-  const list = results.value;
-  const hasResults = list.length > 0;
-  const maxIndex = list.length - 1;
-
-  const normalizeIndex = (value: number) =>
-    Math.min(Math.max(value, -1), maxIndex);
-
-  const setHighlighted = (nextIndex: number) =>
-    (highlightedIndex.value = normalizeIndex(nextIndex));
-
-  const closeSuggestions = () => {
+const hideSuggestions = () => {
+  // Delay hiding to allow click events to fire first
+  setTimeout(() => {
     showSuggestions.value = false;
     highlightedIndex.value = -1;
-    (event.target as HTMLInputElement).blur();
-  };
+  }, 200);
+};
 
-  const selectResult = (item: (typeof list)[number]) => {
-    switch (item.type) {
-      case "speaker":
-        selectSpeaker(item as Speaker);
-        return;
-      case "member":
-        selectMember(item as Member);
-        return;
-      case "company":
-        selectCompany(item as Company);
-        return;
-    }
-  };
-
-  switch (key) {
-    case "Escape": {
-      closeSuggestions();
-      return;
-    }
-
-    case "ArrowDown":
-    case "ArrowUp": {
-      event.preventDefault();
-      if (!hasResults) return;
-
-      const delta = key === "ArrowDown" ? 1 : -1;
-      setHighlighted(highlightedIndex.value + delta);
-      return;
-    }
-
-    case "Enter": {
-      event.preventDefault();
-      if (!hasResults) return;
-
-      // if nothing is highlighted, select the first item
-      const idx = highlightedIndex.value >= 0 ? highlightedIndex.value : 0;
-
-      selectResult(list[idx]);
-      highlightedIndex.value = idx;
-      return;
-    }
-
-    default:
-      return;
-  }
+const clearSelection = () => {
+  selectedItem.value = null;
+  searchTerm.value = "";
+  highlightedIndex.value = -1;
+  emit("update:modelValue", "");
+  showSuggestions.value = false;
 };
 
 const selectCompany = (company: Company) => {
@@ -687,20 +497,64 @@ const selectMember = (member: Member) => {
   emit("update:modelValue", member.name);
 };
 
-const clearSelection = () => {
-  selectedItem.value = null;
-  searchTerm.value = "";
-  highlightedIndex.value = -1;
-  emit("update:modelValue", "");
-  showSuggestions.value = false;
-};
+const handleKeydown = (event: KeyboardEvent) => {
+  const { key } = event;
+  const list = results.value;
+  const hasResults = list.length > 0;
+  const maxIndex = list.length - 1;
 
-const hideSuggestions = () => {
-  // Delay hiding to allow for click events
-  setTimeout(() => {
+  const normalizeIndex = (value: number) =>
+    Math.min(Math.max(value, -1), maxIndex);
+
+  const setHighlighted = (nextIndex: number) => {
+    highlightedIndex.value = normalizeIndex(nextIndex);
+  };
+
+  const closeSuggestions = () => {
     showSuggestions.value = false;
     highlightedIndex.value = -1;
-  }, 200);
+    (event.target as HTMLInputElement).blur();
+  };
+
+  const selectResult = (item: ResultItem) => {
+    switch (item.type) {
+      case "speaker":
+        return selectSpeaker(item);
+      case "member":
+        return selectMember(item);
+      case "company":
+        return selectCompany(item);
+    }
+  };
+
+  switch (key) {
+    case "Escape": {
+      closeSuggestions();
+      return;
+    }
+
+    case "ArrowDown":
+    case "ArrowUp": {
+      event.preventDefault();
+      if (!hasResults) return;
+      const delta = key === "ArrowDown" ? 1 : -1;
+      setHighlighted(highlightedIndex.value + delta);
+      return;
+    }
+
+    case "Enter": {
+      event.preventDefault();
+      if (!hasResults) return;
+      // If nothing is highlighted, select the first item
+      const idx = highlightedIndex.value >= 0 ? highlightedIndex.value : 0;
+      selectResult(list[idx]);
+      highlightedIndex.value = idx;
+      return;
+    }
+
+    default:
+      return;
+  }
 };
 
 const handleCreateCompany = (term: string) => {
@@ -737,7 +591,7 @@ const handleSpeakerSuccess = (speakerId: string) => {
   emit("speakerSuccess", speakerId);
 };
 
-// Watch for external changes to modelValue
+// Sync internal searchTerm when modelValue changes externally
 watch(
   () => props.modelValue,
   (newValue) => {
@@ -747,25 +601,21 @@ watch(
   },
 );
 
-// Watch for forceShowSuggestions to focus input and show suggestions
+// Focus input and show suggestions when forceShowSuggestions is triggered
 watch(
   () => props.forceShowSuggestions,
   (newValue) => {
-    if (newValue) {
-      showSuggestions.value = true;
-      highlightedIndex.value = -1;
-      // Focus the input when force show suggestions is triggered
-      nextTick(() => {
-        const input = document.getElementById(
-          inputId.value,
-        ) as HTMLInputElement;
-        if (input) input.focus();
-      });
-    }
+    if (!newValue) return;
+    showSuggestions.value = true;
+    highlightedIndex.value = -1;
+    nextTick(() => {
+      const input = document.getElementById(inputId.value) as HTMLInputElement;
+      input?.focus();
+    });
   },
 );
 
-// Reset highlighted index when results change
+// Reset highlighted index whenever the result list changes size
 watch(
   () => results.value.length,
   () => {
@@ -789,6 +639,7 @@ watch(
       const el = container.querySelector(
         `[data-result-index="${idx}"]`,
       ) as HTMLElement | null;
+
       if (!el) return;
 
       const elTop = el.offsetTop;
