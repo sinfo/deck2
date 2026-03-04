@@ -4,6 +4,7 @@
     :companies-loading="isCompaniesLoading"
     :members="membersList?.data || []"
     :event-id="eventStore.selectedEvent?.id || 0"
+    :coordination-teams="coordinationTeamsList?.data || []"
   />
 </template>
 
@@ -16,6 +17,7 @@ import { useEventStore } from "@/stores/event";
 import { getAllMembers } from "@/api/members";
 import type { AllMembersFilter } from "@/dto/members";
 import MembersCompanies from "@/components/companies/MembersCompanies.vue";
+import { getAllCoordinationTeams } from "@/api/coordinationTeams";
 
 const eventStore = useEventStore();
 const companiesFilters = computed<AllCompaniesFilter>(() => ({
@@ -34,5 +36,10 @@ const membersFilters = computed<AllMembersFilter>(() => ({
 const { data: membersList } = useQuery({
   key: () => ["members", JSON.stringify(membersFilters.value)],
   query: () => getAllMembers(membersFilters.value),
+});
+
+const { data: coordinationTeamsList } = useQuery({
+  key: ["coordinationTeams"],
+  query: () => getAllCoordinationTeams(),
 });
 </script>

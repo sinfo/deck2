@@ -114,11 +114,7 @@ func InitializeRouter() {
 
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	var allowedOrigins handlers.CORSOption
-	if config.Production {
-		allowedOrigins = handlers.AllowedOrigins([]string{"*sinfo.org"})
-	} else {
-		allowedOrigins = handlers.AllowedOrigins([]string{"*"})
-	}
+	allowedOrigins = handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 
 	authMember = checkAccessLevelWrapper(models.RoleMember)
@@ -160,6 +156,9 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}", authMember(getCompany)).Methods("GET")
 	companyRouter.HandleFunc("/{id}", authMember(updateCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}", authCoordinator(deleteCompany)).Methods("DELETE")
+	// query companies by multiple member IDs
+	companyRouter.HandleFunc("/byMembers", authMember(getCompaniesByMembers)).Methods("POST")
+	companyRouter.HandleFunc("/announce", authCoordinator(announceAcceptedCompanies)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/subscribe", authMember(subscribeToCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/unsubscribe", authMember(unsubscribeToCompany)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/image/internal", authMember(setCompanyPrivateImage)).Methods("POST")
@@ -172,20 +171,26 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation/status/{status}", authMember(setCompanyStatus)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/package/{packageID}", authCoordinator(setCompanyPackage)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/participation/billing", authCoordinator(addCompanyParticipationBilling)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/billing/{billingID}", authCoordinator(deleteCompanyParticipationBilling)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/threads", authMember(getCompanyThreads)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/thread", authMember(addCompanyThread)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/gmail-threads", authMember(updateCompanyGmailThreadIds)).Methods("PUT")
+	companyRouter.HandleFunc("/{id}/participation/gmail-sync", authMember(syncCompanyGmailMessages)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employers", authMember(getCompanyEmployers)).Methods("GET")
 	companyRouter.HandleFunc("/{id}/employers", authMember(updateEmployersOrder)).Methods("PUT")
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
+	companyRouter.HandleFunc("/{id}/contract/docx", authCoordinator(generateCompanyContractDocx)).Methods("POST")
 
 	// speaker handlers
 	speakerRouter := r.PathPrefix("/speakers").Subrouter()
 	speakerRouter.HandleFunc("", authMember(getSpeakers)).Methods("GET")
 	speakerRouter.HandleFunc("", authMember(createSpeaker)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}", authMember(getSpeaker)).Methods("GET")
+	// query speakers by multiple member IDs
+	speakerRouter.HandleFunc("/byMembers", authMember(getSpeakersByMembers)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}", authCoordinator(deleteSpeaker)).Methods("DELETE")
 	speakerRouter.HandleFunc("/{id}", authMember(updateSpeaker)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/subscribe", authMember(subscribeToSpeaker)).Methods("PUT")
@@ -203,6 +208,8 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/image/public/company", authCoordinator(setSpeakerCompanyImage)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/threads", authMember(getSpeakerThreads)).Methods("GET")
 	speakerRouter.HandleFunc("/{id}/thread", authMember(addSpeakerThread)).Methods("POST")
+	speakerRouter.HandleFunc("/{id}/participation/gmail-threads", authMember(updateSpeakerGmailThreadIds)).Methods("PUT")
+	speakerRouter.HandleFunc("/{id}/participation/gmail-sync", authMember(syncSpeakerGmailMessages)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation", authCoordinator(removeSpeakerParticipation)).Methods("DELETE")
 
 	// flightInfo handlers
@@ -217,6 +224,7 @@ func InitializeRouter() {
 	eventRouter.HandleFunc("", authCoordinator(updateEvent)).Methods("PUT")
 	eventRouter.HandleFunc("/{id:[0-9]+}", authMember(getEvent)).Methods("GET")
 	eventRouter.HandleFunc("/{id:[0-9]+}", authAdmin(deleteEvent)).Methods("DELETE")
+	eventRouter.HandleFunc("/{id:[0-9]+}/gmail-threads", authMember(getLinkedGmailThreads)).Methods("GET")
 	eventRouter.HandleFunc("/themes", authCoordinator(updateEventThemes)).Methods("PUT")
 	eventRouter.HandleFunc("/packages", authCoordinator(addPackageToEvent)).Methods("POST")
 	eventRouter.HandleFunc("/packages/{id}", authCoordinator(removePackageFromEvent)).Methods("DELETE")
@@ -242,6 +250,19 @@ func InitializeRouter() {
 	teamRouter.HandleFunc("/{id}/meetings", authMember(addTeamMeeting)).Methods("POST")
 	teamRouter.HandleFunc("/{id}/meetings/{meetingID}", authTeamLeader(deleteTeamMeeting)).Methods("DELETE")
 
+	// coordination team handlers
+	coordRouter := r.PathPrefix("/coordinationTeams").Subrouter()
+	coordRouter.HandleFunc("", authMember(getCoordinationTeams)).Methods("GET")
+	coordRouter.HandleFunc("/me", authCoordinator(getMyCoordinationTeams)).Methods("GET")
+	coordRouter.HandleFunc("", authCoordinator(createCoordinationTeam)).Methods("POST")
+	coordRouter.HandleFunc("/{id}", authMember(getCoordinationTeam)).Methods("GET")
+	coordRouter.HandleFunc("/{id}", authCoordinator(updateCoordinationTeam)).Methods("PUT")
+	coordRouter.HandleFunc("/{id}", authCoordinator(deleteCoordinationTeam)).Methods("DELETE")
+	coordRouter.HandleFunc("/{id}/coordinatedMembers", authCoordinator(addCoordinatedTeam)).Methods("POST")
+	coordRouter.HandleFunc("/{id}/coordinatedMembers/{memberID}", authCoordinator(removeCoordinatedTeam)).Methods("DELETE")
+	coordRouter.HandleFunc("/{id}/coordinator", authCoordinator(setCoordinator)).Methods("POST")
+	coordRouter.HandleFunc("/{id}/coordinator/{memberID}", authCoordinator(removeCoordinator)).Methods("DELETE")
+
 	// me handlers
 	meRouter := r.PathPrefix("/me").Subrouter()
 	meRouter.HandleFunc("", authMember(getMe)).Methods("GET")
@@ -265,6 +286,10 @@ func InitializeRouter() {
 
 	// item handlers
 	itemRouter := r.PathPrefix("/items").Subrouter()
+	itemRouter.HandleFunc("/categories", authMember(getItemCategories)).Methods("GET")
+	itemRouter.HandleFunc("/categories", authCoordinator(createItemCategory)).Methods("POST")
+	itemRouter.HandleFunc("/categories/{id}", authCoordinator(updateItemCategory)).Methods("PUT")
+	itemRouter.HandleFunc("/categories/{id}", authCoordinator(deleteItemCategory)).Methods("DELETE")
 	itemRouter.HandleFunc("", authMember(getItems)).Methods("GET")
 	itemRouter.HandleFunc("", authCoordinator(createItem)).Methods("POST")
 	itemRouter.HandleFunc("/{id}", authMember(getItem)).Methods("GET")
@@ -339,6 +364,11 @@ func InitializeRouter() {
 	templatesRouter.HandleFunc("", getTemplates).Methods("GET")
 	templatesRouter.HandleFunc("/fill/{id}", fillTemplate).Methods("POST")
 	templatesRouter.HandleFunc("/filled/{uuid}", getFilledTemplate).Methods("GET")
+
+	// upload/download template files (coordination only)
+	templatesRouter.HandleFunc("/{id}/upload", authCoordinator(uploadTemplateFile)).Methods("POST")
+	templatesRouter.HandleFunc("/upload-by-name", authCoordinator(uploadTemplateFileByName)).Methods("POST")
+	templatesRouter.HandleFunc("/{id}/download", authCoordinator(downloadTemplateFile)).Methods("GET")
 
 	// save router instance
 	Router = handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(r)

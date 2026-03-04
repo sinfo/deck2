@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -31,11 +32,26 @@ func ResetCurrentPublicCompanies() {
 	currentPublicCompanies = nil
 }
 
+func formatLinkedInURL(url *string) *string {
+	if url == nil || *url == "" {
+		return url
+	}
+
+	trimmed := strings.TrimSpace(*url)
+	if strings.HasPrefix(strings.ToLower(trimmed), "http://") || strings.HasPrefix(strings.ToLower(trimmed), "https://") {
+		return &trimmed
+	}
+
+	formatted := "https://linkedin.com/company/" + strings.TrimPrefix(trimmed, "@")
+	return &formatted
+}
+
 // CreateCompanyData holds data needed to create a company
 type CreateCompanyData struct {
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	Site        *string `json:"site"`
+	LinkedIn    *string `json:"linkedin"`
 }
 
 // ParseBody fills the CreateCompanyData from a body
@@ -80,10 +96,17 @@ func (c *CompaniesType) CreateCompany(data CreateCompanyData) (*models.Company, 
 		return nil, err
 	}
 
+	var linkedinValue interface{} = nil
+	formattedLinkedin := formatLinkedInURL(data.LinkedIn)
+	if formattedLinkedin != nil {
+		linkedinValue = *formattedLinkedin
+	}
+
 	insertResult, err := c.Collection.InsertOne(ctx, bson.M{
 		"name":           data.Name,
 		"description":    data.Description,
 		"site":           data.Site,
+		"linkedin":       linkedinValue,
 		"employers":      []primitive.ObjectID{},
 		"participations": []models.CompanyParticipation{},
 		"contact":        createdContact.InsertedID.(primitive.ObjectID),
@@ -284,16 +307,51 @@ func (c *CompaniesType) GetCompanies(compOptions GetCompaniesOptions) ([]*models
 	return companies, nil
 }
 
+// GetCompaniesByMembers returns companies that have a participation with any of the provided member IDs.
+// If eventID is provided, only participations for that event are considered.
+func (c *CompaniesType) GetCompaniesByMembers(memberIDs []primitive.ObjectID, eventID *int) ([]*models.Company, error) {
+	ctx := context.Background()
+	var companies = make([]*models.Company, 0)
+
+	filter := bson.M{}
+
+	if eventID != nil {
+		filter["participations"] = bson.M{"$elemMatch": bson.M{"member": bson.M{"$in": memberIDs}, "event": *eventID}}
+	} else {
+		filter["participations.member"] = bson.M{"$in": memberIDs}
+	}
+
+	cur, err := c.Collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	for cur.Next(ctx) {
+		var comp models.Company
+		if err := cur.Decode(&comp); err != nil {
+			return nil, err
+		}
+		companies = append(companies, &comp)
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	cur.Close(ctx)
+
+	return companies, nil
+}
+
 // Transforms a models.Company into a models.CompanyPublic. If eventID != nil, returns only the participation for that event, if announced.
 // Otherwise, returns all participations in which they were announced
 func companyToPublic(company models.Company, eventID *int) (*models.CompanyPublic, error) {
 
 	public := models.CompanyPublic{
-		ID:          company.ID,
-		Name:        company.Name,
-		Image:       company.Images.Public,
-		Site:        company.Site,
-		Description: company.Description,
+		ID:    company.ID,
+		Name:  company.Name,
+		Image: company.Images.Public,
+		Site:  company.Site,
 	}
 
 	var participation *models.CompanyParticipation
@@ -788,6 +846,35 @@ func (c *CompaniesType) DeleteCompanyThread(id, threadID primitive.ObjectID) (*m
 	return &updatedCompany, nil
 }
 
+// UpdateCompanyGmailThreadIds updates the gmail thread IDs for a company's current participation
+func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID, gmailThreadIds []string) (*models.Company, error) {
+	ctx := context.Background()
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.gmailThreadIds": gmailThreadIds,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating company gmail thread IDs:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
 // UpdateCompanyParticipationStatus updates a company's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
@@ -824,10 +911,11 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
 type UpdateCompanyData struct {
-	Name        *string
-	Description *string
-	Site        *string
-	BillingInfo *models.CompanyBillingInfo
+	Name        *string                    `json:"name"`
+	Description *string                    `json:"description"`
+	Site        *string                    `json:"site"`
+	LinkedIn    *string                    `json:"linkedin"`
+	BillingInfo *models.CompanyBillingInfo `json:"billingInfo"`
 }
 
 // ParseBody fills the UpdateCompanyData from a body
@@ -856,6 +944,12 @@ func (c *CompaniesType) UpdateCompany(companyID primitive.ObjectID, data UpdateC
 	}
 	if data.Site != nil {
 		updateFields["site"] = *data.Site
+	}
+	if data.LinkedIn != nil {
+		formattedLinkedin := formatLinkedInURL(data.LinkedIn)
+		if formattedLinkedin != nil {
+			updateFields["linkedin"] = *formattedLinkedin
+		}
 	}
 	if data.BillingInfo != nil {
 		billingInfo := *data.BillingInfo
@@ -1338,6 +1432,52 @@ func (c *CompaniesType) DeleteCompanyParticipation(companyID primitive.ObjectID,
 	}
 
 	return &updatedCompany, nil
+}
+
+// AnnounceAcceptedCompanies changes all companies with ACCEPTED status on the
+// current event to ANNOUNCED. Returns the number of companies updated.
+func (c *CompaniesType) AnnounceAcceptedCompanies() (int64, error) {
+	ctx := context.Background()
+
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return 0, err
+	}
+
+	filter := bson.M{
+		"participations": bson.M{
+			"$elemMatch": bson.M{
+				"event":  currentEvent.ID,
+				"status": models.Accepted,
+			},
+		},
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"participations.$[elem].status": models.Announced,
+		},
+	}
+
+	arrayFilters := options.ArrayFilters{
+		Filters: []interface{}{
+			bson.M{
+				"elem.event":  currentEvent.ID,
+				"elem.status": models.Accepted,
+			},
+		},
+	}
+
+	opts := options.Update().SetArrayFilters(arrayFilters)
+
+	result, err := c.Collection.UpdateMany(ctx, filter, update, opts)
+	if err != nil {
+		return 0, err
+	}
+
+	ResetCurrentPublicCompanies()
+
+	return result.ModifiedCount, nil
 }
 
 // FindThread finds a thread in a company

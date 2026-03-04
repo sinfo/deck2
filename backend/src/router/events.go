@@ -621,3 +621,96 @@ func getEventCalendar(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, currentEvent.CalendarUrl, http.StatusPermanentRedirect)
 }
+
+// LinkedGmailThreadInfo contains info about a linked Gmail thread
+type LinkedGmailThreadInfo struct {
+	ThreadID   string `json:"threadId"`
+	EntityType string `json:"entityType"` // "company" or "speaker"
+	EntityID   string `json:"entityId"`
+	EntityName string `json:"entityName"`
+	EntityImage string `json:"entityImage,omitempty"`
+}
+
+// LinkedGmailThreadsResponse is the response for getLinkedGmailThreads
+type LinkedGmailThreadsResponse struct {
+	ThreadIDs []string                `json:"threadIds"`
+	Details   []LinkedGmailThreadInfo `json:"details"`
+}
+
+func getLinkedGmailThreads(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	eventIDStr := params["id"]
+
+	eventID, err := strconv.Atoi(eventIDStr)
+	if err != nil {
+		http.Error(w, "Invalid event ID: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	response := LinkedGmailThreadsResponse{
+		ThreadIDs: make([]string, 0),
+		Details:   make([]LinkedGmailThreadInfo, 0),
+	}
+
+	threadIDSet := make(map[string]bool)
+
+	// Get all companies with participations in this event
+	companies, err := mongodb.Companies.GetCompanies(mongodb.GetCompaniesOptions{
+		EventID: &eventID,
+	})
+	if err != nil {
+		http.Error(w, "Failed to get companies: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for _, company := range companies {
+		for _, participation := range company.Participations {
+			if participation.Event == eventID && len(participation.GmailThreadIds) > 0 {
+				for _, threadID := range participation.GmailThreadIds {
+					if !threadIDSet[threadID] {
+						threadIDSet[threadID] = true
+						response.ThreadIDs = append(response.ThreadIDs, threadID)
+						response.Details = append(response.Details, LinkedGmailThreadInfo{
+							ThreadID:   threadID,
+							EntityType: "company",
+							EntityID:   company.ID.Hex(),
+							EntityName: company.Name,
+							EntityImage: company.Images.Public,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// Get all speakers with participations in this event
+	speakers, err := mongodb.Speakers.GetSpeakers(mongodb.GetSpeakersOptions{
+		EventID: &eventID,
+	})
+	if err != nil {
+		http.Error(w, "Failed to get speakers: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for _, speaker := range speakers {
+		for _, participation := range speaker.Participations {
+			if participation.Event == eventID && len(participation.GmailThreadIds) > 0 {
+				for _, threadID := range participation.GmailThreadIds {
+					if !threadIDSet[threadID] {
+						threadIDSet[threadID] = true
+						response.ThreadIDs = append(response.ThreadIDs, threadID)
+						response.Details = append(response.Details, LinkedGmailThreadInfo{
+							ThreadID:   threadID,
+							EntityType: "speaker",
+							EntityID:   speaker.ID.Hex(),
+							EntityName: speaker.Name,
+							EntityImage: speaker.Images.Speaker,
+						})
+					}
+				}
+			}
+		}
+	}
+
+	json.NewEncoder(w).Encode(response)
+}

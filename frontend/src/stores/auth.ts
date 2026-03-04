@@ -67,8 +67,46 @@ export const useAuthStore = defineStore("auth", () => {
     isInitializing.value = false;
   };
 
-  // Google Auth access token
-  const googleAccessToken = ref<string | null>();
+  // Google Auth access token with persistence
+  const googleAccessToken = ref<string | null>(
+    localStorage.getItem("googleAccessToken"),
+  );
+  const googleAccessTokenExpiry = ref<number | null>(
+    localStorage.getItem("googleAccessTokenExpiry")
+      ? Number(localStorage.getItem("googleAccessTokenExpiry"))
+      : null,
+  );
+
+  // Check if Google token is valid (exists and not expired)
+  const isGoogleAuthenticated = computed(() => {
+    if (!googleAccessToken.value) return false;
+    if (
+      googleAccessTokenExpiry.value &&
+      googleAccessTokenExpiry.value < Date.now()
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  // Set Google token with expiration (expiresIn is in seconds)
+  const setGoogleToken = (token: string, expiresIn: number = 3600) => {
+    googleAccessToken.value = token;
+    // Calculate expiry timestamp (subtract 60 seconds for safety margin)
+    const expiryTime = Date.now() + (expiresIn - 60) * 1000;
+    googleAccessTokenExpiry.value = expiryTime;
+
+    localStorage.setItem("googleAccessToken", token);
+    localStorage.setItem("googleAccessTokenExpiry", String(expiryTime));
+  };
+
+  // Clear Google token
+  const clearGoogleToken = () => {
+    googleAccessToken.value = null;
+    googleAccessTokenExpiry.value = null;
+    localStorage.removeItem("googleAccessToken");
+    localStorage.removeItem("googleAccessTokenExpiry");
+  };
 
   return {
     token,
@@ -81,5 +119,9 @@ export const useAuthStore = defineStore("auth", () => {
     initialize,
 
     googleAccessToken,
+    googleAccessTokenExpiry,
+    isGoogleAuthenticated,
+    setGoogleToken,
+    clearGoogleToken,
   };
 });

@@ -39,6 +39,10 @@ type CompanyParticipation struct {
 	// Some random notes about this participation.
 	Notes string `json:"notes" bson:"notes"`
 
+	// GmailThreadIds is an array of Gmail thread IDs linked to this participation.
+	// These are used to sync communications with Gmail.
+	GmailThreadIds []string `json:"gmailThreadIds,omitempty" bson:"gmailThreadIds,omitempty"`
+
   // Stand details
   StandDetails StandDetails `json:"standDetails,omitempty" bson:"standDetails,omitempty"`
 
@@ -104,6 +108,8 @@ type Company struct {
 
 	Site string `json:"site" bson:"site"`
 
+	LinkedIn string `json:"linkedin,omitempty" bson:"linkedin,omitempty"`
+
 	// Company's contacts is an array of CompanyRep _id (see models.CompanyRep).
 	Employers []primitive.ObjectID `json:"employers,omitempty" bson:"employers,omitempty"`
 
@@ -139,8 +145,6 @@ type CompanyPublic struct {
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
 	Name string `json:"name"`
-
-	Description string `json:"description"`
 
 	// Company's image (public).
 	Image string `json:"img,omitempty"`

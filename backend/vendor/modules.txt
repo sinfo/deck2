@@ -1,3 +1,23 @@
+# baliance.com/gooxml v1.0.1
+## explicit
+baliance.com/gooxml
+baliance.com/gooxml/algo
+baliance.com/gooxml/color
+baliance.com/gooxml/common
+baliance.com/gooxml/document
+baliance.com/gooxml/measurement
+baliance.com/gooxml/schema/soo/dml
+baliance.com/gooxml/schema/soo/dml/picture
+baliance.com/gooxml/schema/soo/ofc/docPropsVTypes
+baliance.com/gooxml/schema/soo/ofc/extended_properties
+baliance.com/gooxml/schema/soo/ofc/math
+baliance.com/gooxml/schema/soo/ofc/sharedTypes
+baliance.com/gooxml/schema/soo/pkg/content_types
+baliance.com/gooxml/schema/soo/pkg/metadata/core_properties
+baliance.com/gooxml/schema/soo/pkg/relationships
+baliance.com/gooxml/schema/soo/schemaLibrary
+baliance.com/gooxml/schema/soo/wml
+baliance.com/gooxml/zippkg
 # cloud.google.com/go/auth v0.16.3
 ## explicit; go 1.23.0
 cloud.google.com/go/auth
@@ -171,12 +191,18 @@ github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.5.0
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
+# github.com/nguyenthenguyen/docx v0.0.0-20230621112118-9c8e795a11db
+## explicit; go 1.16
+github.com/nguyenthenguyen/docx
 # github.com/patrickmn/go-cache v2.1.0+incompatible
 ## explicit
 github.com/patrickmn/go-cache
 # github.com/pelletier/go-toml v1.7.0
 ## explicit; go 1.12
 github.com/pelletier/go-toml
+# github.com/phpdave11/gofpdf v1.4.3
+## explicit; go 1.12
+github.com/phpdave11/gofpdf
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors

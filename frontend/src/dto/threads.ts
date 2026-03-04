@@ -10,6 +10,7 @@ export interface ThreadWithEntry {
   comments: ObjectID[];
   kind: ThreadKind;
   status: ThreadStatus;
+  gmailMessageId?: string;
 }
 
 export enum ThreadKind {
@@ -35,4 +36,5 @@ export interface CreateThread {
 export interface ParticipationCommunications {
   event: number;
   communications: ThreadWithEntry[];
+  gmailThreadIds?: string[];
 }

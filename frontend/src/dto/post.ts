@@ -5,5 +5,9 @@ export interface Post {
   member: ObjectID;
   text: string;
   posted: string;
-  updated: string;
+  updated?: string;
+}
+
+export interface UpdatePostData {
+  text: string;
 }

@@ -197,13 +197,6 @@
                         >
                           Personal
                         </Badge>
-                        <Badge
-                          v-if="!mail.valid"
-                          variant="destructive"
-                          class="text-xs"
-                        >
-                          Invalid
-                        </Badge>
                       </div>
                     </div>
                   </div>
@@ -229,13 +222,6 @@
                       >
                         {{ phone.phone }}
                       </a>
-                      <Badge
-                        v-if="!phone.valid"
-                        variant="destructive"
-                        class="text-xs"
-                      >
-                        Invalid
-                      </Badge>
                     </div>
                   </div>
                 </div>

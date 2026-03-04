@@ -1,17 +1,47 @@
 <template>
+  <div
+    v-if="isDeleteConfirmOpen"
+    class="fixed inset-0 bg-black/20 z-40 transition-opacity duration-200"
+    @click="isDeleteConfirmOpen = false"
+  ></div>
   <Card class="w-full hover:shadow-lg transition-shadow duration-200">
     <CardHeader>
       <div class="flex items-center justify-between mb-4">
         <CardTitle class="text-lg">Speaker Information</CardTitle>
-        <Button
-          v-if="!isEditing"
-          variant="outline"
-          size="sm"
-          :disabled="isUpdating"
-          @click="startEditing"
-        >
-          Edit
-        </Button>
+        <div class="flex items-center gap-2">
+          <Button
+            v-if="!isEditing"
+            variant="outline"
+            size="sm"
+            :disabled="isUpdating"
+            @click="startEditing"
+          >
+            Edit
+          </Button>
+          <Popover v-if="canDelete" v-model:open="isDeleteConfirmOpen">
+            <PopoverTrigger as-child>
+              <Button
+                variant="outline"
+                size="sm"
+                :disabled="isDeleting"
+                class="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                aria-label="Delete speaker"
+                :title="isDeleting ? 'Deleting...' : 'Delete speaker'"
+              >
+                <TrashIcon class="w-4 h-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-80 z-50">
+              <ConfirmDelete
+                title="Delete Speaker"
+                :message="`Are you sure you want to delete ${speaker.name}? This action cannot be undone.`"
+                :is-deleting="isDeleting"
+                @cancel="isDeleteConfirmOpen = false"
+                @confirm="handleDelete"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       <!-- Editing Form -->
@@ -51,22 +81,14 @@
             {{ speaker.title }}
           </div>
           <div class="flex flex-wrap gap-1 mt-2">
+            <ParticipationStatusBadge
+              v-if="speaker.participation?.status"
+              :status="speaker.participation.status"
+              :entity-id="speaker.id"
+              entity-type="speaker"
+              @updated="emit('updated')"
+            />
             <Badge v-if="speaker.companyName">{{ speaker.companyName }}</Badge>
-
-            <Badge
-              :class="
-                participationStatusColor[
-                  speaker.participation?.status || 'SUGGESTED'
-                ]?.background
-              "
-              class="text-xs"
-            >
-              {{
-                humanReadableParticipationStatus[
-                  speaker.participation?.status || "SUGGESTED"
-                ]
-              }}
-            </Badge>
           </div>
         </div>
       </div>
@@ -110,10 +132,9 @@ import type {
 } from "@/dto/speakers";
 import { useSpeakerInfoMutation } from "@/mutations/speakers";
 import { useSpeakerImageUploadMutation } from "@/mutations/speakers";
-import {
-  participationStatusColor,
-  humanReadableParticipationStatus,
-} from "@/dto";
+import { deleteSpeaker } from "@/api/speakers";
+import { useQueryCache } from "@pinia/colada";
+import { useRouter } from "vue-router";
 import Card from "../ui/card/Card.vue";
 import CardContent from "../ui/card/CardContent.vue";
 import CardDescription from "../ui/card/CardDescription.vue";
@@ -123,6 +144,11 @@ import Badge from "../ui/badge/Badge.vue";
 import Button from "../ui/button/Button.vue";
 import Image from "../Image.vue";
 import SpeakerInfoForm from "../speakers/SpeakerInfoForm.vue";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { TrashIcon } from "lucide-vue-next";
+import ConfirmDelete from "@/components/ConfirmDelete.vue";
+import { usePermissions } from "@/composables/usePermissions";
+import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
 
 const props = defineProps<{
   speaker: SpeakerWithParticipation;
@@ -130,10 +156,29 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   updated: [];
+  deleted: [];
 }>();
 
 const isBioExpanded = ref(false);
 const isEditing = ref(false);
+const isDeleteConfirmOpen = ref(false);
+const isDeleting = ref(false);
+const { isCoordinatorOrAdmin } = usePermissions();
+const queryCache = useQueryCache();
+const router = useRouter();
+
+const navigateBackWithReload = (fallback: string) => {
+  try {
+    if (window.history.length > 1) {
+      router.back();
+      setTimeout(() => window.location.reload(), 50);
+    } else {
+      router.push(fallback).then(() => window.location.reload());
+    }
+  } catch {
+    router.push(fallback).then(() => window.location.reload());
+  }
+};
 
 const speakerInfoMutation = useSpeakerInfoMutation();
 const { mutate: updateSpeakerInfo, isLoading: isUpdating } =
@@ -202,6 +247,27 @@ const shouldShowToggle = computed(() => {
 
 const toggleBio = () => {
   isBioExpanded.value = !isBioExpanded.value;
+};
+
+const canDelete = computed(() => {
+  return isCoordinatorOrAdmin.value === true;
+});
+
+const handleDelete = async () => {
+  if (!props.speaker?.id) return;
+  isDeleting.value = true;
+  try {
+    await deleteSpeaker(props.speaker.id);
+    // Invalidate cache and navigate to list
+    queryCache.invalidateQueries({ key: ["speakers"] });
+    navigateBackWithReload("/speakers");
+    emit("deleted");
+  } catch (error) {
+    console.error("Error deleting speaker:", error);
+  } finally {
+    isDeleting.value = false;
+    isDeleteConfirmOpen.value = false;
+  }
 };
 </script>
 

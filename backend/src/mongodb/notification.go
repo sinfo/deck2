@@ -20,7 +20,7 @@ type NotificationsType struct {
 
 var tagRegexCompiler, _ = regexp.Compile(`@[a-zA-Z0-9\.]+`)
 
-//Notify creates a notification and adds it to every subscriber
+// Notify creates a notification and adds it to every subscriber
 func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotificationData) {
 
 	event, err := Events.GetCurrentEvent()
@@ -84,23 +84,20 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 		}
 	}
 
-	// notify coordination on the author's team
-	for _, teamID := range event.Teams {
-		team, err := Teams.GetTeam(teamID)
-		if err != nil || !team.HasMember(author) {
-			continue
-		}
-
-		coordinators := team.GetMembersByRole(models.RoleCoordinator)
-
-		for _, coordinator := range coordinators {
-
-			// notify authors only if not running on production mode
-			if config.Production && coordinator.Member == author {
+	// Notify coordination teams: coordination logic lives in separate collection
+	// Find coordination teams that include the author as a coordinated member
+	// and notify those coordination teams' coordinators only.
+	coordTeams, err := CoordinationTeams.GetCoordinationTeamsByMember(author)
+	if err == nil {
+		for _, coordTeam := range coordTeams {
+			if coordTeam.Coordinator == nil {
 				continue
 			}
-
-			n.NotifyMember(coordinator.Member, data)
+			// do not notify the author themselves in production
+			if config.Production && coordTeam.Coordinator.Member == author {
+				continue
+			}
+			n.NotifyMember(coordTeam.Coordinator.Member, data)
 		}
 	}
 
@@ -137,7 +134,7 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 	}
 }
 
-//CreateNotificationData holds data needed to create a notification
+// CreateNotificationData holds data needed to create a notification
 type CreateNotificationData struct {
 	Kind    models.NotificationKind
 	Post    *primitive.ObjectID
@@ -146,9 +143,11 @@ type CreateNotificationData struct {
 	Company *primitive.ObjectID
 	Meeting *primitive.ObjectID
 	Session *primitive.ObjectID
+	// Optional human-friendly name of the target entity
+	Name string
 }
 
-//NotifyMember adds a notification to a member
+// NotifyMember adds a notification to a member
 func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data CreateNotificationData) {
 	ctx = context.Background()
 
@@ -161,6 +160,7 @@ func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data Creat
 		Company: data.Company,
 		Meeting: data.Meeting,
 		Session: data.Session,
+		Name:    data.Name,
 	}
 
 	if err := notification.Validate(); err != nil {
@@ -184,6 +184,7 @@ func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data Creat
 		"company":   data.Company,
 		"meeting":   data.Meeting,
 		"session":   data.Session,
+		"name":      data.Name,
 		"signature": signature,
 		"date":      time.Now().UTC(),
 	}
@@ -194,7 +195,7 @@ func (n *NotificationsType) NotifyMember(memberID primitive.ObjectID, data Creat
 		return
 	}
 
-	notification, err = n.GetNotification(insertResult.InsertedID.(primitive.ObjectID))
+	_, err = n.GetNotification(insertResult.InsertedID.(primitive.ObjectID))
 	if err != nil {
 		log.Println("unable to retrieve created notification: ", err.Error())
 		return
@@ -214,11 +215,11 @@ func (n *NotificationsType) GetNotification(id primitive.ObjectID) (*models.Noti
 	return &notification, nil
 }
 
-//GetMemberNotifications gets all notifications for a member
-func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) ([]*models.Notification, error) {
+// GetMemberNotifications gets all notifications for a member
+func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) ([]map[string]interface{}, error) {
 	ctx = context.Background()
 
-	var notifications = make([]*models.Notification, 0)
+	var notifications = make([]map[string]interface{}, 0)
 
 	filter := bson.M{
 		"member": memberID,
@@ -229,9 +230,19 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 		return nil, err
 	}
 
+	type savedNotif struct {
+		notifMap  map[string]interface{}
+		speakerID *primitive.ObjectID
+		companyID *primitive.ObjectID
+	}
+
+	var saved = make([]savedNotif, 0)
+	speakerSet := make(map[primitive.ObjectID]struct{})
+	companySet := make(map[primitive.ObjectID]struct{})
+
 	for cur.Next(ctx) {
 
-		// create a value into which the single document can be decoded
+		// decode into models.Notification first
 		var notification models.Notification
 
 		err := cur.Decode(&notification)
@@ -239,7 +250,105 @@ func (n *NotificationsType) GetMemberNotifications(memberID primitive.ObjectID) 
 			return nil, err
 		}
 
-		notifications = append(notifications, &notification)
+		// build a JSON-friendly map for the response
+		notifMap := map[string]interface{}{
+			"id":        notification.ID.Hex(),
+			"kind":      notification.Kind,
+			"signature": notification.Signature,
+			"member":    notification.Member.Hex(),
+			"date":      notification.Date.Format(time.RFC3339),
+			// include optional human-friendly name for deleted entities
+			"name": notification.Name,
+		}
+
+		if notification.Post != nil {
+			notifMap["post"] = notification.Post.Hex()
+		}
+		if notification.Thread != nil {
+			notifMap["thread"] = notification.Thread.Hex()
+		}
+		if notification.Meeting != nil {
+			notifMap["meeting"] = notification.Meeting.Hex()
+		}
+		if notification.Session != nil {
+			notifMap["session"] = notification.Session.Hex()
+		}
+
+		var sID *primitive.ObjectID
+		var cID *primitive.ObjectID
+
+		if notification.Speaker != nil {
+			sID = notification.Speaker
+			// tentatively store the hex (fallback) until we embed
+			notifMap["speaker"] = notification.Speaker.Hex()
+			speakerSet[*sID] = struct{}{}
+		}
+
+		if notification.Company != nil {
+			cID = notification.Company
+			notifMap["company"] = notification.Company.Hex()
+			companySet[*cID] = struct{}{}
+		}
+
+		saved = append(saved, savedNotif{notifMap: notifMap, speakerID: sID, companyID: cID})
+	}
+
+	// If we encountered speaker or company IDs, fetch them in batch and embed
+	var speakersByID = make(map[primitive.ObjectID]*models.Speaker)
+	var companiesByID = make(map[primitive.ObjectID]*models.Company)
+
+	if len(speakerSet) > 0 {
+		ids := make([]primitive.ObjectID, 0, len(speakerSet))
+		for id := range speakerSet {
+			ids = append(ids, id)
+		}
+
+		// batch find speakers
+		spCur, err := Speakers.Collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
+		if err == nil {
+			for spCur.Next(ctx) {
+				var sp models.Speaker
+				if err := spCur.Decode(&sp); err == nil {
+					speakersByID[sp.ID] = &sp
+				}
+			}
+			spCur.Close(ctx)
+		}
+	}
+
+	if len(companySet) > 0 {
+		ids := make([]primitive.ObjectID, 0, len(companySet))
+		for id := range companySet {
+			ids = append(ids, id)
+		}
+
+		// batch find companies
+		coCur, err := Companies.Collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
+		if err == nil {
+			for coCur.Next(ctx) {
+				var co models.Company
+				if err := coCur.Decode(&co); err == nil {
+					companiesByID[co.ID] = &co
+				}
+			}
+			coCur.Close(ctx)
+		}
+	}
+
+	// build final notifications embedding the fetched objects when available
+	for _, s := range saved {
+		if s.speakerID != nil {
+			if sp, ok := speakersByID[*s.speakerID]; ok {
+				s.notifMap["speaker"] = sp
+			}
+		}
+		if s.companyID != nil {
+			if co, ok := companiesByID[*s.companyID]; ok {
+				s.notifMap["company"] = co
+			}
+		}
+
+		notifications = append(notifications, s.notifMap)
 	}
 
 	if err := cur.Err(); err != nil {

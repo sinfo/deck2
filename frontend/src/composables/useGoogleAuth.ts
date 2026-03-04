@@ -49,22 +49,76 @@ export const useGoogleAuth = () => {
     try {
       const jwt = await generateJwt({ access_token: response.access_token });
       authStore.setToken(jwt.data.deck_token);
-      authStore.googleAccessToken = response.access_token;
     } catch (err) {
       console.error("Failed to generate JWT:", err);
       throw new Error("Failed to complete authentication");
     }
+
+    // Store Google token with expiration (expires_in is in seconds, default 3600)
+    try {
+      const expiresIn = response.expires_in
+        ? Number(response.expires_in)
+        : 3600;
+      authStore.setGoogleToken(response.access_token, expiresIn);
+    } catch (err) {
+      console.error("Failed to store Google token:", err);
+      throw new Error("Failed to store Google authentication token");
+    }
+  };
+
+  /**
+   * Request only Google access token without Deck JWT (for Gmail operations)
+   * Use this when the user is already authenticated with Deck but Google token expired
+   */
+  const requestGoogleToken = async (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      isSigningIn.value = true;
+      error.value = null;
+
+      googleSdkLoaded((google) => {
+        google.accounts.oauth2
+          .initTokenClient({
+            client_id: env.GOOGLE_CLIENT_ID,
+            scope: env.GOOGLE_SCOPE,
+            callback: async (response) => {
+              try {
+                const expiresIn = response.expires_in
+                  ? Number(response.expires_in)
+                  : 3600;
+                authStore.setGoogleToken(response.access_token, expiresIn);
+                resolve(true);
+              } catch (err) {
+                error.value =
+                  err instanceof Error
+                    ? err.message
+                    : "Failed to get Google token";
+                resolve(false);
+              } finally {
+                isSigningIn.value = false;
+              }
+            },
+            error_callback: (err) => {
+              console.error("Error during Google token request", err);
+              error.value = "Google authentication failed";
+              isSigningIn.value = false;
+              resolve(false);
+            },
+          })
+          .requestAccessToken();
+      });
+    });
   };
 
   const signOut = () => {
     authStore.clearToken();
-    authStore.googleAccessToken = null;
+    authStore.clearGoogleToken();
   };
 
   return {
     isSigningIn,
     error,
     signInWithGoogle,
+    requestGoogleToken,
     signOut,
   };
 };

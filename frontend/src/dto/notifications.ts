@@ -29,18 +29,11 @@ export interface Notification {
   date?: string; // ISO date string
   // optional references to entities
   event?: number;
-  company?: string;
-  speaker?: string;
+  // company/speaker can be either the id (string) or an embedded object
+  company?: string | Company;
+  speaker?: string | Speaker;
   meeting?: string;
   thread?: string;
   post?: string;
-}
-
-export type EnrichedActor = Pick<Company | Speaker, "id" | "name"> & {
-  type: "company" | "speaker";
-  avatar?: string;
-};
-export interface EnrichedNotification extends Notification {
-  actor?: EnrichedActor; // populated user who triggered the notification
-  message?: string; // short human-readable message
+  name?: string; // human-friendly name of the target entity
 }

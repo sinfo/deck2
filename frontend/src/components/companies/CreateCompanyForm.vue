@@ -70,6 +70,20 @@
         }}</span>
       </div>
 
+      <div class="space-y-2">
+        <Label for="linkedin" class="text-sm font-medium">LinkedIn</Label>
+        <Input
+          id="linkedin"
+          v-model="formData.linkedin"
+          placeholder="username or profile URL"
+          type="text"
+          :disabled="isLoading"
+        />
+        <span v-if="errors.linkedin" class="text-sm text-destructive">{{
+          errors.linkedin
+        }}</span>
+      </div>
+
       <!-- Step 1 Actions -->
       <div class="flex justify-between pt-4">
         <Button
@@ -87,34 +101,15 @@
 
     <!-- Step 2: Company Logo -->
     <div v-if="currentStep === 2" class="space-y-4">
-      <div class="space-y-2">
-        <Label for="image" class="text-sm font-medium">Company Logo</Label>
-        <Input
-          id="image"
-          type="file"
-          accept="image/*"
-          :disabled="isLoading"
-          @change="handleImageChange"
-        />
-        <p class="text-xs text-muted-foreground">
-          Recommended: Square image, minimum 256x256px, max 10MB
-        </p>
-        <span v-if="errors.image" class="text-sm text-destructive">{{
-          errors.image
-        }}</span>
-      </div>
-
-      <!-- Image preview -->
-      <div v-if="imagePreview" class="space-y-2">
-        <Label class="text-sm font-medium">Preview</Label>
-        <div class="w-24 h-24 border border-muted rounded-lg overflow-hidden">
-          <img
-            :src="imagePreview"
-            alt="Logo preview"
-            class="w-full h-full object-cover"
-          />
-        </div>
-      </div>
+      <ImageUpload
+        ref="imageUploadRef"
+        label="Company Logo"
+        input-id="company-logo"
+        url-placeholder="https://example.com/logo.jpg"
+        preview-alt="Logo preview"
+        :disabled="isLoading"
+        @file-selected="handleImageSelected"
+      />
 
       <!-- Step 2 Actions -->
       <div class="flex justify-between pt-4">
@@ -122,8 +117,11 @@
           Back
         </Button>
         <div class="flex gap-2">
-          <Button :disabled="isLoading" @click="nextStep">
-            <span v-if="!imagePreview">Skip</span>
+          <Button
+            :disabled="isLoading || imageUploadRef?.isLoadingImageUrl"
+            @click="nextStep"
+          >
+            <span v-if="!imageUploadRef?.imagePreview">Skip</span>
             <span v-else>Next</span>
           </Button>
         </div>
@@ -276,6 +274,7 @@ import {
   StepperTrigger,
 } from "@/components/ui/stepper";
 import CompanyAutocomplete from "./CompanyAutocomplete.vue";
+import ImageUpload from "@/components/ImageUpload.vue";
 import {
   createCompany,
   createCompanyParticipation,
@@ -328,11 +327,17 @@ const formData = ref<CreateCompanyData>({
   name: props.initialCompanyName || "",
   description: "",
   site: "",
+  linkedin: "",
 });
 
-// Image preview and file
-const imagePreview = ref<string>("");
+// Image upload ref
+const imageUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null);
 const selectedImageFile = ref<File | null>(null);
+
+// Handle image selection from ImageUpload component
+const handleImageSelected = (file: File) => {
+  selectedImageFile.value = file;
+};
 
 // Representatives data
 const representatives = ref<CreateCompanyRepData[]>([]);
@@ -392,30 +397,6 @@ const isValidUrl = (url: string) => {
   }
 };
 
-// Image handling
-const handleImageChange = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (file) {
-    // Check file size (10MB limit)
-    if (file.size > 10 << 20) {
-      errors.value.image = "Image file size must be less than 10MB";
-      return;
-    }
-
-    // Clear any previous image errors
-    delete errors.value.image;
-
-    selectedImageFile.value = file;
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imagePreview.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
 // Representative management
 const addRepresentative = () => {
   representatives.value.push({
@@ -437,7 +418,6 @@ const addEmail = (repIndex: number) => {
   representatives.value[repIndex].contact!.mails.push({
     mail: "",
     personal: false,
-    valid: true,
   });
 };
 
@@ -448,7 +428,6 @@ const removeEmail = (repIndex: number, emailIndex: number) => {
 const addPhone = (repIndex: number) => {
   representatives.value[repIndex].contact!.phones.push({
     phone: "",
-    valid: true,
   });
 };
 

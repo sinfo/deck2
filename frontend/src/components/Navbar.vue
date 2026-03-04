@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch, type FunctionalComponent } from "vue";
-import { Menu, X, LogOut, Settings } from "lucide-vue-next";
+import {
+  Menu,
+  X,
+  LogOut,
+  Settings,
+  Trophy,
+  ChevronDown,
+  Mail,
+} from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import type { RouteLocationRaw } from "vue-router";
 import { useQuery } from "@pinia/colada";
@@ -15,14 +23,20 @@ import {
 import { useEventStore } from "@/stores/event";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
-import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerAutocompleteWithDialog.vue";
+import CompanySpeakerMemberAutocompleteWithDialog from "./CompanySpeakerMemberAutocompleteWithDialog.vue";
+import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
+import type { Member } from "@/dto/members";
 import { useMagicKeys } from "@vueuse/core";
 import Notification from "./navbar/Notification.vue";
+import { usePermissions } from "@/composables/usePermissions";
 
 const isOpen = ref(false);
 const authStore = useAuthStore();
+const { isCoordinatorOrAdmin } = usePermissions();
+
+const showCoordination = computed(() => isCoordinatorOrAdmin.value === true);
 const router = useRouter();
 
 const logout = () => {
@@ -40,7 +54,15 @@ const navigation: NavigationItem[] = [
   { name: "Me", to: { name: "dashboard" } },
   { name: "Companies", to: { name: "companies" } },
   { name: "Speakers", to: { name: "speakers" } },
+  { name: "Gmail", to: { name: "gmail-messages" }, icon: Mail },
+  { name: "Leaderboard", to: { name: "leaderboard" }, icon: Trophy },
   { name: "Settings", to: { name: "settings" }, icon: Settings },
+];
+
+const coordNavigation: NavigationItem[] = [
+  { name: "Coordination Teams", to: { name: "coordination-teams" } },
+  { name: "Packages", to: { name: "event-packages" } },
+  { name: "Templates", to: { name: "contract-templates" } },
 ];
 
 const { data: events, isLoading: eventsLoading } = useQuery({
@@ -71,6 +93,9 @@ const companySelected = (company: Company) =>
 
 const speakerSelected = (speaker: Speaker) =>
   router.push({ name: "speaker", params: { speakerId: speaker.id } });
+
+const memberSelected = (member: Member) =>
+  router.push({ name: "member", params: { memberId: member.id } });
 
 const keys = useMagicKeys();
 const shortcutMac = keys["meta+k"];
@@ -125,7 +150,7 @@ watch(shortcutLinux, () => {
           </Select>
         </div>
 
-        <CompanyOrSpeakerAutocompleteWithDialog
+        <CompanySpeakerMemberAutocompleteWithDialog
           :autofocus="showSuggestions"
           :force-show-suggestions="showSuggestions"
           class="hidden md:inline w-full px-3"
@@ -133,11 +158,34 @@ watch(shortcutLinux, () => {
           show-create
           @company-selected="companySelected"
           @speaker-selected="speakerSelected"
+          @member-selected="memberSelected"
         />
 
         <!-- Desktop Navigation -->
         <div class="hidden md:flex items-center space-x-4">
           <Notification />
+          <div v-if="showCoordination" class="relative group">
+            <Button
+              variant="ghost"
+              class="text-gray-600 hover:text-gray-900 flex items-center gap-1"
+            >
+              Coordination
+              <ChevronDown class="h-4 w-4" />
+            </Button>
+            <div
+              class="absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg invisible group-hover:visible group-hover:opacity-100 opacity-0 transition-all"
+            >
+              <RouterLink
+                v-for="item in coordNavigation"
+                :key="item.name"
+                :to="item.to"
+                class="block px-4 py-2 text-sm hover:bg-gray-50"
+                :title="item.name"
+              >
+                {{ item.name }}
+              </RouterLink>
+            </div>
+          </div>
           <RouterLink
             v-for="item in navigation"
             :key="item.name"
@@ -174,11 +222,12 @@ watch(shortcutLinux, () => {
         v-if="isOpen"
         class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 py-4"
       >
-        <CompanyOrSpeakerAutocompleteWithDialog
+        <CompanySpeakerMemberAutocompleteWithDialog
           class="w-full px-3 pb-3"
           placeholder="Search"
           @company-selected="companySelected"
           @speaker-selected="speakerSelected"
+          @member-selected="memberSelected"
         />
 
         <div class="container mx-auto px-4">
@@ -192,6 +241,37 @@ watch(shortcutLinux, () => {
               <component :is="item.icon" v-if="item.icon" class="h-4 w-4" />
               <span>{{ item.name }}</span>
             </RouterLink>
+
+            <div v-if="showCoordination" class="pl-3">
+              <Popover>
+                <PopoverTrigger as-child>
+                  <div
+                    class="text-gray-600 hover:text-gray-900 flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>Coordination</span>
+                    <ChevronDown class="h-4 w-4 text-gray-500" />
+                  </div>
+                </PopoverTrigger>
+
+                <PopoverContent side="bottom" align="start" class="p-0 w-56">
+                  <div class="flex flex-col">
+                    <RouterLink
+                      v-for="item in coordNavigation"
+                      :key="item.name"
+                      :to="item.to"
+                      class="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+                    >
+                      <component
+                        :is="item.icon"
+                        v-if="item.icon"
+                        class="h-4 w-4"
+                      />
+                      <span>{{ item.name }}</span>
+                    </RouterLink>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
 
             <Button
               variant="ghost"

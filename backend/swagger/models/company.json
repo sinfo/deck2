@@ -24,6 +24,9 @@
         "site": {
             "type": "string"
         },
+        "linkedin": {
+            "type": "string"
+        },
         "employers": {
             "type": "array",
             "items": {

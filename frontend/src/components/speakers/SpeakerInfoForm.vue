@@ -52,36 +52,15 @@
       </div>
 
       <!-- Image Upload Field -->
-      <div class="space-y-2">
-        <Label for="speaker-image" class="text-sm font-medium"
-          >Speaker Image</Label
-        >
-        <Input
-          id="speaker-image"
-          type="file"
-          accept="image/*"
-          :disabled="isLoading"
-          @change="handleImageChange"
-        />
-        <p class="text-xs text-muted-foreground">
-          Recommended: Square image, minimum 256x256px, max 10MB
-        </p>
-        <span v-if="errors.image" class="text-sm text-destructive">{{
-          errors.image
-        }}</span>
-
-        <!-- Image preview -->
-        <div v-if="imagePreview" class="space-y-2">
-          <Label class="text-sm font-medium">Preview</Label>
-          <div class="w-20 h-20 border border-muted rounded-lg overflow-hidden">
-            <img
-              :src="imagePreview"
-              alt="Speaker image preview"
-              class="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      </div>
+      <ImageUpload
+        label="Speaker Image"
+        input-id="speaker-image"
+        url-placeholder="https://example.com/image.jpg"
+        preview-alt="Speaker image preview"
+        preview-size="sm"
+        :disabled="isLoading"
+        @file-selected="handleImageSelected"
+      />
 
       <!-- Notes Field -->
       <div class="space-y-2">
@@ -114,11 +93,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch, ref } from "vue";
+import { computed, reactive, watch } from "vue";
 import type { UpdateSpeakerData } from "@/dto/speakers";
 import Button from "../ui/button/Button.vue";
 import Input from "../ui/input/Input.vue";
 import Label from "../ui/label/Label.vue";
+import ImageUpload from "@/components/ImageUpload.vue";
 
 interface Props {
   isLoading?: boolean;
@@ -145,10 +125,10 @@ const emit = defineEmits<{
   imageSelected: [file: File];
 }>();
 
-// Image handling
-const imagePreview = ref<string>("");
-const selectedImageFile = ref<File | null>(null);
-const errors = ref<Record<string, string>>({});
+// Handle image selection from ImageUpload component
+const handleImageSelected = (file: File) => {
+  emit("imageSelected", file);
+};
 
 const formData = reactive<
   Pick<UpdateSpeakerData, "name" | "title" | "bio" | "companyName" | "notes">
@@ -178,33 +158,6 @@ watch(
 const isValid = computed(() => {
   return formData.name?.trim();
 });
-
-// Image handling
-const handleImageChange = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (file) {
-    // Check file size (10MB limit)
-    if (file.size > 10 << 20) {
-      errors.value.image = "Image file size must be less than 10MB";
-      return;
-    }
-
-    // Clear any previous image errors
-    delete errors.value.image;
-
-    selectedImageFile.value = file;
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imagePreview.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-
-    // Emit the selected file to parent component
-    emit("imageSelected", file);
-  }
-};
 
 const handleSubmit = () => {
   if (isValid.value) {

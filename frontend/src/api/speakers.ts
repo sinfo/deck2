@@ -16,6 +16,9 @@ import {
 export const getAllSpeakers = (filter: AllSpeakersFilter) =>
   instance.get<Speaker[]>("/speakers", { params: filter });
 
+export const getSpeakersByMembers = (members: string[], event?: number) =>
+  instance.post<Speaker[]>("/speakers/byMembers", { members, event });
+
 export const getSpeakerById = (id: string) =>
   instance.get<SpeakerWithContactObject>(`/speakers/${id}`);
 
@@ -47,3 +50,38 @@ export const createSpeaker = (data: CreateSpeakerData) =>
 
 export const uploadSpeakerInternalImage = (id: string, data: FormData) =>
   instance.post<Speaker>(`/speakers/${id}/image/internal`, data);
+
+export const deleteSpeaker = (id: string) =>
+  instance.delete<Speaker>(`/speakers/${id}`);
+
+export const updateSpeakerGmailThreadIds = (
+  id: string,
+  gmailThreadIds: string[],
+) =>
+  instance.put<Speaker>(`/speakers/${id}/participation/gmail-threads`, {
+    gmailThreadIds,
+  });
+
+export interface GmailMessageData {
+  messageId: string;
+  threadId: string;
+  subject: string;
+  from: string;
+  to: string;
+  date: string;
+  body: string;
+  isOutgoing: boolean;
+}
+
+export interface SyncGmailResponse {
+  synced: number;
+  total: number;
+}
+
+export const syncSpeakerGmailMessages = (
+  id: string,
+  messages: GmailMessageData[],
+) =>
+  instance.post<SyncGmailResponse>(`/speakers/${id}/participation/gmail-sync`, {
+    messages,
+  });

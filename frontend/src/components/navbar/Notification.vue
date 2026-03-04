@@ -3,13 +3,13 @@ import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useQuery } from "@pinia/colada";
 import { getMyNotifications } from "@/api/notifications";
-import { getSpeakerById } from "@/api/speakers";
-import { getCompanyById } from "@/api/companies";
 import {
   useDeleteNotificationMutation,
   useDeleteAllNotificationsMutation,
 } from "@/mutations/notifications";
-import type { EnrichedActor, EnrichedNotification } from "@/dto/notifications";
+import type { Notification } from "@/dto/notifications";
+import type { Speaker } from "@/dto/speakers";
+import type { Company } from "@/dto/companies";
 import { Bell, Trash } from "lucide-vue-next";
 import {
   Popover,
@@ -19,8 +19,37 @@ import {
 import Badge from "../ui/badge/Badge.vue";
 import Image from "../Image.vue";
 
-const makeMessage = (kind: string, actor: EnrichedActor) => {
-  const actorName = actor.name;
+const getActor = (notification: Notification) => {
+  if (notification.speaker && typeof notification.speaker === "object") {
+    const speaker = notification.speaker as Speaker;
+    return {
+      id: speaker.id,
+      name: speaker.name,
+      avatar: speaker.imgs.internal || speaker.imgs.speaker,
+    };
+  }
+  if (notification.company && typeof notification.company === "object") {
+    const company = notification.company as Company;
+    return {
+      id: company.id,
+      name: company.name,
+      avatar: company.imgs?.internal || company.imgs?.public,
+    };
+  }
+  return null;
+};
+
+const makeMessage = (
+  notification: Notification,
+  actorArg?: { id?: string; name?: string; avatar?: string } | null,
+) => {
+  const thread = notification.thread;
+  const kind = notification.kind;
+  // Actor is the entity (company/speaker) related to the notification. Prefer the precomputed actor when provided.
+  const actor = actorArg ?? getActor(notification);
+  const actorName = actor && actor.name ? actor.name : "";
+  const isActorPresent = actorName.length > 0;
+
   switch (kind) {
     case "UPDATED_PARTICIPATION":
       return "Participation updated";
@@ -36,73 +65,64 @@ const makeMessage = (kind: string, actor: EnrichedActor) => {
       return "Meeting minute deleted";
     case "UPDATED_PRIVATE_IMAGE":
       return "Private image updated";
+    case "CREATED_PARTICIPATION_PACKAGE":
+      return "Participation package created";
+    case "UPDATED_PARTICIPATION_PACKAGE":
+      return "Participation package updated";
+    case "DELETED_PARTICIPATION_PACKAGE":
+      return "Participation package deleted";
     case "UPDATED":
+      if (thread) {
+        if (isActorPresent) {
+          return "Communication updated";
+        }
+        return "Thread updated";
+      }
+
       return "Updated details";
     case "CREATED":
+      if (thread) {
+        if (isActorPresent) {
+          return "New communication created";
+        }
+        return "Thread created";
+      }
+
       return "Created";
     case "DELETED":
-      return actorName ? `${actorName} deleted` : "Deleted";
+      if (thread) {
+        if (isActorPresent) {
+          return "Communication deleted";
+        }
+        return "Thread deleted";
+      } else if (notification.name) {
+        return `${notification.name} was deleted`;
+      }
+      return "Deleted";
     case "TAGGED":
       return "You were tagged in a post";
     default:
-      return actorName ? `${kind} - ${actorName}` : kind;
+      return kind;
   }
-};
-
-const fetchEnrichedNotifications = async () => {
-  const res = await getMyNotifications();
-  const data = await Promise.all(
-    (res.data || []).map(async (n) => {
-      const enriched: EnrichedNotification = { ...n };
-      try {
-        const speakerId = n.speaker;
-        const companyId = n.company;
-
-        if (speakerId) {
-          const spRes = await getSpeakerById(speakerId);
-          const sp = spRes?.data || spRes;
-          if (sp) {
-            enriched.actor = {
-              type: "speaker",
-              id: sp.id,
-              name: sp.name,
-              avatar: sp.imgs?.speaker || sp.imgs?.internal || undefined,
-            };
-            enriched.message = makeMessage(n.kind, enriched.actor);
-          }
-        } else if (companyId) {
-          const coRes = await getCompanyById(companyId);
-          const co = coRes?.data || coRes;
-          if (co) {
-            enriched.actor = {
-              type: "company",
-              id: co.id,
-              name: co.name,
-              avatar: co.imgs?.public || co.imgs?.internal || undefined,
-            };
-            enriched.message = makeMessage(n.kind, enriched.actor);
-          }
-        }
-      } catch {
-        // ignore enrichment errors
-      }
-      if (!enriched.message && enriched.actor)
-        enriched.message = makeMessage(n.kind, enriched.actor);
-      return enriched;
-    }),
-  );
-  return { ...res, data };
 };
 
 const { data: notifications } = useQuery({
   key: ["notifications"],
-  query: fetchEnrichedNotifications,
+  query: getMyNotifications,
 });
 
-const notificationItems = computed(() => {
-  const items = (notifications.value?.data as EnrichedNotification[]) || [];
+type NotificationEntry = {
+  n: Notification;
+  actor: { id?: string; name?: string; avatar?: string } | null;
+};
+
+const notificationItems = computed<NotificationEntry[]>(() => {
+  const items = (notifications.value?.data as Notification[]) || [];
   // sort newest first — try common timestamp fields (date, createdAt, created_at)
-  return items.slice().sort((a, b) => b.date?.localeCompare(a.date ?? "") || 0);
+  const sorted = items
+    .slice()
+    .sort((a, b) => b.date?.localeCompare(a.date ?? "") || 0);
+  return sorted.map((n) => ({ n, actor: getActor(n) }));
 });
 
 const _deleteNotificationMutation = useDeleteNotificationMutation();
@@ -113,25 +133,32 @@ const removeNotification = async (id: string) => {
 };
 
 const removeAllNotifications = async () => {
-  const ids = notificationItems.value.map((i) => i.id);
+  const ids = notificationItems.value.map((i) => i.n.id);
   if (!ids.length) return;
   await _deleteAllNotificationsMutation.mutate();
 };
 
 const router = useRouter();
-const navigateNotification = (n: EnrichedNotification) => {
-  const actor = n.actor;
-  if (actor?.type === "speaker" && actor?.id) {
-    router.push({ name: "speaker", params: { speakerId: actor.id } });
+const navigateNotification = (n: Notification) => {
+  // ensure speaker is an object (not a string) before accessing .id
+  if (n.speaker && typeof n.speaker === "object" && (n.speaker as Speaker).id) {
+    router.push({
+      name: "speaker",
+      params: { speakerId: (n.speaker as Speaker).id },
+    });
     return;
   }
-  if (actor?.type === "company" && actor?.id) {
-    router.push({ name: "company", params: { companyId: actor.id } });
+  // ensure company is an object (not a string) before accessing .id
+  if (n.company && typeof n.company === "object" && (n.company as Company).id) {
+    router.push({
+      name: "company",
+      params: { companyId: (n.company as Company).id },
+    });
     return;
   }
 };
 
-const onNotificationClick = async (n: EnrichedNotification) => {
+const onNotificationClick = async (n: Notification) => {
   if (!n || !n.id) return;
   try {
     await removeNotification(n.id);
@@ -179,29 +206,31 @@ const onNotificationClick = async (n: EnrichedNotification) => {
 
         <ul>
           <li
-            v-for="n in notificationItems"
-            :key="n.id"
+            v-for="entry in notificationItems"
+            :key="entry.n.id"
             class="flex items-center justify-between px-3 py-2 hover:bg-gray-50 cursor-pointer"
-            @click="onNotificationClick(n)"
+            @click="onNotificationClick(entry.n)"
           >
             <div class="flex items-center gap-3">
               <Image
-                v-if="n.actor && n.actor.avatar"
-                :src="n.actor.avatar"
+                v-if="entry.actor?.avatar"
+                :src="entry.actor?.avatar"
                 alt="actor"
                 class="h-8 w-8 rounded-full object-cover"
               />
               <div class="text-sm">
-                <div class="font-medium">{{ n.message || n.kind }}</div>
+                <div class="font-medium">
+                  {{ makeMessage(entry.n, entry.actor) }}
+                </div>
                 <div class="text-xs text-gray-500">
-                  {{ n.actor?.name || n.date }}
+                  {{ entry.actor?.name || entry.n.date }}
                 </div>
               </div>
             </div>
             <div>
               <button
                 class="text-red-500 text-sm"
-                @click.stop.prevent="removeNotification(n.id)"
+                @click.stop.prevent="removeNotification(entry.n.id)"
               >
                 <Trash :size="16" />
               </button>

@@ -43,37 +43,30 @@
         />
       </div>
 
-      <!-- Image Upload Field -->
+      <!-- LinkedIn Field -->
       <div class="space-y-2">
-        <Label for="company-image" class="text-sm font-medium"
-          >Company Logo</Label
+        <Label for="company-linkedin" class="text-sm font-medium"
+          >LinkedIn</Label
         >
         <Input
-          id="company-image"
-          type="file"
-          accept="image/*"
+          id="company-linkedin"
+          v-model="formData.linkedin"
+          placeholder="username or profile URL"
+          type="text"
           :disabled="isLoading"
-          @change="handleImageChange"
         />
-        <p class="text-xs text-muted-foreground">
-          Recommended: Square image, minimum 256x256px, max 10MB
-        </p>
-        <span v-if="errors.image" class="text-sm text-destructive">{{
-          errors.image
-        }}</span>
-
-        <!-- Image preview -->
-        <div v-if="imagePreview" class="space-y-2">
-          <Label class="text-sm font-medium">Preview</Label>
-          <div class="w-20 h-20 border border-muted rounded-lg overflow-hidden">
-            <img
-              :src="imagePreview"
-              alt="Company logo preview"
-              class="w-full h-full object-cover"
-            />
-          </div>
-        </div>
       </div>
+
+      <!-- Image Upload Field -->
+      <ImageUpload
+        label="Company Logo"
+        input-id="company-logo"
+        url-placeholder="https://example.com/logo.jpg"
+        preview-alt="Company logo preview"
+        preview-size="sm"
+        :disabled="isLoading"
+        @file-selected="handleImageSelected"
+      />
     </div>
 
     <!-- Form Actions -->
@@ -93,16 +86,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, watch, ref } from "vue";
+import { computed, reactive, watch } from "vue";
 import type { UpdateCompanyData } from "@/dto/companies";
 import Button from "../ui/button/Button.vue";
 import Input from "../ui/input/Input.vue";
 import Label from "../ui/label/Label.vue";
+import ImageUpload from "@/components/ImageUpload.vue";
 
 interface Props {
   isLoading?: boolean;
   mode?: "create" | "edit";
-  initialData?: Pick<UpdateCompanyData, "name" | "description" | "site">;
+  initialData?: Pick<
+    UpdateCompanyData,
+    "name" | "description" | "site" | "linkedin"
+  >;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -111,22 +108,25 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  submit: [data: Pick<UpdateCompanyData, "name" | "description" | "site">];
+  submit: [
+    data: Pick<UpdateCompanyData, "name" | "description" | "site" | "linkedin">,
+  ];
   cancel: [];
   imageSelected: [file: File];
 }>();
 
-// Image handling
-const imagePreview = ref<string>("");
-const selectedImageFile = ref<File | null>(null);
-const errors = ref<Record<string, string>>({});
+// Handle image selection from ImageUpload component
+const handleImageSelected = (file: File) => {
+  emit("imageSelected", file);
+};
 
 const formData = reactive<
-  Pick<UpdateCompanyData, "name" | "description" | "site">
+  Pick<UpdateCompanyData, "name" | "description" | "site" | "linkedin">
 >({
   name: "",
   description: "",
   site: "",
+  linkedin: "",
 });
 
 // Initialize form data when in edit mode or when initial data changes
@@ -137,6 +137,7 @@ watch(
       formData.name = newData.name || "";
       formData.description = newData.description || "";
       formData.site = newData.site || "";
+      formData.linkedin = newData.linkedin || "";
     }
   },
   { immediate: true },
@@ -146,39 +147,13 @@ const isValid = computed(() => {
   return formData.name?.trim();
 });
 
-// Image handling
-const handleImageChange = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (file) {
-    // Check file size (10MB limit)
-    if (file.size > 10 << 20) {
-      errors.value.image = "Image file size must be less than 10MB";
-      return;
-    }
-
-    // Clear any previous image errors
-    delete errors.value.image;
-
-    selectedImageFile.value = file;
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imagePreview.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-
-    // Emit the selected file to parent component
-    emit("imageSelected", file);
-  }
-};
-
 const handleSubmit = () => {
   if (isValid.value) {
     emit("submit", {
       name: formData.name?.trim() || undefined,
       description: formData.description?.trim() || "",
       site: formData.site?.trim() || "",
+      linkedin: formData.linkedin?.trim() || "",
     });
   }
 };

@@ -8,7 +8,6 @@ import (
 
 type ContactPhone struct {
 	Phone string `json:"phone" bson:"phone"`
-	Valid bool   `json:"valid" bson:"valid"`
 }
 
 type ContactSocials struct {
@@ -22,7 +21,6 @@ type ContactSocials struct {
 type ContactMail struct {
 	Mail     string `json:"mail" bson:"mail"`
 	Personal bool   `json:"personal" bson:"personal"`
-	Valid    bool   `json:"valid" bson:"valid"`
 }
 
 type Gender string
@@ -51,11 +49,11 @@ type Contact struct {
 	Mails   []ContactMail  `json:"mails" bson:"mails"`
 }
 
-// HasPhone (phone) returns true if contact has a valid phone
+// HasPhone (phone) returns true if contact has a phone
 // number that is a case insensitive partial match to `phone`
 func (c *Contact) HasPhone(p string) bool {
 	for _, s := range c.Phones {
-		if strings.Contains(strings.ToLower(s.Phone), strings.ToLower(p)) && s.Valid {
+		if strings.Contains(strings.ToLower(s.Phone), strings.ToLower(p)) {
 			return true
 		}
 	}
@@ -66,7 +64,7 @@ func (c *Contact) HasPhone(p string) bool {
 // that is a case insensitive partial match to `mail`
 func (c *Contact) HasMail(m string) bool {
 	for _, s := range c.Mails {
-		if strings.Contains(strings.ToLower(s.Mail), strings.ToLower(m)) && s.Valid {
+		if strings.Contains(strings.ToLower(s.Mail), strings.ToLower(m)) {
 			return true
 		}
 	}

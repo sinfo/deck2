@@ -100,34 +100,15 @@
 
     <!-- Step 2: Speaker Image -->
     <div v-if="currentStep === 2" class="space-y-4">
-      <div class="space-y-2">
-        <Label for="image" class="text-sm font-medium">Speaker Image</Label>
-        <Input
-          id="image"
-          type="file"
-          accept="image/*"
-          :disabled="isLoading"
-          @change="handleImageChange"
-        />
-        <p class="text-xs text-muted-foreground">
-          Recommended: Square image, minimum 256x256px, max 10MB
-        </p>
-        <span v-if="errors.image" class="text-sm text-destructive">{{
-          errors.image
-        }}</span>
-      </div>
-
-      <!-- Image preview -->
-      <div v-if="imagePreview" class="space-y-2">
-        <Label class="text-sm font-medium">Preview</Label>
-        <div class="w-24 h-24 border border-muted rounded-lg overflow-hidden">
-          <img
-            :src="imagePreview"
-            alt="Speaker image preview"
-            class="w-full h-full object-cover"
-          />
-        </div>
-      </div>
+      <ImageUpload
+        ref="imageUploadRef"
+        label="Speaker Image"
+        input-id="speaker-image"
+        url-placeholder="https://example.com/image.jpg"
+        preview-alt="Speaker image preview"
+        :disabled="isLoading"
+        @file-selected="handleImageSelected"
+      />
 
       <!-- Step 2 Actions -->
       <div class="flex justify-between pt-4">
@@ -135,8 +116,11 @@
           Back
         </Button>
         <div class="flex gap-2">
-          <Button :disabled="isLoading" @click="nextStep">
-            <span v-if="!imagePreview">Skip</span>
+          <Button
+            :disabled="isLoading || imageUploadRef?.isLoadingImageUrl"
+            @click="nextStep"
+          >
+            <span v-if="!imageUploadRef?.imagePreview">Skip</span>
             <span v-else>Next</span>
           </Button>
         </div>
@@ -186,6 +170,7 @@ import {
 } from "@/components/ui/stepper";
 import SpeakerAutocomplete from "./SpeakerAutocomplete.vue";
 import ContactForm from "../companies/ContactForm.vue";
+import ImageUpload from "@/components/ImageUpload.vue";
 import {
   createSpeaker,
   createSpeakerParticipation,
@@ -247,8 +232,14 @@ const formData = ref<CreateSpeakerFormData>({
 });
 
 // Image preview and file
-const imagePreview = ref<string>("");
+// Image upload ref
+const imageUploadRef = ref<InstanceType<typeof ImageUpload> | null>(null);
 const selectedImageFile = ref<File | null>(null);
+
+// Handle image selection from ImageUpload component
+const handleImageSelected = (file: File) => {
+  selectedImageFile.value = file;
+};
 
 // Contact data - store the submitted contact data
 const contactData = ref<CreateContactData>({
@@ -309,30 +300,6 @@ const validateStep1 = () => {
   }
 
   return true;
-};
-
-// Image handling
-const handleImageChange = (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (file) {
-    // Check file size (10MB limit)
-    if (file.size > 10 << 20) {
-      errors.value.image = "Image file size must be less than 10MB";
-      return;
-    }
-
-    // Clear any previous image errors
-    delete errors.value.image;
-
-    selectedImageFile.value = file;
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      imagePreview.value = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
 };
 
 // Speaker creation

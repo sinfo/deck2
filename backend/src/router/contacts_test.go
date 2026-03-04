@@ -17,7 +17,6 @@ var (
 	Contact1      *models.Contact
 	Contact1Phone = models.ContactPhone{
 		Phone: "1",
-		Valid: true,
 	}
 	Contact1Socials = models.ContactSocials{
 		Facebook: "facebook",
@@ -29,7 +28,6 @@ var (
 	Contact1Mail = models.ContactMail{
 		Mail:     "2",
 		Personal: true,
-		Valid:    true,
 	}
 	Contact1Data = mongodb.CreateContactData{
 		Phones:  append(make([]models.ContactPhone, 0), Contact1Phone),
@@ -39,7 +37,6 @@ var (
 	Contact2      *models.Contact
 	Contact2Phone = models.ContactPhone{
 		Phone: "3",
-		Valid: true,
 	}
 	Contact2Socials = models.ContactSocials{
 		Facebook: "facebook2",
@@ -51,7 +48,6 @@ var (
 	Contact2Mail = models.ContactMail{
 		Mail:     "4",
 		Personal: true,
-		Valid:    true,
 	}
 	Contact2Data = mongodb.CreateContactData{
 		Phones:  append(make([]models.ContactPhone, 0), Contact2Phone),

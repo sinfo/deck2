@@ -23,6 +23,8 @@ var (
 	MemberAssociated = "Member associated"
 )
 
+const SinfoEmailDomain = "@sinfo.org"
+
 // MembersType contains database information on Members
 type MembersType struct {
 	Collection *mongo.Collection
@@ -31,7 +33,7 @@ type MembersType struct {
 // Cached version of the public members for the current event
 var currentPublicMembers *[]*models.MemberPublic
 
-//ResetCurrentPublicMembers does exactly what the name says
+// ResetCurrentPublicMembers does exactly what the name says
 func ResetCurrentPublicMembers() {
 	currentPublicMembers = nil
 }
@@ -135,6 +137,11 @@ func convertToPublicMembers(orig []*models.Member) (res []*models.MemberPublic) 
 		contact, err := Contacts.GetContact(s.Contact)
 		if err == nil {
 			publicMember.Socials = contact.Socials
+		}
+
+		// populate sinfo email when available
+		if len(s.SINFOID) > 0 {
+			publicMember.SinfoEmail = s.SINFOID + SinfoEmailDomain
 		}
 
 		public = append(public, &publicMember)
@@ -506,6 +513,10 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 			return nil, err
 		}
 
+		// Build public members list for the specified event, including team name
+		publicMembers := make([]*models.MemberPublic, 0)
+		seen := make(map[primitive.ObjectID]bool)
+
 		for _, s := range event.Teams {
 			team, err := Teams.GetTeam(s)
 
@@ -520,9 +531,38 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 					return nil, err
 				}
 
-				members = append(members, member)
+				// avoid duplicates when a member appears multiple times
+				if _, ok := seen[member.ID]; ok {
+					continue
+				}
+				seen[member.ID] = true
+
+				pm := &models.MemberPublic{
+					Name:  member.Name,
+					Image: member.Image,
+					Team:  team.Name,
+				}
+
+				contact, err := Contacts.GetContact(member.Contact)
+				if err == nil {
+					pm.Socials = contact.Socials
+				}
+
+				if len(member.SINFOID) > 0 {
+					pm.SinfoEmail = member.SINFOID + SinfoEmailDomain
+				}
+
+				publicMembers = append(publicMembers, pm)
 			}
 		}
+
+		// Only cache the deduplicated result if not already cached
+		if currentPublicMembers == nil {
+			currentPublicMembers = &publicMembers
+		}
+
+		return publicMembers, nil
+
 
 	} else if currentPublicMembers != nil {
 
@@ -591,7 +631,7 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 	return public, nil
 }
 
-//DeleteMember deletes a member if it's not associated with any other instance
+// DeleteMember deletes a member if it's not associated with any other instance
 func (m *MembersType) DeleteMember(id primitive.ObjectID) (*models.Member, error) {
 	ctx = context.Background()
 

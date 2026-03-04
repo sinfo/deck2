@@ -3,7 +3,7 @@ import {
   deleteAllMyNotifications,
   deleteMyNotification,
 } from "@/api/notifications";
-import type { EnrichedNotification } from "@/dto/notifications";
+import type { Notification } from "@/dto/notifications";
 
 export const useDeleteNotificationMutation = defineMutation(() => {
   const queryCache = useQueryCache();
@@ -12,12 +12,14 @@ export const useDeleteNotificationMutation = defineMutation(() => {
     mutation: (id: string) => deleteMyNotification(id),
     onMutate: (id: string) => {
       // optimistic: remove the notification from the "notifications" query
-      const prev = queryCache.getQueryData<{ data: EnrichedNotification[] }>([
+      const prev = queryCache.getQueryData<{ data: Notification[] }>([
         "notifications",
       ]) || {
         data: [],
       };
-      const newData = (prev.data || []).filter((n) => n.id !== id);
+      const newData = (prev.data || []).filter(
+        (n: Notification) => n.id !== id,
+      );
       queryCache.setQueryData(["notifications"], { ...prev, data: newData });
       // cancel ongoing queries
       queryCache.cancelQueries({ key: ["notifications"] });

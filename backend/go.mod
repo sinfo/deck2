@@ -5,6 +5,7 @@ go 1.23.0
 toolchain go1.24.2
 
 require (
+	baliance.com/gooxml v1.0.1
 	github.com/arran4/golang-ical v0.2.7
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/digitalocean/godo v1.19.0
@@ -15,7 +16,9 @@ require (
 	github.com/h2non/filetype v1.0.10
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go v0.0.0-20190523192347-c6c2912aa552
+	github.com/nguyenthenguyen/docx v0.0.0-20230621112118-9c8e795a11db
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/phpdave11/gofpdf v1.4.3
 	github.com/spf13/viper v1.4.0
 	go.mongodb.org/mongo-driver v1.5.1
 	golang.org/x/oauth2 v0.30.0
