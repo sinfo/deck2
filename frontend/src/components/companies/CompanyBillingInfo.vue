@@ -122,8 +122,7 @@ const hasBillingInfo = computed(() => {
 const billingMutation = useCompanyBillingMutation();
 const { mutate: updateBilling, isLoading: isUpdating } = billingMutation;
 
-const permissions = usePermissions();
-const canSeeContract = computed(() => permissions.isCoordinatorOrAdmin);
+const { isCoordinatorOrAdmin: canSeeContract } = usePermissions();
 
 const startEditing = () => {
   isEditing.value = true;

@@ -75,8 +75,7 @@ const hasSigned = ref(props.companyTasks?.contract?.signed ?? false);
 const hasReceiptSent = ref(props.companyTasks?.contract?.receiptSent ?? false);
 const hasPaid = ref(props.companyTasks?.contract?.paid ?? false);
 
-const permissions = usePermissions();
-const canSeeContract = computed(() => permissions.isCoordinatorOrAdmin);
+const { isCoordinatorOrAdmin: canSeeContract } = usePermissions();
 
 watch(
   [hasCreatedContract, hasSentContract, hasSigned, hasReceiptSent, hasPaid],
