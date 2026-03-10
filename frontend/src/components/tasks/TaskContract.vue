@@ -36,7 +36,7 @@
       </div>
 
       <ContractDownload
-        v-if="entityType === 'company'"
+        v-if="entityType === 'company' && canSeeContract"
         :company-id="props.entityId"
       />
     </div>
@@ -56,6 +56,7 @@ import type {
   CompanyTasks,
   CompanyTaskContract,
 } from "@/dto/tasks";
+import { usePermissions } from "@/composables/usePermissions";
 
 const props = defineProps<{
   entityId: string;
@@ -73,6 +74,9 @@ const hasSentContract = ref(props.companyTasks?.contract?.sent ?? false);
 const hasSigned = ref(props.companyTasks?.contract?.signed ?? false);
 const hasReceiptSent = ref(props.companyTasks?.contract?.receiptSent ?? false);
 const hasPaid = ref(props.companyTasks?.contract?.paid ?? false);
+
+const permissions = usePermissions();
+const canSeeContract = computed(() => permissions.isCoordinatorOrAdmin);
 
 watch(
   [hasCreatedContract, hasSentContract, hasSigned, hasReceiptSent, hasPaid],
