@@ -120,7 +120,7 @@
             <div>
               <Select v-model="selectedPackageId">
                 <SelectTrigger>
-                  <SelectValue placeholder="-- Select package --" />
+                  <SelectValue placeholder="Select package" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem
