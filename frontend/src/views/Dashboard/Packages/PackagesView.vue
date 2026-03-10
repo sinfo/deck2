@@ -35,14 +35,14 @@
         <div v-if="isLoading" class="text-muted-foreground">Loading...</div>
         <div v-else>
           <div
-            v-if="filtered.length === 0"
+            v-if="packages.length === 0"
             class="text-sm text-muted-foreground"
           >
             No packages for this event yet.
           </div>
           <div class="grid gap-4">
             <PackageCard
-              v-for="pkg in filtered"
+              v-for="pkg in packages"
               :key="pkg.id"
               :pkg="pkg"
               :event-name="eventName"
@@ -59,30 +59,20 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useEventStore } from "@/stores/event";
-import { usePackagesQuery } from "@/mutations/packages";
+import { useEventPackagesQuery } from "@/mutations/packages";
 import Card from "@/components/ui/card/Card.vue";
 import CardContent from "@/components/ui/card/CardContent.vue";
 import PackageForm from "@/components/packages/PackageForm.vue";
 import PackageCard from "@/components/packages/PackageCard.vue";
-import type { Package } from "@/dto/packages";
 
 const eventStore = useEventStore();
 const eventName = computed(() => eventStore.selectedEvent?.name || "");
 
-const { data: packagesData, refetch, isLoading } = usePackagesQuery();
-
-const filtered = computed(() => {
-  if (!packagesData.value || !eventName.value) return [];
-  return (packagesData.value as Package[]).filter((p) =>
-    String(p.name || "").startsWith(eventName.value),
-  );
-});
+const { data: packages, refetch, isLoading } = useEventPackagesQuery();
 
 const refetchPackages = async () => {
   await refetch();
 };
 
 const onCreated = () => refetchPackages();
-
-// export filtered
 </script>

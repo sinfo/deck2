@@ -84,6 +84,7 @@ export const useCompanyParticipationStatusMutation = defineMutation(() => {
       updateCompanyParticipationStatus(companyId.value!, status),
     onSettled: () => {
       queryCache.invalidateQueries({ key: ["companies"] });
+      queryCache.invalidateQueries({ key: ["company", companyId.value!] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });

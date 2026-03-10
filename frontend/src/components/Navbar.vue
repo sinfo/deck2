@@ -23,21 +23,20 @@ import {
 import { useEventStore } from "@/stores/event";
 import { useAuthStore } from "@/stores/auth";
 import { useRouter } from "vue-router";
-import CompanyOrSpeakerAutocompleteWithDialog from "./CompanyOrSpeakerOrMemberAutocompleteWithDialog.vue";
+import CompanySpeakerMemberAutocompleteWithDialog from "./CompanySpeakerMemberAutocompleteWithDialog.vue";
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
 import type { Member } from "@/dto/members";
 import { useMagicKeys } from "@vueuse/core";
 import Notification from "./navbar/Notification.vue";
+import { usePermissions } from "@/composables/usePermissions";
 
 const isOpen = ref(false);
 const authStore = useAuthStore();
+const { isCoordinatorOrAdmin } = usePermissions();
 
-const showCoordination = computed(() => {
-  const role = authStore.decoded?.role as string | undefined;
-  return role === "COORDINATOR" || role === "ADMIN";
-});
+const showCoordination = computed(() => isCoordinatorOrAdmin.value === true);
 const router = useRouter();
 
 const logout = () => {
@@ -61,7 +60,6 @@ const navigation: NavigationItem[] = [
 ];
 
 const coordNavigation: NavigationItem[] = [
-  { name: "My Team", to: { name: "my-coordination-team" } },
   { name: "Coordination Teams", to: { name: "coordination-teams" } },
   { name: "Packages", to: { name: "event-packages" } },
   { name: "Templates", to: { name: "contract-templates" } },
@@ -152,7 +150,7 @@ watch(shortcutLinux, () => {
           </Select>
         </div>
 
-        <CompanyOrSpeakerAutocompleteWithDialog
+        <CompanySpeakerMemberAutocompleteWithDialog
           :autofocus="showSuggestions"
           :force-show-suggestions="showSuggestions"
           class="hidden md:inline w-full px-3"
@@ -224,7 +222,7 @@ watch(shortcutLinux, () => {
         v-if="isOpen"
         class="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-200 py-4"
       >
-        <CompanyOrSpeakerAutocompleteWithDialog
+        <CompanySpeakerMemberAutocompleteWithDialog
           class="w-full px-3 pb-3"
           placeholder="Search"
           @company-selected="companySelected"

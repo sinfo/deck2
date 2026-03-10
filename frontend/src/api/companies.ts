@@ -151,3 +151,6 @@ export const generateCompanyContract = (
 
 export const updateCompanyTasks = (id: string, tasks: CompanyTasks) =>
   instance.put<Company>(`/companies/${id}/participation/tasks`, { tasks });
+
+export const announceAcceptedCompanies = () =>
+  instance.post<{ announced: number }>("/companies/announce");

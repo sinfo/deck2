@@ -1,2 +1,2 @@
-
-npx --yes commitlint --config frontend/commitlint.config.js --edit "$1"
+cd "$(dirname "$0")/.."  # goes to frontend/
+npx --yes commitlint --config ./commitlint.config.js --edit "$1"

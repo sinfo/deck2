@@ -5,35 +5,11 @@
         <h4 class="font-medium">{{ getEventName(participation.event) }}</h4>
 
         <div class="flex items-center gap-2">
-          <Popover
-            :open="isStatusMenuOpen"
-            @update:open="isStatusMenuOpen = $event"
-          >
-            <PopoverTrigger as-child>
-              <Badge
-                :class="participationStatusColor[selectedStatus]?.background"
-                class="text-xs flex items-center gap-1 cursor-pointer"
-              >
-                {{ humanReadableParticipationStatus[selectedStatus] }}
-                <ChevronDown class="w-3 h-3" />
-              </Badge>
-            </PopoverTrigger>
-            <PopoverContent class="w-56 p-0">
-              <div class="flex flex-col">
-                <button
-                  v-for="(label, value) in humanReadableParticipationStatus"
-                  :key="value"
-                  :class="[
-                    'px-3 py-2 text-sm text-left hover:bg-accent cursor-pointer',
-                    selectedStatus === value && 'bg-accent',
-                  ]"
-                  @click="selectStatus(value as ParticipationStatus)"
-                >
-                  {{ label }}
-                </button>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <ParticipationStatusBadge
+            :status="participation.status"
+            :entity-id="companyId"
+            entity-type="company"
+          />
 
           <Button
             v-if="!isEditing"
@@ -45,18 +21,8 @@
           </Button>
 
           <div v-else class="flex gap-2">
-            <Button
-              size="sm"
-              :disabled="isSaving || isStatusUpdating"
-              @click="saveChanges"
-            >
-              {{
-                isSaving
-                  ? "Saving..."
-                  : isStatusUpdating
-                    ? "Updating..."
-                    : "Save"
-              }}
+            <Button size="sm" :disabled="isSaving" @click="saveChanges">
+              {{ isSaving ? "Saving..." : "Save" }}
             </Button>
             <Button variant="outline" size="sm" @click="cancelEditing"
               >Cancel</Button
@@ -84,13 +50,8 @@
 
           <div v-if="participation.confirmed" class="text-sm">
             <span class="font-medium">Confirmed:</span>
-            <div class="mt-1 text-muted-foreground flex items-center gap-4">
+            <div class="mt-1 text-muted-foreground">
               <span>{{ formatDate(participation.confirmed) }}</span>
-              <span
-                v-if="participation.package && packageName"
-                class="text-xs text-muted-foreground"
-                >· {{ packageName }}</span
-              >
             </div>
           </div>
 
@@ -102,8 +63,19 @@
           </div>
         </div>
 
-        <div v-if="participation.partner" class="flex items-center gap-1">
-          <Badge variant="secondary" class="text-xs">Partner</Badge>
+        <div
+          v-if="participation.partner || packageName"
+          class="flex items-center gap-1"
+        >
+          <Badge
+            v-if="participation.partner"
+            variant="secondary"
+            class="text-xs"
+            >Partner</Badge
+          >
+          <Badge v-if="packageName" variant="outline" class="text-xs">{{
+            packageName
+          }}</Badge>
         </div>
       </div>
 
@@ -125,7 +97,8 @@
               id="confirmed-date"
               v-model="editForm.confirmed"
               type="datetime-local"
-              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              :disabled="!canEditConfirmedDate"
             />
           </div>
 
@@ -198,15 +171,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, computed } from "vue";
 import useToast from "@/lib/toast";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import {
-  useCompanyParticipationMutation,
-  useCompanyParticipationStatusMutation,
-} from "@/mutations/companies";
+import { useCompanyParticipationMutation } from "@/mutations/companies";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -214,22 +184,12 @@ import { Label } from "@/components/ui/label";
 import MemberSelect from "@/components/members/MemberSelect.vue";
 import { useCompanyParticipationPackageMutation } from "@/mutations/companies";
 import { usePackagesQuery, usePackageQuery } from "@/mutations/packages";
+import { usePermissions } from "@/composables/usePermissions";
 import type { Package } from "@/dto/packages";
 import type {
   CompanyParticipation,
   UpdateCompanyParticipationData,
 } from "@/dto/companies";
-import {
-  humanReadableParticipationStatus,
-  type ParticipationStatus,
-  participationStatusColor,
-} from "@/dto";
-import { ChevronDown } from "lucide-vue-next";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -238,6 +198,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Image from "../Image.vue";
+import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
 
 interface Props {
   participation: CompanyParticipation;
@@ -246,15 +207,15 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const { isCoordinatorOrAdmin } = usePermissions();
+const canEditConfirmedDate = computed(() => {
+  return isCoordinatorOrAdmin.value === true;
+});
+
 const isEditing = ref(false);
 const isSaving = ref(false);
-const isStatusMenuOpen = ref(false);
-const isStatusUpdating = ref(false);
-const selectedStatus = ref<ParticipationStatus>(props.participation.status);
 
 const updateMutation = useCompanyParticipationMutation();
-const statusMutation = useCompanyParticipationStatusMutation();
-statusMutation.companyId.value = props.companyId;
 
 const formatToISOString = (date: Date): string => {
   return date.toISOString();
@@ -323,27 +284,9 @@ const { data: membersData } = useQuery({
   query: () => getAllMembers(),
 });
 
-const selectStatus = async (status: ParticipationStatus) => {
-  const previous = selectedStatus.value;
-  selectedStatus.value = status;
-  isStatusMenuOpen.value = false;
-  try {
-    isStatusUpdating.value = true;
-    statusMutation.companyId.value = props.companyId;
-    await statusMutation.mutate(status);
-  } catch (err) {
-    console.error("Failed to update participation status:", err);
-    // revert value on error
-    selectedStatus.value = previous;
-  } finally {
-    isStatusUpdating.value = false;
-  }
-};
-
 const startEditing = () => {
   // entering edit mode for participation
   isEditing.value = true;
-  selectedStatus.value = props.participation.status;
   editForm.member = props.participation.member;
   editForm.partner = props.participation.partner;
   // If no confirmed date exists, set it to current time, otherwise convert existing date
