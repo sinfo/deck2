@@ -603,11 +603,15 @@ const currentMemberId = computed(() => {
   return authStore.member?.id ?? authStore.decoded?.id ?? null;
 });
 
+const isAdmin = computed(() => authStore.decoded?.role === "ADMIN");
+
 const canManageThread = (thread: ThreadWithEntry): boolean => {
+  if (isAdmin.value) return true;
+
   return Boolean(
     thread.entry?.member &&
-    currentMemberId.value &&
-    thread.entry.member === currentMemberId.value,
+      currentMemberId.value &&
+      thread.entry.member === currentMemberId.value,
   );
 };
 

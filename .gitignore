@@ -125,3 +125,9 @@ deck2.sh
 Podfile
 
 backend/.vendor-new/
+
+.env
+**/.env
+.env.*
+**/.env.*
+!**/.env.example
