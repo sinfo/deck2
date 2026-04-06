@@ -462,6 +462,7 @@ import Textarea from "./ui/textarea/Textarea.vue";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
 import { Pencil, Trash2, Mail, RefreshCw } from "lucide-vue-next";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
+import { usePermissions } from "@/composables/usePermissions";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
 import {
   Tooltip,
@@ -507,6 +508,7 @@ const selectedEventId = ref<number | null>(
 );
 const selectedTemplate = ref<TemplateWithVariables>();
 const authStore = useAuthStore();
+const { isAdmin, isCoordinator } = usePermissions();
 
 const editingThreadId = ref<string | null>(null);
 const editingPostId = ref<string | null>(null);
@@ -603,9 +605,8 @@ const currentMemberId = computed(() => {
   return authStore.member?.id ?? authStore.decoded?.id ?? null;
 });
 
-const isAdmin = computed(() => authStore.decoded?.role === "ADMIN");
-
 const canManageThread = (thread: ThreadWithEntry): boolean => {
+  if (isCoordinator.value) return true;
   if (isAdmin.value) return true;
 
   return Boolean(
