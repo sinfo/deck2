@@ -609,10 +609,10 @@ const canManageThread = (thread: ThreadWithEntry): boolean => {
   if (isCoordinator.value) return true;
   if (isAdmin.value) return true;
 
-  return Boolean(
-    thread.entry?.member &&
-      currentMemberId.value &&
-      thread.entry.member === currentMemberId.value,
+  return (
+    thread.entry?.member != null &&
+    currentMemberId.value != null &&
+    thread.entry.member === currentMemberId.value
   );
 };
 
