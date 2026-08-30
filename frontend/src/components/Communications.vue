@@ -307,7 +307,10 @@
             </div>
 
             <!-- Actions -->
-            <div :class="['mt-1 transition-opacity opacity-100']">
+            <div
+              v-if="canManageThread(thread)"
+              :class="['mt-1 transition-opacity opacity-100']"
+            >
               <button
                 class="p-1 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/10 text-muted-foreground hover:opacity-80"
                 title="Edit"
@@ -459,6 +462,7 @@ import Textarea from "./ui/textarea/Textarea.vue";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
 import { Pencil, Trash2, Mail, RefreshCw } from "lucide-vue-next";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
+import { usePermissions } from "@/composables/usePermissions";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
 import {
   Tooltip,
@@ -503,6 +507,8 @@ const selectedEventId = ref<number | null>(
   eventStore.selectedEvent?.id ?? null,
 );
 const selectedTemplate = ref<TemplateWithVariables>();
+const authStore = useAuthStore();
+const { isAdmin, isCoordinator } = usePermissions();
 
 const editingThreadId = ref<string | null>(null);
 const editingPostId = ref<string | null>(null);
@@ -595,8 +601,23 @@ const onMessageInput = () => {
   props.postThreadMutation?.reset?.();
 };
 
+const currentMemberId = computed(() => {
+  return authStore.member?.id ?? authStore.decoded?.id ?? null;
+});
+
+const canManageThread = (thread: ThreadWithEntry): boolean => {
+  if (isCoordinator.value) return true;
+  if (isAdmin.value) return true;
+
+  return (
+    thread.entry?.member != null &&
+    currentMemberId.value != null &&
+    thread.entry.member === currentMemberId.value
+  );
+};
+
 const startEdit = (thread: ThreadWithEntry) => {
-  if (!thread.entry) return;
+  if (!thread.entry || !canManageThread(thread)) return;
 
   editingThreadId.value = thread.id;
   editingPostId.value = thread.entry.id;
@@ -647,7 +668,6 @@ const handleGmailThreadsSave = async (threadIds: string[]) => {
 };
 
 // Gmail sync functionality
-const authStore = useAuthStore();
 const gmailComposable = useGmailMessages();
 const { requestGoogleToken, error: googleAuthError } = useGoogleAuth();
 const isSyncing = ref(false);
@@ -863,6 +883,15 @@ const saveEdit = async () => {
   const text = editText.value.trim();
   if (!id || !text) return;
 
+  const thread = sortedCommunications.value.find(
+    (item) => item.id === editingThreadId.value,
+  );
+
+  if (!thread || !canManageThread(thread)) {
+    cancelEdit();
+    return;
+  }
+
   updatePostMutation.postId.value = id;
   updatePostMutation.text.value = text;
 
@@ -880,7 +909,7 @@ const saveEdit = async () => {
 };
 
 const requestDelete = async (thread: ThreadWithEntry) => {
-  if (!thread.entry) return;
+  if (!thread.entry || !canManageThread(thread)) return;
   const ok = window.confirm(
     "Delete this message? This action cannot be undone.",
   );
