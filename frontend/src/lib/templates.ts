@@ -25,12 +25,12 @@ export const templateHumanReadableNames: Record<EmailTemplate, string> = {
   [EmailTemplate.SPEAKERS_PT]: "Speakers Invitation - Português",
 };
 
-// 3. Set the template paths here
+// 3. Set the template paths here. Templates are served in frontend/public/templates
 export const templatePaths: Record<EmailTemplate, string> = {
-  [EmailTemplate.COMPANIES_EN]: "/companies/33-en.html",
-  [EmailTemplate.COMPANIES_PT]: "/companies/33-pt.html",
-  [EmailTemplate.SPEAKERS_EN]: "/speakers/33-en.html",
-  [EmailTemplate.SPEAKERS_PT]: "/speakers/33-pt.html",
+  [EmailTemplate.COMPANIES_EN]: "/companies/{{.Edition}}-en.html",
+  [EmailTemplate.COMPANIES_PT]: "/companies/{{.Edition}}-pt.html",
+  [EmailTemplate.SPEAKERS_EN]: "/speakers/{{.Edition}}-en.html",
+  [EmailTemplate.SPEAKERS_PT]: "/speakers/{{.Edition}}-pt.html",
 };
 
 // 4. Set the company templates and the speaker templates
@@ -174,8 +174,22 @@ const regex = /{{\.(.*?)}}/g;
 const conditionalRegex =
   /{{if\s+\.(.*?)}}\s*(.*?)\s*(?:{{else}}\s*(.*?)\s*)?{{end}}/gs;
 
-const loadTemplate = async (template: EmailTemplate): Promise<string> => {
-  const path = templatePaths[template];
+const loadTemplate = async (
+  template: EmailTemplate,
+  variables: AnyEmailVariableInput[],
+): Promise<string> => {
+  const edition = variables.find(
+    (v) => v.key == EmailVariableKey.Edition,
+  )?.value;
+
+  if (!edition) {
+    throw new Error("Edition variable is missing");
+  }
+
+  const path = templatePaths[template].replace(
+    "{{.Edition}}",
+    edition.toString(),
+  );
   return fetch(`/templates${path}`).then((r) => r.text());
 };
 
@@ -334,7 +348,7 @@ export const loadTemplateAndReplace = async (
   variables: AnyEmailVariableInput[],
 ) => {
   // Replace all {{.VarName}} variables
-  let content = await loadTemplate(template);
+  let content = await loadTemplate(template, variables);
 
   // First, process conditional blocks
   content = processConditionals(content, variables);
