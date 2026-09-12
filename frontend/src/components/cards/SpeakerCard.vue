@@ -115,9 +115,11 @@
       </div>
 
       <div v-if="speaker.notes" class="space-y-2 text-sm">
-        <div class="flex items-start gap-2">
+        <div class="flex gap-2">
           <span class="text-muted-foreground">Notes:</span>
-          <span class="text-sm whitespace-pre-wrap">{{ speaker.notes }}</span>
+          <span class="min-w-0 flex-1 whitespace-pre-wrap break-words">{{
+            speaker.notes
+          }}</span>
         </div>
       </div>
     </CardContent>
