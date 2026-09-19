@@ -68,6 +68,30 @@
                 <Button
                   variant="outline"
                   size="sm"
+                  :disabled="!selectedEventId"
+                  @click="isAutoLinkModalOpen = true"
+                >
+                  <Zap
+                    :size="16"
+                    :stroke-width="2"
+                    class="mr-1 text-yellow-500"
+                  />
+                  <span>Auto-Link</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  Automatically discover and link Gmail threads for all entities
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="sm"
                   :disabled="
                     !selectedEventId ||
                     currentParticipationGmailThreadIds.length === 0 ||
@@ -406,6 +430,13 @@
     :default-search-query="gmailPickerDefaultQuery"
     @save="handleGmailThreadsSave"
   />
+
+  <!-- Auto-Link Gmail Modal -->
+  <AutoLinkGmailModal
+    v-model:open="isAutoLinkModalOpen"
+    :event-id="selectedEventId || undefined"
+    @complete="onAutoLinkComplete"
+  />
 </template>
 
 <script setup lang="ts">
@@ -457,9 +488,10 @@ import {
 import type { Event } from "@/dto/events";
 import Textarea from "./ui/textarea/Textarea.vue";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
-import { Pencil, Trash2, Mail, RefreshCw } from "lucide-vue-next";
+import { Pencil, Trash2, Mail, RefreshCw, Zap } from "lucide-vue-next";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
+import AutoLinkGmailModal from "./AutoLinkGmailModal.vue";
 import {
   Tooltip,
   TooltipContent,
@@ -510,6 +542,7 @@ const editText = ref("");
 
 // Gmail thread picker state
 const isGmailPickerOpen = ref(false);
+const isAutoLinkModalOpen = ref(false);
 const gmailPickerThreadIds = ref<string[]>([]);
 const gmailPickerDefaultQuery = ref("");
 const queryCache = useQueryCache();
@@ -644,6 +677,12 @@ const handleGmailThreadsSave = async (threadIds: string[]) => {
   } finally {
     gmailPickerThreadIds.value = [];
   }
+};
+
+const onAutoLinkComplete = () => {
+  queryCache.invalidateQueries({
+    key: [`${props.entityType}-communications`, props.entity.id],
+  });
 };
 
 // Gmail sync functionality

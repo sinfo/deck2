@@ -11,6 +11,15 @@
         </div>
         <div class="flex gap-2">
           <Button
+            v-if="authStore.isGoogleAuthenticated"
+            variant="default"
+            class="gap-1.5"
+            @click="isAutoLinkModalOpen = true"
+          >
+            <Zap class="w-4 h-4" />
+            Auto-Link Entities
+          </Button>
+          <Button
             v-if="!authStore.isGoogleAuthenticated"
             :disabled="isSigningIn"
             @click="handleSignIn"
@@ -442,6 +451,12 @@
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <!-- Auto Link Gmail Modal -->
+      <AutoLinkGmailModal
+        v-model:open="isAutoLinkModalOpen"
+        @complete="fetchThreads"
+      />
     </div>
   </div>
 </template>
@@ -518,7 +533,11 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
+  Zap,
 } from "lucide-vue-next";
+import AutoLinkGmailModal from "@/components/AutoLinkGmailModal.vue";
+
+const isAutoLinkModalOpen = ref(false);
 
 const authStore = useAuthStore();
 const eventStore = useEventStore();
