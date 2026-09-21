@@ -9,6 +9,7 @@ type ParticipationStatus string
 const (
 	Suggested       ParticipationStatus = "SUGGESTED"
 	Selected        ParticipationStatus = "SELECTED"
+	NotSelected     ParticipationStatus = "NOT_SELECTED"
 	OnHold          ParticipationStatus = "ON_HOLD"
 	Contacted       ParticipationStatus = "CONTACTED"
 	InConversations ParticipationStatus = "IN_CONVERSATIONS"
@@ -21,27 +22,29 @@ const (
 // Next advances status of participation.
 // This follows a state machine well defined.
 //   SUGGESTED
-//      1 => SELECTED
+//      1 => NOT_SELECTED
 //      2 => ON_HOLD
-//   SELECTED
-//      1 => CONTACTED
+//   NOT_SELECTED
+//      1 => SELECTED
 //   ON_HOLD
 //      1 => SELECTED
+//      2 => IN_CONVERSATIONS
+//   SELECTED
+//      1 => CONTACTED
 //   CONTACTED
 //      1 => IN_CONVERSATIONS
 //      2 => REJECTED
 //      3 => GIVEN_UP
 //   IN_CONVERSATIONS
 //      1 => ACCEPTED
-//      2 => REJECTED
-//      3 => GIVEN_UP
+//      2 => ON_HOLD
 //   ACCEPTED
 //      1 => ANNOUNCED
 func (s *ParticipationStatus) Next(step int) error {
 	switch *s {
 	case Suggested:
 		if step == 1 {
-			*s = Selected
+			*s = NotSelected
 		} else if step == 2 {
 			*s = OnHold
 		} else {
@@ -59,9 +62,20 @@ func (s *ParticipationStatus) Next(step int) error {
 
 		break
 
+	case NotSelected:
+		if step == 1 {
+			*s = Selected
+		} else {
+			return errors.New("Invalid step")
+		}
+
+		break
+
 	case OnHold:
 		if step == 1 {
 			*s = Selected
+		} else if step == 2 {
+			*s = InConversations
 		} else {
 			return errors.New("Invalid step")
 		}
@@ -85,9 +99,7 @@ func (s *ParticipationStatus) Next(step int) error {
 		if step == 1 {
 			*s = Accepted
 		} else if step == 2 {
-			*s = Rejected
-		} else if step == 3 {
-			*s = GivenUp
+			*s = OnHold
 		} else {
 			return errors.New("Invalid step")
 		}
@@ -126,7 +138,7 @@ func (s *ParticipationStatus) ValidSteps() []ValidStep {
 	switch *s {
 	case Suggested:
 		return []ValidStep{
-			ValidStep{Step: 1, Next: Selected},
+			ValidStep{Step: 1, Next: NotSelected},
 			ValidStep{Step: 2, Next: OnHold},
 		}
 
@@ -135,9 +147,15 @@ func (s *ParticipationStatus) ValidSteps() []ValidStep {
 			ValidStep{Step: 1, Next: Contacted},
 		}
 
+	case NotSelected:
+		return []ValidStep{
+			ValidStep{Step: 1, Next: Selected},
+		}
+
 	case OnHold:
 		return []ValidStep{
 			ValidStep{Step: 1, Next: Selected},
+			ValidStep{Step: 2, Next: InConversations},
 		}
 
 	case Contacted:
@@ -150,8 +168,7 @@ func (s *ParticipationStatus) ValidSteps() []ValidStep {
 	case InConversations:
 		return []ValidStep{
 			ValidStep{Step: 1, Next: Accepted},
-			ValidStep{Step: 2, Next: Rejected},
-			ValidStep{Step: 3, Next: GivenUp},
+			ValidStep{Step: 2, Next: OnHold},
 		}
 
 	case Accepted:
@@ -180,6 +197,10 @@ func (s *ParticipationStatus) Parse(status string) error {
 
 	case string(Selected):
 		newStatus = Selected
+		break
+
+	case string(NotSelected):
+		newStatus = NotSelected
 		break
 
 	case string(OnHold):
