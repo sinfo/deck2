@@ -60,7 +60,7 @@
         <!-- Email Section -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <Label class="text-sm font-medium">Email Addresses *</Label>
+            <Label class="text-sm font-medium">Email Addresses</Label>
             <Button
               variant="ghost"
               size="sm"
@@ -364,11 +364,10 @@ watch(
 
 const isValid = computed(() => {
   const hasName = props.withoutName || formData.name?.trim();
-  const hasEmail = formData.contact.mails.some((mail) => mail.mail.trim());
   const hasGender = !!formData.contact.gender;
   const hasLanguage = !!formData.contact.language;
 
-  return hasName && hasEmail && hasGender && hasLanguage;
+  return hasName && hasGender && hasLanguage;
 });
 
 watch(
@@ -385,8 +384,6 @@ const validationMessage = computed(() => {
   if (!props.withoutName && !formData.name?.trim()) return "Name is required";
   if (!formData.contact.gender) return "Gender is required";
   if (!formData.contact.language) return "Language is required";
-  if (!formData.contact.mails.some((mail) => mail.mail.trim()))
-    return "At least one email is required";
   return "";
 });
 
