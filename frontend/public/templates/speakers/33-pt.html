@@ -236,20 +236,16 @@
                   "
                 >
                   <p>
-                    <strong
-                      >Car<b style="color: red">o/a/e</b> {{.Speaker}},</strong
-                    >
+                    <strong>Car{{.SpeakerArticle}} {{.Speaker}},</strong>
                   </p>
                   <p>
-                    Sou <b style="color: red">o/a/e</b> {{.Member}}, um
-                    orgulhoso membro da SINFO. Em nome da equipa organizadora da
-                    SINFO {{.Edition}}, convidamo-l<b style="color: red"
-                      >o/a/e</b
-                    >
-                    a participar como orador<b style="color: red">(a)</b> de uma
-                    palestra no nosso evento. Ficaríamos muito gratos pela
-                    oportunidade de recebê-l<b style="color: red">o/a/e</b> se
-                    aceitar este convite.
+                    Sou {{.MemberArticle}} {{.Member}}, um{{.MemberSuffix}}
+                    orgulhos{{.MemberArticle}} membro da SINFO. Em nome da
+                    equipa organizadora da SINFO {{.Edition}},
+                    convidamo-l{{.SpeakerArticle}} a participar como
+                    orador{{.SpeakerSuffix}} de uma palestra no nosso evento.
+                    Ficaríamos muito gratos pela oportunidade de
+                    recebê-l{{.SpeakerArticle}} se aceitar este convite.
                   </p>
 
                   <p>
@@ -409,9 +405,8 @@
                     {{if .Paragraph}} {{.Paragraph}} {{else}} A maioria dos
                     nossos visitantes são estudantes de Informática ansiosos por
                     começar as suas carreiras e seria com muito prazer que iam
-                    ouvi-l<b style="color: red">o/a</b> falar sobre o seu
-                    percurso profissional e aprender com a sua experiência!
-                    {{end}}
+                    ouvi-l{{.SpeakerArticle}} falar sobre o seu percurso
+                    profissional e aprender com a sua experiência! {{end}}
                   </p>
 
                   <br />

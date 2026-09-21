@@ -16,7 +16,7 @@
 
       <!-- Gender Field -->
       <div class="space-y-2">
-        <Label class="text-sm font-medium">Gender</Label>
+        <Label class="text-sm font-medium">Gender *</Label>
         <ToggleGroup
           v-model="formData.contact.gender"
           type="single"
@@ -38,7 +38,7 @@
 
       <!-- Language Field -->
       <div class="space-y-2">
-        <Label class="text-sm font-medium">Language</Label>
+        <Label class="text-sm font-medium">Language *</Label>
         <ToggleGroup
           v-model="formData.contact.language"
           type="single"
@@ -60,7 +60,7 @@
         <!-- Email Section -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <Label class="text-sm font-medium">Email Addresses *</Label>
+            <Label class="text-sm font-medium">Email Addresses</Label>
             <Button
               variant="ghost"
               size="sm"
@@ -237,6 +237,18 @@
             {{ showMoreSocials ? "- Less" : "+ More" }} social platforms
           </Button>
         </div>
+
+        <!-- Validation Message (Visible in embedded mode) -->
+        <div
+          v-if="withoutAction && !isValid && validationMessage"
+          class="rounded-md bg-destructive/15 p-3 mt-4"
+        >
+          <p
+            class="text-sm font-medium text-destructive flex items-center gap-2"
+          >
+            {{ validationMessage }}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -350,22 +362,28 @@ watch(
   { immediate: true },
 );
 
+const isValid = computed(() => {
+  const hasName = props.withoutName || formData.name?.trim();
+  const hasGender = !!formData.contact.gender;
+  const hasLanguage = !!formData.contact.language;
+
+  return hasName && hasGender && hasLanguage;
+});
+
 watch(
   () => formData,
-  (newData) => emit("updated", newData),
+  (newData) => {
+    if (isValid.value) {
+      emit("updated", newData);
+    }
+  },
   { deep: true, immediate: true },
 );
 
-const isValid = computed(() => {
-  const hasName = props.withoutName || formData.name?.trim();
-  const hasEmail = formData.contact.mails.some((mail) => mail.mail.trim());
-  return hasName && hasEmail;
-});
-
 const validationMessage = computed(() => {
   if (!props.withoutName && !formData.name?.trim()) return "Name is required";
-  if (!formData.contact.mails.some((mail) => mail.mail.trim()))
-    return "At least one email is required";
+  if (!formData.contact.gender) return "Gender is required";
+  if (!formData.contact.language) return "Language is required";
   return "";
 });
 

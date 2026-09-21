@@ -127,7 +127,9 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 	ctx := context.Background()
 
 	contact := bson.M{
-		"phones": []models.ContactPhone{},
+		"gender":   data.Contact.Gender,
+		"language": data.Contact.Language,
+		"phones":   []models.ContactPhone{},
 		"socials": bson.M{
 			"facebook": "",
 			"skype":    "",
