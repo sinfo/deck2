@@ -12,6 +12,7 @@ export interface ImplementsParticipationStatus {
 export type ParticipationStatus =
   | "SUGGESTED"
   | "SELECTED"
+  | "NOT_SELECTED"
   | "ON_HOLD"
   | "CONTACTED"
   | "IN_CONVERSATIONS"
@@ -23,11 +24,12 @@ export const participationNextValues: Record<
   ParticipationStatus,
   ParticipationStatus[]
 > = {
-  SUGGESTED: ["SELECTED", "ON_HOLD"],
+  SUGGESTED: ["NOT_SELECTED", "ON_HOLD"],
+  NOT_SELECTED: ["SELECTED"],
+  ON_HOLD: ["SELECTED", "IN_CONVERSATIONS"],
   SELECTED: ["CONTACTED"],
-  ON_HOLD: ["SELECTED"],
   CONTACTED: ["IN_CONVERSATIONS", "REJECTED", "GIVEN_UP"],
-  IN_CONVERSATIONS: ["ACCEPTED", "REJECTED", "GIVEN_UP"],
+  IN_CONVERSATIONS: ["ACCEPTED", "ON_HOLD"],
   ACCEPTED: ["ANNOUNCED"],
   REJECTED: [],
   GIVEN_UP: [],
@@ -40,6 +42,7 @@ export const humanReadableParticipationStatus: Record<
 > = {
   SUGGESTED: "Suggested",
   SELECTED: "Selected",
+  NOT_SELECTED: "Not Selected",
   ON_HOLD: "On Hold",
   CONTACTED: "Contacted",
   IN_CONVERSATIONS: "In Conversations",
@@ -59,6 +62,7 @@ export const participationStatusColor: Record<
 > = {
   SUGGESTED: { background: "bg-amber-300", ring: "ring-amber-200" }, //
   SELECTED: { background: "bg-violet-400", ring: "ring-violet-500/50" }, //
+  NOT_SELECTED: { background: "bg-stone-300", ring: "ring-stone-400/50" },
   ON_HOLD: { background: "bg-zinc-400", ring: "ring-zinc-500/50" },
   CONTACTED: { background: "bg-orange-300", ring: "ring-orange-300/50" }, //
   IN_CONVERSATIONS: { background: "bg-sky-400", ring: "ring-sky-400/50" }, //
@@ -71,20 +75,22 @@ export const participationStatusColor: Record<
 // Next advances status of participation.
 // This follows a state machine well defined.
 //   SUGGESTED
-//      1 => SELECTED
+//      1 => NOT_SELECTED
 //      2 => ON_HOLD
-//   SELECTED
-//      1 => CONTACTED
+//   NOT_SELECTED
+//      1 => SELECTED
 //   ON_HOLD
 //      1 => SELECTED
+//      2 => IN_CONVERSATIONS
+//   SELECTED
+//      1 => CONTACTED
 //   CONTACTED
 //      1 => IN_CONVERSATIONS
 //      2 => REJECTED
 //      3 => GIVEN_UP
 //   IN_CONVERSATIONS
 //      1 => ACCEPTED
-//      2 => REJECTED
-//      3 => GIVEN_UP
+//      2 => ON_HOLD
 //   ACCEPTED
 //      1 => ANNOUNCED
 export const nextParticipationStatus = (
@@ -93,16 +99,21 @@ export const nextParticipationStatus = (
 ): ParticipationStatus => {
   switch (status) {
     case "SUGGESTED":
-      if (step === 1) return "SELECTED";
+      if (step === 1) return "NOT_SELECTED";
       if (step === 2) return "ON_HOLD";
       break;
 
-    case "SELECTED":
-      if (step === 1) return "CONTACTED";
+    case "NOT_SELECTED":
+      if (step === 1) return "SELECTED";
       break;
 
     case "ON_HOLD":
       if (step === 1) return "SELECTED";
+      if (step === 2) return "IN_CONVERSATIONS";
+      break;
+
+    case "SELECTED":
+      if (step === 1) return "CONTACTED";
       break;
 
     case "CONTACTED":
@@ -113,8 +124,7 @@ export const nextParticipationStatus = (
 
     case "IN_CONVERSATIONS":
       if (step === 1) return "ACCEPTED";
-      if (step === 2) return "REJECTED";
-      if (step === 3) return "GIVEN_UP";
+      if (step === 2) return "ON_HOLD";
       break;
 
     case "ACCEPTED":
