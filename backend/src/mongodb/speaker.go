@@ -139,6 +139,8 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 	}
 
 	if data.Contact != nil {
+		contact["gender"] = data.Contact.Gender
+		contact["language"] = data.Contact.Language
 		contact["phones"] = data.Contact.Phones
 		contact["mails"] = data.Contact.Mails
 		contact["socials"] = formatContactSocials(data.Contact.Socials)

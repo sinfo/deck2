@@ -312,6 +312,8 @@ const createSpeakerAndFinish = async () => {
   try {
     // Filter out empty contacts before submission
     const filteredContact = {
+      gender: contactData.value.gender,
+      language: contactData.value.language,
       mails: contactData.value.mails.filter(
         (mail) => mail.mail && mail.mail.trim().length > 0,
       ),
