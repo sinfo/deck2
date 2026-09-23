@@ -105,7 +105,7 @@
         width: 100% !important;
         border: none;
         text-align: center;
-        background-color : #ffffff;
+        background-color: #ffffff;
       }
 
       /* What it does: Forces elements to resize to the full width of their container. Useful for resizing images beyond their max-width. */
@@ -155,8 +155,7 @@
 </head>
 
 <body yahoo="yahoo">
-  <table cellpadding="0" cellspacing="0" height="100%"
-    style="border-collapse:collapse; border: 4px solid #000032">
+  <table cellpadding="0" cellspacing="0" height="100%" style="border-collapse:collapse; border: 4px solid #000032">
     <tr>
       <td>
         <div style="text-align: center ;width: 100%;">
@@ -164,8 +163,10 @@
           <!-- Visually Hidden Preheader Text : BEGIN -->
           <div
             style="display:none;font-size:1px;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;mso-hide:all;font-family: sans-serif;">
-            Em nome da equipa que organiza a SINFO, ficaríamos muito felizes se aceitasse o nosso convite para fazer uma palestra. 
-            A SINFO é uma organização de estudantes universitários sem fins lucrativos responsável pelo planeamento de um dos 
+            Em nome da equipa que organiza a SINFO, ficaríamos muito felizes se aceitasse o nosso convite para fazer uma
+            palestra.
+            A SINFO é uma organização de estudantes universitários sem fins lucrativos responsável pelo planeamento de
+            um dos
             maiores eventos de tecnologia em Portugal. Trata-se de uma conferência anual que ocorre em Lisboa. </div>
           <!-- Visually Hidden Preheader Text : END -->
 
@@ -173,8 +174,7 @@
           <!-- Email Header : END -->
 
           <!-- Email Body : BEGIN -->
-          <table cellspacing="0" cellpadding="0" width="600"
-            class="email-container">
+          <table cellspacing="0" cellpadding="0" width="600" class="email-container">
 
             <!-- Hero Image, Flush : BEGIN -->
             <tr style="width: 100%;">
@@ -189,22 +189,26 @@
             <!-- 1 Column Text : BEGIN -->
             <tr> </tr>
           </table>
-          <table cellspacing="0" cellpadding="0" width="600"
-            class="email-container">
+          <table cellspacing="0" cellpadding="0" width="600" class="email-container">
             <tr>
               <td
                 style="padding: 40px; text-align: left; font-family: sans-serif; font-size: 13px; mso-height-rule: exactly; line-height: 20px; color: black; ">
-                <p><strong>Car<b style="color: red">o/a/e</b> {{.Speaker}},</strong></p>
-                <p>Sou <b style="color: red">o/a/e</b> {{.MemberName}}, um orgulhoso membro da SINFO. Em nome da equipa organizadora da SINFO {{.Edition}},
-                  convidamo-l<b style="color: red">o/a/e</b> a participar como orador<b style="color: red">(a)</b> de uma palestra no nosso evento. 
-                  Ficaríamos muito gratos pela oportunidade de recebê-l<b style="color: red">o/a/e</b> se aceitar este convite.</p>
+                <p><strong>Car{{.SpeakerArticle}} {{.Speaker}},</strong></p>
+                <p>Sou {{.MemberArticle}} {{.MemberName}}, um orgulhoso membro da SINFO. Em nome da equipa
+                  organizadora da SINFO {{.Edition}},
+                  convidamo-l{{.SpeakerArticle}} a participar como orador{{.SpeakerSuffix}} de
+                  uma palestra no nosso evento.
+                  Ficaríamos muito gratos pela oportunidade de recebê-l{{.SpeakerArticle}} se aceitar este
+                  convite.</p>
 
-                <p>A SINFO é uma organização sem fins lucrativos, responsável por um dos maiores eventos de tecnologia em Portugal 
-                  organizado por alunos universitários. Trata-se de uma conferência anual realizada na maravilhosa cidade de Lisboa.</p>
+                <p>A SINFO é uma organização sem fins lucrativos, responsável por um dos maiores eventos de tecnologia
+                  em Portugal
+                  organizado por alunos universitários. Trata-se de uma conferência anual realizada na maravilhosa
+                  cidade de Lisboa.</p>
 
-                <p>O nosso evento tem sido organizado por estudantes universitários apaixonados por tecnologia e 
+                <p>O nosso evento tem sido organizado por estudantes universitários apaixonados por tecnologia e
                   inovação desde 1992, celebrando a sua {{.Edition}}ª edição este ano.</p>
-                  
+
                 <!-- Button : Begin -->
 
                 <!-- Button : END -->
@@ -266,13 +270,15 @@
               <td
                 style="padding: 40px; text-align: left; font-family: sans-serif; font-size: 13px; mso-height-rule: exactly; line-height: 20px; color: black;">
 
-                <p>Seria com muito gosto que lhe daríamos as boas-vindas à nossa cidade! Apesar de sermos um evento universitário 
+                <p>Seria com muito gosto que lhe daríamos as boas-vindas à nossa cidade! Apesar de sermos um evento
+                  universitário
                   sem fins lucrativos, estamos totalmente preparados para cobrir as despesas de viagem e alojamento.</p>
 
-                <p>{{if .Paragraph}} {{.Paragraph}} 
-                   {{else}} A maioria dos nossos visitantes são estudantes de Informática ansiosos por 
-                   começar as suas carreiras e seria com muito prazer que iam ouvi-l<b style="color: red">o/a</b> falar sobre o seu percurso profissional e aprender com a sua experiência! {{end}}</p>
-                  
+                <p>{{if .Paragraph}} {{.Paragraph}}
+                  {{else}} A maioria dos nossos visitantes são estudantes de Informática ansiosos por
+                  começar as suas carreiras e seria com muito prazer que iam ouvi-l{{.SpeakerArticle}} falar
+                  sobre o seu percurso profissional e aprender com a sua experiência! {{end}}</p>
+
                 <br>
                 <br>
                 <!-- Button : Begin -->
@@ -299,8 +305,7 @@
               </td>
             </tr>
           </table>
-          <table cellspacing="0" cellpadding="0" width="600"
-            class="email-container">
+          <table cellspacing="0" cellpadding="0" width="600" class="email-container">
 
             <td
               style="padding-top: 20px; text-align: center; font-family: sans-serif; font-size: 12.5px; mso-height-rule: exactly; line-height: 20px; color: black;">
@@ -317,13 +322,13 @@
               <td valign="top" style="text-align: center; padding: 5px; padding-bottom: 30px;">
                 <table cellspacing="0" cellpadding="0" width="100%" style="border:none;">
                   <tr>
-                    <td width="25%" class="stack-column-center"><a href="https://youtu.be/8LhlLrrYG7Y?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
-                        target="_blank">
+                    <td width="25%" class="stack-column-center"><a
+                        href="https://youtu.be/8LhlLrrYG7Y?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY" target="_blank">
                         <table cellspacing="0" cellpadding="0" style="border:none;">
                           <tr>
                             <td style="padding: 10px; text-align: center; "><img
                                 src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/690b36da16af63cb350c71e9"
-                                style="border-radius: 50%; border:none;" width="125" height="125" alt="manuel" 
+                                style="border-radius: 50%; border:none;" width="125" height="125" alt="manuel"
                                 class="fluid"></td>
                           </tr>
                           <tr>
@@ -336,22 +341,22 @@
                         </table>
                       </a></td>
                     <td width="25%" class="stack-column-center">
-                        <table cellspacing="0" cellpadding="0" style="border:none;">
-                          <tr>
-                            <td style="padding: 10px; text-align: center; "><img
-                                src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/69161ee37fef9d13bee61991"
-                                style="border-radius: 50%; border:none;" width="125" height="125" alt="cody"
-                                class="fluid"></td>
-                          </tr>
-                          <tr>
-                            <td
-                              style="font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; line-height: 20px; color: #555555; padding: 0 10px 10px; text-align: center;"
-                              class="center-on-narrow"><strong>Jose M. Alvarez</strong><br>
-                              NVIDIA
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
+                      <table cellspacing="0" cellpadding="0" style="border:none;">
+                        <tr>
+                          <td style="padding: 10px; text-align: center; "><img
+                              src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/69161ee37fef9d13bee61991"
+                              style="border-radius: 50%; border:none;" width="125" height="125" alt="cody"
+                              class="fluid"></td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; line-height: 20px; color: #555555; padding: 0 10px 10px; text-align: center;"
+                            class="center-on-narrow"><strong>Jose M. Alvarez</strong><br>
+                            NVIDIA
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
                     <td width="25%" class="stack-column-center"><a
                         href="https://youtu.be/6cfqQONk2no?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY" target="_blank">
                         <table cellspacing="0" cellpadding="0" style="border:none">
@@ -370,7 +375,8 @@
                           </tr>
                         </table>
                       </a></td>
-                      <td width="25%" class="stack-column-center"><a href="https://youtu.be/03m8UZt0Bjs?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY" target="_blank">
+                    <td width="25%" class="stack-column-center"><a
+                        href="https://youtu.be/03m8UZt0Bjs?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY" target="_blank">
                         <table cellspacing="0" cellpadding="0" style="border:none;">
                           <tr>
                             <td style="padding: 10px; text-align: center; "><img
@@ -409,13 +415,13 @@
                           </tr>
                         </table>
                       </a></td>
-                    <td width="25%" class="stack-column-center"><a href="https://youtu.be/xZjjMCqh224?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
-                        target="_blank">
+                    <td width="25%" class="stack-column-center"><a
+                        href="https://youtu.be/xZjjMCqh224?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY" target="_blank">
                         <table cellspacing="0" cellpadding="0" style="border:none;">
                           <tr>
                             <td style="padding: 10px; text-align: center; "><img
                                 src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/697b916dbbab45879708d93e"
-                                style="border-radius: 50%; border:none;" width="125" height="125" alt="roger" 
+                                style="border-radius: 50%; border:none;" width="125" height="125" alt="roger"
                                 class="fluid"></td>
                           </tr>
                           <tr>
@@ -427,8 +433,8 @@
                           </tr>
                         </table>
                       </a></td>
-                    <td width="25%" class="stack-column-center"><a href="https://youtu.be/Jpgw8ssJXFQ?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
-                      target="_blank">
+                    <td width="25%" class="stack-column-center"><a
+                        href="https://youtu.be/Jpgw8ssJXFQ?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY" target="_blank">
                         <table cellspacing="0" cellpadding="0" style="border:none;">
                           <tr>
                             <td style="padding: 10px; text-align: center; "><img
@@ -446,22 +452,23 @@
                         </table>
                       </a></td>
                     <td width="25%" class="stack-column-center">
-                        <table cellspacing="0" cellpadding="0" style="border:none;">
-                          <tr>
-                            <td style="padding: 10px; text-align: center; "><img
-                                src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/687e591aaf604f46163262e3"
-                                style="border-radius: 50%; border:none;" width="125" height="125" alt="benjamin"
-                                class="fluid"></td>
-                          </tr>
-                          <tr>
-                            <td
-                              style="font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; line-height: 20px; color: #555555; padding: 0 10px 10px; text-align: center;"
-                              class="center-on-narrow"><strong>Zoe Sams</strong><br>
-                              Apple<br>
-                            </td>
-                          </tr>
-                        </table>
-                      </a></td>
+                      <table cellspacing="0" cellpadding="0" style="border:none;">
+                        <tr>
+                          <td style="padding: 10px; text-align: center; "><img
+                              src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/687e591aaf604f46163262e3"
+                              style="border-radius: 50%; border:none;" width="125" height="125" alt="benjamin"
+                              class="fluid"></td>
+                        </tr>
+                        <tr>
+                          <td
+                            style="font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; line-height: 20px; color: #555555; padding: 0 10px 10px; text-align: center;"
+                            class="center-on-narrow"><strong>Zoe Sams</strong><br>
+                            Apple<br>
+                          </td>
+                        </tr>
+                      </table>
+                      </a>
+                    </td>
                   </tr>
                 </table>
               </td>
