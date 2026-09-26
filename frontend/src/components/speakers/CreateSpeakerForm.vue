@@ -145,7 +145,10 @@
           Back
         </Button>
         <div class="flex gap-2">
-          <Button :disabled="isLoading" @click="createSpeakerAndFinish">
+          <Button
+            :disabled="isLoading || (step3Submitted && !isStep3Valid)"
+            @click="createSpeakerAndFinish"
+          >
             <span>Create Speaker</span>
           </Button>
         </div>
