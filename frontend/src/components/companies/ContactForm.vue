@@ -244,7 +244,7 @@
 
         <!-- Validation Message -->
         <div
-          v-if="withoutAction && !isValid && validationMessage"
+          v-if="withoutAction && showErrors && validationMessage"
           class="rounded-md bg-destructive/15 p-3 mt-4"
         >
           <p
@@ -313,6 +313,7 @@ interface Props {
   initialData?: CompanyRep;
   withoutName?: boolean;
   withoutAction?: boolean;
+  showErrors?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {

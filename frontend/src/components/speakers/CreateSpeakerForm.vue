@@ -135,6 +135,7 @@
         without-action
         :is-loading="isLoading"
         mode="create"
+        :show-errors="step3Submitted"
         @updated="(newData) => (contactData = newData.contact!)"
       />
 
@@ -144,10 +145,7 @@
           Back
         </Button>
         <div class="flex gap-2">
-          <Button
-            :disabled="isLoading || !isStep3Valid"
-            @click="createSpeakerAndFinish"
-          >
+          <Button :disabled="isLoading" @click="createSpeakerAndFinish">
             <span>Create Speaker</span>
           </Button>
         </div>
@@ -261,6 +259,8 @@ const isStep1Valid = computed(() => {
   );
 });
 
+const step3Submitted = ref(false);
+
 const isStep3Valid = computed(() => {
   const filledEmails = contactData.value.mails
     .map((mail) => mail.mail.trim())
@@ -286,6 +286,7 @@ const nextStep = () => {
 const previousStep = () => {
   if (currentStep.value === 3) {
     currentStep.value = 2;
+    step3Submitted.value = false;
   } else if (currentStep.value === 2) {
     currentStep.value = 1;
   }
@@ -321,6 +322,8 @@ const validateStep1 = () => {
 
 // Speaker creation
 const createSpeakerAndFinish = async () => {
+  step3Submitted.value = true;
+  if (!isStep3Valid.value) return;
   if (!validateStep1()) return;
 
   isLoading.value = true;
