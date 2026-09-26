@@ -60,7 +60,7 @@
         <!-- Email Section -->
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <Label class="text-sm font-medium">Email Addresses</Label>
+            <Label class="text-sm font-medium">Email Addresses *</Label>
             <Button
               variant="ghost"
               size="sm"
@@ -84,6 +84,10 @@
                 type="email"
                 :disabled="isLoading"
                 class="flex-1"
+                :class="{
+                  'border-destructive':
+                    email.mail.trim() && !isEmailValid(email.mail.trim()),
+                }"
               />
               <div class="flex items-center gap-2">
                 <label
@@ -238,7 +242,7 @@
           </Button>
         </div>
 
-        <!-- Validation Message (Visible in embedded mode) -->
+        <!-- Validation Message -->
         <div
           v-if="withoutAction && !isValid && validationMessage"
           class="rounded-md bg-destructive/15 p-3 mt-4"
@@ -296,6 +300,7 @@ import { computed, reactive, ref, watch } from "vue";
 import type { CreateCompanyRepData, CompanyRep } from "@/dto/companies";
 import type { ContactSocials } from "@/dto/contacts";
 import { Gender, Language } from "@/dto/contacts";
+import { isEmailValid } from "@/lib/utils";
 import Button from "../ui/button/Button.vue";
 import Input from "../ui/input/Input.vue";
 import Label from "../ui/label/Label.vue";
@@ -362,12 +367,18 @@ watch(
   { immediate: true },
 );
 
+const filledEmails = computed(() =>
+  formData.contact.mails.map((mail) => mail.mail.trim()).filter(Boolean),
+);
+
 const isValid = computed(() => {
   const hasName = props.withoutName || formData.name?.trim();
+  const hasEmail = filledEmails.value.length > 0;
+  const hasValidEmails = filledEmails.value.every(isEmailValid);
   const hasGender = !!formData.contact.gender;
   const hasLanguage = !!formData.contact.language;
 
-  return hasName && hasGender && hasLanguage;
+  return hasName && hasEmail && hasValidEmails && hasGender && hasLanguage;
 });
 
 watch(
@@ -380,6 +391,8 @@ const validationMessage = computed(() => {
   if (!props.withoutName && !formData.name?.trim()) return "Name is required";
   if (!formData.contact.gender) return "Gender is required";
   if (!formData.contact.language) return "Language is required";
+  if (filledEmails.value.length === 0) return "At least one email is required";
+  if (!filledEmails.value.every(isEmailValid)) return "Invalid email format";
   return "";
 });
 

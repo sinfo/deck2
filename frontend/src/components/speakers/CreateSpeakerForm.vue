@@ -181,6 +181,7 @@ import {
 } from "@/api/speakers";
 import type { Speaker, CreateSpeakerData } from "@/dto/speakers";
 import type { CreateContactData } from "@/dto/contacts";
+import { isEmailValid } from "@/lib/utils";
 import { UserIcon, ImageIcon, ContactIcon } from "lucide-vue-next";
 
 interface Props {
@@ -261,7 +262,16 @@ const isStep1Valid = computed(() => {
 });
 
 const isStep3Valid = computed(() => {
-  return !!contactData.value.gender && !!contactData.value.language;
+  const filledEmails = contactData.value.mails
+    .map((mail) => mail.mail.trim())
+    .filter(Boolean);
+
+  return (
+    filledEmails.length > 0 &&
+    filledEmails.every(isEmailValid) &&
+    !!contactData.value.gender &&
+    !!contactData.value.language
+  );
 });
 
 // Step navigation
