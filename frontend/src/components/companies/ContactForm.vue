@@ -389,11 +389,14 @@ watch(
 );
 
 const validationMessage = computed(() => {
-  if (!props.withoutName && !formData.name?.trim()) return "Name is required";
-  if (!formData.contact.gender) return "Gender is required";
-  if (!formData.contact.language) return "Language is required";
-  if (filledEmails.value.length === 0) return "At least one email is required";
-  if (!filledEmails.value.every(isEmailValid)) return "Invalid email format";
+  if (!props.withoutName && !formData.name?.trim())
+    return "You need to specify a name.";
+  if (!formData.contact.gender) return "You need to specify a gender.";
+  if (!formData.contact.language) return "You need to specify a language.";
+  if (filledEmails.value.length === 0)
+    return "Please attach at least one email address.";
+  if (!filledEmails.value.every(isEmailValid))
+    return "The email attached has an invalid format.";
   return "";
 });
 
