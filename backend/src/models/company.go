@@ -120,6 +120,84 @@ type Company struct {
 
 	// Contact is an _id of Contact (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
+
+	// Relationships with other companies (acquisitions, mergers, rebrands).
+	// Stored on both sides: the related company holds the inverse relationship.
+	Relationships []CompanyRelationship `json:"relationships,omitempty" bson:"relationships,omitempty"`
+}
+
+// CompanyRelationshipType describes how a company relates to another one.
+type CompanyRelationshipType string
+
+const (
+	// SubsidiaryOf means this company is owned by the related company.
+	SubsidiaryOf CompanyRelationshipType = "SUBSIDIARY_OF"
+	// ParentOf means this company owns the related company.
+	ParentOf CompanyRelationshipType = "PARENT_OF"
+	// MergedInto means this company no longer exists separately and is now part of the related company.
+	MergedInto CompanyRelationshipType = "MERGED_INTO"
+	// Absorbed means the related company was merged into this company.
+	Absorbed CompanyRelationshipType = "ABSORBED"
+	// RebrandedTo means this company is now known as the related company.
+	RebrandedTo CompanyRelationshipType = "REBRANDED_TO"
+	// RebrandedFrom means this company was previously known as the related company.
+	RebrandedFrom CompanyRelationshipType = "REBRANDED_FROM"
+)
+
+var companyRelationshipInverses = map[CompanyRelationshipType]CompanyRelationshipType{
+	SubsidiaryOf:  ParentOf,
+	ParentOf:      SubsidiaryOf,
+	MergedInto:    Absorbed,
+	Absorbed:      MergedInto,
+	RebrandedTo:   RebrandedFrom,
+	RebrandedFrom: RebrandedTo,
+}
+
+// IsValid checks if the relationship type is a known one.
+func (t CompanyRelationshipType) IsValid() bool {
+	_, ok := companyRelationshipInverses[t]
+	return ok
+}
+
+// Inverse returns the relationship type as seen from the related company.
+func (t CompanyRelationshipType) Inverse() CompanyRelationshipType {
+	return companyRelationshipInverses[t]
+}
+
+// PointsUp is true when the relationship goes from the owned/old company
+// to the owning/new one (SUBSIDIARY_OF, MERGED_INTO, REBRANDED_TO).
+func (t CompanyRelationshipType) PointsUp() bool {
+	return t == SubsidiaryOf || t == MergedInto || t == RebrandedTo
+}
+
+// CompanyRelationship links a company to another one.
+type CompanyRelationship struct {
+	Type CompanyRelationshipType `json:"type" bson:"type"`
+
+	// Company is the related company's _id (see models.Company).
+	Company primitive.ObjectID `json:"company" bson:"company"`
+
+	// When the acquisition, merger or rebrand happened.
+	Since *time.Time `json:"since,omitempty" bson:"since,omitempty"`
+
+	Notes string `json:"notes,omitempty" bson:"notes,omitempty"`
+}
+
+// RelatedCompany is a CompanyRelationship resolved with the related company's name and image.
+type RelatedCompany struct {
+	Type CompanyRelationshipType `json:"type"`
+
+	// Company is the related company's _id (see models.Company).
+	Company primitive.ObjectID `json:"company"`
+
+	Name string `json:"name"`
+
+	// Related company's image (internal, or public as fallback).
+	Image string `json:"img,omitempty"`
+
+	Since *time.Time `json:"since,omitempty"`
+
+	Notes string `json:"notes,omitempty"`
 }
 
 // CompanyParticipationPublic stores a company's participation info to be shown to everyone publicly.
