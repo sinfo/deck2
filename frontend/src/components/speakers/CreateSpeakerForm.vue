@@ -135,6 +135,7 @@
         without-action
         :is-loading="isLoading"
         mode="create"
+        :show-errors="step3Submitted"
         @updated="(newData) => (contactData = newData.contact!)"
       />
 
@@ -144,7 +145,10 @@
           Back
         </Button>
         <div class="flex gap-2">
-          <Button :disabled="isLoading" @click="createSpeakerAndFinish">
+          <Button
+            :disabled="isLoading || (step3Submitted && !isStep3Valid)"
+            @click="createSpeakerAndFinish"
+          >
             <span>Create Speaker</span>
           </Button>
         </div>
@@ -178,6 +182,7 @@ import {
 } from "@/api/speakers";
 import type { Speaker, CreateSpeakerData } from "@/dto/speakers";
 import type { CreateContactData } from "@/dto/contacts";
+import { isEmailValid } from "@/lib/utils";
 import { UserIcon, ImageIcon, ContactIcon } from "lucide-vue-next";
 
 interface Props {
@@ -257,6 +262,21 @@ const isStep1Valid = computed(() => {
   );
 });
 
+const step3Submitted = ref(false);
+
+const isStep3Valid = computed(() => {
+  const filledEmails = contactData.value.mails
+    .map((mail) => mail.mail.trim())
+    .filter(Boolean);
+
+  return (
+    filledEmails.length > 0 &&
+    filledEmails.every(isEmailValid) &&
+    !!contactData.value.gender &&
+    !!contactData.value.language
+  );
+});
+
 // Step navigation
 const nextStep = () => {
   if (currentStep.value === 1 && validateStep1()) {
@@ -269,6 +289,7 @@ const nextStep = () => {
 const previousStep = () => {
   if (currentStep.value === 3) {
     currentStep.value = 2;
+    step3Submitted.value = false;
   } else if (currentStep.value === 2) {
     currentStep.value = 1;
   }
@@ -304,6 +325,8 @@ const validateStep1 = () => {
 
 // Speaker creation
 const createSpeakerAndFinish = async () => {
+  step3Submitted.value = true;
+  if (!isStep3Valid.value) return;
   if (!validateStep1()) return;
 
   isLoading.value = true;
@@ -319,6 +342,8 @@ const createSpeakerAndFinish = async () => {
         (phone) => phone.phone && phone.phone.trim().length > 0,
       ),
       socials: contactData.value.socials || {},
+      gender: contactData.value.gender,
+      language: contactData.value.language,
     };
 
     const createData: CreateSpeakerData = {

@@ -16,7 +16,7 @@
 
       <!-- Gender Field -->
       <div class="space-y-2">
-        <Label class="text-sm font-medium">Gender</Label>
+        <Label class="text-sm font-medium">Gender *</Label>
         <ToggleGroup
           v-model="formData.contact.gender"
           type="single"
@@ -38,7 +38,7 @@
 
       <!-- Language Field -->
       <div class="space-y-2">
-        <Label class="text-sm font-medium">Language</Label>
+        <Label class="text-sm font-medium">Language *</Label>
         <ToggleGroup
           v-model="formData.contact.language"
           type="single"
@@ -84,6 +84,10 @@
                 type="email"
                 :disabled="isLoading"
                 class="flex-1"
+                :class="{
+                  'border-destructive':
+                    email.mail.trim() && !isEmailValid(email.mail.trim()),
+                }"
               />
               <div class="flex items-center gap-2">
                 <label
@@ -237,6 +241,18 @@
             {{ showMoreSocials ? "- Less" : "+ More" }} social platforms
           </Button>
         </div>
+
+        <!-- Validation Message -->
+        <div
+          v-if="withoutAction && showErrors && validationMessage"
+          class="rounded-md bg-destructive/15 p-3 mt-4"
+        >
+          <p
+            class="text-sm font-medium text-destructive flex items-center gap-2"
+          >
+            {{ validationMessage }}
+          </p>
+        </div>
       </div>
     </div>
 
@@ -284,6 +300,7 @@ import { computed, reactive, ref, watch } from "vue";
 import type { CreateCompanyRepData, CompanyRep } from "@/dto/companies";
 import type { ContactSocials } from "@/dto/contacts";
 import { Gender, Language } from "@/dto/contacts";
+import { isEmailValid } from "@/lib/utils";
 import Button from "../ui/button/Button.vue";
 import Input from "../ui/input/Input.vue";
 import Label from "../ui/label/Label.vue";
@@ -296,6 +313,7 @@ interface Props {
   initialData?: CompanyRep;
   withoutName?: boolean;
   withoutAction?: boolean;
+  showErrors?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -350,22 +368,35 @@ watch(
   { immediate: true },
 );
 
+const filledEmails = computed(() =>
+  formData.contact.mails.map((mail) => mail.mail.trim()).filter(Boolean),
+);
+
+const isValid = computed(() => {
+  const hasName = props.withoutName || formData.name?.trim();
+  const hasEmail = filledEmails.value.length > 0;
+  const hasValidEmails = filledEmails.value.every(isEmailValid);
+  const hasGender = !!formData.contact.gender;
+  const hasLanguage = !!formData.contact.language;
+
+  return hasName && hasEmail && hasValidEmails && hasGender && hasLanguage;
+});
+
 watch(
   () => formData,
   (newData) => emit("updated", newData),
   { deep: true, immediate: true },
 );
 
-const isValid = computed(() => {
-  const hasName = props.withoutName || formData.name?.trim();
-  const hasEmail = formData.contact.mails.some((mail) => mail.mail.trim());
-  return hasName && hasEmail;
-});
-
 const validationMessage = computed(() => {
-  if (!props.withoutName && !formData.name?.trim()) return "Name is required";
-  if (!formData.contact.mails.some((mail) => mail.mail.trim()))
-    return "At least one email is required";
+  if (!props.withoutName && !formData.name?.trim())
+    return "You need to specify a name.";
+  if (!formData.contact.gender) return "You need to specify a gender.";
+  if (!formData.contact.language) return "You need to specify a language.";
+  if (filledEmails.value.length === 0)
+    return "Please attach at least one email address.";
+  if (!filledEmails.value.every(isEmailValid))
+    return "The email attached has an invalid format.";
   return "";
 });
 
