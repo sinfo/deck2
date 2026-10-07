@@ -59,6 +59,10 @@
           @cancel="cancelEditing"
           @image-selected="handleImageSelected"
         />
+        <CompanyRelationshipsEditor
+          :company-id="company.id"
+          class="mt-6 border-t pt-6"
+        />
       </div>
 
       <!-- Display Mode -->
@@ -92,6 +96,8 @@
     </CardHeader>
 
     <CardContent v-if="!isEditing" class="space-y-3">
+      <CompanyRelationships :company-id="company.id" />
+
       <div v-if="company.description" class="relative">
         <CardDescription
           :class="[
@@ -162,6 +168,8 @@ import Badge from "../ui/badge/Badge.vue";
 import Button from "../ui/button/Button.vue";
 import Image from "../Image.vue";
 import CompanyInfoForm from "../companies/CompanyInfoForm.vue";
+import CompanyRelationships from "../companies/CompanyRelationships.vue";
+import CompanyRelationshipsEditor from "../companies/CompanyRelationshipsEditor.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";

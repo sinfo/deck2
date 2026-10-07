@@ -1,12 +1,15 @@
 import { instance } from ".";
 import type {
+  AddCompanyRelationshipData,
   AddParticipationData,
   AllCompaniesFilter,
   Company,
   CompanyPublic,
+  CompanyRelationshipType,
   CompanyRep,
   CreateCompanyData,
   CreateCompanyRepData,
+  RelatedCompany,
   UpdateCompanyData,
   UpdateCompanyParticipationData,
 } from "@/dto/companies";
@@ -97,6 +100,23 @@ export const uploadCompanyPublicImage = (id: string, data: FormData) =>
 
 export const deleteCompany = (id: string) =>
   instance.delete<Company>(`/companies/${id}`);
+
+export const getCompanyRelationships = (id: string) =>
+  instance.get<RelatedCompany[]>(`/companies/${id}/relationships`);
+
+export const addCompanyRelationship = (
+  id: string,
+  data: AddCompanyRelationshipData,
+) => instance.post<Company>(`/companies/${id}/relationships`, data);
+
+export const removeCompanyRelationship = (
+  id: string,
+  targetId: string,
+  type: CompanyRelationshipType,
+) =>
+  instance.delete<Company>(`/companies/${id}/relationships/${targetId}`, {
+    params: { type },
+  });
 
 export interface GenerateCompanyContractData {
   language: string;

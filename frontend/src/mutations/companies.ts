@@ -10,6 +10,9 @@ import {
   uploadCompanyPublicImage,
   updateRepresentativeOrder,
   updateCompanyTasks,
+  getCompanyRelationships,
+  addCompanyRelationship,
+  removeCompanyRelationship,
 } from "@/api/companies";
 import type { ParticipationStatus } from "@/dto";
 import type {
@@ -17,6 +20,8 @@ import type {
   UpdateCompanyParticipationData,
   AddParticipationData,
   CompanyBillingInfo,
+  AddCompanyRelationshipData,
+  CompanyRelationshipType,
 } from "@/dto/companies";
 import type { CompanyTasks } from "@/dto/tasks";
 import {
@@ -27,8 +32,13 @@ import {
 } from "@/dto/threads";
 import { useAuthStore } from "@/stores/auth";
 import { useEventStore } from "@/stores/event";
-import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
-import { ref } from "vue";
+import {
+  defineMutation,
+  useMutation,
+  useQuery,
+  useQueryCache,
+} from "@pinia/colada";
+import { ref, toValue, type MaybeRefOrGetter } from "vue";
 
 export const useCompanyParticipationMutation = defineMutation(() => {
   const companyId = ref<string>();
@@ -400,5 +410,72 @@ export const useCompanyTasksMutation = defineMutation(() => {
     mutateAsync,
     ...mutation,
     companyId,
+  };
+});
+
+export const useCompanyRelationshipsQuery = (
+  companyId: MaybeRefOrGetter<string | undefined>,
+) =>
+  useQuery({
+    key: () => ["company-relationships", toValue(companyId) ?? ""],
+    enabled: () => !!toValue(companyId),
+    query: async () =>
+      (await getCompanyRelationships(toValue(companyId)!)).data,
+  });
+
+// Relationships are stored on both companies, so both sides must be refreshed.
+const invalidateCompanyRelationships = (
+  queryCache: ReturnType<typeof useQueryCache>,
+  companyIds: string[],
+) => {
+  for (const id of companyIds) {
+    queryCache.invalidateQueries({ key: ["company", id] });
+    queryCache.invalidateQueries({ key: ["company-relationships", id] });
+  }
+  queryCache.invalidateQueries({ key: ["companies"] });
+};
+
+export const useAddCompanyRelationshipMutation = defineMutation(() => {
+  const queryCache = useQueryCache();
+
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars: { companyId: string; data: AddCompanyRelationshipData }) =>
+      addCompanyRelationship(vars.companyId, vars.data),
+    onSettled: (_data, _error, vars) => {
+      invalidateCompanyRelationships(queryCache, [
+        vars.companyId,
+        vars.data.company,
+      ]);
+    },
+  });
+
+  return {
+    mutate,
+    mutateAsync,
+    ...mutation,
+  };
+});
+
+export const useRemoveCompanyRelationshipMutation = defineMutation(() => {
+  const queryCache = useQueryCache();
+
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars: {
+      companyId: string;
+      targetId: string;
+      type: CompanyRelationshipType;
+    }) => removeCompanyRelationship(vars.companyId, vars.targetId, vars.type),
+    onSettled: (_data, _error, vars) => {
+      invalidateCompanyRelationships(queryCache, [
+        vars.companyId,
+        vars.targetId,
+      ]);
+    },
+  });
+
+  return {
+    mutate,
+    mutateAsync,
+    ...mutation,
   };
 });

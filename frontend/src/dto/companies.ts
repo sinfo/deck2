@@ -52,6 +52,48 @@ export interface Company {
   billingInfo?: CompanyBillingInfo;
   participations: CompanyParticipation[];
   contact: ObjectID;
+  relationships?: CompanyRelationship[];
+}
+
+export type CompanyRelationshipType =
+  | "SUBSIDIARY_OF"
+  | "PARENT_OF"
+  | "MERGED_INTO"
+  | "ABSORBED"
+  | "REBRANDED_TO"
+  | "REBRANDED_FROM";
+
+// Label of each relationship type, as seen from the company that holds it.
+export const companyRelationshipLabels: Record<
+  CompanyRelationshipType,
+  string
+> = {
+  SUBSIDIARY_OF: "Part of",
+  PARENT_OF: "Owns",
+  MERGED_INTO: "Merged into",
+  ABSORBED: "Absorbed",
+  REBRANDED_TO: "Now known as",
+  REBRANDED_FROM: "Formerly known as",
+};
+
+export interface CompanyRelationship {
+  type: CompanyRelationshipType;
+  company: ObjectID;
+  since?: string;
+  notes?: string;
+}
+
+// A CompanyRelationship resolved with the related company's name and image.
+export interface RelatedCompany extends CompanyRelationship {
+  name: string;
+  img?: string;
+}
+
+export interface AddCompanyRelationshipData {
+  type: CompanyRelationshipType;
+  company: ObjectID;
+  since?: string;
+  notes?: string;
 }
 
 export interface CompanyParticipationPublic {
