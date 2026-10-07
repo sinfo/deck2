@@ -184,6 +184,9 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/contract/docx", authCoordinator(generateCompanyContractDocx)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/tasks", authMember(updateCompanyTasks)).Methods("PUT")
+	companyRouter.HandleFunc("/{id}/relationships", authMember(getCompanyRelationships)).Methods("GET")
+	companyRouter.HandleFunc("/{id}/relationships", authMember(addCompanyRelationship)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/relationships/{targetID}", authMember(removeCompanyRelationship)).Methods("DELETE")
 
 	// speaker handlers
 	speakerRouter := r.PathPrefix("/speakers").Subrouter()

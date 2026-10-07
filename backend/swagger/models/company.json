@@ -27,6 +27,12 @@
         "linkedin": {
             "type": "string"
         },
+        "relationships": {
+            "type": "array",
+            "items": {
+                "$ref": "./company-relationship.json"
+            }
+        },
         "employers": {
             "type": "array",
             "items": {

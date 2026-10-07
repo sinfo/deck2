@@ -342,6 +342,12 @@
     "/companies/{id}/employer/{rep}": {
       "$ref": "./companies-id-employer-rep.json"
     },
+    "/companies/{id}/relationships": {
+      "$ref": "./companies-id-relationships.json"
+    },
+    "/companies/{id}/relationships/{targetID}": {
+      "$ref": "./companies-id-relationships-targetid.json"
+    },
     "/companyReps": {
       "$ref": "./companyReps.json"
     },
