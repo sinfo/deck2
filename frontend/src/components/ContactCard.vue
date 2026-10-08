@@ -18,6 +18,12 @@
           <!-- Name and badges -->
           <div v-if="contactName">
             <h3 class="font-semibold text-base">{{ contactName }}</h3>
+            <p
+              v-if="contactRole"
+              class="text-sm text-muted-foreground break-words"
+            >
+              {{ contactRole }}
+            </p>
             <div
               v-if="contact.gender || contact.language"
               class="mt-1 flex gap-2"
@@ -60,6 +66,7 @@
                     :initial-data="{
                       id: contact.id,
                       name: contactName || '',
+                      role: contactRole,
                       contact: contact,
                     }"
                     :is-loading="isSaving"
@@ -241,6 +248,7 @@ import { ClipboardIcon, CheckIcon } from "lucide-vue-next";
 interface Props {
   contact?: Contact;
   contactName?: string;
+  contactRole?: string;
   canEdit?: boolean;
   canDelete?: boolean;
   entityId?: string;
@@ -255,6 +263,7 @@ const props = withDefaults(defineProps<Props>(), {
   isDeleting: false,
   contact: undefined,
   contactName: undefined,
+  contactRole: undefined,
   entityId: undefined,
   entityType: undefined,
   repId: undefined,
@@ -322,6 +331,7 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
     try {
       await updateCompanyRepresentative(props.repId, {
         name: data.name,
+        role: data.role,
         contact: data.contact,
       });
 

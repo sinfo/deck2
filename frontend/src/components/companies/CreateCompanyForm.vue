@@ -164,6 +164,18 @@
               </Button>
             </div>
 
+            <div class="space-y-2">
+              <Label :for="`rep-role-${index}`" class="text-sm font-medium">
+                Work role
+              </Label>
+              <Input
+                :id="`rep-role-${index}`"
+                v-model="rep.role"
+                placeholder="Enter representative role"
+                :disabled="isLoading"
+              />
+            </div>
+
             <!-- Email Contacts -->
             <div class="space-y-2">
               <Label class="text-sm font-medium">Email Addresses</Label>
@@ -475,6 +487,7 @@ const createCompanyAndFinish = async () => {
         ) {
           await createCompanyRepresentative(companyId, {
             name: rep.name || "Unnamed Representative",
+            role: rep.role?.trim(),
             contact: filteredContact,
           });
         }

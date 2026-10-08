@@ -93,11 +93,13 @@ export interface AddParticipationData {
 export interface CompanyRep {
   id: ObjectID;
   name: string;
+  role?: string;
   contact: Contact;
 }
 
 export interface CreateCompanyRepData {
   name?: string;
+  role?: string;
   contact?: CreateContactData;
 }
 

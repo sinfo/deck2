@@ -7,6 +7,10 @@
         "name": {
             "type": "string"
         },
+        "role": {
+            "type": "string",
+            "description": "Optional work role within the company"
+        },
         "contact": {
             "type": "string"
         }

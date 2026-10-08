@@ -1060,6 +1060,7 @@ func getCompanyEmployers(w http.ResponseWriter, r *http.Request) {
 		repWithContact := &models.CompanyRepWithContact{
 			ID:      rep.ID,
 			Name:    rep.Name,
+			Role:    rep.Role,
 			Contact: contact,
 		}
 

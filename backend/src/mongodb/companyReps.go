@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
@@ -30,13 +31,16 @@ type GetCompanyRepOptions struct {
 // CreateCompanyRepData contains data needed to create a rep
 type CreateCompanyRepData struct {
 	Name    *string            `json:"name" bson:"name"`
+	Role    *string            `json:"role,omitempty" bson:"role,omitempty"`
 	Contact *CreateContactData `json:"contact" bson:"contact"`
 }
 
 // ParseBody fills a CreateCompanyRepData
 func (ccrp *CreateCompanyRepData) ParseBody(body io.Reader) error {
 
-	json.NewDecoder(body).Decode(ccrp)
+	if err := json.NewDecoder(body).Decode(ccrp); err != nil {
+		return err
+	}
 
 	if ccrp.Name == nil || len(*ccrp.Name) == 0 {
 		return errors.New("Invalid name")
@@ -96,6 +100,9 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 	ctx := context.Background()
 
 	dataQuery := bson.M{"name": data.Name}
+	if data.Role != nil {
+		dataQuery["role"] = strings.TrimSpace(*data.Role)
+	}
 
 	if data.Contact != nil {
 		contact, err := Contacts.CreateContact(*data.Contact)
@@ -141,6 +148,10 @@ func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCom
 
 	setDoc := bson.M{
 		"name": data.Name,
+	}
+
+	if data.Role != nil {
+		setDoc["role"] = strings.TrimSpace(*data.Role)
 	}
 
 	if data.Contact != nil {

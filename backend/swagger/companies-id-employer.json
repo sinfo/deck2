@@ -40,6 +40,10 @@
                         "name": {
                             "type": "string"
                         },
+                        "role": {
+                            "type": "string",
+                            "description": "Work role within the company"
+                        },
                         "contact": {
                             "type": "object",
                             "required": [

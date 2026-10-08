@@ -78,8 +78,10 @@ func TestUpdateCompanyRep(t *testing.T) {
 	ctx := context.Background()
 	defer mongodb.CompanyReps.Collection.Drop(ctx)
 
-	rep1, err := mongodb.CompanyReps.CreateCompanyRep(mongodb.CreateCompanyRepData{Name: &Name1})
+	role := "Talent Acquisition Manager"
+	rep1, err := mongodb.CompanyReps.CreateCompanyRep(mongodb.CreateCompanyRepData{Name: &Name1, Role: &role})
 	assert.NilError(t, err)
+	assert.Equal(t, rep1.Role, role)
 
 	ucrp := &mongodb.CreateCompanyRepData{
 		Name: &Name2,
@@ -98,4 +100,20 @@ func TestUpdateCompanyRep(t *testing.T) {
 
 	assert.Equal(t, rep.Name, Name2)
 	assert.Equal(t, rep.ID, rep1.ID)
+	assert.Equal(t, rep.Role, role)
+
+	for _, role := range []string{"Head of HR", ""} {
+		ucrp.Role = &role
+		b, err = json.Marshal(ucrp)
+		assert.NilError(t, err)
+		res, err = executeRequest("PUT", "/companyReps/"+rep1.ID.Hex(), bytes.NewBuffer(b))
+		assert.NilError(t, err)
+		assert.Equal(t, res.Code, http.StatusOK)
+		rep = models.CompanyRep{}
+		assert.NilError(t, json.NewDecoder(res.Body).Decode(&rep))
+		assert.Equal(t, rep.Role, role)
+		stored, err := mongodb.CompanyReps.GetCompanyRep(rep1.ID)
+		assert.NilError(t, err)
+		assert.Equal(t, stored.Role, role)
+	}
 }

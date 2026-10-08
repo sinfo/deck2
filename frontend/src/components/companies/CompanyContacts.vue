@@ -137,6 +137,7 @@
             <ContactCard
               :contact="rep.contact"
               :contact-name="rep.name"
+              :contact-role="rep.role"
               can-edit
               can-delete
               :entity-id="companyId"
