@@ -19,6 +19,7 @@ export const useGoogleAuth = () => {
           .initTokenClient({
             client_id: env.GOOGLE_CLIENT_ID,
             scope: env.GOOGLE_SCOPE,
+            prompt: "select_account",
             callback: async (response) => {
               try {
                 await handleGoogleCallback(response);
@@ -38,7 +39,7 @@ export const useGoogleAuth = () => {
               resolve(false);
             },
           })
-          .requestAccessToken();
+          .requestAccessToken({ prompt: "select_account" });
       });
     });
   };
@@ -80,6 +81,7 @@ export const useGoogleAuth = () => {
           .initTokenClient({
             client_id: env.GOOGLE_CLIENT_ID,
             scope: env.GOOGLE_SCOPE,
+            prompt: "select_account",
             callback: async (response) => {
               try {
                 const expiresIn = response.expires_in
@@ -104,7 +106,7 @@ export const useGoogleAuth = () => {
               resolve(false);
             },
           })
-          .requestAccessToken();
+          .requestAccessToken({ prompt: "select_account" });
       });
     });
   };

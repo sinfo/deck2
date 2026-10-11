@@ -14,10 +14,12 @@
             v-if="authStore.isGoogleAuthenticated"
             variant="default"
             class="gap-1.5"
-            @click="isAutoLinkModalOpen = true"
+            :disabled="isAutoLinking"
+            @click="handleAutoLinkEntities"
           >
-            <Zap class="w-4 h-4" />
-            Auto-Link Entities
+            <RefreshCw v-if="isAutoLinking" class="w-4 h-4 animate-spin" />
+            <Zap v-else class="w-4 h-4" />
+            {{ isAutoLinking ? "Auto-Linking..." : "Auto-Link Entities" }}
           </Button>
           <Button
             v-if="!authStore.isGoogleAuthenticated"
@@ -451,12 +453,6 @@
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <!-- Auto Link Gmail Modal -->
-      <AutoLinkGmailModal
-        v-model:open="isAutoLinkModalOpen"
-        @complete="fetchThreads"
-      />
     </div>
   </div>
 </template>
@@ -535,14 +531,48 @@ import {
   EyeOff,
   Zap,
 } from "lucide-vue-next";
-import AutoLinkGmailModal from "@/components/AutoLinkGmailModal.vue";
-
-const isAutoLinkModalOpen = ref(false);
+import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
+import { useToast } from "@/lib/toast";
 
 const authStore = useAuthStore();
 const eventStore = useEventStore();
 const router = useRouter();
+const { toast } = useToast();
+const { isAutoLinking, autoLinkEventEntities } = useAutoLinkGmail();
 const { signInWithGoogle, isSigningIn, requestGoogleToken } = useGoogleAuth();
+
+const handleAutoLinkEntities = async () => {
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) {
+    toast.warning({
+      title: "No Edition Selected",
+      description: "Please select an event edition before auto-linking.",
+    });
+    return;
+  }
+
+  toast.info({
+    title: "Auto-Linking",
+    description:
+      "Scanning your Gmail for company and speaker threads in the background...",
+  });
+
+  try {
+    const results = await autoLinkEventEntities(eventId);
+    const newlyLinked = results.filter((r) => r.status === "SUCCESS").length;
+    toast.success({
+      title: "Auto-Link Completed",
+      description: `Linked ${newlyLinked} new thread(s).`,
+    });
+    await fetchThreads();
+  } catch (err) {
+    console.error("Auto-link error:", err);
+    toast.error({
+      title: "Auto-Link Error",
+      description: err instanceof Error ? err.message : "Failed to auto-link",
+    });
+  }
+};
 const {
   listThreads,
   getThreads,

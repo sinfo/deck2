@@ -70,6 +70,9 @@ type Thread struct {
 	// GmailMessageId is the ID of the Gmail message this thread was synced from.
 	// This is used to prevent duplicate syncs.
 	GmailMessageId string `json:"gmailMessageId,omitempty" bson:"gmailMessageId,omitempty"`
+
+	// GmailThreadId is the ID of the Gmail thread this message belongs to.
+	GmailThreadId string `json:"gmailThreadId,omitempty" bson:"gmailThreadId,omitempty"`
 }
 
 type ThreadWithEntry struct {
@@ -97,4 +100,10 @@ type ThreadWithEntry struct {
 	// REVIEWED => thread is posted, but some changed must be made before it's ready to be approved.
 	// PENDING => thread is posted and is waiting for the coordination's approval/review.
 	Status ThreadStatus `json:"status" bson:"status"`
+
+	// GmailMessageId is the ID of the Gmail message this thread was synced from.
+	GmailMessageId string `json:"gmailMessageId,omitempty" bson:"gmailMessageId,omitempty"`
+
+	// GmailThreadId is the ID of the Gmail thread this message belongs to.
+	GmailThreadId string `json:"gmailThreadId,omitempty" bson:"gmailThreadId,omitempty"`
 }

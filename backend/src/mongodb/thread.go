@@ -27,6 +27,7 @@ type CreateThreadData struct {
 	Meeting        *primitive.ObjectID
 	Kind           models.ThreadKind
 	GmailMessageId string
+	GmailThreadId  string
 	Posted         *time.Time
 }
 
@@ -76,6 +77,10 @@ func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error
 
 	if data.GmailMessageId != "" {
 		query["gmailMessageId"] = data.GmailMessageId
+	}
+
+	if data.GmailThreadId != "" {
+		query["gmailThreadId"] = data.GmailThreadId
 	}
 
 	insertResult, err := t.Collection.InsertOne(ctx, query)

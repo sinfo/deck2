@@ -15,17 +15,15 @@ import {
   updateSpeakerGmailThreadIds,
   syncSpeakerGmailMessages,
 } from "@/api/speakers";
+import { getMyResponsibilities } from "@/api/me";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
 
 export type EntityAutoLinkStatus =
-  | "IDLE"
-  | "PROCESSING"
   | "SUCCESS"
   | "ALREADY_LINKED"
   | "NOT_FOUND"
-  | "ERROR"
-  | "MANUALLY_LINKED";
+  | "ERROR";
 
 export interface EntityLinkResult {
   entityId: string;
@@ -39,19 +37,30 @@ export interface EntityLinkResult {
   searchQueryUsed?: string;
 }
 
+interface EntityProcessConfig {
+  id: string;
+  name: string;
+  type: "company" | "speaker";
+  existingThreads: string[];
+  fetchEmails: () => Promise<string[]>;
+  updateThreadIds: (ids: string[]) => Promise<unknown>;
+  syncMessages: (messages: GmailMessageData[]) => Promise<unknown>;
+}
+
 export const useAutoLinkGmail = () => {
   const authStore = useAuthStore();
   const { requestGoogleToken } = useGoogleAuth();
   const gmailComposable = useGmailMessages();
 
   const isAutoLinking = ref(false);
+  const hasScanned = ref(false);
   const progressPercent = ref(0);
   const currentProcessingEntity = ref<string>("");
   const results = ref<EntityLinkResult[]>([]);
   const error = ref<string | null>(null);
 
   /**
-   * Helper function to convert message HTML/Text body cleanly
+   * Helper function to convert message HTML/Text body cleanly and strip quotes
    */
   const cleanMessageBody = (body: string): string => {
     if (!body) return "";
@@ -66,7 +75,48 @@ export const useAutoLinkGmail = () => {
       });
       text = doc.body.textContent || "";
     }
-    return text
+
+    // Normalize multi-line quote headers (e.g. "On Fri, 16 Jan 2026 at 09:40, Name <\nemail@example.com> wrote:")
+    const normalizedBody = text.replace(
+      /^(On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2},\s+[^<]+)<\s*\n\s*([^>]+@[^>]+)>\s*wrote:/gim,
+      "$1<$2> wrote:",
+    );
+
+    // Remove common email quote markers
+    const lines = normalizedBody.split("\n");
+    const cleanedLines: string[] = [];
+    let foundQuoteStart = false;
+
+    for (const line of lines) {
+      if (
+        line.match(/^On\s+.+\s+wrote:?\s*$/i) ||
+        line.match(/^On\s+\w{3},?\s+\w{3}\s+\d{1,2},?\s+\d{4}/i) ||
+        line.match(/^On\s+\w{3},?\s+\d{1,2}\s+\w{3}/i) ||
+        line.match(/^On\s+\d{1,2}\s+\w{3}\s+\d{4}/i) ||
+        line.match(
+          /^On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2}/i,
+        ) ||
+        line.match(/wrote:\s*$/) ||
+        line.match(/^>/) ||
+        line.match(/^-{3,}\s*Original Message\s*-{3,}$/i) ||
+        line.match(/^_{3,}$/) ||
+        line.match(/^From:.*Sent:.*To:/i) ||
+        line.match(/^-{2,}\s*Forwarded message\s*-{2,}$/i) ||
+        line.match(/<[^>]+@[^>]+>\s*wrote:?\s*$/i) ||
+        line.match(/^[^>]*<\s*$/) ||
+        line.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+>\s*wrote:?\s*$/i)
+      ) {
+        foundQuoteStart = true;
+      }
+
+      if (!foundQuoteStart) {
+        cleanedLines.push(line);
+      }
+    }
+
+    const result = cleanedLines.length > 0 ? cleanedLines.join("\n") : text;
+
+    return result
       .replace(/\r\n/g, "\n")
       .replace(/\n{3,}/g, "\n\n")
       .replace(/[ \t]+/g, " ")
@@ -76,11 +126,11 @@ export const useAutoLinkGmail = () => {
   };
 
   /**
-   * Extract clean sender name from From header
+   * Format email address cleanly, preserving both name and email (e.g. "Ana Silva <ana@company.com>")
    */
-  const extractEmailName = (from: string): string => {
-    const match = from.match(/^"?([^"<]+)"?\s*<[^>]+>$/);
-    return match ? match[1].trim() : from;
+  const formatEmailAddress = (addr: string): string => {
+    if (!addr) return "";
+    return addr.replace(/"/g, "").trim();
   };
 
   /**
@@ -89,6 +139,12 @@ export const useAutoLinkGmail = () => {
   const fetchMessagesForThreads = async (
     threadIds: string[],
   ): Promise<GmailMessageData[]> => {
+    if (!threadIds || threadIds.length === 0) return [];
+    if (!authStore.isGoogleAuthenticated) {
+      const authed = await requestGoogleToken();
+      if (!authed) return [];
+    }
+
     const allMessages: GmailMessageData[] = [];
     const userEmail = authStore.member?.sinfoid
       ? `${authStore.member.sinfoid}@sinfo.org`
@@ -130,16 +186,17 @@ export const useAutoLinkGmail = () => {
           gmailComposable.getMessageBody(msg, false) || msg.snippet || "";
         body = cleanMessageBody(body);
 
-        const isOutgoing =
+        const isOutgoing = Boolean(
           from.toLowerCase().includes("@sinfo.org") ||
-          (userEmail && from.toLowerCase().includes(userEmail.toLowerCase()));
+            (userEmail && from.toLowerCase().includes(userEmail.toLowerCase())),
+        );
 
         allMessages.push({
           messageId: msg.id,
           threadId: msg.threadId,
           subject,
-          from: extractEmailName(from),
-          to: extractEmailName(to),
+          from: formatEmailAddress(from),
+          to: formatEmailAddress(to),
           date: isoDate,
           body,
           isOutgoing,
@@ -155,7 +212,7 @@ export const useAutoLinkGmail = () => {
    */
   const autoLinkEventEntities = async (
     eventId: number,
-    options: { forceReScan?: boolean } = {},
+    options: { forceReScan?: boolean; onlyMyResponsibilities?: boolean } = {},
   ): Promise<EntityLinkResult[]> => {
     if (!authStore.isGoogleAuthenticated) {
       const authed = await requestGoogleToken();
@@ -166,79 +223,86 @@ export const useAutoLinkGmail = () => {
     }
 
     isAutoLinking.value = true;
+    hasScanned.value = false;
     error.value = null;
     progressPercent.value = 0;
     results.value = [];
 
     try {
-      // 1. Fetch companies and speakers participating in this event
-      const [companiesRes, speakersRes] = await Promise.all([
-        getAllCompanies({ event: eventId }),
-        getAllSpeakers({ event: eventId }),
-      ]);
+      let companies: Company[] = [];
+      let speakers: Speaker[] = [];
 
-      const companies: Company[] = companiesRes.data || [];
-      const speakers: Speaker[] = speakersRes.data || [];
+      const onlyMy = options.onlyMyResponsibilities !== false;
+      if (onlyMy) {
+        try {
+          const myResp = await getMyResponsibilities({ event: eventId });
+          companies = myResp.data?.companies || [];
+          speakers = myResp.data?.speakers || [];
+        } catch (err) {
+          console.error("Failed to fetch my responsibilities:", err);
+          error.value =
+            err instanceof Error
+              ? err.message
+              : "Failed to fetch assigned companies and speakers";
+          return [];
+        }
+      } else {
+        const [companiesRes, speakersRes] = await Promise.all([
+          getAllCompanies({ event: eventId }),
+          getAllSpeakers({ event: eventId }),
+        ]);
+        companies = companiesRes.data || [];
+        speakers = speakersRes.data || [];
+      }
 
       const totalEntities = companies.length + speakers.length;
       if (totalEntities === 0) {
-        isAutoLinking.value = false;
         return [];
       }
 
       let processedCount = 0;
 
-      // 2. Process Companies
-      for (const company of companies) {
-        currentProcessingEntity.value = company.name;
+      const processEntity = async (target: EntityProcessConfig) => {
+        currentProcessingEntity.value = target.name;
         processedCount++;
         progressPercent.value = Math.round(
           (processedCount / totalEntities) * 100,
         );
 
-        const participation = company.participations?.find(
-          (p) => p.event === eventId,
-        );
-        const existingThreads = participation?.gmailThreadIds || [];
+        const existingThreads = target.existingThreads;
 
         if (existingThreads.length > 0 && !options.forceReScan) {
+          try {
+            const messagesToSync =
+              await fetchMessagesForThreads(existingThreads);
+            if (messagesToSync.length > 0) {
+              await target.syncMessages(messagesToSync);
+            }
+          } catch (syncErr) {
+            console.error(
+              `Failed to sync existing messages for ${target.type} ${target.name}:`,
+              syncErr,
+            );
+          }
+
           results.value.push({
-            entityId: company.id,
-            entityName: company.name,
-            entityType: "company",
+            entityId: target.id,
+            entityName: target.name,
+            entityType: target.type,
             status: "ALREADY_LINKED",
             linkedThreadsCount: existingThreads.length,
             newlyLinkedCount: 0,
             threadIds: existingThreads,
-            searchQueryUsed: company.name,
+            searchQueryUsed: target.name,
           });
-          continue;
+          return;
         }
 
-        // Collect email addresses from company reps
-        const emails: string[] = [];
-        try {
-          const repsRes = await getCompanyRepresentatives(company.id);
-          const reps = repsRes.data || [];
-          for (const rep of reps) {
-            if (rep.contact?.mails) {
-              for (const m of rep.contact.mails) {
-                if (m.mail?.trim()) emails.push(m.mail.trim());
-              }
-            }
-          }
-        } catch {
-          // Ignore error fetching reps
-        }
-
-        // Build query
-        let query = "";
-        if (emails.length > 0) {
-          const emailQueries = emails.map((e) => `from:${e} OR to:${e}`);
-          query = emailQueries.join(" OR ");
-        } else {
-          query = `"${company.name}"`;
-        }
+        const emails = await target.fetchEmails();
+        const query =
+          emails.length > 0
+            ? emails.map((e) => `from:${e} OR to:${e}`).join(" OR ")
+            : `"${target.name}"`;
 
         try {
           const threadListRes = await gmailComposable.listThreads({
@@ -255,52 +319,51 @@ export const useAutoLinkGmail = () => {
 
           if (matchedThreadIds.length === 0) {
             results.value.push({
-              entityId: company.id,
-              entityName: company.name,
-              entityType: "company",
+              entityId: target.id,
+              entityName: target.name,
+              entityType: target.type,
               status: "NOT_FOUND",
               linkedThreadsCount: 0,
               newlyLinkedCount: 0,
               threadIds: [],
               searchQueryUsed: query,
             });
-          } else {
-            // Combine with existing
-            const newThreadIds = Array.from(
-              new Set([...existingThreads, ...matchedThreadIds]),
-            );
-            const newlyAdded = newThreadIds.filter(
-              (id) => !existingThreads.includes(id),
-            );
-
-            // Update DB
-            await updateCompanyGmailThreadIds(company.id, newThreadIds);
-
-            // Sync messages
-            if (newThreadIds.length > 0) {
-              const messagesToSync =
-                await fetchMessagesForThreads(newThreadIds);
-              if (messagesToSync.length > 0) {
-                await syncCompanyGmailMessages(company.id, messagesToSync);
-              }
-            }
-
-            results.value.push({
-              entityId: company.id,
-              entityName: company.name,
-              entityType: "company",
-              status: "SUCCESS",
-              linkedThreadsCount: newThreadIds.length,
-              newlyLinkedCount: newlyAdded.length,
-              threadIds: newThreadIds,
-              searchQueryUsed: query,
-            });
+            return;
           }
+
+          const newThreadIds = Array.from(
+            new Set([...existingThreads, ...matchedThreadIds]),
+          );
+          const newlyAdded = newThreadIds.filter(
+            (id) => !existingThreads.includes(id),
+          );
+
+          if (newlyAdded.length > 0) {
+            await target.updateThreadIds(newThreadIds);
+          }
+
+          if (newThreadIds.length > 0) {
+            const messagesToSync = await fetchMessagesForThreads(newThreadIds);
+            if (messagesToSync.length > 0) {
+              await target.syncMessages(messagesToSync);
+            }
+          }
+
+          results.value.push({
+            entityId: target.id,
+            entityName: target.name,
+            entityType: target.type,
+            status: "SUCCESS",
+            linkedThreadsCount: newThreadIds.length,
+            newlyLinkedCount: newlyAdded.length,
+            threadIds: newThreadIds,
+            searchQueryUsed: query,
+          });
         } catch (err) {
           results.value.push({
-            entityId: company.id,
-            entityName: company.name,
-            entityType: "company",
+            entityId: target.id,
+            entityName: target.name,
+            entityType: target.type,
             status: "ERROR",
             linkedThreadsCount: existingThreads.length,
             newlyLinkedCount: 0,
@@ -310,124 +373,66 @@ export const useAutoLinkGmail = () => {
             searchQueryUsed: query,
           });
         }
+      };
+
+      for (const company of companies) {
+        await processEntity({
+          id: company.id,
+          name: company.name,
+          type: "company",
+          existingThreads:
+            company.participations?.find((p) => p.event === eventId)
+              ?.gmailThreadIds || [],
+          fetchEmails: async () => {
+            try {
+              const repsRes = await getCompanyRepresentatives(company.id);
+              const reps = repsRes.data || [];
+              const emails: string[] = [];
+              for (const rep of reps) {
+                if (rep.contact?.mails) {
+                  for (const m of rep.contact.mails) {
+                    if (m.mail?.trim()) emails.push(m.mail.trim());
+                  }
+                }
+              }
+              return emails;
+            } catch {
+              return [];
+            }
+          },
+          updateThreadIds: (ids) =>
+            updateCompanyGmailThreadIds(company.id, ids),
+          syncMessages: (msgs) => syncCompanyGmailMessages(company.id, msgs),
+        });
       }
 
-      // 3. Process Speakers
       for (const speaker of speakers) {
-        currentProcessingEntity.value = speaker.name;
-        processedCount++;
-        progressPercent.value = Math.round(
-          (processedCount / totalEntities) * 100,
-        );
-
-        const participation = speaker.participations?.find(
-          (p) => p.event === eventId,
-        );
-        const existingThreads = participation?.gmailThreadIds || [];
-
-        if (existingThreads.length > 0 && !options.forceReScan) {
-          results.value.push({
-            entityId: speaker.id,
-            entityName: speaker.name,
-            entityType: "speaker",
-            status: "ALREADY_LINKED",
-            linkedThreadsCount: existingThreads.length,
-            newlyLinkedCount: 0,
-            threadIds: existingThreads,
-            searchQueryUsed: speaker.name,
-          });
-          continue;
-        }
-
-        // Fetch detailed contact info for speaker
-        const emails: string[] = [];
-        try {
-          const speakerDetailRes = await getSpeakerById(speaker.id);
-          const contactObj = speakerDetailRes.data?.contactObject;
-          if (contactObj?.mails) {
-            for (const m of contactObj.mails) {
-              if (m.mail?.trim()) emails.push(m.mail.trim());
-            }
-          }
-        } catch {
-          // Ignore error
-        }
-
-        let query = "";
-        if (emails.length > 0) {
-          const emailQueries = emails.map((e) => `from:${e} OR to:${e}`);
-          query = emailQueries.join(" OR ");
-        } else {
-          query = `"${speaker.name}"`;
-        }
-
-        try {
-          const threadListRes = await gmailComposable.listThreads({
-            q: query,
-            maxResults: 10,
-          });
-
-          if (gmailComposable.needsReauth.value) {
-            await requestGoogleToken();
-          }
-
-          const matchedThreads = threadListRes?.threads || [];
-          const matchedThreadIds = matchedThreads.map((t) => t.id);
-
-          if (matchedThreadIds.length === 0) {
-            results.value.push({
-              entityId: speaker.id,
-              entityName: speaker.name,
-              entityType: "speaker",
-              status: "NOT_FOUND",
-              linkedThreadsCount: 0,
-              newlyLinkedCount: 0,
-              threadIds: [],
-              searchQueryUsed: query,
-            });
-          } else {
-            const newThreadIds = Array.from(
-              new Set([...existingThreads, ...matchedThreadIds]),
-            );
-            const newlyAdded = newThreadIds.filter(
-              (id) => !existingThreads.includes(id),
-            );
-
-            await updateSpeakerGmailThreadIds(speaker.id, newThreadIds);
-
-            if (newThreadIds.length > 0) {
-              const messagesToSync =
-                await fetchMessagesForThreads(newThreadIds);
-              if (messagesToSync.length > 0) {
-                await syncSpeakerGmailMessages(speaker.id, messagesToSync);
+        await processEntity({
+          id: speaker.id,
+          name: speaker.name,
+          type: "speaker",
+          existingThreads:
+            speaker.participations?.find((p) => p.event === eventId)
+              ?.gmailThreadIds || [],
+          fetchEmails: async () => {
+            try {
+              const speakerDetailRes = await getSpeakerById(speaker.id);
+              const contactObj = speakerDetailRes.data?.contactObject;
+              const emails: string[] = [];
+              if (contactObj?.mails) {
+                for (const m of contactObj.mails) {
+                  if (m.mail?.trim()) emails.push(m.mail.trim());
+                }
               }
+              return emails;
+            } catch {
+              return [];
             }
-
-            results.value.push({
-              entityId: speaker.id,
-              entityName: speaker.name,
-              entityType: "speaker",
-              status: "SUCCESS",
-              linkedThreadsCount: newThreadIds.length,
-              newlyLinkedCount: newlyAdded.length,
-              threadIds: newThreadIds,
-              searchQueryUsed: query,
-            });
-          }
-        } catch (err) {
-          results.value.push({
-            entityId: speaker.id,
-            entityName: speaker.name,
-            entityType: "speaker",
-            status: "ERROR",
-            linkedThreadsCount: existingThreads.length,
-            newlyLinkedCount: 0,
-            threadIds: existingThreads,
-            errorMessage:
-              err instanceof Error ? err.message : "Failed to search Gmail",
-            searchQueryUsed: query,
-          });
-        }
+          },
+          updateThreadIds: (ids) =>
+            updateSpeakerGmailThreadIds(speaker.id, ids),
+          syncMessages: (msgs) => syncSpeakerGmailMessages(speaker.id, msgs),
+        });
       }
 
       return results.value;
@@ -439,28 +444,18 @@ export const useAutoLinkGmail = () => {
       return results.value;
     } finally {
       isAutoLinking.value = false;
-    }
-  };
-
-  /**
-   * Mark an entity as manually linked after user manually links it in GmailThreadPicker
-   */
-  const markAsManuallyLinked = (entityId: string, threadIds: string[]) => {
-    const resultItem = results.value.find((r) => r.entityId === entityId);
-    if (resultItem) {
-      resultItem.status = "MANUALLY_LINKED";
-      resultItem.linkedThreadsCount = threadIds.length;
-      resultItem.threadIds = threadIds;
+      hasScanned.value = true;
     }
   };
 
   return {
     isAutoLinking,
+    hasScanned,
     progressPercent,
     currentProcessingEntity,
     results,
     error,
     autoLinkEventEntities,
-    markAsManuallyLinked,
+    fetchMessagesForThreads,
   };
 };
