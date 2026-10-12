@@ -144,6 +144,14 @@ export const useAutoLinkGmail = () => {
     );
   };
 
+  const extractEmailAddressesFromHeader = (header?: string): string[] => {
+    if (!header) return [];
+    const matches = header.match(
+      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+    );
+    return matches ? matches.map((m) => m.toLowerCase()) : [];
+  };
+
   const getGmailThreadIds = (
     entity: {
       participations?: { event: number; gmailThreadIds?: string[] }[];
@@ -436,6 +444,12 @@ export const useAutoLinkGmail = () => {
         });
       }
 
+      // Update last sync timestamp
+      localStorage.setItem(
+        `gmail_last_sync_timestamp_${eventId}`,
+        String(Date.now()),
+      );
+
       // Invalidate relevant caches so UI updates automatically
       queryCache.invalidateQueries({ key: ["company-communications"] });
       queryCache.invalidateQueries({ key: ["speaker-communications"] });
@@ -454,6 +468,245 @@ export const useAutoLinkGmail = () => {
     }
   };
 
+  /**
+   * Delta Sync (Inbox-First):
+   * Instead of scanning every company/speaker sequentially, query Gmail once for recent threads
+   * since the last sync timestamp. Only entities that actually received or sent new emails are updated.
+   */
+  const syncRecentGmailUpdates = async (
+    eventId: number,
+  ): Promise<EntityLinkResult[]> => {
+    if (!(await ensureValidGoogleToken())) {
+      return [];
+    }
+
+    const storageKey = `gmail_last_sync_timestamp_${eventId}`;
+    const lastSyncTimeStr = localStorage.getItem(storageKey);
+    const lastSyncTime = lastSyncTimeStr ? Number(lastSyncTimeStr) : null;
+
+    // If never synced before, run initial full linking across responsibilities
+    if (!lastSyncTime || isNaN(lastSyncTime)) {
+      const initialResults = await autoLinkEventEntities(eventId, {
+        onlyMyResponsibilities: true,
+      });
+      localStorage.setItem(storageKey, String(Date.now()));
+      return initialResults;
+    }
+
+    isAutoLinking.value = true;
+    error.value = null;
+
+    try {
+      // Look back since last sync with a 3-minute safety margin (clock drift / delivery delays)
+      const afterEpochSec = Math.max(0, Math.floor(lastSyncTime / 1000) - 180);
+      const query = `after:${afterEpochSec}`;
+
+      // Single fast API call to Gmail for recent threads
+      const recentThreadsRes = await gmailComposable.listThreads({
+        q: query,
+        maxResults: 20,
+      });
+
+      if (gmailComposable.needsReauth.value) {
+        await requestGoogleToken();
+      }
+
+      const recentThreads = recentThreadsRes?.threads || [];
+
+      // No new threads at all -> finish immediately with 0 overhead
+      if (recentThreads.length === 0) {
+        localStorage.setItem(storageKey, String(Date.now()));
+        return [];
+      }
+
+      // Fetch messages for ONLY the recent threads
+      const recentThreadIds = recentThreads.map((t) => t.id);
+      const recentMessages = await fetchMessagesForThreads(recentThreadIds);
+
+      if (recentMessages.length === 0) {
+        localStorage.setItem(storageKey, String(Date.now()));
+        return [];
+      }
+
+      // Load assigned responsibilities
+      const myResp = await getMyResponsibilities({ event: eventId });
+      const companies = myResp.data?.companies || [];
+      const speakers = myResp.data?.speakers || [];
+
+      // Maps for fast matching
+      const threadToCompany = new Map<string, Company>();
+      const threadToSpeaker = new Map<string, Speaker>();
+      const emailToCompany = new Map<string, Company>();
+      const emailToSpeaker = new Map<string, Speaker>();
+
+      for (const company of companies) {
+        for (const tid of getGmailThreadIds(company, eventId)) {
+          threadToCompany.set(tid, company);
+        }
+      }
+
+      for (const speaker of speakers) {
+        for (const tid of getGmailThreadIds(speaker, eventId)) {
+          threadToSpeaker.set(tid, speaker);
+        }
+      }
+
+      // Preload contact emails for assigned entities
+      await Promise.all([
+        ...companies.map(async (company) => {
+          try {
+            const repsRes = await getCompanyRepresentatives(company.id);
+            for (const rep of repsRes.data || []) {
+              for (const mail of extractMailsFromList(rep.contact?.mails)) {
+                emailToCompany.set(mail.toLowerCase(), company);
+              }
+            }
+          } catch {
+            // ignore
+          }
+        }),
+        ...speakers.map(async (speaker) => {
+          try {
+            const detailRes = await getSpeakerById(speaker.id);
+            for (const mail of extractMailsFromList(
+              detailRes.data?.contactObject?.mails,
+            )) {
+              emailToSpeaker.set(mail.toLowerCase(), speaker);
+            }
+          } catch {
+            // ignore
+          }
+        }),
+      ]);
+
+      // Match messages to entities
+      const companyPayloads = new Map<
+        string,
+        {
+          company: Company;
+          messages: GmailMessageData[];
+          threadIds: Set<string>;
+        }
+      >();
+      const speakerPayloads = new Map<
+        string,
+        {
+          speaker: Speaker;
+          messages: GmailMessageData[];
+          threadIds: Set<string>;
+        }
+      >();
+
+      for (const msg of recentMessages) {
+        let matchedCompany = threadToCompany.get(msg.threadId);
+        let matchedSpeaker = threadToSpeaker.get(msg.threadId);
+
+        if (!matchedCompany && !matchedSpeaker) {
+          const emails = [
+            ...extractEmailAddressesFromHeader(msg.from),
+            ...extractEmailAddressesFromHeader(msg.to),
+          ];
+          for (const email of emails) {
+            if (emailToCompany.has(email)) {
+              matchedCompany = emailToCompany.get(email);
+              break;
+            }
+            if (emailToSpeaker.has(email)) {
+              matchedSpeaker = emailToSpeaker.get(email);
+              break;
+            }
+          }
+        }
+
+        if (matchedCompany) {
+          const item = companyPayloads.get(matchedCompany.id) || {
+            company: matchedCompany,
+            messages: [],
+            threadIds: new Set<string>(),
+          };
+          item.messages.push(msg);
+          item.threadIds.add(msg.threadId);
+          companyPayloads.set(matchedCompany.id, item);
+        } else if (matchedSpeaker) {
+          const item = speakerPayloads.get(matchedSpeaker.id) || {
+            speaker: matchedSpeaker,
+            messages: [],
+            threadIds: new Set<string>(),
+          };
+          item.messages.push(msg);
+          item.threadIds.add(msg.threadId);
+          speakerPayloads.set(matchedSpeaker.id, item);
+        }
+      }
+
+      const updatedResults: EntityLinkResult[] = [];
+
+      // Update ONLY matched companies
+      for (const [compId, item] of companyPayloads) {
+        const existing = getGmailThreadIds(item.company, eventId);
+        const combined = Array.from(new Set([...existing, ...item.threadIds]));
+        if (combined.length > existing.length) {
+          await updateCompanyGmailThreadIds(compId, combined);
+        }
+        if (item.messages.length > 0) {
+          await syncCompanyGmailMessages(compId, item.messages);
+        }
+        updatedResults.push({
+          entityId: compId,
+          entityName: item.company.name,
+          entityType: "company",
+          status: "SUCCESS",
+          participationStatus: item.company.participations?.find(
+            (p) => p.event === eventId,
+          )?.status,
+          linkedThreadsCount: combined.length,
+          newlyLinkedCount: combined.length - existing.length,
+          threadIds: combined,
+        });
+      }
+
+      // Update ONLY matched speakers
+      for (const [spkId, item] of speakerPayloads) {
+        const existing = getGmailThreadIds(item.speaker, eventId);
+        const combined = Array.from(new Set([...existing, ...item.threadIds]));
+        if (combined.length > existing.length) {
+          await updateSpeakerGmailThreadIds(spkId, combined);
+        }
+        if (item.messages.length > 0) {
+          await syncSpeakerGmailMessages(spkId, item.messages);
+        }
+        updatedResults.push({
+          entityId: spkId,
+          entityName: item.speaker.name,
+          entityType: "speaker",
+          status: "SUCCESS",
+          participationStatus: item.speaker.participations?.find(
+            (p) => p.event === eventId,
+          )?.status,
+          linkedThreadsCount: combined.length,
+          newlyLinkedCount: combined.length - existing.length,
+          threadIds: combined,
+        });
+      }
+
+      localStorage.setItem(storageKey, String(Date.now()));
+
+      if (updatedResults.length > 0) {
+        queryCache.invalidateQueries({ key: ["company-communications"] });
+        queryCache.invalidateQueries({ key: ["speaker-communications"] });
+        queryCache.invalidateQueries({ key: ["my-responsibilities"] });
+      }
+
+      return updatedResults;
+    } catch (err) {
+      console.error("Delta sync error:", err);
+      error.value = err instanceof Error ? err.message : "Delta sync failed";
+      return [];
+    } finally {
+      isAutoLinking.value = false;
+    }
+  };
+
   return {
     isAutoLinking,
     hasScanned,
@@ -462,6 +715,7 @@ export const useAutoLinkGmail = () => {
     results,
     error,
     autoLinkEventEntities,
+    syncRecentGmailUpdates,
     fetchMessagesForThreads,
   };
 };

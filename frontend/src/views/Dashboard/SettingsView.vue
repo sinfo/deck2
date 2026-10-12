@@ -425,7 +425,8 @@ const queryCache = useQueryCache();
 const eventStore = useEventStore();
 const { toast } = useToast();
 const { requestGoogleToken, isSigningIn } = useGoogleAuth();
-const { isAutoLinking, autoLinkEventEntities } = useAutoLinkGmail();
+const { isAutoLinking, autoLinkEventEntities, syncRecentGmailUpdates } =
+  useAutoLinkGmail();
 
 // Fetch user data
 const {
@@ -482,7 +483,7 @@ const userConnectedEmail = computed(() => {
     : authStore.sinfoEmail;
 });
 
-const syncThreads = async (silent = false) => {
+const syncThreads = async (silent = false, fullScan = false) => {
   const eventId = eventStore.selectedEvent?.id;
   if (!eventId) {
     if (!silent) {
@@ -498,12 +499,14 @@ const syncThreads = async (silent = false) => {
     toast.info({
       title: "Syncing Gmail Threads",
       description:
-        "Searching and syncing communications for your assigned companies...",
+        "Checking recent communications for your assigned companies...",
     });
   }
 
   try {
-    const results = await autoLinkEventEntities(eventId);
+    const results = fullScan
+      ? await autoLinkEventEntities(eventId, { forceReScan: true })
+      : await syncRecentGmailUpdates(eventId);
     const newlyLinked = results.filter((r) => r.status === "SUCCESS").length;
     const alreadyLinked = results.filter(
       (r) => r.status === "ALREADY_LINKED",

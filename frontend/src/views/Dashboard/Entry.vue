@@ -20,21 +20,36 @@ import { useToast } from "@/lib/toast";
 
 const authStore = useAuthStore();
 const eventStore = useEventStore();
-const { autoLinkEventEntities } = useAutoLinkGmail();
+const { syncRecentGmailUpdates } = useAutoLinkGmail();
 const { toast } = useToast();
 
 const syncedEventId = ref<number | null>(null);
 
-// Automatically sync Gmail on Deck load/refresh and event switch if connected
+// Automatically delta sync Gmail on Deck load/refresh and event switch if connected
 watch(
   () => [eventStore.selectedEvent, authStore.isGoogleAuthenticated] as const,
   async ([event, isGoogleAuth]) => {
     if (event?.id && isGoogleAuth && syncedEventId.value !== event.id) {
       syncedEventId.value = event.id;
       try {
-        const results = await autoLinkEventEntities(event.id, {
-          onlyMyResponsibilities: true,
-        });
+        // Fast delta sync: single query to Gmail for recent threads, updating only entities with new emails
+        const results = await syncRecentGmailUpdates(event.id);
+        const updatedCount = results.filter(
+          (r) => r.status === "SUCCESS",
+        ).length;
+        if (updatedCount > 0) {
+          const names = results
+            .filter((r) => r.status === "SUCCESS")
+            .slice(0, 3)
+            .map((r) => r.entityName)
+            .join(", ");
+          const extra = updatedCount > 3 ? ` and ${updatedCount - 3} more` : "";
+          toast.success({
+            title: "New Emails Synced",
+            description: `Updated communications for: ${names}${extra}.`,
+          });
+        }
+
         const notFoundContacted = results.filter(
           (r) =>
             r.status === "NOT_FOUND" &&
@@ -62,7 +77,7 @@ watch(
           });
         }
       } catch (err) {
-        console.warn("Auto-sync on refresh failed:", err);
+        console.warn("Delta sync on refresh failed:", err);
       }
     }
   },
