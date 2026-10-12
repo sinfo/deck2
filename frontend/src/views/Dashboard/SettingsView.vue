@@ -425,8 +425,12 @@ const queryCache = useQueryCache();
 const eventStore = useEventStore();
 const { toast } = useToast();
 const { requestGoogleToken, isSigningIn } = useGoogleAuth();
-const { isAutoLinking, autoLinkEventEntities, syncRecentGmailUpdates } =
-  useAutoLinkGmail();
+const {
+  isAutoLinking,
+  autoLinkEventEntities,
+  syncRecentGmailUpdates,
+  warnUnlinkedContacted,
+} = useAutoLinkGmail();
 
 // Fetch user data
 const {
@@ -511,19 +515,6 @@ const syncThreads = async (silent = false, fullScan = false) => {
     const alreadyLinked = results.filter(
       (r) => r.status === "ALREADY_LINKED",
     ).length;
-    const notFoundContacted = results.filter(
-      (r) =>
-        r.status === "NOT_FOUND" &&
-        r.participationStatus &&
-        [
-          "CONTACTED",
-          "IN_CONVERSATIONS",
-          "ACCEPTED",
-          "REJECTED",
-          "GIVEN_UP",
-        ].includes(r.participationStatus),
-    );
-
     toast.success({
       title: "Sync Complete",
       description:
@@ -532,20 +523,7 @@ const syncThreads = async (silent = false, fullScan = false) => {
           : "Email communications are up to date.",
     });
 
-    if (notFoundContacted.length > 0) {
-      const names = notFoundContacted
-        .slice(0, 3)
-        .map((r) => r.entityName)
-        .join(", ");
-      const extra =
-        notFoundContacted.length > 3
-          ? ` and ${notFoundContacted.length - 3} more`
-          : "";
-      toast.warning({
-        title: "Gmail Threads Not Found",
-        description: `No Gmail thread found for ${notFoundContacted.length} contacted entity/entities: ${names}${extra}.`,
-      });
-    }
+    warnUnlinkedContacted(results);
   } catch (err) {
     console.error("Failed to sync threads:", err);
     toast.error({

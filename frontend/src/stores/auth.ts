@@ -17,6 +17,12 @@ const parseJwt = (token: string) => {
   return JSON.parse(jsonPayload);
 };
 
+const GOOGLE_STORAGE_KEYS = {
+  CONNECTED: "isGoogleConnected",
+  ACCESS_TOKEN: "googleAccessToken",
+  TOKEN_EXPIRY: "googleAccessTokenExpiry",
+} as const;
+
 export const useAuthStore = defineStore("auth", () => {
   const token = ref<string | null>(localStorage.getItem("authToken"));
   const isInitializing = ref(true);
@@ -66,12 +72,6 @@ export const useAuthStore = defineStore("auth", () => {
     }
     isInitializing.value = false;
   };
-
-  const GOOGLE_STORAGE_KEYS = {
-    CONNECTED: "isGoogleConnected",
-    ACCESS_TOKEN: "googleAccessToken",
-    TOKEN_EXPIRY: "googleAccessTokenExpiry",
-  } as const;
 
   // SINFO email associated with current user (from loaded member or JWT claims)
   const sinfoEmail = computed<string | null>(() => {

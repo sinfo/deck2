@@ -537,8 +537,12 @@ const authStore = useAuthStore();
 const eventStore = useEventStore();
 const router = useRouter();
 const { toast } = useToast();
-const { isAutoLinking, autoLinkEventEntities, fetchMessagesForThreads } =
-  useAutoLinkGmail();
+const {
+  isAutoLinking,
+  autoLinkEventEntities,
+  fetchMessagesForThreads,
+  warnUnlinkedContacted,
+} = useAutoLinkGmail();
 const { signInWithGoogle, isSigningIn, requestGoogleToken } = useGoogleAuth();
 
 const handleAutoLinkEntities = async () => {
@@ -560,38 +564,12 @@ const handleAutoLinkEntities = async () => {
   try {
     const results = await autoLinkEventEntities(eventId);
     const newlyLinked = results.filter((r) => r.status === "SUCCESS").length;
-    const notFoundContacted = results.filter(
-      (r) =>
-        r.status === "NOT_FOUND" &&
-        r.participationStatus &&
-        [
-          "CONTACTED",
-          "IN_CONVERSATIONS",
-          "ACCEPTED",
-          "REJECTED",
-          "GIVEN_UP",
-        ].includes(r.participationStatus),
-    );
-
     toast.success({
       title: "Auto-Link Completed",
       description: `Linked ${newlyLinked} new thread(s).`,
     });
 
-    if (notFoundContacted.length > 0) {
-      const names = notFoundContacted
-        .slice(0, 3)
-        .map((r) => r.entityName)
-        .join(", ");
-      const extra =
-        notFoundContacted.length > 3
-          ? ` and ${notFoundContacted.length - 3} more`
-          : "";
-      toast.warning({
-        title: "Gmail Threads Not Found",
-        description: `Could not find Gmail threads for ${notFoundContacted.length} contacted entity/entities: ${names}${extra}.`,
-      });
-    }
+    warnUnlinkedContacted(results);
 
     await fetchThreads();
   } catch (err) {

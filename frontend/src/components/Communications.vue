@@ -609,7 +609,10 @@ import type { Speaker } from "@/dto/speakers";
 import type { Company } from "@/dto/companies";
 import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
-import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
+import {
+  useAutoLinkGmail,
+  isContactedParticipationStatus,
+} from "@/composables/useAutoLinkGmail";
 import Card from "./ui/card/Card.vue";
 import CardContent from "./ui/card/CardContent.vue";
 import CardDescription from "./ui/card/CardDescription.vue";
@@ -1002,17 +1005,8 @@ const currentParticipationStatus = computed<ParticipationStatus | undefined>(
 );
 
 const isContactedWithoutThread = computed(() => {
-  if (!currentParticipationStatus.value) return false;
-  const contactedStatuses: ParticipationStatus[] = [
-    "CONTACTED",
-    "IN_CONVERSATIONS",
-    "ACCEPTED",
-    "REJECTED",
-    "GIVEN_UP",
-    "ANNOUNCED",
-  ];
   return (
-    contactedStatuses.includes(currentParticipationStatus.value) &&
+    isContactedParticipationStatus(currentParticipationStatus.value) &&
     currentParticipationGmailThreadIds.value.length === 0
   );
 });

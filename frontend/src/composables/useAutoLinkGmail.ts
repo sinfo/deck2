@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { useQueryCache } from "@pinia/colada";
 import { useAuthStore } from "@/stores/auth";
+import { useToast } from "@/lib/toast";
 import { useGoogleAuth } from "./useGoogleAuth";
 import { useGmailMessages } from "./useGmailMessages";
 import {
@@ -40,6 +41,22 @@ export interface EntityLinkResult {
   searchQueryUsed?: string;
 }
 
+export const CONTACTED_PARTICIPATION_STATUSES: readonly ParticipationStatus[] =
+  [
+    "CONTACTED",
+    "IN_CONVERSATIONS",
+    "ACCEPTED",
+    "REJECTED",
+    "GIVEN_UP",
+    "ANNOUNCED",
+  ] as const;
+
+export const isContactedParticipationStatus = (
+  status?: ParticipationStatus,
+): boolean => {
+  return status ? CONTACTED_PARTICIPATION_STATUSES.includes(status) : false;
+};
+
 interface EntityProcessConfig {
   id: string;
   name: string;
@@ -51,9 +68,121 @@ interface EntityProcessConfig {
   syncMessages: (messages: GmailMessageData[]) => Promise<unknown>;
 }
 
+// Regex matching reply headers, forwarded blocks, and signatures to strip quoted email history
+const QUOTE_HEADER_REGEX =
+  /^(On\s+.+\s+wrote:?|On\s+\w{3},?\s+\w{3}\s+\d{1,2}|On\s+\w{3},?\s+\d{1,2}\s+\w{3}|On\s+\d{1,2}\s+\w{3}\s+\d{4}|.*wrote:\s*$|>|-{3,}\s*Original Message\s*-{3,}|_{3,}|From:.*Sent:.*To:|--\s*Forwarded message\s*--|<[^>]+@[^>]+>\s*wrote:?|[^>]*<\s*$|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+>\s*wrote:?)/i;
+
+/**
+ * Strips HTML tags and removes quoted email replies/history
+ */
+const cleanMessageBody = (body: string): string => {
+  if (!body) return "";
+  let text = body;
+  if (text.includes("<") && text.includes(">")) {
+    try {
+      const doc = new DOMParser().parseFromString(text, "text/html");
+      doc.querySelectorAll("script, style").forEach((el) => el.remove());
+      doc.querySelectorAll("br").forEach((el) => el.replaceWith("\n"));
+      doc.querySelectorAll("p, div, tr, li").forEach((el) => {
+        el.prepend(document.createTextNode("\n"));
+        el.append(document.createTextNode("\n"));
+      });
+      text = doc.body.textContent || "";
+    } catch {
+      // Fall back to raw text if HTML parsing fails
+    }
+  }
+
+  // Normalize multi-line quote headers (e.g. "On Fri, 16 Jan 2026 at 09:40, Name <\nemail@example.com> wrote:")
+  const normalizedBody = text.replace(
+    /^(On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2},\s+[^<]+)<\s*\n\s*([^>]+@[^>]+)>\s*wrote:/gim,
+    "$1<$2> wrote:",
+  );
+
+  const lines = normalizedBody.split("\n");
+  const cleanedLines: string[] = [];
+  for (const line of lines) {
+    if (QUOTE_HEADER_REGEX.test(line)) {
+      break;
+    }
+    cleanedLines.push(line);
+  }
+
+  const result = cleanedLines.length > 0 ? cleanedLines.join("\n") : text;
+
+  return result
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/^ +/gm, "")
+    .replace(/ +$/gm, "")
+    .trim();
+};
+
+const formatEmailAddress = (addr: string): string => {
+  if (!addr) return "";
+  return addr.replace(/"/g, "").trim();
+};
+
+const parseDateToIso = (dateStr: string, internalDate: string): string => {
+  if (dateStr) {
+    try {
+      return new Date(dateStr).toISOString();
+    } catch {
+      // Fallback to internalDate below
+    }
+  }
+  return new Date(parseInt(internalDate, 10)).toISOString();
+};
+
+const extractMailsFromList = (mails?: { mail?: string }[]): string[] => {
+  return (mails?.map((m) => m.mail?.trim()).filter(Boolean) as string[]) ?? [];
+};
+
+const extractEmailAddressesFromHeader = (header?: string): string[] => {
+  if (!header) return [];
+  const matches = header.match(
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  );
+  return matches ? matches.map((m) => m.toLowerCase()) : [];
+};
+
+const getGmailThreadIds = (
+  entity: {
+    participations?: { event: number; gmailThreadIds?: string[] }[];
+  },
+  eventId: number,
+): string[] => {
+  return (
+    entity.participations?.find((p) => p.event === eventId)?.gmailThreadIds ||
+    []
+  );
+};
+
+const fetchCompanyEmails = async (companyId: string): Promise<string[]> => {
+  try {
+    const repsRes = await getCompanyRepresentatives(companyId);
+    return (repsRes.data || []).flatMap((rep) =>
+      extractMailsFromList(rep.contact?.mails),
+    );
+  } catch {
+    return [];
+  }
+};
+
+const fetchSpeakerEmails = async (speakerId: string): Promise<string[]> => {
+  try {
+    const detailRes = await getSpeakerById(speakerId);
+    return extractMailsFromList(detailRes.data?.contactObject?.mails);
+  } catch {
+    return [];
+  }
+};
+
 export const useAutoLinkGmail = () => {
   const authStore = useAuthStore();
   const queryCache = useQueryCache();
+  const { toast } = useToast();
   const { requestGoogleToken } = useGoogleAuth();
   const gmailComposable = useGmailMessages();
 
@@ -64,104 +193,44 @@ export const useAutoLinkGmail = () => {
   const results = ref<EntityLinkResult[]>([]);
   const error = ref<string | null>(null);
 
-  // Matches reply headers, forwarded blocks, and email signatures to strip quoted history
-  // and prevent duplicating earlier thread messages across subsequent syncs.
-  const QUOTE_HEADER_REGEX =
-    /^(On\s+.+\s+wrote:?|On\s+\w{3},?\s+\w{3}\s+\d{1,2}|On\s+\w{3},?\s+\d{1,2}\s+\w{3}|On\s+\d{1,2}\s+\w{3}\s+\d{4}|.*wrote:\s*$|>|-{3,}\s*Original Message\s*-{3,}|_{3,}|From:.*Sent:.*To:|--\s*Forwarded message\s*--|<[^>]+@[^>]+>\s*wrote:?|[^>]*<\s*$|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+>\s*wrote:?)/i;
-
-  /**
-   * Helper function to convert message HTML/Text body cleanly and strip quotes
-   */
-  const cleanMessageBody = (body: string): string => {
-    if (!body) return "";
-    let text = body;
-    if (text.includes("<") && text.includes(">")) {
-      const doc = new DOMParser().parseFromString(text, "text/html");
-      doc.querySelectorAll("script, style").forEach((el) => el.remove());
-      doc.querySelectorAll("br").forEach((el) => el.replaceWith("\n"));
-      doc.querySelectorAll("p, div, tr, li").forEach((el) => {
-        el.prepend(document.createTextNode("\n"));
-        el.append(document.createTextNode("\n"));
-      });
-      text = doc.body.textContent || "";
-    }
-
-    // Normalize multi-line quote headers (e.g. "On Fri, 16 Jan 2026 at 09:40, Name <\nemail@example.com> wrote:")
-    const normalizedBody = text.replace(
-      /^(On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2},\s+[^<]+)<\s*\n\s*([^>]+@[^>]+)>\s*wrote:/gim,
-      "$1<$2> wrote:",
-    );
-
-    // Remove common email quote markers
-    const lines = normalizedBody.split("\n");
-    const cleanedLines: string[] = [];
-    for (const line of lines) {
-      if (QUOTE_HEADER_REGEX.test(line)) {
-        break;
-      }
-      cleanedLines.push(line);
-    }
-
-    const result = cleanedLines.length > 0 ? cleanedLines.join("\n") : text;
-
-    return result
-      .replace(/\r\n/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .replace(/[ \t]+/g, " ")
-      .replace(/^ +/gm, "")
-      .replace(/ +$/gm, "")
-      .trim();
-  };
-
-  /**
-   * Format email address cleanly, preserving both name and email (e.g. "Ana Silva <ana@company.com>")
-   */
-  const formatEmailAddress = (addr: string): string => {
-    if (!addr) return "";
-    return addr.replace(/"/g, "").trim();
-  };
-
-  const parseDateToIso = (dateStr: string, internalDate: string): string => {
-    if (dateStr) {
-      try {
-        return new Date(dateStr).toISOString();
-      } catch {
-        // Fallback to internalDate below
-      }
-    }
-    return new Date(parseInt(internalDate, 10)).toISOString();
-  };
-
   const ensureValidGoogleToken = async (): Promise<boolean> => {
     if (!authStore.isGoogleAuthenticated) return false;
     if (authStore.hasValidGoogleToken) return true;
     return await requestGoogleToken({ silent: true });
   };
 
-  const extractMailsFromList = (mails?: { mail?: string }[]): string[] => {
-    return (
-      (mails?.map((m) => m.mail?.trim()).filter(Boolean) as string[]) ?? []
+  /**
+   * Filter results to find contacted entities without linked threads
+   */
+  const getUnlinkedContacted = (
+    resultsList: EntityLinkResult[] = results.value,
+  ): EntityLinkResult[] => {
+    return resultsList.filter(
+      (r) =>
+        r.status === "NOT_FOUND" &&
+        isContactedParticipationStatus(r.participationStatus),
     );
   };
 
-  const extractEmailAddressesFromHeader = (header?: string): string[] => {
-    if (!header) return [];
-    const matches = header.match(
-      /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
-    );
-    return matches ? matches.map((m) => m.toLowerCase()) : [];
-  };
+  /**
+   * Trigger a toast warning if any contacted entities are unlinked
+   */
+  const warnUnlinkedContacted = (
+    resultsList: EntityLinkResult[] = results.value,
+  ) => {
+    const unlinked = getUnlinkedContacted(resultsList);
+    if (unlinked.length === 0) return;
 
-  const getGmailThreadIds = (
-    entity: {
-      participations?: { event: number; gmailThreadIds?: string[] }[];
-    },
-    eventId: number,
-  ): string[] => {
-    return (
-      entity.participations?.find((p) => p.event === eventId)?.gmailThreadIds ||
-      []
-    );
+    const names = unlinked
+      .slice(0, 3)
+      .map((r) => r.entityName)
+      .join(", ");
+    const extra = unlinked.length > 3 ? ` and ${unlinked.length - 3} more` : "";
+
+    toast.warning({
+      title: "Gmail Threads Not Found",
+      description: `Could not find Gmail threads for ${unlinked.length} contacted entity/entities: ${names}${extra}.`,
+    });
   };
 
   /**
@@ -190,7 +259,7 @@ export const useAutoLinkGmail = () => {
         });
       }
 
-      for (const msg of threadMessages) {
+      for (const msg of threadMessages || []) {
         const from = gmailComposable.getHeaderValue(msg, "From") || "Unknown";
         const to = gmailComposable.getHeaderValue(msg, "To") || "";
         const subject =
@@ -401,17 +470,7 @@ export const useAutoLinkGmail = () => {
           type: "company",
           existingThreads: getGmailThreadIds(company, eventId),
           participationStatus: compParticipation?.status,
-          fetchEmails: async () => {
-            try {
-              const repsRes = await getCompanyRepresentatives(company.id);
-              const reps = repsRes.data || [];
-              return reps.flatMap((rep) =>
-                extractMailsFromList(rep.contact?.mails),
-              );
-            } catch {
-              return [];
-            }
-          },
+          fetchEmails: () => fetchCompanyEmails(company.id),
           updateThreadIds: (ids) =>
             updateCompanyGmailThreadIds(company.id, ids),
           syncMessages: (msgs) => syncCompanyGmailMessages(company.id, msgs),
@@ -428,29 +487,18 @@ export const useAutoLinkGmail = () => {
           type: "speaker",
           existingThreads: getGmailThreadIds(speaker, eventId),
           participationStatus: speakerParticipation?.status,
-          fetchEmails: async () => {
-            try {
-              const speakerDetailRes = await getSpeakerById(speaker.id);
-              return extractMailsFromList(
-                speakerDetailRes.data?.contactObject?.mails,
-              );
-            } catch {
-              return [];
-            }
-          },
+          fetchEmails: () => fetchSpeakerEmails(speaker.id),
           updateThreadIds: (ids) =>
             updateSpeakerGmailThreadIds(speaker.id, ids),
           syncMessages: (msgs) => syncSpeakerGmailMessages(speaker.id, msgs),
         });
       }
 
-      // Update last sync timestamp
       localStorage.setItem(
         `gmail_last_sync_timestamp_${eventId}`,
         String(Date.now()),
       );
 
-      // Invalidate relevant caches so UI updates automatically
       queryCache.invalidateQueries({ key: ["company-communications"] });
       queryCache.invalidateQueries({ key: ["speaker-communications"] });
       queryCache.invalidateQueries({ key: ["my-responsibilities"] });
@@ -470,8 +518,8 @@ export const useAutoLinkGmail = () => {
 
   /**
    * Delta Sync (Inbox-First):
-   * Instead of scanning every company/speaker sequentially, query Gmail once for recent threads
-   * since the last sync timestamp. Only entities that actually received or sent new emails are updated.
+   * Queries Gmail once for threads modified since the last sync.
+   * Updates only the specific entities that actually exchanged new emails.
    */
   const syncRecentGmailUpdates = async (
     eventId: number,
@@ -484,7 +532,7 @@ export const useAutoLinkGmail = () => {
     const lastSyncTimeStr = localStorage.getItem(storageKey);
     const lastSyncTime = lastSyncTimeStr ? Number(lastSyncTimeStr) : null;
 
-    // If never synced before, run initial full linking across responsibilities
+    // Fall back to initial full scan across responsibilities on first sync
     if (!lastSyncTime || isNaN(lastSyncTime)) {
       const initialResults = await autoLinkEventEntities(eventId, {
         onlyMyResponsibilities: true,
@@ -497,11 +545,10 @@ export const useAutoLinkGmail = () => {
     error.value = null;
 
     try {
-      // Look back since last sync with a 3-minute safety margin (clock drift / delivery delays)
+      // 3-minute safety margin to absorb clock drift or transit delays
       const afterEpochSec = Math.max(0, Math.floor(lastSyncTime / 1000) - 180);
       const query = `after:${afterEpochSec}`;
 
-      // Single fast API call to Gmail for recent threads
       const recentThreadsRes = await gmailComposable.listThreads({
         q: query,
         maxResults: 20,
@@ -513,13 +560,13 @@ export const useAutoLinkGmail = () => {
 
       const recentThreads = recentThreadsRes?.threads || [];
 
-      // No new threads at all -> finish immediately with 0 overhead
+      // No new threads -> exit immediately with 0 overhead
       if (recentThreads.length === 0) {
         localStorage.setItem(storageKey, String(Date.now()));
         return [];
       }
 
-      // Fetch messages for ONLY the recent threads
+      // Fetch messages for only the recent threads
       const recentThreadIds = recentThreads.map((t) => t.id);
       const recentMessages = await fetchMessagesForThreads(recentThreadIds);
 
@@ -528,7 +575,6 @@ export const useAutoLinkGmail = () => {
         return [];
       }
 
-      // Load assigned responsibilities
       const myResp = await getMyResponsibilities({ event: eventId });
       const companies = myResp.data?.companies || [];
       const speakers = myResp.data?.speakers || [];
@@ -554,36 +600,24 @@ export const useAutoLinkGmail = () => {
       // Preload contact emails for assigned entities
       await Promise.all([
         ...companies.map(async (company) => {
-          try {
-            const repsRes = await getCompanyRepresentatives(company.id);
-            for (const rep of repsRes.data || []) {
-              for (const mail of extractMailsFromList(rep.contact?.mails)) {
-                emailToCompany.set(mail.toLowerCase(), company);
-              }
-            }
-          } catch {
-            // ignore
+          const mails = await fetchCompanyEmails(company.id);
+          for (const mail of mails) {
+            emailToCompany.set(mail.toLowerCase(), company);
           }
         }),
         ...speakers.map(async (speaker) => {
-          try {
-            const detailRes = await getSpeakerById(speaker.id);
-            for (const mail of extractMailsFromList(
-              detailRes.data?.contactObject?.mails,
-            )) {
-              emailToSpeaker.set(mail.toLowerCase(), speaker);
-            }
-          } catch {
-            // ignore
+          const mails = await fetchSpeakerEmails(speaker.id);
+          for (const mail of mails) {
+            emailToSpeaker.set(mail.toLowerCase(), speaker);
           }
         }),
       ]);
 
-      // Match messages to entities
+      // Group messages by matched entity
       const companyPayloads = new Map<
         string,
         {
-          company: Company;
+          entity: Company;
           messages: GmailMessageData[];
           threadIds: Set<string>;
         }
@@ -591,11 +625,30 @@ export const useAutoLinkGmail = () => {
       const speakerPayloads = new Map<
         string,
         {
-          speaker: Speaker;
+          entity: Speaker;
           messages: GmailMessageData[];
           threadIds: Set<string>;
         }
       >();
+
+      const addToPayload = <T extends Company | Speaker>(
+        map: Map<
+          string,
+          { entity: T; messages: GmailMessageData[]; threadIds: Set<string> }
+        >,
+        id: string,
+        entity: T,
+        msg: GmailMessageData,
+      ) => {
+        const item = map.get(id) || {
+          entity,
+          messages: [],
+          threadIds: new Set<string>(),
+        };
+        item.messages.push(msg);
+        item.threadIds.add(msg.threadId);
+        map.set(id, item);
+      };
 
       for (const msg of recentMessages) {
         let matchedCompany = threadToCompany.get(msg.threadId);
@@ -619,74 +672,71 @@ export const useAutoLinkGmail = () => {
         }
 
         if (matchedCompany) {
-          const item = companyPayloads.get(matchedCompany.id) || {
-            company: matchedCompany,
-            messages: [],
-            threadIds: new Set<string>(),
-          };
-          item.messages.push(msg);
-          item.threadIds.add(msg.threadId);
-          companyPayloads.set(matchedCompany.id, item);
+          addToPayload(companyPayloads, matchedCompany.id, matchedCompany, msg);
         } else if (matchedSpeaker) {
-          const item = speakerPayloads.get(matchedSpeaker.id) || {
-            speaker: matchedSpeaker,
-            messages: [],
-            threadIds: new Set<string>(),
-          };
-          item.messages.push(msg);
-          item.threadIds.add(msg.threadId);
-          speakerPayloads.set(matchedSpeaker.id, item);
+          addToPayload(speakerPayloads, matchedSpeaker.id, matchedSpeaker, msg);
         }
       }
 
       const updatedResults: EntityLinkResult[] = [];
 
-      // Update ONLY matched companies
-      for (const [compId, item] of companyPayloads) {
-        const existing = getGmailThreadIds(item.company, eventId);
-        const combined = Array.from(new Set([...existing, ...item.threadIds]));
+      const persistEntityUpdates = async (
+        type: "company" | "speaker",
+        entity: Company | Speaker,
+        messages: GmailMessageData[],
+        newThreadIds: Set<string>,
+        updateThreadIdsFn: (id: string, ids: string[]) => Promise<unknown>,
+        syncMessagesFn: (
+          id: string,
+          msgs: GmailMessageData[],
+        ) => Promise<unknown>,
+      ): Promise<EntityLinkResult> => {
+        const existing = getGmailThreadIds(entity, eventId);
+        const combined = Array.from(new Set([...existing, ...newThreadIds]));
         if (combined.length > existing.length) {
-          await updateCompanyGmailThreadIds(compId, combined);
+          await updateThreadIdsFn(entity.id, combined);
         }
-        if (item.messages.length > 0) {
-          await syncCompanyGmailMessages(compId, item.messages);
+        if (messages.length > 0) {
+          await syncMessagesFn(entity.id, messages);
         }
-        updatedResults.push({
-          entityId: compId,
-          entityName: item.company.name,
-          entityType: "company",
+        return {
+          entityId: entity.id,
+          entityName: entity.name,
+          entityType: type,
           status: "SUCCESS",
-          participationStatus: item.company.participations?.find(
+          participationStatus: entity.participations?.find(
             (p) => p.event === eventId,
           )?.status,
           linkedThreadsCount: combined.length,
           newlyLinkedCount: combined.length - existing.length,
           threadIds: combined,
-        });
+        };
+      };
+
+      for (const item of companyPayloads.values()) {
+        updatedResults.push(
+          await persistEntityUpdates(
+            "company",
+            item.entity,
+            item.messages,
+            item.threadIds,
+            updateCompanyGmailThreadIds,
+            syncCompanyGmailMessages,
+          ),
+        );
       }
 
-      // Update ONLY matched speakers
-      for (const [spkId, item] of speakerPayloads) {
-        const existing = getGmailThreadIds(item.speaker, eventId);
-        const combined = Array.from(new Set([...existing, ...item.threadIds]));
-        if (combined.length > existing.length) {
-          await updateSpeakerGmailThreadIds(spkId, combined);
-        }
-        if (item.messages.length > 0) {
-          await syncSpeakerGmailMessages(spkId, item.messages);
-        }
-        updatedResults.push({
-          entityId: spkId,
-          entityName: item.speaker.name,
-          entityType: "speaker",
-          status: "SUCCESS",
-          participationStatus: item.speaker.participations?.find(
-            (p) => p.event === eventId,
-          )?.status,
-          linkedThreadsCount: combined.length,
-          newlyLinkedCount: combined.length - existing.length,
-          threadIds: combined,
-        });
+      for (const item of speakerPayloads.values()) {
+        updatedResults.push(
+          await persistEntityUpdates(
+            "speaker",
+            item.entity,
+            item.messages,
+            item.threadIds,
+            updateSpeakerGmailThreadIds,
+            syncSpeakerGmailMessages,
+          ),
+        );
       }
 
       localStorage.setItem(storageKey, String(Date.now()));
@@ -714,6 +764,8 @@ export const useAutoLinkGmail = () => {
     currentProcessingEntity,
     results,
     error,
+    getUnlinkedContacted,
+    warnUnlinkedContacted,
     autoLinkEventEntities,
     syncRecentGmailUpdates,
     fetchMessagesForThreads,
