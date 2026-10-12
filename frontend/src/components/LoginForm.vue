@@ -38,7 +38,8 @@ const authStore = useAuthStore();
 const callback = async (response: CallbackTypes.TokenPopupResponse) => {
   const jwt = await generateJwt({ access_token: response.access_token });
   authStore.setToken(jwt.data.deck_token);
-  authStore.googleAccessToken = response.access_token;
+  const expiresIn = response.expires_in ? Number(response.expires_in) : 3600;
+  authStore.setGoogleToken(response.access_token, expiresIn);
 
   if (to) router.push(to);
   else router.push({ name: "dashboard" });

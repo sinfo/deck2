@@ -67,7 +67,12 @@ export const useAuthStore = defineStore("auth", () => {
     isInitializing.value = false;
   };
 
-  // Google Auth access token with persistence
+  // Google Auth integration state
+  // Once connected, stays connected permanently until user manually clicks Disconnect!
+  const isGoogleConnected = ref<boolean>(
+    localStorage.getItem("isGoogleConnected") === "true",
+  );
+
   const googleAccessToken = ref<string | null>(
     localStorage.getItem("googleAccessToken"),
   );
@@ -77,8 +82,11 @@ export const useAuthStore = defineStore("auth", () => {
       : null,
   );
 
-  // Check if Google token is valid (exists and not expired)
-  const isGoogleAuthenticated = computed(() => {
+  // For components checking if Gmail is connected (Settings, Badges, etc.)
+  const isGoogleAuthenticated = computed(() => isGoogleConnected.value);
+
+  // For checking if the access token is currently valid and unexpired
+  const hasValidGoogleToken = computed(() => {
     if (!googleAccessToken.value) return false;
     if (
       googleAccessTokenExpiry.value &&
@@ -88,6 +96,12 @@ export const useAuthStore = defineStore("auth", () => {
     }
     return true;
   });
+
+  // Explicit manual connection by the user
+  const connectGoogle = () => {
+    isGoogleConnected.value = true;
+    localStorage.setItem("isGoogleConnected", "true");
+  };
 
   // Set Google token with expiration (expiresIn is in seconds)
   const setGoogleToken = (token: string, expiresIn: number = 3600) => {
@@ -100,12 +114,19 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem("googleAccessTokenExpiry", String(expiryTime));
   };
 
-  // Clear Google token
+  // Clear expired/invalid token in memory/storage (does NOT disconnect the user!)
   const clearGoogleToken = () => {
     googleAccessToken.value = null;
     googleAccessTokenExpiry.value = null;
     localStorage.removeItem("googleAccessToken");
     localStorage.removeItem("googleAccessTokenExpiry");
+  };
+
+  // Explicit manual disconnection by the user
+  const disconnectGoogle = () => {
+    isGoogleConnected.value = false;
+    localStorage.removeItem("isGoogleConnected");
+    clearGoogleToken();
   };
 
   return {
@@ -118,10 +139,14 @@ export const useAuthStore = defineStore("auth", () => {
     clearToken,
     initialize,
 
+    isGoogleConnected,
     googleAccessToken,
     googleAccessTokenExpiry,
     isGoogleAuthenticated,
+    hasValidGoogleToken,
+    connectGoogle,
     setGoogleToken,
     clearGoogleToken,
+    disconnectGoogle,
   };
 });

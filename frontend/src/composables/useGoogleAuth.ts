@@ -9,17 +9,33 @@ export const useGoogleAuth = () => {
   const isSigningIn = ref(false);
   const error = ref<string | null>(null);
 
-  const signInWithGoogle = async (): Promise<boolean> => {
+  const getTargetUserEmail = (explicitHint?: string) => {
+    if (explicitHint) return explicitHint;
+    const sinfoid = authStore.member?.sinfoid || authStore.decoded?.sinfoid;
+    return sinfoid ? `${sinfoid}@sinfo.org` : undefined;
+  };
+
+  const signInWithGoogle = async (
+    options: {
+      prompt?: "" | "none" | "consent" | "select_account";
+      hint?: string;
+    } = {},
+  ): Promise<boolean> => {
     return new Promise((resolve) => {
       isSigningIn.value = true;
       error.value = null;
 
+      const userEmail = getTargetUserEmail(options.hint);
+      const promptMode = options.prompt ?? "";
+
       googleSdkLoaded((google) => {
-        google.accounts.oauth2
-          .initTokenClient({
+        try {
+          const client = google.accounts.oauth2.initTokenClient({
             client_id: env.GOOGLE_CLIENT_ID,
             scope: env.GOOGLE_SCOPE,
-            prompt: "select_account",
+            prompt: promptMode,
+            hint: userEmail,
+            hosted_domain: "sinfo.org",
             callback: async (response) => {
               try {
                 await handleGoogleCallback(response);
@@ -38,8 +54,17 @@ export const useGoogleAuth = () => {
               isSigningIn.value = false;
               resolve(false);
             },
-          })
-          .requestAccessToken({ prompt: "select_account" });
+          });
+
+          client.requestAccessToken({
+            prompt: promptMode,
+            hint: userEmail,
+          });
+        } catch (err) {
+          console.error("Failed to init token client:", err);
+          isSigningIn.value = false;
+          resolve(false);
+        }
       });
     });
   };
@@ -48,11 +73,15 @@ export const useGoogleAuth = () => {
     response: CallbackTypes.TokenPopupResponse,
   ) => {
     try {
-      const jwt = await generateJwt({ access_token: response.access_token });
-      authStore.setToken(jwt.data.deck_token);
+      if (!authStore.isAuthenticated) {
+        const jwt = await generateJwt({ access_token: response.access_token });
+        authStore.setToken(jwt.data.deck_token);
+      }
     } catch (err) {
       console.error("Failed to generate JWT:", err);
-      throw new Error("Failed to complete authentication");
+      if (!authStore.isAuthenticated) {
+        throw new Error("Failed to complete authentication");
+      }
     }
 
     // Store Google token with expiration (expires_in is in seconds, default 3600)
@@ -71,18 +100,43 @@ export const useGoogleAuth = () => {
    * Request only Google access token without Deck JWT (for Gmail operations)
    * Use this when the user is already authenticated with Deck but Google token expired
    */
-  const requestGoogleToken = async (): Promise<boolean> => {
+  const requestGoogleToken = async (
+    options: {
+      prompt?: "" | "none" | "consent" | "select_account";
+      silent?: boolean;
+      hint?: string;
+    } = {},
+  ): Promise<boolean> => {
+    // If token is already present and not expired, reuse it immediately
+    if (authStore.hasValidGoogleToken) {
+      return true;
+    }
+
+    const userEmail = getTargetUserEmail(options.hint);
+
+    const promptMode: "" | "none" | "consent" | "select_account" =
+      options.silent ? "" : (options.prompt ?? "");
+
     return new Promise((resolve) => {
       isSigningIn.value = true;
       error.value = null;
 
       googleSdkLoaded((google) => {
-        google.accounts.oauth2
-          .initTokenClient({
+        try {
+          const client = google.accounts.oauth2.initTokenClient({
             client_id: env.GOOGLE_CLIENT_ID,
             scope: env.GOOGLE_SCOPE,
-            prompt: "select_account",
+            prompt: promptMode,
+            hint: userEmail,
+            hosted_domain: "sinfo.org",
             callback: async (response) => {
+              if (!response?.access_token) {
+                console.warn("No Google access token received");
+                error.value = "Failed to obtain Google access token";
+                isSigningIn.value = false;
+                resolve(false);
+                return;
+              }
               try {
                 const expiresIn = response.expires_in
                   ? Number(response.expires_in)
@@ -100,13 +154,22 @@ export const useGoogleAuth = () => {
               }
             },
             error_callback: (err) => {
-              console.error("Error during Google token request", err);
+              console.warn("Error during Google token request", err);
               error.value = "Google authentication failed";
               isSigningIn.value = false;
               resolve(false);
             },
-          })
-          .requestAccessToken({ prompt: "select_account" });
+          });
+
+          client.requestAccessToken({
+            prompt: promptMode,
+            hint: userEmail,
+          });
+        } catch (err) {
+          console.error("Failed to init token client:", err);
+          isSigningIn.value = false;
+          resolve(false);
+        }
       });
     });
   };

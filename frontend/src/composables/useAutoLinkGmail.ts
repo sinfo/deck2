@@ -1,4 +1,5 @@
 import { ref } from "vue";
+import { useQueryCache } from "@pinia/colada";
 import { useAuthStore } from "@/stores/auth";
 import { useGoogleAuth } from "./useGoogleAuth";
 import { useGmailMessages } from "./useGmailMessages";
@@ -49,6 +50,7 @@ interface EntityProcessConfig {
 
 export const useAutoLinkGmail = () => {
   const authStore = useAuthStore();
+  const queryCache = useQueryCache();
   const { requestGoogleToken } = useGoogleAuth();
   const gmailComposable = useGmailMessages();
 
@@ -140,8 +142,9 @@ export const useAutoLinkGmail = () => {
     threadIds: string[],
   ): Promise<GmailMessageData[]> => {
     if (!threadIds || threadIds.length === 0) return [];
-    if (!authStore.isGoogleAuthenticated) {
-      const authed = await requestGoogleToken();
+    if (!authStore.isGoogleAuthenticated) return [];
+    if (!authStore.hasValidGoogleToken) {
+      const authed = await requestGoogleToken({ silent: true });
       if (!authed) return [];
     }
 
@@ -215,9 +218,12 @@ export const useAutoLinkGmail = () => {
     options: { forceReScan?: boolean; onlyMyResponsibilities?: boolean } = {},
   ): Promise<EntityLinkResult[]> => {
     if (!authStore.isGoogleAuthenticated) {
-      const authed = await requestGoogleToken();
+      return [];
+    }
+
+    if (!authStore.hasValidGoogleToken) {
+      const authed = await requestGoogleToken({ silent: true });
       if (!authed) {
-        error.value = "Google authentication is required";
         return [];
       }
     }
@@ -434,6 +440,11 @@ export const useAutoLinkGmail = () => {
           syncMessages: (msgs) => syncSpeakerGmailMessages(speaker.id, msgs),
         });
       }
+
+      // Invalidate relevant caches so UI updates automatically
+      queryCache.invalidateQueries({ key: ["company-communications"] });
+      queryCache.invalidateQueries({ key: ["speaker-communications"] });
+      queryCache.invalidateQueries({ key: ["my-responsibilities"] });
 
       return results.value;
     } catch (err) {

@@ -324,12 +324,14 @@
                         companies and speakers communications.
                       </p>
                       <p
-                        v-if="
-                          authStore.isGoogleAuthenticated && userConnectedEmail
-                        "
+                        v-if="userConnectedEmail"
                         class="text-xs text-muted-foreground"
                       >
-                        Connected as
+                        {{
+                          authStore.isGoogleAuthenticated
+                            ? "Connected as"
+                            : "Account:"
+                        }}
                         <span class="font-medium text-foreground">{{
                           userConnectedEmail
                         }}</span>
@@ -422,7 +424,7 @@ const isEditMode = ref(false);
 const queryCache = useQueryCache();
 const eventStore = useEventStore();
 const { toast } = useToast();
-const { signInWithGoogle, isSigningIn } = useGoogleAuth();
+const { requestGoogleToken, isSigningIn } = useGoogleAuth();
 const { isAutoLinking, autoLinkEventEntities } = useAutoLinkGmail();
 
 // Fetch user data
@@ -478,6 +480,12 @@ const userConnectedEmail = computed(() => {
   if (user.value?.data?.sinfoid) {
     return `${user.value.data.sinfoid}@sinfo.org`;
   }
+  if (authStore.member?.sinfoid) {
+    return `${authStore.member.sinfoid}@sinfo.org`;
+  }
+  if (authStore.decoded?.sinfoid) {
+    return `${authStore.decoded.sinfoid}@sinfo.org`;
+  }
   return null;
 });
 
@@ -526,18 +534,42 @@ const syncThreads = async (silent = false) => {
 };
 
 const connectGoogle = async () => {
-  const success = await signInWithGoogle();
-  if (success) {
+  const userEmail = userConnectedEmail.value;
+
+  // If token is already present and unexpired (e.g. from Deck login), connect immediately without popups
+  if (authStore.hasValidGoogleToken) {
+    authStore.connectGoogle();
     toast.success({
       title: "Gmail Connected",
-      description: "Google account connected. Starting automatic sync...",
+      description: `Connected as ${userEmail || "SINFO member"}. Starting automatic sync...`,
     });
     await syncThreads(true);
+    return;
+  }
+
+  // Otherwise request token directly targeting the SINFO account without account picker
+  const success = await requestGoogleToken({
+    prompt: "",
+    hint: userEmail ?? undefined,
+  });
+
+  if (success) {
+    authStore.connectGoogle();
+    toast.success({
+      title: "Gmail Connected",
+      description: `Connected as ${userEmail || "SINFO member"}. Starting automatic sync...`,
+    });
+    await syncThreads(true);
+  } else {
+    toast.error({
+      title: "Connection Failed",
+      description: "Could not connect to your SINFO Gmail account.",
+    });
   }
 };
 
 const disconnectGoogle = () => {
-  authStore.clearGoogleToken();
+  authStore.disconnectGoogle();
   toast.info({
     title: "Gmail Disconnected",
     description: "Your Gmail account has been disconnected.",
