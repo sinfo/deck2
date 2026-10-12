@@ -61,6 +61,8 @@ export const useAutoLinkGmail = () => {
   const results = ref<EntityLinkResult[]>([]);
   const error = ref<string | null>(null);
 
+  // Matches reply headers, forwarded blocks, and email signatures to strip quoted history
+  // and prevent duplicating earlier thread messages across subsequent syncs.
   const QUOTE_HEADER_REGEX =
     /^(On\s+.+\s+wrote:?|On\s+\w{3},?\s+\w{3}\s+\d{1,2}|On\s+\w{3},?\s+\d{1,2}\s+\w{3}|On\s+\d{1,2}\s+\w{3}\s+\d{4}|.*wrote:\s*$|>|-{3,}\s*Original Message\s*-{3,}|_{3,}|From:.*Sent:.*To:|--\s*Forwarded message\s*--|<[^>]+@[^>]+>\s*wrote:?|[^>]*<\s*$|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+>\s*wrote:?)/i;
 
@@ -231,6 +233,7 @@ export const useAutoLinkGmail = () => {
       let companies: Company[] = [];
       let speakers: Speaker[] = [];
 
+      // By default only sync entities assigned to current user to avoid cross-member pollution
       const onlyMy = options.onlyMyResponsibilities !== false;
       if (onlyMy) {
         try {

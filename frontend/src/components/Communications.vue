@@ -715,6 +715,7 @@ interface ParsedEmailContent {
   body: string;
 }
 
+// Cache parsed email headers and bodies across template render cycles to avoid repetitive regex/string work.
 const emailParseCache = new Map<string, ParsedEmailContent>();
 
 const parseEmailText = (text?: string): ParsedEmailContent => {
@@ -770,6 +771,7 @@ const parseEmailText = (text?: string): ParsedEmailContent => {
   return result;
 };
 
+// Returns conversation group key (gmailThreadId or parsed email subject) to separate distinct threads.
 const getThreadKey = (thread: ThreadWithEntry): string | null => {
   if (thread.gmailThreadId) return thread.gmailThreadId;
   const emailInfo = parseEmailText(thread.entry?.text);
@@ -860,6 +862,7 @@ const filteredCommunications = computed<ThreadWithEntry[]>(() => {
   return comms.filter((t) => getThreadKey(t) === selectedThreadTab.value);
 });
 
+// Renders a visual divider when consecutive messages belong to different email threads in "All" view
 const showThreadDivider = (index: number): boolean => {
   if (
     availableThreadTabs.value.length < 2 ||

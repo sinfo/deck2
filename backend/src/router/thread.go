@@ -38,6 +38,8 @@ func (sgmd *syncGmailMessagesData) ParseBody(body io.Reader) error {
 	return nil
 }
 
+// formatGmailMessageText prepends structured metadata headers (📧 Subject, De, Para)
+// to the message text, which the frontend parses to render dedicated email card headers.
 func formatGmailMessageText(msg GmailMessageData) string {
 	var headerLines []string
 	if msg.Subject != "" && msg.Subject != "(No subject)" {
@@ -56,8 +58,11 @@ func formatGmailMessageText(msg GmailMessageData) string {
 	return msg.Body
 }
 
-// syncGmailMessagesToThreads processes a batch of Gmail messages, prevents duplicates,
-// creates the posts and threads, and links them via attachThread.
+// syncGmailMessagesToThreads processes a batch of Gmail messages:
+// - Deduplicates against existing threads in MongoDB via GmailMessageId
+// - Skips duplicates within the current incoming batch
+// - Preserves message timestamps and direction (From/To)
+// - Creates post and thread records, linking them via the attachThread callback
 func syncGmailMessagesToThreads(
 	messages []GmailMessageData,
 	memberID primitive.ObjectID,

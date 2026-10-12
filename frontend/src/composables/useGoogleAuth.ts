@@ -27,6 +27,8 @@ export const useGoogleAuth = () => {
           const client = google.accounts.oauth2.initTokenClient({
             client_id: env.GOOGLE_CLIENT_ID,
             scope: env.GOOGLE_SCOPE,
+            // With promptMode = "" and hint = userEmail, Google Identity Services skips
+            // the account picker modal and binds directly to the user's active SINFO session.
             prompt: options.promptMode,
             hint: options.userEmail,
             hosted_domain: "sinfo.org",
