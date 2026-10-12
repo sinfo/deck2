@@ -122,9 +122,45 @@
 
       <div
         v-else-if="!sortedCommunications?.length"
-        class="flex-1 flex items-center justify-center"
+        class="flex-1 flex items-center justify-center p-6"
       >
-        <div class="text-center text-muted-foreground">
+        <!-- Notice when entity is contacted but no Gmail thread could be linked -->
+        <div
+          v-if="isContactedWithoutThread"
+          class="text-center max-w-sm mx-auto space-y-3"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto"
+          >
+            <MailWarning class="w-6 h-6" />
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-semibold text-sm">No Gmail thread found</h3>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              This {{ entityType }} is marked as
+              <strong class="text-foreground font-semibold">{{
+                currentStatusLabel
+              }}</strong
+              >, but no matching email thread was found automatically in Gmail.
+            </p>
+          </div>
+          <div class="pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              class="gap-1.5 text-xs"
+              @click="openGmailPicker"
+            >
+              <Link2 class="w-3.5 h-3.5" />
+              Link Gmail thread manually
+            </Button>
+          </div>
+          <div v-if="selectedEventId" class="text-[11px] opacity-60">
+            For event: {{ getEventName(selectedEventId) }}
+          </div>
+        </div>
+
+        <div v-else class="text-center text-muted-foreground">
           <div class="text-lg mb-2">💬</div>
           <div>No communications yet</div>
           <div class="text-xs">
@@ -140,6 +176,31 @@
       </div>
 
       <div v-else class="flex-1 flex flex-col overflow-hidden">
+        <!-- Warning banner when communications exist but Gmail thread is not linked -->
+        <div
+          v-if="isContactedWithoutThread"
+          class="mx-3 mt-2 mb-1 p-2.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2 flex-shrink-0"
+        >
+          <div class="flex items-center gap-2 min-w-0">
+            <AlertTriangle
+              class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0"
+            />
+            <span class="truncate">
+              Marked as <strong>{{ currentStatusLabel }}</strong
+              >, but no Gmail thread is linked.
+            </span>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-7 text-xs px-2.5 border-amber-500/30 hover:bg-amber-500/20 flex-shrink-0 gap-1"
+            @click="openGmailPicker"
+          >
+            <Link2 class="w-3 h-3" />
+            Link thread
+          </Button>
+        </div>
+
         <!-- Thread tabs selector when multiple threads exist -->
         <div
           v-if="availableThreadTabs.length > 1"
@@ -570,9 +631,20 @@ import {
   type AnyEmailVariableInput,
 } from "@/lib/templates";
 import type { Event } from "@/dto/events";
+import type { ParticipationStatus } from "@/dto";
+import { humanReadableParticipationStatus } from "@/dto";
 import Textarea from "./ui/textarea/Textarea.vue";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
-import { Pencil, Trash2, Mail, RefreshCw, Layers } from "lucide-vue-next";
+import {
+  Pencil,
+  Trash2,
+  Mail,
+  RefreshCw,
+  Layers,
+  AlertTriangle,
+  MailWarning,
+  Link2,
+} from "lucide-vue-next";
 import { Badge } from "@/components/ui/badge";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
@@ -592,7 +664,11 @@ interface CommunicationsProps {
   entity: Company | Speaker;
   entityType: "company" | "speaker";
   description: string;
-  participations?: Array<{ event: number }>;
+  participations?: Array<{
+    event: number;
+    status?: ParticipationStatus;
+    gmailThreadIds?: string[];
+  }>;
   canSendMessages?: boolean;
   templates?: TemplateWithVariables[];
   fetchCommunications: (
@@ -912,6 +988,41 @@ const currentParticipationGmailThreadIds = computed(() => {
     (p) => p.event === selectedEventId.value,
   );
   return participation?.gmailThreadIds || [];
+});
+
+const currentParticipation = computed(() => {
+  if (!props.participations || !selectedEventId.value) return null;
+  return (
+    props.participations.find((p) => p.event === selectedEventId.value) || null
+  );
+});
+
+const currentParticipationStatus = computed<ParticipationStatus | undefined>(
+  () => currentParticipation.value?.status,
+);
+
+const isContactedWithoutThread = computed(() => {
+  if (!currentParticipationStatus.value) return false;
+  const contactedStatuses: ParticipationStatus[] = [
+    "CONTACTED",
+    "IN_CONVERSATIONS",
+    "ACCEPTED",
+    "REJECTED",
+    "GIVEN_UP",
+    "ANNOUNCED",
+  ];
+  return (
+    contactedStatuses.includes(currentParticipationStatus.value) &&
+    currentParticipationGmailThreadIds.value.length === 0
+  );
+});
+
+const currentStatusLabel = computed(() => {
+  if (!currentParticipationStatus.value) return "";
+  return (
+    humanReadableParticipationStatus[currentParticipationStatus.value] ||
+    currentParticipationStatus.value
+  );
 });
 
 const openGmailPicker = () => {

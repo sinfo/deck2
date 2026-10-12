@@ -19,6 +19,7 @@ import {
 import { getMyResponsibilities } from "@/api/me";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
+import type { ParticipationStatus } from "@/dto";
 
 export type EntityAutoLinkStatus =
   | "SUCCESS"
@@ -31,6 +32,7 @@ export interface EntityLinkResult {
   entityName: string;
   entityType: "company" | "speaker";
   status: EntityAutoLinkStatus;
+  participationStatus?: ParticipationStatus;
   linkedThreadsCount: number;
   newlyLinkedCount: number;
   threadIds: string[];
@@ -43,6 +45,7 @@ interface EntityProcessConfig {
   name: string;
   type: "company" | "speaker";
   existingThreads: string[];
+  participationStatus?: ParticipationStatus;
   fetchEmails: () => Promise<string[]>;
   updateThreadIds: (ids: string[]) => Promise<unknown>;
   syncMessages: (messages: GmailMessageData[]) => Promise<unknown>;
@@ -296,6 +299,7 @@ export const useAutoLinkGmail = () => {
             entityName: target.name,
             entityType: target.type,
             status: "ALREADY_LINKED",
+            participationStatus: target.participationStatus,
             linkedThreadsCount: existingThreads.length,
             newlyLinkedCount: 0,
             threadIds: existingThreads,
@@ -329,6 +333,7 @@ export const useAutoLinkGmail = () => {
               entityName: target.name,
               entityType: target.type,
               status: "NOT_FOUND",
+              participationStatus: target.participationStatus,
               linkedThreadsCount: 0,
               newlyLinkedCount: 0,
               threadIds: [],
@@ -355,6 +360,7 @@ export const useAutoLinkGmail = () => {
             entityName: target.name,
             entityType: target.type,
             status: "SUCCESS",
+            participationStatus: target.participationStatus,
             linkedThreadsCount: newThreadIds.length,
             newlyLinkedCount: newlyAdded.length,
             threadIds: newThreadIds,
@@ -366,6 +372,7 @@ export const useAutoLinkGmail = () => {
             entityName: target.name,
             entityType: target.type,
             status: "ERROR",
+            participationStatus: target.participationStatus,
             linkedThreadsCount: existingThreads.length,
             newlyLinkedCount: 0,
             threadIds: existingThreads,
@@ -377,11 +384,15 @@ export const useAutoLinkGmail = () => {
       };
 
       for (const company of companies) {
+        const compParticipation = company.participations?.find(
+          (p) => p.event === eventId,
+        );
         await processEntity({
           id: company.id,
           name: company.name,
           type: "company",
           existingThreads: getGmailThreadIds(company, eventId),
+          participationStatus: compParticipation?.status,
           fetchEmails: async () => {
             try {
               const repsRes = await getCompanyRepresentatives(company.id);
@@ -400,11 +411,15 @@ export const useAutoLinkGmail = () => {
       }
 
       for (const speaker of speakers) {
+        const speakerParticipation = speaker.participations?.find(
+          (p) => p.event === eventId,
+        );
         await processEntity({
           id: speaker.id,
           name: speaker.name,
           type: "speaker",
           existingThreads: getGmailThreadIds(speaker, eventId),
+          participationStatus: speakerParticipation?.status,
           fetchEmails: async () => {
             try {
               const speakerDetailRes = await getSpeakerById(speaker.id);

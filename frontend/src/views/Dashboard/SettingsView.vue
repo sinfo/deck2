@@ -508,6 +508,18 @@ const syncThreads = async (silent = false) => {
     const alreadyLinked = results.filter(
       (r) => r.status === "ALREADY_LINKED",
     ).length;
+    const notFoundContacted = results.filter(
+      (r) =>
+        r.status === "NOT_FOUND" &&
+        r.participationStatus &&
+        [
+          "CONTACTED",
+          "IN_CONVERSATIONS",
+          "ACCEPTED",
+          "REJECTED",
+          "GIVEN_UP",
+        ].includes(r.participationStatus),
+    );
 
     toast.success({
       title: "Sync Complete",
@@ -516,6 +528,21 @@ const syncThreads = async (silent = false) => {
           ? `Linked ${newlyLinked} new thread(s). Total ${alreadyLinked + newlyLinked} thread(s) in sync.`
           : "Email communications are up to date.",
     });
+
+    if (notFoundContacted.length > 0) {
+      const names = notFoundContacted
+        .slice(0, 3)
+        .map((r) => r.entityName)
+        .join(", ");
+      const extra =
+        notFoundContacted.length > 3
+          ? ` and ${notFoundContacted.length - 3} more`
+          : "";
+      toast.warning({
+        title: "Gmail Threads Not Found",
+        description: `No Gmail thread found for ${notFoundContacted.length} contacted entity/entities: ${names}${extra}.`,
+      });
+    }
   } catch (err) {
     console.error("Failed to sync threads:", err);
     toast.error({
