@@ -715,8 +715,12 @@ interface ParsedEmailContent {
   body: string;
 }
 
+const emailParseCache = new Map<string, ParsedEmailContent>();
+
 const parseEmailText = (text?: string): ParsedEmailContent => {
   if (!text) return { isEmail: false, body: "" };
+  const cached = emailParseCache.get(text);
+  if (cached) return cached;
 
   const lines = text.split("\n");
   let subject: string | undefined;
@@ -742,21 +746,37 @@ const parseEmailText = (text?: string): ParsedEmailContent => {
   }
 
   const isEmail = Boolean(subject || from || to);
+  let result: ParsedEmailContent;
   if (!isEmail) {
-    return { isEmail: false, body: text };
+    result = { isEmail: false, body: text };
+  } else {
+    const body = lines
+      .slice(headerEndIndex + 1)
+      .join("\n")
+      .trim();
+    result = {
+      isEmail: true,
+      subject,
+      from,
+      to,
+      body: body || text,
+    };
   }
 
-  const body = lines
-    .slice(headerEndIndex + 1)
-    .join("\n")
-    .trim();
-  return {
-    isEmail: true,
-    subject,
-    from,
-    to,
-    body: body || text,
-  };
+  if (emailParseCache.size > 200) {
+    emailParseCache.clear();
+  }
+  emailParseCache.set(text, result);
+  return result;
+};
+
+const getThreadKey = (thread: ThreadWithEntry): string | null => {
+  if (thread.gmailThreadId) return thread.gmailThreadId;
+  const emailInfo = parseEmailText(thread.entry?.text);
+  if (emailInfo.isEmail && emailInfo.subject) {
+    return `subject:${emailInfo.subject}`;
+  }
+  return null;
 };
 
 const getAuthorDisplayName = (thread: ThreadWithEntry): string => {
@@ -792,13 +812,9 @@ const availableThreadTabs = computed<ThreadGroupInfo[]>(() => {
   >();
 
   for (const t of comms) {
-    const emailInfo = parseEmailText(t.entry?.text);
-    let threadKey = t.gmailThreadId;
-    if (!threadKey && emailInfo.isEmail && emailInfo.subject) {
-      threadKey = `subject:${emailInfo.subject}`;
-    }
-
+    const threadKey = getThreadKey(t);
     if (threadKey) {
+      const emailInfo = parseEmailText(t.entry?.text);
       const existing = threadMap.get(threadKey);
       const label = emailInfo.subject || `Thread #${threadKey.slice(-6)}`;
       const sender = emailInfo.from || "";
@@ -841,24 +857,8 @@ const filteredCommunications = computed<ThreadWithEntry[]>(() => {
     return comms;
   }
 
-  return comms.filter((t) => {
-    const emailInfo = parseEmailText(t.entry?.text);
-    const threadKey =
-      t.gmailThreadId ||
-      (emailInfo.isEmail && emailInfo.subject
-        ? `subject:${emailInfo.subject}`
-        : "");
-    return threadKey === selectedThreadTab.value;
-  });
+  return comms.filter((t) => getThreadKey(t) === selectedThreadTab.value);
 });
-
-const getThreadKey = (thread: ThreadWithEntry): string | null => {
-  const emailInfo = parseEmailText(thread.entry?.text);
-  if (thread.gmailThreadId) return thread.gmailThreadId;
-  if (emailInfo.isEmail && emailInfo.subject)
-    return `subject:${emailInfo.subject}`;
-  return null;
-};
 
 const showThreadDivider = (index: number): boolean => {
   if (
