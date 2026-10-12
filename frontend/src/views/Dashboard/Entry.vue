@@ -25,14 +25,13 @@ const { toast } = useToast();
 
 const syncedEventId = ref<number | null>(null);
 
-// Automatically delta sync Gmail on Deck load/refresh and event switch if connected
+// Auto delta-sync recent emails on refresh if connected
 watch(
   () => [eventStore.selectedEvent, authStore.isGoogleAuthenticated] as const,
   async ([event, isGoogleAuth]) => {
     if (event?.id && isGoogleAuth && syncedEventId.value !== event.id) {
       syncedEventId.value = event.id;
       try {
-        // Fast delta sync: single query to Gmail for recent threads, updating only entities with new emails
         const results = await syncRecentGmailUpdates(event.id);
         const updatedCount = results.filter(
           (r) => r.status === "SUCCESS",

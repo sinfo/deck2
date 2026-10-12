@@ -293,7 +293,7 @@ export const useAutoLinkGmail = () => {
   };
 
   /**
-   * Automatically link Gmail threads for all entities in an event
+   * Scans all assigned entities and links their Gmail threads (initial setup / manual re-scan)
    */
   const autoLinkEventEntities = async (
     eventId: number,
@@ -517,9 +517,7 @@ export const useAutoLinkGmail = () => {
   };
 
   /**
-   * Delta Sync (Inbox-First):
-   * Queries Gmail once for threads modified since the last sync.
-   * Updates only the specific entities that actually exchanged new emails.
+   * Delta sync: checks only threads updated since last sync, updating only entities with new messages
    */
   const syncRecentGmailUpdates = async (
     eventId: number,
@@ -532,7 +530,7 @@ export const useAutoLinkGmail = () => {
     const lastSyncTimeStr = localStorage.getItem(storageKey);
     const lastSyncTime = lastSyncTimeStr ? Number(lastSyncTimeStr) : null;
 
-    // Fall back to initial full scan across responsibilities on first sync
+    // Fallback: full scan on first run
     if (!lastSyncTime || isNaN(lastSyncTime)) {
       const initialResults = await autoLinkEventEntities(eventId, {
         onlyMyResponsibilities: true,
@@ -545,7 +543,7 @@ export const useAutoLinkGmail = () => {
     error.value = null;
 
     try {
-      // 3-minute safety margin to absorb clock drift or transit delays
+      // 3m margin for clock drift and delivery delay
       const afterEpochSec = Math.max(0, Math.floor(lastSyncTime / 1000) - 180);
       const query = `after:${afterEpochSec}`;
 
@@ -560,13 +558,13 @@ export const useAutoLinkGmail = () => {
 
       const recentThreads = recentThreadsRes?.threads || [];
 
-      // No new threads -> exit immediately with 0 overhead
+      // No new threads -> exit immediately
       if (recentThreads.length === 0) {
         localStorage.setItem(storageKey, String(Date.now()));
         return [];
       }
 
-      // Fetch messages for only the recent threads
+      // Fetch messages only for recent threads
       const recentThreadIds = recentThreads.map((t) => t.id);
       const recentMessages = await fetchMessagesForThreads(recentThreadIds);
 
