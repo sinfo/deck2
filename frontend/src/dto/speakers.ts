@@ -1,5 +1,6 @@
 import type { ImplementsParticipationStatus, ObjectID, Participation } from ".";
 import type { Contact, CreateContactData } from "./contacts";
+import type { SpeakerTasks } from "./tasks";
 
 export interface SpeakerParticipationRoom {
   type: string;
@@ -16,6 +17,7 @@ export interface SpeakerParticipation
   feedback: string;
   flights: ObjectID[];
   room: SpeakerParticipationRoom;
+  tasks?: SpeakerTasks;
 }
 
 export interface SpeakerImages {

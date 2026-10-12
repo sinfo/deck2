@@ -6,6 +6,7 @@ import type {
   UpdateSpeakerData,
   UpdateSpeakerParticipationData,
 } from "@/dto/speakers";
+import type { SpeakerTasks } from "@/dto/tasks";
 import { instance } from ".";
 import {
   type ParticipationCommunications,
@@ -51,6 +52,12 @@ export const createSpeaker = (data: CreateSpeakerData) =>
 export const uploadSpeakerInternalImage = (id: string, data: FormData) =>
   instance.post<Speaker>(`/speakers/${id}/image/internal`, data);
 
+export const uploadSpeakerPublicImage = (id: string, data: FormData) =>
+  instance.post<Speaker>(`/speakers/${id}/image/public/speaker`, data);
+
+export const uploadSpeakerCompanyImage = (id: string, data: FormData) =>
+  instance.post<Speaker>(`/speakers/${id}/image/public/company`, data);
+
 export const deleteSpeaker = (id: string) =>
   instance.delete<Speaker>(`/speakers/${id}`);
 
@@ -85,3 +92,6 @@ export const syncSpeakerGmailMessages = (
   instance.post<SyncGmailResponse>(`/speakers/${id}/participation/gmail-sync`, {
     messages,
   });
+
+export const updateSpeakerTasks = (id: string, tasks: SpeakerTasks) =>
+  instance.put<Speaker>(`/speakers/${id}/participation/tasks`, { tasks });

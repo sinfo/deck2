@@ -71,7 +71,7 @@ async function submit() {
       <label class="block text-sm text-gray-600">Template record</label>
       <Select v-model="selectedTemplate" :disabled="!props.eventId">
         <SelectTrigger class="mt-1 w-full border rounded px-2 py-1">
-          <SelectValue placeholder="-- select template --" />
+          <SelectValue placeholder="Select template" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem v-for="t in definedTemplates" :key="t.id" :value="t.id">
