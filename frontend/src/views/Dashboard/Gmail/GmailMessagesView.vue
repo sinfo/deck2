@@ -472,7 +472,6 @@ import {
   getAllCompanies,
   updateCompanyGmailThreadIds,
   syncCompanyGmailMessages,
-  type GmailMessageData,
 } from "@/api/companies";
 import {
   getAllSpeakers,
@@ -538,7 +537,8 @@ const authStore = useAuthStore();
 const eventStore = useEventStore();
 const router = useRouter();
 const { toast } = useToast();
-const { isAutoLinking, autoLinkEventEntities } = useAutoLinkGmail();
+const { isAutoLinking, autoLinkEventEntities, fetchMessagesForThreads } =
+  useAutoLinkGmail();
 const { signInWithGoogle, isSigningIn, requestGoogleToken } = useGoogleAuth();
 
 const handleAutoLinkEntities = async () => {
@@ -869,38 +869,6 @@ watch(linkEntityType, () => {
   }
 });
 
-/**
- * Strips HTML tags and converts to clean plain text
- */
-const stripHtmlToText = (html: string): string => {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  doc.querySelectorAll("script, style").forEach((el) => el.remove());
-  doc.querySelectorAll("br").forEach((el) => el.replaceWith("\n"));
-  doc.querySelectorAll("p, div, tr, li").forEach((el) => {
-    el.prepend(document.createTextNode("\n"));
-    el.append(document.createTextNode("\n"));
-  });
-
-  let text = doc.body.textContent || "";
-  text = text
-    .replace(/\r\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/[ \t]+/g, " ")
-    .replace(/^ +/gm, "")
-    .replace(/ +$/gm, "")
-    .trim();
-
-  return text;
-};
-
-/**
- * Extracts a clean display name from an email address
- */
-const extractEmailName = (email: string): string => {
-  const match = email.match(/^"?([^"<]+)"?\s*<[^>]+>$/);
-  return match ? match[1].trim() : email;
-};
-
 const linkThread = async () => {
   if (!selectedLinkEntity.value || !threadToLink.value) return;
 
@@ -947,78 +915,7 @@ const linkThread = async () => {
 
 const syncThreadMessages = async (entityId: string, thread: GmailThread) => {
   try {
-    const allMessages: GmailMessageData[] = [];
-
-    for (const msg of thread.messages) {
-      const from = getHeaderValue(msg, "From") || "Unknown";
-      const to = getHeaderValue(msg, "To") || "";
-      const subject = getHeaderValue(msg, "Subject") || "(No subject)";
-      const dateStr = getHeaderValue(msg, "Date") || "";
-
-      let isoDate = "";
-      if (dateStr) {
-        try {
-          isoDate = new Date(dateStr).toISOString();
-        } catch {
-          isoDate = new Date(parseInt(msg.internalDate)).toISOString();
-        }
-      } else {
-        isoDate = new Date(parseInt(msg.internalDate)).toISOString();
-      }
-
-      let body = getMessageBody(msg, false) || msg.snippet || "";
-      if (body.includes("<") && body.includes(">")) {
-        body = stripHtmlToText(body);
-      }
-
-      // Clean up quoted content
-      const lines = body.split("\n");
-      const cleanedLines: string[] = [];
-      let foundQuoteStart = false;
-
-      for (const line of lines) {
-        if (
-          line.match(/^On\s+.+\s+wrote:?\s*$/i) ||
-          line.match(/^On\s+\w{3},?\s+\w{3}\s+\d{1,2},?\s+\d{4}/i) ||
-          line.match(/^On\s+\w{3},?\s+\d{1,2}\s+\w{3}/i) ||
-          line.match(/^On\s+\d{1,2}\s+\w{3}\s+\d{4}/i) ||
-          line.match(/wrote:\s*$/) ||
-          line.match(/^>/) ||
-          line.match(/^-{3,}\s*Original Message\s*-{3,}$/i) ||
-          line.match(/^_{3,}$/) ||
-          line.match(/^From:.*Sent:.*To:/i) ||
-          line.match(/^-{2,}\s*Forwarded message\s*-{2,}$/i) ||
-          line.match(/<[^>]+@[^>]+>\s*wrote:?\s*$/i)
-        ) {
-          foundQuoteStart = true;
-        }
-        if (!foundQuoteStart) {
-          cleanedLines.push(line);
-        }
-      }
-
-      const cleanBody =
-        cleanedLines.length > 0 ? cleanedLines.join("\n").trim() : body;
-
-      const userEmail = authStore.member?.sinfoid
-        ? `${authStore.member.sinfoid}@sinfo.org`
-        : "";
-      const isOutgoing =
-        from.toLowerCase().includes("@sinfo.org") ||
-        from.toLowerCase().includes(userEmail.toLowerCase());
-
-      allMessages.push({
-        messageId: msg.id,
-        threadId: msg.threadId,
-        subject,
-        from: extractEmailName(from),
-        to: extractEmailName(to),
-        date: isoDate,
-        body: cleanBody,
-        isOutgoing,
-      });
-    }
-
+    const allMessages = await fetchMessagesForThreads([thread.id]);
     if (allMessages.length > 0) {
       if (linkEntityType.value === "company") {
         await syncCompanyGmailMessages(entityId, allMessages);

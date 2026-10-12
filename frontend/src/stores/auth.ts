@@ -67,18 +67,30 @@ export const useAuthStore = defineStore("auth", () => {
     isInitializing.value = false;
   };
 
+  const GOOGLE_STORAGE_KEYS = {
+    CONNECTED: "isGoogleConnected",
+    ACCESS_TOKEN: "googleAccessToken",
+    TOKEN_EXPIRY: "googleAccessTokenExpiry",
+  } as const;
+
+  // SINFO email associated with current user (from loaded member or JWT claims)
+  const sinfoEmail = computed<string | null>(() => {
+    const sinfoid = member.value?.sinfoid || decoded.value?.sinfoid;
+    return sinfoid ? `${sinfoid}@sinfo.org` : null;
+  });
+
   // Google Auth integration state
   // Once connected, stays connected permanently until user manually clicks Disconnect!
   const isGoogleConnected = ref<boolean>(
-    localStorage.getItem("isGoogleConnected") === "true",
+    localStorage.getItem(GOOGLE_STORAGE_KEYS.CONNECTED) === "true",
   );
 
   const googleAccessToken = ref<string | null>(
-    localStorage.getItem("googleAccessToken"),
+    localStorage.getItem(GOOGLE_STORAGE_KEYS.ACCESS_TOKEN),
   );
   const googleAccessTokenExpiry = ref<number | null>(
-    localStorage.getItem("googleAccessTokenExpiry")
-      ? Number(localStorage.getItem("googleAccessTokenExpiry"))
+    localStorage.getItem(GOOGLE_STORAGE_KEYS.TOKEN_EXPIRY)
+      ? Number(localStorage.getItem(GOOGLE_STORAGE_KEYS.TOKEN_EXPIRY))
       : null,
   );
 
@@ -100,7 +112,7 @@ export const useAuthStore = defineStore("auth", () => {
   // Explicit manual connection by the user
   const connectGoogle = () => {
     isGoogleConnected.value = true;
-    localStorage.setItem("isGoogleConnected", "true");
+    localStorage.setItem(GOOGLE_STORAGE_KEYS.CONNECTED, "true");
   };
 
   // Set Google token with expiration (expiresIn is in seconds)
@@ -110,22 +122,22 @@ export const useAuthStore = defineStore("auth", () => {
     const expiryTime = Date.now() + (expiresIn - 60) * 1000;
     googleAccessTokenExpiry.value = expiryTime;
 
-    localStorage.setItem("googleAccessToken", token);
-    localStorage.setItem("googleAccessTokenExpiry", String(expiryTime));
+    localStorage.setItem(GOOGLE_STORAGE_KEYS.ACCESS_TOKEN, token);
+    localStorage.setItem(GOOGLE_STORAGE_KEYS.TOKEN_EXPIRY, String(expiryTime));
   };
 
   // Clear expired/invalid token in memory/storage (does NOT disconnect the user!)
   const clearGoogleToken = () => {
     googleAccessToken.value = null;
     googleAccessTokenExpiry.value = null;
-    localStorage.removeItem("googleAccessToken");
-    localStorage.removeItem("googleAccessTokenExpiry");
+    localStorage.removeItem(GOOGLE_STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(GOOGLE_STORAGE_KEYS.TOKEN_EXPIRY);
   };
 
   // Explicit manual disconnection by the user
   const disconnectGoogle = () => {
     isGoogleConnected.value = false;
-    localStorage.removeItem("isGoogleConnected");
+    localStorage.removeItem(GOOGLE_STORAGE_KEYS.CONNECTED);
     clearGoogleToken();
   };
 
@@ -133,6 +145,7 @@ export const useAuthStore = defineStore("auth", () => {
     token,
     decoded,
     member,
+    sinfoEmail,
     isInitializing,
     isAuthenticated,
     setToken,

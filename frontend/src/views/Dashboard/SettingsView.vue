@@ -477,16 +477,9 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
 };
 
 const userConnectedEmail = computed(() => {
-  if (user.value?.data?.sinfoid) {
-    return `${user.value.data.sinfoid}@sinfo.org`;
-  }
-  if (authStore.member?.sinfoid) {
-    return `${authStore.member.sinfoid}@sinfo.org`;
-  }
-  if (authStore.decoded?.sinfoid) {
-    return `${authStore.decoded.sinfoid}@sinfo.org`;
-  }
-  return null;
+  return user.value?.data?.sinfoid
+    ? `${user.value.data.sinfoid}@sinfo.org`
+    : authStore.sinfoEmail;
 });
 
 const syncThreads = async (silent = false) => {
@@ -533,17 +526,21 @@ const syncThreads = async (silent = false) => {
   }
 };
 
+const onGoogleConnected = async (userEmail?: string | null) => {
+  authStore.connectGoogle();
+  toast.success({
+    title: "Gmail Connected",
+    description: `Connected as ${userEmail || "SINFO member"}. Starting automatic sync...`,
+  });
+  await syncThreads(true);
+};
+
 const connectGoogle = async () => {
   const userEmail = userConnectedEmail.value;
 
   // If token is already present and unexpired (e.g. from Deck login), connect immediately without popups
   if (authStore.hasValidGoogleToken) {
-    authStore.connectGoogle();
-    toast.success({
-      title: "Gmail Connected",
-      description: `Connected as ${userEmail || "SINFO member"}. Starting automatic sync...`,
-    });
-    await syncThreads(true);
+    await onGoogleConnected(userEmail);
     return;
   }
 
@@ -554,12 +551,7 @@ const connectGoogle = async () => {
   });
 
   if (success) {
-    authStore.connectGoogle();
-    toast.success({
-      title: "Gmail Connected",
-      description: `Connected as ${userEmail || "SINFO member"}. Starting automatic sync...`,
-    });
-    await syncThreads(true);
+    await onGoogleConnected(userEmail);
   } else {
     toast.error({
       title: "Connection Failed",

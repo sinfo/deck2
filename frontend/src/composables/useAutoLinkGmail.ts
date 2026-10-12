@@ -61,6 +61,9 @@ export const useAutoLinkGmail = () => {
   const results = ref<EntityLinkResult[]>([]);
   const error = ref<string | null>(null);
 
+  const QUOTE_HEADER_REGEX =
+    /^(On\s+.+\s+wrote:?|On\s+\w{3},?\s+\w{3}\s+\d{1,2}|On\s+\w{3},?\s+\d{1,2}\s+\w{3}|On\s+\d{1,2}\s+\w{3}\s+\d{4}|.*wrote:\s*$|>|-{3,}\s*Original Message\s*-{3,}|_{3,}|From:.*Sent:.*To:|--\s*Forwarded message\s*--|<[^>]+@[^>]+>\s*wrote:?|[^>]*<\s*$|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+>\s*wrote:?)/i;
+
   /**
    * Helper function to convert message HTML/Text body cleanly and strip quotes
    */
@@ -87,33 +90,11 @@ export const useAutoLinkGmail = () => {
     // Remove common email quote markers
     const lines = normalizedBody.split("\n");
     const cleanedLines: string[] = [];
-    let foundQuoteStart = false;
-
     for (const line of lines) {
-      if (
-        line.match(/^On\s+.+\s+wrote:?\s*$/i) ||
-        line.match(/^On\s+\w{3},?\s+\w{3}\s+\d{1,2},?\s+\d{4}/i) ||
-        line.match(/^On\s+\w{3},?\s+\d{1,2}\s+\w{3}/i) ||
-        line.match(/^On\s+\d{1,2}\s+\w{3}\s+\d{4}/i) ||
-        line.match(
-          /^On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2}/i,
-        ) ||
-        line.match(/wrote:\s*$/) ||
-        line.match(/^>/) ||
-        line.match(/^-{3,}\s*Original Message\s*-{3,}$/i) ||
-        line.match(/^_{3,}$/) ||
-        line.match(/^From:.*Sent:.*To:/i) ||
-        line.match(/^-{2,}\s*Forwarded message\s*-{2,}$/i) ||
-        line.match(/<[^>]+@[^>]+>\s*wrote:?\s*$/i) ||
-        line.match(/^[^>]*<\s*$/) ||
-        line.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+>\s*wrote:?\s*$/i)
-      ) {
-        foundQuoteStart = true;
+      if (QUOTE_HEADER_REGEX.test(line)) {
+        break;
       }
-
-      if (!foundQuoteStart) {
-        cleanedLines.push(line);
-      }
+      cleanedLines.push(line);
     }
 
     const result = cleanedLines.length > 0 ? cleanedLines.join("\n") : text;
@@ -135,6 +116,41 @@ export const useAutoLinkGmail = () => {
     return addr.replace(/"/g, "").trim();
   };
 
+  const parseDateToIso = (dateStr: string, internalDate: string): string => {
+    if (dateStr) {
+      try {
+        return new Date(dateStr).toISOString();
+      } catch {
+        // Fallback to internalDate below
+      }
+    }
+    return new Date(parseInt(internalDate, 10)).toISOString();
+  };
+
+  const ensureValidGoogleToken = async (): Promise<boolean> => {
+    if (!authStore.isGoogleAuthenticated) return false;
+    if (authStore.hasValidGoogleToken) return true;
+    return await requestGoogleToken({ silent: true });
+  };
+
+  const extractMailsFromList = (mails?: { mail?: string }[]): string[] => {
+    return (
+      (mails?.map((m) => m.mail?.trim()).filter(Boolean) as string[]) ?? []
+    );
+  };
+
+  const getGmailThreadIds = (
+    entity: {
+      participations?: { event: number; gmailThreadIds?: string[] }[];
+    },
+    eventId: number,
+  ): string[] => {
+    return (
+      entity.participations?.find((p) => p.event === eventId)?.gmailThreadIds ||
+      []
+    );
+  };
+
   /**
    * Fetch and prepare Gmail messages for backend sync
    */
@@ -142,16 +158,10 @@ export const useAutoLinkGmail = () => {
     threadIds: string[],
   ): Promise<GmailMessageData[]> => {
     if (!threadIds || threadIds.length === 0) return [];
-    if (!authStore.isGoogleAuthenticated) return [];
-    if (!authStore.hasValidGoogleToken) {
-      const authed = await requestGoogleToken({ silent: true });
-      if (!authed) return [];
-    }
+    if (!(await ensureValidGoogleToken())) return [];
 
     const allMessages: GmailMessageData[] = [];
-    const userEmail = authStore.member?.sinfoid
-      ? `${authStore.member.sinfoid}@sinfo.org`
-      : "";
+    const userEmail = authStore.sinfoEmail || "";
 
     for (const threadId of threadIds) {
       let threadMessages = await gmailComposable.getMessagesByThreadId(
@@ -173,17 +183,7 @@ export const useAutoLinkGmail = () => {
         const subject =
           gmailComposable.getHeaderValue(msg, "Subject") || "(No subject)";
         const dateStr = gmailComposable.getHeaderValue(msg, "Date") || "";
-
-        let isoDate = "";
-        if (dateStr) {
-          try {
-            isoDate = new Date(dateStr).toISOString();
-          } catch {
-            isoDate = new Date(parseInt(msg.internalDate)).toISOString();
-          }
-        } else {
-          isoDate = new Date(parseInt(msg.internalDate)).toISOString();
-        }
+        const isoDate = parseDateToIso(dateStr, msg.internalDate);
 
         let body =
           gmailComposable.getMessageBody(msg, false) || msg.snippet || "";
@@ -217,15 +217,8 @@ export const useAutoLinkGmail = () => {
     eventId: number,
     options: { forceReScan?: boolean; onlyMyResponsibilities?: boolean } = {},
   ): Promise<EntityLinkResult[]> => {
-    if (!authStore.isGoogleAuthenticated) {
+    if (!(await ensureValidGoogleToken())) {
       return [];
-    }
-
-    if (!authStore.hasValidGoogleToken) {
-      const authed = await requestGoogleToken({ silent: true });
-      if (!authed) {
-        return [];
-      }
     }
 
     isAutoLinking.value = true;
@@ -277,13 +270,17 @@ export const useAutoLinkGmail = () => {
 
         const existingThreads = target.existingThreads;
 
+        const syncMessagesForThreads = async (threadIds: string[]) => {
+          if (threadIds.length === 0) return;
+          const messagesToSync = await fetchMessagesForThreads(threadIds);
+          if (messagesToSync.length > 0) {
+            await target.syncMessages(messagesToSync);
+          }
+        };
+
         if (existingThreads.length > 0 && !options.forceReScan) {
           try {
-            const messagesToSync =
-              await fetchMessagesForThreads(existingThreads);
-            if (messagesToSync.length > 0) {
-              await target.syncMessages(messagesToSync);
-            }
+            await syncMessagesForThreads(existingThreads);
           } catch (syncErr) {
             console.error(
               `Failed to sync existing messages for ${target.type} ${target.name}:`,
@@ -348,12 +345,7 @@ export const useAutoLinkGmail = () => {
             await target.updateThreadIds(newThreadIds);
           }
 
-          if (newThreadIds.length > 0) {
-            const messagesToSync = await fetchMessagesForThreads(newThreadIds);
-            if (messagesToSync.length > 0) {
-              await target.syncMessages(messagesToSync);
-            }
-          }
+          await syncMessagesForThreads(newThreadIds);
 
           results.value.push({
             entityId: target.id,
@@ -386,22 +378,14 @@ export const useAutoLinkGmail = () => {
           id: company.id,
           name: company.name,
           type: "company",
-          existingThreads:
-            company.participations?.find((p) => p.event === eventId)
-              ?.gmailThreadIds || [],
+          existingThreads: getGmailThreadIds(company, eventId),
           fetchEmails: async () => {
             try {
               const repsRes = await getCompanyRepresentatives(company.id);
               const reps = repsRes.data || [];
-              const emails: string[] = [];
-              for (const rep of reps) {
-                if (rep.contact?.mails) {
-                  for (const m of rep.contact.mails) {
-                    if (m.mail?.trim()) emails.push(m.mail.trim());
-                  }
-                }
-              }
-              return emails;
+              return reps.flatMap((rep) =>
+                extractMailsFromList(rep.contact?.mails),
+              );
             } catch {
               return [];
             }
@@ -417,20 +401,13 @@ export const useAutoLinkGmail = () => {
           id: speaker.id,
           name: speaker.name,
           type: "speaker",
-          existingThreads:
-            speaker.participations?.find((p) => p.event === eventId)
-              ?.gmailThreadIds || [],
+          existingThreads: getGmailThreadIds(speaker, eventId),
           fetchEmails: async () => {
             try {
               const speakerDetailRes = await getSpeakerById(speaker.id);
-              const contactObj = speakerDetailRes.data?.contactObject;
-              const emails: string[] = [];
-              if (contactObj?.mails) {
-                for (const m of contactObj.mails) {
-                  if (m.mail?.trim()) emails.push(m.mail.trim());
-                }
-              }
-              return emails;
+              return extractMailsFromList(
+                speakerDetailRes.data?.contactObject?.mails,
+              );
             } catch {
               return [];
             }

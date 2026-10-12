@@ -38,6 +38,24 @@ func (sgmd *syncGmailMessagesData) ParseBody(body io.Reader) error {
 	return nil
 }
 
+func formatGmailMessageText(msg GmailMessageData) string {
+	var headerLines []string
+	if msg.Subject != "" && msg.Subject != "(No subject)" {
+		headerLines = append(headerLines, fmt.Sprintf("📧 %s", msg.Subject))
+	}
+	if msg.From != "" {
+		headerLines = append(headerLines, fmt.Sprintf("De: %s", msg.From))
+	}
+	if msg.To != "" {
+		headerLines = append(headerLines, fmt.Sprintf("Para: %s", msg.To))
+	}
+
+	if len(headerLines) > 0 {
+		return fmt.Sprintf("%s\n\n%s", strings.Join(headerLines, "\n"), msg.Body)
+	}
+	return msg.Body
+}
+
 // syncGmailMessagesToThreads processes a batch of Gmail messages, prevents duplicates,
 // creates the posts and threads, and links them via attachThread.
 func syncGmailMessagesToThreads(
@@ -84,23 +102,7 @@ func syncGmailMessagesToThreads(
 			kind = models.ThreadKindTo
 		}
 
-		var headerLines []string
-		if msg.Subject != "" && msg.Subject != "(No subject)" {
-			headerLines = append(headerLines, fmt.Sprintf("📧 %s", msg.Subject))
-		}
-		if msg.From != "" {
-			headerLines = append(headerLines, fmt.Sprintf("De: %s", msg.From))
-		}
-		if msg.To != "" {
-			headerLines = append(headerLines, fmt.Sprintf("Para: %s", msg.To))
-		}
-
-		var formattedText string
-		if len(headerLines) > 0 {
-			formattedText = fmt.Sprintf("%s\n\n%s", strings.Join(headerLines, "\n"), msg.Body)
-		} else {
-			formattedText = msg.Body
-		}
+		formattedText := formatGmailMessageText(msg)
 
 		cpd := mongodb.CreatePostData{
 			Member: memberID,
