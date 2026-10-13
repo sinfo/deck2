@@ -545,19 +545,12 @@
                   <div v-else>
                     <!-- Message content -->
                     <div v-if="thread.entry" class="text-sm">
-                      <!-- Synced Email Header Card -->
+                      <!-- Synced Email Header -->
                       <div
                         v-if="parseEmailText(thread.entry.text).isEmail"
-                        class="space-y-1.5"
+                        class="space-y-2"
                       >
-                        <div
-                          class="text-xs rounded-lg p-2.5 mb-2 border flex items-center gap-3"
-                          :class="[
-                            getMessageDirection(thread.kind) === 'outgoing'
-                              ? 'bg-white/10 border-white/20 text-white'
-                              : 'bg-white/80 dark:bg-black/30 border-red-200/60 dark:border-red-900/40 text-red-950 dark:text-red-200',
-                          ]"
-                        >
+                        <div class="flex items-center gap-2.5">
                           <!-- Channel Logo beside the subject -->
                           <ChannelTile
                             :channel="getThreadChannel(thread)"
