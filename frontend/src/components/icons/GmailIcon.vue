@@ -1,8 +1,12 @@
+<script setup lang="ts">
+// Official Gmail Icon
+</script>
+
 <template>
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 49.4 512 399.42"
-    class="shrink-0"
+    viewBox="0 64.72 512 384.1"
+    class="block shrink-0"
     aria-label="Gmail"
   >
     <g fill="none" fill-rule="evenodd">

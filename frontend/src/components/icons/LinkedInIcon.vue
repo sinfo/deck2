@@ -1,8 +1,12 @@
+<script setup lang="ts">
+// Official LinkedIn Icon
+</script>
+
 <template>
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    class="shrink-0"
+    class="block shrink-0"
     aria-label="LinkedIn"
   >
     <path

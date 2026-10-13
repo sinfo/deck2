@@ -482,53 +482,67 @@
                   ]"
                 >
                   <!-- Message header -->
-                  <div
-                    class="flex items-center gap-2 text-xs"
-                    :class="[
-                      getMessageDirection(thread.kind) === 'outgoing'
-                        ? 'text-white/80'
-                        : 'opacity-75',
-                    ]"
-                  >
-                    <!-- Channel Logo in medium size -->
-                    <LinkedInIcon
-                      v-if="getThreadChannel(thread) === ThreadChannel.LinkedIn"
-                      class="w-4.5 h-4.5 rounded-[2px] shrink-0"
-                      title="LinkedIn"
-                    />
-                    <GmailIcon
-                      v-else-if="
-                        getThreadChannel(thread) === ThreadChannel.Gmail
-                      "
-                      class="w-4.5 h-4.5 shrink-0"
-                      title="Gmail"
-                    />
-                    <MessageSquare
-                      v-else
-                      class="w-4.5 h-4.5 shrink-0 opacity-75"
-                      title="Outro"
-                    />
-
-                    <div class="flex items-center gap-1">
+                  <div class="flex items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-2">
+                      <!-- Channel Logo in elevated micro-tile with same background as subject card -->
                       <div
+                        class="grid place-items-center w-9 h-9 rounded-lg shrink-0 select-none border"
+                        :class="getChannelTileClasses(thread)"
+                      >
+                        <LinkedInIcon
+                          v-if="
+                            getThreadChannel(thread) === ThreadChannel.LinkedIn
+                          "
+                          class="w-6 h-6 block"
+                          title="LinkedIn"
+                        />
+                        <GmailIcon
+                          v-else-if="
+                            getThreadChannel(thread) === ThreadChannel.Gmail
+                          "
+                          class="w-6 h-6 block"
+                          title="Gmail"
+                        />
+                        <MessageSquare
+                          v-else
+                          class="w-5 h-5 block opacity-80"
+                          title="Outro"
+                        />
+                      </div>
+
+                      <!-- Special kind badge if not standard Sent/Received (e.g. Phone Call, Meeting, Template) -->
+                      <div
+                        v-if="
+                          thread.kind !== ThreadKind.ThreadKindTo &&
+                          thread.kind !== ThreadKind.ThreadKindFrom
+                        "
+                        class="flex items-center gap-1 font-medium"
                         :class="[
-                          'w-2 h-2 rounded-full',
-                          getKindColor(thread.kind),
+                          getMessageDirection(thread.kind) === 'outgoing'
+                            ? 'text-white/90'
+                            : 'text-foreground/90',
                         ]"
-                      ></div>
-                      <span>{{ getKindLabel(thread.kind) }}</span>
+                      >
+                        <div
+                          :class="[
+                            'w-2 h-2 rounded-full',
+                            getKindColor(thread.kind),
+                          ]"
+                        ></div>
+                        <span>{{ getKindLabel(thread.kind) }}</span>
+                      </div>
                     </div>
 
-                    <div class="flex items-center gap-1">
-                      <div
-                        :class="[
-                          'w-2 h-2 rounded-full',
-                          getStatusColor(thread.status),
-                        ]"
-                      ></div>
-                    </div>
-
-                    <span>{{ formatDate(thread.posted) }}</span>
+                    <span
+                      :class="[
+                        getMessageDirection(thread.kind) === 'outgoing'
+                          ? 'text-white/70'
+                          : 'text-muted-foreground',
+                      ]"
+                      class="shrink-0"
+                    >
+                      {{ formatDate(thread.posted) }}
+                    </span>
                   </div>
 
                   <!-- Edit mode -->
@@ -872,7 +886,7 @@ import {
   updateSpeakerGmailThreadIds,
   syncSpeakerGmailMessages,
 } from "@/api/speakers";
-import { ThreadChannel, ThreadKind, ThreadStatus } from "@/dto/threads";
+import { ThreadChannel, ThreadKind } from "@/dto/threads";
 import type {
   ParticipationCommunications,
   ThreadWithEntry,
@@ -1201,6 +1215,23 @@ const getBubbleClasses = (thread: ThreadWithEntry): string => {
   return isOutgoing
     ? "bg-red-800 text-white border border-red-900 shadow-xs dark:bg-red-900 dark:text-red-50"
     : "bg-red-100 text-red-950 border border-red-200 dark:bg-red-950/50 dark:text-red-100 dark:border-red-900/60";
+};
+
+const getChannelTileClasses = (thread: ThreadWithEntry): string => {
+  const isOutgoing = getMessageDirection(thread.kind) === "outgoing";
+  if (isOutgoing) {
+    return "bg-white/10 border-white/20 text-white";
+  }
+
+  const channel = getThreadChannel(thread);
+  if (channel === ThreadChannel.LinkedIn) {
+    return "bg-white/80 dark:bg-black/30 border-blue-200/60 dark:border-blue-900/40 text-blue-950 dark:text-blue-200";
+  }
+  if (channel === ThreadChannel.Other) {
+    return "bg-white/80 dark:bg-black/30 border-zinc-200/60 dark:border-zinc-800 text-zinc-950 dark:text-zinc-200";
+  }
+  // Gmail (default)
+  return "bg-white/80 dark:bg-black/30 border-red-200/60 dark:border-red-900/40 text-red-950 dark:text-red-200";
 };
 
 const gmailCommunicationsCount = computed(() => {
@@ -1742,19 +1773,6 @@ const getKindColor = (kind: ThreadKind): string => {
       return "bg-orange-500";
     case ThreadKind.ThreadKindTemplate:
       return "bg-gray-500";
-    default:
-      return "bg-gray-400";
-  }
-};
-
-const getStatusColor = (status: ThreadStatus): string => {
-  switch (status) {
-    case ThreadStatus.ThreadStatusApproved:
-      return "bg-green-500";
-    case ThreadStatus.ThreadStatusReviewed:
-      return "bg-yellow-500";
-    case ThreadStatus.ThreadStatusPending:
-      return "bg-red-500";
     default:
       return "bg-gray-400";
   }
