@@ -481,68 +481,26 @@
                     getBubbleClasses(thread),
                   ]"
                 >
-                  <!-- Message header -->
-                  <div class="flex items-center justify-between gap-3 text-xs">
-                    <div class="flex items-center gap-2">
-                      <!-- Channel Logo in elevated micro-tile with same background as subject card -->
-                      <div
-                        class="grid place-items-center w-9 h-9 rounded-lg shrink-0 select-none border"
-                        :class="getChannelTileClasses(thread)"
-                      >
-                        <LinkedInIcon
-                          v-if="
-                            getThreadChannel(thread) === ThreadChannel.LinkedIn
-                          "
-                          class="w-6 h-6 block"
-                          title="LinkedIn"
-                        />
-                        <GmailIcon
-                          v-else-if="
-                            getThreadChannel(thread) === ThreadChannel.Gmail
-                          "
-                          class="w-6 h-6 block"
-                          title="Gmail"
-                        />
-                        <MessageSquare
-                          v-else
-                          class="w-5 h-5 block opacity-80"
-                          title="Outro"
-                        />
-                      </div>
-
-                      <!-- Special kind badge if not standard Sent/Received (e.g. Phone Call, Meeting, Template) -->
-                      <div
-                        v-if="
-                          thread.kind !== ThreadKind.ThreadKindTo &&
-                          thread.kind !== ThreadKind.ThreadKindFrom
-                        "
-                        class="flex items-center gap-1 font-medium"
-                        :class="[
-                          getMessageDirection(thread.kind) === 'outgoing'
-                            ? 'text-white/90'
-                            : 'text-foreground/90',
-                        ]"
-                      >
-                        <div
-                          :class="[
-                            'w-2 h-2 rounded-full',
-                            getKindColor(thread.kind),
-                          ]"
-                        ></div>
-                        <span>{{ getKindLabel(thread.kind) }}</span>
-                      </div>
-                    </div>
-
-                    <span
+                  <!-- Special kind badge if not standard Sent/Received (e.g. Phone Call, Meeting, Template) -->
+                  <div
+                    v-if="
+                      thread.kind !== ThreadKind.ThreadKindTo &&
+                      thread.kind !== ThreadKind.ThreadKindFrom
+                    "
+                    class="flex items-center gap-1 font-medium text-xs mb-1"
+                    :class="[
+                      getMessageDirection(thread.kind) === 'outgoing'
+                        ? 'text-white/90'
+                        : 'text-foreground/90',
+                    ]"
+                  >
+                    <div
                       :class="[
-                        getMessageDirection(thread.kind) === 'outgoing'
-                          ? 'text-white/70'
-                          : 'text-muted-foreground',
+                        'w-2 h-2 rounded-full',
+                        getKindColor(thread.kind),
                       ]"
-                      class="shrink-0"
-                    >
-                      {{ formatDate(thread.posted) }}
-                    </span>
+                    ></div>
+                    <span>{{ getKindLabel(thread.kind) }}</span>
                   </div>
 
                   <!-- Edit mode -->
@@ -593,46 +551,58 @@
                         class="space-y-1.5"
                       >
                         <div
-                          class="text-xs rounded p-2 mb-2 space-y-0.5 border"
+                          class="text-xs rounded-lg p-2.5 mb-2 border flex items-center gap-3"
                           :class="[
                             getMessageDirection(thread.kind) === 'outgoing'
                               ? 'bg-white/10 border-white/20 text-white'
                               : 'bg-white/80 dark:bg-black/30 border-red-200/60 dark:border-red-900/40 text-red-950 dark:text-red-200',
                           ]"
                         >
-                          <div
-                            v-if="parseEmailText(thread.entry.text).subject"
-                            class="font-medium text-xs truncate flex items-center gap-1"
-                            :class="[
+                          <!-- Channel Logo beside the subject -->
+                          <ChannelTile
+                            :channel="getThreadChannel(thread)"
+                            :is-outgoing="
                               getMessageDirection(thread.kind) === 'outgoing'
-                                ? 'text-white'
-                                : 'text-red-950 dark:text-red-100',
-                            ]"
-                          >
-                            <span class="opacity-70 font-semibold"
-                              >Assunto:</span
+                            "
+                          />
+
+                          <div class="min-w-0 flex-1 space-y-0.5">
+                            <div
+                              v-if="parseEmailText(thread.entry.text).subject"
+                              class="font-medium text-xs truncate flex items-center gap-1"
+                              :class="[
+                                getMessageDirection(thread.kind) === 'outgoing'
+                                  ? 'text-white'
+                                  : 'text-red-950 dark:text-red-100',
+                              ]"
                             >
-                            <span>{{
-                              parseEmailText(thread.entry.text).subject
-                            }}</span>
-                          </div>
-                          <div
-                            v-if="parseEmailText(thread.entry.text).from"
-                            class="truncate text-[11px]"
-                          >
-                            <span class="font-semibold opacity-70">De:</span>
-                            <span class="ml-1">{{
-                              parseEmailText(thread.entry.text).from
-                            }}</span>
-                          </div>
-                          <div
-                            v-if="parseEmailText(thread.entry.text).to"
-                            class="truncate text-[11px]"
-                          >
-                            <span class="font-semibold opacity-70">Para:</span>
-                            <span class="ml-1">{{
-                              parseEmailText(thread.entry.text).to
-                            }}</span>
+                              <span class="opacity-70 font-semibold"
+                                >Assunto:</span
+                              >
+                              <span>{{
+                                parseEmailText(thread.entry.text).subject
+                              }}</span>
+                            </div>
+                            <div
+                              v-if="parseEmailText(thread.entry.text).from"
+                              class="truncate text-[11px]"
+                            >
+                              <span class="font-semibold opacity-70">De:</span>
+                              <span class="ml-1">{{
+                                parseEmailText(thread.entry.text).from
+                              }}</span>
+                            </div>
+                            <div
+                              v-if="parseEmailText(thread.entry.text).to"
+                              class="truncate text-[11px]"
+                            >
+                              <span class="font-semibold opacity-70"
+                                >Para:</span
+                              >
+                              <span class="ml-1">{{
+                                parseEmailText(thread.entry.text).to
+                              }}</span>
+                            </div>
                           </div>
                         </div>
                         <!-- Email body -->
@@ -640,9 +610,22 @@
                           {{ parseEmailText(thread.entry.text).body }}
                         </div>
                       </div>
-                      <div v-else class="whitespace-pre-wrap">
-                        {{ thread.entry.text }}
+
+                      <!-- Non-email message (e.g. LinkedIn or manual entry) -->
+                      <div v-else class="flex items-start gap-3">
+                        <ChannelTile
+                          :channel="getThreadChannel(thread)"
+                          :is-outgoing="
+                            getMessageDirection(thread.kind) === 'outgoing'
+                          "
+                        />
+                        <div
+                          class="whitespace-pre-wrap flex-1 pt-1 leading-relaxed"
+                        >
+                          {{ thread.entry.text }}
+                        </div>
                       </div>
+
                       <div
                         v-if="
                           thread.entry.updated &&
@@ -671,6 +654,18 @@
                     <!-- No content fallback -->
                     <div v-else class="text-sm italic opacity-60">
                       No message content
+                    </div>
+
+                    <!-- Date in bottom corner -->
+                    <div
+                      class="text-[11px] text-right mt-1.5 select-none"
+                      :class="[
+                        getMessageDirection(thread.kind) === 'outgoing'
+                          ? 'text-white/70'
+                          : 'text-muted-foreground',
+                      ]"
+                    >
+                      {{ formatDate(thread.posted) }}
                     </div>
                   </div>
 
@@ -937,6 +932,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
+import ChannelTile from "./ChannelTile.vue";
 import {
   Tooltip,
   TooltipContent,
@@ -1045,9 +1041,9 @@ const availableEvents = computed(() => {
 });
 
 const membersById = computed(() => {
-  if (!membersData.value?.data) return new Map();
+  if (!membersData.value?.data) return new Map<string, Member>();
 
-  const map = new Map();
+  const map = new Map<string, Member>();
   membersData.value.data.forEach((member) => {
     map.set(member.id, member);
   });
@@ -1178,16 +1174,6 @@ const getThreadChannel = (thread: ThreadWithEntry): ThreadChannel => {
   if (thread.channel === ThreadChannel.Other) {
     return ThreadChannel.Other;
   }
-  if (thread.channel === ThreadChannel.Gmail) {
-    return ThreadChannel.Gmail;
-  }
-  if (
-    thread.gmailMessageId ||
-    thread.gmailThreadId ||
-    thread.kind === ThreadKind.ThreadKindTemplate
-  ) {
-    return ThreadChannel.Gmail;
-  }
   return ThreadChannel.Gmail;
 };
 
@@ -1217,40 +1203,27 @@ const getBubbleClasses = (thread: ThreadWithEntry): string => {
     : "bg-red-100 text-red-950 border border-red-200 dark:bg-red-950/50 dark:text-red-100 dark:border-red-900/60";
 };
 
-const getChannelTileClasses = (thread: ThreadWithEntry): string => {
-  const isOutgoing = getMessageDirection(thread.kind) === "outgoing";
-  if (isOutgoing) {
-    return "bg-white/10 border-white/20 text-white";
+const channelCounts = computed(() => {
+  const counts = {
+    [ThreadChannel.Gmail]: 0,
+    [ThreadChannel.LinkedIn]: 0,
+    [ThreadChannel.Other]: 0,
+  };
+  for (const t of sortedCommunications.value) {
+    counts[getThreadChannel(t)]++;
   }
-
-  const channel = getThreadChannel(thread);
-  if (channel === ThreadChannel.LinkedIn) {
-    return "bg-white/80 dark:bg-black/30 border-blue-200/60 dark:border-blue-900/40 text-blue-950 dark:text-blue-200";
-  }
-  if (channel === ThreadChannel.Other) {
-    return "bg-white/80 dark:bg-black/30 border-zinc-200/60 dark:border-zinc-800 text-zinc-950 dark:text-zinc-200";
-  }
-  // Gmail (default)
-  return "bg-white/80 dark:bg-black/30 border-red-200/60 dark:border-red-900/40 text-red-950 dark:text-red-200";
-};
-
-const gmailCommunicationsCount = computed(() => {
-  return sortedCommunications.value.filter(
-    (t) => getThreadChannel(t) === ThreadChannel.Gmail,
-  ).length;
+  return counts;
 });
 
-const linkedInCommunicationsCount = computed(() => {
-  return sortedCommunications.value.filter(
-    (t) => getThreadChannel(t) === ThreadChannel.LinkedIn,
-  ).length;
-});
-
-const otherCommunicationsCount = computed(() => {
-  return sortedCommunications.value.filter(
-    (t) => getThreadChannel(t) === ThreadChannel.Other,
-  ).length;
-});
+const gmailCommunicationsCount = computed(
+  () => channelCounts.value[ThreadChannel.Gmail],
+);
+const linkedInCommunicationsCount = computed(
+  () => channelCounts.value[ThreadChannel.LinkedIn],
+);
+const otherCommunicationsCount = computed(
+  () => channelCounts.value[ThreadChannel.Other],
+);
 
 const availableGmailThreadTabs = computed<ThreadGroupInfo[]>(() => {
   const comms = sortedCommunications.value.filter(
@@ -1463,8 +1436,12 @@ const checkAvailableGmailThreads = async () => {
 };
 
 watch(
-  () => hasManualGmailMessage.value,
-  (hasManual) => {
+  [
+    () => hasManualGmailMessage.value,
+    () => props.entity.id,
+    () => selectedEventId.value,
+  ],
+  ([hasManual]) => {
     if (hasManual) {
       checkAvailableGmailThreads();
     } else {
@@ -1472,17 +1449,6 @@ watch(
     }
   },
   { immediate: true },
-);
-
-watch(
-  () => [props.entity.id, selectedEventId.value],
-  () => {
-    if (hasManualGmailMessage.value) {
-      checkAvailableGmailThreads();
-    } else {
-      availableGmailThreadsCount.value = 0;
-    }
-  },
 );
 
 // O aviso só pode aparecer quando se adiciona manualmente uma msg do Gmail e existem threads disponíveis onde a podemos ligar
@@ -1663,6 +1629,7 @@ watch(
     } else if (newTab === "other") {
       messageChannel.value = ThreadChannel.Other;
     }
+    selectedGmailThreadTab.value = "all";
     scrollToBottom();
   },
 );
@@ -1698,11 +1665,11 @@ const getMessageAuthor = (thread: ThreadWithEntry): Author | null => {
 
   // For phone calls, always show the member who made the call
   if (thread.kind === ThreadKind.ThreadKindPhoneCall && thread.entry?.member) {
-    return getMemberById(thread.entry.member);
+    return getMemberById(thread.entry.member) ?? null;
   }
 
   if (direction === "outgoing" && thread.entry?.member) {
-    return getMemberById(thread.entry?.member);
+    return getMemberById(thread.entry.member) ?? null;
   } else if (direction === "incoming") {
     return props.entity;
   }

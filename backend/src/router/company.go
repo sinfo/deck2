@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/spaces"
@@ -400,17 +399,11 @@ func (acd *addThreadData) ParseBody(body io.Reader) error {
 	}
 
 	if acd.Channel != nil {
-		if !acd.Channel.IsValid() {
+		normalized, ok := acd.Channel.Normalize()
+		if !ok {
 			return errors.New("invalid channel")
 		}
-		ch := strings.ToUpper(strings.TrimSpace(string(*acd.Channel)))
-		if ch == "OUTRO" || ch == string(models.ThreadChannelOther) {
-			*acd.Channel = models.ThreadChannelOther
-		} else if ch == string(models.ThreadChannelLinkedIn) {
-			*acd.Channel = models.ThreadChannelLinkedIn
-		} else {
-			*acd.Channel = models.ThreadChannelGmail
-		}
+		*acd.Channel = normalized
 	}
 
 	if *acd.Kind == models.ThreadKindMeeting && acd.Meeting == nil {

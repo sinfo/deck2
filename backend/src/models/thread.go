@@ -50,14 +50,24 @@ const (
 	ThreadChannelOther    ThreadChannel = "OTHER"
 )
 
+// Normalize returns the canonical ThreadChannel, mapping synonyms like "OUTRO" to ThreadChannelOther
+func (tc ThreadChannel) Normalize() (ThreadChannel, bool) {
+	switch strings.ToUpper(strings.TrimSpace(string(tc))) {
+	case string(ThreadChannelGmail):
+		return ThreadChannelGmail, true
+	case string(ThreadChannelLinkedIn):
+		return ThreadChannelLinkedIn, true
+	case string(ThreadChannelOther), "OUTRO":
+		return ThreadChannelOther, true
+	default:
+		return "", false
+	}
+}
+
 // IsValid checks the validity of the thread channel
 func (tc ThreadChannel) IsValid() bool {
-	switch strings.ToUpper(strings.TrimSpace(string(tc))) {
-	case string(ThreadChannelGmail), string(ThreadChannelLinkedIn), string(ThreadChannelOther), "OUTRO":
-		return true
-	default:
-		return false
-	}
+	_, ok := tc.Normalize()
+	return ok
 }
 
 type Thread struct {
