@@ -44,7 +44,7 @@
                   :disabled="!selectedEventId"
                   @click="openGmailPicker"
                 >
-                  <Mail :size="16" :stroke-width="2" class="mr-1" />
+                  <GmailIcon class="w-4 h-4 mr-1.5" />
                   <span v-if="currentParticipationGmailThreadIds.length > 0">
                     {{ currentParticipationGmailThreadIds.length }} Gmail
                   </span>
@@ -246,14 +246,7 @@
                 ]"
                 @click="selectedChannelTab = 'gmail'"
               >
-                <Mail
-                  class="w-3 h-3"
-                  :class="
-                    selectedChannelTab === 'gmail'
-                      ? 'text-white'
-                      : 'text-red-500'
-                  "
-                />
+                <GmailIcon class="w-3.5 h-3.5" />
                 <span>Gmail</span>
                 <span
                   class="text-[10px] px-1.5 py-0.2 rounded-full"
@@ -278,14 +271,7 @@
                 ]"
                 @click="selectedChannelTab = 'linkedin'"
               >
-                <Linkedin
-                  class="w-3 h-3"
-                  :class="
-                    selectedChannelTab === 'linkedin'
-                      ? 'text-white'
-                      : 'text-blue-500'
-                  "
-                />
+                <LinkedInIcon class="w-3.5 h-3.5 rounded-[2px]" />
                 <span>LinkedIn</span>
                 <span
                   class="text-[10px] px-1.5 py-0.2 rounded-full"
@@ -384,14 +370,28 @@
             v-if="filteredCommunications.length === 0"
             class="h-full flex items-center justify-center p-8 text-center text-muted-foreground"
           >
-            <div>
-              <div class="text-2xl mb-2">
-                {{ selectedChannelTab === "linkedin" ? "💼" : "✉️" }}
+            <div class="flex flex-col items-center">
+              <div class="mb-3 flex justify-center">
+                <LinkedInIcon
+                  v-if="selectedChannelTab === 'linkedin'"
+                  class="w-10 h-10 rounded-sm"
+                />
+                <GmailIcon
+                  v-else-if="selectedChannelTab === 'gmail'"
+                  class="w-10 h-10"
+                />
+                <MessageSquare
+                  v-else
+                  class="w-10 h-10 text-muted-foreground/60"
+                />
               </div>
               <div class="text-sm font-medium">
-                Sem comunicações
                 {{
-                  selectedChannelTab === "linkedin" ? "do LinkedIn" : "do Gmail"
+                  selectedChannelTab === "linkedin"
+                    ? "Sem comunicações do LinkedIn"
+                    : selectedChannelTab === "gmail"
+                      ? "Sem comunicações do Gmail"
+                      : "Sem comunicações de Outro"
                 }}
               </div>
               <div class="text-xs opacity-70 mt-1">
@@ -414,15 +414,15 @@
                 variant="outline"
                 class="font-normal text-[11px] gap-1 py-0.5"
               >
-                <Linkedin
+                <LinkedInIcon
                   v-if="getThreadChannel(thread) === ThreadChannel.LinkedIn"
-                  class="w-3 h-3 text-blue-500"
+                  class="w-3 h-3 rounded-[2px]"
                 />
                 <MessageSquare
                   v-else-if="getThreadChannel(thread) === ThreadChannel.Other"
                   class="w-3 h-3 text-zinc-500"
                 />
-                <Mail v-else class="w-3 h-3 text-red-500" />
+                <GmailIcon v-else class="w-3 h-3" />
                 <span class="max-w-[220px] sm:max-w-[320px] truncate">
                   {{ getDividerLabel(thread) }}
                 </span>
@@ -490,40 +490,24 @@
                         : 'opacity-75',
                     ]"
                   >
-                    <!-- Channel Badge (Gmail / LinkedIn / Outro) -->
-                    <div
-                      class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold"
-                      :class="[
-                        getMessageDirection(thread.kind) === 'outgoing'
-                          ? 'bg-black/20 text-white'
-                          : getThreadChannel(thread) === ThreadChannel.LinkedIn
-                            ? 'bg-blue-200/80 text-blue-900 dark:bg-blue-900/60 dark:text-blue-200'
-                            : getThreadChannel(thread) === ThreadChannel.Other
-                              ? 'bg-zinc-200/80 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-200'
-                              : 'bg-red-200/80 text-red-900 dark:bg-red-900/60 dark:text-red-200',
-                      ]"
-                    >
-                      <Linkedin
-                        v-if="
-                          getThreadChannel(thread) === ThreadChannel.LinkedIn
-                        "
-                        class="w-2.5 h-2.5"
-                      />
-                      <MessageSquare
-                        v-else-if="
-                          getThreadChannel(thread) === ThreadChannel.Other
-                        "
-                        class="w-2.5 h-2.5"
-                      />
-                      <Mail v-else class="w-2.5 h-2.5" />
-                      <span>{{
-                        getThreadChannel(thread) === ThreadChannel.LinkedIn
-                          ? "LinkedIn"
-                          : getThreadChannel(thread) === ThreadChannel.Other
-                            ? "Outro"
-                            : "Gmail"
-                      }}</span>
-                    </div>
+                    <!-- Channel Logo in medium size -->
+                    <LinkedInIcon
+                      v-if="getThreadChannel(thread) === ThreadChannel.LinkedIn"
+                      class="w-4.5 h-4.5 rounded-[2px] shrink-0"
+                      title="LinkedIn"
+                    />
+                    <GmailIcon
+                      v-else-if="
+                        getThreadChannel(thread) === ThreadChannel.Gmail
+                      "
+                      class="w-4.5 h-4.5 shrink-0"
+                      title="Gmail"
+                    />
+                    <MessageSquare
+                      v-else
+                      class="w-4.5 h-4.5 shrink-0 opacity-75"
+                      title="Outro"
+                    />
 
                     <div class="flex items-center gap-1">
                       <div
@@ -757,31 +741,100 @@
             </Button>
             <div class="flex gap-1.5 flex-1 sm:flex-none">
               <!-- Channel Selector (Gmail vs LinkedIn vs Outro) -->
-              <select
+              <Select
                 v-model="messageChannel"
                 :disabled="selectedEventId !== latestEvent?.id"
-                class="text-xs border rounded px-2 py-1 flex-1 sm:flex-none bg-background cursor-pointer"
-                title="Plataforma de Comunicação"
               >
-                <option :value="ThreadChannel.Gmail">✉️ Gmail</option>
-                <option :value="ThreadChannel.LinkedIn">💼 LinkedIn</option>
-                <option :value="ThreadChannel.Other">💬 Outro</option>
-              </select>
+                <SelectTrigger
+                  size="sm"
+                  class="h-7 text-xs px-2 gap-1.5 min-w-[95px] flex-1 sm:flex-none"
+                  title="Plataforma de Comunicação"
+                >
+                  <div class="flex items-center gap-1.5">
+                    <GmailIcon
+                      v-if="messageChannel === ThreadChannel.Gmail"
+                      class="size-3.5"
+                    />
+                    <LinkedInIcon
+                      v-else-if="messageChannel === ThreadChannel.LinkedIn"
+                      class="size-3.5 rounded-[2px]"
+                    />
+                    <MessageSquare v-else class="size-3.5 opacity-75" />
+                    <span>{{
+                      messageChannel === ThreadChannel.Gmail
+                        ? "Gmail"
+                        : messageChannel === ThreadChannel.LinkedIn
+                          ? "LinkedIn"
+                          : "Outro"
+                    }}</span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem :value="ThreadChannel.Gmail" class="text-xs">
+                    <div class="flex items-center gap-2">
+                      <GmailIcon class="size-3.5" />
+                      <span>Gmail</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem :value="ThreadChannel.LinkedIn" class="text-xs">
+                    <div class="flex items-center gap-2">
+                      <LinkedInIcon class="size-3.5 rounded-[2px]" />
+                      <span>LinkedIn</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem :value="ThreadChannel.Other" class="text-xs">
+                    <div class="flex items-center gap-2">
+                      <MessageSquare class="size-3.5 opacity-75" />
+                      <span>Outro</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
 
               <!-- Message Kind/Direction Selector -->
-              <select
+              <Select
                 v-model="messageKind"
                 :disabled="selectedEventId !== latestEvent?.id"
-                class="text-xs border rounded px-2 py-1 flex-1 sm:flex-none bg-background cursor-pointer"
-                title="Tipo de Mensagem"
               >
-                <option :value="ThreadKind.ThreadKindTo">Outgoing</option>
-                <option :value="ThreadKind.ThreadKindFrom">Incoming</option>
-                <option :value="ThreadKind.ThreadKindPhoneCall">
-                  Phone Call
-                </option>
-                <option :value="ThreadKind.ThreadKindTemplate">Template</option>
-              </select>
+                <SelectTrigger
+                  size="sm"
+                  class="h-7 text-xs px-2 min-w-[95px] flex-1 sm:flex-none"
+                  title="Tipo de Mensagem"
+                >
+                  <span>{{
+                    messageKind === ThreadKind.ThreadKindTo
+                      ? "Outgoing"
+                      : messageKind === ThreadKind.ThreadKindFrom
+                        ? "Incoming"
+                        : messageKind === ThreadKind.ThreadKindPhoneCall
+                          ? "Phone Call"
+                          : "Template"
+                  }}</span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem :value="ThreadKind.ThreadKindTo" class="text-xs">
+                    Outgoing
+                  </SelectItem>
+                  <SelectItem
+                    :value="ThreadKind.ThreadKindFrom"
+                    class="text-xs"
+                  >
+                    Incoming
+                  </SelectItem>
+                  <SelectItem
+                    :value="ThreadKind.ThreadKindPhoneCall"
+                    class="text-xs"
+                  >
+                    Phone Call
+                  </SelectItem>
+                  <SelectItem
+                    :value="ThreadKind.ThreadKindTemplate"
+                    class="text-xs"
+                  >
+                    Template
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
@@ -856,16 +909,15 @@ import type { ParticipationStatus } from "@/dto";
 import { humanReadableParticipationStatus } from "@/dto";
 import Textarea from "./ui/textarea/Textarea.vue";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
+import { GmailIcon, LinkedInIcon } from "@/components/icons";
 import {
   Pencil,
   Trash2,
-  Mail,
   RefreshCw,
   Layers,
   AlertTriangle,
   MailWarning,
   Link2,
-  Linkedin,
   MessageSquare,
 } from "lucide-vue-next";
 import { Badge } from "@/components/ui/badge";
