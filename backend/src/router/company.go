@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/spaces"
@@ -381,6 +382,7 @@ type addThreadData struct {
 	Text    *string                    `json:"text"`
 	Meeting *mongodb.CreateMeetingData `json:"meeting"`
 	Kind    *models.ThreadKind         `json:"kind"`
+	Channel *models.ThreadChannel      `json:"channel"`
 }
 
 func (acd *addThreadData) ParseBody(body io.Reader) error {
@@ -395,6 +397,20 @@ func (acd *addThreadData) ParseBody(body io.Reader) error {
 
 	if acd.Kind == nil {
 		return errors.New("invalid kind")
+	}
+
+	if acd.Channel != nil {
+		if !acd.Channel.IsValid() {
+			return errors.New("invalid channel")
+		}
+		ch := strings.ToUpper(strings.TrimSpace(string(*acd.Channel)))
+		if ch == "OUTRO" || ch == string(models.ThreadChannelOther) {
+			*acd.Channel = models.ThreadChannelOther
+		} else if ch == string(models.ThreadChannelLinkedIn) {
+			*acd.Channel = models.ThreadChannelLinkedIn
+		} else {
+			*acd.Channel = models.ThreadChannelGmail
+		}
 	}
 
 	if *acd.Kind == models.ThreadKindMeeting && acd.Meeting == nil {
@@ -468,11 +484,18 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 		meetingIDPointer = &meeting.ID
 	}
 
+	// channel defaults to GMAIL if not specified
+	channel := models.ThreadChannelGmail
+	if atd.Channel != nil {
+		channel = *atd.Channel
+	}
+
 	// only then create the thread
 	ctd := mongodb.CreateThreadData{
 		Entry:   newPost.ID,
 		Meeting: meetingIDPointer,
 		Kind:    *atd.Kind,
+		Channel: channel,
 	}
 
 	newThread, err := mongodb.Threads.CreateThread(ctd)
@@ -512,13 +535,16 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	threadWithEntry := models.ThreadWithEntry{
-		ID:       newThread.ID,
-		Posted:   newThread.Posted,
-		Entry:    newPost,
-		Meeting:  newThread.Meeting,
-		Comments: newThread.Comments,
-		Kind:     newThread.Kind,
-		Status:   newThread.Status,
+		ID:             newThread.ID,
+		Posted:         newThread.Posted,
+		Entry:          newPost,
+		Meeting:        newThread.Meeting,
+		Comments:       newThread.Comments,
+		Kind:           newThread.Kind,
+		Status:         newThread.Status,
+		GmailMessageId: newThread.GmailMessageId,
+		GmailThreadId:  newThread.GmailThreadId,
+		Channel:        newThread.Channel,
 	}
 
 	_ = updatedCompany
@@ -1250,6 +1276,11 @@ func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			channel := thread.Channel
+			if channel == "" {
+				channel = models.ThreadChannelGmail
+			}
+
 			comms = append(comms, &models.ThreadWithEntry{
 				ID:             thread.ID,
 				Posted:         thread.Posted,
@@ -1260,6 +1291,7 @@ func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 				Status:         thread.Status,
 				GmailMessageId: thread.GmailMessageId,
 				GmailThreadId:  thread.GmailThreadId,
+				Channel:        channel,
 			})
 		}
 

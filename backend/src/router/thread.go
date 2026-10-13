@@ -123,6 +123,7 @@ func syncGmailMessagesToThreads(
 		ctd := mongodb.CreateThreadData{
 			Entry:          newPost.ID,
 			Kind:           kind,
+			Channel:        models.ThreadChannelGmail,
 			GmailMessageId: msg.MessageId,
 			GmailThreadId:  msg.ThreadId,
 			Posted:         postedTime,

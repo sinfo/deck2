@@ -1,6 +1,7 @@
 package models
 
 import (
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -40,6 +41,25 @@ func (ts ThreadStatus) IsValid() bool {
 	return ts != ThreadStatusApproved && ts != ThreadStatusReviewed && ts != ThreadStatusPending
 }
 
+// ThreadChannel is the communication channel (e.g. Gmail or LinkedIn)
+type ThreadChannel string
+
+const (
+	ThreadChannelGmail    ThreadChannel = "GMAIL"
+	ThreadChannelLinkedIn ThreadChannel = "LINKEDIN"
+	ThreadChannelOther    ThreadChannel = "OTHER"
+)
+
+// IsValid checks the validity of the thread channel
+func (tc ThreadChannel) IsValid() bool {
+	switch strings.ToUpper(strings.TrimSpace(string(tc))) {
+	case string(ThreadChannelGmail), string(ThreadChannelLinkedIn), string(ThreadChannelOther), "OUTRO":
+		return true
+	default:
+		return false
+	}
+}
+
 type Thread struct {
 
 	// Thread's ID (_id of mongodb).
@@ -73,6 +93,9 @@ type Thread struct {
 
 	// GmailThreadId is the ID of the Gmail thread this message belongs to.
 	GmailThreadId string `json:"gmailThreadId,omitempty" bson:"gmailThreadId,omitempty"`
+
+	// Channel can be "GMAIL", "LINKEDIN" or "OTHER".
+	Channel ThreadChannel `json:"channel,omitempty" bson:"channel,omitempty"`
 }
 
 type ThreadWithEntry struct {
@@ -106,4 +129,7 @@ type ThreadWithEntry struct {
 
 	// GmailThreadId is the ID of the Gmail thread this message belongs to.
 	GmailThreadId string `json:"gmailThreadId,omitempty" bson:"gmailThreadId,omitempty"`
+
+	// Channel can be "GMAIL", "LINKEDIN" or "OTHER".
+	Channel ThreadChannel `json:"channel,omitempty" bson:"channel,omitempty"`
 }

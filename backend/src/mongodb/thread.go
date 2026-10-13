@@ -26,6 +26,7 @@ type CreateThreadData struct {
 	Entry          primitive.ObjectID
 	Meeting        *primitive.ObjectID
 	Kind           models.ThreadKind
+	Channel        models.ThreadChannel
 	GmailMessageId string
 	GmailThreadId  string
 	Posted         *time.Time
@@ -73,6 +74,10 @@ func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error
 
 	if data.Meeting != nil {
 		query["meeting"] = *data.Meeting
+	}
+
+	if data.Channel != "" {
+		query["channel"] = data.Channel
 	}
 
 	if data.GmailMessageId != "" {

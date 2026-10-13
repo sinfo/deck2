@@ -178,7 +178,11 @@
       <div v-else class="flex-1 flex flex-col overflow-hidden">
         <!-- Warning banner when communications exist but Gmail thread is not linked -->
         <div
-          v-if="isContactedWithoutThread"
+          v-if="
+            isContactedWithoutThread &&
+            selectedChannelTab !== 'linkedin' &&
+            selectedChannelTab !== 'other'
+          "
           class="mx-3 mt-2 mb-1 p-2.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2 flex-shrink-0"
         >
           <div class="flex items-center gap-2 min-w-0">
@@ -201,47 +205,201 @@
           </Button>
         </div>
 
-        <!-- Thread tabs selector when multiple threads exist -->
-        <div
-          v-if="availableThreadTabs.length > 1"
-          class="flex items-center gap-1.5 px-3 sm:px-4 py-2 border-b bg-muted/30 overflow-x-auto flex-shrink-0"
-        >
-          <span
-            class="text-xs font-semibold text-muted-foreground mr-1 flex items-center gap-1 flex-shrink-0"
+        <!-- Channel tabs selector: All | Gmail | LinkedIn -->
+        <div class="flex flex-col border-b bg-muted/20 flex-shrink-0">
+          <div
+            class="flex items-center justify-between gap-1.5 px-3 sm:px-4 py-2 overflow-x-auto"
           >
-            <Layers class="w-3.5 h-3.5" /> Threads:
-          </span>
-          <button
-            v-for="tab in availableThreadTabs"
-            :key="tab.id"
-            class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0"
-            :class="[
-              selectedThreadTab === tab.id
-                ? 'bg-primary text-primary-foreground font-medium shadow-sm'
-                : 'bg-background hover:bg-muted text-muted-foreground border',
-            ]"
-            @click="selectedThreadTab = tab.id"
+            <div class="flex items-center gap-1.5">
+              <!-- All tab -->
+              <button
+                type="button"
+                class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
+                :class="[
+                  selectedChannelTab === 'all'
+                    ? 'bg-primary text-primary-foreground font-medium shadow-xs'
+                    : 'bg-background hover:bg-muted text-muted-foreground border',
+                ]"
+                @click="selectedChannelTab = 'all'"
+              >
+                <span>All</span>
+                <span
+                  class="text-[10px] px-1.5 py-0.2 rounded-full"
+                  :class="[
+                    selectedChannelTab === 'all'
+                      ? 'bg-primary-foreground/20 text-primary-foreground'
+                      : 'bg-muted text-muted-foreground',
+                  ]"
+                >
+                  {{ sortedCommunications.length }}
+                </span>
+              </button>
+
+              <!-- Gmail tab -->
+              <button
+                type="button"
+                class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
+                :class="[
+                  selectedChannelTab === 'gmail'
+                    ? 'bg-red-800 text-white font-medium shadow-xs'
+                    : 'bg-background hover:bg-muted text-muted-foreground border',
+                ]"
+                @click="selectedChannelTab = 'gmail'"
+              >
+                <Mail
+                  class="w-3 h-3"
+                  :class="
+                    selectedChannelTab === 'gmail'
+                      ? 'text-white'
+                      : 'text-red-500'
+                  "
+                />
+                <span>Gmail</span>
+                <span
+                  class="text-[10px] px-1.5 py-0.2 rounded-full"
+                  :class="[
+                    selectedChannelTab === 'gmail'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-muted text-muted-foreground',
+                  ]"
+                >
+                  {{ gmailCommunicationsCount }}
+                </span>
+              </button>
+
+              <!-- LinkedIn tab -->
+              <button
+                type="button"
+                class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
+                :class="[
+                  selectedChannelTab === 'linkedin'
+                    ? 'bg-blue-800 text-white font-medium shadow-xs'
+                    : 'bg-background hover:bg-muted text-muted-foreground border',
+                ]"
+                @click="selectedChannelTab = 'linkedin'"
+              >
+                <Linkedin
+                  class="w-3 h-3"
+                  :class="
+                    selectedChannelTab === 'linkedin'
+                      ? 'text-white'
+                      : 'text-blue-500'
+                  "
+                />
+                <span>LinkedIn</span>
+                <span
+                  class="text-[10px] px-1.5 py-0.2 rounded-full"
+                  :class="[
+                    selectedChannelTab === 'linkedin'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-muted text-muted-foreground',
+                  ]"
+                >
+                  {{ linkedInCommunicationsCount }}
+                </span>
+              </button>
+
+              <!-- Outro tab -->
+              <button
+                type="button"
+                class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
+                :class="[
+                  selectedChannelTab === 'other'
+                    ? 'bg-zinc-800 text-white font-medium shadow-xs dark:bg-zinc-700'
+                    : 'bg-background hover:bg-muted text-muted-foreground border',
+                ]"
+                @click="selectedChannelTab = 'other'"
+              >
+                <MessageSquare
+                  class="w-3 h-3"
+                  :class="
+                    selectedChannelTab === 'other'
+                      ? 'text-white'
+                      : 'text-zinc-500'
+                  "
+                />
+                <span>Outro</span>
+                <span
+                  class="text-[10px] px-1.5 py-0.2 rounded-full"
+                  :class="[
+                    selectedChannelTab === 'other'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-muted text-muted-foreground',
+                  ]"
+                >
+                  {{ otherCommunicationsCount }}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Gmail Sub-threads when in Gmail tab and multiple Gmail threads exist -->
+          <div
+            v-if="
+              selectedChannelTab === 'gmail' &&
+              availableGmailThreadTabs.length > 1
+            "
+            class="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 border-t bg-muted/40 overflow-x-auto"
           >
-            <span class="max-w-[150px] sm:max-w-[200px] truncate">{{
-              tab.label
-            }}</span>
             <span
-              class="text-[10px] px-1.5 py-0.2 rounded-full"
-              :class="[
-                selectedThreadTab === tab.id
-                  ? 'bg-primary-foreground/20 text-primary-foreground'
-                  : 'bg-muted text-muted-foreground',
-              ]"
+              class="text-[11px] font-medium text-muted-foreground mr-1 flex items-center gap-1 flex-shrink-0"
             >
-              {{ tab.count }}
+              <Layers class="w-3 h-3" /> Threads:
             </span>
-          </button>
+            <button
+              v-for="subTab in availableGmailThreadTabs"
+              :key="subTab.id"
+              type="button"
+              class="text-[11px] px-2 py-0.5 rounded-md transition-colors flex items-center gap-1 whitespace-nowrap flex-shrink-0 cursor-pointer"
+              :class="[
+                selectedGmailThreadTab === subTab.id
+                  ? 'bg-red-800 text-white font-medium shadow-xs'
+                  : 'bg-background/80 hover:bg-muted text-muted-foreground border',
+              ]"
+              @click="selectedGmailThreadTab = subTab.id"
+            >
+              <span class="max-w-[140px] sm:max-w-[180px] truncate">{{
+                subTab.label
+              }}</span>
+              <span
+                class="text-[9px] px-1 rounded-full"
+                :class="[
+                  selectedGmailThreadTab === subTab.id
+                    ? 'bg-white/20 text-white'
+                    : 'bg-muted text-muted-foreground',
+                ]"
+              >
+                {{ subTab.count }}
+              </span>
+            </button>
+          </div>
         </div>
 
         <div
           ref="messagesContainer"
           class="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
         >
+          <!-- Filtered empty state -->
+          <div
+            v-if="filteredCommunications.length === 0"
+            class="h-full flex items-center justify-center p-8 text-center text-muted-foreground"
+          >
+            <div>
+              <div class="text-2xl mb-2">
+                {{ selectedChannelTab === "linkedin" ? "💼" : "✉️" }}
+              </div>
+              <div class="text-sm font-medium">
+                Sem comunicações
+                {{
+                  selectedChannelTab === "linkedin" ? "do LinkedIn" : "do Gmail"
+                }}
+              </div>
+              <div class="text-xs opacity-70 mt-1">
+                Alterne para a aba "All" ou envie uma mensagem neste canal.
+              </div>
+            </div>
+          </div>
+
           <template
             v-for="(thread, index) in filteredCommunications"
             :key="thread.id"
@@ -256,9 +414,17 @@
                 variant="outline"
                 class="font-normal text-[11px] gap-1 py-0.5"
               >
-                <Layers class="w-3 h-3 text-muted-foreground" />
+                <Linkedin
+                  v-if="getThreadChannel(thread) === ThreadChannel.LinkedIn"
+                  class="w-3 h-3 text-blue-500"
+                />
+                <MessageSquare
+                  v-else-if="getThreadChannel(thread) === ThreadChannel.Other"
+                  class="w-3 h-3 text-zinc-500"
+                />
+                <Mail v-else class="w-3 h-3 text-red-500" />
                 <span class="max-w-[220px] sm:max-w-[320px] truncate">
-                  {{ getThreadLabel(thread) }}
+                  {{ getDividerLabel(thread) }}
                 </span>
               </Badge>
               <div class="h-px bg-border flex-1"></div>
@@ -312,15 +478,53 @@
                 <div
                   :class="[
                     'w-full rounded-lg p-2 sm:p-3 space-y-2',
-                    thread.kind === ThreadKind.ThreadKindPhoneCall
-                      ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                      : getMessageDirection(thread.kind) === 'outgoing'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted',
+                    getBubbleClasses(thread),
                   ]"
                 >
                   <!-- Message header -->
-                  <div class="flex items-center gap-2 text-xs opacity-75">
+                  <div
+                    class="flex items-center gap-2 text-xs"
+                    :class="[
+                      getMessageDirection(thread.kind) === 'outgoing'
+                        ? 'text-white/80'
+                        : 'opacity-75',
+                    ]"
+                  >
+                    <!-- Channel Badge (Gmail / LinkedIn / Outro) -->
+                    <div
+                      class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                      :class="[
+                        getMessageDirection(thread.kind) === 'outgoing'
+                          ? 'bg-black/20 text-white'
+                          : getThreadChannel(thread) === ThreadChannel.LinkedIn
+                            ? 'bg-blue-200/80 text-blue-900 dark:bg-blue-900/60 dark:text-blue-200'
+                            : getThreadChannel(thread) === ThreadChannel.Other
+                              ? 'bg-zinc-200/80 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-200'
+                              : 'bg-red-200/80 text-red-900 dark:bg-red-900/60 dark:text-red-200',
+                      ]"
+                    >
+                      <Linkedin
+                        v-if="
+                          getThreadChannel(thread) === ThreadChannel.LinkedIn
+                        "
+                        class="w-2.5 h-2.5"
+                      />
+                      <MessageSquare
+                        v-else-if="
+                          getThreadChannel(thread) === ThreadChannel.Other
+                        "
+                        class="w-2.5 h-2.5"
+                      />
+                      <Mail v-else class="w-2.5 h-2.5" />
+                      <span>{{
+                        getThreadChannel(thread) === ThreadChannel.LinkedIn
+                          ? "LinkedIn"
+                          : getThreadChannel(thread) === ThreadChannel.Other
+                            ? "Outro"
+                            : "Gmail"
+                      }}</span>
+                    </div>
+
                     <div class="flex items-center gap-1">
                       <div
                         :class="[
@@ -350,14 +554,14 @@
                   >
                     <Textarea
                       v-model="editText"
-                      class="w-full resize-none min-h-[60px] max-h-[160px]"
+                      class="w-full resize-none min-h-[60px] max-h-[160px] bg-background text-foreground"
                       :disabled="updatePostMutation?.isLoading?.value"
                     />
                     <div class="flex justify-end gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        class="text-primary"
+                        class="bg-background text-foreground hover:bg-muted"
                         :disabled="updatePostMutation?.isLoading?.value"
                         @click="cancelEdit"
                       >
@@ -365,7 +569,7 @@
                       </Button>
                       <Button
                         size="sm"
-                        class="border border-white"
+                        class="bg-background text-foreground hover:bg-muted font-medium"
                         :disabled="
                           !editText.trim() ||
                           updatePostMutation?.isLoading?.value
@@ -394,8 +598,8 @@
                           class="text-xs rounded p-2 mb-2 space-y-0.5 border"
                           :class="[
                             getMessageDirection(thread.kind) === 'outgoing'
-                              ? 'bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground'
-                              : 'bg-background/80 border-border/60 text-muted-foreground',
+                              ? 'bg-white/10 border-white/20 text-white'
+                              : 'bg-white/80 dark:bg-black/30 border-red-200/60 dark:border-red-900/40 text-red-950 dark:text-red-200',
                           ]"
                         >
                           <div
@@ -403,8 +607,8 @@
                             class="font-medium text-xs truncate flex items-center gap-1"
                             :class="[
                               getMessageDirection(thread.kind) === 'outgoing'
-                                ? 'text-primary-foreground'
-                                : 'text-foreground',
+                                ? 'text-white'
+                                : 'text-red-950 dark:text-red-100',
                             ]"
                           >
                             <span class="opacity-70 font-semibold"
@@ -546,24 +750,39 @@
                 postThreadMutation?.isLoading.value
               "
               size="sm"
-              class="px-3 flex-1 sm:flex-none"
+              class="px-3 flex-1 sm:flex-none cursor-pointer"
               @click="sendMessage"
             >
               {{ postThreadMutation?.isLoading.value ? "Sending..." : "Send" }}
             </Button>
-            <select
-              v-model="messageKind"
-              :disabled="selectedEventId !== latestEvent?.id"
-              class="text-xs border rounded px-2 py-1 flex-1 sm:flex-none"
-            >
-              <option :value="ThreadKind.ThreadKindTo">Outgoing</option>
-              <option :value="ThreadKind.ThreadKindFrom">Incoming</option>
-              <option :value="ThreadKind.ThreadKindPhoneCall">
-                Phone Call
-              </option>
-              <!-- Broken for now <option :value="ThreadKind.ThreadKindMeeting">Meeting</option> -->
-              <option :value="ThreadKind.ThreadKindTemplate">Template</option>
-            </select>
+            <div class="flex gap-1.5 flex-1 sm:flex-none">
+              <!-- Channel Selector (Gmail vs LinkedIn vs Outro) -->
+              <select
+                v-model="messageChannel"
+                :disabled="selectedEventId !== latestEvent?.id"
+                class="text-xs border rounded px-2 py-1 flex-1 sm:flex-none bg-background cursor-pointer"
+                title="Plataforma de Comunicação"
+              >
+                <option :value="ThreadChannel.Gmail">✉️ Gmail</option>
+                <option :value="ThreadChannel.LinkedIn">💼 LinkedIn</option>
+                <option :value="ThreadChannel.Other">💬 Outro</option>
+              </select>
+
+              <!-- Message Kind/Direction Selector -->
+              <select
+                v-model="messageKind"
+                :disabled="selectedEventId !== latestEvent?.id"
+                class="text-xs border rounded px-2 py-1 flex-1 sm:flex-none bg-background cursor-pointer"
+                title="Tipo de Mensagem"
+              >
+                <option :value="ThreadKind.ThreadKindTo">Outgoing</option>
+                <option :value="ThreadKind.ThreadKindFrom">Incoming</option>
+                <option :value="ThreadKind.ThreadKindPhoneCall">
+                  Phone Call
+                </option>
+                <option :value="ThreadKind.ThreadKindTemplate">Template</option>
+              </select>
+            </div>
           </div>
         </div>
         <div class="text-xs text-muted-foreground mt-2">
@@ -600,7 +819,7 @@ import {
   updateSpeakerGmailThreadIds,
   syncSpeakerGmailMessages,
 } from "@/api/speakers";
-import { ThreadKind, ThreadStatus } from "@/dto/threads";
+import { ThreadChannel, ThreadKind, ThreadStatus } from "@/dto/threads";
 import type {
   ParticipationCommunications,
   ThreadWithEntry,
@@ -609,10 +828,9 @@ import type { Speaker } from "@/dto/speakers";
 import type { Company } from "@/dto/companies";
 import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
-import {
-  useAutoLinkGmail,
-  isContactedParticipationStatus,
-} from "@/composables/useAutoLinkGmail";
+import { useAuthStore } from "@/stores/auth";
+import { useGmailMessages } from "@/composables/useGmailMessages";
+import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
 import Card from "./ui/card/Card.vue";
 import CardContent from "./ui/card/CardContent.vue";
 import CardDescription from "./ui/card/CardDescription.vue";
@@ -647,6 +865,8 @@ import {
   AlertTriangle,
   MailWarning,
   Link2,
+  Linkedin,
+  MessageSquare,
 } from "lucide-vue-next";
 import { Badge } from "@/components/ui/badge";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
@@ -692,6 +912,7 @@ const props = withDefaults(defineProps<CommunicationsProps>(), {
 
 const newMessage = ref("");
 const messageKind = ref<ThreadKind>(ThreadKind.ThreadKindTo);
+const messageChannel = ref<ThreadChannel>(ThreadChannel.Gmail);
 const messagesContainer = ref<HTMLElement>();
 const eventStore = useEventStore();
 const selectedEventId = ref<number | null>(
@@ -874,7 +1095,8 @@ const getAuthorInitials = (thread: ThreadWithEntry): string => {
   return name.charAt(0) || "?";
 };
 
-const selectedThreadTab = ref<string>("all");
+const selectedChannelTab = ref<"all" | "gmail" | "linkedin" | "other">("all");
+const selectedGmailThreadTab = ref<string>("all");
 
 interface ThreadGroupInfo {
   id: string;
@@ -883,8 +1105,74 @@ interface ThreadGroupInfo {
   count: number;
 }
 
-const availableThreadTabs = computed<ThreadGroupInfo[]>(() => {
-  const comms = sortedCommunications.value;
+const getThreadChannel = (thread: ThreadWithEntry): ThreadChannel => {
+  if (thread.channel === ThreadChannel.LinkedIn) {
+    return ThreadChannel.LinkedIn;
+  }
+  if (thread.channel === ThreadChannel.Other) {
+    return ThreadChannel.Other;
+  }
+  if (thread.channel === ThreadChannel.Gmail) {
+    return ThreadChannel.Gmail;
+  }
+  if (
+    thread.gmailMessageId ||
+    thread.gmailThreadId ||
+    thread.kind === ThreadKind.ThreadKindTemplate
+  ) {
+    return ThreadChannel.Gmail;
+  }
+  return ThreadChannel.Gmail;
+};
+
+const getBubbleClasses = (thread: ThreadWithEntry): string => {
+  if (thread.kind === ThreadKind.ThreadKindPhoneCall) {
+    return "bg-purple-100 text-purple-900 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-900";
+  }
+
+  const isOutgoing = getMessageDirection(thread.kind) === "outgoing";
+  const channel = getThreadChannel(thread);
+
+  if (channel === ThreadChannel.LinkedIn) {
+    return isOutgoing
+      ? "bg-blue-800 text-white border border-blue-900 shadow-xs dark:bg-blue-900 dark:text-blue-50"
+      : "bg-blue-100 text-blue-950 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-100 dark:border-blue-900/60";
+  }
+
+  if (channel === ThreadChannel.Other) {
+    return isOutgoing
+      ? "bg-zinc-800 text-white border border-zinc-900 shadow-xs dark:bg-zinc-800 dark:text-zinc-50"
+      : "bg-zinc-100 text-zinc-950 border border-zinc-200 dark:bg-zinc-900/60 dark:text-zinc-100 dark:border-zinc-800";
+  }
+
+  // Gmail (default)
+  return isOutgoing
+    ? "bg-red-800 text-white border border-red-900 shadow-xs dark:bg-red-900 dark:text-red-50"
+    : "bg-red-100 text-red-950 border border-red-200 dark:bg-red-950/50 dark:text-red-100 dark:border-red-900/60";
+};
+
+const gmailCommunicationsCount = computed(() => {
+  return sortedCommunications.value.filter(
+    (t) => getThreadChannel(t) === ThreadChannel.Gmail,
+  ).length;
+});
+
+const linkedInCommunicationsCount = computed(() => {
+  return sortedCommunications.value.filter(
+    (t) => getThreadChannel(t) === ThreadChannel.LinkedIn,
+  ).length;
+});
+
+const otherCommunicationsCount = computed(() => {
+  return sortedCommunications.value.filter(
+    (t) => getThreadChannel(t) === ThreadChannel.Other,
+  ).length;
+});
+
+const availableGmailThreadTabs = computed<ThreadGroupInfo[]>(() => {
+  const comms = sortedCommunications.value.filter(
+    (t) => getThreadChannel(t) === ThreadChannel.Gmail,
+  );
   if (!comms.length) return [];
 
   const threadMap = new Map<
@@ -912,7 +1200,7 @@ const availableThreadTabs = computed<ThreadGroupInfo[]>(() => {
   const tabs: ThreadGroupInfo[] = [
     {
       id: "all",
-      label: "All Messages",
+      label: "Todas as threads",
       count: comms.length,
     },
   ];
@@ -931,38 +1219,78 @@ const availableThreadTabs = computed<ThreadGroupInfo[]>(() => {
 
 const filteredCommunications = computed<ThreadWithEntry[]>(() => {
   const comms = sortedCommunications.value;
-  if (
-    selectedThreadTab.value === "all" ||
-    availableThreadTabs.value.length < 2
-  ) {
-    return comms;
+  if (!comms.length) return [];
+
+  if (selectedChannelTab.value === "gmail") {
+    const gmailComms = comms.filter(
+      (t) => getThreadChannel(t) === ThreadChannel.Gmail,
+    );
+    if (
+      selectedGmailThreadTab.value === "all" ||
+      availableGmailThreadTabs.value.length < 2
+    ) {
+      return gmailComms;
+    }
+    return gmailComms.filter(
+      (t) => getThreadKey(t) === selectedGmailThreadTab.value,
+    );
   }
 
-  return comms.filter((t) => getThreadKey(t) === selectedThreadTab.value);
+  if (selectedChannelTab.value === "linkedin") {
+    return comms.filter((t) => getThreadChannel(t) === ThreadChannel.LinkedIn);
+  }
+
+  if (selectedChannelTab.value === "other") {
+    return comms.filter((t) => getThreadChannel(t) === ThreadChannel.Other);
+  }
+
+  // All: return all messages in chronological order
+  return comms;
 });
 
-// Renders a visual divider when consecutive messages belong to different email threads in "All" view
 const showThreadDivider = (index: number): boolean => {
-  if (
-    availableThreadTabs.value.length < 2 ||
-    selectedThreadTab.value !== "all"
-  ) {
-    return false;
-  }
   const comms = filteredCommunications.value;
-  const currentThreadKey = getThreadKey(comms[index]);
-  if (!currentThreadKey) return false;
+  if (index === 0 || comms.length === 0) return false;
 
-  if (index === 0) return true;
-  const prevThreadKey = getThreadKey(comms[index - 1]);
-  return currentThreadKey !== prevThreadKey;
+  const current = comms[index];
+  const prev = comms[index - 1];
+
+  if (selectedChannelTab.value === "all") {
+    const currentChannel = getThreadChannel(current);
+    const prevChannel = getThreadChannel(prev);
+    if (currentChannel !== prevChannel) {
+      return true;
+    }
+    const currentKey = getThreadKey(current);
+    const prevKey = getThreadKey(prev);
+    return !!(currentKey && prevKey && currentKey !== prevKey);
+  }
+
+  if (
+    selectedChannelTab.value === "gmail" &&
+    selectedGmailThreadTab.value === "all" &&
+    availableGmailThreadTabs.value.length > 1
+  ) {
+    const currentKey = getThreadKey(current);
+    const prevKey = getThreadKey(prev);
+    return !!(currentKey && prevKey && currentKey !== prevKey);
+  }
+
+  return false;
 };
 
-const getThreadLabel = (thread: ThreadWithEntry): string => {
+const getDividerLabel = (thread: ThreadWithEntry): string => {
+  const channel = getThreadChannel(thread);
+  if (channel === ThreadChannel.LinkedIn) {
+    return "LinkedIn";
+  }
+  if (channel === ThreadChannel.Other) {
+    return "Outro";
+  }
   const emailInfo = parseEmailText(thread.entry?.text);
-  if (emailInfo.subject) return emailInfo.subject;
-  if (thread.gmailThreadId) return `Thread #${thread.gmailThreadId.slice(-6)}`;
-  return "Email Thread";
+  if (emailInfo.subject) return `Gmail: ${emailInfo.subject}`;
+  if (thread.gmailThreadId) return `Gmail: #${thread.gmailThreadId.slice(-6)}`;
+  return "Gmail";
 };
 
 const onMessageInput = () => {
@@ -1004,10 +1332,82 @@ const currentParticipationStatus = computed<ParticipationStatus | undefined>(
   () => currentParticipation.value?.status,
 );
 
+const authStore = useAuthStore();
+const { listThreads } = useGmailMessages();
+
+const availableGmailThreadsCount = ref<number>(0);
+const isCheckingAvailableThreads = ref<boolean>(false);
+
+const hasManualGmailMessage = computed(() => {
+  return sortedCommunications.value.some(
+    (t) =>
+      getThreadChannel(t) === ThreadChannel.Gmail &&
+      !t.gmailMessageId &&
+      !t.gmailThreadId &&
+      t.kind !== ThreadKind.ThreadKindPhoneCall &&
+      t.kind !== ThreadKind.ThreadKindMeeting &&
+      !parseEmailText(t.entry?.text).isEmail,
+  );
+});
+
+const checkAvailableGmailThreads = async () => {
+  if (
+    !authStore.isGoogleAuthenticated ||
+    !hasManualGmailMessage.value ||
+    currentParticipationGmailThreadIds.value.length > 0
+  ) {
+    availableGmailThreadsCount.value = 0;
+    return;
+  }
+
+  isCheckingAvailableThreads.value = true;
+  try {
+    const res = await listThreads({
+      q: props.entity.name,
+      maxResults: 5,
+    });
+    const threads = res?.threads || [];
+    const unlinked = threads.filter(
+      (t) => !currentParticipationGmailThreadIds.value.includes(t.id),
+    );
+    availableGmailThreadsCount.value = unlinked.length;
+  } catch (err) {
+    console.error("Failed to check available Gmail threads:", err);
+    availableGmailThreadsCount.value = 0;
+  } finally {
+    isCheckingAvailableThreads.value = false;
+  }
+};
+
+watch(
+  () => hasManualGmailMessage.value,
+  (hasManual) => {
+    if (hasManual) {
+      checkAvailableGmailThreads();
+    } else {
+      availableGmailThreadsCount.value = 0;
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => [props.entity.id, selectedEventId.value],
+  () => {
+    if (hasManualGmailMessage.value) {
+      checkAvailableGmailThreads();
+    } else {
+      availableGmailThreadsCount.value = 0;
+    }
+  },
+);
+
+// O aviso só pode aparecer quando se adiciona manualmente uma msg do Gmail e existem threads disponíveis onde a podemos ligar
 const isContactedWithoutThread = computed(() => {
   return (
-    isContactedParticipationStatus(currentParticipationStatus.value) &&
-    currentParticipationGmailThreadIds.value.length === 0
+    hasManualGmailMessage.value &&
+    currentParticipationGmailThreadIds.value.length === 0 &&
+    availableGmailThreadsCount.value > 0
   );
 });
 
@@ -1039,6 +1439,7 @@ const handleGmailThreadsSave = async (threadIds: string[]) => {
     });
     // Auto-sync after linking
     await syncGmailMessages();
+    availableGmailThreadsCount.value = 0;
   } catch (err) {
     console.error("Failed to update Gmail thread IDs:", err);
   } finally {
@@ -1168,9 +1569,23 @@ watch(
   },
 );
 
-// Watch for changes in the selected thread tab and scroll to bottom
+// Watch for changes in the selected channel or sub-thread tab and scroll to bottom
 watch(
-  () => selectedThreadTab.value,
+  () => selectedChannelTab.value,
+  (newTab) => {
+    if (newTab === "linkedin") {
+      messageChannel.value = ThreadChannel.LinkedIn;
+    } else if (newTab === "gmail") {
+      messageChannel.value = ThreadChannel.Gmail;
+    } else if (newTab === "other") {
+      messageChannel.value = ThreadChannel.Other;
+    }
+    scrollToBottom();
+  },
+);
+
+watch(
+  () => selectedGmailThreadTab.value,
   () => {
     scrollToBottom();
   },
@@ -1328,6 +1743,7 @@ const sendMessage = async () => {
     props.postThreadMutation.threadData.value = {
       text: newMessage.value,
       kind: messageKind.value,
+      channel: messageChannel.value,
     };
 
     await props.postThreadMutation.mutate();
@@ -1336,6 +1752,10 @@ const sendMessage = async () => {
     selectedTemplate.value = undefined;
 
     scrollToBottom();
+
+    if (messageChannel.value === ThreadChannel.Gmail) {
+      checkAvailableGmailThreads();
+    }
   } catch (error) {
     console.error("Failed to send message:", error);
   }
@@ -1370,6 +1790,7 @@ watch(
     const { template, variables } = newTemplate;
     openTemplateInNewTab(template, variables);
 
+    messageChannel.value = ThreadChannel.Gmail;
     messageKind.value = ThreadKind.ThreadKindTemplate;
     newMessage.value = `Send "${templateHumanReadableNames[template]}" template`;
   },
