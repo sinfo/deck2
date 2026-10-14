@@ -207,6 +207,14 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       }
       console.error("Create speaker thread failed:", err);
     },
+
+    onSettled: () => {
+      if (speakerId.value) {
+        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+      queryCache.invalidateQueries({ key: ["responsibilities"] });
+    },
   });
 
   return {

@@ -512,6 +512,16 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if afterUpdate, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID); err == nil && newStatus != nil {
+		updatedCompany = afterUpdate
+		if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+				Kind:    models.NotificationKindUpdatedParticipationStatus,
+				Company: &updatedCompany.ID,
+			})
+		}
+	}
+
 	threadWithEntry := models.ThreadWithEntry{
 		ID:       newThread.ID,
 		Posted:   newThread.Posted,
@@ -1447,6 +1457,17 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		}
 
 		syncedCount++
+	}
+
+	if syncedCount > 0 {
+		if _, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID); err == nil && newStatus != nil {
+			if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+				mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+					Kind:    models.NotificationKindUpdatedParticipationStatus,
+					Company: &companyID,
+				})
+			}
+		}
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{

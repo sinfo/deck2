@@ -851,6 +851,15 @@ const syncGmailMessages = async () => {
     queryCache.invalidateQueries({
       key: [`${props.entityType}-communications`, props.entity.id],
     });
+    queryCache.invalidateQueries({
+      key: [props.entityType, props.entity.id],
+    });
+    queryCache.invalidateQueries({
+      key: [props.entityType === "company" ? "companies" : "speakers"],
+    });
+    queryCache.invalidateQueries({
+      key: ["responsibilities"],
+    });
   } catch (err) {
     console.error("Failed to sync Gmail messages:", err);
   } finally {

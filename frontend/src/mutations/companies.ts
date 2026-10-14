@@ -298,6 +298,14 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       }
       console.error("Create company thread failed:", err);
     },
+
+    onSettled: () => {
+      if (companyId.value) {
+        queryCache.invalidateQueries({ key: ["company", companyId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["companies"] });
+      queryCache.invalidateQueries({ key: ["responsibilities"] });
+    },
   });
 
   return {
