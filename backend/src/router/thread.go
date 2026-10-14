@@ -193,7 +193,7 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if credentials.Role.AccessLevel() != 0 && p.Member != credentials.ID {
+		if credentials.Role.AccessLevel() > 1 && p.Member != credentials.ID {
 			http.Error(w, "Unauthorized", http.StatusForbidden)
 			return
 		}
@@ -245,7 +245,7 @@ func deleteThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if credentials.Role.AccessLevel() != 0 && p.Member != credentials.ID {
+	if credentials.Role.AccessLevel() > 1 && p.Member != credentials.ID {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
