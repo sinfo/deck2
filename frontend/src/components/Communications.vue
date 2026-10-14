@@ -550,85 +550,64 @@
                         v-if="parseEmailText(thread.entry.text).isEmail"
                         class="space-y-1.5"
                       >
+                        <!-- Balloon wrapping only the icon and subject (and De/Para) -->
                         <div
-                          class="flex items-center justify-between gap-3 mb-2"
+                          class="text-xs rounded-lg p-2.5 mb-2 border flex items-center gap-2.5 min-w-0"
+                          :class="getHeaderCardClasses(thread)"
                         >
-                          <!-- Balloon wrapping only the icon and subject (and De/Para) -->
-                          <div
-                            class="text-xs rounded-lg p-2.5 border flex items-center gap-2.5 min-w-0 flex-1"
-                            :class="getHeaderCardClasses(thread)"
-                          >
-                            <!-- Channel Logo directly beside subject (no own balloon/tile) -->
-                            <ChannelTile
-                              bare
-                              :channel="getThreadChannel(thread)"
-                              :is-outgoing="
-                                getMessageDirection(thread.kind) === 'outgoing'
-                              "
-                            />
-
-                            <div class="min-w-0 flex-1 space-y-0.5">
-                              <div
-                                v-if="parseEmailText(thread.entry.text).subject"
-                                class="font-medium text-xs flex items-center gap-1 min-w-0"
-                                :class="[
-                                  getMessageDirection(thread.kind) ===
-                                  'outgoing'
-                                    ? 'text-white'
-                                    : getThreadChannel(thread) ===
-                                        ThreadChannel.LinkedIn
-                                      ? 'text-blue-950 dark:text-blue-100'
-                                      : getThreadChannel(thread) ===
-                                          ThreadChannel.Other
-                                        ? 'text-zinc-950 dark:text-zinc-100'
-                                        : 'text-red-950 dark:text-red-100',
-                                ]"
-                                :title="
-                                  parseEmailText(thread.entry.text).subject
-                                "
-                              >
-                                <span class="opacity-70 font-semibold shrink-0"
-                                  >Assunto:</span
-                                >
-                                <span class="truncate min-w-0">{{
-                                  parseEmailText(thread.entry.text).subject
-                                }}</span>
-                              </div>
-                              <div
-                                v-if="parseEmailText(thread.entry.text).from"
-                                class="truncate text-[11px]"
-                              >
-                                <span class="font-semibold opacity-70"
-                                  >De:</span
-                                >
-                                <span class="ml-1">{{
-                                  parseEmailText(thread.entry.text).from
-                                }}</span>
-                              </div>
-                              <div
-                                v-if="parseEmailText(thread.entry.text).to"
-                                class="truncate text-[11px]"
-                              >
-                                <span class="font-semibold opacity-70"
-                                  >Para:</span
-                                >
-                                <span class="ml-1">{{
-                                  parseEmailText(thread.entry.text).to
-                                }}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- Date outside the balloon -->
-                          <div
-                            class="text-[11px] shrink-0 whitespace-nowrap select-none"
-                            :class="[
+                          <!-- Channel Logo directly beside subject (no own balloon/tile) -->
+                          <ChannelTile
+                            bare
+                            :channel="getThreadChannel(thread)"
+                            :is-outgoing="
                               getMessageDirection(thread.kind) === 'outgoing'
-                                ? 'text-white/70'
-                                : 'text-muted-foreground',
-                            ]"
-                          >
-                            {{ formatDate(thread.posted) }}
+                            "
+                          />
+
+                          <div class="min-w-0 flex-1 space-y-0.5">
+                            <div
+                              v-if="parseEmailText(thread.entry.text).subject"
+                              class="font-medium text-xs flex items-center gap-1 min-w-0"
+                              :class="[
+                                getMessageDirection(thread.kind) === 'outgoing'
+                                  ? 'text-white'
+                                  : getThreadChannel(thread) ===
+                                      ThreadChannel.LinkedIn
+                                    ? 'text-blue-950 dark:text-blue-100'
+                                    : getThreadChannel(thread) ===
+                                        ThreadChannel.Other
+                                      ? 'text-zinc-950 dark:text-zinc-100'
+                                      : 'text-red-950 dark:text-red-100',
+                              ]"
+                              :title="parseEmailText(thread.entry.text).subject"
+                            >
+                              <span class="opacity-70 font-semibold shrink-0"
+                                >Assunto:</span
+                              >
+                              <span class="truncate min-w-0">{{
+                                parseEmailText(thread.entry.text).subject
+                              }}</span>
+                            </div>
+                            <div
+                              v-if="parseEmailText(thread.entry.text).from"
+                              class="truncate text-[11px]"
+                            >
+                              <span class="font-semibold opacity-70">De:</span>
+                              <span class="ml-1">{{
+                                parseEmailText(thread.entry.text).from
+                              }}</span>
+                            </div>
+                            <div
+                              v-if="parseEmailText(thread.entry.text).to"
+                              class="truncate text-[11px]"
+                            >
+                              <span class="font-semibold opacity-70"
+                                >Para:</span
+                              >
+                              <span class="ml-1">{{
+                                parseEmailText(thread.entry.text).to
+                              }}</span>
+                            </div>
                           </div>
                         </div>
                         <!-- Email body -->
@@ -650,16 +629,6 @@
                         >
                           {{ thread.entry.text }}
                         </div>
-                        <div
-                          class="text-[11px] shrink-0 whitespace-nowrap select-none pt-1"
-                          :class="[
-                            getMessageDirection(thread.kind) === 'outgoing'
-                              ? 'text-white/70'
-                              : 'text-muted-foreground',
-                          ]"
-                        >
-                          {{ formatDate(thread.posted) }}
-                        </div>
                       </div>
 
                       <div
@@ -676,53 +645,32 @@
                     <!-- Phone call indicator -->
                     <div
                       v-else-if="thread.kind === ThreadKind.ThreadKindPhoneCall"
-                      class="text-sm italic flex items-center justify-between gap-2"
+                      class="text-sm italic flex items-center justify-center gap-2"
                     >
-                      <div class="flex items-center gap-2">
-                        <span class="text-lg">📞</span>
-                        <span>Phone call</span>
-                      </div>
-                      <span
-                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
-                        :class="[
-                          getMessageDirection(thread.kind) === 'outgoing'
-                            ? 'text-white/70'
-                            : 'text-muted-foreground',
-                        ]"
-                      >
-                        {{ formatDate(thread.posted) }}
-                      </span>
+                      <span class="text-lg">📞</span>
+                      <span>Phone call</span>
                     </div>
 
                     <!-- Meeting indicator -->
-                    <div
-                      v-else-if="thread.meeting"
-                      class="text-sm italic flex items-center justify-between gap-2"
-                    >
-                      <span>📅 Meeting scheduled</span>
-                      <span
-                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
-                        :class="[
-                          getMessageDirection(thread.kind) === 'outgoing'
-                            ? 'text-white/70'
-                            : 'text-muted-foreground',
-                        ]"
-                      >
-                        {{ formatDate(thread.posted) }}
-                      </span>
+                    <div v-else-if="thread.meeting" class="text-sm italic">
+                      📅 Meeting scheduled
                     </div>
 
                     <!-- No content fallback -->
+                    <div v-else class="text-sm italic opacity-60">
+                      No message content
+                    </div>
+
+                    <!-- Date in bottom corner -->
                     <div
-                      v-else
-                      class="text-sm italic opacity-60 flex items-center justify-between gap-2"
+                      class="text-[11px] text-right mt-1.5 select-none"
+                      :class="[
+                        getMessageDirection(thread.kind) === 'outgoing'
+                          ? 'text-white/70'
+                          : 'text-muted-foreground',
+                      ]"
                     >
-                      <span>No message content</span>
-                      <span
-                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
-                      >
-                        {{ formatDate(thread.posted) }}
-                      </span>
+                      {{ formatDate(thread.posted, thread) }}
                     </div>
                   </div>
 
@@ -1819,8 +1767,25 @@ const getKindColor = (kind: ThreadKind): string => {
   }
 };
 
-const formatDate = (dateString: string): string => {
+const isManualCommunication = (thread: ThreadWithEntry): boolean => {
+  return (
+    !thread.gmailMessageId &&
+    !thread.gmailThreadId &&
+    !parseEmailText(thread.entry?.text).isEmail
+  );
+};
+
+const formatDate = (dateString: string, thread?: ThreadWithEntry): string => {
   const date = new Date(dateString);
+
+  if (thread && isManualCommunication(thread)) {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
   const now = new Date();
   const diffInDays = Math.floor(
     (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
