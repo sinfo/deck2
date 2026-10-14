@@ -205,13 +205,12 @@
           </Button>
         </div>
 
-        <!-- Channel tabs selector: All | Gmail | LinkedIn -->
+        <!-- Channel tabs -->
         <div class="flex flex-col border-b bg-muted/20 flex-shrink-0">
           <div
             class="flex items-center justify-between gap-1.5 px-3 sm:px-4 py-2 overflow-x-auto"
           >
             <div class="flex items-center gap-1.5">
-              <!-- All tab -->
               <button
                 type="button"
                 class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
@@ -235,7 +234,6 @@
                 </span>
               </button>
 
-              <!-- Gmail tab -->
               <button
                 type="button"
                 class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
@@ -260,7 +258,6 @@
                 </span>
               </button>
 
-              <!-- LinkedIn tab -->
               <button
                 type="button"
                 class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
@@ -285,7 +282,6 @@
                 </span>
               </button>
 
-              <!-- Outro tab -->
               <button
                 type="button"
                 class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
@@ -481,7 +477,7 @@
                     getBubbleClasses(thread),
                   ]"
                 >
-                  <!-- Special kind badge if not standard Sent/Received (e.g. Phone Call, Meeting, Template) -->
+                  <!-- Kind badge -->
                   <div
                     v-if="
                       thread.kind !== ThreadKind.ThreadKindTo &&
@@ -543,19 +539,16 @@
 
                   <!-- VIEW MODE -->
                   <div v-else>
-                    <!-- Message content -->
                     <div v-if="thread.entry" class="text-sm">
-                      <!-- Synced Email Header Card -->
+                      <!-- Email message -->
                       <div
                         v-if="parseEmailText(thread.entry.text).isEmail"
                         class="space-y-1.5"
                       >
-                        <!-- Balloon wrapping only the icon and subject (and De/Para) -->
                         <div
                           class="text-xs rounded-lg p-2.5 mb-2 border flex items-center gap-2.5 min-w-0"
                           :class="getHeaderCardClasses(thread)"
                         >
-                          <!-- Channel Logo directly beside subject (no own balloon/tile) -->
                           <ChannelTile
                             bare
                             :channel="getThreadChannel(thread)"
@@ -568,17 +561,6 @@
                             <div
                               v-if="parseEmailText(thread.entry.text).subject"
                               class="font-medium text-xs flex items-center gap-1 min-w-0"
-                              :class="[
-                                getMessageDirection(thread.kind) === 'outgoing'
-                                  ? 'text-white'
-                                  : getThreadChannel(thread) ===
-                                      ThreadChannel.LinkedIn
-                                    ? 'text-blue-950 dark:text-blue-100'
-                                    : getThreadChannel(thread) ===
-                                        ThreadChannel.Other
-                                      ? 'text-zinc-950 dark:text-zinc-100'
-                                      : 'text-red-950 dark:text-red-100',
-                              ]"
                               :title="parseEmailText(thread.entry.text).subject"
                             >
                               <span class="opacity-70 font-semibold shrink-0"
@@ -610,12 +592,12 @@
                             </div>
                           </div>
                         </div>
+
                         <!-- Email body -->
                         <div class="leading-relaxed">
                           <div
-                            v-for="(line, idx) in splitTextLines(
-                              parseEmailText(thread.entry.text).body,
-                            ).leadingLines"
+                            v-for="(line, idx) in getThreadTextLines(thread)
+                              .leadingLines"
                             :key="idx"
                             class="min-h-[1.25rem] whitespace-pre-wrap break-words"
                           >
@@ -626,17 +608,9 @@
                           >
                             <span
                               class="truncate min-w-0 flex-1"
-                              :title="
-                                splitTextLines(
-                                  parseEmailText(thread.entry.text).body,
-                                ).lastLine
-                              "
+                              :title="getThreadTextLines(thread).lastLine"
                             >
-                              {{
-                                splitTextLines(
-                                  parseEmailText(thread.entry.text).body,
-                                ).lastLine
-                              }}
+                              {{ getThreadTextLines(thread).lastLine }}
                             </span>
                             <span
                               class="text-[11px] shrink-0 whitespace-nowrap select-none"
@@ -652,7 +626,7 @@
                         </div>
                       </div>
 
-                      <!-- Non-email message (e.g. LinkedIn or manual entry) -->
+                      <!-- Non-email message -->
                       <div v-else class="flex items-start gap-3 min-w-0">
                         <ChannelTile
                           :channel="getThreadChannel(thread)"
@@ -662,9 +636,8 @@
                         />
                         <div class="flex-1 min-w-0 pt-1 leading-relaxed">
                           <div
-                            v-for="(line, idx) in splitTextLines(
-                              thread.entry.text,
-                            ).leadingLines"
+                            v-for="(line, idx) in getThreadTextLines(thread)
+                              .leadingLines"
                             :key="idx"
                             class="min-h-[1.25rem] whitespace-pre-wrap break-words"
                           >
@@ -675,11 +648,9 @@
                           >
                             <span
                               class="truncate min-w-0 flex-1"
-                              :title="
-                                splitTextLines(thread.entry.text).lastLine
-                              "
+                              :title="getThreadTextLines(thread).lastLine"
                             >
-                              {{ splitTextLines(thread.entry.text).lastLine }}
+                              {{ getThreadTextLines(thread).lastLine }}
                             </span>
                             <span
                               class="text-[11px] shrink-0 whitespace-nowrap select-none"
@@ -1223,16 +1194,38 @@ const parseEmailText = (text?: string): ParsedEmailContent => {
   return result;
 };
 
+const textLinesCache = new Map<
+  string,
+  { leadingLines: string[]; lastLine: string }
+>();
+
 const splitTextLines = (
   text?: string,
 ): { leadingLines: string[]; lastLine: string } => {
   if (!text) return { leadingLines: [], lastLine: "" };
+  const cached = textLinesCache.get(text);
+  if (cached) return cached;
+
   const trimmed = text.replace(/\n+$/, "");
   const lines = trimmed.split("\n");
-  return {
+  const result = {
     leadingLines: lines.slice(0, -1),
     lastLine: lines[lines.length - 1] ?? "",
   };
+
+  if (textLinesCache.size > 200) {
+    textLinesCache.clear();
+  }
+  textLinesCache.set(text, result);
+  return result;
+};
+
+const getThreadTextLines = (
+  thread: ThreadWithEntry,
+): { leadingLines: string[]; lastLine: string } => {
+  const text = thread.entry?.text ?? "";
+  const emailInfo = parseEmailText(text);
+  return splitTextLines(emailInfo.isEmail ? emailInfo.body : text);
 };
 
 // Returns conversation group key (gmailThreadId or parsed email subject) to separate distinct threads.
@@ -1270,12 +1263,8 @@ interface ThreadGroupInfo {
 }
 
 const getThreadChannel = (thread: ThreadWithEntry): ThreadChannel => {
-  if (thread.channel === ThreadChannel.LinkedIn) {
-    return ThreadChannel.LinkedIn;
-  }
-  if (thread.channel === ThreadChannel.Other) {
-    return ThreadChannel.Other;
-  }
+  if (thread.channel === ThreadChannel.LinkedIn) return ThreadChannel.LinkedIn;
+  if (thread.channel === ThreadChannel.Other) return ThreadChannel.Other;
   return ThreadChannel.Gmail;
 };
 
@@ -1301,7 +1290,7 @@ const getBubbleClasses = (thread: ThreadWithEntry): string => {
 
   // Gmail (default)
   return isOutgoing
-    ? "bg-red-800 text-white border border-red-900 shadow-xs dark:bg-red-900 dark:text-red-50"
+    ? "bg-[#712b27] text-white border border-[#5c2927] shadow-xs dark:bg-[#712b27] dark:text-red-50 dark:border-[#5c2927]"
     : "bg-red-100 text-red-950 border border-red-200 dark:bg-red-950/50 dark:text-red-100 dark:border-red-900/60";
 };
 
@@ -1311,15 +1300,14 @@ const getHeaderCardClasses = (thread: ThreadWithEntry): string => {
     return "bg-white/10 border-white/20 text-white";
   }
 
-  const channel = getThreadChannel(thread);
-  if (channel === ThreadChannel.LinkedIn) {
-    return "bg-white/80 dark:bg-black/30 border-blue-200/60 dark:border-blue-900/40 text-blue-950 dark:text-blue-200";
+  switch (getThreadChannel(thread)) {
+    case ThreadChannel.LinkedIn:
+      return "bg-white/80 dark:bg-black/30 border-blue-200/60 dark:border-blue-900/40 text-blue-950 dark:text-blue-200";
+    case ThreadChannel.Other:
+      return "bg-white/80 dark:bg-black/30 border-zinc-200/60 dark:border-zinc-800 text-zinc-950 dark:text-zinc-200";
+    default:
+      return "bg-white/80 dark:bg-black/30 border-red-200/60 dark:border-red-900/40 text-red-950 dark:text-red-200";
   }
-  if (channel === ThreadChannel.Other) {
-    return "bg-white/80 dark:bg-black/30 border-zinc-200/60 dark:border-zinc-800 text-zinc-950 dark:text-zinc-200";
-  }
-  // Gmail (default)
-  return "bg-white/80 dark:bg-black/30 border-red-200/60 dark:border-red-900/40 text-red-950 dark:text-red-200";
 };
 
 const channelCounts = computed(() => {
@@ -1455,17 +1443,19 @@ const showThreadDivider = (index: number): boolean => {
 };
 
 const getDividerLabel = (thread: ThreadWithEntry): string => {
-  const channel = getThreadChannel(thread);
-  if (channel === ThreadChannel.LinkedIn) {
-    return "LinkedIn";
+  switch (getThreadChannel(thread)) {
+    case ThreadChannel.LinkedIn:
+      return "LinkedIn";
+    case ThreadChannel.Other:
+      return "Outro";
+    default: {
+      const emailInfo = parseEmailText(thread.entry?.text);
+      if (emailInfo.subject) return `Gmail: ${emailInfo.subject}`;
+      if (thread.gmailThreadId)
+        return `Gmail: #${thread.gmailThreadId.slice(-6)}`;
+      return "Gmail";
+    }
   }
-  if (channel === ThreadChannel.Other) {
-    return "Outro";
-  }
-  const emailInfo = parseEmailText(thread.entry?.text);
-  if (emailInfo.subject) return `Gmail: ${emailInfo.subject}`;
-  if (thread.gmailThreadId) return `Gmail: #${thread.gmailThreadId.slice(-6)}`;
-  return "Gmail";
 };
 
 const onMessageInput = () => {
@@ -1570,7 +1560,7 @@ watch(
   { immediate: true },
 );
 
-// O aviso só pode aparecer quando se adiciona manualmente uma msg do Gmail e existem threads disponíveis onde a podemos ligar
+// Warning banner shows when manual Gmail communication exists and unlinked threads are available
 const isContactedWithoutThread = computed(() => {
   return (
     hasManualGmailMessage.value &&

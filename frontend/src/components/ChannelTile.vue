@@ -21,14 +21,14 @@ const tileClasses = computed(() => {
     return "bg-white/10 border-white/20 text-white";
   }
 
-  if (props.channel === ThreadChannel.LinkedIn) {
-    return "bg-white/90 dark:bg-black/40 border-blue-200/80 dark:border-blue-900/60 text-blue-950 dark:text-blue-200";
+  switch (props.channel) {
+    case ThreadChannel.LinkedIn:
+      return "bg-white/90 dark:bg-black/40 border-blue-200/80 dark:border-blue-900/60 text-blue-950 dark:text-blue-200";
+    case ThreadChannel.Other:
+      return "bg-white/90 dark:bg-black/40 border-zinc-200/80 dark:border-zinc-800 text-zinc-950 dark:text-zinc-200";
+    default:
+      return "bg-white/90 dark:bg-black/40 border-red-200/80 dark:border-red-900/60 text-red-950 dark:text-red-200";
   }
-  if (props.channel === ThreadChannel.Other) {
-    return "bg-white/90 dark:bg-black/40 border-zinc-200/80 dark:border-zinc-800 text-zinc-950 dark:text-zinc-200";
-  }
-  // Gmail (default)
-  return "bg-white/90 dark:bg-black/40 border-red-200/80 dark:border-red-900/60 text-red-950 dark:text-red-200";
 });
 </script>
 
@@ -40,7 +40,7 @@ const tileClasses = computed(() => {
   >
     <LinkedInIcon
       v-if="channel === ThreadChannel.LinkedIn"
-      class="w-6 h-6 block"
+      class="w-6 h-6 block rounded-[2px]"
       title="LinkedIn"
     />
     <GmailIcon
@@ -50,21 +50,19 @@ const tileClasses = computed(() => {
     />
     <MessageSquare v-else class="w-5 h-5 block opacity-80" title="Outro" />
   </div>
-  <template v-else>
-    <LinkedInIcon
-      v-if="channel === ThreadChannel.LinkedIn"
-      class="w-6 h-6 shrink-0 block rounded-[2px]"
-      title="LinkedIn"
-    />
-    <GmailIcon
-      v-else-if="channel === ThreadChannel.Gmail"
-      class="w-6 h-6 shrink-0 block"
-      title="Gmail"
-    />
-    <MessageSquare
-      v-else
-      class="w-5 h-5 shrink-0 block opacity-80"
-      title="Outro"
-    />
-  </template>
+  <LinkedInIcon
+    v-else-if="channel === ThreadChannel.LinkedIn"
+    class="w-6 h-6 shrink-0 block rounded-[2px]"
+    title="LinkedIn"
+  />
+  <GmailIcon
+    v-else-if="channel === ThreadChannel.Gmail"
+    class="w-6 h-6 shrink-0 block"
+    title="Gmail"
+  />
+  <MessageSquare
+    v-else
+    class="w-5 h-5 shrink-0 block opacity-80"
+    title="Outro"
+  />
 </template>
