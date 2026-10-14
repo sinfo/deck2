@@ -611,23 +611,87 @@
                           </div>
                         </div>
                         <!-- Email body -->
-                        <div class="whitespace-pre-wrap leading-relaxed">
-                          {{ parseEmailText(thread.entry.text).body }}
+                        <div class="leading-relaxed">
+                          <div
+                            v-for="(line, idx) in splitTextLines(
+                              parseEmailText(thread.entry.text).body,
+                            ).leadingLines"
+                            :key="idx"
+                            class="min-h-[1.25rem] whitespace-pre-wrap break-words"
+                          >
+                            {{ line }}
+                          </div>
+                          <div
+                            class="flex items-baseline justify-between gap-2 min-w-0"
+                          >
+                            <span
+                              class="truncate min-w-0 flex-1"
+                              :title="
+                                splitTextLines(
+                                  parseEmailText(thread.entry.text).body,
+                                ).lastLine
+                              "
+                            >
+                              {{
+                                splitTextLines(
+                                  parseEmailText(thread.entry.text).body,
+                                ).lastLine
+                              }}
+                            </span>
+                            <span
+                              class="text-[11px] shrink-0 whitespace-nowrap select-none"
+                              :class="[
+                                getMessageDirection(thread.kind) === 'outgoing'
+                                  ? 'text-white/70'
+                                  : 'text-muted-foreground',
+                              ]"
+                            >
+                              {{ formatDate(thread.posted, thread) }}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
                       <!-- Non-email message (e.g. LinkedIn or manual entry) -->
-                      <div v-else class="flex items-start gap-3">
+                      <div v-else class="flex items-start gap-3 min-w-0">
                         <ChannelTile
                           :channel="getThreadChannel(thread)"
                           :is-outgoing="
                             getMessageDirection(thread.kind) === 'outgoing'
                           "
                         />
-                        <div
-                          class="whitespace-pre-wrap flex-1 pt-1 leading-relaxed"
-                        >
-                          {{ thread.entry.text }}
+                        <div class="flex-1 min-w-0 pt-1 leading-relaxed">
+                          <div
+                            v-for="(line, idx) in splitTextLines(
+                              thread.entry.text,
+                            ).leadingLines"
+                            :key="idx"
+                            class="min-h-[1.25rem] whitespace-pre-wrap break-words"
+                          >
+                            {{ line }}
+                          </div>
+                          <div
+                            class="flex items-baseline justify-between gap-2 min-w-0"
+                          >
+                            <span
+                              class="truncate min-w-0 flex-1"
+                              :title="
+                                splitTextLines(thread.entry.text).lastLine
+                              "
+                            >
+                              {{ splitTextLines(thread.entry.text).lastLine }}
+                            </span>
+                            <span
+                              class="text-[11px] shrink-0 whitespace-nowrap select-none"
+                              :class="[
+                                getMessageDirection(thread.kind) === 'outgoing'
+                                  ? 'text-white/70'
+                                  : 'text-muted-foreground',
+                              ]"
+                            >
+                              {{ formatDate(thread.posted, thread) }}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
@@ -645,32 +709,53 @@
                     <!-- Phone call indicator -->
                     <div
                       v-else-if="thread.kind === ThreadKind.ThreadKindPhoneCall"
-                      class="text-sm italic flex items-center justify-center gap-2"
+                      class="text-sm italic flex items-center justify-between gap-2"
                     >
-                      <span class="text-lg">📞</span>
-                      <span>Phone call</span>
+                      <div class="flex items-center gap-2">
+                        <span class="text-lg">📞</span>
+                        <span>Phone call</span>
+                      </div>
+                      <span
+                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
+                        :class="[
+                          getMessageDirection(thread.kind) === 'outgoing'
+                            ? 'text-white/70'
+                            : 'text-muted-foreground',
+                        ]"
+                      >
+                        {{ formatDate(thread.posted, thread) }}
+                      </span>
                     </div>
 
                     <!-- Meeting indicator -->
-                    <div v-else-if="thread.meeting" class="text-sm italic">
-                      📅 Meeting scheduled
+                    <div
+                      v-else-if="thread.meeting"
+                      class="text-sm italic flex items-center justify-between gap-2"
+                    >
+                      <span>📅 Meeting scheduled</span>
+                      <span
+                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
+                        :class="[
+                          getMessageDirection(thread.kind) === 'outgoing'
+                            ? 'text-white/70'
+                            : 'text-muted-foreground',
+                        ]"
+                      >
+                        {{ formatDate(thread.posted, thread) }}
+                      </span>
                     </div>
 
                     <!-- No content fallback -->
-                    <div v-else class="text-sm italic opacity-60">
-                      No message content
-                    </div>
-
-                    <!-- Date in bottom corner -->
                     <div
-                      class="text-[11px] text-right mt-1.5 select-none"
-                      :class="[
-                        getMessageDirection(thread.kind) === 'outgoing'
-                          ? 'text-white/70'
-                          : 'text-muted-foreground',
-                      ]"
+                      v-else
+                      class="text-sm italic opacity-60 flex items-center justify-between gap-2"
                     >
-                      {{ formatDate(thread.posted, thread) }}
+                      <span>No message content</span>
+                      <span
+                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
+                      >
+                        {{ formatDate(thread.posted, thread) }}
+                      </span>
                     </div>
                   </div>
 
@@ -1136,6 +1221,18 @@ const parseEmailText = (text?: string): ParsedEmailContent => {
   }
   emailParseCache.set(text, result);
   return result;
+};
+
+const splitTextLines = (
+  text?: string,
+): { leadingLines: string[]; lastLine: string } => {
+  if (!text) return { leadingLines: [], lastLine: "" };
+  const trimmed = text.replace(/\n+$/, "");
+  const lines = trimmed.split("\n");
+  return {
+    leadingLines: lines.slice(0, -1),
+    lastLine: lines[lines.length - 1] ?? "",
+  };
 };
 
 // Returns conversation group key (gmailThreadId or parsed email subject) to separate distinct threads.
