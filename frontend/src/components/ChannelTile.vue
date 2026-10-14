@@ -8,9 +8,11 @@ const props = withDefaults(
   defineProps<{
     channel: ThreadChannel;
     isOutgoing?: boolean;
+    bare?: boolean;
   }>(),
   {
     isOutgoing: false,
+    bare: false,
   },
 );
 
@@ -32,6 +34,7 @@ const tileClasses = computed(() => {
 
 <template>
   <div
+    v-if="!bare"
     class="grid place-items-center w-9 h-9 rounded-lg shrink-0 select-none border"
     :class="tileClasses"
   >
@@ -47,4 +50,21 @@ const tileClasses = computed(() => {
     />
     <MessageSquare v-else class="w-5 h-5 block opacity-80" title="Outro" />
   </div>
+  <template v-else>
+    <LinkedInIcon
+      v-if="channel === ThreadChannel.LinkedIn"
+      class="w-6 h-6 shrink-0 block rounded-[2px]"
+      title="LinkedIn"
+    />
+    <GmailIcon
+      v-else-if="channel === ThreadChannel.Gmail"
+      class="w-6 h-6 shrink-0 block"
+      title="Gmail"
+    />
+    <MessageSquare
+      v-else
+      class="w-5 h-5 shrink-0 block opacity-80"
+      title="Outro"
+    />
+  </template>
 </template>
