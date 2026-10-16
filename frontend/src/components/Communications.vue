@@ -1,11 +1,13 @@
 <template>
-  <Card class="w-full h-auto lg:h-[650px] 2xl:h-[800px] flex flex-col">
-    <CardHeader class="flex-shrink-0">
+  <Card
+    class="w-full h-auto lg:h-[650px] 2xl:h-[800px] flex flex-col gap-0 py-0"
+  >
+    <CardHeader class="flex-shrink-0 px-4 pt-3 pb-1 sm:px-6 sm:pt-4 sm:pb-1.5">
       <div
         class="flex flex-col sm:flex-row sm:items-center justify-between gap-2"
       >
         <div class="flex-1">
-          <CardTitle class="text-base sm:text-lg"> Communications</CardTitle>
+          <CardTitle class="text-base sm:text-lg">Communications</CardTitle>
           <CardDescription class="text-sm">
             {{ description }}
           </CardDescription>
@@ -208,7 +210,7 @@
         <!-- Channel tabs -->
         <div class="flex flex-col border-b bg-muted/20 flex-shrink-0">
           <div
-            class="flex items-center justify-between gap-1.5 px-3 sm:px-4 py-2 overflow-x-auto"
+            class="flex items-center justify-between gap-1.5 px-3 sm:px-4 py-1.5 overflow-x-auto"
           >
             <div class="flex items-center gap-1.5">
               <button
@@ -549,13 +551,7 @@
                           class="text-xs rounded-lg p-2.5 mb-2 border flex items-center gap-2.5 min-w-0"
                           :class="getHeaderCardClasses(thread)"
                         >
-                          <ChannelTile
-                            bare
-                            :channel="getThreadChannel(thread)"
-                            :is-outgoing="
-                              getMessageDirection(thread.kind) === 'outgoing'
-                            "
-                          />
+                          <GmailIcon class="w-4 h-4 shrink-0" />
 
                           <div class="min-w-0 flex-1 space-y-0.5">
                             <div
@@ -594,10 +590,14 @@
                         </div>
 
                         <!-- Email body -->
-                        <div class="leading-relaxed">
+                        <div
+                          v-if="parseEmailText(thread.entry.text).body"
+                          class="leading-relaxed"
+                        >
                           <div
-                            v-for="(line, idx) in getThreadTextLines(thread)
-                              .leadingLines"
+                            v-for="(line, idx) in splitTextLines(
+                              parseEmailText(thread.entry.text).body,
+                            ).leadingLines"
                             :key="idx"
                             class="min-h-[1.25rem] whitespace-pre-wrap break-words"
                           >
@@ -608,72 +608,144 @@
                           >
                             <span
                               class="truncate min-w-0 flex-1"
-                              :title="getThreadTextLines(thread).lastLine"
+                              :title="
+                                splitTextLines(
+                                  parseEmailText(thread.entry.text).body,
+                                ).lastLine
+                              "
                             >
-                              {{ getThreadTextLines(thread).lastLine }}
+                              {{
+                                splitTextLines(
+                                  parseEmailText(thread.entry.text).body,
+                                ).lastLine
+                              }}
                             </span>
-                            <span
-                              class="text-[11px] shrink-0 whitespace-nowrap select-none"
+                            <div
+                              class="flex items-center gap-1.5 text-[11px] shrink-0 whitespace-nowrap select-none"
                               :class="[
                                 getMessageDirection(thread.kind) === 'outgoing'
                                   ? 'text-white/70'
                                   : 'text-muted-foreground',
                               ]"
                             >
-                              {{ formatDate(thread.posted, thread) }}
-                            </span>
+                              <TooltipProvider
+                                v-if="
+                                  thread.entry.updated &&
+                                  thread.entry.updated !== thread.entry.posted
+                                "
+                              >
+                                <Tooltip>
+                                  <TooltipTrigger as-child>
+                                    <span
+                                      class="inline-flex items-center gap-0.5 cursor-help hover:opacity-100 opacity-80"
+                                    >
+                                      <Pencil
+                                        class="w-2.5 h-2.5 inline-block"
+                                      />
+                                      <span class="text-[10px] italic"
+                                        >Edited</span
+                                      >
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      Edited
+                                      {{
+                                        formatFullDateTime(thread.entry.updated)
+                                      }}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+
+                              <span>{{
+                                formatDate(thread.posted, thread)
+                              }}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <!-- Non-email message -->
-                      <div v-else class="flex items-start gap-3 min-w-0">
-                        <ChannelTile
-                          :channel="getThreadChannel(thread)"
-                          :is-outgoing="
+                        <!-- Fallback if email has no body (only subject balloon) -->
+                        <div
+                          v-else
+                          class="flex items-center justify-end gap-1.5 text-[11px] select-none pt-1"
+                          :class="[
                             getMessageDirection(thread.kind) === 'outgoing'
-                          "
-                        />
-                        <div class="flex-1 min-w-0 pt-1 leading-relaxed">
-                          <div
-                            v-for="(line, idx) in getThreadTextLines(thread)
-                              .leadingLines"
-                            :key="idx"
-                            class="min-h-[1.25rem] whitespace-pre-wrap break-words"
+                              ? 'text-white/70'
+                              : 'text-muted-foreground',
+                          ]"
+                        >
+                          <TooltipProvider
+                            v-if="
+                              thread.entry.updated &&
+                              thread.entry.updated !== thread.entry.posted
+                            "
                           >
-                            {{ line }}
-                          </div>
-                          <div
-                            class="flex items-baseline justify-between gap-2 min-w-0"
-                          >
-                            <span
-                              class="truncate min-w-0 flex-1"
-                              :title="getThreadTextLines(thread).lastLine"
-                            >
-                              {{ getThreadTextLines(thread).lastLine }}
-                            </span>
-                            <span
-                              class="text-[11px] shrink-0 whitespace-nowrap select-none"
-                              :class="[
-                                getMessageDirection(thread.kind) === 'outgoing'
-                                  ? 'text-white/70'
-                                  : 'text-muted-foreground',
-                              ]"
-                            >
-                              {{ formatDate(thread.posted, thread) }}
-                            </span>
-                          </div>
+                            <Tooltip>
+                              <TooltipTrigger as-child>
+                                <span
+                                  class="inline-flex items-center gap-0.5 cursor-help hover:opacity-100 opacity-80"
+                                >
+                                  <Pencil class="w-2.5 h-2.5 inline-block" />
+                                  <span class="text-[10px] italic">Edited</span>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Edited
+                                  {{ formatFullDateTime(thread.entry.updated) }}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <span>{{ formatDate(thread.posted, thread) }}</span>
                         </div>
                       </div>
 
-                      <div
-                        v-if="
-                          thread.entry.updated &&
-                          thread.entry.updated !== thread.entry.posted
-                        "
-                        class="text-xs opacity-60 mt-1"
-                      >
-                        Edited {{ formatDate(thread.entry.updated) }}
+                      <!-- Non-email message (icon removed, date in corner) -->
+                      <div v-else class="min-w-0">
+                        <div
+                          class="whitespace-pre-wrap break-words leading-relaxed"
+                        >
+                          {{ thread.entry.text }}
+                        </div>
+
+                        <!-- Date & Edited status (in bottom-right corner) -->
+                        <div
+                          class="flex items-center justify-end gap-1.5 mt-1 select-none text-[11px]"
+                          :class="[
+                            getMessageDirection(thread.kind) === 'outgoing'
+                              ? 'text-white/70'
+                              : 'text-muted-foreground',
+                          ]"
+                        >
+                          <TooltipProvider
+                            v-if="
+                              thread.entry.updated &&
+                              thread.entry.updated !== thread.entry.posted
+                            "
+                          >
+                            <Tooltip>
+                              <TooltipTrigger as-child>
+                                <span
+                                  class="inline-flex items-center gap-0.5 cursor-help hover:opacity-100 opacity-80"
+                                >
+                                  <Pencil class="w-2.5 h-2.5 inline-block" />
+                                  <span class="text-[10px] italic">Edited</span>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>
+                                  Edited
+                                  {{ formatFullDateTime(thread.entry.updated) }}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <span>{{ formatDate(thread.posted, thread) }}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -993,7 +1065,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
-import ChannelTile from "./ChannelTile.vue";
 import {
   Tooltip,
   TooltipContent,
@@ -1194,6 +1265,18 @@ const parseEmailText = (text?: string): ParsedEmailContent => {
   return result;
 };
 
+const formatFullDateTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+};
+
 const textLinesCache = new Map<
   string,
   { leadingLines: string[]; lastLine: string }
@@ -1218,14 +1301,6 @@ const splitTextLines = (
   }
   textLinesCache.set(text, result);
   return result;
-};
-
-const getThreadTextLines = (
-  thread: ThreadWithEntry,
-): { leadingLines: string[]; lastLine: string } => {
-  const text = thread.entry?.text ?? "";
-  const emailInfo = parseEmailText(text);
-  return splitTextLines(emailInfo.isEmail ? emailInfo.body : text);
 };
 
 // Returns conversation group key (gmailThreadId or parsed email subject) to separate distinct threads.
@@ -1413,7 +1488,20 @@ const filteredCommunications = computed<ThreadWithEntry[]>(() => {
 
 const showThreadDivider = (index: number): boolean => {
   const comms = filteredCommunications.value;
-  if (index === 0 || comms.length === 0) return false;
+  if (comms.length === 0) return false;
+
+  // Show platform divider before the first message at the start of the chat
+  if (index === 0) {
+    if (selectedChannelTab.value === "all") return true;
+    if (
+      selectedChannelTab.value === "gmail" &&
+      selectedGmailThreadTab.value === "all" &&
+      availableGmailThreadTabs.value.length > 1
+    ) {
+      return true;
+    }
+    return false;
+  }
 
   const current = comms[index];
   const prev = comms[index - 1];
