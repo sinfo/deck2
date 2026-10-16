@@ -550,16 +550,19 @@ let threadListRes = await gmailComposable.listThreads({
       const afterEpochSec = Math.max(0, Math.floor(lastSyncTime / 1000) - 180);
       const query = `after:${afterEpochSec}`;
 
-      const recentThreadsRes = await gmailComposable.listThreads({
+let recentThreadsRes = await gmailComposable.listThreads({
         q: query,
         maxResults: 20,
       });
 
       if (gmailComposable.needsReauth.value) {
-        await requestGoogleToken();
+        const authed = await requestGoogleToken();
+        if (!authed) throw new Error("Google authentication failed");
+        recentThreadsRes = await gmailComposable.listThreads({
+          q: query,
+          maxResults: 20,
+        });
       }
-
-      const recentThreads = recentThreadsRes?.threads || [];
 
       // No new threads -> exit immediately
       if (recentThreads.length === 0) {
