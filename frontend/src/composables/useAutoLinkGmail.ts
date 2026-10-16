@@ -392,16 +392,19 @@ export const useAutoLinkGmail = () => {
             : `"${target.name}"`;
 
         try {
-          const threadListRes = await gmailComposable.listThreads({
+let threadListRes = await gmailComposable.listThreads({
             q: query,
             maxResults: 10,
           });
 
           if (gmailComposable.needsReauth.value) {
-            await requestGoogleToken();
+            const authed = await requestGoogleToken();
+            if (!authed) throw new Error("Google authentication failed");
+            threadListRes = await gmailComposable.listThreads({
+              q: query,
+              maxResults: 10,
+            });
           }
-
-          const matchedThreads = threadListRes?.threads || [];
           const matchedThreadIds = matchedThreads.map((t) => t.id);
 
           if (matchedThreadIds.length === 0) {
