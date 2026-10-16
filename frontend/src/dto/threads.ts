@@ -11,6 +11,7 @@ export interface ThreadWithEntry {
   kind: ThreadKind;
   status: ThreadStatus;
   gmailMessageId?: string;
+  gmailThreadId?: string;
 }
 
 export enum ThreadKind {

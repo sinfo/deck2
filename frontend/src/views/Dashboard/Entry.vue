@@ -11,5 +11,63 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import Navbar from "@/components/Navbar.vue";
+import { useAuthStore } from "@/stores/auth";
+import { useEventStore } from "@/stores/event";
+import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
+import { useToast } from "@/lib/toast";
+
+const currentRoute = useRoute();
+const authStore = useAuthStore();
+const eventStore = useEventStore();
+const { syncRecentGmailUpdates, warnUnlinkedContacted } = useAutoLinkGmail();
+const { toast } = useToast();
+
+const syncedSessionKey = ref<string | null>(null);
+
+// Auto delta-sync recent emails on refresh if connected
+watch(
+  () =>
+    [
+      eventStore.selectedEvent,
+      authStore.isGoogleAuthenticated,
+      authStore.memberSinfoid,
+    ] as const,
+  async ([event, isGoogleAuth, sinfoid]) => {
+    if (!isGoogleAuth || !sinfoid) {
+      syncedSessionKey.value = null;
+      return;
+    }
+
+    const sessionKey = `${sinfoid}:${event?.id}`;
+    if (event?.id && syncedSessionKey.value !== sessionKey) {
+      syncedSessionKey.value = sessionKey;
+      try {
+        const results = await syncRecentGmailUpdates(event.id);
+        const updatedCount = results.filter(
+          (r) => r.status === "SUCCESS",
+        ).length;
+        if (updatedCount > 0 && currentRoute.name !== "settings") {
+          const names = results
+            .filter((r) => r.status === "SUCCESS")
+            .slice(0, 3)
+            .map((r) => r.entityName)
+            .join(", ");
+          const extra = updatedCount > 3 ? ` and ${updatedCount - 3} more` : "";
+          toast.success({
+            title: "New Emails Synced",
+            description: `Updated communications for: ${names}${extra}.`,
+          });
+        }
+
+        warnUnlinkedContacted(results);
+      } catch (err) {
+        console.warn("Delta sync on refresh failed:", err);
+      }
+    }
+  },
+  { immediate: true },
+);
 </script>
