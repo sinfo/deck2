@@ -163,6 +163,7 @@ export const useGoogleAuth = () => {
         expiresIn,
         userInfo.email,
       );
+      authStore.connectGoogle(userInfo.email);
     } catch (err) {
       console.error("Failed to store Google token:", err);
       throw new Error("Failed to store Google authentication token");
@@ -216,6 +217,7 @@ export const useGoogleAuth = () => {
           expiresIn,
           userInfo.email,
         );
+        authStore.connectGoogle(userInfo.email);
       },
     });
   };

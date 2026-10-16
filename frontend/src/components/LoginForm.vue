@@ -39,7 +39,12 @@ const callback = async (response: CallbackTypes.TokenPopupResponse) => {
   const jwt = await generateJwt({ access_token: response.access_token });
   authStore.setToken(jwt.data.deck_token);
   const expiresIn = response.expires_in ? Number(response.expires_in) : 3600;
-  authStore.setGoogleToken(response.access_token, expiresIn);
+  authStore.setGoogleToken(
+    response.access_token,
+    expiresIn,
+    authStore.sinfoEmail || undefined,
+  );
+  authStore.connectGoogle(authStore.sinfoEmail || undefined);
 
   if (to) router.push(to);
   else router.push({ name: "dashboard" });

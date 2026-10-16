@@ -610,21 +610,32 @@ export const useAutoLinkGmail = () => {
           );
           const query = `after:${afterEpochSec}`;
 
-          let recentThreadsRes = await gmailComposable.listThreads({
-            q: query,
-            maxResults: 20,
-          });
+          const recentThreads: GmailThreadListItem[] = [];
+          let pageToken: string | undefined = undefined;
+          const MAX_DELTA_THREADS = 100;
 
-          if (gmailComposable.needsReauth.value) {
-            const authed = await requestGoogleToken();
-            if (!authed) throw new Error("Google authentication failed");
-            recentThreadsRes = await gmailComposable.listThreads({
+          do {
+            let recentThreadsRes = await gmailComposable.listThreads({
               q: query,
-              maxResults: 20,
+              maxResults: 50,
+              pageToken,
             });
-          }
 
-          const recentThreads = recentThreadsRes?.threads || [];
+            if (gmailComposable.needsReauth.value) {
+              const authed = await requestGoogleToken();
+              if (!authed) throw new Error("Google authentication failed");
+              recentThreadsRes = await gmailComposable.listThreads({
+                q: query,
+                maxResults: 50,
+                pageToken,
+              });
+            }
+
+            const threads = recentThreadsRes?.threads || [];
+            recentThreads.push(...threads);
+
+            pageToken = recentThreadsRes?.nextPageToken;
+          } while (pageToken && recentThreads.length < MAX_DELTA_THREADS);
 
           // No new threads -> exit immediately
           if (recentThreads.length === 0) {

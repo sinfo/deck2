@@ -187,9 +187,16 @@ export const useAuthStore = defineStore("auth", () => {
   });
 
   // Explicit manual connection by the user
-  const connectGoogle = () => {
+  const connectGoogle = (emailOrSinfoid?: string | null) => {
     isGoogleConnected.value = true;
-    const key = getScopedKey(GOOGLE_STORAGE_KEYS.CONNECTED);
+    const targetSinfoid =
+      memberSinfoid.value ||
+      (emailOrSinfoid
+        ? emailOrSinfoid.includes("@")
+          ? emailOrSinfoid.split("@")[0]
+          : emailOrSinfoid
+        : null);
+    const key = getScopedKey(GOOGLE_STORAGE_KEYS.CONNECTED, targetSinfoid);
     if (key) {
       localStorage.setItem(key, "true");
     }
