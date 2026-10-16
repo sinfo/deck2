@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -58,6 +59,8 @@ func formatGmailMessageText(msg GmailMessageData) string {
 	return msg.Body
 }
 
+var syncGmailMutex sync.Mutex
+
 // syncGmailMessagesToThreads processes a batch of Gmail messages:
 // - Deduplicates against existing threads in MongoDB via GmailMessageId
 // - Skips duplicates within the current incoming batch
@@ -68,6 +71,9 @@ func syncGmailMessagesToThreads(
 	memberID primitive.ObjectID,
 	attachThread func(threadID primitive.ObjectID) error,
 ) int {
+	syncGmailMutex.Lock()
+	defer syncGmailMutex.Unlock()
+
 	messageIds := make([]string, 0, len(messages))
 	for _, msg := range messages {
 		if msg.MessageId != "" {
