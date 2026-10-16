@@ -106,9 +106,11 @@ export interface GenerateCompanyContractData {
 export const updateCompanyGmailThreadIds = (
   id: string,
   gmailThreadIds: string[],
+  eventId?: number,
 ) =>
   instance.put<Company>(`/companies/${id}/participation/gmail-threads`, {
     gmailThreadIds,
+    event: eventId,
   });
 
 export interface GmailMessageData {
@@ -130,10 +132,11 @@ export interface SyncGmailResponse {
 export const syncCompanyGmailMessages = (
   id: string,
   messages: GmailMessageData[],
+  eventId?: number,
 ) =>
   instance.post<SyncGmailResponse>(
     `/companies/${id}/participation/gmail-sync`,
-    { messages },
+    { messages, event: eventId },
   );
 
 export const generateCompanyContract = (

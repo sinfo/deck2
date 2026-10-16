@@ -3,7 +3,7 @@ import { useQueryCache } from "@pinia/colada";
 import { useAuthStore } from "@/stores/auth";
 import { useToast } from "@/lib/toast";
 import { useGoogleAuth } from "./useGoogleAuth";
-import { useGmailMessages } from "./useGmailMessages";
+import { useGmailMessages, type GmailThreadListItem } from "./useGmailMessages";
 import {
   getAllCompanies,
   getCompanyRepresentatives,
@@ -397,22 +397,37 @@ export const useAutoLinkGmail = () => {
             : `"${target.name}"`;
 
         try {
-          let threadListRes = await gmailComposable.listThreads({
-            q: query,
-            maxResults: 10,
-          });
+          const allMatchedThreads: GmailThreadListItem[] = [];
+          let pageToken: string | undefined = undefined;
+          const MAX_THREADS_PER_ENTITY = 100;
 
-          if (gmailComposable.needsReauth.value) {
-            const authed = await requestGoogleToken();
-            if (!authed) throw new Error("Google authentication failed");
-            threadListRes = await gmailComposable.listThreads({
+          do {
+            let threadListRes = await gmailComposable.listThreads({
               q: query,
-              maxResults: 10,
+              maxResults: 50,
+              pageToken,
             });
-          }
 
-          const matchedThreads = threadListRes?.threads || [];
-          const matchedThreadIds = matchedThreads.map((t) => t.id);
+            if (gmailComposable.needsReauth.value) {
+              const authed = await requestGoogleToken();
+              if (!authed) throw new Error("Google authentication failed");
+              threadListRes = await gmailComposable.listThreads({
+                q: query,
+                maxResults: 50,
+                pageToken,
+              });
+            }
+
+            const threads = threadListRes?.threads || [];
+            allMatchedThreads.push(...threads);
+
+            pageToken = threadListRes?.nextPageToken;
+          } while (
+            pageToken &&
+            allMatchedThreads.length < MAX_THREADS_PER_ENTITY
+          );
+
+          const matchedThreadIds = allMatchedThreads.map((t) => t.id);
 
           if (matchedThreadIds.length === 0) {
             results.value.push({
@@ -482,8 +497,9 @@ export const useAutoLinkGmail = () => {
           participationStatus: compParticipation?.status,
           fetchEmails: () => fetchCompanyEmails(company.id),
           updateThreadIds: (ids) =>
-            updateCompanyGmailThreadIds(company.id, ids),
-          syncMessages: (msgs) => syncCompanyGmailMessages(company.id, msgs),
+            updateCompanyGmailThreadIds(company.id, ids, eventId),
+          syncMessages: (msgs) =>
+            syncCompanyGmailMessages(company.id, msgs, eventId),
         });
       }
 
@@ -499,8 +515,9 @@ export const useAutoLinkGmail = () => {
           participationStatus: speakerParticipation?.status,
           fetchEmails: () => fetchSpeakerEmails(speaker.id),
           updateThreadIds: (ids) =>
-            updateSpeakerGmailThreadIds(speaker.id, ids),
-          syncMessages: (msgs) => syncSpeakerGmailMessages(speaker.id, msgs),
+            updateSpeakerGmailThreadIds(speaker.id, ids, eventId),
+          syncMessages: (msgs) =>
+            syncSpeakerGmailMessages(speaker.id, msgs, eventId),
         });
       }
 
@@ -785,8 +802,8 @@ export const useAutoLinkGmail = () => {
                 item.entity,
                 item.messages,
                 item.threadIds,
-                updateCompanyGmailThreadIds,
-                syncCompanyGmailMessages,
+                (id, ids) => updateCompanyGmailThreadIds(id, ids, eventId),
+                (id, msgs) => syncCompanyGmailMessages(id, msgs, eventId),
               ),
             );
           }
@@ -798,8 +815,8 @@ export const useAutoLinkGmail = () => {
                 item.entity,
                 item.messages,
                 item.threadIds,
-                updateSpeakerGmailThreadIds,
-                syncSpeakerGmailMessages,
+                (id, ids) => updateSpeakerGmailThreadIds(id, ids, eventId),
+                (id, msgs) => syncSpeakerGmailMessages(id, msgs, eventId),
               ),
             );
           }

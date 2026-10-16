@@ -1275,6 +1275,7 @@ func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 
 type updateGmailThreadIdsData struct {
 	GmailThreadIds []string `json:"gmailThreadIds"`
+	Event          *int     `json:"event"`
 }
 
 func (ugtd *updateGmailThreadIdsData) ParseBody(body io.Reader) error {
@@ -1310,7 +1311,16 @@ func updateCompanyGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	company, err := mongodb.Companies.UpdateCompanyGmailThreadIds(companyID, data.GmailThreadIds)
+	var targetEventID int
+	if data.Event != nil && *data.Event > 0 {
+		targetEventID = *data.Event
+	} else if eventStr := r.URL.Query().Get("event"); eventStr != "" {
+		if ev, err := strconv.Atoi(eventStr); err == nil && ev > 0 {
+			targetEventID = ev
+		}
+	}
+
+	company, err := mongodb.Companies.UpdateCompanyGmailThreadIds(companyID, data.GmailThreadIds, targetEventID)
 	if err != nil {
 		http.Error(w, "Could not update gmail thread IDs: "+err.Error(), http.StatusExpectationFailed)
 		return
@@ -1347,8 +1357,17 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var targetEventID int
+	if data.Event != nil && *data.Event > 0 {
+		targetEventID = *data.Event
+	} else if eventStr := r.URL.Query().Get("event"); eventStr != "" {
+		if ev, err := strconv.Atoi(eventStr); err == nil && ev > 0 {
+			targetEventID = ev
+		}
+	}
+
 	syncedCount := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
-		_, err := mongodb.Companies.AddThread(companyID, threadID)
+		_, err := mongodb.Companies.AddThread(companyID, threadID, targetEventID)
 		return err
 	})
 

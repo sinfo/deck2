@@ -1133,7 +1133,16 @@ func updateSpeakerGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	speaker, err := mongodb.Speakers.UpdateSpeakerGmailThreadIds(speakerID, data.GmailThreadIds)
+	var targetEventID int
+	if data.Event != nil && *data.Event > 0 {
+		targetEventID = *data.Event
+	} else if eventStr := r.URL.Query().Get("event"); eventStr != "" {
+		if ev, err := strconv.Atoi(eventStr); err == nil && ev > 0 {
+			targetEventID = ev
+		}
+	}
+
+	speaker, err := mongodb.Speakers.UpdateSpeakerGmailThreadIds(speakerID, data.GmailThreadIds, targetEventID)
 	if err != nil {
 		http.Error(w, "Could not update gmail thread IDs: "+err.Error(), http.StatusExpectationFailed)
 		return
@@ -1170,8 +1179,17 @@ func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var targetEventID int
+	if data.Event != nil && *data.Event > 0 {
+		targetEventID = *data.Event
+	} else if eventStr := r.URL.Query().Get("event"); eventStr != "" {
+		if ev, err := strconv.Atoi(eventStr); err == nil && ev > 0 {
+			targetEventID = ev
+		}
+	}
+
 	syncedCount := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
-		_, err := mongodb.Speakers.AddThread(speakerID, threadID)
+		_, err := mongodb.Speakers.AddThread(speakerID, threadID, targetEventID)
 		return err
 	})
 

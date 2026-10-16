@@ -30,6 +30,7 @@ type GmailMessageData struct {
 
 type syncGmailMessagesData struct {
 	Messages []GmailMessageData `json:"messages"`
+	Event    *int               `json:"event"`
 }
 
 func (sgmd *syncGmailMessagesData) ParseBody(body io.Reader) error {
