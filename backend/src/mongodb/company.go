@@ -875,18 +875,11 @@ func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID
 	return &updatedCompany, nil
 }
 
-// UpdateCompanyParticipationStatus updates a company's participation status
-// related to the current event. This is the method used when one does not want necessarily to follow
-// the state machine described on models.ParticipationStatus.
-func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.ObjectID, status models.ParticipationStatus) (*models.Company, error) {
+// UpdateCompanyParticipationStatusForEvent updates a company's participation status for a specific event.
+func (c *CompaniesType) UpdateCompanyParticipationStatusForEvent(companyID primitive.ObjectID, eventID int, status models.ParticipationStatus) (*models.Company, error) {
 
 	ctx := context.Background()
 	var updatedCompany models.Company
-
-	currentEvent, err := Events.GetCurrentEvent()
-	if err != nil {
-		return nil, err
-	}
 
 	var updateQuery = bson.M{
 		"$set": bson.M{
@@ -894,7 +887,7 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 		},
 	}
 
-	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+	var filterQuery = bson.M{"_id": companyID, "participations.event": eventID}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
@@ -907,6 +900,100 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 	ResetCurrentPublicCompanies()
 
 	return &updatedCompany, nil
+}
+
+// UpdateCompanyParticipationStatus updates a company's participation status
+// related to the current event. This is the method used when one does not want necessarily to follow
+// the state machine described on models.ParticipationStatus.
+func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.ObjectID, status models.ParticipationStatus) (*models.Company, error) {
+	currentEvent, err := Events.GetCurrentEvent()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.UpdateCompanyParticipationStatusForEvent(companyID, currentEvent.ID, status)
+}
+
+func (c *CompaniesType) AutoUpdateParticipationStatus(companyID primitive.ObjectID, eventIDs ...int) (*models.Company, *models.ParticipationStatus, error) {
+	var targetEventID int
+	if len(eventIDs) > 0 && eventIDs[0] > 0 {
+		targetEventID = eventIDs[0]
+	} else {
+		currentEvent, err := Events.GetCurrentEvent()
+		if err != nil {
+			return nil, nil, err
+		}
+		targetEventID = currentEvent.ID
+	}
+
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var participation *models.CompanyParticipation
+	for i := range company.Participations {
+		if company.Participations[i].Event == targetEventID {
+			participation = &company.Participations[i]
+			break
+		}
+	}
+
+	if participation == nil {
+		return company, nil, nil
+	}
+
+	currentStatus := participation.Status
+	if currentStatus == models.Accepted || currentStatus == models.Announced || currentStatus == models.Rejected {
+		return company, nil, nil
+	}
+
+	hasOutgoing := false
+	hasIncoming := false
+
+	for _, commID := range participation.Communications {
+		thread, err := Threads.GetThread(commID)
+		if err != nil {
+			continue
+		}
+
+		if thread.Kind.IsOutgoing() {
+			hasOutgoing = true
+		}
+		if thread.Kind.IsIncoming() || len(thread.Comments) > 0 {
+			hasIncoming = true
+		}
+
+		if hasOutgoing && hasIncoming {
+			break
+		}
+	}
+
+	var newStatus models.ParticipationStatus = currentStatus
+
+	if hasOutgoing && hasIncoming {
+		if currentStatus != models.InConversations {
+			newStatus = models.InConversations
+		}
+	} else if hasOutgoing {
+		if currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
+			newStatus = models.Contacted
+		}
+	} else if hasIncoming {
+		if currentStatus == models.Contacted || currentStatus == models.GivenUp || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold {
+			newStatus = models.InConversations
+		}
+	}
+
+	if newStatus != currentStatus {
+		updatedCompany, err := c.UpdateCompanyParticipationStatusForEvent(companyID, targetEventID, newStatus)
+		if err != nil {
+			return nil, nil, err
+		}
+		return updatedCompany, &newStatus, nil
+	}
+
+	return company, nil, nil
 }
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
