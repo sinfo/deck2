@@ -4,6 +4,32 @@ import { useAuthStore } from "@/stores/auth";
 import { ref } from "vue";
 import { env } from "@/env";
 
+export interface GoogleUserInfo {
+  id: string;
+  email: string;
+  verified_email?: boolean;
+  hd?: string;
+}
+
+const fetchGoogleUserInfo = async (
+  accessToken: string,
+): Promise<GoogleUserInfo | null> => {
+  try {
+    const res = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!res.ok) {
+      return null;
+    }
+    return (await res.json()) as GoogleUserInfo;
+  } catch (err) {
+    console.error("Failed to fetch Google user info:", err);
+    return null;
+  }
+};
+
 export const useGoogleAuth = () => {
   const authStore = useAuthStore();
   const isSigningIn = ref(false);
@@ -16,7 +42,10 @@ export const useGoogleAuth = () => {
   const executeTokenRequest = (options: {
     promptMode: "" | "none" | "consent" | "select_account";
     userEmail?: string;
-    onToken: (response: CallbackTypes.TokenPopupResponse) => Promise<void>;
+    onToken: (
+      response: CallbackTypes.TokenPopupResponse,
+      userInfo: GoogleUserInfo,
+    ) => Promise<void>;
   }): Promise<boolean> => {
     return new Promise((resolve) => {
       isSigningIn.value = true;
@@ -40,8 +69,45 @@ export const useGoogleAuth = () => {
                 resolve(false);
                 return;
               }
+
+              // Validate the authorized Google account
+              const userInfo = await fetchGoogleUserInfo(response.access_token);
+              if (!userInfo || !userInfo.email) {
+                console.warn("Failed to retrieve Google userinfo for token");
+                error.value = "Failed to verify Google account information.";
+                isSigningIn.value = false;
+                resolve(false);
+                return;
+              }
+
+              const expectedEmail = (options.userEmail || authStore.sinfoEmail)
+                ?.toLowerCase()
+                .trim();
+              const actualEmail = userInfo.email.toLowerCase().trim();
+
+              if (expectedEmail && actualEmail !== expectedEmail) {
+                console.warn(
+                  `Google account mismatch: expected ${expectedEmail}, got ${actualEmail}`,
+                );
+                error.value = `Authorized Google account (${actualEmail}) does not match your SINFO account (${expectedEmail}).`;
+                isSigningIn.value = false;
+                resolve(false);
+                return;
+              }
+
+              if (
+                !actualEmail.endsWith("@sinfo.org") &&
+                userInfo.hd !== "sinfo.org"
+              ) {
+                console.warn(`Non-sinfo Google account: ${actualEmail}`);
+                error.value = "Only @sinfo.org Google accounts are allowed.";
+                isSigningIn.value = false;
+                resolve(false);
+                return;
+              }
+
               try {
-                await options.onToken(response);
+                await options.onToken(response, userInfo);
                 resolve(true);
               } catch (err) {
                 error.value =
@@ -74,6 +140,7 @@ export const useGoogleAuth = () => {
 
   const handleGoogleCallback = async (
     response: CallbackTypes.TokenPopupResponse,
+    userInfo: GoogleUserInfo,
   ) => {
     try {
       if (!authStore.isAuthenticated) {
@@ -91,7 +158,11 @@ export const useGoogleAuth = () => {
       const expiresIn = response.expires_in
         ? Number(response.expires_in)
         : 3600;
-      authStore.setGoogleToken(response.access_token, expiresIn);
+      authStore.setGoogleToken(
+        response.access_token,
+        expiresIn,
+        userInfo.email,
+      );
     } catch (err) {
       console.error("Failed to store Google token:", err);
       throw new Error("Failed to store Google authentication token");
@@ -136,11 +207,15 @@ export const useGoogleAuth = () => {
     return executeTokenRequest({
       promptMode,
       userEmail,
-      onToken: async (response) => {
+      onToken: async (response, userInfo) => {
         const expiresIn = response.expires_in
           ? Number(response.expires_in)
           : 3600;
-        authStore.setGoogleToken(response.access_token, expiresIn);
+        authStore.setGoogleToken(
+          response.access_token,
+          expiresIn,
+          userInfo.email,
+        );
       },
     });
   };

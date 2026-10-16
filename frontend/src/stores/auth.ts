@@ -21,6 +21,7 @@ const GOOGLE_STORAGE_KEYS = {
   CONNECTED: "isGoogleConnected",
   ACCESS_TOKEN: "googleAccessToken",
   TOKEN_EXPIRY: "googleAccessTokenExpiry",
+  CONNECTED_EMAIL: "googleConnectedEmail",
 } as const;
 
 export const useAuthStore = defineStore("auth", () => {
@@ -85,6 +86,10 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.getItem(GOOGLE_STORAGE_KEYS.CONNECTED) === "true",
   );
 
+  const connectedGoogleEmail = ref<string | null>(
+    localStorage.getItem(GOOGLE_STORAGE_KEYS.CONNECTED_EMAIL),
+  );
+
   const googleAccessToken = ref<string | null>(
     localStorage.getItem(GOOGLE_STORAGE_KEYS.ACCESS_TOKEN),
   );
@@ -116,7 +121,11 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   // Set Google token with expiration (expiresIn is in seconds)
-  const setGoogleToken = (token: string, expiresIn: number = 3600) => {
+  const setGoogleToken = (
+    token: string,
+    expiresIn: number = 3600,
+    email?: string,
+  ) => {
     googleAccessToken.value = token;
     // Calculate expiry timestamp (subtract 60 seconds for safety margin)
     const expiryTime = Date.now() + (expiresIn - 60) * 1000;
@@ -124,6 +133,11 @@ export const useAuthStore = defineStore("auth", () => {
 
     localStorage.setItem(GOOGLE_STORAGE_KEYS.ACCESS_TOKEN, token);
     localStorage.setItem(GOOGLE_STORAGE_KEYS.TOKEN_EXPIRY, String(expiryTime));
+
+    if (email) {
+      connectedGoogleEmail.value = email;
+      localStorage.setItem(GOOGLE_STORAGE_KEYS.CONNECTED_EMAIL, email);
+    }
   };
 
   // Clear expired/invalid token in memory/storage (does NOT disconnect the user!)
@@ -137,7 +151,9 @@ export const useAuthStore = defineStore("auth", () => {
   // Explicit manual disconnection by the user
   const disconnectGoogle = () => {
     isGoogleConnected.value = false;
+    connectedGoogleEmail.value = null;
     localStorage.removeItem(GOOGLE_STORAGE_KEYS.CONNECTED);
+    localStorage.removeItem(GOOGLE_STORAGE_KEYS.CONNECTED_EMAIL);
     clearGoogleToken();
   };
 
@@ -153,6 +169,7 @@ export const useAuthStore = defineStore("auth", () => {
     initialize,
 
     isGoogleConnected,
+    connectedGoogleEmail,
     googleAccessToken,
     googleAccessTokenExpiry,
     isGoogleAuthenticated,

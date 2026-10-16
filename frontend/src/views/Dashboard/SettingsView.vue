@@ -424,7 +424,11 @@ const isEditMode = ref(false);
 const queryCache = useQueryCache();
 const eventStore = useEventStore();
 const { toast } = useToast();
-const { requestGoogleToken, isSigningIn } = useGoogleAuth();
+const {
+  requestGoogleToken,
+  isSigningIn,
+  error: googleAuthError,
+} = useGoogleAuth();
 const {
   isAutoLinking,
   autoLinkEventEntities,
@@ -482,9 +486,12 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
 };
 
 const userConnectedEmail = computed(() => {
-  return user.value?.data?.sinfoid
-    ? `${user.value.data.sinfoid}@sinfo.org`
-    : authStore.sinfoEmail;
+  return (
+    authStore.connectedGoogleEmail ||
+    (user.value?.data?.sinfoid
+      ? `${user.value.data.sinfoid}@sinfo.org`
+      : authStore.sinfoEmail)
+  );
 });
 
 const syncThreads = async (silent = false, fullScan = false) => {
@@ -559,11 +566,13 @@ const connectGoogle = async () => {
   });
 
   if (success) {
-    await onGoogleConnected(userEmail);
+    await onGoogleConnected(userConnectedEmail.value);
   } else {
     toast.error({
       title: "Connection Failed",
-      description: "Could not connect to your SINFO Gmail account.",
+      description:
+        googleAuthError.value ||
+        "Could not connect to your SINFO Gmail account.",
     });
   }
 };

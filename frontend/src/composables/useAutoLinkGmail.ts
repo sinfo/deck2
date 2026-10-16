@@ -392,7 +392,7 @@ export const useAutoLinkGmail = () => {
             : `"${target.name}"`;
 
         try {
-let threadListRes = await gmailComposable.listThreads({
+          let threadListRes = await gmailComposable.listThreads({
             q: query,
             maxResults: 10,
           });
@@ -405,6 +405,8 @@ let threadListRes = await gmailComposable.listThreads({
               maxResults: 10,
             });
           }
+
+          const matchedThreads = threadListRes?.threads || [];
           const matchedThreadIds = matchedThreads.map((t) => t.id);
 
           if (matchedThreadIds.length === 0) {
@@ -550,7 +552,7 @@ let threadListRes = await gmailComposable.listThreads({
       const afterEpochSec = Math.max(0, Math.floor(lastSyncTime / 1000) - 180);
       const query = `after:${afterEpochSec}`;
 
-let recentThreadsRes = await gmailComposable.listThreads({
+      let recentThreadsRes = await gmailComposable.listThreads({
         q: query,
         maxResults: 20,
       });
@@ -563,6 +565,8 @@ let recentThreadsRes = await gmailComposable.listThreads({
           maxResults: 20,
         });
       }
+
+      const recentThreads = recentThreadsRes?.threads || [];
 
       // No new threads -> exit immediately
       if (recentThreads.length === 0) {
