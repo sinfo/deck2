@@ -100,3 +100,6 @@ export interface UpdateSpeakerParticipationData {
   feedback?: string;
   room?: SpeakerParticipationRoom;
 }
+
+export type SpeakerWithContactAndParticipation = SpeakerWithContactObject &
+  SpeakerWithParticipation;
