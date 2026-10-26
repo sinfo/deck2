@@ -13,6 +13,9 @@ import {
   getCompanyRelationships,
   addCompanyRelationship,
   removeCompanyRelationship,
+  updateCompanyRelationship,
+  setCompanyClosure,
+  removeCompanyClosure,
 } from "@/api/companies";
 import type { ParticipationStatus } from "@/dto";
 import type {
@@ -22,6 +25,8 @@ import type {
   CompanyBillingInfo,
   AddCompanyRelationshipData,
   CompanyRelationshipType,
+  CompanyClosure,
+  UpdateCompanyRelationshipData,
 } from "@/dto/companies";
 import type { CompanyTasks } from "@/dto/tasks";
 import {
@@ -470,6 +475,59 @@ export const useRemoveCompanyRelationshipMutation = defineMutation(() => {
         vars.companyId,
         vars.targetId,
       ]);
+    },
+  });
+
+  return {
+    mutate,
+    mutateAsync,
+    ...mutation,
+  };
+});
+
+export const useUpdateCompanyRelationshipMutation = defineMutation(() => {
+  const queryCache = useQueryCache();
+
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars: {
+      companyId: string;
+      targetId: string;
+      type: CompanyRelationshipType;
+      data: UpdateCompanyRelationshipData;
+    }) =>
+      updateCompanyRelationship(
+        vars.companyId,
+        vars.targetId,
+        vars.type,
+        vars.data,
+      ),
+    onSettled: (_data, _error, vars) => {
+      invalidateCompanyRelationships(queryCache, [
+        vars.companyId,
+        vars.targetId,
+      ]);
+    },
+  });
+
+  return {
+    mutate,
+    mutateAsync,
+    ...mutation,
+  };
+});
+
+export const useCompanyClosureMutation = defineMutation(() => {
+  const queryCache = useQueryCache();
+
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    // A null closure marks the company as operating again.
+    mutation: (vars: { companyId: string; closure: CompanyClosure | null }) =>
+      vars.closure
+        ? setCompanyClosure(vars.companyId, vars.closure)
+        : removeCompanyClosure(vars.companyId),
+    onSettled: (_data, _error, vars) => {
+      queryCache.invalidateQueries({ key: ["company", vars.companyId] });
+      queryCache.invalidateQueries({ key: ["companies"] });
     },
   });
 

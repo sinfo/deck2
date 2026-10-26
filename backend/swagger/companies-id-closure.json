@@ -3,7 +3,7 @@
         "tags": [
             "companies"
         ],
-        "summary": "Marks a company as bankrupt or liquidated",
+        "summary": "Marks a company as bankrupt or banned",
         "operationId": "setCompanyClosure",
         "consumes": [
             "application/json"

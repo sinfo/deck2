@@ -2129,6 +2129,18 @@ func TestCompanyClosure(t *testing.T) {
 	assert.Equal(t, updatedCompany.Closure.Type, models.Bankrupt)
 	assert.Equal(t, updatedCompany.Closure.Since.Equal(since), true)
 
+	// Changing to banned, without a date, replaces the previous closure
+	res, err = executeRequest("PUT", "/companies/"+company.ID.Hex()+"/closure", bytes.NewBufferString(`{"type": "BANNED"}`))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var bannedCompany models.Company
+	json.NewDecoder(res.Body).Decode(&bannedCompany)
+
+	assert.Assert(t, bannedCompany.Closure != nil)
+	assert.Equal(t, bannedCompany.Closure.Type, models.Banned)
+	assert.Assert(t, bannedCompany.Closure.Since == nil)
+
 	// Invalid type
 	res, err = executeRequest("PUT", "/companies/"+company.ID.Hex()+"/closure", bytes.NewBufferString(`{"type": "SOMETHING"}`))
 	assert.NilError(t, err)

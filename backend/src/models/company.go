@@ -125,7 +125,7 @@ type Company struct {
 	// Stored on both sides: the related company holds the inverse relationship.
 	Relationships []CompanyRelationship `json:"relationships,omitempty" bson:"relationships,omitempty"`
 
-	// Closure is set when the company went bankrupt or was liquidated. Nil means the company is operating.
+	// Closure is set when the company went bankrupt or was banned. Nil means the company is operating normally.
 	Closure *CompanyClosure `json:"closure,omitempty" bson:"closure,omitempty"`
 }
 
@@ -199,26 +199,26 @@ type RelatedCompany struct {
 	Since *time.Time `json:"since,omitempty"`
 }
 
-// CompanyClosureType describes why a company stopped existing.
+// CompanyClosureType describes why the team should no longer work with a company.
 type CompanyClosureType string
 
 const (
 	// Bankrupt means the company went bankrupt.
 	Bankrupt CompanyClosureType = "BANKRUPT"
-	// Liquidated means the company was liquidated.
-	Liquidated CompanyClosureType = "LIQUIDATED"
+	// Banned means the company is banned.
+	Banned CompanyClosureType = "BANNED"
 )
 
 // IsValid checks if the closure type is a known one.
 func (t CompanyClosureType) IsValid() bool {
-	return t == Bankrupt || t == Liquidated
+	return t == Bankrupt || t == Banned
 }
 
-// CompanyClosure marks a company as no longer operating.
+// CompanyClosure marks a company as bankrupt or banned.
 type CompanyClosure struct {
 	Type CompanyClosureType `json:"type" bson:"type"`
 
-	// When the company went bankrupt or was liquidated.
+	// When the company went bankrupt or was banned.
 	Since *time.Time `json:"since,omitempty" bson:"since,omitempty"`
 }
 

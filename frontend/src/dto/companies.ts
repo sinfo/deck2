@@ -53,6 +53,7 @@ export interface Company {
   participations: CompanyParticipation[];
   contact: ObjectID;
   relationships?: CompanyRelationship[];
+  closure?: CompanyClosure;
 }
 
 export type CompanyRelationshipType =
@@ -80,7 +81,6 @@ export interface CompanyRelationship {
   type: CompanyRelationshipType;
   company: ObjectID;
   since?: string;
-  notes?: string;
 }
 
 // A CompanyRelationship resolved with the related company's name and image.
@@ -93,7 +93,24 @@ export interface AddCompanyRelationshipData {
   type: CompanyRelationshipType;
   company: ObjectID;
   since?: string;
-  notes?: string;
+}
+
+export interface UpdateCompanyRelationshipData {
+  // null removes the date.
+  since: string | null;
+}
+
+export type CompanyClosureType = "BANKRUPT" | "BANNED";
+
+export const companyClosureLabels: Record<CompanyClosureType, string> = {
+  BANKRUPT: "Bankrupt",
+  BANNED: "Banned",
+};
+
+// Set when the company went bankrupt or was banned.
+export interface CompanyClosure {
+  type: CompanyClosureType;
+  since?: string;
 }
 
 export interface CompanyParticipationPublic {

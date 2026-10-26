@@ -1893,7 +1893,7 @@ func (c *CompaniesType) UpdateCompanyRelationship(companyID primitive.ObjectID, 
 	return c.GetCompany(companyID)
 }
 
-// CompanyClosureData is the data used to mark a company as bankrupt or liquidated.
+// CompanyClosureData is the data used to mark a company as bankrupt or banned.
 type CompanyClosureData struct {
 	Type  *models.CompanyClosureType `json:"type"`
 	Since *time.Time                 `json:"since"`
@@ -1913,7 +1913,7 @@ func (ccd *CompanyClosureData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-// SetCompanyClosure marks a company as bankrupt or liquidated.
+// SetCompanyClosure marks a company as bankrupt or banned.
 func (c *CompaniesType) SetCompanyClosure(companyID primitive.ObjectID, data CompanyClosureData) (*models.Company, error) {
 
 	ctx := context.Background()

@@ -46,6 +46,10 @@
 
       <!-- Editing Form -->
       <div v-if="isEditing">
+        <div class="mb-6 space-y-6 border-b pb-6">
+          <CompanyRelationshipsEditor :company-id="company.id" />
+          <CompanyClosureEditor :company="company" />
+        </div>
         <CompanyInfoForm
           :initial-data="{
             name: company.name,
@@ -58,10 +62,6 @@
           @submit="handleSubmit"
           @cancel="cancelEditing"
           @image-selected="handleImageSelected"
-        />
-        <CompanyRelationshipsEditor
-          :company-id="company.id"
-          class="mt-6 border-t pt-6"
         />
       </div>
 
@@ -170,6 +170,7 @@ import Image from "../Image.vue";
 import CompanyInfoForm from "../companies/CompanyInfoForm.vue";
 import CompanyRelationships from "../companies/CompanyRelationships.vue";
 import CompanyRelationshipsEditor from "../companies/CompanyRelationshipsEditor.vue";
+import CompanyClosureEditor from "../companies/CompanyClosureEditor.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";

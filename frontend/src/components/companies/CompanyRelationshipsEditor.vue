@@ -13,32 +13,52 @@
       <li
         v-for="rel in relationships"
         :key="`${rel.type}-${rel.company}`"
-        class="flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm"
+        class="space-y-1.5 rounded-md border px-2 py-1.5 text-sm"
       >
-        <span class="text-muted-foreground whitespace-nowrap">
-          {{ companyRelationshipLabels[rel.type] }}
-        </span>
-        <Image
-          :src="rel.img"
-          :alt="`${rel.name} logo`"
-          class="h-6 w-6 flex-shrink-0 rounded-full border object-contain bg-white"
-        />
-        <span class="flex-1 truncate font-medium">{{ rel.name }}</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          class="h-6 w-6 p-0 text-destructive hover:text-destructive"
-          :disabled="isRemoving"
-          :aria-label="`Remove relationship with ${rel.name}`"
-          @click="handleRemove(rel)"
-        >
-          <XIcon class="h-4 w-4" />
-        </Button>
+        <div class="flex items-center gap-2">
+          <span class="text-muted-foreground whitespace-nowrap">
+            {{ companyRelationshipLabels[rel.type] }}
+          </span>
+          <Image
+            :src="rel.img"
+            :alt="`${rel.name} logo`"
+            class="h-6 w-6 flex-shrink-0 rounded-full border object-contain bg-white"
+          />
+          <span class="min-w-0 flex-1 truncate font-medium">
+            {{ rel.name }}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-6 w-6 p-0 text-destructive hover:text-destructive"
+            :disabled="isRemoving"
+            :aria-label="`Remove relationship with ${rel.name}`"
+            @click="handleRemove(rel)"
+          >
+            <XIcon class="h-4 w-4" />
+          </Button>
+        </div>
+        <div class="flex items-center gap-2">
+          <label
+            :for="`relationship-since-${rel.type}-${rel.company}`"
+            class="text-xs text-muted-foreground"
+          >
+            Since
+          </label>
+          <Input
+            :id="`relationship-since-${rel.type}-${rel.company}`"
+            type="date"
+            class="h-7 w-auto px-2 text-xs"
+            :model-value="toDateInputValue(rel.since)"
+            :disabled="isUpdating"
+            @change="handleDateChange(rel, $event)"
+          />
+        </div>
       </li>
     </ul>
     <p v-else class="text-xs text-muted-foreground">No relationships yet.</p>
 
-    <!-- New relationship -->
+    <!-- New relationship: created as soon as a company is chosen -->
     <div class="space-y-3 rounded-md border border-dashed p-3">
       <div class="space-y-2">
         <Label for="relationship-type" class="text-sm font-medium">
@@ -64,107 +84,45 @@
         <Label for="relationship-company" class="text-sm font-medium">
           Company
         </Label>
-        <div
-          v-if="selectedCompany"
-          class="flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm"
+        <Input
+          id="relationship-company"
+          v-model="search"
+          :placeholder="isAdding ? 'Adding…' : 'Search company…'"
+          autocomplete="off"
+          :disabled="isAdding"
+          @focus="isSearchOpen = true"
+          @blur="isSearchOpen = false"
+        />
+        <ul
+          v-if="isSearchOpen && search.trim()"
+          class="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-md border bg-popover p-1 shadow-md"
         >
-          <Image
-            :src="
-              selectedCompany.imgs?.internal || selectedCompany.imgs?.public
-            "
-            :alt="`${selectedCompany.name} logo`"
-            class="h-6 w-6 flex-shrink-0 rounded-full border object-contain bg-white"
-          />
-          <span class="flex-1 truncate font-medium">
-            {{ selectedCompany.name }}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-6 w-6 p-0"
-            aria-label="Clear selected company"
-            :disabled="isAdding"
-            @click="selectedCompany = null"
+          <li
+            v-for="company in searchResults"
+            :key="company.id"
+            class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
+            @mousedown.prevent="handleAdd(company)"
           >
-            <XIcon class="h-4 w-4" />
-          </Button>
-        </div>
-        <template v-else>
-          <Input
-            id="relationship-company"
-            v-model="search"
-            placeholder="Search company…"
-            autocomplete="off"
-            :disabled="isAdding"
-            @focus="isSearchOpen = true"
-            @blur="isSearchOpen = false"
-          />
-          <ul
-            v-if="isSearchOpen && search.trim()"
-            class="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-md border bg-popover p-1 shadow-md"
+            <Image
+              :src="company.imgs?.internal || company.imgs?.public"
+              :alt="`${company.name} logo`"
+              class="h-6 w-6 flex-shrink-0 rounded-full border object-contain bg-white"
+            />
+            <span class="truncate">{{ company.name }}</span>
+          </li>
+          <li
+            v-if="!searchResults.length"
+            class="px-2 py-1.5 text-sm text-muted-foreground"
           >
-            <li
-              v-for="company in searchResults"
-              :key="company.id"
-              class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"
-              @mousedown.prevent="selectCompany(company)"
-            >
-              <Image
-                :src="company.imgs?.internal || company.imgs?.public"
-                :alt="`${company.name} logo`"
-                class="h-6 w-6 flex-shrink-0 rounded-full border object-contain bg-white"
-              />
-              <span class="truncate">{{ company.name }}</span>
-            </li>
-            <li
-              v-if="!searchResults.length"
-              class="px-2 py-1.5 text-sm text-muted-foreground"
-            >
-              No companies found.
-            </li>
-          </ul>
-        </template>
-      </div>
-
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div class="space-y-2">
-          <Label for="relationship-since" class="text-sm font-medium">
-            Since
-          </Label>
-          <Input
-            id="relationship-since"
-            v-model="since"
-            type="date"
-            :disabled="isAdding"
-          />
-        </div>
-        <div class="space-y-2">
-          <Label for="relationship-notes" class="text-sm font-medium">
-            Notes
-          </Label>
-          <Input
-            id="relationship-notes"
-            v-model="notes"
-            placeholder="Optional"
-            :disabled="isAdding"
-          />
-        </div>
-      </div>
-
-      <p v-if="errorMessage" class="text-xs text-destructive">
-        {{ errorMessage }}
-      </p>
-
-      <div class="flex justify-end">
-        <Button
-          size="sm"
-          :disabled="!selectedCompany || isAdding"
-          @click="handleAdd"
-        >
-          Add relationship
-        </Button>
+            No companies found.
+          </li>
+        </ul>
       </div>
     </div>
+
+    <p v-if="errorMessage" class="text-xs text-destructive">
+      {{ errorMessage }}
+    </p>
   </div>
 </template>
 
@@ -184,7 +142,9 @@ import {
   useAddCompanyRelationshipMutation,
   useCompanyRelationshipsQuery,
   useRemoveCompanyRelationshipMutation,
+  useUpdateCompanyRelationshipMutation,
 } from "@/mutations/companies";
+import { fromDateInputValue, toDateInputValue } from "@/lib/utils";
 import Button from "../ui/button/Button.vue";
 import Input from "../ui/input/Input.vue";
 import Label from "../ui/label/Label.vue";
@@ -218,9 +178,6 @@ const fuzzySearch = computed(() =>
 const newType = ref<CompanyRelationshipType>("SUBSIDIARY_OF");
 const search = ref("");
 const isSearchOpen = ref(false);
-const selectedCompany = ref<Company | null>(null);
-const since = ref("");
-const notes = ref("");
 const errorMessage = ref("");
 
 const searchResults = computed(() =>
@@ -230,16 +187,12 @@ const searchResults = computed(() =>
     .map((result) => result.item),
 );
 
-const selectCompany = (company: Company) => {
-  selectedCompany.value = company;
-  search.value = "";
-  isSearchOpen.value = false;
-};
-
 const { mutateAsync: addRelationship, isLoading: isAdding } =
   useAddCompanyRelationshipMutation();
 const { mutateAsync: removeRelationship, isLoading: isRemoving } =
   useRemoveCompanyRelationshipMutation();
+const { mutateAsync: updateRelationship, isLoading: isUpdating } =
+  useUpdateCompanyRelationshipMutation();
 
 const toErrorMessage = (error: unknown) => {
   const response = (error as { response?: { status?: number; data?: unknown } })
@@ -256,24 +209,32 @@ const toErrorMessage = (error: unknown) => {
   }
 };
 
-const handleAdd = async () => {
-  if (!selectedCompany.value) return;
+const handleAdd = async (company: Company) => {
   errorMessage.value = "";
+  search.value = "";
+  isSearchOpen.value = false;
 
   try {
     await addRelationship({
       companyId: props.companyId,
-      data: {
-        type: newType.value,
-        company: selectedCompany.value.id,
-        since: since.value ? new Date(since.value).toISOString() : undefined,
-        notes: notes.value.trim() || undefined,
-      },
+      data: { type: newType.value, company: company.id },
     });
+  } catch (error) {
+    errorMessage.value = toErrorMessage(error);
+  }
+};
 
-    selectedCompany.value = null;
-    since.value = "";
-    notes.value = "";
+const handleDateChange = async (rel: RelatedCompany, event: Event) => {
+  errorMessage.value = "";
+  const value = (event.target as HTMLInputElement).value;
+
+  try {
+    await updateRelationship({
+      companyId: props.companyId,
+      targetId: rel.company,
+      type: rel.type,
+      data: { since: fromDateInputValue(value) },
+    });
   } catch (error) {
     errorMessage.value = toErrorMessage(error);
   }
