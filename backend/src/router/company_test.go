@@ -2042,3 +2042,109 @@ func TestDeleteCompanyRemovesRelationships(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, len(updatedWpp.Relationships), 0)
 }
+
+func TestUpdateCompanyRelationship(t *testing.T) {
+	ctx := context.Background()
+
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	wpp := createRelationshipTestCompany(t, "WPP")
+	vml := createRelationshipTestCompany(t, "VML")
+
+	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, wpp.ID).Code, http.StatusOK)
+
+	since := time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC)
+	b, errMarshal := json.Marshal(mongodb.UpdateCompanyRelationshipData{Since: &since})
+	assert.NilError(t, errMarshal)
+
+	// Updating from the other side also updates the inverse
+	res, err := executeRequest("PUT", "/companies/"+wpp.ID.Hex()+"/relationships/"+vml.ID.Hex()+"?type=PARENT_OF", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	updatedWpp, err := mongodb.Companies.GetCompany(wpp.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, updatedWpp.Relationships[0].Since.Equal(since), true)
+
+	updatedVml, err := mongodb.Companies.GetCompany(vml.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, updatedVml.Relationships[0].Since.Equal(since), true)
+
+	// A null date removes it from both sides
+	res, err = executeRequest("PUT", "/companies/"+vml.ID.Hex()+"/relationships/"+wpp.ID.Hex()+"?type=SUBSIDIARY_OF", bytes.NewBufferString(`{"since": null}`))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	updatedWpp, err = mongodb.Companies.GetCompany(wpp.ID)
+	assert.NilError(t, err)
+	assert.Assert(t, updatedWpp.Relationships[0].Since == nil)
+
+	updatedVml, err = mongodb.Companies.GetCompany(vml.ID)
+	assert.NilError(t, err)
+	assert.Assert(t, updatedVml.Relationships[0].Since == nil)
+
+	// Relationship that does not exist
+	res, err = executeRequest("PUT", "/companies/"+vml.ID.Hex()+"/relationships/"+wpp.ID.Hex()+"?type=MERGED_INTO", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
+	// Invalid type
+	res, err = executeRequest("PUT", "/companies/"+vml.ID.Hex()+"/relationships/"+wpp.ID.Hex()+"?type=SOMETHING", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestCompanyClosure(t *testing.T) {
+	ctx := context.Background()
+
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	company := createRelationshipTestCompany(t, "Lehman Brothers")
+
+	since := time.Date(2008, time.September, 15, 0, 0, 0, 0, time.UTC)
+	closureType := models.Bankrupt
+	b, errMarshal := json.Marshal(mongodb.CompanyClosureData{Type: &closureType, Since: &since})
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/companies/"+company.ID.Hex()+"/closure", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var updatedCompany models.Company
+	json.NewDecoder(res.Body).Decode(&updatedCompany)
+
+	assert.Assert(t, updatedCompany.Closure != nil)
+	assert.Equal(t, updatedCompany.Closure.Type, models.Bankrupt)
+	assert.Equal(t, updatedCompany.Closure.Since.Equal(since), true)
+
+	// Invalid type
+	res, err = executeRequest("PUT", "/companies/"+company.ID.Hex()+"/closure", bytes.NewBufferString(`{"type": "SOMETHING"}`))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	// Company not found
+	res, err = executeRequest("PUT", "/companies/"+primitive.NewObjectID().Hex()+"/closure", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
+	// Operating again
+	res, err = executeRequest("DELETE", "/companies/"+company.ID.Hex()+"/closure", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	updated, err := mongodb.Companies.GetCompany(company.ID)
+	assert.NilError(t, err)
+	assert.Assert(t, updated.Closure == nil)
+}

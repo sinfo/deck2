@@ -1573,3 +1573,119 @@ func removeCompanyRelationship(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 }
+
+func updateCompanyRelationship(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid company ID format: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	targetID, err := primitive.ObjectIDFromHex(params["targetID"])
+	if err != nil {
+		http.Error(w, "Invalid related company ID format: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	relType := models.CompanyRelationshipType(r.URL.Query().Get("type"))
+	if !relType.IsValid() {
+		http.Error(w, "Invalid relationship type", http.StatusBadRequest)
+		return
+	}
+
+	var ucrd = &mongodb.UpdateCompanyRelationshipData{}
+
+	if err := ucrd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateCompanyRelationship(companyID, targetID, relType, *ucrd)
+	if err != nil {
+		http.Error(w, "Could not update company relationship: "+err.Error(), relationshipErrorStatus(err))
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdated,
+			Company: &updatedCompany.ID,
+		})
+	}
+}
+
+func setCompanyClosure(w http.ResponseWriter, r *http.Request) {
+
+	defer r.Body.Close()
+
+	params := mux.Vars(r)
+	companyID, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid company ID format: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var ccd = &mongodb.CompanyClosureData{}
+
+	if err := ccd.ParseBody(r.Body); err != nil {
+		http.Error(w, "Could not parse body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.SetCompanyClosure(companyID, *ccd)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, "Company not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Could not set company closure: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdated,
+			Company: &updatedCompany.ID,
+		})
+	}
+}
+
+func removeCompanyClosure(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid company ID format: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.RemoveCompanyClosure(companyID)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, "Company not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Could not remove company closure: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdated,
+			Company: &updatedCompany.ID,
+		})
+	}
+}

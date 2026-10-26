@@ -1532,7 +1532,6 @@ type CompanyRelationshipData struct {
 	Type    *models.CompanyRelationshipType `json:"type"`
 	Company *primitive.ObjectID             `json:"company"`
 	Since   *time.Time                      `json:"since"`
-	Notes   *string                         `json:"notes"`
 }
 
 // ParseBody fills the CompanyRelationshipData from a body
@@ -1645,11 +1644,6 @@ func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, dat
 		Type:    relType.Inverse(),
 		Company: companyID,
 		Since:   data.Since,
-	}
-
-	if data.Notes != nil {
-		relationship.Notes = *data.Notes
-		inverse.Notes = *data.Notes
 	}
 
 	var updatedCompany models.Company
@@ -1818,9 +1812,154 @@ func (c *CompaniesType) GetCompanyRelationships(companyID primitive.ObjectID) ([
 			Name:    other.Name,
 			Image:   image,
 			Since:   rel.Since,
-			Notes:   rel.Notes,
 		})
 	}
 
 	return related, nil
+}
+
+// UpdateCompanyRelationshipData is the data used to update a relationship between two companies.
+type UpdateCompanyRelationshipData struct {
+	// Since is the new date of the relationship. Nil removes the date.
+	Since *time.Time `json:"since"`
+}
+
+// ParseBody fills the UpdateCompanyRelationshipData from a body
+func (ucrd *UpdateCompanyRelationshipData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ucrd); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// setRelationshipSince sets (or removes, if nil) the date of one relationship of a company.
+func (c *CompaniesType) setRelationshipSince(companyID, targetID primitive.ObjectID, relType models.CompanyRelationshipType, since *time.Time) (*mongo.UpdateResult, error) {
+
+	ctx := context.Background()
+
+	var filterQuery = bson.M{
+		"_id":           companyID,
+		"relationships": bson.M{"$elemMatch": bson.M{"type": relType, "company": targetID}},
+	}
+
+	// The positional operator "$" targets the array element matched by $elemMatch in the filter.
+	var updateQuery = bson.M{"$unset": bson.M{"relationships.$.since": ""}}
+	if since != nil {
+		updateQuery = bson.M{"$set": bson.M{"relationships.$.since": *since}}
+	}
+
+	return c.Collection.UpdateOne(ctx, filterQuery, updateQuery)
+}
+
+// UpdateCompanyRelationship updates the date of a relationship on both companies.
+func (c *CompaniesType) UpdateCompanyRelationship(companyID primitive.ObjectID, targetID primitive.ObjectID, relType models.CompanyRelationshipType, data UpdateCompanyRelationshipData) (*models.Company, error) {
+
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	var current *models.CompanyRelationship
+	for i := range company.Relationships {
+		if company.Relationships[i].Company == targetID && company.Relationships[i].Type == relType {
+			current = &company.Relationships[i]
+			break
+		}
+	}
+
+	if current == nil {
+		return nil, ErrRelationshipNotFound
+	}
+
+	if _, err := c.setRelationshipSince(companyID, targetID, relType, data.Since); err != nil {
+		log.Println("error updating company relationship:", err)
+		return nil, err
+	}
+
+	// The related company may have been deleted in the meantime, so a non-match is fine.
+	if _, err := c.setRelationshipSince(targetID, companyID, relType.Inverse(), data.Since); err != nil {
+		log.Println("error updating inverse company relationship, rolling back:", err)
+
+		// No transactions available: restore the previous date so both sides stay consistent.
+		if _, rollbackErr := c.setRelationshipSince(companyID, targetID, relType, current.Since); rollbackErr != nil {
+			log.Println("error rolling back company relationship update:", rollbackErr)
+		}
+
+		return nil, err
+	}
+
+	return c.GetCompany(companyID)
+}
+
+// CompanyClosureData is the data used to mark a company as bankrupt or liquidated.
+type CompanyClosureData struct {
+	Type  *models.CompanyClosureType `json:"type"`
+	Since *time.Time                 `json:"since"`
+}
+
+// ParseBody fills the CompanyClosureData from a body
+func (ccd *CompanyClosureData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ccd); err != nil {
+		return err
+	}
+
+	if ccd.Type == nil || !ccd.Type.IsValid() {
+		return errors.New("invalid closure type")
+	}
+
+	return nil
+}
+
+// SetCompanyClosure marks a company as bankrupt or liquidated.
+func (c *CompaniesType) SetCompanyClosure(companyID primitive.ObjectID, data CompanyClosureData) (*models.Company, error) {
+
+	ctx := context.Background()
+	var updatedCompany models.Company
+
+	closure := models.CompanyClosure{
+		Type:  *data.Type,
+		Since: data.Since,
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{"closure": closure},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("error setting company closure:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// RemoveCompanyClosure marks a company as operating again.
+func (c *CompaniesType) RemoveCompanyClosure(companyID primitive.ObjectID) (*models.Company, error) {
+
+	ctx := context.Background()
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$unset": bson.M{"closure": ""},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("error removing company closure:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
 }

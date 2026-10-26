@@ -348,6 +348,9 @@
     "/companies/{id}/relationships/{targetID}": {
       "$ref": "./companies-id-relationships-targetid.json"
     },
+    "/companies/{id}/closure": {
+      "$ref": "./companies-id-closure.json"
+    },
     "/companyReps": {
       "$ref": "./companyReps.json"
     },

@@ -124,6 +124,9 @@ type Company struct {
 	// Relationships with other companies (acquisitions, mergers, rebrands).
 	// Stored on both sides: the related company holds the inverse relationship.
 	Relationships []CompanyRelationship `json:"relationships,omitempty" bson:"relationships,omitempty"`
+
+	// Closure is set when the company went bankrupt or was liquidated. Nil means the company is operating.
+	Closure *CompanyClosure `json:"closure,omitempty" bson:"closure,omitempty"`
 }
 
 // CompanyRelationshipType describes how a company relates to another one.
@@ -179,8 +182,6 @@ type CompanyRelationship struct {
 
 	// When the acquisition, merger or rebrand happened.
 	Since *time.Time `json:"since,omitempty" bson:"since,omitempty"`
-
-	Notes string `json:"notes,omitempty" bson:"notes,omitempty"`
 }
 
 // RelatedCompany is a CompanyRelationship resolved with the related company's name and image.
@@ -196,8 +197,29 @@ type RelatedCompany struct {
 	Image string `json:"img,omitempty"`
 
 	Since *time.Time `json:"since,omitempty"`
+}
 
-	Notes string `json:"notes,omitempty"`
+// CompanyClosureType describes why a company stopped existing.
+type CompanyClosureType string
+
+const (
+	// Bankrupt means the company went bankrupt.
+	Bankrupt CompanyClosureType = "BANKRUPT"
+	// Liquidated means the company was liquidated.
+	Liquidated CompanyClosureType = "LIQUIDATED"
+)
+
+// IsValid checks if the closure type is a known one.
+func (t CompanyClosureType) IsValid() bool {
+	return t == Bankrupt || t == Liquidated
+}
+
+// CompanyClosure marks a company as no longer operating.
+type CompanyClosure struct {
+	Type CompanyClosureType `json:"type" bson:"type"`
+
+	// When the company went bankrupt or was liquidated.
+	Since *time.Time `json:"since,omitempty" bson:"since,omitempty"`
 }
 
 // CompanyParticipationPublic stores a company's participation info to be shown to everyone publicly.

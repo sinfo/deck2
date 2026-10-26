@@ -27,9 +27,6 @@
         "since": {
             "type": "string",
             "format": "date-time"
-        },
-        "notes": {
-            "type": "string"
         }
     }
 }

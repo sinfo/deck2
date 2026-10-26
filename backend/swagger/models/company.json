@@ -27,6 +27,9 @@
         "linkedin": {
             "type": "string"
         },
+        "closure": {
+            "$ref": "./company-closure.json"
+        },
         "relationships": {
             "type": "array",
             "items": {
