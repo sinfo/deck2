@@ -236,9 +236,9 @@
                 >
                   <p><strong>Dear {{.Speaker}},</strong></p>
                   <p>
-                    I’m {{.MemberName}}, a proud member of SINFO. On behalf of
-                    the team organizing SINFO {{.Edition}}, we would be thrilled
-                    if you would accept this invitation to speak at our event.
+                    I’m {{.Member}}, a proud member of SINFO. On behalf of the
+                    team organizing SINFO {{.Edition}}, we would be thrilled if
+                    you would accept this invitation to speak at our event.
                   </p>
 
                   <p>
@@ -334,8 +334,9 @@
                           valign="middle"
                         >
                           <b
-                            >The week from {{.EventStart.Format "2th"}} to
-                            {{.EventEnd.Format "2th of January, 2006"}}</b
+                            >The week from {{.EventStartDay}} to
+                            {{.EventEndDay}} of {{.EventEndMonth}},
+                            {{.EventEndYear}}</b
                           >
                         </td>
                       </tr>
