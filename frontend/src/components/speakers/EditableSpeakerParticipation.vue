@@ -20,7 +20,11 @@
             Edit
           </Button>
           <div v-else class="flex gap-2">
-            <Button size="sm" :disabled="isSaving" @click="saveChanges">
+            <Button
+              size="sm"
+              :disabled="isSaving || isTextOverLimit"
+              @click="saveChanges"
+            >
               {{ isSaving ? "Saving..." : "Save Changes" }}
             </Button>
             <Button variant="outline" size="sm" @click="cancelEditing">
@@ -94,6 +98,10 @@
       </div>
 
       <div v-else class="space-y-4">
+        <p v-if="isTextOverLimit" class="text-sm text-destructive">
+          Shorten the text to {{ TEXT_LIMIT }} characters per field before
+          saving.
+        </p>
         <!-- Editable form -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div class="space-y-2">
@@ -110,10 +118,18 @@
             <textarea
               id="feedback"
               v-model="editForm.feedback"
+              :maxlength="TEXT_LIMIT"
+              aria-describedby="feedback-character-count"
               rows="3"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
               placeholder="Add feedback..."
             />
+            <p
+              id="feedback-character-count"
+              class="text-xs text-muted-foreground"
+            >
+              {{ editForm.feedback?.length ?? 0 }} / {{ TEXT_LIMIT }} characters
+            </p>
           </div>
 
           <div class="space-y-2">
@@ -149,10 +165,19 @@
               <textarea
                 id="room-notes"
                 v-model="editForm.room!.notes"
+                :maxlength="TEXT_LIMIT"
+                aria-describedby="room-notes-character-count"
                 rows="2"
                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
                 placeholder="Additional room notes..."
               />
+              <p
+                id="room-notes-character-count"
+                class="text-xs text-muted-foreground"
+              >
+                {{ editForm.room?.notes?.length ?? 0 }} /
+                {{ TEXT_LIMIT }} characters
+              </p>
             </div>
           </div>
         </div>
@@ -162,7 +187,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, computed } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
@@ -184,6 +209,8 @@ interface Props {
   speakerId: string;
 }
 
+const TEXT_LIMIT = 2000;
+
 const props = defineProps<Props>();
 const isEditing = ref(false);
 const isSaving = ref(false);
@@ -197,6 +224,12 @@ const editForm = reactive<UpdateSpeakerParticipationData>({
     notes: props.participation.room?.notes || "",
   },
 });
+
+const isTextOverLimit = computed(
+  () =>
+    (editForm.feedback?.length ?? 0) > TEXT_LIMIT ||
+    (editForm.room?.notes?.length ?? 0) > TEXT_LIMIT,
+);
 
 const { data: eventsData } = useQuery({
   key: () => ["events"],
@@ -229,6 +262,8 @@ const cancelEditing = () => {
 };
 
 const saveChanges = async () => {
+  if (isTextOverLimit.value) return;
+
   isSaving.value = true;
 
   try {
