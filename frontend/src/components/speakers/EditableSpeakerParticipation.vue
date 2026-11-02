@@ -209,7 +209,7 @@ interface Props {
   speakerId: string;
 }
 
-const TEXT_LIMIT = 2000;
+const TEXT_LIMIT = 1000;
 
 const props = defineProps<Props>();
 const isEditing = ref(false);
