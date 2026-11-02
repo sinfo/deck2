@@ -1,0 +1,32 @@
+{
+    "type": "object",
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "SUBSIDIARY_OF",
+                "PARENT_OF",
+                "MERGED_INTO",
+                "ABSORBED",
+                "REBRANDED_TO",
+                "REBRANDED_FROM"
+            ]
+        },
+        "company": {
+            "type": "string",
+            "description": "ID of the related company"
+        },
+        "name": {
+            "type": "string",
+            "description": "Name of the related company"
+        },
+        "img": {
+            "type": "string",
+            "description": "Image of the related company (internal, or public as fallback)"
+        },
+        "since": {
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

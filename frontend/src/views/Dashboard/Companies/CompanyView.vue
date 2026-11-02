@@ -2,6 +2,9 @@
   <div v-if="companyWithParticipation" class="flex flex-col lg:flex-row gap-6">
     <!-- Company information section -->
     <div class="space-y-4 w-full lg:w-96 lg:flex-shrink-0">
+      <!-- Bankrupt / banned, merged and rebranded warnings -->
+      <CompanyStatusBanners :company="companyWithParticipation" />
+
       <!-- Company Card -->
       <CompanyCard
         :company="companyWithParticipation"
@@ -93,6 +96,7 @@
 <script setup lang="ts">
 import { getCompanyById, getCompanyRepresentatives } from "@/api/companies";
 import CompanyCard from "@/components/cards/CompanyCard.vue";
+import CompanyStatusBanners from "@/components/companies/CompanyStatusBanners.vue";
 import CompanyBillingInfo from "@/components/companies/CompanyBillingInfo.vue";
 import CompanyContacts from "@/components/companies/CompanyContacts.vue";
 import DirectEmailDialogTrigger from "@/components/DirectEmailDialogTrigger.vue";

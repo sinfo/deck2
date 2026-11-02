@@ -46,6 +46,10 @@
 
       <!-- Editing Form -->
       <div v-if="isEditing">
+        <div class="mb-6 space-y-6 border-b pb-6">
+          <CompanyRelationshipsEditor :company-id="company.id" />
+          <CompanyClosureEditor :company="company" />
+        </div>
         <CompanyInfoForm
           :initial-data="{
             name: company.name,
@@ -92,6 +96,8 @@
     </CardHeader>
 
     <CardContent v-if="!isEditing" class="space-y-3">
+      <CompanyRelationships :company-id="company.id" />
+
       <div v-if="company.description" class="relative">
         <CardDescription
           :class="[
@@ -162,6 +168,9 @@ import Badge from "../ui/badge/Badge.vue";
 import Button from "../ui/button/Button.vue";
 import Image from "../Image.vue";
 import CompanyInfoForm from "../companies/CompanyInfoForm.vue";
+import CompanyRelationships from "../companies/CompanyRelationships.vue";
+import CompanyRelationshipsEditor from "../companies/CompanyRelationshipsEditor.vue";
+import CompanyClosureEditor from "../companies/CompanyClosureEditor.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";

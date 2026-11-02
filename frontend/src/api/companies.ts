@@ -1,14 +1,19 @@
 import { instance } from ".";
 import type {
+  AddCompanyRelationshipData,
   AddParticipationData,
   AllCompaniesFilter,
   Company,
+  CompanyClosure,
   CompanyPublic,
+  CompanyRelationshipType,
   CompanyRep,
   CreateCompanyData,
   CreateCompanyRepData,
+  RelatedCompany,
   UpdateCompanyData,
   UpdateCompanyParticipationData,
+  UpdateCompanyRelationshipData,
 } from "@/dto/companies";
 import type { CompanyTasks } from "@/dto/tasks";
 import type {
@@ -97,6 +102,39 @@ export const uploadCompanyPublicImage = (id: string, data: FormData) =>
 
 export const deleteCompany = (id: string) =>
   instance.delete<Company>(`/companies/${id}`);
+
+export const getCompanyRelationships = (id: string) =>
+  instance.get<RelatedCompany[]>(`/companies/${id}/relationships`);
+
+export const addCompanyRelationship = (
+  id: string,
+  data: AddCompanyRelationshipData,
+) => instance.post<Company>(`/companies/${id}/relationships`, data);
+
+export const removeCompanyRelationship = (
+  id: string,
+  targetId: string,
+  type: CompanyRelationshipType,
+) =>
+  instance.delete<Company>(`/companies/${id}/relationships/${targetId}`, {
+    params: { type },
+  });
+
+export const updateCompanyRelationship = (
+  id: string,
+  targetId: string,
+  type: CompanyRelationshipType,
+  data: UpdateCompanyRelationshipData,
+) =>
+  instance.put<Company>(`/companies/${id}/relationships/${targetId}`, data, {
+    params: { type },
+  });
+
+export const setCompanyClosure = (id: string, data: CompanyClosure) =>
+  instance.put<Company>(`/companies/${id}/closure`, data);
+
+export const removeCompanyClosure = (id: string) =>
+  instance.delete<Company>(`/companies/${id}/closure`);
 
 export interface GenerateCompanyContractData {
   language: string;
