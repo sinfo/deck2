@@ -21,7 +21,11 @@
           </Button>
 
           <div v-else class="flex gap-2">
-            <Button size="sm" :disabled="isSaving" @click="saveChanges">
+            <Button
+              size="sm"
+              :disabled="isSaving || isTextOverLimit"
+              @click="saveChanges"
+            >
               {{ isSaving ? "Saving..." : "Save" }}
             </Button>
             <Button variant="outline" size="sm" @click="cancelEditing"
@@ -55,9 +59,11 @@
             </div>
           </div>
 
-          <div v-if="participation.notes" class="text-sm">
+          <div v-if="participation.notes" class="text-sm min-w-0">
             <span class="font-medium">Notes:</span>
-            <div class="mt-1 text-muted-foreground">
+            <div
+              class="mt-1 text-muted-foreground whitespace-pre-wrap [overflow-wrap:anywhere]"
+            >
               {{ participation.notes }}
             </div>
           </div>
@@ -80,6 +86,10 @@
       </div>
 
       <div v-else class="space-y-4">
+        <p v-if="isTextOverLimit" class="text-sm text-destructive">
+          Shorten the text to {{ TEXT_LIMIT }} characters per field before
+          saving.
+        </p>
         <!-- Editable form -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div class="space-y-2">
@@ -107,10 +117,15 @@
             <textarea
               id="notes"
               v-model="editForm.notes"
+              :maxlength="TEXT_LIMIT"
+              aria-describedby="notes-character-count"
               rows="3"
               class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-vertical"
               placeholder="Add notes..."
             />
+            <p id="notes-character-count" class="text-xs text-muted-foreground">
+              {{ editForm.notes?.length ?? 0 }} / {{ TEXT_LIMIT }} characters
+            </p>
           </div>
         </div>
 
@@ -205,6 +220,8 @@ interface Props {
   companyId: string;
 }
 
+const TEXT_LIMIT = 1000;
+
 const props = defineProps<Props>();
 
 const { isCoordinatorOrAdmin } = usePermissions();
@@ -260,6 +277,10 @@ const editForm = reactive<UpdateCompanyParticipationData>({
   ),
   notes: props.participation.notes,
 });
+
+const isTextOverLimit = computed(
+  () => (editForm.notes?.length ?? 0) > TEXT_LIMIT,
+);
 
 const packageOptions = ref<{ id: string; name: string }[]>([]);
 const selectedPackageId = ref<string>(
@@ -396,6 +417,8 @@ const cancelEditing = () => {
 };
 
 const saveChanges = async () => {
+  if (isTextOverLimit.value) return;
+
   isSaving.value = true;
 
   try {
