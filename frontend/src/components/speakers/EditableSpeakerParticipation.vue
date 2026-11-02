@@ -47,9 +47,11 @@
             </div>
           </div>
 
-          <div v-if="participation.feedback" class="text-sm">
+          <div v-if="participation.feedback" class="text-sm min-w-0">
             <span class="font-medium">Feedback:</span>
-            <div class="mt-1 text-muted-foreground">
+            <div
+              class="mt-1 text-muted-foreground whitespace-pre-wrap [overflow-wrap:anywhere]"
+            >
               {{ participation.feedback }}
             </div>
           </div>
@@ -61,10 +63,14 @@
                 participation.room.cost ||
                 participation.room.notes)
             "
+            class="min-w-0"
           >
             <h5 class="text-sm font-medium">Room Details:</h5>
-            <div class="flex flex-row gap-2 items-start">
-              <Badge v-if="participation.room.type" class="text-xs">
+            <div class="flex flex-wrap gap-2 items-start">
+              <Badge
+                v-if="participation.room.type"
+                class="text-xs min-w-0 max-w-full whitespace-normal [overflow-wrap:anywhere]"
+              >
                 {{ participation.room.type }}
               </Badge>
 
@@ -77,7 +83,9 @@
             </div>
 
             <div v-if="participation.room.notes">
-              <div class="mt-1 text-muted-foreground">
+              <div
+                class="mt-1 text-muted-foreground whitespace-pre-wrap [overflow-wrap:anywhere]"
+              >
                 {{ participation.room.notes }}
               </div>
             </div>

@@ -55,9 +55,11 @@
             </div>
           </div>
 
-          <div v-if="participation.notes" class="text-sm">
+          <div v-if="participation.notes" class="text-sm min-w-0">
             <span class="font-medium">Notes:</span>
-            <div class="mt-1 text-muted-foreground">
+            <div
+              class="mt-1 text-muted-foreground whitespace-pre-wrap [overflow-wrap:anywhere]"
+            >
               {{ participation.notes }}
             </div>
           </div>
