@@ -323,7 +323,12 @@
             v-if="selectedMessageBody"
             class="prose prose-sm dark:prose-invert max-w-none"
           >
-            <div v-if="isHtmlBody" v-html="selectedMessageBody"></div>
+            <iframe
+              v-if="isHtmlBody"
+              :srcdoc="selectedMessageBody ?? ''"
+              sandbox=""
+              class="w-full min-h-96 border-0"
+            />
             <pre v-else class="whitespace-pre-wrap text-sm">{{
               selectedMessageBody
             }}</pre>

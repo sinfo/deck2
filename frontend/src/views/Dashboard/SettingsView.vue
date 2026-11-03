@@ -275,7 +275,7 @@
                 <CardTitle>Connected Applications</CardTitle>
                 <CardDescription>
                   These are the applications that you have connected to your
-                  DECK account.
+                  Deck account.
                 </CardDescription>
               </CardHeader>
               <CardContent class="space-y-6">
@@ -357,13 +357,26 @@
                         {{ isAutoLinking ? "Syncing..." : "Sync Threads" }}
                       </Button>
                       <Button
+                        as-child
                         variant="outline"
                         size="sm"
-                        class="text-destructive hover:bg-destructive/10"
+                        class="gap-1.5"
+                      >
+                        <RouterLink :to="{ name: 'gmail-messages' }">
+                          <Mail class="w-3.5 h-3.5" />
+                          View Threads
+                        </RouterLink>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        class="h-8 w-8 text-destructive hover:bg-destructive/10"
                         :disabled="isAutoLinking"
+                        aria-label="Disconnect Gmail"
+                        title="Disconnect Gmail"
                         @click="disconnectGoogle"
                       >
-                        Disconnect
+                        <Unplug class="w-4 h-4" />
                       </Button>
                     </template>
                     <template v-else>
@@ -414,7 +427,7 @@ import ContactForm from "@/components/companies/ContactForm.vue";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, RefreshCw } from "lucide-vue-next";
+import { Mail, RefreshCw, Unplug } from "lucide-vue-next";
 import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
 import { useEventStore } from "@/stores/event";
