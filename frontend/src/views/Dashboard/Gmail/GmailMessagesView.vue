@@ -327,6 +327,7 @@
               v-if="isHtmlBody"
               :srcdoc="selectedMessageBody ?? ''"
               sandbox=""
+              title="Email message content"
               class="w-full min-h-96 border-0"
             />
             <pre v-else class="whitespace-pre-wrap text-sm">{{
