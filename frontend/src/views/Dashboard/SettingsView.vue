@@ -531,10 +531,15 @@ const syncThreads = async (silent = false, fullScan = false) => {
     const results = fullScan
       ? await autoLinkEventEntities(eventId, { forceReScan: true })
       : await syncRecentGmailUpdates(eventId);
-    const newlyLinked = results.filter((r) => r.status === "SUCCESS").length;
-    const alreadyLinked = results.filter(
-      (r) => r.status === "ALREADY_LINKED",
-    ).length;
+    const newlyLinked = results.reduce(
+      (count, result) => count + result.newlyLinkedCount,
+      0,
+    );
+    const alreadyLinked = results.reduce(
+      (count, result) =>
+        count + Math.max(result.linkedThreadsCount - result.newlyLinkedCount, 0),
+      0,
+    );
     toast.success({
       title: "Sync Complete",
       description:
