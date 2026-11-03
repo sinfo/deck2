@@ -93,8 +93,7 @@ export const useAuthStore = defineStore("auth", () => {
       );
       if (scopedConnKey && localStorage.getItem(scopedConnKey) === null) {
         const memberEmail = `${sinfoid.toLowerCase()}@sinfo.org`;
-        if (!legacyEmail || legacyEmail.toLowerCase().trim() === memberEmail) {
-          localStorage.setItem(scopedConnKey, legacyConnected);
+        if (legacyEmail && legacyEmail.toLowerCase().trim() === memberEmail) {
           if (legacyEmail) {
             const scopedEmailKey = getScopedKey(
               GOOGLE_STORAGE_KEYS.CONNECTED_EMAIL,
