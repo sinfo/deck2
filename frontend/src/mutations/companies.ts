@@ -218,7 +218,8 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
   const { mutate, ...mutation } = useMutation({
     mutation: () => postThread(companyId.value!, threadData.value!),
     onMutate: () => {
-      const key = ["company-communications", companyId.value!];
+      const targetCompanyId = companyId.value!;
+      const key = ["company-communications", targetCompanyId];
 
       const oldVal =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -265,6 +266,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
         oldVal,
         currentEventId,
         tempThreadId,
+        targetCompanyId,
       };
     },
 
@@ -299,9 +301,9 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       console.error("Create company thread failed:", err);
     },
 
-    onSettled: () => {
-      if (companyId.value) {
-        queryCache.invalidateQueries({ key: ["company", companyId.value] });
+    onSettled: (_res, _err, _vars, ctx) => {
+      if (ctx?.targetCompanyId) {
+        queryCache.invalidateQueries({ key: ["company", ctx.targetCompanyId] });
       }
       queryCache.invalidateQueries({ key: ["companies"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });

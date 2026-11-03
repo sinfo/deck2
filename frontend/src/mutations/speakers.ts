@@ -126,7 +126,8 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
     mutation: () => postSpeakerThread(speakerId.value!, threadData.value!),
 
     onMutate: () => {
-      const key = ["speaker-communications", speakerId.value!];
+      const targetSpeakerId = speakerId.value!;
+      const key = ["speaker-communications", targetSpeakerId];
 
       const oldVal =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -174,6 +175,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
         oldVal,
         currentEventId,
         tempThreadId,
+        targetSpeakerId,
       };
     },
 
@@ -208,9 +210,9 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       console.error("Create speaker thread failed:", err);
     },
 
-    onSettled: () => {
-      if (speakerId.value) {
-        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+    onSettled: (_res, _err, _vars, ctx) => {
+      if (ctx?.targetSpeakerId) {
+        queryCache.invalidateQueries({ key: ["speaker", ctx.targetSpeakerId] });
       }
       queryCache.invalidateQueries({ key: ["speakers"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });

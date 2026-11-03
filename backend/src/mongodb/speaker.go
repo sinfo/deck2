@@ -920,6 +920,43 @@ func (s *SpeakersType) UpdateSpeakerParticipationStatusForEvent(speakerID primit
 	return &updatedSpeaker, nil
 }
 
+func (s *SpeakersType) updateSpeakerParticipationStatusForEventIfCurrent(speakerID primitive.ObjectID, eventID int, currentStatus models.ParticipationStatus, newStatus models.ParticipationStatus) (*models.Speaker, bool, error) {
+	ctx := context.Background()
+	var updatedSpeaker models.Speaker
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.status": newStatus,
+		},
+	}
+
+	var filterQuery = bson.M{
+		"_id": speakerID,
+		"participations": bson.M{
+			"$elemMatch": bson.M{
+				"event":  eventID,
+				"status": currentStatus,
+			},
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, false, nil
+		}
+
+		log.Println("Error conditionally updating speaker's status:", err)
+		return nil, false, err
+	}
+
+	ResetCurrentPublicSpeakers()
+
+	return &updatedSpeaker, true, nil
+}
+
 // UpdateSpeakerParticipationStatus updates a speaker's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
@@ -944,71 +981,89 @@ func (s *SpeakersType) AutoUpdateParticipationStatus(speakerID primitive.ObjectI
 		targetEventID = currentEvent.ID
 	}
 
-	speaker, err := s.GetSpeaker(speakerID)
-	if err != nil {
-		return nil, nil, err
-	}
+	const maxRetries = 3
 
-	var participation *models.SpeakerParticipation
-	for i := range speaker.Participations {
-		if speaker.Participations[i].Event == targetEventID {
-			participation = &speaker.Participations[i]
-			break
-		}
-	}
-
-	if participation == nil {
-		return speaker, nil, nil
-	}
-
-	currentStatus := participation.Status
-	if currentStatus == models.Accepted || currentStatus == models.Announced || currentStatus == models.Rejected {
-		return speaker, nil, nil
-	}
-
-	hasOutgoing := false
-	hasIncoming := false
-
-	for _, commID := range participation.Communications {
-		thread, err := Threads.GetThread(commID)
-		if err != nil {
-			continue
-		}
-
-		if thread.Kind.IsOutgoing() {
-			hasOutgoing = true
-		}
-		if thread.Kind.IsIncoming() || len(thread.Comments) > 0 {
-			hasIncoming = true
-		}
-
-		if hasOutgoing && hasIncoming {
-			break
-		}
-	}
-
-	var newStatus models.ParticipationStatus = currentStatus
-
-	if hasOutgoing && hasIncoming {
-		if currentStatus != models.InConversations {
-			newStatus = models.InConversations
-		}
-	} else if hasOutgoing {
-		if currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
-			newStatus = models.Contacted
-		}
-	} else if hasIncoming {
-		if currentStatus == models.Contacted || currentStatus == models.GivenUp || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold {
-			newStatus = models.InConversations
-		}
-	}
-
-	if newStatus != currentStatus {
-		updatedSpeaker, err := s.UpdateSpeakerParticipationStatusForEvent(speakerID, targetEventID, newStatus)
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		speaker, err := s.GetSpeaker(speakerID)
 		if err != nil {
 			return nil, nil, err
 		}
-		return updatedSpeaker, &newStatus, nil
+
+		var participation *models.SpeakerParticipation
+		for i := range speaker.Participations {
+			if speaker.Participations[i].Event == targetEventID {
+				participation = &speaker.Participations[i]
+				break
+			}
+		}
+
+		if participation == nil {
+			return speaker, nil, nil
+		}
+
+		currentStatus := participation.Status
+		if currentStatus == models.Accepted || currentStatus == models.Announced || currentStatus == models.Rejected {
+			return speaker, nil, nil
+		}
+
+		hasOutgoing := false
+		hasIncoming := false
+
+		threadsByID, err := Threads.GetThreadsByIDs(participation.Communications)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		for _, commID := range participation.Communications {
+			thread, exists := threadsByID[commID]
+			if !exists {
+				continue
+			}
+
+			if thread.Kind.IsOutgoing() {
+				hasOutgoing = true
+			}
+			if thread.Kind.IsIncoming() {
+				hasIncoming = true
+			}
+
+			if hasOutgoing && hasIncoming {
+				break
+			}
+		}
+
+		var newStatus models.ParticipationStatus = currentStatus
+
+		if hasOutgoing && hasIncoming {
+			if currentStatus != models.InConversations {
+				newStatus = models.InConversations
+			}
+		} else if hasOutgoing {
+			if currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
+				newStatus = models.Contacted
+			}
+		} else if hasIncoming {
+			if currentStatus == models.Contacted || currentStatus == models.GivenUp || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold {
+				newStatus = models.InConversations
+			}
+		}
+
+		if newStatus == currentStatus {
+			return speaker, nil, nil
+		}
+
+		updatedSpeaker, updated, err := s.updateSpeakerParticipationStatusForEventIfCurrent(speakerID, targetEventID, currentStatus, newStatus)
+		if err != nil {
+			return nil, nil, err
+		}
+		if updated {
+			return updatedSpeaker, &newStatus, nil
+		}
+	}
+
+	speaker, err := s.GetSpeaker(speakerID)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return speaker, nil, nil

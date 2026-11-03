@@ -902,6 +902,43 @@ func (c *CompaniesType) UpdateCompanyParticipationStatusForEvent(companyID primi
 	return &updatedCompany, nil
 }
 
+func (c *CompaniesType) updateCompanyParticipationStatusForEventIfCurrent(companyID primitive.ObjectID, eventID int, currentStatus models.ParticipationStatus, newStatus models.ParticipationStatus) (*models.Company, bool, error) {
+	ctx := context.Background()
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.status": newStatus,
+		},
+	}
+
+	var filterQuery = bson.M{
+		"_id": companyID,
+		"participations": bson.M{
+			"$elemMatch": bson.M{
+				"event":  eventID,
+				"status": currentStatus,
+			},
+		},
+	}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, false, nil
+		}
+
+		log.Println("Error conditionally updating company's status:", err)
+		return nil, false, err
+	}
+
+	ResetCurrentPublicCompanies()
+
+	return &updatedCompany, true, nil
+}
+
 // UpdateCompanyParticipationStatus updates a company's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
@@ -926,71 +963,89 @@ func (c *CompaniesType) AutoUpdateParticipationStatus(companyID primitive.Object
 		targetEventID = currentEvent.ID
 	}
 
-	company, err := c.GetCompany(companyID)
-	if err != nil {
-		return nil, nil, err
-	}
+	const maxRetries = 3
 
-	var participation *models.CompanyParticipation
-	for i := range company.Participations {
-		if company.Participations[i].Event == targetEventID {
-			participation = &company.Participations[i]
-			break
-		}
-	}
-
-	if participation == nil {
-		return company, nil, nil
-	}
-
-	currentStatus := participation.Status
-	if currentStatus == models.Accepted || currentStatus == models.Announced || currentStatus == models.Rejected {
-		return company, nil, nil
-	}
-
-	hasOutgoing := false
-	hasIncoming := false
-
-	for _, commID := range participation.Communications {
-		thread, err := Threads.GetThread(commID)
-		if err != nil {
-			continue
-		}
-
-		if thread.Kind.IsOutgoing() {
-			hasOutgoing = true
-		}
-		if thread.Kind.IsIncoming() || len(thread.Comments) > 0 {
-			hasIncoming = true
-		}
-
-		if hasOutgoing && hasIncoming {
-			break
-		}
-	}
-
-	var newStatus models.ParticipationStatus = currentStatus
-
-	if hasOutgoing && hasIncoming {
-		if currentStatus != models.InConversations {
-			newStatus = models.InConversations
-		}
-	} else if hasOutgoing {
-		if currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
-			newStatus = models.Contacted
-		}
-	} else if hasIncoming {
-		if currentStatus == models.Contacted || currentStatus == models.GivenUp || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold {
-			newStatus = models.InConversations
-		}
-	}
-
-	if newStatus != currentStatus {
-		updatedCompany, err := c.UpdateCompanyParticipationStatusForEvent(companyID, targetEventID, newStatus)
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		company, err := c.GetCompany(companyID)
 		if err != nil {
 			return nil, nil, err
 		}
-		return updatedCompany, &newStatus, nil
+
+		var participation *models.CompanyParticipation
+		for i := range company.Participations {
+			if company.Participations[i].Event == targetEventID {
+				participation = &company.Participations[i]
+				break
+			}
+		}
+
+		if participation == nil {
+			return company, nil, nil
+		}
+
+		currentStatus := participation.Status
+		if currentStatus == models.Accepted || currentStatus == models.Announced || currentStatus == models.Rejected {
+			return company, nil, nil
+		}
+
+		hasOutgoing := false
+		hasIncoming := false
+
+		threadsByID, err := Threads.GetThreadsByIDs(participation.Communications)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		for _, commID := range participation.Communications {
+			thread, exists := threadsByID[commID]
+			if !exists {
+				continue
+			}
+
+			if thread.Kind.IsOutgoing() {
+				hasOutgoing = true
+			}
+			if thread.Kind.IsIncoming() {
+				hasIncoming = true
+			}
+
+			if hasOutgoing && hasIncoming {
+				break
+			}
+		}
+
+		var newStatus models.ParticipationStatus = currentStatus
+
+		if hasOutgoing && hasIncoming {
+			if currentStatus != models.InConversations {
+				newStatus = models.InConversations
+			}
+		} else if hasOutgoing {
+			if currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
+				newStatus = models.Contacted
+			}
+		} else if hasIncoming {
+			if currentStatus == models.Contacted || currentStatus == models.GivenUp || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold {
+				newStatus = models.InConversations
+			}
+		}
+
+		if newStatus == currentStatus {
+			return company, nil, nil
+		}
+
+		updatedCompany, updated, err := c.updateCompanyParticipationStatusForEventIfCurrent(companyID, targetEventID, currentStatus, newStatus)
+		if err != nil {
+			return nil, nil, err
+		}
+		if updated {
+			return updatedCompany, &newStatus, nil
+		}
+	}
+
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return company, nil, nil
