@@ -116,6 +116,7 @@ const statusesOrdered: ParticipationStatus[] = [
   "CONTACTED",
   "GIVEN_UP",
   "IN_CONVERSATIONS",
+  "NOT_SELECTED",
   "ON_HOLD",
   "REJECTED",
   "SELECTED",
@@ -149,6 +150,14 @@ const statusStyles: Record<
     defaultBg: "bg-violet-100",
     defaultText: "text-violet-800",
     defaultHoverBg: "hover:bg-violet-200",
+  },
+  NOT_SELECTED: {
+    selectedBg: "bg-stone-400",
+    selectedText: "text-stone-950",
+    selectedHoverBg: "hover:bg-stone-500",
+    defaultBg: "bg-stone-100",
+    defaultText: "text-stone-700",
+    defaultHoverBg: "hover:bg-stone-200",
   },
   ON_HOLD: {
     selectedBg: "bg-zinc-500",

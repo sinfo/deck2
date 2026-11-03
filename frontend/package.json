@@ -62,5 +62,10 @@
       "npx --yes eslint --ext .ts,.vue,.js,.json --fix",
       "npx --yes prettier --write"
     ]
+  },
+  "allowScripts": {
+    "esbuild@0.25.8": true,
+    "vue-demi@0.14.10": true,
+    "@tailwindcss/oxide@4.1.11": true
   }
 }

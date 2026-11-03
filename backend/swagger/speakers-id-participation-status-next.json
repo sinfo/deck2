@@ -44,6 +44,7 @@
                                         "enum": [
                                             "SUGGESTED",
                                             "SELECTED",
+                                            "NOT_SELECTED",
                                             "ON_HOLD",
                                             "CONTACTED",
                                             "IN_CONVERSATIONS",
