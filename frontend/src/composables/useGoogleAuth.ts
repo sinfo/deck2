@@ -9,19 +9,39 @@ export const useGoogleAuth = () => {
   const isSigningIn = ref(false);
   const error = ref<string | null>(null);
 
-  const signInWithGoogle = async (): Promise<boolean> => {
+  const getTargetUserEmail = (explicitHint?: string) => {
+    return explicitHint || authStore.sinfoEmail || undefined;
+  };
+
+  const executeTokenRequest = (options: {
+    promptMode: "" | "none" | "consent" | "select_account";
+    userEmail?: string;
+    onToken: (response: CallbackTypes.TokenPopupResponse) => Promise<void>;
+  }): Promise<boolean> => {
     return new Promise((resolve) => {
       isSigningIn.value = true;
       error.value = null;
 
       googleSdkLoaded((google) => {
-        google.accounts.oauth2
-          .initTokenClient({
+        try {
+          const client = google.accounts.oauth2.initTokenClient({
             client_id: env.GOOGLE_CLIENT_ID,
             scope: env.GOOGLE_SCOPE,
+            // With promptMode = "" and hint = userEmail, Google Identity Services skips
+            // the account picker modal and binds directly to the user's active SINFO session.
+            prompt: options.promptMode,
+            hint: options.userEmail,
+            hosted_domain: "sinfo.org",
             callback: async (response) => {
+              if (!response?.access_token) {
+                console.warn("No Google access token received");
+                error.value = "Failed to obtain Google access token";
+                isSigningIn.value = false;
+                resolve(false);
+                return;
+              }
               try {
-                await handleGoogleCallback(response);
+                await options.onToken(response);
                 resolve(true);
               } catch (err) {
                 error.value =
@@ -32,13 +52,22 @@ export const useGoogleAuth = () => {
               }
             },
             error_callback: (err) => {
-              console.error("Error during Google login", err);
+              console.warn("Error during Google token request", err);
               error.value = "Google authentication failed";
               isSigningIn.value = false;
               resolve(false);
             },
-          })
-          .requestAccessToken();
+          });
+
+          client.requestAccessToken({
+            prompt: options.promptMode,
+            hint: options.userEmail,
+          });
+        } catch (err) {
+          console.error("Failed to init token client:", err);
+          isSigningIn.value = false;
+          resolve(false);
+        }
       });
     });
   };
@@ -47,14 +76,17 @@ export const useGoogleAuth = () => {
     response: CallbackTypes.TokenPopupResponse,
   ) => {
     try {
-      const jwt = await generateJwt({ access_token: response.access_token });
-      authStore.setToken(jwt.data.deck_token);
+      if (!authStore.isAuthenticated) {
+        const jwt = await generateJwt({ access_token: response.access_token });
+        authStore.setToken(jwt.data.deck_token);
+      }
     } catch (err) {
       console.error("Failed to generate JWT:", err);
-      throw new Error("Failed to complete authentication");
+      if (!authStore.isAuthenticated) {
+        throw new Error("Failed to complete authentication");
+      }
     }
 
-    // Store Google token with expiration (expires_in is in seconds, default 3600)
     try {
       const expiresIn = response.expires_in
         ? Number(response.expires_in)
@@ -66,46 +98,50 @@ export const useGoogleAuth = () => {
     }
   };
 
+  const signInWithGoogle = async (
+    options: {
+      prompt?: "" | "none" | "consent" | "select_account";
+      hint?: string;
+    } = {},
+  ): Promise<boolean> => {
+    const userEmail = getTargetUserEmail(options.hint);
+    const promptMode = options.prompt ?? "";
+
+    return executeTokenRequest({
+      promptMode,
+      userEmail,
+      onToken: handleGoogleCallback,
+    });
+  };
+
   /**
    * Request only Google access token without Deck JWT (for Gmail operations)
    * Use this when the user is already authenticated with Deck but Google token expired
    */
-  const requestGoogleToken = async (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      isSigningIn.value = true;
-      error.value = null;
+  const requestGoogleToken = async (
+    options: {
+      prompt?: "" | "none" | "consent" | "select_account";
+      silent?: boolean;
+      hint?: string;
+    } = {},
+  ): Promise<boolean> => {
+    if (authStore.hasValidGoogleToken) {
+      return true;
+    }
 
-      googleSdkLoaded((google) => {
-        google.accounts.oauth2
-          .initTokenClient({
-            client_id: env.GOOGLE_CLIENT_ID,
-            scope: env.GOOGLE_SCOPE,
-            callback: async (response) => {
-              try {
-                const expiresIn = response.expires_in
-                  ? Number(response.expires_in)
-                  : 3600;
-                authStore.setGoogleToken(response.access_token, expiresIn);
-                resolve(true);
-              } catch (err) {
-                error.value =
-                  err instanceof Error
-                    ? err.message
-                    : "Failed to get Google token";
-                resolve(false);
-              } finally {
-                isSigningIn.value = false;
-              }
-            },
-            error_callback: (err) => {
-              console.error("Error during Google token request", err);
-              error.value = "Google authentication failed";
-              isSigningIn.value = false;
-              resolve(false);
-            },
-          })
-          .requestAccessToken();
-      });
+    const userEmail = getTargetUserEmail(options.hint);
+    const promptMode: "" | "none" | "consent" | "select_account" =
+      options.silent ? "" : (options.prompt ?? "");
+
+    return executeTokenRequest({
+      promptMode,
+      userEmail,
+      onToken: async (response) => {
+        const expiresIn = response.expires_in
+          ? Number(response.expires_in)
+          : 3600;
+        authStore.setGoogleToken(response.access_token, expiresIn);
+      },
     });
   };
 

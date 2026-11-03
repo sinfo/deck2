@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/sinfo/deck2/src/config"
 	"github.com/sinfo/deck2/src/spaces"
@@ -382,6 +381,7 @@ type addThreadData struct {
 	Text    *string                    `json:"text"`
 	Meeting *mongodb.CreateMeetingData `json:"meeting"`
 	Kind    *models.ThreadKind         `json:"kind"`
+	Channel *models.ThreadChannel      `json:"channel"`
 }
 
 func (acd *addThreadData) ParseBody(body io.Reader) error {
@@ -396,6 +396,14 @@ func (acd *addThreadData) ParseBody(body io.Reader) error {
 
 	if acd.Kind == nil {
 		return errors.New("invalid kind")
+	}
+
+	if acd.Channel != nil {
+		normalized, ok := acd.Channel.Normalize()
+		if !ok {
+			return errors.New("invalid channel")
+		}
+		*acd.Channel = normalized
 	}
 
 	if *acd.Kind == models.ThreadKindMeeting && acd.Meeting == nil {
@@ -469,11 +477,18 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 		meetingIDPointer = &meeting.ID
 	}
 
+	// channel defaults to GMAIL if not specified
+	channel := models.ThreadChannelGmail
+	if atd.Channel != nil {
+		channel = *atd.Channel
+	}
+
 	// only then create the thread
 	ctd := mongodb.CreateThreadData{
 		Entry:   newPost.ID,
 		Meeting: meetingIDPointer,
 		Kind:    *atd.Kind,
+		Channel: channel,
 	}
 
 	newThread, err := mongodb.Threads.CreateThread(ctd)
@@ -513,13 +528,16 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	threadWithEntry := models.ThreadWithEntry{
-		ID:       newThread.ID,
-		Posted:   newThread.Posted,
-		Entry:    newPost,
-		Meeting:  newThread.Meeting,
-		Comments: newThread.Comments,
-		Kind:     newThread.Kind,
-		Status:   newThread.Status,
+		ID:             newThread.ID,
+		Posted:         newThread.Posted,
+		Entry:          newPost,
+		Meeting:        newThread.Meeting,
+		Comments:       newThread.Comments,
+		Kind:           newThread.Kind,
+		Status:         newThread.Status,
+		GmailMessageId: newThread.GmailMessageId,
+		GmailThreadId:  newThread.GmailThreadId,
+		Channel:        newThread.Channel,
 	}
 
 	_ = updatedCompany
@@ -1251,14 +1269,22 @@ func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			channel := thread.Channel
+			if channel == "" {
+				channel = models.ThreadChannelGmail
+			}
+
 			comms = append(comms, &models.ThreadWithEntry{
-				ID:       thread.ID,
-				Posted:   thread.Posted,
-				Entry:    post,
-				Meeting:  thread.Meeting,
-				Comments: thread.Comments,
-				Kind:     thread.Kind,
-				Status:   thread.Status,
+				ID:             thread.ID,
+				Posted:         thread.Posted,
+				Entry:          post,
+				Meeting:        thread.Meeting,
+				Comments:       thread.Comments,
+				Kind:           thread.Kind,
+				Status:         thread.Status,
+				GmailMessageId: thread.GmailMessageId,
+				GmailThreadId:  thread.GmailThreadId,
+				Channel:        channel,
 			})
 		}
 
@@ -1318,29 +1344,6 @@ func updateCompanyGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(company)
 }
 
-// GmailMessageData represents a Gmail message to be synced
-type GmailMessageData struct {
-	MessageId  string `json:"messageId"`
-	ThreadId   string `json:"threadId"`
-	Subject    string `json:"subject"`
-	From       string `json:"from"`
-	To         string `json:"to"`
-	Date       string `json:"date"`
-	Body       string `json:"body"`
-	IsOutgoing bool   `json:"isOutgoing"`
-}
-
-type syncGmailMessagesData struct {
-	Messages []GmailMessageData `json:"messages"`
-}
-
-func (sgmd *syncGmailMessagesData) ParseBody(body io.Reader) error {
-	if err := json.NewDecoder(body).Decode(sgmd); err != nil {
-		return err
-	}
-	return nil
-}
-
 func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
@@ -1369,85 +1372,10 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get existing synced messages to avoid duplicates
-	messageIds := make([]string, len(data.Messages))
-	for i, msg := range data.Messages {
-		messageIds[i] = msg.MessageId
-	}
-	existingThreads, err := mongodb.Threads.GetThreadsByGmailMessageIds(messageIds)
-	if err != nil {
-		log.Println("Error checking existing gmail threads:", err)
-	}
-
-	var syncedCount int
-	for _, msg := range data.Messages {
-		// Skip if already synced
-		if _, exists := existingThreads[msg.MessageId]; exists {
-			continue
-		}
-
-		// Parse the date
-		var postedTime *time.Time
-		if msg.Date != "" {
-			if parsed, err := time.Parse(time.RFC3339, msg.Date); err == nil {
-				postedTime = &parsed
-			}
-		}
-
-		// Determine thread kind based on direction
-		kind := models.ThreadKindFrom
-		if msg.IsOutgoing {
-			kind = models.ThreadKindTo
-		}
-
-		// Format the message text - just subject as header and body content
-		var formattedText string
-		if msg.Subject != "" && msg.Subject != "(No subject)" {
-			formattedText = fmt.Sprintf("📧 %s\n\n%s", msg.Subject, msg.Body)
-		} else {
-			formattedText = msg.Body
-		}
-
-		// Create post
-		cpd := mongodb.CreatePostData{
-			Member: credentials.ID,
-			Text:   formattedText,
-		}
-
-		newPost, err := mongodb.Posts.CreatePost(cpd)
-		if err != nil {
-			log.Printf("Error creating post for gmail message %s: %s", msg.MessageId, err)
-			continue
-		}
-
-		// Create thread
-		ctd := mongodb.CreateThreadData{
-			Entry:          newPost.ID,
-			Kind:           kind,
-			GmailMessageId: msg.MessageId,
-			Posted:         postedTime,
-		}
-
-		newThread, err := mongodb.Threads.CreateThread(ctd)
-		if err != nil {
-			log.Printf("Error creating thread for gmail message %s: %s", msg.MessageId, err)
-			// Clean up post
-			mongodb.Posts.DeletePost(newPost.ID)
-			continue
-		}
-
-		// Attach thread to company participation
-		_, err = mongodb.Companies.AddThread(companyID, newThread.ID)
-		if err != nil {
-			log.Printf("Error attaching thread to company for gmail message %s: %s", msg.MessageId, err)
-			// Clean up
-			mongodb.Posts.DeletePost(newPost.ID)
-			mongodb.Threads.DeleteThread(newThread.ID)
-			continue
-		}
-
-		syncedCount++
-	}
+	syncedCount := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
+		_, err := mongodb.Companies.AddThread(companyID, threadID)
+		return err
+	})
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"synced": syncedCount,
