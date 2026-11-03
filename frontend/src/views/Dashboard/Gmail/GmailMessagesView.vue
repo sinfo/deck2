@@ -567,8 +567,10 @@ const handleAutoLinkEntities = async () => {
   });
 
   try {
-    const results = await autoLinkEventEntities(eventId);
-    const newlyLinked = results.filter((r) => r.status === "SUCCESS").length;
+    const newlyLinked = results.reduce(
+      (count, result) => count + result.newlyLinkedCount,
+      0,
+    );
     toast.success({
       title: "Auto-Link Completed",
       description: `Linked ${newlyLinked} new thread(s).`,
