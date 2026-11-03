@@ -605,9 +605,12 @@ export const useAutoLinkGmail = () => {
           const initialResults = await executeAutoLinkEntities(eventId, {
             onlyMyResponsibilities: true,
           });
-          if (!error.value) {
-            localStorage.setItem(storageKey, String(Date.now()));
-          }
+if (
+  !error.value &&
+  !initialResults.some((result) => result.status === "ERROR")
+) {
+  localStorage.setItem(storageKey, String(Date.now()));
+}
           return initialResults;
         }
 
