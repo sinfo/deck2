@@ -1027,11 +1027,23 @@ const openGmailPicker = () => {
 };
 
 const handleGmailThreadsSave = async (threadIds: string[]) => {
+  if (!selectedEventId.value) {
+    return;
+  }
+
   try {
     if (props.entityType === "company") {
-      await updateCompanyGmailThreadIds(props.entity.id, threadIds);
+      await updateCompanyGmailThreadIds(
+        props.entity.id,
+        threadIds,
+        selectedEventId.value,
+      );
     } else {
-      await updateSpeakerGmailThreadIds(props.entity.id, threadIds);
+      await updateSpeakerGmailThreadIds(
+        props.entity.id,
+        threadIds,
+        selectedEventId.value,
+      );
     }
     // Invalidate the communications query to refresh data
     queryCache.invalidateQueries({
@@ -1051,7 +1063,10 @@ const { fetchMessagesForThreads } = useAutoLinkGmail();
 const isSyncing = ref(false);
 
 const syncGmailMessages = async () => {
-  if (!currentParticipationGmailThreadIds.value.length) {
+  if (
+    !currentParticipationGmailThreadIds.value.length ||
+    !selectedEventId.value
+  ) {
     return;
   }
 
@@ -1068,9 +1083,17 @@ const syncGmailMessages = async () => {
 
     // Send to backend for sync
     if (props.entityType === "company") {
-      await syncCompanyGmailMessages(props.entity.id, allMessages);
+      await syncCompanyGmailMessages(
+        props.entity.id,
+        allMessages,
+        selectedEventId.value,
+      );
     } else {
-      await syncSpeakerGmailMessages(props.entity.id, allMessages);
+      await syncSpeakerGmailMessages(
+        props.entity.id,
+        allMessages,
+        selectedEventId.value,
+      );
     }
 
     // Refresh communications
