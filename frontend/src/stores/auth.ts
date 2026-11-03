@@ -33,14 +33,13 @@ const GOOGLE_STORAGE_KEYS = {
 export const useAuthStore = defineStore("auth", () => {
   const token = ref<string | null>(localStorage.getItem("authToken"));
   const isInitializing = ref(true);
-  const decoded = computed<JWTAuth>(() =>
-    token.value
-      ? (parseJwt(token.value) as JWTAuth)
-      : (null as unknown as JWTAuth),
+  const decoded = computed<JWTAuth | null>(() =>
+    token.value ? parseJwt(token.value) : null,
   );
 
   const isAuthenticated = computed(() => {
     if (!token.value) return false;
+    if (!decoded.value) return false;
     const expires = decoded.value?.exp ? decoded.value.exp * 1000 : null;
     if (expires && expires < Date.now()) {
       return false;
@@ -273,6 +272,11 @@ export const useAuthStore = defineStore("auth", () => {
   const initialize = async () => {
     // Check if token exists and is valid
     if (token.value) {
+      if (!decoded.value) {
+        clearToken();
+        isInitializing.value = false;
+        return;
+      }
       const expires = decoded.value?.exp ? decoded.value.exp * 1000 : null;
       if (expires && expires < Date.now()) {
         clearToken();

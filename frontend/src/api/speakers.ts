@@ -64,7 +64,7 @@ export const deleteSpeaker = (id: string) =>
 export const updateSpeakerGmailThreadIds = (
   id: string,
   gmailThreadIds: string[],
-  eventId?: number,
+  eventId: number,
 ) =>
   instance.put<Speaker>(`/speakers/${id}/participation/gmail-threads`, {
     gmailThreadIds,
@@ -90,7 +90,7 @@ export interface SyncGmailResponse {
 export const syncSpeakerGmailMessages = (
   id: string,
   messages: GmailMessageData[],
-  eventId?: number,
+  eventId: number,
 ) =>
   instance.post<SyncGmailResponse>(`/speakers/${id}/participation/gmail-sync`, {
     messages,

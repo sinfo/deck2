@@ -187,8 +187,8 @@ const currentProcessingEntity = ref<string>("");
 const results = ref<EntityLinkResult[]>([]);
 const error = ref<string | null>(null);
 
-// Shared in-flight sync promise to coordinate concurrent calls (e.g. from Entry.vue and SettingsView.vue)
-let activeSyncPromise: Promise<EntityLinkResult[]> | null = null;
+// Shared in-flight sync promises keyed by member + event to coordinate concurrent calls
+const activeSyncPromises = new Map<string, Promise<EntityLinkResult[]>>();
 let lastWarnTimestamp = 0;
 
 export const useAutoLinkGmail = () => {
@@ -197,6 +197,17 @@ export const useAutoLinkGmail = () => {
   const { toast } = useToast();
   const { requestGoogleToken } = useGoogleAuth();
   const gmailComposable = useGmailMessages();
+
+  const getSyncScopeKey = (eventId: number): string => {
+    const memberScope =
+      authStore.memberSinfoid ||
+      authStore.decoded?.sinfoid?.toLowerCase().trim() ||
+      "unknown";
+    return `${memberScope}:${eventId}`;
+  };
+
+  const getSyncTimestampStorageKey = (eventId: number): string =>
+    `gmail_last_sync_timestamp_${getSyncScopeKey(eventId)}`;
 
   const ensureValidGoogleToken = async (): Promise<boolean> => {
     if (!authStore.isGoogleAuthenticated) return false;
@@ -399,8 +410,6 @@ export const useAutoLinkGmail = () => {
         try {
           const allMatchedThreads: GmailThreadListItem[] = [];
           let pageToken: string | undefined = undefined;
-          const MAX_THREADS_PER_ENTITY = 100;
-
           do {
             let threadListRes = await gmailComposable.listThreads({
               q: query,
@@ -422,10 +431,7 @@ export const useAutoLinkGmail = () => {
             allMatchedThreads.push(...threads);
 
             pageToken = threadListRes?.nextPageToken;
-          } while (
-            pageToken &&
-            allMatchedThreads.length < MAX_THREADS_PER_ENTITY
-          );
+          } while (pageToken);
 
           const matchedThreadIds = allMatchedThreads.map((t) => t.id);
 
@@ -522,7 +528,7 @@ export const useAutoLinkGmail = () => {
       }
 
       localStorage.setItem(
-        `gmail_last_sync_timestamp_${eventId}`,
+        getSyncTimestampStorageKey(eventId),
         String(Date.now()),
       );
 
@@ -550,6 +556,8 @@ export const useAutoLinkGmail = () => {
     eventId: number,
     options: { forceReScan?: boolean; onlyMyResponsibilities?: boolean } = {},
   ): Promise<EntityLinkResult[]> => {
+    const syncScopeKey = getSyncScopeKey(eventId);
+    const activeSyncPromise = activeSyncPromises.get(syncScopeKey);
     if (activeSyncPromise) {
       return activeSyncPromise;
     }
@@ -562,11 +570,11 @@ export const useAutoLinkGmail = () => {
       try {
         return await executeAutoLinkEntities(eventId, options);
       } finally {
-        activeSyncPromise = null;
+        activeSyncPromises.delete(syncScopeKey);
       }
     })();
 
-    activeSyncPromise = promise;
+    activeSyncPromises.set(syncScopeKey, promise);
     return await promise;
   };
 
@@ -576,6 +584,8 @@ export const useAutoLinkGmail = () => {
   const syncRecentGmailUpdates = async (
     eventId: number,
   ): Promise<EntityLinkResult[]> => {
+    const syncScopeKey = getSyncScopeKey(eventId);
+    const activeSyncPromise = activeSyncPromises.get(syncScopeKey);
     if (activeSyncPromise) {
       return activeSyncPromise;
     }
@@ -586,7 +596,7 @@ export const useAutoLinkGmail = () => {
 
     const promise = (async () => {
       try {
-        const storageKey = `gmail_last_sync_timestamp_${eventId}`;
+        const storageKey = getSyncTimestampStorageKey(eventId);
         const lastSyncTimeStr = localStorage.getItem(storageKey);
         const lastSyncTime = lastSyncTimeStr ? Number(lastSyncTimeStr) : null;
 
@@ -595,7 +605,9 @@ export const useAutoLinkGmail = () => {
           const initialResults = await executeAutoLinkEntities(eventId, {
             onlyMyResponsibilities: true,
           });
-          localStorage.setItem(storageKey, String(Date.now()));
+          if (!error.value) {
+            localStorage.setItem(storageKey, String(Date.now()));
+          }
           return initialResults;
         }
 
@@ -612,7 +624,6 @@ export const useAutoLinkGmail = () => {
 
           const recentThreads: GmailThreadListItem[] = [];
           let pageToken: string | undefined = undefined;
-          const MAX_DELTA_THREADS = 100;
 
           do {
             let recentThreadsRes = await gmailComposable.listThreads({
@@ -635,7 +646,7 @@ export const useAutoLinkGmail = () => {
             recentThreads.push(...threads);
 
             pageToken = recentThreadsRes?.nextPageToken;
-          } while (pageToken && recentThreads.length < MAX_DELTA_THREADS);
+          } while (pageToken);
 
           // No new threads -> exit immediately
           if (recentThreads.length === 0) {
@@ -850,11 +861,11 @@ export const useAutoLinkGmail = () => {
           isAutoLinking.value = false;
         }
       } finally {
-        activeSyncPromise = null;
+        activeSyncPromises.delete(syncScopeKey);
       }
     })();
 
-    activeSyncPromise = promise;
+    activeSyncPromises.set(syncScopeKey, promise);
     return await promise;
   };
 

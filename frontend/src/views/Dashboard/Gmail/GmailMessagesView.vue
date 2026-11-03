@@ -878,6 +878,8 @@ watch(linkEntityType, () => {
 
 const linkThread = async () => {
   if (!selectedLinkEntity.value || !threadToLink.value) return;
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) return;
 
   isLinking.value = true;
 
@@ -894,9 +896,9 @@ const linkThread = async () => {
 
       // Update the participation's Gmail thread IDs
       if (linkEntityType.value === "company") {
-        await updateCompanyGmailThreadIds(entity.id, newThreadIds);
+        await updateCompanyGmailThreadIds(entity.id, newThreadIds, eventId);
       } else {
-        await updateSpeakerGmailThreadIds(entity.id, newThreadIds);
+        await updateSpeakerGmailThreadIds(entity.id, newThreadIds, eventId);
       }
 
       // Sync the messages from this thread
@@ -921,13 +923,16 @@ const linkThread = async () => {
 };
 
 const syncThreadMessages = async (entityId: string, thread: GmailThread) => {
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) return;
+
   try {
     const allMessages = await fetchMessagesForThreads([thread.id]);
     if (allMessages.length > 0) {
       if (linkEntityType.value === "company") {
-        await syncCompanyGmailMessages(entityId, allMessages);
+        await syncCompanyGmailMessages(entityId, allMessages, eventId);
       } else {
-        await syncSpeakerGmailMessages(entityId, allMessages);
+        await syncSpeakerGmailMessages(entityId, allMessages, eventId);
       }
     }
   } catch (err) {
