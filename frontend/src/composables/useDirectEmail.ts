@@ -4,7 +4,10 @@ import { useAuthStore } from "@/stores/auth";
 import { useEventStore } from "@/stores/event";
 import { getCompanyRepresentatives } from "@/api/companies";
 import type { CompanyWithParticipation } from "@/dto/companies";
-import type { Speaker, SpeakerWithParticipation } from "@/dto/speakers";
+import type {
+  Speaker,
+  SpeakerWithContactAndParticipation,
+} from "@/dto/speakers";
 import {
   EmailTemplateCategory,
   getVariablesFromType,
@@ -22,11 +25,11 @@ import type { Contact } from "@/dto/contacts";
 
 export type DirectEmailEntity =
   | CompanyWithParticipation
-  | SpeakerWithParticipation;
+  | SpeakerWithContactAndParticipation;
 
 function isSpeaker(
   entity: DirectEmailEntity,
-): entity is SpeakerWithParticipation {
+): entity is SpeakerWithContactAndParticipation {
   return (entity as Speaker).companyName !== undefined;
 }
 
