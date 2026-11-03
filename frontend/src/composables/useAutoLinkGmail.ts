@@ -605,12 +605,15 @@ export const useAutoLinkGmail = () => {
           const initialResults = await executeAutoLinkEntities(eventId, {
             onlyMyResponsibilities: true,
           });
-if (
-  !error.value &&
-  !initialResults.some((result) => result.status === "ERROR")
-) {
-  localStorage.setItem(storageKey, String(Date.now()));
-}
+
+          // only save the sync timestamp if no general errors or individual failures occurred since
+          // future syncs might skip emails that failed to process.
+          if (
+            !error.value &&
+            !initialResults.some((result) => result.status === "ERROR")
+          ) {
+            localStorage.setItem(storageKey, String(Date.now()));
+          }
           return initialResults;
         }
 

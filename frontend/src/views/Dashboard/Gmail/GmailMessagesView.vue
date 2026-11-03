@@ -543,12 +543,8 @@ const authStore = useAuthStore();
 const eventStore = useEventStore();
 const router = useRouter();
 const { toast } = useToast();
-const {
-  isAutoLinking,
-  autoLinkEventEntities,
-  fetchMessagesForThreads,
-  warnUnlinkedContacted,
-} = useAutoLinkGmail();
+const { isAutoLinking, fetchMessagesForThreads, warnUnlinkedContacted } =
+  useAutoLinkGmail();
 const { signInWithGoogle, isSigningIn, requestGoogleToken } = useGoogleAuth();
 
 const handleAutoLinkEntities = async () => {

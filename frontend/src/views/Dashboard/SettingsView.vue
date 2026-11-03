@@ -537,7 +537,8 @@ const syncThreads = async (silent = false, fullScan = false) => {
     );
     const alreadyLinked = results.reduce(
       (count, result) =>
-        count + Math.max(result.linkedThreadsCount - result.newlyLinkedCount, 0),
+        count +
+        Math.max(result.linkedThreadsCount - result.newlyLinkedCount, 0),
       0,
     );
     toast.success({
