@@ -13,28 +13,8 @@
       </div>
 
       <div v-else class="space-y-1">
-        <!-- Header: avatar, name, socials, meta and actions -->
-        <div class="flex items-center gap-3">
-          <div class="relative flex-shrink-0">
-            <div
-              class="size-9 rounded-full flex items-center justify-center text-xs font-semibold"
-              :class="
-                isPrimary
-                  ? 'bg-orange-100 text-orange-700'
-                  : 'bg-primary/10 text-primary'
-              "
-            >
-              {{ initials }}
-            </div>
-            <div
-              v-if="isPrimary"
-              class="absolute -bottom-1 -right-1 bg-orange-100 text-orange-600 rounded-full p-0.5 border border-orange-200"
-              title="Primary contact (used in bulk emails)"
-            >
-              <CrownIcon class="size-2.5" />
-            </div>
-          </div>
-
+        <!-- Header: name, socials, meta and actions -->
+        <div class="flex items-start gap-3">
           <div class="flex-1 min-w-0">
             <!-- Socials wrap to their own line when they don't fit next to the name -->
             <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -44,6 +24,13 @@
               >
                 {{ contactName || "Unnamed Contact" }}
               </h3>
+              <span
+                v-if="isPrimary"
+                class="-ml-1 bg-orange-100 text-orange-600 rounded-full p-0.5 border border-orange-200"
+                title="Primary contact (used in bulk emails)"
+              >
+                <CrownIcon class="size-3" />
+              </span>
               <div
                 v-if="socialLinks.length"
                 class="flex items-center gap-0.5 -mx-0.5"
@@ -160,7 +147,7 @@
         <!-- Emails and phones -->
         <div
           v-if="contact.mails.length || contact.phones.length"
-          class="pl-12 space-y-0.5"
+          class="space-y-0.5"
         >
           <div
             v-for="mail in contact.mails"
@@ -368,14 +355,6 @@ const formatGender = (gender: Gender): string => {
       return "";
   }
 };
-
-const initials = computed(() => {
-  const parts = (props.contactName || "").trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "?";
-  const first = parts[0][0];
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-  return (first + last).toUpperCase();
-});
 
 interface SocialLink {
   label: string;
