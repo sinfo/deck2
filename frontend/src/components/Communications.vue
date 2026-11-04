@@ -406,6 +406,8 @@
     :default-search-query="gmailPickerDefaultQuery"
     @save="handleGmailThreadsSave"
   />
+
+  <MissingGenderDialog v-model:open="isMissingGenderDialogOpen" />
 </template>
 
 <script setup lang="ts">
@@ -454,6 +456,7 @@ import {
   templateHumanReadableNames,
   type AnyEmailVariableInput,
 } from "@/lib/templates";
+import MissingGenderDialog from "./MissingGenderDialog.vue";
 import type { Event } from "@/dto/events";
 import Textarea from "./ui/textarea/Textarea.vue";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
@@ -503,6 +506,7 @@ const selectedEventId = ref<number | null>(
   eventStore.selectedEvent?.id ?? null,
 );
 const selectedTemplate = ref<TemplateWithVariables>();
+const isMissingGenderDialogOpen = ref(false);
 
 const editingThreadId = ref<string | null>(null);
 const editingPostId = ref<string | null>(null);
@@ -1134,6 +1138,13 @@ watch(
     if (!newTemplate) return;
 
     const { template, variables } = newTemplate;
+
+    if (template.endsWith("_PT") && !authStore.member?.contactObject?.gender) {
+      selectedTemplate.value = undefined;
+      isMissingGenderDialogOpen.value = true;
+      return;
+    }
+
     openTemplateInNewTab(template, variables);
 
     messageKind.value = ThreadKind.ThreadKindTemplate;
