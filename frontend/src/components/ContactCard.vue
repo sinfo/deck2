@@ -1,5 +1,5 @@
 <template>
-  <Card class="w-full gap-0 py-3">
+  <Card class="w-full gap-0 py-2.5">
     <!-- Overlay backdrop when popover is open -->
     <div
       v-if="isEditFormOpen || isDeleteConfirmOpen"
@@ -12,7 +12,7 @@
         No contact information available
       </div>
 
-      <div v-else class="space-y-2.5">
+      <div v-else class="space-y-1">
         <!-- Header: avatar, name, socials, meta and actions -->
         <div class="flex items-center gap-3">
           <div class="relative flex-shrink-0">
