@@ -156,7 +156,7 @@
                   <div class="flex flex-wrap items-center gap-2">
                     <a
                       :href="`tel:${phone.phone}`"
-                      class="text-primary hover:underline min-w-0 flex-shrink-0"
+                      class="text-primary hover:underline min-w-0 wrap-anywhere"
                     >
                       {{ phone.phone }}
                     </a>
