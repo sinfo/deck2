@@ -76,8 +76,10 @@
           />
         </div>
         <div class="flex-1 min-w-0">
-          <CardTitle class="text-lg truncate">{{ speaker.name }}</CardTitle>
-          <div class="text-sm text-muted-foreground mb-2">
+          <CardTitle class="text-lg wrap-anywhere">{{
+            speaker.name
+          }}</CardTitle>
+          <div class="text-sm text-muted-foreground mb-2 wrap-anywhere">
             {{ speaker.title }}
           </div>
           <div class="flex flex-wrap gap-1 mt-2">
@@ -88,7 +90,11 @@
               entity-type="speaker"
               @updated="emit('updated')"
             />
-            <Badge v-if="speaker.companyName">{{ speaker.companyName }}</Badge>
+            <Badge
+              v-if="speaker.companyName"
+              class="max-w-full whitespace-normal wrap-anywhere"
+              >{{ speaker.companyName }}</Badge
+            >
           </div>
         </div>
       </div>
@@ -98,7 +104,7 @@
       <div v-if="speaker.bio" class="relative">
         <CardDescription
           :class="[
-            'transition-all duration-300 ease-in-out whitespace-pre-wrap',
+            'transition-all duration-300 ease-in-out whitespace-pre-wrap wrap-anywhere',
             isBioExpanded ? '' : 'line-clamp-3',
           ]"
         >
