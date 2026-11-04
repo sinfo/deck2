@@ -44,21 +44,27 @@
             <span class="text-sm font-medium text-muted-foreground"
               >Company Name:</span
             >
-            <p class="text-sm">{{ company?.billingInfo?.name }}</p>
+            <p class="text-sm wrap-anywhere">
+              {{ company?.billingInfo?.name }}
+            </p>
           </div>
 
           <div>
             <span class="text-sm font-medium text-muted-foreground"
               >Address:</span
             >
-            <p class="text-sm">{{ company?.billingInfo?.address }}</p>
+            <p class="text-sm wrap-anywhere">
+              {{ company?.billingInfo?.address }}
+            </p>
           </div>
 
           <div>
             <span class="text-sm font-medium text-muted-foreground"
               >Tax ID (TIN):</span
             >
-            <p class="text-sm">{{ company?.billingInfo?.tin }}</p>
+            <p class="text-sm wrap-anywhere">
+              {{ company?.billingInfo?.tin }}
+            </p>
           </div>
         </div>
 
