@@ -95,6 +95,7 @@
         <Textarea
           id="speaker-observations"
           v-model="speakerObservations"
+          class="min-w-0 wrap-anywhere"
           placeholder="Any observations about the speaker"
           :rows="3"
         />
