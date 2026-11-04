@@ -1,5 +1,14 @@
 <template>
-  <Card class="w-full gap-0 py-2.5">
+  <Card class="relative w-full gap-0 py-2.5">
+    <!-- Primary contact crown, sitting on the card's top-left border -->
+    <div
+      v-if="isPrimary"
+      class="absolute -top-2.5 -left-2.5 z-10 bg-orange-100 text-orange-600 rounded-full p-1 border border-orange-200 shadow-sm"
+      title="Primary contact (used in bulk emails)"
+    >
+      <CrownIcon class="size-3" />
+    </div>
+
     <!-- Overlay backdrop when popover is open -->
     <div
       v-if="isEditFormOpen || isDeleteConfirmOpen"
@@ -24,13 +33,6 @@
               >
                 {{ contactName || "Unnamed Contact" }}
               </h3>
-              <span
-                v-if="isPrimary"
-                class="-ml-1 bg-orange-100 text-orange-600 rounded-full p-0.5 border border-orange-200"
-                title="Primary contact (used in bulk emails)"
-              >
-                <CrownIcon class="size-3" />
-              </span>
               <div
                 v-if="socialLinks.length"
                 class="flex items-center gap-0.5 -mx-0.5"
