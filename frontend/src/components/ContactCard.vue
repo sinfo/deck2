@@ -1,5 +1,5 @@
 <template>
-  <Card class="w-full">
+  <Card class="w-full gap-0 py-3">
     <!-- Overlay backdrop when popover is open -->
     <div
       v-if="isEditFormOpen || isDeleteConfirmOpen"
@@ -7,36 +7,62 @@
       @click="closeAllPopovers"
     ></div>
 
-    <CardContent>
-      <div v-if="!contact" class="text-center text-muted-foreground py-8">
+    <CardContent class="px-4">
+      <div v-if="!contact" class="text-center text-muted-foreground py-4">
         No contact information available
       </div>
 
-      <div v-else class="space-y-4">
-        <!-- Header with name and buttons -->
-        <div class="space-y-3">
-          <!-- Name and badges -->
-          <div v-if="contactName">
-            <h3 class="font-semibold text-base">{{ contactName }}</h3>
+      <div v-else class="space-y-2.5">
+        <!-- Header: name, meta and actions -->
+        <div class="flex items-start gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <h3
+                class="font-semibold text-base leading-tight truncate"
+                :title="contactName"
+              >
+                {{ contactName || "Unnamed Contact" }}
+              </h3>
+              <span
+                v-if="isPrimary"
+                class="flex-shrink-0 inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 px-1.5 py-0.5 text-[10px] font-medium"
+                title="Primary contact (used in bulk emails)"
+              >
+                <CrownIcon class="size-3" />
+                Primary
+              </span>
+            </div>
             <div
               v-if="contact.gender || contact.language"
-              class="mt-1 flex gap-2"
+              class="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground"
             >
-              <Badge v-if="contact.gender" variant="secondary" class="text-xs">
+              <span v-if="contact.gender">
                 {{ formatGender(contact.gender) }}
-              </Badge>
-              <Badge v-if="contact.language" variant="outline" class="text-xs">
+              </span>
+              <span v-if="contact.gender && contact.language">·</span>
+              <span
+                v-if="contact.language"
+                class="text-[10px] font-medium tracking-wide"
+                :title="formatLanguageName(contact.language)"
+              >
                 {{ formatLanguage(contact.language) }}
-              </Badge>
+              </span>
             </div>
           </div>
 
           <!-- Action buttons -->
-          <div v-if="canEdit" class="flex gap-2">
+          <div v-if="canEdit" class="flex items-center flex-shrink-0 -mr-1">
             <Popover v-model:open="isEditFormOpen">
               <PopoverTrigger as-child>
-                <Button variant="outline" size="sm" :disabled="isSaving">
-                  Edit
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="size-7 text-muted-foreground"
+                  :disabled="isSaving"
+                  title="Edit contact"
+                  aria-label="Edit contact"
+                >
+                  <PencilIcon class="size-3.5" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -73,12 +99,18 @@
             <Popover v-if="canDelete" v-model:open="isDeleteConfirmOpen">
               <PopoverTrigger as-child>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="ghost"
+                  size="icon"
                   :disabled="isDeleting"
-                  class="text-destructive hover:text-destructive"
+                  class="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  :title="isDeleting ? 'Deleting...' : 'Remove contact'"
+                  aria-label="Remove contact"
                 >
-                  {{ isDeleting ? "Deleting..." : "Remove" }}
+                  <Loader2Icon
+                    v-if="isDeleting"
+                    class="size-3.5 animate-spin"
+                  />
+                  <Trash2Icon v-else class="size-3.5" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent class="w-80">
@@ -94,126 +126,86 @@
           </div>
         </div>
 
-        <div v-if="contact.mails.length" class="space-y-2">
-          <h4 class="text-sm font-medium text-muted-foreground">Email</h4>
-          <div class="space-y-1">
-            <div v-for="mail in contact.mails" :key="mail.mail" class="text-sm">
-              <div class="flex items-start gap-2">
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <a
-                      :href="`mailto:${mail.mail}`"
-                      class="text-primary hover:underline min-w-0 flex-shrink-0"
-                    >
-                      {{ mail.mail }}
-                    </a>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      class="h-6 w-6 p-0"
-                      :disabled="isSaving"
-                      :title="'Copy email'"
-                      @click="copyEmail(mail.mail)"
-                    >
-                      <template v-if="copiedEmail === mail.mail">
-                        <CheckIcon class="w-4 h-4 text-black" />
-                      </template>
-                      <template v-else>
-                        <ClipboardIcon class="w-4 h-4" />
-                      </template>
-                    </Button>
-                    <div v-if="mail.personal" class="flex gap-1 flex-shrink-0">
-                      <Badge
-                        v-if="mail.personal"
-                        variant="secondary"
-                        class="text-xs"
-                      >
-                        Personal
-                      </Badge>
-                    </div>
-                  </div>
-                  <div v-if="copyError" class="text-xs text-destructive mt-1">
-                    {{ copyError }}
-                  </div>
-                </div>
-              </div>
-            </div>
+        <!-- Emails and phones -->
+        <div
+          v-if="contact.mails.length || contact.phones.length"
+          class="space-y-1"
+        >
+          <div
+            v-for="mail in contact.mails"
+            :key="mail.mail"
+            class="group/row flex items-center gap-2 min-w-0"
+          >
+            <span
+              class="flex-shrink-0 size-5 text-primary flex items-center justify-center"
+            >
+              <MailIcon class="size-4" />
+            </span>
+            <a
+              :href="`mailto:${mail.mail}`"
+              class="truncate text-sm font-medium text-primary hover:underline"
+              :title="mail.mail"
+            >
+              {{ mail.mail }}
+            </a>
+            <Badge
+              v-if="mail.personal"
+              variant="secondary"
+              class="text-[10px] px-1.5 py-0 flex-shrink-0"
+            >
+              Personal
+            </Badge>
+            <button
+              type="button"
+              class="flex-shrink-0 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+              :title="copiedEmail === mail.mail ? 'Copied!' : 'Copy email'"
+              aria-label="Copy email"
+              @click="copyEmail(mail.mail)"
+            >
+              <CheckIcon
+                v-if="copiedEmail === mail.mail"
+                class="size-4 text-green-600"
+              />
+              <CopyIcon v-else class="size-4" />
+            </button>
+          </div>
+          <div
+            v-for="phone in contact.phones"
+            :key="phone.phone"
+            class="flex items-center gap-2 min-w-0"
+          >
+            <span
+              class="flex-shrink-0 size-5 text-primary flex items-center justify-center"
+            >
+              <PhoneIcon class="size-4" />
+            </span>
+            <a
+              :href="`tel:${phone.phone}`"
+              class="truncate text-sm font-medium text-primary hover:underline"
+            >
+              {{ phone.phone }}
+            </a>
+          </div>
+          <div v-if="copyError" class="text-xs text-destructive">
+            {{ copyError }}
           </div>
         </div>
 
-        <div v-if="contact.phones.length" class="space-y-2">
-          <h4 class="text-sm font-medium text-muted-foreground">Phone</h4>
-          <div class="space-y-1">
-            <div
-              v-for="phone in contact.phones"
-              :key="phone.phone"
-              class="text-sm"
-            >
-              <div class="flex items-start gap-2">
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <a
-                      :href="`tel:${phone.phone}`"
-                      class="text-primary hover:underline min-w-0 flex-shrink-0"
-                    >
-                      {{ phone.phone }}
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="hasSocials(contact.socials)" class="space-y-2">
-          <h4 class="text-sm font-medium text-muted-foreground">
-            Social Media
-          </h4>
-          <div class="flex flex-wrap gap-2">
-            <a
-              v-if="contact.socials.linkedin"
-              :href="linkedinUrl(contact.socials.linkedin)"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-            >
-              LinkedIn
-            </a>
-            <a
-              v-if="contact.socials.twitter"
-              :href="twitterUrl(contact.socials.twitter)"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-sky-100 text-sky-700 rounded hover:bg-sky-200 transition-colors"
-            >
-              Twitter
-            </a>
-            <a
-              v-if="contact.socials.facebook"
-              :href="facebookUrl(contact.socials.facebook)"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
-            >
-              Facebook
-            </a>
-            <a
-              v-if="contact.socials.github"
-              :href="githubUrl(contact.socials.github)"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-            >
-              GitHub
-            </a>
-            <a
-              v-if="contact.socials.skype"
-              :href="`skype:${contact.socials.skype}?chat`"
-              class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-cyan-100 text-cyan-700 rounded hover:bg-cyan-200 transition-colors"
-            >
-              Skype
-            </a>
-          </div>
+        <!-- Social media -->
+        <div v-if="socialLinks.length" class="-ml-1.5 flex flex-wrap gap-0.5">
+          <a
+            v-for="social in socialLinks"
+            :key="social.label"
+            :href="social.href"
+            :target="social.external ? '_blank' : undefined"
+            rel="noopener noreferrer"
+            :title="social.label"
+            :aria-label="social.label"
+            class="size-7 rounded-md flex items-center justify-center transition-colors"
+            :class="social.color"
+          >
+            <component :is="social.icon" class="size-4" />
+          </a>
         </div>
       </div>
     </CardContent>
@@ -221,10 +213,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import {
+  computed,
+  h,
+  onMounted,
+  onUnmounted,
+  ref,
+  type Component,
+  type FunctionalComponent,
+} from "vue";
 import { useMutation, useQueryCache } from "@pinia/colada";
 import type { Contact } from "@/dto/contacts";
-import type { ContactSocials, CreateContactData } from "@/dto/contacts";
+import type { CreateContactData } from "@/dto/contacts";
 import { Gender, Language } from "@/dto/contacts";
 import { updateContact } from "@/api/contacts";
 import { updateCompanyRepresentative } from "@/api/companies";
@@ -236,7 +236,36 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import ContactForm from "./companies/ContactForm.vue";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import type { CreateCompanyRepData } from "@/dto/companies";
-import { ClipboardIcon, CheckIcon } from "lucide-vue-next";
+import {
+  CheckIcon,
+  CopyIcon,
+  CrownIcon,
+  FacebookIcon,
+  GithubIcon,
+  LinkedinIcon,
+  Loader2Icon,
+  MailIcon,
+  MessageCircleIcon,
+  PencilIcon,
+  PhoneIcon,
+  Trash2Icon,
+} from "lucide-vue-next";
+
+// lucide doesn't ship brand logos for X, so draw it inline
+const XIcon: FunctionalComponent = () =>
+  h(
+    "svg",
+    {
+      xmlns: "http://www.w3.org/2000/svg",
+      viewBox: "0 0 24 24",
+      fill: "currentColor",
+    },
+    [
+      h("path", {
+        d: "M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z",
+      }),
+    ],
+  );
 
 interface Props {
   contact?: Contact;
@@ -247,12 +276,14 @@ interface Props {
   entityType?: "company" | "speaker";
   repId?: string;
   isDeleting?: boolean;
+  isPrimary?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   canEdit: false,
   canDelete: false,
   isDeleting: false,
+  isPrimary: false,
   contact: undefined,
   contactName: undefined,
   entityId: undefined,
@@ -353,12 +384,78 @@ const formatGender = (gender: Gender): string => {
   }
 };
 
+interface SocialLink {
+  label: string;
+  href: string;
+  icon: Component;
+  color: string;
+  external: boolean;
+}
+
+const socialLinks = computed<SocialLink[]>(() => {
+  const socials = props.contact?.socials;
+  if (!socials) return [];
+  const links: SocialLink[] = [];
+  if (socials.linkedin)
+    links.push({
+      label: "LinkedIn",
+      href: linkedinUrl(socials.linkedin),
+      icon: LinkedinIcon,
+      color: "text-[#0A66C2] hover:bg-[#0A66C2]/10",
+      external: true,
+    });
+  if (socials.twitter)
+    links.push({
+      label: "X",
+      href: twitterUrl(socials.twitter),
+      icon: XIcon,
+      color: "text-black hover:bg-gray-100",
+      external: true,
+    });
+  if (socials.facebook)
+    links.push({
+      label: "Facebook",
+      href: facebookUrl(socials.facebook),
+      icon: FacebookIcon,
+      color: "text-[#1877F2] hover:bg-[#1877F2]/10",
+      external: true,
+    });
+  if (socials.github)
+    links.push({
+      label: "GitHub",
+      href: githubUrl(socials.github),
+      icon: GithubIcon,
+      color: "text-gray-900 hover:bg-gray-100",
+      external: true,
+    });
+  if (socials.skype)
+    links.push({
+      label: "Skype",
+      href: `skype:${socials.skype}?chat`,
+      icon: MessageCircleIcon,
+      color: "text-cyan-700 hover:bg-cyan-50",
+      external: false,
+    });
+  return links;
+});
+
 const formatLanguage = (language: Language): string => {
   switch (language) {
     case Language.PORTUGUESE:
-      return "🇵🇹";
+      return "PT";
     case Language.ENGLISH:
-      return "🇺🇸";
+      return "EN";
+    default:
+      return "";
+  }
+};
+
+const formatLanguageName = (language: Language): string => {
+  switch (language) {
+    case Language.PORTUGUESE:
+      return "Portuguese";
+    case Language.ENGLISH:
+      return "English";
     default:
       return "";
   }
@@ -372,17 +469,6 @@ const confirmDelete = () => {
 const closeAllPopovers = () => {
   isEditFormOpen.value = false;
   isDeleteConfirmOpen.value = false;
-};
-
-const hasSocials = (socials?: ContactSocials): boolean => {
-  if (!socials) return false;
-  return !!(
-    socials.linkedin ||
-    socials.twitter ||
-    socials.facebook ||
-    socials.github ||
-    socials.skype
-  );
 };
 
 const copiedEmail = ref<string | null>(null);

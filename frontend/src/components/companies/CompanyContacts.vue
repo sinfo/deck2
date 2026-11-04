@@ -78,7 +78,7 @@
         @click="isAddFormOpen = true"
       />
 
-      <div v-else class="space-y-4">
+      <div v-else class="space-y-3">
         <div
           v-for="(rep, index) in orderedRepresentatives"
           :key="rep.id"
@@ -111,29 +111,7 @@
             </Button>
           </div>
 
-          <div class="relative group">
-            <!-- Primary contact indicator -->
-            <div
-              v-if="index === 0"
-              class="absolute -top-2 -right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-            >
-              <div
-                class="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full shadow-lg flex items-center gap-1"
-              >
-                <CrownIcon class="w-3 h-3" />
-                Primary Contact
-              </div>
-            </div>
-
-            <!-- Always visible crown for first contact -->
-            <div
-              v-if="index === 0"
-              class="absolute -top-1 -right-1 z-10 bg-orange-100 text-orange-600 rounded-full p-1 shadow-sm border border-orange-200"
-              title="Primary Contact"
-            >
-              <CrownIcon class="w-3 h-3" />
-            </div>
-
+          <div class="relative">
             <ContactCard
               :contact="rep.contact"
               :contact-name="rep.name"
@@ -143,6 +121,7 @@
               entity-type="company"
               :rep-id="rep.id"
               :is-deleting="isDeleting"
+              :is-primary="index === 0"
               :class="{
                 'ml-2 md:ml-4': isReorderMode,
                 'transition-all duration-300': true,
@@ -173,7 +152,6 @@ import {
   GripVerticalIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  CrownIcon,
 } from "lucide-vue-next";
 import Card from "../ui/card/Card.vue";
 import CardContent from "../ui/card/CardContent.vue";
