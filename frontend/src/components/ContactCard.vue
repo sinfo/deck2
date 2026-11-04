@@ -13,24 +13,55 @@
       </div>
 
       <div v-else class="space-y-2.5">
-        <!-- Header: name, meta and actions -->
-        <div class="flex items-start gap-3">
+        <!-- Header: avatar, name, socials, meta and actions -->
+        <div class="flex items-center gap-3">
+          <div class="relative flex-shrink-0">
+            <div
+              class="size-9 rounded-full flex items-center justify-center text-xs font-semibold"
+              :class="
+                isPrimary
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-primary/10 text-primary'
+              "
+            >
+              {{ initials }}
+            </div>
+            <div
+              v-if="isPrimary"
+              class="absolute -bottom-1 -right-1 bg-orange-100 text-orange-600 rounded-full p-0.5 border border-orange-200"
+              title="Primary contact (used in bulk emails)"
+            >
+              <CrownIcon class="size-2.5" />
+            </div>
+          </div>
+
           <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-1.5 min-w-0">
+            <!-- Socials wrap to their own line when they don't fit next to the name -->
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <h3
-                class="font-semibold text-base leading-tight truncate"
+                class="font-semibold text-sm leading-tight truncate min-w-0 max-w-full"
                 :title="contactName"
               >
                 {{ contactName || "Unnamed Contact" }}
               </h3>
-              <span
-                v-if="isPrimary"
-                class="flex-shrink-0 inline-flex items-center gap-1 rounded-full bg-orange-100 text-orange-700 border border-orange-200 px-1.5 py-0.5 text-[10px] font-medium"
-                title="Primary contact (used in bulk emails)"
+              <div
+                v-if="socialLinks.length"
+                class="flex items-center gap-0.5 -mx-0.5"
               >
-                <CrownIcon class="size-3" />
-                Primary
-              </span>
+                <a
+                  v-for="social in socialLinks"
+                  :key="social.label"
+                  :href="social.href"
+                  :target="social.external ? '_blank' : undefined"
+                  rel="noopener noreferrer"
+                  :title="social.label"
+                  :aria-label="social.label"
+                  class="p-0.5 rounded transition-colors hover:bg-accent"
+                  :class="social.color"
+                >
+                  <component :is="social.icon" class="size-3.5" />
+                </a>
+              </div>
             </div>
             <div
               v-if="contact.gender || contact.language"
@@ -129,21 +160,17 @@
         <!-- Emails and phones -->
         <div
           v-if="contact.mails.length || contact.phones.length"
-          class="space-y-1"
+          class="pl-12 space-y-0.5"
         >
           <div
             v-for="mail in contact.mails"
             :key="mail.mail"
-            class="group/row flex items-center gap-2 min-w-0"
+            class="group/row flex items-center gap-2 text-sm min-w-0"
           >
-            <span
-              class="flex-shrink-0 size-5 text-primary flex items-center justify-center"
-            >
-              <MailIcon class="size-4" />
-            </span>
+            <MailIcon class="size-3.5 flex-shrink-0 text-muted-foreground" />
             <a
               :href="`mailto:${mail.mail}`"
-              class="truncate text-sm font-medium text-primary hover:underline"
+              class="truncate hover:underline"
               :title="mail.mail"
             >
               {{ mail.mail }}
@@ -157,32 +184,30 @@
             </Badge>
             <button
               type="button"
-              class="flex-shrink-0 p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
+              class="flex-shrink-0 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity cursor-pointer"
+              :class="
+                copiedEmail === mail.mail
+                  ? 'opacity-100'
+                  : 'opacity-60 sm:opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100'
+              "
               :title="copiedEmail === mail.mail ? 'Copied!' : 'Copy email'"
               aria-label="Copy email"
               @click="copyEmail(mail.mail)"
             >
               <CheckIcon
                 v-if="copiedEmail === mail.mail"
-                class="size-4 text-green-600"
+                class="size-3.5 text-green-600"
               />
-              <CopyIcon v-else class="size-4" />
+              <CopyIcon v-else class="size-3.5" />
             </button>
           </div>
           <div
             v-for="phone in contact.phones"
             :key="phone.phone"
-            class="flex items-center gap-2 min-w-0"
+            class="flex items-center gap-2 text-sm min-w-0"
           >
-            <span
-              class="flex-shrink-0 size-5 text-primary flex items-center justify-center"
-            >
-              <PhoneIcon class="size-4" />
-            </span>
-            <a
-              :href="`tel:${phone.phone}`"
-              class="truncate text-sm font-medium text-primary hover:underline"
-            >
+            <PhoneIcon class="size-3.5 flex-shrink-0 text-muted-foreground" />
+            <a :href="`tel:${phone.phone}`" class="truncate hover:underline">
               {{ phone.phone }}
             </a>
           </div>
@@ -190,38 +215,13 @@
             {{ copyError }}
           </div>
         </div>
-
-        <!-- Social media -->
-        <div v-if="socialLinks.length" class="-ml-1.5 flex flex-wrap gap-0.5">
-          <a
-            v-for="social in socialLinks"
-            :key="social.label"
-            :href="social.href"
-            :target="social.external ? '_blank' : undefined"
-            rel="noopener noreferrer"
-            :title="social.label"
-            :aria-label="social.label"
-            class="size-7 rounded-md flex items-center justify-center transition-colors"
-            :class="social.color"
-          >
-            <component :is="social.icon" class="size-4" />
-          </a>
-        </div>
       </div>
     </CardContent>
   </Card>
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  h,
-  onMounted,
-  onUnmounted,
-  ref,
-  type Component,
-  type FunctionalComponent,
-} from "vue";
+import { computed, onMounted, onUnmounted, ref, type Component } from "vue";
 import { useMutation, useQueryCache } from "@pinia/colada";
 import type { Contact } from "@/dto/contacts";
 import type { CreateContactData } from "@/dto/contacts";
@@ -249,23 +249,8 @@ import {
   PencilIcon,
   PhoneIcon,
   Trash2Icon,
+  TwitterIcon,
 } from "lucide-vue-next";
-
-// lucide doesn't ship brand logos for X, so draw it inline
-const XIcon: FunctionalComponent = () =>
-  h(
-    "svg",
-    {
-      xmlns: "http://www.w3.org/2000/svg",
-      viewBox: "0 0 24 24",
-      fill: "currentColor",
-    },
-    [
-      h("path", {
-        d: "M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z",
-      }),
-    ],
-  );
 
 interface Props {
   contact?: Contact;
@@ -384,6 +369,14 @@ const formatGender = (gender: Gender): string => {
   }
 };
 
+const initials = computed(() => {
+  const parts = (props.contactName || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  const first = parts[0][0];
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return (first + last).toUpperCase();
+});
+
 interface SocialLink {
   label: string;
   href: string;
@@ -401,15 +394,15 @@ const socialLinks = computed<SocialLink[]>(() => {
       label: "LinkedIn",
       href: linkedinUrl(socials.linkedin),
       icon: LinkedinIcon,
-      color: "text-[#0A66C2] hover:bg-[#0A66C2]/10",
+      color: "text-[#0A66C2]",
       external: true,
     });
   if (socials.twitter)
     links.push({
-      label: "X",
+      label: "Twitter",
       href: twitterUrl(socials.twitter),
-      icon: XIcon,
-      color: "text-black hover:bg-gray-100",
+      icon: TwitterIcon,
+      color: "text-sky-500",
       external: true,
     });
   if (socials.facebook)
@@ -417,7 +410,7 @@ const socialLinks = computed<SocialLink[]>(() => {
       label: "Facebook",
       href: facebookUrl(socials.facebook),
       icon: FacebookIcon,
-      color: "text-[#1877F2] hover:bg-[#1877F2]/10",
+      color: "text-[#1877F2]",
       external: true,
     });
   if (socials.github)
@@ -425,7 +418,7 @@ const socialLinks = computed<SocialLink[]>(() => {
       label: "GitHub",
       href: githubUrl(socials.github),
       icon: GithubIcon,
-      color: "text-gray-900 hover:bg-gray-100",
+      color: "text-foreground",
       external: true,
     });
   if (socials.skype)
@@ -433,7 +426,7 @@ const socialLinks = computed<SocialLink[]>(() => {
       label: "Skype",
       href: `skype:${socials.skype}?chat`,
       icon: MessageCircleIcon,
-      color: "text-cyan-700 hover:bg-cyan-50",
+      color: "text-cyan-600",
       external: false,
     });
   return links;
