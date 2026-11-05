@@ -543,8 +543,13 @@ const authStore = useAuthStore();
 const eventStore = useEventStore();
 const router = useRouter();
 const { toast } = useToast();
-const { isAutoLinking, fetchMessagesForThreads, warnUnlinkedContacted } =
-  useAutoLinkGmail();
+const {
+  isAutoLinking,
+  autoLinkEventEntities,
+  fetchMessagesForThreads,
+  warnUnlinkedContacted,
+  error: gmailSyncError,
+} = useAutoLinkGmail();
 const { signInWithGoogle, isSigningIn, requestGoogleToken } = useGoogleAuth();
 
 const handleAutoLinkEntities = async () => {
@@ -564,6 +569,19 @@ const handleAutoLinkEntities = async () => {
   });
 
   try {
+    const results = await autoLinkEventEntities(eventId);
+    const failedEntities = results.filter(
+      (result) => result.status === "ERROR",
+    );
+    if (gmailSyncError.value || failedEntities.length > 0) {
+      toast.error({
+        title: "Auto-Link Incomplete",
+        description:
+          gmailSyncError.value ??
+          `Failed to sync ${failedEntities.length} entity/entities. Please retry.`,
+      });
+      return;
+    }
     const newlyLinked = results.reduce(
       (count, result) => count + result.newlyLinkedCount,
       0,
@@ -932,6 +950,13 @@ const syncThreadMessages = async (entityId: string, thread: GmailThread) => {
 
   try {
     const allMessages = await fetchMessagesForThreads([thread.id]);
+    if (gmailSyncError.value) {
+      console.error(
+        "Failed to fetch Gmail thread messages:",
+        gmailSyncError.value,
+      );
+      return;
+    }
     if (allMessages.length > 0) {
       if (linkEntityType.value === "company") {
         await syncCompanyGmailMessages(entityId, allMessages, eventId);

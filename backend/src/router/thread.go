@@ -8,13 +8,13 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/sinfo/deck2/src/models"
 	"github.com/sinfo/deck2/src/mongodb"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type GmailMessageData struct {
@@ -60,7 +60,38 @@ func formatGmailMessageText(msg GmailMessageData) string {
 	return msg.Body
 }
 
-var syncGmailMutex sync.Mutex
+// Check whether the member owns the participation or coordinates its event.
+func canManageGmailParticipation(
+	memberID primitive.ObjectID,
+	ownerID primitive.ObjectID,
+	eventID int,
+) (bool, error) {
+	if memberID == ownerID {
+		return true, nil
+	}
+
+	teams, err := mongodb.Teams.GetTeams(mongodb.GetTeamsOptions{
+		Event:  &eventID,
+		Member: &memberID,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	for _, team := range teams {
+		member, err := team.GetMember(memberID)
+		if err != nil {
+			continue
+		}
+
+		if member.Role == models.RoleCoordinator ||
+			member.Role == models.RoleAdmin {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
 
 // syncGmailMessagesToThreads processes a batch of Gmail messages:
 // - Deduplicates against existing threads in MongoDB via GmailMessageId
@@ -71,10 +102,7 @@ func syncGmailMessagesToThreads(
 	messages []GmailMessageData,
 	memberID primitive.ObjectID,
 	attachThread func(threadID primitive.ObjectID) error,
-) int {
-	syncGmailMutex.Lock()
-	defer syncGmailMutex.Unlock()
-
+) (int, error) {
 	messageIds := make([]string, 0, len(messages))
 	for _, msg := range messages {
 		if msg.MessageId != "" {
@@ -83,7 +111,7 @@ func syncGmailMessagesToThreads(
 	}
 	existingThreads, err := mongodb.Threads.GetThreadsByGmailMessageIds(messageIds)
 	if err != nil {
-		log.Println("Error checking existing gmail threads:", err)
+		return 0, fmt.Errorf("failed to check existing Gmail threads: %w", err)
 	}
 
 	processedMessageIds := make(map[string]bool)
@@ -123,8 +151,7 @@ func syncGmailMessagesToThreads(
 
 		newPost, err := mongodb.Posts.CreatePost(cpd)
 		if err != nil {
-			log.Printf("Error creating post for gmail message %s: %s", msg.MessageId, err)
-			continue
+			return syncedCount, fmt.Errorf("error creating post for Gmail message %s: %w", msg.MessageId, err)
 		}
 
 		ctd := mongodb.CreateThreadData{
@@ -137,22 +164,31 @@ func syncGmailMessagesToThreads(
 
 		newThread, err := mongodb.Threads.CreateThread(ctd)
 		if err != nil {
-			log.Printf("Error creating thread for gmail message %s: %s", msg.MessageId, err)
-			mongodb.Posts.DeletePost(newPost.ID)
-			continue
+			if _, cleanupErr := mongodb.Posts.DeletePost(newPost.ID); cleanupErr != nil {
+				log.Printf("Error cleaning up post for Gmail message %s: %v", msg.MessageId, cleanupErr)
+				if mongo.IsDuplicateKeyError(err) {
+					return syncedCount, fmt.Errorf("error cleaning up post for duplicate Gmail message %s: %w", msg.MessageId, cleanupErr)
+				}
+			}
+
+			if mongo.IsDuplicateKeyError(err) {
+				continue
+			}
+
+			return syncedCount, fmt.Errorf("error creating thread for Gmail message %s: %w", msg.MessageId, err)
 		}
 
 		if err := attachThread(newThread.ID); err != nil {
-			log.Printf("Error attaching thread for gmail message %s: %s", msg.MessageId, err)
-			mongodb.Posts.DeletePost(newPost.ID)
-			mongodb.Threads.DeleteThread(newThread.ID)
-			continue
+			if _, cleanupErr := mongodb.Threads.DeleteThread(newThread.ID); cleanupErr != nil {
+				log.Printf("Error cleaning up thread for Gmail message %s: %v", msg.MessageId, cleanupErr)
+			}
+			return syncedCount, fmt.Errorf("error attaching thread for Gmail message %s: %w", msg.MessageId, err)
 		}
 
 		syncedCount++
 	}
 
-	return syncedCount
+	return syncedCount, nil
 }
 
 func getThread(w http.ResponseWriter, r *http.Request) {

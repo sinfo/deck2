@@ -1107,7 +1107,42 @@ func removeSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(speaker)
 }
 
+// parseSpeakerGmailEventID validates an explicitly requested edition.
+func parseSpeakerGmailEventID(bodyEvent *int, queryEvent string) (int, error) {
+	if bodyEvent != nil {
+		if *bodyEvent <= 0 {
+			return 0, fmt.Errorf("invalid event ID: %d", *bodyEvent)
+		}
+		return *bodyEvent, nil
+	}
+
+	if queryEvent != "" {
+		eventID, err := strconv.Atoi(queryEvent)
+		if err != nil || eventID <= 0 {
+			return 0, fmt.Errorf("invalid event ID: %q", queryEvent)
+		}
+		return eventID, nil
+	}
+
+	return 0, nil
+}
+
+func canManageSpeakerGmailParticipation(
+	speaker *models.Speaker,
+	memberID primitive.ObjectID,
+	eventID int,
+) (bool, error) {
+	for _, participation := range speaker.Participations {
+		if participation.Event == eventID {
+			return canManageGmailParticipation(memberID, participation.Member, eventID)
+		}
+	}
+	return false, nil
+}
+
 func updateSpeakerGmailThreadIds(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
 	params := mux.Vars(r)
 	speakerID, err := primitive.ObjectIDFromHex(params["id"])
 	if err != nil {
@@ -1115,14 +1150,14 @@ func updateSpeakerGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 	if !ok {
 		http.Error(w, "Authentication failed", http.StatusUnauthorized)
 		return
 	}
 
-	// Verify speaker exists
-	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+	speaker, err := mongodb.Speakers.GetSpeaker(speakerID)
+	if err != nil {
 		http.Error(w, "Speaker not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
@@ -1133,22 +1168,37 @@ func updateSpeakerGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var targetEventID int
-	if data.Event != nil && *data.Event > 0 {
-		targetEventID = *data.Event
-	} else if eventStr := r.URL.Query().Get("event"); eventStr != "" {
-		if ev, err := strconv.Atoi(eventStr); err == nil && ev > 0 {
-			targetEventID = ev
+	targetEventID, err := parseSpeakerGmailEventID(data.Event, r.URL.Query().Get("event"))
+	if err != nil {
+		http.Error(w, "Invalid event: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if targetEventID == 0 {
+		event, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+			return
 		}
+		targetEventID = event.ID
 	}
 
-	speaker, err := mongodb.Speakers.UpdateSpeakerGmailThreadIds(speakerID, data.GmailThreadIds, targetEventID)
+	allowed, err := canManageSpeakerGmailParticipation(speaker, credentials.ID, targetEventID)
+	if err != nil {
+		http.Error(w, "Could not verify permissions", http.StatusInternalServerError)
+		return
+	}
+	if !allowed {
+		http.Error(w, "Not authorized for this participation", http.StatusForbidden)
+		return
+	}
+
+	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerGmailThreadIds(speakerID, data.GmailThreadIds, targetEventID)
 	if err != nil {
 		http.Error(w, "Could not update gmail thread IDs: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	json.NewEncoder(w).Encode(speaker)
+	json.NewEncoder(w).Encode(updatedSpeaker)
 }
 
 func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
@@ -1167,8 +1217,8 @@ func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify speaker exists
-	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+	speaker, err := mongodb.Speakers.GetSpeaker(speakerID)
+	if err != nil {
 		http.Error(w, "Speaker not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
@@ -1179,19 +1229,39 @@ func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var targetEventID int
-	if data.Event != nil && *data.Event > 0 {
-		targetEventID = *data.Event
-	} else if eventStr := r.URL.Query().Get("event"); eventStr != "" {
-		if ev, err := strconv.Atoi(eventStr); err == nil && ev > 0 {
-			targetEventID = ev
+	targetEventID, err := parseSpeakerGmailEventID(data.Event, r.URL.Query().Get("event"))
+	if err != nil {
+		http.Error(w, "Invalid event: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if targetEventID == 0 {
+		event, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+			return
 		}
+		targetEventID = event.ID
 	}
 
-	syncedCount := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
+	allowed, err := canManageSpeakerGmailParticipation(speaker, credentials.ID, targetEventID)
+	if err != nil {
+		http.Error(w, "Could not verify permissions", http.StatusInternalServerError)
+		return
+	}
+	if !allowed {
+		http.Error(w, "Not authorized for this participation", http.StatusForbidden)
+		return
+	}
+
+	syncedCount, err := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
 		_, err := mongodb.Speakers.AddThread(speakerID, threadID, targetEventID)
 		return err
 	})
+	if err != nil {
+		log.Println("Error syncing Gmail messages for speaker:", err)
+		http.Error(w, "Failed to sync Gmail messages", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"synced": syncedCount,

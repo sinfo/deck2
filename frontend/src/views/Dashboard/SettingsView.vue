@@ -447,6 +447,7 @@ const {
   autoLinkEventEntities,
   syncRecentGmailUpdates,
   warnUnlinkedContacted,
+  error: gmailSyncError,
 } = useAutoLinkGmail();
 
 // Fetch user data
@@ -531,6 +532,18 @@ const syncThreads = async (silent = false, fullScan = false) => {
     const results = fullScan
       ? await autoLinkEventEntities(eventId, { forceReScan: true })
       : await syncRecentGmailUpdates(eventId);
+    const failedEntities = results.filter(
+      (result) => result.status === "ERROR",
+    );
+    if (gmailSyncError.value || failedEntities.length > 0) {
+      toast.error({
+        title: "Sync Incomplete",
+        description:
+          gmailSyncError.value ??
+          `Failed to sync ${failedEntities.length} entity/entities. Please retry.`,
+      });
+      return;
+    }
     const newlyLinked = results.reduce(
       (count, result) => count + result.newlyLinkedCount,
       0,
