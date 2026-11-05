@@ -922,6 +922,7 @@ func (s *SpeakersType) UpdateSpeakerParticipationStatusForEvent(speakerID primit
 
 func (s *SpeakersType) updateSpeakerParticipationStatusForEventIfCurrent(speakerID primitive.ObjectID, eventID int, currentStatus models.ParticipationStatus, newStatus models.ParticipationStatus) (*models.Speaker, bool, error) {
 	ctx := context.Background()
+
 	var updatedSpeaker models.Speaker
 
 	var updateQuery = bson.M{
@@ -957,6 +958,18 @@ func (s *SpeakersType) updateSpeakerParticipationStatusForEventIfCurrent(speaker
 	return &updatedSpeaker, true, nil
 }
 
+// UpdateSpeakerParticipationStatusForEventConditional updates a speaker's participation status for a specific event
+// only if its current status matches expectedStatus.
+func (s *SpeakersType) UpdateSpeakerParticipationStatusForEventConditional(
+	speakerID primitive.ObjectID,
+	eventID int,
+	expectedStatus models.ParticipationStatus,
+	status models.ParticipationStatus,
+) (*models.Speaker, error) {
+	updatedSpeaker, _, err := s.updateSpeakerParticipationStatusForEventIfCurrent(speakerID, eventID, expectedStatus, status)
+	return updatedSpeaker, err
+}
+
 // UpdateSpeakerParticipationStatus updates a speaker's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
@@ -981,7 +994,7 @@ func (s *SpeakersType) AutoUpdateParticipationStatus(speakerID primitive.ObjectI
 		targetEventID = currentEvent.ID
 	}
 
-	const maxRetries = 3
+	const maxRetries = 5
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		speaker, err := s.GetSpeaker(speakerID)
@@ -1061,12 +1074,11 @@ func (s *SpeakersType) AutoUpdateParticipationStatus(speakerID primitive.ObjectI
 		}
 	}
 
-	speaker, err := s.GetSpeaker(speakerID)
+	latestSpeaker, err := s.GetSpeaker(speakerID)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	return speaker, nil, nil
+	return latestSpeaker, nil, nil
 }
 
 // UpdateSpeakerInternalImage updates the speaker's internal image.

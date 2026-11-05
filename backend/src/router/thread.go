@@ -106,27 +106,6 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 	} else if speaker != nil {
 		cnd.Speaker = &speaker.ID
 		mongodb.Notifications.Notify(credentials.ID, cnd)
-
-		targetEvent := 0
-		for _, p := range speaker.Participations {
-			for _, comm := range p.Communications {
-				if comm == threadID {
-					targetEvent = p.Event
-					break
-				}
-			}
-			if targetEvent != 0 {
-				break
-			}
-		}
-
-		if _, newStatus, err := mongodb.Speakers.AutoUpdateParticipationStatus(speaker.ID, targetEvent); err == nil && newStatus != nil {
-			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-				Kind:    models.NotificationKindUpdatedParticipationStatus,
-				Speaker: &speaker.ID,
-			})
-		}
-
 		return
 	}
 
@@ -137,27 +116,6 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 	} else if company != nil {
 		cnd.Company = &company.ID
 		mongodb.Notifications.Notify(credentials.ID, cnd)
-
-		targetEvent := 0
-		for _, p := range company.Participations {
-			for _, comm := range p.Communications {
-				if comm == threadID {
-					targetEvent = p.Event
-					break
-				}
-			}
-			if targetEvent != 0 {
-				break
-			}
-		}
-
-		if _, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(company.ID, targetEvent); err == nil && newStatus != nil {
-			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-				Kind:    models.NotificationKindUpdatedParticipationStatus,
-				Company: &company.ID,
-			})
-		}
-
 		return
 	}
 

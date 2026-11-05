@@ -183,12 +183,16 @@ const onBulkCompanyEmailSuccess = (
 ) => {
   // For each success, create the template thread
   for (const company of result.success) {
-    postCompanyThreadMutation.companyId.value = company.entityInfo.id;
-    postCompanyThreadMutation.threadData.value = {
+    const threadData = {
       kind: ThreadKind.ThreadKindTemplate,
       text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
     };
-    postCompanyThreadMutation.mutate();
+    postCompanyThreadMutation.companyId.value = company.entityInfo.id;
+    postCompanyThreadMutation.threadData.value = threadData;
+    postCompanyThreadMutation.mutate({
+      companyId: company.entityInfo.id,
+      threadData,
+    });
   }
 };
 
@@ -199,12 +203,16 @@ const onBulkSpeakerEmailSuccess = (
 ) => {
   // For each success, create the template thread
   for (const speaker of result.success) {
-    postSpeakerThreadMutation.speakerId.value = speaker.entityInfo.id;
-    postSpeakerThreadMutation.threadData.value = {
+    const threadData = {
       kind: ThreadKind.ThreadKindTemplate,
       text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
     };
-    postSpeakerThreadMutation.mutate();
+    postSpeakerThreadMutation.speakerId.value = speaker.entityInfo.id;
+    postSpeakerThreadMutation.threadData.value = threadData;
+    postSpeakerThreadMutation.mutate({
+      speakerId: speaker.entityInfo.id,
+      threadData,
+    });
   }
 };
 

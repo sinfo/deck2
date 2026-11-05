@@ -939,6 +939,18 @@ func (c *CompaniesType) updateCompanyParticipationStatusForEventIfCurrent(compan
 	return &updatedCompany, true, nil
 }
 
+// UpdateCompanyParticipationStatusForEventConditional updates a company's participation status for a specific event
+// only if its current status matches expectedStatus.
+func (c *CompaniesType) UpdateCompanyParticipationStatusForEventConditional(
+	companyID primitive.ObjectID,
+	eventID int,
+	expectedStatus models.ParticipationStatus,
+	status models.ParticipationStatus,
+) (*models.Company, error) {
+	updatedCompany, _, err := c.updateCompanyParticipationStatusForEventIfCurrent(companyID, eventID, expectedStatus, status)
+	return updatedCompany, err
+}
+
 // UpdateCompanyParticipationStatus updates a company's participation status
 // related to the current event. This is the method used when one does not want necessarily to follow
 // the state machine described on models.ParticipationStatus.
@@ -963,7 +975,7 @@ func (c *CompaniesType) AutoUpdateParticipationStatus(companyID primitive.Object
 		targetEventID = currentEvent.ID
 	}
 
-	const maxRetries = 3
+	const maxRetries = 5
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		company, err := c.GetCompany(companyID)
@@ -1043,12 +1055,11 @@ func (c *CompaniesType) AutoUpdateParticipationStatus(companyID primitive.Object
 		}
 	}
 
-	company, err := c.GetCompany(companyID)
+	latestCompany, err := c.GetCompany(companyID)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	return company, nil, nil
+	return latestCompany, nil, nil
 }
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
