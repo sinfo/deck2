@@ -938,11 +938,11 @@ const filteredCommunications = computed<ThreadWithEntry[]>(() => {
     return comms;
   }
 
-return availableThreadTabs.value.some(
-  (tab) => tab.id === selectedThreadTab.value,
-)
-  ? comms.filter((t) => getThreadKey(t) === selectedThreadTab.value)
-  : comms;
+  return availableThreadTabs.value.some(
+    (tab) => tab.id === selectedThreadTab.value,
+  )
+    ? comms.filter((t) => getThreadKey(t) === selectedThreadTab.value)
+    : comms;
 });
 
 // Renders a visual divider when consecutive messages belong to different email threads in "All" view
