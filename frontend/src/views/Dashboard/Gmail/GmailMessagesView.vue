@@ -11,6 +11,17 @@
         </div>
         <div class="flex gap-2">
           <Button
+            v-if="authStore.isGoogleAuthenticated"
+            variant="default"
+            class="gap-1.5"
+            :disabled="isAutoLinking"
+            @click="handleAutoLinkEntities"
+          >
+            <RefreshCw v-if="isAutoLinking" class="w-4 h-4 animate-spin" />
+            <Zap v-else class="w-4 h-4" />
+            {{ isAutoLinking ? "Auto-Linking..." : "Auto-Link Entities" }}
+          </Button>
+          <Button
             v-if="!authStore.isGoogleAuthenticated"
             :disabled="isSigningIn"
             @click="handleSignIn"
@@ -312,7 +323,13 @@
             v-if="selectedMessageBody"
             class="prose prose-sm dark:prose-invert max-w-none"
           >
-            <div v-if="isHtmlBody" v-html="selectedMessageBody"></div>
+            <iframe
+              v-if="isHtmlBody"
+              :srcdoc="selectedMessageBody ?? ''"
+              sandbox=""
+              title="Email message content"
+              class="w-full min-h-96 border-0"
+            />
             <pre v-else class="whitespace-pre-wrap text-sm">{{
               selectedMessageBody
             }}</pre>
@@ -461,7 +478,6 @@ import {
   getAllCompanies,
   updateCompanyGmailThreadIds,
   syncCompanyGmailMessages,
-  type GmailMessageData,
 } from "@/api/companies";
 import {
   getAllSpeakers,
@@ -518,12 +534,74 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
+  Zap,
 } from "lucide-vue-next";
+import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
+import { useToast } from "@/lib/toast";
 
 const authStore = useAuthStore();
 const eventStore = useEventStore();
 const router = useRouter();
+const { toast } = useToast();
+const {
+  isAutoLinking,
+  autoLinkEventEntities,
+  fetchMessagesForThreads,
+  warnUnlinkedContacted,
+  error: gmailSyncError,
+} = useAutoLinkGmail();
 const { signInWithGoogle, isSigningIn, requestGoogleToken } = useGoogleAuth();
+
+const handleAutoLinkEntities = async () => {
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) {
+    toast.warning({
+      title: "No Edition Selected",
+      description: "Please select an event edition before auto-linking.",
+    });
+    return;
+  }
+
+  toast.info({
+    title: "Auto-Linking",
+    description:
+      "Scanning your Gmail for company and speaker threads in the background...",
+  });
+
+  try {
+    const results = await autoLinkEventEntities(eventId);
+    const failedEntities = results.filter(
+      (result) => result.status === "ERROR",
+    );
+    if (gmailSyncError.value || failedEntities.length > 0) {
+      toast.error({
+        title: "Auto-Link Incomplete",
+        description:
+          gmailSyncError.value ??
+          `Failed to sync ${failedEntities.length} entity/entities. Please retry.`,
+      });
+      return;
+    }
+    const newlyLinked = results.reduce(
+      (count, result) => count + result.newlyLinkedCount,
+      0,
+    );
+    toast.success({
+      title: "Auto-Link Completed",
+      description: `Linked ${newlyLinked} new thread(s).`,
+    });
+
+    warnUnlinkedContacted(results);
+
+    await fetchThreads();
+  } catch (err) {
+    console.error("Auto-link error:", err);
+    toast.error({
+      title: "Auto-Link Error",
+      description: err instanceof Error ? err.message : "Failed to auto-link",
+    });
+  }
+};
 const {
   listThreads,
   getThreads,
@@ -820,40 +898,10 @@ watch(linkEntityType, () => {
   }
 });
 
-/**
- * Strips HTML tags and converts to clean plain text
- */
-const stripHtmlToText = (html: string): string => {
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  doc.querySelectorAll("script, style").forEach((el) => el.remove());
-  doc.querySelectorAll("br").forEach((el) => el.replaceWith("\n"));
-  doc.querySelectorAll("p, div, tr, li").forEach((el) => {
-    el.prepend(document.createTextNode("\n"));
-    el.append(document.createTextNode("\n"));
-  });
-
-  let text = doc.body.textContent || "";
-  text = text
-    .replace(/\r\n/g, "\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/[ \t]+/g, " ")
-    .replace(/^ +/gm, "")
-    .replace(/ +$/gm, "")
-    .trim();
-
-  return text;
-};
-
-/**
- * Extracts a clean display name from an email address
- */
-const extractEmailName = (email: string): string => {
-  const match = email.match(/^"?([^"<]+)"?\s*<[^>]+>$/);
-  return match ? match[1].trim() : email;
-};
-
 const linkThread = async () => {
   if (!selectedLinkEntity.value || !threadToLink.value) return;
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) return;
 
   isLinking.value = true;
 
@@ -870,9 +918,9 @@ const linkThread = async () => {
 
       // Update the participation's Gmail thread IDs
       if (linkEntityType.value === "company") {
-        await updateCompanyGmailThreadIds(entity.id, newThreadIds);
+        await updateCompanyGmailThreadIds(entity.id, newThreadIds, eventId);
       } else {
-        await updateSpeakerGmailThreadIds(entity.id, newThreadIds);
+        await updateSpeakerGmailThreadIds(entity.id, newThreadIds, eventId);
       }
 
       // Sync the messages from this thread
@@ -897,84 +945,23 @@ const linkThread = async () => {
 };
 
 const syncThreadMessages = async (entityId: string, thread: GmailThread) => {
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) return;
+
   try {
-    const allMessages: GmailMessageData[] = [];
-
-    for (const msg of thread.messages) {
-      const from = getHeaderValue(msg, "From") || "Unknown";
-      const to = getHeaderValue(msg, "To") || "";
-      const subject = getHeaderValue(msg, "Subject") || "(No subject)";
-      const dateStr = getHeaderValue(msg, "Date") || "";
-
-      let isoDate = "";
-      if (dateStr) {
-        try {
-          isoDate = new Date(dateStr).toISOString();
-        } catch {
-          isoDate = new Date(parseInt(msg.internalDate)).toISOString();
-        }
-      } else {
-        isoDate = new Date(parseInt(msg.internalDate)).toISOString();
-      }
-
-      let body = getMessageBody(msg, false) || msg.snippet || "";
-      if (body.includes("<") && body.includes(">")) {
-        body = stripHtmlToText(body);
-      }
-
-      // Clean up quoted content
-      const lines = body.split("\n");
-      const cleanedLines: string[] = [];
-      let foundQuoteStart = false;
-
-      for (const line of lines) {
-        if (
-          line.match(/^On\s+.+\s+wrote:?\s*$/i) ||
-          line.match(/^On\s+\w{3},?\s+\w{3}\s+\d{1,2},?\s+\d{4}/i) ||
-          line.match(/^On\s+\w{3},?\s+\d{1,2}\s+\w{3}/i) ||
-          line.match(/^On\s+\d{1,2}\s+\w{3}\s+\d{4}/i) ||
-          line.match(/wrote:\s*$/) ||
-          line.match(/^>/) ||
-          line.match(/^-{3,}\s*Original Message\s*-{3,}$/i) ||
-          line.match(/^_{3,}$/) ||
-          line.match(/^From:.*Sent:.*To:/i) ||
-          line.match(/^-{2,}\s*Forwarded message\s*-{2,}$/i) ||
-          line.match(/<[^>]+@[^>]+>\s*wrote:?\s*$/i)
-        ) {
-          foundQuoteStart = true;
-        }
-        if (!foundQuoteStart) {
-          cleanedLines.push(line);
-        }
-      }
-
-      const cleanBody =
-        cleanedLines.length > 0 ? cleanedLines.join("\n").trim() : body;
-
-      const userEmail = authStore.member?.sinfoid
-        ? `${authStore.member.sinfoid}@sinfo.org`
-        : "";
-      const isOutgoing =
-        from.toLowerCase().includes("@sinfo.org") ||
-        from.toLowerCase().includes(userEmail.toLowerCase());
-
-      allMessages.push({
-        messageId: msg.id,
-        threadId: msg.threadId,
-        subject,
-        from: extractEmailName(from),
-        to: extractEmailName(to),
-        date: isoDate,
-        body: cleanBody,
-        isOutgoing,
-      });
+    const allMessages = await fetchMessagesForThreads([thread.id]);
+    if (gmailSyncError.value) {
+      console.error(
+        "Failed to fetch Gmail thread messages:",
+        gmailSyncError.value,
+      );
+      return;
     }
-
     if (allMessages.length > 0) {
       if (linkEntityType.value === "company") {
-        await syncCompanyGmailMessages(entityId, allMessages);
+        await syncCompanyGmailMessages(entityId, allMessages, eventId);
       } else {
-        await syncSpeakerGmailMessages(entityId, allMessages);
+        await syncSpeakerGmailMessages(entityId, allMessages, eventId);
       }
     }
   } catch (err) {
