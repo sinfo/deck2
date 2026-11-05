@@ -326,7 +326,10 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       ctx?: { companyId?: string; targetCompanyId?: string },
     ) => {
       const idToInvalidate =
-        vars?.companyId ?? ctx?.targetCompanyId ?? ctx?.companyId ?? companyId.value;
+        vars?.companyId ??
+        ctx?.targetCompanyId ??
+        ctx?.companyId ??
+        companyId.value;
       if (idToInvalidate) {
         queryCache.invalidateQueries({ key: ["company", idToInvalidate] });
       }

@@ -235,7 +235,10 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       ctx?: { speakerId?: string; targetSpeakerId?: string },
     ) => {
       const idToInvalidate =
-        vars?.speakerId ?? ctx?.targetSpeakerId ?? ctx?.speakerId ?? speakerId.value;
+        vars?.speakerId ??
+        ctx?.targetSpeakerId ??
+        ctx?.speakerId ??
+        speakerId.value;
       if (idToInvalidate) {
         queryCache.invalidateQueries({ key: ["speaker", idToInvalidate] });
       }
