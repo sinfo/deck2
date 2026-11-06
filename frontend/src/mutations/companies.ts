@@ -208,6 +208,11 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
   };
 });
 
+export interface PostCompanyThreadVariables {
+  companyId?: string;
+  threadData?: CreateThread;
+}
+
 export const usePostCompanyThreadMutation = defineMutation(() => {
   const companyId = ref<string>();
   const threadData = ref<CreateThread>();
@@ -216,9 +221,21 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
   const eventStore = useEventStore();
 
   const { mutate, ...mutation } = useMutation({
-    mutation: () => postThread(companyId.value!, threadData.value!),
-    onMutate: () => {
-      const key = ["company-communications", companyId.value!];
+    mutation: (
+      vars?: PostCompanyThreadVariables,
+      ctx?: { companyId?: string; threadData?: CreateThread },
+    ) => {
+      const targetCompanyId =
+        vars?.companyId ?? ctx?.companyId ?? companyId.value!;
+      const targetThreadData =
+        vars?.threadData ?? ctx?.threadData ?? threadData.value!;
+      return postThread(targetCompanyId, targetThreadData);
+    },
+    onMutate: (vars?: PostCompanyThreadVariables) => {
+      const targetCompanyId = vars?.companyId ?? companyId.value;
+      const targetThreadData = vars?.threadData ?? threadData.value;
+
+      const key = ["company-communications", targetCompanyId!];
 
       const oldVal =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -226,7 +243,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       const tempThreadId = crypto.randomUUID();
       const tempPostId = crypto.randomUUID();
 
-      const kind = threadData.value?.kind;
+      const kind = targetThreadData?.kind;
       if (!kind) throw new Error("Thread kind is required");
       const memberId = authStore.decoded?.id;
       if (!memberId) throw new Error("Authenticated member id is required");
@@ -243,7 +260,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
           id: tempPostId,
           member: memberId,
           posted: new Date().toISOString(),
-          text: threadData.value?.text ?? "",
+          text: targetThreadData?.text ?? "",
         },
       };
 
@@ -263,10 +280,13 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       queryCache.setQueryData<ParticipationCommunications[]>(key, newVal);
 
       return {
+        companyId: targetCompanyId,
+        threadData: targetThreadData,
         key,
         oldVal,
         currentEventId,
         tempThreadId,
+        targetCompanyId,
       };
     },
 
@@ -299,6 +319,24 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
         );
       }
       console.error("Create company thread failed:", err);
+    },
+
+    onSettled: (
+      _data,
+      _error,
+      vars?: PostCompanyThreadVariables,
+      ctx?: { companyId?: string; targetCompanyId?: string },
+    ) => {
+      const idToInvalidate =
+        vars?.companyId ??
+        ctx?.targetCompanyId ??
+        ctx?.companyId ??
+        companyId.value;
+      if (idToInvalidate) {
+        queryCache.invalidateQueries({ key: ["company", idToInvalidate] });
+      }
+      queryCache.invalidateQueries({ key: ["companies"] });
+      queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 

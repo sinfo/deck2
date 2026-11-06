@@ -271,7 +271,6 @@ func addCommentToThread(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(updatedThread)
 
 	//notify
-
 	cnd := mongodb.CreateNotificationData{
 		Kind:   models.NotificationKindCreated,
 		Thread: &updatedThread.ID,
