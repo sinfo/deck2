@@ -249,10 +249,56 @@ func deleteThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	speaker, _ := mongodb.Speakers.FindThread(id)
+	company, _ := mongodb.Companies.FindThread(id)
+
+	targetEvent := 0
+	if speaker != nil {
+		for _, part := range speaker.Participations {
+			for _, comm := range part.Communications {
+				if comm == id {
+					targetEvent = part.Event
+					break
+				}
+			}
+			if targetEvent != 0 {
+				break
+			}
+		}
+	} else if company != nil {
+		for _, part := range company.Participations {
+			for _, comm := range part.Communications {
+				if comm == id {
+					targetEvent = part.Event
+					break
+				}
+			}
+			if targetEvent != 0 {
+				break
+			}
+		}
+	}
+
 	thread, err := mongodb.Threads.DeleteThread(id)
 	if err != nil {
 		http.Error(w, "Could not delete thread: "+err.Error(), http.StatusNotFound)
 		return
+	}
+
+	if speaker != nil {
+		if _, newStatus, err := mongodb.Speakers.AutoUpdateParticipationStatus(speaker.ID, targetEvent); err == nil && newStatus != nil {
+			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+				Kind:    models.NotificationKindUpdatedParticipationStatus,
+				Speaker: &speaker.ID,
+			})
+		}
+	} else if company != nil {
+		if _, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(company.ID, targetEvent); err == nil && newStatus != nil {
+			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+				Kind:    models.NotificationKindUpdatedParticipationStatus,
+				Company: &company.ID,
+			})
+		}
 	}
 
 	_ = json.NewEncoder(w).Encode(thread)

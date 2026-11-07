@@ -316,11 +316,26 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
 		return
+	}
+
+	targetEvent := 0
+	if existingCompany, err := mongodb.Companies.GetCompany(id); err == nil && existingCompany != nil {
+		for _, part := range existingCompany.Participations {
+			for _, comm := range part.Communications {
+				if comm == threadID {
+					targetEvent = part.Event
+					break
+				}
+			}
+			if targetEvent != 0 {
+				break
+			}
+		}
 	}
 
 	company, err := mongodb.Companies.DeleteCompanyThread(id, threadID)
@@ -330,10 +345,18 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete thread and posts (comments) associated to it - only if
-	// thread was deleted sucessfully from speaker participation
+	// thread was deleted sucessfully from company participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
+	}
+
+	if afterUpdate, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(company.ID, targetEvent); err == nil && newStatus != nil {
+		company = afterUpdate
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Company: &company.ID,
+		})
 	}
 
 	json.NewEncoder(w).Encode(company)

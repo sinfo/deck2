@@ -359,11 +359,26 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
 		return
+	}
+
+	targetEvent := 0
+	if existingSpeaker, err := mongodb.Speakers.GetSpeaker(id); err == nil && existingSpeaker != nil {
+		for _, part := range existingSpeaker.Participations {
+			for _, comm := range part.Communications {
+				if comm == threadID {
+					targetEvent = part.Event
+					break
+				}
+			}
+			if targetEvent != 0 {
+				break
+			}
+		}
 	}
 
 	speaker, err := mongodb.Speakers.DeleteSpeakerThread(id, threadID)
@@ -377,6 +392,14 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
+	}
+
+	if afterUpdate, newStatus, err := mongodb.Speakers.AutoUpdateParticipationStatus(speaker.ID, targetEvent); err == nil && newStatus != nil {
+		speaker = afterUpdate
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Speaker: &speaker.ID,
+		})
 	}
 
 	json.NewEncoder(w).Encode(speaker)

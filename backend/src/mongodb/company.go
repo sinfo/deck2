@@ -1033,12 +1033,16 @@ func (c *CompaniesType) AutoUpdateParticipationStatus(companyID primitive.Object
 				newStatus = models.InConversations
 			}
 		} else if hasOutgoing {
-			if currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
+			if currentStatus == models.InConversations || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
 				newStatus = models.Contacted
 			}
 		} else if hasIncoming {
 			if currentStatus == models.Contacted || currentStatus == models.GivenUp || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold {
 				newStatus = models.InConversations
+			}
+		} else {
+			if currentStatus == models.Contacted || currentStatus == models.InConversations {
+				newStatus = models.Selected
 			}
 		}
 
