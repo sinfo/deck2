@@ -293,60 +293,83 @@ func (m *MembersType) GetMembers(options GetMemberOptions) ([]*models.Member, er
 
 // GetMemberAuthCredentials finds a member and returns his/her information for auth purposes.
 func (m *MembersType) GetMemberAuthCredentials(sinfoID string) (*models.AuthorizationCredentials, error) {
-	ctx = context.Background()
-
-	var member models.Member
-	var result models.AuthorizationCredentials
-
-	if err := m.Collection.FindOne(ctx, bson.M{"sinfoid": sinfoID}).Decode(&member); err != nil {
-		return nil, err
-	}
-
-	result.ID = member.ID
-	result.SINFOID = member.SINFOID
+	ctx := context.Background()
 
 	currentEvent, err := Events.GetCurrentEvent()
 	if err != nil {
 		return nil, err
 	}
 
-	var options = GetTeamsOptions{Event: &currentEvent.ID, Member: &member.ID}
-	teams, err := Teams.GetTeams(options)
+	cursor, err := m.Collection.Find(ctx, bson.M{"sinfoid": sinfoID})
 	if err != nil {
 		return nil, err
 	}
 
-	var level = -1
-	var role models.TeamRole
-	var memberTeam string
-	for _, team := range teams {
-		member, err := team.GetMember(member.ID)
+	var members []models.Member
+	if err := cursor.All(ctx, &members); err != nil {
+		return nil, err
+	}
 
+	if len(members) == 0 {
+		return nil, errors.New("member not found")
+	}
+
+	var result *models.AuthorizationCredentials
+
+	for _, member := range members {
+		teams, err := Teams.GetTeams(GetTeamsOptions{
+			Event:  &currentEvent.ID,
+			Member: &member.ID,
+		})
 		if err != nil {
+			return nil, err
+		}
+
+		level := -1
+		var role models.TeamRole
+		var memberTeam string
+
+		for _, team := range teams {
+			teamMember, err := team.GetMember(member.ID)
+			if err != nil {
+				continue
+			}
+
+			currentLevel := teamMember.Role.AccessLevel()
+			if currentLevel == -1 {
+				continue
+			}
+
+			if level == -1 || currentLevel < level {
+				level = currentLevel
+				role = teamMember.Role
+				memberTeam = team.Name
+			}
+		}
+
+		// Member does not belong to a team in the current edition
+		if level == -1 {
 			continue
 		}
 
-		l := member.Role.AccessLevel()
-
-		if l == -1 {
-			continue
+		// Cannot have two or more members with the same sinfoid in the current edition
+		if result != nil {
+			return nil, errors.New("multiple members with same sinfoid in current event")
 		}
 
-		if level == -1 || level > l {
-			level = l
-			role = member.Role
-			memberTeam = team.Name
+		result = &models.AuthorizationCredentials{
+			ID:      member.ID,
+			SINFOID: member.SINFOID,
+			Role:    role,
+			Team:    memberTeam,
 		}
 	}
 
-	if level == -1 {
-		return nil, errors.New("member without team")
+	if result == nil {
+		return nil, errors.New("member without team in current event")
 	}
 
-	result.Role = role
-	result.Team = memberTeam
-
-	return &result, nil
+	return result, nil
 }
 
 func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models.MemberEventTeam, error) {
@@ -358,7 +381,7 @@ func (m *MembersType) GetMembersParticipations(id primitive.ObjectID) ([]*models
 		return nil, err
 	}
 
-	//Member can only belong to 1 team in each event
+	// Member can only belong to 1 team in each event
 	teamFound := false
 	for _, event := range events {
 		for _, teamID := range event.Teams {
@@ -562,7 +585,6 @@ func (m *MembersType) GetMembersPublic(options GetMemberOptions) ([]*models.Memb
 		}
 
 		return publicMembers, nil
-
 
 	} else if currentPublicMembers != nil {
 

@@ -138,6 +138,12 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       if (!kind) {
         throw new Error("Thread kind is required for optimistic update");
       }
+      const memberId = authStore.decoded?.id;
+      if (!memberId) {
+        throw new Error(
+          "Authenticated member id is required for optimistic update",
+        );
+      }
       const now = new Date().toISOString();
 
       const valToAdd: ThreadWithEntry = {
@@ -148,7 +154,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
         status: ThreadStatus.ThreadStatusPending,
         entry: {
           id: tempPostId,
-          member: authStore.decoded?.id,
+          member: memberId,
           posted: new Date().toISOString(),
           text: threadData.value?.text ?? "",
         },

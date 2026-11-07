@@ -228,6 +228,8 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
 
       const kind = threadData.value?.kind;
       if (!kind) throw new Error("Thread kind is required");
+      const memberId = authStore.decoded?.id;
+      if (!memberId) throw new Error("Authenticated member id is required");
 
       const now = new Date().toISOString();
 
@@ -239,7 +241,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
         status: ThreadStatus.ThreadStatusPending,
         entry: {
           id: tempPostId,
-          member: authStore.decoded?.id,
+          member: memberId,
           posted: new Date().toISOString(),
           text: threadData.value?.text ?? "",
         },

@@ -846,12 +846,19 @@ func (c *CompaniesType) DeleteCompanyThread(id, threadID primitive.ObjectID) (*m
 	return &updatedCompany, nil
 }
 
-// UpdateCompanyGmailThreadIds updates the gmail thread IDs for a company's current participation
-func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID, gmailThreadIds []string) (*models.Company, error) {
+// UpdateCompanyGmailThreadIds updates the gmail thread IDs for a company's participation in an event (defaults to current event)
+func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID, gmailThreadIds []string, eventID ...int) (*models.Company, error) {
 	ctx := context.Background()
-	currentEvent, err := Events.GetCurrentEvent()
-	if err != nil {
-		return nil, err
+
+	var targetEventID int
+	if len(eventID) > 0 && eventID[0] > 0 {
+		targetEventID = eventID[0]
+	} else {
+		currentEvent, err := Events.GetCurrentEvent()
+		if err != nil {
+			return nil, err
+		}
+		targetEventID = currentEvent.ID
 	}
 
 	var updatedCompany models.Company
@@ -862,7 +869,7 @@ func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID
 		},
 	}
 
-	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+	var filterQuery = bson.M{"_id": companyID, "participations.event": targetEventID}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
@@ -1180,14 +1187,20 @@ func (c *CompaniesType) UpdateEmployersOrder(companyID primitive.ObjectID, data 
 	return &updatedCompany, nil
 }
 
-// AddThread adds a models.Thread to a company's participation's list of communications (related to the current event).
-func (c *CompaniesType) AddThread(companyID primitive.ObjectID, threadID primitive.ObjectID) (*models.Company, error) {
+// AddThread adds a models.Thread to a company's participation's list of communications (related to the specified event, defaults to current event).
+func (c *CompaniesType) AddThread(companyID primitive.ObjectID, threadID primitive.ObjectID, eventID ...int) (*models.Company, error) {
 
 	ctx := context.Background()
-	currentEvent, err := Events.GetCurrentEvent()
 
-	if err != nil {
-		return nil, err
+	var targetEventID int
+	if len(eventID) > 0 && eventID[0] > 0 {
+		targetEventID = eventID[0]
+	} else {
+		currentEvent, err := Events.GetCurrentEvent()
+		if err != nil {
+			return nil, err
+		}
+		targetEventID = currentEvent.ID
 	}
 
 	var updatedCompany models.Company
@@ -1198,7 +1211,7 @@ func (c *CompaniesType) AddThread(companyID primitive.ObjectID, threadID primiti
 		},
 	}
 
-	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+	var filterQuery = bson.M{"_id": companyID, "participations.event": targetEventID}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
