@@ -49,7 +49,7 @@
 
           <div v-if="participation.feedback" class="text-sm">
             <span class="font-medium">Feedback:</span>
-            <div class="mt-1 text-muted-foreground">
+            <div class="mt-1 text-muted-foreground wrap-anywhere">
               {{ participation.feedback }}
             </div>
           </div>
@@ -63,21 +63,21 @@
             "
           >
             <h5 class="text-sm font-medium">Room Details:</h5>
-            <div class="flex flex-row gap-2 items-start">
-              <Badge v-if="participation.room.type" class="text-xs">
+            <div class="min-w-0 flex flex-row gap-2 items-start">
+              <Badge
+                v-if="participation.room.type"
+                class="min-w-0 flex-1 whitespace-normal wrap-anywhere"
+              >
                 {{ participation.room.type }}
               </Badge>
 
-              <Badge
-                v-if="participation.room.cost"
-                class="text-xs bg-amber-400"
-              >
+              <Badge v-if="participation.room.cost" class="bg-amber-400">
                 {{ participation.room.cost }}€
               </Badge>
             </div>
 
             <div v-if="participation.room.notes">
-              <div class="mt-1 text-muted-foreground">
+              <div class="mt-1 text-muted-foreground wrap-anywhere">
                 {{ participation.room.notes }}
               </div>
             </div>
