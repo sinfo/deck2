@@ -72,7 +72,7 @@
               </Badge>
 
               <Badge v-if="participation.room.cost" class="bg-amber-400">
-                {{ participation.room.cost }}€
+                {{ formatEuroFromCents(participation.room.cost) }}
               </Badge>
             </div>
 
@@ -126,7 +126,7 @@
                 <Label for="room-cost">Cost</Label>
                 <input
                   id="room-cost"
-                  v-model.number="editForm.room!.cost"
+                  v-model.number="roomCostEuros"
                   type="number"
                   min="0"
                   step="0.01"
@@ -154,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { computed, ref, reactive } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
@@ -189,6 +189,22 @@ const editForm = reactive<UpdateSpeakerParticipationData>({
     notes: props.participation.room?.notes || "",
   },
 });
+
+const roomCostEuros = computed({
+  get: () => (editForm.room?.cost ?? 0) / 100,
+  set: (euros: number | string) => {
+    if (!editForm.room) return;
+
+    const value = Number(String(euros).replace(",", "."));
+    editForm.room.cost = Number.isFinite(value) ? Math.round(value * 100) : 0;
+  },
+});
+
+const formatEuroFromCents = (cents: number) =>
+  new Intl.NumberFormat("pt-PT", {
+    style: "currency",
+    currency: "EUR",
+  }).format(cents / 100);
 
 const { data: eventsData } = useQuery({
   key: () => ["events"],
