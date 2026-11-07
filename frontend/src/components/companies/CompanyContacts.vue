@@ -65,8 +65,7 @@
         <div class="flex items-center gap-2">
           <GripVerticalIcon class="w-4 h-4" />
           <span
-            >Reorder mode active. Use the arrow buttons to rearrange
-            contacts.</span
+            >Reorder mode active. Drag the cards to rearrange contacts.</span
           >
         </div>
       </div>
@@ -78,62 +77,28 @@
         @click="isAddFormOpen = true"
       />
 
-      <div v-else class="space-y-4">
+      <div v-else class="space-y-3">
         <div
           v-for="(rep, index) in orderedRepresentatives"
           :key="rep.id"
           class="relative"
+          :class="{
+            'cursor-grab active:cursor-grabbing': isReorderMode,
+            'opacity-50': draggedId === rep.id,
+          }"
+          :draggable="isReorderMode"
+          @dragstart="onDragStart($event, rep.id)"
+          @dragover="onDragOver($event, index)"
+          @drop.prevent
+          @dragend="draggedId = null"
         >
-          <!-- Reorder buttons -->
-          <div
+          <!-- Drag handle hint, sits in the card list's left gutter -->
+          <GripVerticalIcon
             v-if="isReorderMode"
-            class="absolute -left-8 md:-left-16 top-1/2 -translate-y-1/2 flex flex-col gap-1 z-10"
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="index === 0"
-              class="h-8 w-8 p-0 shadow-sm"
-              title="Move up"
-              @click="moveUp(index)"
-            >
-              <ChevronUpIcon class="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="index === orderedRepresentatives.length - 1"
-              class="h-8 w-8 p-0 shadow-sm"
-              title="Move down"
-              @click="moveDown(index)"
-            >
-              <ChevronDownIcon class="w-4 h-4" />
-            </Button>
-          </div>
+            class="absolute -left-5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"
+          />
 
-          <div class="relative group">
-            <!-- Primary contact indicator -->
-            <div
-              v-if="index === 0"
-              class="absolute -top-2 -right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-            >
-              <div
-                class="bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full shadow-lg flex items-center gap-1"
-              >
-                <CrownIcon class="w-3 h-3" />
-                Primary Contact
-              </div>
-            </div>
-
-            <!-- Always visible crown for first contact -->
-            <div
-              v-if="index === 0"
-              class="absolute -top-1 -right-1 z-10 bg-orange-100 text-orange-600 rounded-full p-1 shadow-sm border border-orange-200"
-              title="Primary Contact"
-            >
-              <CrownIcon class="w-3 h-3" />
-            </div>
-
+          <div class="relative">
             <ContactCard
               :contact="rep.contact"
               :contact-name="rep.name"
@@ -143,8 +108,8 @@
               entity-type="company"
               :rep-id="rep.id"
               :is-deleting="isDeleting"
+              :is-primary="index === 0"
               :class="{
-                'ml-2 md:ml-4': isReorderMode,
                 'transition-all duration-300': true,
                 'ring-2 ring-blue-200': isReorderMode,
                 'ring-1 ring-orange-200 shadow-sm':
@@ -169,12 +134,7 @@ import {
   deleteCompanyRepresentative,
 } from "@/api/companies";
 import { useUpdateRepresentativeOrderMutation } from "@/mutations/companies";
-import {
-  GripVerticalIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
-  CrownIcon,
-} from "lucide-vue-next";
+import { GripVerticalIcon } from "lucide-vue-next";
 import Card from "../ui/card/Card.vue";
 import CardContent from "../ui/card/CardContent.vue";
 import CardDescription from "../ui/card/CardDescription.vue";
@@ -353,25 +313,38 @@ const toggleReorderMode = () => {
   isReorderMode.value = !isReorderMode.value;
 };
 
-const moveUp = (index: number) => {
-  if (index > 0) {
-    const newOrder = [...representativeOrder.value];
-    [newOrder[index - 1], newOrder[index]] = [
-      newOrder[index],
-      newOrder[index - 1],
-    ];
-    representativeOrder.value = newOrder;
+// Drag and drop reordering (reorder mode only). The list reorders live while
+// dragging; the new order is saved when leaving reorder mode.
+const draggedId = ref<string | null>(null);
+
+const onDragStart = (event: DragEvent, repId: string) => {
+  if (!isReorderMode.value) return;
+  draggedId.value = repId;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    // Firefox only starts a drag when some data is set
+    event.dataTransfer.setData("text/plain", repId);
   }
 };
 
-const moveDown = (index: number) => {
-  if (index < representativeOrder.value.length - 1) {
-    const newOrder = [...representativeOrder.value];
-    [newOrder[index], newOrder[index + 1]] = [
-      newOrder[index + 1],
-      newOrder[index],
-    ];
-    representativeOrder.value = newOrder;
-  }
+const onDragOver = (event: DragEvent, targetIndex: number) => {
+  if (!isReorderMode.value || !draggedId.value) return;
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+
+  const fromIndex = representativeOrder.value.indexOf(draggedId.value);
+  if (fromIndex === -1 || fromIndex === targetIndex) return;
+
+  // Only swap once the pointer crosses the middle of the target card,
+  // so cards of different heights don't flicker back and forth
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  const middle = rect.top + rect.height / 2;
+  if (fromIndex < targetIndex && event.clientY < middle) return;
+  if (fromIndex > targetIndex && event.clientY > middle) return;
+
+  const newOrder = [...representativeOrder.value];
+  newOrder.splice(fromIndex, 1);
+  newOrder.splice(targetIndex, 0, draggedId.value);
+  representativeOrder.value = newOrder;
 };
 </script>
