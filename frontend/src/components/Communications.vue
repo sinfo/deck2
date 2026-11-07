@@ -343,6 +343,13 @@
                     <span>{{ formatDate(thread.posted) }}</span>
                   </div>
 
+              <!-- VIEW MODE -->
+              <div v-else>
+                <!-- Message content -->
+                <div v-if="thread.entry" class="text-sm">
+                  <div class="whitespace-pre-wrap wrap-anywhere">
+                    {{ thread.entry.text }}
+                  </div>
                   <!-- Edit mode -->
                   <div
                     v-if="editingThreadId === thread.id"
@@ -527,12 +534,12 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2">
-          <div class="flex-1">
+          <div class="flex-1 min-w-0">
             <Textarea
               v-model="newMessage"
               :disabled="selectedEventId !== latestEvent?.id"
               placeholder="Type your message..."
-              class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px]"
+              class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px] wrap-anywhere"
               @keydown.enter.ctrl="sendMessage"
               @keydown.enter.meta="sendMessage"
               @input="onMessageInput"

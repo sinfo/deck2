@@ -17,7 +17,9 @@
         <div class="space-y-3">
           <!-- Name and badges -->
           <div v-if="contactName">
-            <h3 class="font-semibold text-base">{{ contactName }}</h3>
+            <h3 class="font-semibold text-base wrap-anywhere">
+              {{ contactName }}
+            </h3>
             <div
               v-if="contact.gender || contact.language"
               class="mt-1 flex gap-2"
@@ -103,7 +105,7 @@
                   <div class="flex flex-wrap items-center gap-2">
                     <a
                       :href="`mailto:${mail.mail}`"
-                      class="text-primary hover:underline min-w-0 flex-shrink-0"
+                      class="text-primary hover:underline min-w-0 max-full wrap-anywhere"
                     >
                       {{ mail.mail }}
                     </a>
@@ -154,7 +156,7 @@
                   <div class="flex flex-wrap items-center gap-2">
                     <a
                       :href="`tel:${phone.phone}`"
-                      class="text-primary hover:underline min-w-0 flex-shrink-0"
+                      class="text-primary hover:underline min-w-0 wrap-anywhere"
                     >
                       {{ phone.phone }}
                     </a>
