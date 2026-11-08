@@ -29,39 +29,37 @@
         <!-- Personal Information Card -->
         <Card>
           <CardHeader>
-            <div class="flex items-center justify-between">
-              <div>
-                <CardTitle>Personal Information</CardTitle>
-                <CardDescription>
-                  Basic information about your account
-                </CardDescription>
-              </div>
-              <Button
-                v-if="!isEditingProfile"
-                variant="outline"
-                size="sm"
-                :disabled="isUploadingImage"
-                @click="isEditingProfile = true"
-              >
-                Edit
-              </Button>
-            </div>
+            <CardTitle>Personal Information</CardTitle>
+            <CardDescription>
+              Basic information about your account
+            </CardDescription>
           </CardHeader>
           <CardContent class="space-y-4">
             <div class="flex items-center space-x-4">
-              <div class="relative group">
+              <div
+                class="relative group w-16 h-16 rounded-full overflow-hidden flex-shrink-0"
+              >
                 <Image
                   :src="profileImageUrl"
                   :alt="`${user.data.name} photo`"
                   class="w-16 h-16 rounded-full object-cover border-2 border-border"
                 />
                 <div
-                  v-if="isEditingProfile"
-                  class="absolute inset-0 w-16 h-16 rounded-full bg-black/0 group-hover:bg-black/50 transition-all cursor-pointer flex items-center justify-center"
-                  :class="{ 'pointer-events-none': isUploadingImage }"
+                  class="absolute inset-0 rounded-full transition-all flex items-center justify-center"
+                  :class="[
+                    isUploadingImage
+                      ? 'bg-black/50 pointer-events-none'
+                      : 'bg-black/0 group-hover:bg-black/50 cursor-pointer',
+                  ]"
+                  title="Change profile picture"
                   @click="triggerFileInput"
                 >
+                  <div
+                    v-if="isUploadingImage"
+                    class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"
+                  ></div>
                   <Pencil
+                    v-else
                     class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
                   />
                 </div>
@@ -82,28 +80,6 @@
                   SINFO ID: {{ user.data.sinfoid }}
                 </p>
               </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div
-              v-if="isEditingProfile"
-              class="flex justify-end gap-2 pt-4 border-t"
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                :disabled="isUploadingImage"
-                @click="cancelProfileEdit"
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                :disabled="!previewImageUrl || isUploadingImage"
-                @click="updateProfileChanges"
-              >
-                {{ isUploadingImage ? "Uploading..." : "Update Profile" }}
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -334,10 +310,12 @@ import { Pencil } from "lucide-vue-next";
 import { useUploadImageMutation } from "@/mutations/me";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
+import { useToast } from "@/lib/toast";
 
-const isEditingProfile = ref(false);
 const fileInput = ref<HTMLInputElement>();
 const previewImageUrl = ref<string | null>(null);
+
+const { toast } = useToast();
 
 const isEditMode = ref(false);
 const queryCache = useQueryCache();
@@ -362,57 +340,41 @@ const isUploadingImage = uploadImageMutation.isLoading;
 
 const triggerFileInput = () => fileInput.value?.click();
 
-const setPreviewImageUrl = (file?: File) => {
+const handleImageUpload = async (ev: Event) => {
+  const input = ev.target as HTMLInputElement;
+  const f = input.files && input.files[0];
+  if (!f) return;
+
   if (previewImageUrl.value) {
     try {
       URL.revokeObjectURL(previewImageUrl.value);
     } catch {
       /* ignore */
     }
-    previewImageUrl.value = null;
   }
+  previewImageUrl.value = URL.createObjectURL(f);
+  uploadImageMutation.file.value = f;
 
-  if (!file) {
-    uploadImageMutation.file.value = undefined;
-    return;
-  }
-
-  uploadImageMutation.file.value = file;
-  previewImageUrl.value = URL.createObjectURL(file);
-};
-
-const handleImageUpload = (ev: Event) => {
-  const input = ev.target as HTMLInputElement;
-  const f = input.files && input.files[0];
-  if (!f) return;
-  setPreviewImageUrl(f);
-};
-
-const cancelProfileEdit = () => {
-  isEditingProfile.value = false;
   try {
+    await uploadImageMutation.mutate();
+    toast.success({ title: "Profile picture updated successfully" });
+  } catch (err) {
+    toast.error({
+      title: "Failed to update profile picture",
+      description: String(err),
+    });
+  } finally {
     if (previewImageUrl.value) {
-      URL.revokeObjectURL(previewImageUrl.value);
+      try {
+        URL.revokeObjectURL(previewImageUrl.value);
+      } catch {
+        /* ignore */
+      }
+      previewImageUrl.value = null;
     }
-  } catch {
-    /* ignore */
+    uploadImageMutation.file.value = undefined;
+    if (fileInput.value) fileInput.value.value = "";
   }
-  previewImageUrl.value = null;
-  uploadImageMutation.file.value = undefined;
-  if (fileInput.value) fileInput.value.value = "";
-};
-
-const updateProfileChanges = async () => {
-  if (uploadImageMutation.file.value) {
-    try {
-      await uploadImageMutation.mutate();
-    } catch {
-      /* ignore */
-    }
-  }
-  isEditingProfile.value = false;
-  setPreviewImageUrl();
-  if (fileInput.value) fileInput.value.value = "";
 };
 
 onUnmounted(() => {
