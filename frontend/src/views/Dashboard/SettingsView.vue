@@ -275,7 +275,7 @@
                 <CardTitle>Connected Applications</CardTitle>
                 <CardDescription>
                   These are the applications that you have connected to your
-                  DECK account.
+                  Deck account.
                 </CardDescription>
               </CardHeader>
               <CardContent class="space-y-6">
@@ -357,13 +357,26 @@
                         {{ isAutoLinking ? "Syncing..." : "Sync Threads" }}
                       </Button>
                       <Button
+                        as-child
                         variant="outline"
                         size="sm"
-                        class="text-destructive hover:bg-destructive/10"
+                        class="gap-1.5"
+                      >
+                        <RouterLink :to="{ name: 'gmail-messages' }">
+                          <Mail class="w-3.5 h-3.5" />
+                          View Threads
+                        </RouterLink>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        class="h-8 w-8 text-destructive hover:bg-destructive/10"
                         :disabled="isAutoLinking"
+                        aria-label="Disconnect Gmail"
+                        title="Disconnect Gmail"
                         @click="disconnectGoogle"
                       >
-                        Disconnect
+                        <Unplug class="w-4 h-4" />
                       </Button>
                     </template>
                     <template v-else>
@@ -414,7 +427,7 @@ import ContactForm from "@/components/companies/ContactForm.vue";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, RefreshCw } from "lucide-vue-next";
+import { Mail, RefreshCw, Unplug } from "lucide-vue-next";
 import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
 import { useEventStore } from "@/stores/event";
@@ -424,12 +437,17 @@ const isEditMode = ref(false);
 const queryCache = useQueryCache();
 const eventStore = useEventStore();
 const { toast } = useToast();
-const { requestGoogleToken, isSigningIn } = useGoogleAuth();
+const {
+  requestGoogleToken,
+  isSigningIn,
+  error: googleAuthError,
+} = useGoogleAuth();
 const {
   isAutoLinking,
   autoLinkEventEntities,
   syncRecentGmailUpdates,
   warnUnlinkedContacted,
+  error: gmailSyncError,
 } = useAutoLinkGmail();
 
 // Fetch user data
@@ -482,9 +500,12 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
 };
 
 const userConnectedEmail = computed(() => {
-  return user.value?.data?.sinfoid
-    ? `${user.value.data.sinfoid}@sinfo.org`
-    : authStore.sinfoEmail;
+  return (
+    authStore.connectedGoogleEmail ||
+    (user.value?.data?.sinfoid
+      ? `${user.value.data.sinfoid}@sinfo.org`
+      : authStore.sinfoEmail)
+  );
 });
 
 const syncThreads = async (silent = false, fullScan = false) => {
@@ -511,10 +532,28 @@ const syncThreads = async (silent = false, fullScan = false) => {
     const results = fullScan
       ? await autoLinkEventEntities(eventId, { forceReScan: true })
       : await syncRecentGmailUpdates(eventId);
-    const newlyLinked = results.filter((r) => r.status === "SUCCESS").length;
-    const alreadyLinked = results.filter(
-      (r) => r.status === "ALREADY_LINKED",
-    ).length;
+    const failedEntities = results.filter(
+      (result) => result.status === "ERROR",
+    );
+    if (gmailSyncError.value || failedEntities.length > 0) {
+      toast.error({
+        title: "Sync Incomplete",
+        description:
+          gmailSyncError.value ??
+          `Failed to sync ${failedEntities.length} entity/entities. Please retry.`,
+      });
+      return;
+    }
+    const newlyLinked = results.reduce(
+      (count, result) => count + result.newlyLinkedCount,
+      0,
+    );
+    const alreadyLinked = results.reduce(
+      (count, result) =>
+        count +
+        Math.max(result.linkedThreadsCount - result.newlyLinkedCount, 0),
+      0,
+    );
     toast.success({
       title: "Sync Complete",
       description:
@@ -559,11 +598,13 @@ const connectGoogle = async () => {
   });
 
   if (success) {
-    await onGoogleConnected(userEmail);
+    await onGoogleConnected(userConnectedEmail.value);
   } else {
     toast.error({
       title: "Connection Failed",
-      description: "Could not connect to your SINFO Gmail account.",
+      description:
+        googleAuthError.value ||
+        "Could not connect to your SINFO Gmail account.",
     });
   }
 };

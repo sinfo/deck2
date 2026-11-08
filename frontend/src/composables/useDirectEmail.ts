@@ -115,10 +115,12 @@ export const useDirectEmail = (entity: DirectEmailEntity) => {
         }
       }
 
-      const signature = await loadSignature(
-        authStore.member!,
-        authStore.decoded,
-      );
+      const credentials = authStore.decoded;
+      if (!credentials) {
+        throw new Error("Authentication credentials not available.");
+      }
+
+      const signature = await loadSignature(authStore.member!, credentials);
 
       const { subject, body } = await loadTemplate(
         templateCategory,

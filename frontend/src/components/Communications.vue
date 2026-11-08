@@ -361,7 +361,7 @@
 
         <div
           ref="messagesContainer"
-          class="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
+          class="flex-1 min-w-0 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
         >
           <!-- Filtered empty state -->
           <div
@@ -466,7 +466,7 @@
 
               <div
                 :class="[
-                  'max-w-[85%] sm:max-w-[80%] flex flex-col group/message',
+                  'min-w-0 max-w-[85%] sm:max-w-[80%] flex flex-col group/message',
                   getMessageDirection(thread.kind) === 'outgoing'
                     ? 'items-end'
                     : 'items-start',
@@ -504,7 +504,7 @@
                   <!-- Edit mode -->
                   <div
                     v-if="editingThreadId === thread.id"
-                    class="text-sm space-y-2"
+                    class="text-sm min-w-0 space-y-2"
                   >
                     <Textarea
                       v-model="editText"
@@ -545,7 +545,7 @@
                       <!-- Email message -->
                       <div
                         v-if="parseEmailText(thread.entry.text).isEmail"
-                        class="space-y-1.5"
+                        class="min-w-0 space-y-1.5"
                       >
                         <div
                           class="text-xs rounded-lg p-2.5 mb-2 border flex items-center gap-2.5 min-w-0"
@@ -1071,6 +1071,8 @@
     :default-search-query="gmailPickerDefaultQuery"
     @save="handleGmailThreadsSave"
   />
+
+  <MissingGenderDialog v-model:open="isMissingGenderDialogOpen" />
 </template>
 
 <script setup lang="ts">
@@ -1118,6 +1120,7 @@ import {
   templateHumanReadableNames,
   type AnyEmailVariableInput,
 } from "@/lib/templates";
+import MissingGenderDialog from "./MissingGenderDialog.vue";
 import type { Event } from "@/dto/events";
 import type { ParticipationStatus } from "@/dto";
 import { humanReadableParticipationStatus } from "@/dto";
@@ -1181,10 +1184,12 @@ const messageKind = ref<ThreadKind>(ThreadKind.ThreadKindTo);
 const messageChannel = ref<ThreadChannel>(ThreadChannel.Gmail);
 const messagesContainer = ref<HTMLElement>();
 const eventStore = useEventStore();
+const authStore = useAuthStore();
 const selectedEventId = ref<number | null>(
   eventStore.selectedEvent?.id ?? null,
 );
 const selectedTemplate = ref<TemplateWithVariables>();
+const isMissingGenderDialogOpen = ref(false);
 
 const editingThreadId = ref<string | null>(null);
 const editingPostId = ref<string | null>(null);
@@ -1745,11 +1750,23 @@ const openGmailPicker = () => {
 };
 
 const handleGmailThreadsSave = async (threadIds: string[]) => {
+  if (!selectedEventId.value) {
+    return;
+  }
+
   try {
     if (props.entityType === "company") {
-      await updateCompanyGmailThreadIds(props.entity.id, threadIds);
+      await updateCompanyGmailThreadIds(
+        props.entity.id,
+        threadIds,
+        selectedEventId.value,
+      );
     } else {
-      await updateSpeakerGmailThreadIds(props.entity.id, threadIds);
+      await updateSpeakerGmailThreadIds(
+        props.entity.id,
+        threadIds,
+        selectedEventId.value,
+      );
     }
     // Invalidate the communications query to refresh data
     queryCache.invalidateQueries({
@@ -1770,7 +1787,10 @@ const { fetchMessagesForThreads } = useAutoLinkGmail();
 const isSyncing = ref(false);
 
 const syncGmailMessages = async () => {
-  if (!currentParticipationGmailThreadIds.value.length) {
+  if (
+    !currentParticipationGmailThreadIds.value.length ||
+    !selectedEventId.value
+  ) {
     return;
   }
 
@@ -1787,9 +1807,17 @@ const syncGmailMessages = async () => {
 
     // Send to backend for sync
     if (props.entityType === "company") {
-      await syncCompanyGmailMessages(props.entity.id, allMessages);
+      await syncCompanyGmailMessages(
+        props.entity.id,
+        allMessages,
+        selectedEventId.value,
+      );
     } else {
-      await syncSpeakerGmailMessages(props.entity.id, allMessages);
+      await syncSpeakerGmailMessages(
+        props.entity.id,
+        allMessages,
+        selectedEventId.value,
+      );
     }
 
     // Refresh communications
@@ -2108,6 +2136,13 @@ watch(
     if (!newTemplate) return;
 
     const { template, variables } = newTemplate;
+
+    if (template.endsWith("_PT") && !authStore.member?.contactObject?.gender) {
+      selectedTemplate.value = undefined;
+      isMissingGenderDialogOpen.value = true;
+      return;
+    }
+
     openTemplateInNewTab(template, variables);
 
     messageChannel.value = ThreadChannel.Gmail;

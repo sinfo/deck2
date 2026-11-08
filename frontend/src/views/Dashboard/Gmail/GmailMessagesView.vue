@@ -323,7 +323,13 @@
             v-if="selectedMessageBody"
             class="prose prose-sm dark:prose-invert max-w-none"
           >
-            <div v-if="isHtmlBody" v-html="selectedMessageBody"></div>
+            <iframe
+              v-if="isHtmlBody"
+              :srcdoc="selectedMessageBody ?? ''"
+              sandbox=""
+              title="Email message content"
+              class="w-full min-h-96 border-0"
+            />
             <pre v-else class="whitespace-pre-wrap text-sm">{{
               selectedMessageBody
             }}</pre>
@@ -542,6 +548,7 @@ const {
   autoLinkEventEntities,
   fetchMessagesForThreads,
   warnUnlinkedContacted,
+  error: gmailSyncError,
 } = useAutoLinkGmail();
 const { signInWithGoogle, isSigningIn, requestGoogleToken } = useGoogleAuth();
 
@@ -563,7 +570,22 @@ const handleAutoLinkEntities = async () => {
 
   try {
     const results = await autoLinkEventEntities(eventId);
-    const newlyLinked = results.filter((r) => r.status === "SUCCESS").length;
+    const failedEntities = results.filter(
+      (result) => result.status === "ERROR",
+    );
+    if (gmailSyncError.value || failedEntities.length > 0) {
+      toast.error({
+        title: "Auto-Link Incomplete",
+        description:
+          gmailSyncError.value ??
+          `Failed to sync ${failedEntities.length} entity/entities. Please retry.`,
+      });
+      return;
+    }
+    const newlyLinked = results.reduce(
+      (count, result) => count + result.newlyLinkedCount,
+      0,
+    );
     toast.success({
       title: "Auto-Link Completed",
       description: `Linked ${newlyLinked} new thread(s).`,
@@ -878,6 +900,8 @@ watch(linkEntityType, () => {
 
 const linkThread = async () => {
   if (!selectedLinkEntity.value || !threadToLink.value) return;
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) return;
 
   isLinking.value = true;
 
@@ -894,9 +918,9 @@ const linkThread = async () => {
 
       // Update the participation's Gmail thread IDs
       if (linkEntityType.value === "company") {
-        await updateCompanyGmailThreadIds(entity.id, newThreadIds);
+        await updateCompanyGmailThreadIds(entity.id, newThreadIds, eventId);
       } else {
-        await updateSpeakerGmailThreadIds(entity.id, newThreadIds);
+        await updateSpeakerGmailThreadIds(entity.id, newThreadIds, eventId);
       }
 
       // Sync the messages from this thread
@@ -921,13 +945,23 @@ const linkThread = async () => {
 };
 
 const syncThreadMessages = async (entityId: string, thread: GmailThread) => {
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) return;
+
   try {
     const allMessages = await fetchMessagesForThreads([thread.id]);
+    if (gmailSyncError.value) {
+      console.error(
+        "Failed to fetch Gmail thread messages:",
+        gmailSyncError.value,
+      );
+      return;
+    }
     if (allMessages.length > 0) {
       if (linkEntityType.value === "company") {
-        await syncCompanyGmailMessages(entityId, allMessages);
+        await syncCompanyGmailMessages(entityId, allMessages, eventId);
       } else {
-        await syncSpeakerGmailMessages(entityId, allMessages);
+        await syncSpeakerGmailMessages(entityId, allMessages, eventId);
       }
     }
   } catch (err) {

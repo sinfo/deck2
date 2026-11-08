@@ -185,9 +185,12 @@ func InitializeDatabase() {
 		Collection: db.Collection("coordinationTeams"),
 	}
 
-	// Ensure index for categories
 	if err := Categories.EnsureIndexes(); err != nil {
 		log.Println("Warning: failed to ensure categories indexes:", err)
+	}
+
+	if err := Threads.EnsureIndexes(); err != nil {
+		log.Fatal("Failed to ensure Gmail thread indexes:", err)
 	}
 
 	// Seed default categories if none exist yet

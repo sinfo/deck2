@@ -21,6 +21,23 @@ type ThreadsType struct {
 	Collection *mongo.Collection
 }
 
+// EnsureIndexes makes sure the indexes are created
+func (t *ThreadsType) EnsureIndexes() error {
+	// index that prevents duplicate Gmail messages from being synchronized.
+	_, err := t.Collection.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.D{{Key: "gmailMessageId", Value: 1}},
+			Options: options.Index().
+				SetUnique(true).
+				SetPartialFilterExpression(bson.M{
+					"gmailMessageId": bson.M{"$gt": ""},
+				}),
+		},
+	)
+	return err
+}
+
 // CreateThreadData holds data needed to create a thread
 type CreateThreadData struct {
 	Entry          primitive.ObjectID
@@ -151,7 +168,7 @@ func (t *ThreadsType) GetThreadsByGmailMessageIds(gmailMessageIds []string) (map
 	for cursor.Next(ctx) {
 		var thread models.Thread
 		if err := cursor.Decode(&thread); err != nil {
-			continue
+			return nil, err
 		}
 		result[thread.GmailMessageId] = &thread
 	}

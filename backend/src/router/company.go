@@ -1300,6 +1300,7 @@ func getCompanyThreads(w http.ResponseWriter, r *http.Request) {
 
 type updateGmailThreadIdsData struct {
 	GmailThreadIds []string `json:"gmailThreadIds"`
+	Event          *int     `json:"event"`
 }
 
 func (ugtd *updateGmailThreadIdsData) ParseBody(body io.Reader) error {
@@ -1309,7 +1310,42 @@ func (ugtd *updateGmailThreadIdsData) ParseBody(body io.Reader) error {
 	return nil
 }
 
+// parseCompanyGmailEventID validates an explicitly requested edition.
+func parseCompanyGmailEventID(bodyEvent *int, queryEvent string) (int, error) {
+	if bodyEvent != nil {
+		if *bodyEvent <= 0 {
+			return 0, fmt.Errorf("invalid event ID: %d", *bodyEvent)
+		}
+		return *bodyEvent, nil
+	}
+
+	if queryEvent != "" {
+		eventID, err := strconv.Atoi(queryEvent)
+		if err != nil || eventID <= 0 {
+			return 0, fmt.Errorf("invalid event ID: %q", queryEvent)
+		}
+		return eventID, nil
+	}
+
+	return 0, nil
+}
+
+func canManageCompanyGmailParticipation(
+	company *models.Company,
+	memberID primitive.ObjectID,
+	eventID int,
+) (bool, error) {
+	for _, participation := range company.Participations {
+		if participation.Event == eventID {
+			return canManageGmailParticipation(memberID, participation.Member, eventID)
+		}
+	}
+	return false, nil
+}
+
 func updateCompanyGmailThreadIds(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
 	params := mux.Vars(r)
 	companyID, err := primitive.ObjectIDFromHex(params["id"])
 	if err != nil {
@@ -1317,14 +1353,14 @@ func updateCompanyGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 	if !ok {
 		http.Error(w, "Authentication failed", http.StatusUnauthorized)
 		return
 	}
 
-	// Verify company exists
-	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+	company, err := mongodb.Companies.GetCompany(companyID)
+	if err != nil {
 		http.Error(w, "Company not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
@@ -1335,13 +1371,37 @@ func updateCompanyGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	company, err := mongodb.Companies.UpdateCompanyGmailThreadIds(companyID, data.GmailThreadIds)
+	targetEventID, err := parseCompanyGmailEventID(data.Event, r.URL.Query().Get("event"))
+	if err != nil {
+		http.Error(w, "Invalid event: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if targetEventID == 0 {
+		event, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+			return
+		}
+		targetEventID = event.ID
+	}
+
+	allowed, err := canManageCompanyGmailParticipation(company, credentials.ID, targetEventID)
+	if err != nil {
+		http.Error(w, "Could not verify permissions", http.StatusInternalServerError)
+		return
+	}
+	if !allowed {
+		http.Error(w, "Not authorized for this participation", http.StatusForbidden)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.UpdateCompanyGmailThreadIds(companyID, data.GmailThreadIds, targetEventID)
 	if err != nil {
 		http.Error(w, "Could not update gmail thread IDs: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	json.NewEncoder(w).Encode(company)
+	json.NewEncoder(w).Encode(updatedCompany)
 }
 
 func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
@@ -1360,8 +1420,8 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify company exists
-	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+	company, err := mongodb.Companies.GetCompany(companyID)
+	if err != nil {
 		http.Error(w, "Company not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
@@ -1372,10 +1432,39 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	syncedCount := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
-		_, err := mongodb.Companies.AddThread(companyID, threadID)
+	targetEventID, err := parseCompanyGmailEventID(data.Event, r.URL.Query().Get("event"))
+	if err != nil {
+		http.Error(w, "Invalid event: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if targetEventID == 0 {
+		event, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+			return
+		}
+		targetEventID = event.ID
+	}
+
+	allowed, err := canManageCompanyGmailParticipation(company, credentials.ID, targetEventID)
+	if err != nil {
+		http.Error(w, "Could not verify permissions", http.StatusInternalServerError)
+		return
+	}
+	if !allowed {
+		http.Error(w, "Not authorized for this participation", http.StatusForbidden)
+		return
+	}
+
+	syncedCount, err := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
+		_, err := mongodb.Companies.AddThread(companyID, threadID, targetEventID)
 		return err
 	})
+	if err != nil {
+		log.Println("Error syncing Gmail messages for company:", err)
+		http.Error(w, "Failed to sync Gmail messages", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"synced": syncedCount,
