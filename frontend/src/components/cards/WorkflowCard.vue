@@ -135,7 +135,7 @@ watch(
         </div>
       </CardContent>
       <CardHeader>
-        <CardTitle>{{ title }}</CardTitle>
+        <CardTitle class="wrap-anywhere">{{ title }}</CardTitle>
         <div v-if="badges?.length" class="flex flex-wrap gap-1">
           <TooltipProvider v-for="badge in badges" :key="badge.label">
             <Tooltip>

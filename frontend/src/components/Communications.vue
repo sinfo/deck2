@@ -240,7 +240,7 @@
 
         <div
           ref="messagesContainer"
-          class="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
+          class="flex-1 min-w-0 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
         >
           <template
             v-for="(thread, index) in filteredCommunications"
@@ -302,7 +302,7 @@
 
               <div
                 :class="[
-                  'max-w-[85%] sm:max-w-[80%] flex flex-col group/message',
+                  'min-w-0 max-w-[85%] sm:max-w-[80%] flex flex-col group/message',
                   getMessageDirection(thread.kind) === 'outgoing'
                     ? 'items-end'
                     : 'items-start',
@@ -311,7 +311,7 @@
                 <!-- Bubble skin -->
                 <div
                   :class="[
-                    'w-full rounded-lg p-2 sm:p-3 space-y-2',
+                    'w-full min-w-0 rounded-lg p-2 sm:p-3 space-y-2',
                     thread.kind === ThreadKind.ThreadKindPhoneCall
                       ? 'bg-purple-100 text-purple-800 border border-purple-200'
                       : getMessageDirection(thread.kind) === 'outgoing'
@@ -346,11 +346,11 @@
                   <!-- Edit mode -->
                   <div
                     v-if="editingThreadId === thread.id"
-                    class="text-sm space-y-2"
+                    class="text-sm min-w-0 space-y-2"
                   >
                     <Textarea
                       v-model="editText"
-                      class="w-full resize-none min-h-[60px] max-h-[160px]"
+                      class="w-full min-w-0 resize-none min-h-[60px] max-h-[160px] wrap-anywhere"
                       :disabled="updatePostMutation?.isLoading?.value"
                     />
                     <div class="flex justify-end gap-2">
@@ -384,14 +384,14 @@
                   <!-- VIEW MODE -->
                   <div v-else>
                     <!-- Message content -->
-                    <div v-if="thread.entry" class="text-sm">
+                    <div v-if="thread.entry" class="text-sm min-w-0">
                       <!-- Synced Email Header Card -->
                       <div
                         v-if="parseEmailText(thread.entry.text).isEmail"
-                        class="space-y-1.5"
+                        class="min-w-0 space-y-1.5"
                       >
                         <div
-                          class="text-xs rounded p-2 mb-2 space-y-0.5 border"
+                          class="min-w-0 text-xs rounded p-2 mb-2 space-y-0.5 border"
                           :class="[
                             getMessageDirection(thread.kind) === 'outgoing'
                               ? 'bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground'
@@ -400,7 +400,7 @@
                         >
                           <div
                             v-if="parseEmailText(thread.entry.text).subject"
-                            class="font-medium text-xs truncate flex items-center gap-1"
+                            class="min-w-0 font-medium text-xs flex items-center gap-1"
                             :class="[
                               getMessageDirection(thread.kind) === 'outgoing'
                                 ? 'text-primary-foreground'
@@ -410,7 +410,7 @@
                             <span class="opacity-70 font-semibold"
                               >Assunto:</span
                             >
-                            <span>{{
+                            <span class="min-w-0 wrap-anywhere">{{
                               parseEmailText(thread.entry.text).subject
                             }}</span>
                           </div>
@@ -434,11 +434,13 @@
                           </div>
                         </div>
                         <!-- Email body -->
-                        <div class="whitespace-pre-wrap leading-relaxed">
+                        <div
+                          class="whitespace-pre-wrap leading-relaxed wrap-anywhere"
+                        >
                           {{ parseEmailText(thread.entry.text).body }}
                         </div>
                       </div>
-                      <div v-else class="whitespace-pre-wrap">
+                      <div v-else class="whitespace-pre-wrap wrap-anywhere">
                         {{ thread.entry.text }}
                       </div>
                       <div
@@ -527,12 +529,12 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2">
-          <div class="flex-1">
+          <div class="flex-1 min-w-0">
             <Textarea
               v-model="newMessage"
               :disabled="selectedEventId !== latestEvent?.id"
               placeholder="Type your message..."
-              class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px]"
+              class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px] wrap-anywhere"
               @keydown.enter.ctrl="sendMessage"
               @keydown.enter.meta="sendMessage"
               @input="onMessageInput"
@@ -611,6 +613,7 @@ import type { Speaker } from "@/dto/speakers";
 import type { Company } from "@/dto/companies";
 import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
+import { useAuthStore } from "@/stores/auth";
 import {
   useAutoLinkGmail,
   isContactedParticipationStatus,
@@ -697,6 +700,7 @@ const newMessage = ref("");
 const messageKind = ref<ThreadKind>(ThreadKind.ThreadKindTo);
 const messagesContainer = ref<HTMLElement>();
 const eventStore = useEventStore();
+const authStore = useAuthStore();
 const selectedEventId = ref<number | null>(
   eventStore.selectedEvent?.id ?? null,
 );

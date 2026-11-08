@@ -71,7 +71,9 @@
           />
         </div>
         <div class="flex-1 min-w-0">
-          <CardTitle class="text-lg truncate">{{ company.name }}</CardTitle>
+          <CardTitle class="text-lg wrap-anywhere">{{
+            company.name
+          }}</CardTitle>
           <div class="flex flex-wrap gap-1 mt-2">
             <ParticipationStatusBadge
               v-if="company.participation?.status"
@@ -95,7 +97,7 @@
       <div v-if="company.description" class="relative">
         <CardDescription
           :class="[
-            'transition-all duration-300 ease-in-out whitespace-pre-wrap',
+            'transition-all duration-300 ease-in-out whitespace-pre-wrap wrap-anywhere',
             isDescriptionExpanded ? '' : 'line-clamp-3',
           ]"
         >
