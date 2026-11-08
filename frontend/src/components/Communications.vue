@@ -1662,7 +1662,6 @@ const currentParticipationStatus = computed<ParticipationStatus | undefined>(
   () => currentParticipation.value?.status,
 );
 
-const authStore = useAuthStore();
 const { listThreads } = useGmailMessages();
 
 const availableGmailThreadsCount = ref<number>(0);
