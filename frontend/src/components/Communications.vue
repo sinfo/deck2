@@ -628,51 +628,24 @@
                                   : 'text-muted-foreground',
                               ]"
                             >
-                              <TooltipProvider
+                              <span
                                 v-if="
                                   thread.entry.updated &&
                                   thread.entry.updated !== thread.entry.posted
                                 "
+                                class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
+                                :title="`Edited ${formatFullDateTime(thread.entry.updated)}`"
                               >
-                                <Tooltip>
-                                  <TooltipTrigger as-child>
-                                    <span
-                                      class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
-                                    >
-                                      <Pencil
-                                        class="w-2.5 h-2.5 inline-block"
-                                      />
-                                      <span class="italic">Edited</span>
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>
-                                      Edited
-                                      {{
-                                        formatFullDateTime(thread.entry.updated)
-                                      }}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                                <Pencil class="w-2.5 h-2.5 inline-block" />
+                                <span class="italic">Edited</span>
+                              </span>
 
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger as-child>
-                                    <span
-                                      class="cursor-help hover:opacity-100"
-                                      :title="formatFullDateTime(thread.posted)"
-                                    >
-                                      {{ formatDate(thread.posted) }}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>
-                                      {{ formatFullDateTime(thread.posted) }}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <span
+                                class="cursor-help hover:opacity-100"
+                                :title="formatFullDateTime(thread.posted)"
+                              >
+                                {{ formatDate(thread.posted) }}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -687,45 +660,24 @@
                               : 'text-muted-foreground',
                           ]"
                         >
-                          <TooltipProvider
+                          <span
                             v-if="
                               thread.entry.updated &&
                               thread.entry.updated !== thread.entry.posted
                             "
+                            class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
+                            :title="`Edited ${formatFullDateTime(thread.entry.updated)}`"
                           >
-                            <Tooltip>
-                              <TooltipTrigger as-child>
-                                <span
-                                  class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
-                                >
-                                  <Pencil class="w-2.5 h-2.5 inline-block" />
-                                  <span class="italic">Edited</span>
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  Edited
-                                  {{ formatFullDateTime(thread.entry.updated) }}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                            <Pencil class="w-2.5 h-2.5 inline-block" />
+                            <span class="italic">Edited</span>
+                          </span>
 
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger as-child>
-                                <span
-                                  class="cursor-help hover:opacity-100"
-                                  :title="formatFullDateTime(thread.posted)"
-                                >
-                                  {{ formatDate(thread.posted) }}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{{ formatFullDateTime(thread.posted) }}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <span
+                            class="cursor-help hover:opacity-100"
+                            :title="formatFullDateTime(thread.posted)"
+                          >
+                            {{ formatDate(thread.posted) }}
+                          </span>
                         </div>
                       </div>
 
@@ -746,45 +698,24 @@
                               : 'text-muted-foreground',
                           ]"
                         >
-                          <TooltipProvider
+                          <span
                             v-if="
                               thread.entry.updated &&
                               thread.entry.updated !== thread.entry.posted
                             "
+                            class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
+                            :title="`Edited ${formatFullDateTime(thread.entry.updated)}`"
                           >
-                            <Tooltip>
-                              <TooltipTrigger as-child>
-                                <span
-                                  class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
-                                >
-                                  <Pencil class="w-2.5 h-2.5 inline-block" />
-                                  <span class="italic">Edited</span>
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>
-                                  Edited
-                                  {{ formatFullDateTime(thread.entry.updated) }}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                            <Pencil class="w-2.5 h-2.5 inline-block" />
+                            <span class="italic">Edited</span>
+                          </span>
 
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger as-child>
-                                <span
-                                  class="cursor-help hover:opacity-100"
-                                  :title="formatFullDateTime(thread.posted)"
-                                >
-                                  {{ formatDate(thread.posted) }}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{{ formatFullDateTime(thread.posted) }}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <span
+                            class="cursor-help hover:opacity-100"
+                            :title="formatFullDateTime(thread.posted)"
+                          >
+                            {{ formatDate(thread.posted) }}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -798,26 +729,17 @@
                         <span class="text-lg">📞</span>
                         <span>Phone call</span>
                       </div>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger as-child>
-                            <span
-                              class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
-                              :class="[
-                                getMessageDirection(thread.kind) === 'outgoing'
-                                  ? 'text-white/70'
-                                  : 'text-muted-foreground',
-                              ]"
-                              :title="formatFullDateTime(thread.posted)"
-                            >
-                              {{ formatDate(thread.posted) }}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{{ formatFullDateTime(thread.posted) }}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <span
+                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
+                        :class="[
+                          getMessageDirection(thread.kind) === 'outgoing'
+                            ? 'text-white/70'
+                            : 'text-muted-foreground',
+                        ]"
+                        :title="formatFullDateTime(thread.posted)"
+                      >
+                        {{ formatDate(thread.posted) }}
+                      </span>
                     </div>
 
                     <!-- Meeting indicator -->
@@ -826,26 +748,17 @@
                       class="text-sm italic flex items-center justify-between gap-2"
                     >
                       <span>📅 Meeting scheduled</span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger as-child>
-                            <span
-                              class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
-                              :class="[
-                                getMessageDirection(thread.kind) === 'outgoing'
-                                  ? 'text-white/70'
-                                  : 'text-muted-foreground',
-                              ]"
-                              :title="formatFullDateTime(thread.posted)"
-                            >
-                              {{ formatDate(thread.posted) }}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{{ formatFullDateTime(thread.posted) }}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <span
+                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
+                        :class="[
+                          getMessageDirection(thread.kind) === 'outgoing'
+                            ? 'text-white/70'
+                            : 'text-muted-foreground',
+                        ]"
+                        :title="formatFullDateTime(thread.posted)"
+                      >
+                        {{ formatDate(thread.posted) }}
+                      </span>
                     </div>
 
                     <!-- No content fallback -->
@@ -854,21 +767,12 @@
                       class="text-sm italic opacity-60 flex items-center justify-between gap-2"
                     >
                       <span>No message content</span>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger as-child>
-                            <span
-                              class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
-                              :title="formatFullDateTime(thread.posted)"
-                            >
-                              {{ formatDate(thread.posted) }}
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{{ formatFullDateTime(thread.posted) }}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      <span
+                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
+                        :title="formatFullDateTime(thread.posted)"
+                      >
+                        {{ formatDate(thread.posted) }}
+                      </span>
                     </div>
                   </div>
 
