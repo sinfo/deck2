@@ -129,6 +129,35 @@ func (t *ThreadsType) GetThread(threadID primitive.ObjectID) (*models.Thread, er
 	return &thread, nil
 }
 
+// GetThreadsByIDs finds threads by multiple thread IDs.
+// Returns a map of threadID -> thread for quick lookup.
+func (t *ThreadsType) GetThreadsByIDs(threadIDs []primitive.ObjectID) (map[primitive.ObjectID]*models.Thread, error) {
+	ctx := context.Background()
+	result := make(map[primitive.ObjectID]*models.Thread)
+
+	if len(threadIDs) == 0 {
+		return result, nil
+	}
+
+	cursor, err := t.Collection.Find(ctx, bson.M{
+		"_id": bson.M{"$in": threadIDs},
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var thread models.Thread
+		if err := cursor.Decode(&thread); err != nil {
+			continue
+		}
+		result[thread.ID] = &thread
+	}
+
+	return result, cursor.Err()
+}
+
 // GetThreadByGmailMessageId finds a thread by its Gmail message ID.
 func (t *ThreadsType) GetThreadByGmailMessageId(gmailMessageId string) (*models.Thread, error) {
 	ctx := context.Background()
@@ -171,6 +200,34 @@ func (t *ThreadsType) GetThreadsByGmailMessageIds(gmailMessageIds []string) (map
 	return result, cursor.Err()
 }
 
+// GetThreads finds threads by multiple thread IDs.
+func (t *ThreadsType) GetThreads(threadIDs []primitive.ObjectID) ([]*models.Thread, error) {
+	ctx := context.Background()
+	result := make([]*models.Thread, 0, len(threadIDs))
+
+	if len(threadIDs) == 0 {
+		return result, nil
+	}
+
+	cursor, err := t.Collection.Find(ctx, bson.M{
+		"_id": bson.M{"$in": threadIDs},
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var thread models.Thread
+		if err := cursor.Decode(&thread); err != nil {
+			continue
+		}
+		result = append(result, &thread)
+	}
+
+	return result, cursor.Err()
+}
+
 // DeleteThread deletes a thread by its ID and cleans up related data.
 func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread, error) {
 	ctx := context.Background()
@@ -203,6 +260,11 @@ func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread,
 
 	// Clean up stale references in participations
 	_, _ = Speakers.Collection.UpdateMany(
+		ctx,
+		bson.M{"participations.communications": threadID},
+		bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
+	)
+	_, _ = Companies.Collection.UpdateMany(
 		ctx,
 		bson.M{"participations.communications": threadID},
 		bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},

@@ -20,6 +20,8 @@ export const useDeleteThreadMutation = defineMutation(() => {
     mutation: () => deleteThread(threadId.value),
     onMutate: () => {
       const key = commsKey.value;
+      const currentEntityId = entityId.value;
+      const currentEntityType = entityType.value;
 
       const prev =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -32,7 +34,12 @@ export const useDeleteThreadMutation = defineMutation(() => {
       }));
 
       queryCache.setQueryData<ParticipationCommunications[]>(key, next);
-      return { key, prev };
+      return {
+        key,
+        prev,
+        entityId: currentEntityId,
+        entityType: currentEntityType,
+      };
     },
 
     // rollback on error
@@ -43,6 +50,20 @@ export const useDeleteThreadMutation = defineMutation(() => {
           ctx.prev,
         );
       }
+    },
+
+    onSettled: (_res, _err, _vars, ctx) => {
+      const targetEntityId = ctx?.entityId ?? entityId.value;
+      const targetEntityType = ctx?.entityType ?? entityType.value;
+      if (targetEntityId) {
+        queryCache.invalidateQueries({
+          key: [targetEntityType, targetEntityId],
+        });
+      }
+      queryCache.invalidateQueries({
+        key: [targetEntityType === "company" ? "companies" : "speakers"],
+      });
+      queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 

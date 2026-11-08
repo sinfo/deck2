@@ -115,6 +115,11 @@ export const useSpeakerInfoMutation = defineMutation(() => {
   };
 });
 
+export interface PostSpeakerThreadVariables {
+  speakerId?: string;
+  threadData?: CreateThread;
+}
+
 export const usePostSpeakerThreadMutation = defineMutation(() => {
   const speakerId = ref<string>();
   const threadData = ref<CreateThread>();
@@ -123,10 +128,22 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
   const eventStore = useEventStore();
 
   const { mutate, ...mutation } = useMutation({
-    mutation: () => postSpeakerThread(speakerId.value!, threadData.value!),
+    mutation: (
+      vars?: PostSpeakerThreadVariables,
+      ctx?: { speakerId?: string; threadData?: CreateThread },
+    ) => {
+      const targetSpeakerId =
+        vars?.speakerId ?? ctx?.speakerId ?? speakerId.value!;
+      const targetThreadData =
+        vars?.threadData ?? ctx?.threadData ?? threadData.value!;
+      return postSpeakerThread(targetSpeakerId, targetThreadData);
+    },
 
-    onMutate: () => {
-      const key = ["speaker-communications", speakerId.value!];
+    onMutate: (vars?: PostSpeakerThreadVariables) => {
+      const targetSpeakerId = vars?.speakerId ?? speakerId.value;
+      const targetThreadData = vars?.threadData ?? threadData.value;
+
+      const key = ["speaker-communications", targetSpeakerId!];
 
       const oldVal =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -134,7 +151,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       const tempThreadId = crypto.randomUUID();
       const tempPostId = crypto.randomUUID();
 
-      const kind = threadData.value?.kind;
+      const kind = targetThreadData?.kind;
       if (!kind) {
         throw new Error("Thread kind is required for optimistic update");
       }
@@ -156,7 +173,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
           id: tempPostId,
           member: memberId,
           posted: new Date().toISOString(),
-          text: threadData.value?.text ?? "",
+          text: targetThreadData?.text ?? "",
         },
       };
 
@@ -176,10 +193,13 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       queryCache.setQueryData<ParticipationCommunications[]>(key, newVal);
 
       return {
+        speakerId: targetSpeakerId,
+        threadData: targetThreadData,
         key,
         oldVal,
         currentEventId,
         tempThreadId,
+        targetSpeakerId,
       };
     },
 
@@ -212,6 +232,24 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
         );
       }
       console.error("Create speaker thread failed:", err);
+    },
+
+    onSettled: (
+      _data,
+      _error,
+      vars?: PostSpeakerThreadVariables,
+      ctx?: { speakerId?: string; targetSpeakerId?: string },
+    ) => {
+      const idToInvalidate =
+        vars?.speakerId ??
+        ctx?.targetSpeakerId ??
+        ctx?.speakerId ??
+        speakerId.value;
+      if (idToInvalidate) {
+        queryCache.invalidateQueries({ key: ["speaker", idToInvalidate] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+      queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 
