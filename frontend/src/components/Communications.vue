@@ -31,7 +31,10 @@
             </SelectContent>
           </Select>
         </div>
-        <div class="flex-shrink-0 flex gap-1">
+        <div
+          v-if="authStore.isGoogleAuthenticated"
+          class="flex-shrink-0 flex gap-1"
+        >
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
@@ -47,10 +50,7 @@
                   @click="openGmailPicker"
                 >
                   <GmailIcon class="w-4 h-4 mr-1.5" />
-                  <span v-if="currentParticipationGmailThreadIds.length > 0">
-                    {{ currentParticipationGmailThreadIds.length }} Gmail
-                  </span>
-                  <span v-else>Link Gmail</span>
+                  <span>View Threads</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -58,7 +58,7 @@
                   {{
                     currentParticipationGmailThreadIds.length > 0
                       ? `${currentParticipationGmailThreadIds.length} Gmail thread(s) linked`
-                      : "Link Gmail threads to this participation"
+                      : "View and link Gmail threads"
                   }}
                 </p>
               </TooltipContent>
@@ -658,9 +658,23 @@
                                 </Tooltip>
                               </TooltipProvider>
 
-                              <span>{{
-                                formatDate(thread.posted, thread)
-                              }}</span>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger as-child>
+                                    <span
+                                      class="cursor-help hover:opacity-100"
+                                      :title="formatFullDateTime(thread.posted)"
+                                    >
+                                      {{ formatDate(thread.posted, thread) }}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>
+                                      {{ formatFullDateTime(thread.posted) }}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             </div>
                           </div>
                         </div>
@@ -699,7 +713,21 @@
                             </Tooltip>
                           </TooltipProvider>
 
-                          <span>{{ formatDate(thread.posted, thread) }}</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger as-child>
+                                <span
+                                  class="cursor-help hover:opacity-100"
+                                  :title="formatFullDateTime(thread.posted)"
+                                >
+                                  {{ formatDate(thread.posted, thread) }}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{{ formatFullDateTime(thread.posted) }}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
 
@@ -744,7 +772,21 @@
                             </Tooltip>
                           </TooltipProvider>
 
-                          <span>{{ formatDate(thread.posted, thread) }}</span>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger as-child>
+                                <span
+                                  class="cursor-help hover:opacity-100"
+                                  :title="formatFullDateTime(thread.posted)"
+                                >
+                                  {{ formatDate(thread.posted, thread) }}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{{ formatFullDateTime(thread.posted) }}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </div>
                       </div>
                     </div>
@@ -758,16 +800,26 @@
                         <span class="text-lg">📞</span>
                         <span>Phone call</span>
                       </div>
-                      <span
-                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
-                        :class="[
-                          getMessageDirection(thread.kind) === 'outgoing'
-                            ? 'text-white/70'
-                            : 'text-muted-foreground',
-                        ]"
-                      >
-                        {{ formatDate(thread.posted, thread) }}
-                      </span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <span
+                              class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
+                              :class="[
+                                getMessageDirection(thread.kind) === 'outgoing'
+                                  ? 'text-white/70'
+                                  : 'text-muted-foreground',
+                              ]"
+                              :title="formatFullDateTime(thread.posted)"
+                            >
+                              {{ formatDate(thread.posted, thread) }}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{{ formatFullDateTime(thread.posted) }}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
 
                     <!-- Meeting indicator -->
@@ -776,16 +828,26 @@
                       class="text-sm italic flex items-center justify-between gap-2"
                     >
                       <span>📅 Meeting scheduled</span>
-                      <span
-                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
-                        :class="[
-                          getMessageDirection(thread.kind) === 'outgoing'
-                            ? 'text-white/70'
-                            : 'text-muted-foreground',
-                        ]"
-                      >
-                        {{ formatDate(thread.posted, thread) }}
-                      </span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <span
+                              class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
+                              :class="[
+                                getMessageDirection(thread.kind) === 'outgoing'
+                                  ? 'text-white/70'
+                                  : 'text-muted-foreground',
+                              ]"
+                              :title="formatFullDateTime(thread.posted)"
+                            >
+                              {{ formatDate(thread.posted, thread) }}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{{ formatFullDateTime(thread.posted) }}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
 
                     <!-- No content fallback -->
@@ -794,11 +856,21 @@
                       class="text-sm italic opacity-60 flex items-center justify-between gap-2"
                     >
                       <span>No message content</span>
-                      <span
-                        class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none"
-                      >
-                        {{ formatDate(thread.posted, thread) }}
-                      </span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <span
+                              class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
+                              :title="formatFullDateTime(thread.posted)"
+                            >
+                              {{ formatDate(thread.posted, thread) }}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{{ formatFullDateTime(thread.posted) }}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
 
@@ -857,12 +929,12 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-2">
-          <div class="flex-1">
+          <div class="flex-1 flex flex-col">
             <Textarea
               v-model="newMessage"
               :disabled="selectedEventId !== latestEvent?.id"
               placeholder="Type your message..."
-              class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px]"
+              class="w-full h-full resize-none border rounded-md p-2 text-sm min-h-[72px] max-h-[120px]"
               @keydown.enter.ctrl="sendMessage"
               @keydown.enter.meta="sendMessage"
               @input="onMessageInput"
@@ -889,7 +961,7 @@
               >
                 <SelectTrigger
                   size="sm"
-                  class="h-7 text-xs px-2 gap-1.5 min-w-[95px] flex-1 sm:flex-none"
+                  class="h-8 text-xs px-2 gap-1.5 min-w-[95px] flex-1 sm:flex-none"
                   title="Plataforma de Comunicação"
                 >
                   <div class="flex items-center gap-1.5">
@@ -940,7 +1012,7 @@
               >
                 <SelectTrigger
                   size="sm"
-                  class="h-7 text-xs px-2 min-w-[95px] flex-1 sm:flex-none"
+                  class="h-8 text-xs px-2 min-w-[95px] flex-1 sm:flex-none"
                   title="Tipo de Mensagem"
                 >
                   <span>{{
@@ -1942,47 +2014,44 @@ const getKindColor = (kind: ThreadKind): string => {
   }
 };
 
-const isManualCommunication = (thread: ThreadWithEntry): boolean => {
+const isSameDay = (d1: Date, d2: Date): boolean => {
   return (
-    !thread.gmailMessageId &&
-    !thread.gmailThreadId &&
-    !parseEmailText(thread.entry?.text).isEmail
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+};
+
+const isSyncedCommunication = (thread?: ThreadWithEntry): boolean => {
+  if (!thread) return false;
+  return (
+    !!thread.gmailMessageId ||
+    !!thread.gmailThreadId ||
+    parseEmailText(thread.entry?.text).isEmail
   );
 };
 
 const formatDate = (dateString: string, thread?: ThreadWithEntry): string => {
-  const date = new Date(dateString);
-
-  if (thread && isManualCommunication(thread)) {
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  if (thread && isSyncedCommunication(thread)) {
+    return formatFullDateTime(dateString);
   }
 
+  const date = new Date(dateString);
   const now = new Date();
-  const diffInDays = Math.floor(
-    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
-  );
 
-  if (diffInDays === 0) {
+  if (isSameDay(date, now)) {
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
     });
-  } else if (diffInDays === 1) {
-    return "Yesterday";
-  } else if (diffInDays < 7) {
-    return date.toLocaleDateString("en-US", { weekday: "short" });
-  } else {
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
   }
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 const sendMessage = async () => {
