@@ -637,14 +637,12 @@
                                 <Tooltip>
                                   <TooltipTrigger as-child>
                                     <span
-                                      class="inline-flex items-center gap-0.5 cursor-help hover:opacity-100 opacity-80"
+                                      class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
                                     >
                                       <Pencil
                                         class="w-2.5 h-2.5 inline-block"
                                       />
-                                      <span class="text-[10px] italic"
-                                        >Edited</span
-                                      >
+                                      <span class="italic">Edited</span>
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -665,7 +663,7 @@
                                       class="cursor-help hover:opacity-100"
                                       :title="formatFullDateTime(thread.posted)"
                                     >
-                                      {{ formatDate(thread.posted, thread) }}
+                                      {{ formatDate(thread.posted) }}
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent>
@@ -698,10 +696,10 @@
                             <Tooltip>
                               <TooltipTrigger as-child>
                                 <span
-                                  class="inline-flex items-center gap-0.5 cursor-help hover:opacity-100 opacity-80"
+                                  class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
                                 >
                                   <Pencil class="w-2.5 h-2.5 inline-block" />
-                                  <span class="text-[10px] italic">Edited</span>
+                                  <span class="italic">Edited</span>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -720,7 +718,7 @@
                                   class="cursor-help hover:opacity-100"
                                   :title="formatFullDateTime(thread.posted)"
                                 >
-                                  {{ formatDate(thread.posted, thread) }}
+                                  {{ formatDate(thread.posted) }}
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -757,10 +755,10 @@
                             <Tooltip>
                               <TooltipTrigger as-child>
                                 <span
-                                  class="inline-flex items-center gap-0.5 cursor-help hover:opacity-100 opacity-80"
+                                  class="inline-flex items-center gap-1 cursor-help hover:opacity-100"
                                 >
                                   <Pencil class="w-2.5 h-2.5 inline-block" />
-                                  <span class="text-[10px] italic">Edited</span>
+                                  <span class="italic">Edited</span>
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -779,7 +777,7 @@
                                   class="cursor-help hover:opacity-100"
                                   :title="formatFullDateTime(thread.posted)"
                                 >
-                                  {{ formatDate(thread.posted, thread) }}
+                                  {{ formatDate(thread.posted) }}
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
@@ -812,7 +810,7 @@
                               ]"
                               :title="formatFullDateTime(thread.posted)"
                             >
-                              {{ formatDate(thread.posted, thread) }}
+                              {{ formatDate(thread.posted) }}
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -840,7 +838,7 @@
                               ]"
                               :title="formatFullDateTime(thread.posted)"
                             >
-                              {{ formatDate(thread.posted, thread) }}
+                              {{ formatDate(thread.posted) }}
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -863,7 +861,7 @@
                               class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
                               :title="formatFullDateTime(thread.posted)"
                             >
-                              {{ formatDate(thread.posted, thread) }}
+                              {{ formatDate(thread.posted) }}
                             </span>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -2049,20 +2047,7 @@ const isSameDay = (d1: Date, d2: Date): boolean => {
   );
 };
 
-const isSyncedCommunication = (thread?: ThreadWithEntry): boolean => {
-  if (!thread) return false;
-  return (
-    !!thread.gmailMessageId ||
-    !!thread.gmailThreadId ||
-    parseEmailText(thread.entry?.text).isEmail
-  );
-};
-
-const formatDate = (dateString: string, thread?: ThreadWithEntry): string => {
-  if (thread && isSyncedCommunication(thread)) {
-    return formatFullDateTime(dateString);
-  }
-
+const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
 
