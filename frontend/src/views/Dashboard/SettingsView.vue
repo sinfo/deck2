@@ -29,19 +29,50 @@
         <!-- Personal Information Card -->
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
-              Basic information about your account
-            </CardDescription>
+            <div class="flex items-center justify-between">
+              <div>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  Basic information about your account
+                </CardDescription>
+              </div>
+              <Button
+                v-if="!isEditingProfile"
+                variant="outline"
+                size="sm"
+                :disabled="isUploadingImage"
+                @click="isEditingProfile = true"
+              >
+                Edit
+              </Button>
+            </div>
           </CardHeader>
           <CardContent class="space-y-4">
             <div class="flex items-center space-x-4">
-              <img
-                :src="user.data.img"
-                :alt="user.data.name"
-                class="w-16 h-16 rounded-full object-cover border-2 border-border"
-                @error="handleImageError"
-              />
+              <div class="relative group">
+                <Image
+                  :src="profileImageUrl"
+                  :alt="`${user.data.name} photo`"
+                  class="w-16 h-16 rounded-full object-cover border-2 border-border"
+                />
+                <div
+                  v-if="isEditingProfile"
+                  class="absolute inset-0 w-16 h-16 rounded-full bg-black/0 group-hover:bg-black/50 transition-all cursor-pointer flex items-center justify-center"
+                  :class="{ 'pointer-events-none': isUploadingImage }"
+                  @click="triggerFileInput"
+                >
+                  <Pencil
+                    class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  />
+                </div>
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept="image/*"
+                  class="hidden"
+                  @change="handleImageUpload"
+                />
+              </div>
               <div>
                 <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
                 <p class="text-sm text-muted-foreground">
@@ -51,6 +82,28 @@
                   SINFO ID: {{ user.data.sinfoid }}
                 </p>
               </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div
+              v-if="isEditingProfile"
+              class="flex justify-end gap-2 pt-4 border-t"
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                :disabled="isUploadingImage"
+                @click="cancelProfileEdit"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                :disabled="!previewImageUrl || isUploadingImage"
+                @click="updateProfileChanges"
+              >
+                {{ isUploadingImage ? "Uploading..." : "Update Profile" }}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -257,7 +310,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import { useQuery, useMutation, useQueryCache } from "@pinia/colada";
 import { getMe } from "@/api/members";
 import { updateContact } from "@/api/contacts";
@@ -276,8 +329,15 @@ import Button from "@/components/ui/button/Button.vue";
 import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
+import Image from "@/components/Image.vue";
+import { Pencil } from "lucide-vue-next";
+import { useUploadImageMutation } from "@/mutations/me";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
+
+const isEditingProfile = ref(false);
+const fileInput = ref<HTMLInputElement>();
+const previewImageUrl = ref<string | null>(null);
 
 const isEditMode = ref(false);
 const queryCache = useQueryCache();
@@ -291,6 +351,79 @@ const {
 } = useQuery({
   key: ["me"],
   query: getMe,
+});
+
+const profileImageUrl = computed(
+  () => previewImageUrl.value || user.value?.data.img,
+);
+
+const uploadImageMutation = useUploadImageMutation();
+const isUploadingImage = uploadImageMutation.isLoading;
+
+const triggerFileInput = () => fileInput.value?.click();
+
+const setPreviewImageUrl = (file?: File) => {
+  if (previewImageUrl.value) {
+    try {
+      URL.revokeObjectURL(previewImageUrl.value);
+    } catch {
+      /* ignore */
+    }
+    previewImageUrl.value = null;
+  }
+
+  if (!file) {
+    uploadImageMutation.file.value = undefined;
+    return;
+  }
+
+  uploadImageMutation.file.value = file;
+  previewImageUrl.value = URL.createObjectURL(file);
+};
+
+const handleImageUpload = (ev: Event) => {
+  const input = ev.target as HTMLInputElement;
+  const f = input.files && input.files[0];
+  if (!f) return;
+  setPreviewImageUrl(f);
+};
+
+const cancelProfileEdit = () => {
+  isEditingProfile.value = false;
+  try {
+    if (previewImageUrl.value) {
+      URL.revokeObjectURL(previewImageUrl.value);
+    }
+  } catch {
+    /* ignore */
+  }
+  previewImageUrl.value = null;
+  uploadImageMutation.file.value = undefined;
+  if (fileInput.value) fileInput.value.value = "";
+};
+
+const updateProfileChanges = async () => {
+  if (uploadImageMutation.file.value) {
+    try {
+      await uploadImageMutation.mutate();
+    } catch {
+      /* ignore */
+    }
+  }
+  isEditingProfile.value = false;
+  setPreviewImageUrl();
+  if (fileInput.value) fileInput.value.value = "";
+};
+
+onUnmounted(() => {
+  if (previewImageUrl.value) {
+    try {
+      URL.revokeObjectURL(previewImageUrl.value);
+    } catch {
+      /* ignore */
+    }
+    previewImageUrl.value = null;
+  }
 });
 
 // Update contact mutation
@@ -329,11 +462,6 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
     ...authStore.member?.contactObject,
     ...contactData,
   };
-};
-
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = "/src/assets/noImage.png"; // Fallback image
 };
 
 // Utility functions
