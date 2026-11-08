@@ -1472,14 +1472,11 @@ const showThreadDivider = (index: number): boolean => {
   // Show platform divider before the first message at the start of the chat
   if (index === 0) {
     if (selectedChannelTab.value === "all") return true;
-    if (
+    return (
       selectedChannelTab.value === "gmail" &&
       selectedGmailThreadTab.value === "all" &&
       availableGmailThreadTabs.value.length > 1
-    ) {
-      return true;
-    }
-    return false;
+    );
   }
 
   const current = comms[index];
