@@ -286,7 +286,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from "vue";
+import { ref, computed } from "vue";
 import { useQuery, useMutation, useQueryCache } from "@pinia/colada";
 import { getMe } from "@/api/members";
 import { updateContact } from "@/api/contacts";
@@ -308,12 +308,19 @@ import ContactForm from "@/components/companies/ContactForm.vue";
 import Image from "@/components/Image.vue";
 import { Pencil } from "lucide-vue-next";
 import { useUploadImageMutation } from "@/mutations/me";
+import { useImageUpload } from "@/composables/useImageUpload";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { useToast } from "@/lib/toast";
 
 const fileInput = ref<HTMLInputElement>();
-const previewImageUrl = ref<string | null>(null);
+const {
+  imagePreview,
+  selectedImageFile,
+  imageError,
+  handleFileChange,
+  reset: resetImageUpload,
+} = useImageUpload();
 
 const { toast } = useToast();
 
@@ -331,9 +338,15 @@ const {
   query: getMe,
 });
 
-const profileImageUrl = computed(
-  () => previewImageUrl.value || user.value?.data.img,
-);
+const cacheBuster = ref(Date.now());
+
+const profileImageUrl = computed(() => {
+  if (imagePreview.value) return imagePreview.value;
+  const img = user.value?.data.img;
+  if (!img) return "";
+  const separator = img.includes("?") ? "&" : "?";
+  return `${img}${separator}t=${cacheBuster.value}`;
+});
 
 const uploadImageMutation = useUploadImageMutation();
 const isUploadingImage = uploadImageMutation.isLoading;
@@ -341,52 +354,42 @@ const isUploadingImage = uploadImageMutation.isLoading;
 const triggerFileInput = () => fileInput.value?.click();
 
 const handleImageUpload = async (ev: Event) => {
-  const input = ev.target as HTMLInputElement;
-  const f = input.files && input.files[0];
-  if (!f) return;
+  handleFileChange(ev);
 
-  if (previewImageUrl.value) {
-    try {
-      URL.revokeObjectURL(previewImageUrl.value);
-    } catch {
-      /* ignore */
-    }
-  }
-  previewImageUrl.value = URL.createObjectURL(f);
-  uploadImageMutation.file.value = f;
-
-  try {
-    await uploadImageMutation.mutate();
-    toast.success({ title: "Profile picture updated successfully" });
-  } catch (err) {
+  if (imageError.value) {
     toast.error({
       title: "Failed to update profile picture",
-      description: String(err),
+      description: imageError.value,
+    });
+    resetImageUpload();
+    if (fileInput.value) fileInput.value.value = "";
+    return;
+  }
+
+  const f = selectedImageFile.value;
+  if (!f) return;
+
+  try {
+    await uploadImageMutation.mutateAsync(f);
+    cacheBuster.value = Date.now();
+    toast.success({ title: "Profile picture updated successfully" });
+  } catch (err: unknown) {
+    console.error("Failed to update profile picture:", err);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const axiosErr = err as any;
+    const msg =
+      axiosErr?.response?.data ||
+      axiosErr?.message ||
+      "Failed to update profile picture";
+    toast.error({
+      title: "Failed to update profile picture",
+      description: typeof msg === "string" ? msg : JSON.stringify(msg),
     });
   } finally {
-    if (previewImageUrl.value) {
-      try {
-        URL.revokeObjectURL(previewImageUrl.value);
-      } catch {
-        /* ignore */
-      }
-      previewImageUrl.value = null;
-    }
-    uploadImageMutation.file.value = undefined;
+    resetImageUpload();
     if (fileInput.value) fileInput.value.value = "";
   }
 };
-
-onUnmounted(() => {
-  if (previewImageUrl.value) {
-    try {
-      URL.revokeObjectURL(previewImageUrl.value);
-    } catch {
-      /* ignore */
-    }
-    previewImageUrl.value = null;
-  }
-});
 
 // Update contact mutation
 const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({

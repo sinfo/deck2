@@ -1,16 +1,14 @@
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
 import { uploadMyImage } from "@/api/me";
-import { ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { getMe } from "@/api/members";
 
 export const useUploadImageMutation = defineMutation(() => {
-  const file = ref<File>();
   const queryCache = useQueryCache();
   const authStore = useAuthStore();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () => uploadMyImage(file.value!),
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (file: File) => uploadMyImage(file),
     onSettled: async () => {
       queryCache.invalidateQueries({ key: ["me"] });
       try {
@@ -26,7 +24,7 @@ export const useUploadImageMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
-    file,
   };
 });
