@@ -149,6 +149,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
+        channel: threadData.value?.channel,
         comments: [],
         posted: now,
         status: ThreadStatus.ThreadStatusPending,

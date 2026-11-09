@@ -236,6 +236,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
+        channel: threadData.value?.channel,
         comments: [],
         posted: now,
         status: ThreadStatus.ThreadStatusPending,

@@ -40,13 +40,29 @@ func (ts ThreadStatus) IsValid() bool {
 	return ts != ThreadStatusApproved && ts != ThreadStatusReviewed && ts != ThreadStatusPending
 }
 
+// ThreadChannel is the communication channel (e.g. Gmail or LinkedIn)
+type ThreadChannel string
+
+const (
+	ThreadChannelGmail    ThreadChannel = "GMAIL"
+	ThreadChannelLinkedIn ThreadChannel = "LINKEDIN"
+	ThreadChannelOther    ThreadChannel = "OTHER"
+)
+
+// IsValid checks the validity of the thread channel
+func (tc ThreadChannel) IsValid() bool {
+	return tc == ThreadChannelGmail ||
+		tc == ThreadChannelLinkedIn ||
+		tc == ThreadChannelOther
+}
+
 type Thread struct {
 
 	// Thread's ID (_id of mongodb).
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
 	// Time posted
-	Posted  time.Time `json:"posted" bson:"posted"`
+	Posted time.Time `json:"posted" bson:"posted"`
 
 	// Entry is an _id of Post (see models.Post).
 	Entry primitive.ObjectID `json:"entry" bson:"entry"`
@@ -73,6 +89,9 @@ type Thread struct {
 
 	// GmailThreadId is the ID of the Gmail thread this message belongs to.
 	GmailThreadId string `json:"gmailThreadId,omitempty" bson:"gmailThreadId,omitempty"`
+
+	// Channel can be "GMAIL", "LINKEDIN" or "OTHER".
+	Channel ThreadChannel `json:"channel,omitempty" bson:"channel,omitempty"`
 }
 
 type ThreadWithEntry struct {
@@ -80,7 +99,7 @@ type ThreadWithEntry struct {
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
 	// Time posted
-	Posted  time.Time `json:"posted" bson:"posted"`
+	Posted time.Time `json:"posted" bson:"posted"`
 
 	// Entry is an _id of Post (see models.Post).
 	Entry *Post `json:"entry" bson:"entry"`
@@ -106,4 +125,7 @@ type ThreadWithEntry struct {
 
 	// GmailThreadId is the ID of the Gmail thread this message belongs to.
 	GmailThreadId string `json:"gmailThreadId,omitempty" bson:"gmailThreadId,omitempty"`
+
+	// Channel can be "GMAIL", "LINKEDIN" or "OTHER".
+	Channel ThreadChannel `json:"channel,omitempty" bson:"channel,omitempty"`
 }
