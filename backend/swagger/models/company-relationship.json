@@ -1,0 +1,28 @@
+{
+    "type": "object",
+    "required": [
+        "type",
+        "company"
+    ],
+    "properties": {
+        "type": {
+            "type": "string",
+            "enum": [
+                "SUBSIDIARY_OF",
+                "PARENT_OF",
+                "MERGED_INTO",
+                "ABSORBED",
+                "REBRANDED_TO",
+                "REBRANDED_FROM"
+            ]
+        },
+        "company": {
+            "type": "string",
+            "description": "ID of the related company"
+        },
+        "since": {
+            "type": "string",
+            "format": "date-time"
+        }
+    }
+}

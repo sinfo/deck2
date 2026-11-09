@@ -223,6 +223,16 @@ func InitializeDatabase() {
 		},
 	)
 
+	// Index to quickly find companies related to a given company
+	if _, err := Companies.Collection.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.D{{Key: "relationships.company", Value: 1}},
+		},
+	); err != nil {
+		log.Println("Warning: failed to ensure companies relationships index:", err)
+	}
+
 	log.Println("Connected to the database successfully")
 
 	go CleanupCache()
