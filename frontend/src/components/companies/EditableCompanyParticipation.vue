@@ -118,7 +118,7 @@
           <div class="space-y-2">
             <Label for="package-select">Package</Label>
             <div>
-              <Select v-model="selectedPackageId">
+              <Select v-model="selectedPackageId" :disabled="isSaving">
                 <SelectTrigger>
                   <SelectValue placeholder="Select package" />
                 </SelectTrigger>
@@ -137,12 +137,6 @@
                 class="text-xs text-muted-foreground mt-1"
               >
                 Loading packages...
-              </div>
-              <div
-                v-if="isPackageUpdating"
-                class="text-xs text-muted-foreground mt-1"
-              >
-                Updating package...
               </div>
               <div
                 v-if="!isPackageLoading && packageOptions.length === 0"
@@ -261,12 +255,9 @@ const editForm = reactive<UpdateCompanyParticipationData>({
   notes: props.participation.notes,
 });
 
-const packageOptions = ref<{ id: string; name: string }[]>([]);
 const selectedPackageId = ref<string>(
   props.participation.package ? String(props.participation.package) : "",
 );
-const packageName = ref<string | null>(null);
-const isPackageUpdating = ref(false);
 const packageMutation = useCompanyParticipationPackageMutation();
 packageMutation.companyId.value = props.companyId;
 
@@ -284,6 +275,36 @@ const { data: membersData } = useQuery({
   query: () => getAllMembers(),
 });
 
+const packageOptions = computed(() => {
+  const allPkgs = (packagesData.value || []) as Package[];
+  const eventId = props.participation?.event;
+  if (!eventId) return [];
+
+  const ev = eventsData.value?.data?.find((e) => e.id === eventId);
+  if (!ev) return allPkgs.map((p) => ({ id: String(p.id), name: p.name }));
+
+  const name = String(ev.name || "");
+  const pkgs = allPkgs.filter((ap) => String(ap.name || "").startsWith(name));
+
+  return pkgs.map((p) => ({
+    id: String(p.id),
+    name: p.name || "(no name)",
+  }));
+});
+
+const currentPackageId = computed(() =>
+  props.participation.package ? String(props.participation.package) : "",
+);
+const pkgQuery = usePackageQuery(currentPackageId);
+const packageName = computed(() => {
+  if (!currentPackageId.value) return null;
+  const pkgFromList = (packagesData.value as Package[] | undefined)?.find(
+    (p) => String(p.id) === currentPackageId.value,
+  );
+  if (pkgFromList) return pkgFromList.name;
+  return pkgQuery.data.value?.name || null;
+});
+
 const startEditing = () => {
   // entering edit mode for participation
   isEditing.value = true;
@@ -293,112 +314,43 @@ const startEditing = () => {
   const confirmedDate = props.participation.confirmed;
   editForm.confirmed = formatToDatetimeLocal(confirmedDate);
   editForm.notes = props.participation.notes;
-
-  // Load event packages for selection (no-op if events not yet loaded)
-  loadEventPackages(props.participation.event);
+  selectedPackageId.value = props.participation.package
+    ? String(props.participation.package)
+    : "";
 };
-
-const loadEventPackages = async (eventId: number) => {
-  packageOptions.value = [];
-  const ev = eventsData.value?.data?.find((e) => e.id === eventId);
-
-  if (!ev) return;
-
-  try {
-    const allPkgs = (packagesData.value || []) as Package[];
-    const name = String(ev.name || "");
-    const pkgs =
-      eventId != null
-        ? allPkgs.filter((ap) => String(ap.name || "").startsWith(name))
-        : [];
-
-    packageOptions.value = pkgs.map((p) => ({
-      id: String(p.id),
-      name: p.name || "(no name)",
-    }));
-  } catch (err) {
-    console.error("Failed to load packages for event:", err);
-    packageOptions.value = [];
-  }
-};
-
-const pkgQuery = usePackageQuery(selectedPackageId);
-const packageData = pkgQuery.data;
-
-watch(
-  () => packageData.value,
-  (val) => {
-    packageName.value = val?.name || null;
-  },
-  { immediate: true },
-);
 
 watch(
   () => props.participation.package,
   (newVal) => {
-    selectedPackageId.value = newVal ? String(newVal) : "";
-  },
-);
-
-watch(
-  () => eventsData.value?.data,
-  (newVal) => {
-    if (isEditing.value && newVal) {
-      loadEventPackages(props.participation.event);
+    if (!isEditing.value) {
+      selectedPackageId.value = newVal ? String(newVal) : "";
     }
   },
 );
-
-const onPackageChange = async () => {
-  if (!selectedPackageId.value) return;
-  const previous = props.participation.package
-    ? String(props.participation.package)
-    : "";
-  try {
-    isPackageUpdating.value = true;
-    packageMutation.packageId.value = selectedPackageId.value;
-    await packageMutation.mutate();
-    try {
-      await pkgQuery.refetch();
-      packageName.value = packageData.value?.name || null;
-    } catch (err) {
-      console.error("Failed to load package name:", err);
-      packageName.value = null;
-    }
-  } catch (err) {
-    console.error("Failed to update participation package:", err);
-    selectedPackageId.value = previous;
-    try {
-      await pkgQuery.refetch();
-      packageName.value = packageData.value?.name || null;
-    } catch (err) {
-      console.error("Failed to load package name:", err);
-      packageName.value = null;
-    }
-    toast.error({
-      title: "Failed to update package",
-      description:
-        "Could not update the participation package. Your selection was reverted.",
-    });
-  } finally {
-    isPackageUpdating.value = false;
-  }
-};
-
-// Watch for select changes (fires when user picks a package from the Select)
-watch(selectedPackageId, (newVal, oldVal) => {
-  if (newVal === oldVal) return;
-  onPackageChange();
-});
 
 const cancelEditing = () => {
   isEditing.value = false;
+  selectedPackageId.value = props.participation.package
+    ? String(props.participation.package)
+    : "";
 };
 
 const saveChanges = async () => {
   isSaving.value = true;
 
   try {
+    const currentPkgId = props.participation.package
+      ? String(props.participation.package)
+      : "";
+    const packageChanged =
+      selectedPackageId.value && selectedPackageId.value !== currentPkgId;
+
+    if (packageChanged) {
+      packageMutation.companyId.value = props.companyId;
+      packageMutation.packageId.value = selectedPackageId.value;
+      await packageMutation.mutateAsync();
+    }
+
     const dataToSend = {
       ...editForm,
       confirmed: convertDatetimeLocalToISO(editForm.confirmed!),
@@ -406,11 +358,20 @@ const saveChanges = async () => {
 
     updateMutation.companyId.value = props.companyId;
     updateMutation.data.value = dataToSend;
-    updateMutation.mutate();
+    await updateMutation.mutateAsync();
+
+    toast.success({
+      title: "Participation updated",
+      description: "Company participation has been updated successfully.",
+    });
 
     isEditing.value = false;
   } catch (error) {
     console.error("Failed to update company participation:", error);
+    toast.error({
+      title: "Failed to update participation",
+      description: "Could not update company participation. Please try again.",
+    });
   } finally {
     isSaving.value = false;
   }
