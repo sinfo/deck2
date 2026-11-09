@@ -17,7 +17,11 @@
         <Textarea
           v-model="newMessage"
           :disabled="disabled"
-          placeholder="Type your message..."
+          :placeholder="
+            messageKind === ThreadKind.ThreadKindPhoneCall
+              ? 'Registar notas da chamada telefónica...'
+              : 'Type your message...'
+          "
           class="w-full h-full resize-none border rounded-md p-2 text-sm min-h-[72px] max-h-[120px]"
           @keydown.enter.ctrl="emit('send')"
           @keydown.enter.meta="emit('send')"
@@ -34,8 +38,17 @@
           {{ isSending ? "Sending..." : "Send" }}
         </Button>
         <div class="flex gap-1.5 flex-1 sm:flex-none">
+          <div
+            v-if="messageKind === ThreadKind.ThreadKindPhoneCall"
+            class="h-8 text-xs px-2.5 gap-1.5 min-w-[95px] flex-1 sm:flex-none rounded-md border bg-muted/60 dark:bg-muted/40 border-border text-foreground flex items-center select-none"
+            title="Chamada Telefónica"
+          >
+            <Phone class="size-3.5 text-zinc-500 dark:text-zinc-400" />
+            <span class="font-medium">Telefone</span>
+          </div>
+
           <!-- Channel Selector (Gmail vs LinkedIn vs Outro) -->
-          <Select v-model="messageChannel" :disabled="disabled">
+          <Select v-else v-model="messageChannel" :disabled="disabled">
             <SelectTrigger
               size="sm"
               class="h-8 text-xs px-2 gap-1.5 min-w-[95px] flex-1 sm:flex-none"
@@ -135,9 +148,10 @@
 </template>
 
 <script setup lang="ts">
+import { watch } from "vue";
 import { ThreadChannel, ThreadKind } from "@/dto/threads";
 import { GmailIcon, LinkedInIcon } from "@/components/icons";
-import { MessageSquare } from "lucide-vue-next";
+import { MessageSquare, Phone } from "lucide-vue-next";
 import Button from "../ui/button/Button.vue";
 import Textarea from "../ui/textarea/Textarea.vue";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
@@ -147,6 +161,16 @@ const messageChannel = defineModel<ThreadChannel>("channel", {
   required: true,
 });
 const messageKind = defineModel<ThreadKind>("kind", { required: true });
+
+watch(
+  () => messageKind.value,
+  (newKind) => {
+    if (newKind === ThreadKind.ThreadKindPhoneCall) {
+      messageChannel.value = ThreadChannel.Other;
+    }
+  },
+  { immediate: true },
+);
 
 const emit = defineEmits<{
   (event: "send"): void;

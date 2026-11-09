@@ -107,6 +107,12 @@ export const getThreadKey = (thread: ThreadWithEntry): string | null =>
   thread.gmailThreadId || null;
 
 export const getThreadChannel = (thread: ThreadWithEntry): ThreadChannel => {
+  if (
+    thread.kind === ThreadKind.ThreadKindPhoneCall ||
+    thread.kind === ThreadKind.ThreadKindMeeting
+  ) {
+    return ThreadChannel.Other;
+  }
   if (thread.channel === ThreadChannel.LinkedIn) return ThreadChannel.LinkedIn;
   if (thread.channel === ThreadChannel.Other) return ThreadChannel.Other;
   return ThreadChannel.Gmail;
@@ -114,7 +120,7 @@ export const getThreadChannel = (thread: ThreadWithEntry): ThreadChannel => {
 
 export const getBubbleClasses = (thread: ThreadWithEntry): string => {
   if (thread.kind === ThreadKind.ThreadKindPhoneCall) {
-    return "bg-purple-100 text-purple-900 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-900";
+    return "bg-zinc-100 text-zinc-950 border border-zinc-200 dark:bg-zinc-900/60 dark:text-zinc-100 dark:border-zinc-800";
   }
 
   const isOutgoing = getMessageDirection(thread.kind) === "outgoing";
@@ -155,6 +161,9 @@ export const getHeaderCardClasses = (thread: ThreadWithEntry): string => {
 };
 
 export const getDividerLabel = (thread: ThreadWithEntry): string => {
+  if (thread.kind === ThreadKind.ThreadKindPhoneCall) {
+    return "Chamada Telefónica";
+  }
   switch (getThreadChannel(thread)) {
     case ThreadChannel.LinkedIn:
       return "LinkedIn";
@@ -204,7 +213,7 @@ export const getKindColor = (kind: ThreadKind): string => {
     case ThreadKind.ThreadKindFrom:
       return "bg-green-500";
     case ThreadKind.ThreadKindPhoneCall:
-      return "bg-purple-500";
+      return "bg-zinc-500";
     case ThreadKind.ThreadKindMeeting:
       return "bg-orange-500";
     case ThreadKind.ThreadKindTemplate:
@@ -241,7 +250,7 @@ export const formatDate = (dateString: string): string => {
   });
 };
 
-export type ChannelTab = "all" | "gmail" | "linkedin" | "other";
+export type ChannelTab = "all" | "gmail" | "linkedin" | "calls" | "other";
 
 export interface ThreadGroupInfo {
   id: string;

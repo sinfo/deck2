@@ -1,5 +1,5 @@
 import { computed, ref, type ComputedRef } from "vue";
-import { ThreadChannel, type ThreadWithEntry } from "@/dto/threads";
+import { ThreadChannel, ThreadKind, type ThreadWithEntry } from "@/dto/threads";
 import {
   getThreadChannel,
   getThreadKey,
@@ -14,26 +14,34 @@ export const useCommunicationThreads = (
   const selectedChannelTab = ref<ChannelTab>("all");
   const selectedGmailThreadTab = ref<string>("all");
 
-  const channelCounts = computed(() => {
-    const counts = {
-      [ThreadChannel.Gmail]: 0,
-      [ThreadChannel.LinkedIn]: 0,
-      [ThreadChannel.Other]: 0,
-    };
-    for (const t of communications.value) {
-      counts[getThreadChannel(t)]++;
-    }
-    return counts;
-  });
+  const callsCount = computed(
+    () =>
+      communications.value.filter(
+        (t) => t.kind === ThreadKind.ThreadKindPhoneCall,
+      ).length,
+  );
 
   const gmailCommunicationsCount = computed(
-    () => channelCounts.value[ThreadChannel.Gmail],
+    () =>
+      communications.value.filter(
+        (t) => getThreadChannel(t) === ThreadChannel.Gmail,
+      ).length,
   );
+
   const linkedInCommunicationsCount = computed(
-    () => channelCounts.value[ThreadChannel.LinkedIn],
+    () =>
+      communications.value.filter(
+        (t) => getThreadChannel(t) === ThreadChannel.LinkedIn,
+      ).length,
   );
+
   const otherCommunicationsCount = computed(
-    () => channelCounts.value[ThreadChannel.Other],
+    () =>
+      communications.value.filter(
+        (t) =>
+          getThreadChannel(t) === ThreadChannel.Other &&
+          t.kind !== ThreadKind.ThreadKindPhoneCall,
+      ).length,
   );
 
   const availableGmailThreadTabs = computed<ThreadGroupInfo[]>(() => {
@@ -88,6 +96,10 @@ export const useCommunicationThreads = (
     const comms = communications.value;
     if (!comms.length) return [];
 
+    if (selectedChannelTab.value === "calls") {
+      return comms.filter((t) => t.kind === ThreadKind.ThreadKindPhoneCall);
+    }
+
     if (selectedChannelTab.value === "gmail") {
       const gmailComms = comms.filter(
         (t) => getThreadChannel(t) === ThreadChannel.Gmail,
@@ -110,7 +122,11 @@ export const useCommunicationThreads = (
     }
 
     if (selectedChannelTab.value === "other") {
-      return comms.filter((t) => getThreadChannel(t) === ThreadChannel.Other);
+      return comms.filter(
+        (t) =>
+          getThreadChannel(t) === ThreadChannel.Other &&
+          t.kind !== ThreadKind.ThreadKindPhoneCall,
+      );
     }
 
     // All: return all messages in chronological order
@@ -120,6 +136,15 @@ export const useCommunicationThreads = (
   const showThreadDivider = (index: number): boolean => {
     const comms = filteredCommunications.value;
     if (comms.length === 0) return false;
+
+    const current = comms[index];
+
+    if (
+      current.kind === ThreadKind.ThreadKindPhoneCall ||
+      selectedChannelTab.value === "calls"
+    ) {
+      return false;
+    }
 
     // Show platform divider before the first message at the start of the chat
     if (index === 0) {
@@ -131,17 +156,26 @@ export const useCommunicationThreads = (
       );
     }
 
-    const current = comms[index];
-    const prev = comms[index - 1];
-
     if (selectedChannelTab.value === "all") {
+      let prevChannelMessage: ThreadWithEntry | null = null;
+      for (let i = index - 1; i >= 0; i--) {
+        if (comms[i].kind !== ThreadKind.ThreadKindPhoneCall) {
+          prevChannelMessage = comms[i];
+          break;
+        }
+      }
+
+      if (!prevChannelMessage) {
+        return true;
+      }
+
       const currentChannel = getThreadChannel(current);
-      const prevChannel = getThreadChannel(prev);
+      const prevChannel = getThreadChannel(prevChannelMessage);
       if (currentChannel !== prevChannel) {
         return true;
       }
       const currentKey = getThreadKey(current);
-      const prevKey = getThreadKey(prev);
+      const prevKey = getThreadKey(prevChannelMessage);
       return !!(currentKey && prevKey && currentKey !== prevKey);
     }
 
@@ -150,6 +184,7 @@ export const useCommunicationThreads = (
       selectedGmailThreadTab.value === "all" &&
       availableGmailThreadTabs.value.length > 1
     ) {
+      const prev = comms[index - 1];
       const currentKey = getThreadKey(current);
       const prevKey = getThreadKey(prev);
       return !!(currentKey && prevKey && currentKey !== prevKey);
@@ -161,6 +196,7 @@ export const useCommunicationThreads = (
   return {
     selectedChannelTab,
     selectedGmailThreadTab,
+    callsCount,
     gmailCommunicationsCount,
     linkedInCommunicationsCount,
     otherCommunicationsCount,

@@ -962,6 +962,8 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	channel := models.ThreadChannelGmail
 	if atd.Channel != nil {
 		channel = *atd.Channel
+	} else if *atd.Kind == models.ThreadKindPhoneCall || *atd.Kind == models.ThreadKindMeeting {
+		channel = models.ThreadChannelOther
 	}
 
 	// only then create the thread
