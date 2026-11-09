@@ -154,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive } from "vue";
+import { computed, ref, reactive, watch } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
@@ -218,7 +218,13 @@ const { data: membersData } = useQuery({
 
 const updateMutation = useSpeakerParticipationMutation();
 
-updateMutation.speakerId.value = props.speakerId;
+watch(
+  () => props.speakerId,
+  (newId) => {
+    updateMutation.speakerId.value = newId;
+  },
+  { immediate: true },
+);
 
 const startEditing = () => {
   isEditing.value = true;
@@ -240,7 +246,11 @@ const saveChanges = async () => {
   isSaving.value = true;
 
   try {
-    updateMutation.mutate(editForm);
+    updateMutation.speakerId.value = props.speakerId;
+    await updateMutation.mutateAsync({
+      speakerId: props.speakerId,
+      data: editForm,
+    });
     isEditing.value = false;
   } catch (error) {
     console.error("Failed to update speaker participation:", error);

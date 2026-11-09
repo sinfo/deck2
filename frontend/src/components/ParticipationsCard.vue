@@ -154,7 +154,7 @@ import {
 } from "@/dto";
 
 import { useQuery } from "@pinia/colada";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import Image from "./Image.vue";
 import EmptyStateCard from "./ui/EmptyStateCard.vue";
 
@@ -182,6 +182,15 @@ const createCompanyParticipationMutation =
   useCreateCompanyParticipationMutation();
 const createSpeakerParticipationMutation =
   useCreateSpeakerParticipationMutation();
+
+watch(
+  () => props.entityId,
+  (id) => {
+    createCompanyParticipationMutation.companyId.value = id;
+    createSpeakerParticipationMutation.speakerId.value = id;
+  },
+  { immediate: true },
+);
 
 const isCreatingParticipation = computed(
   () =>
@@ -261,14 +270,20 @@ const createParticipation = async () => {
 
   try {
     if (props.entityType === "company") {
-      createCompanyParticipationMutation.companyId.value = props.entityId;
-      createCompanyParticipationMutation.data.value = {
+      const data = {
         partner: false,
       };
-      await createCompanyParticipationMutation.mutate();
+      createCompanyParticipationMutation.companyId.value = props.entityId;
+      createCompanyParticipationMutation.data.value = data;
+      await createCompanyParticipationMutation.mutateAsync({
+        companyId: props.entityId,
+        data,
+      });
     } else if (props.entityType === "speaker") {
       createSpeakerParticipationMutation.speakerId.value = props.entityId;
-      await createSpeakerParticipationMutation.mutate();
+      await createSpeakerParticipationMutation.mutateAsync({
+        speakerId: props.entityId,
+      });
     }
   } catch (error) {
     console.error("Failed to create participation:", error);

@@ -192,7 +192,6 @@ const packageOptions = computed(() => {
 
 // Package mutation (companies only)
 const packageMutation = useCompanyParticipationPackageMutation();
-packageMutation.companyId.value = props.entityId;
 
 const selectedPackageId = ref<string>(
   isCompanyParticipation(props.participation) && props.participation?.package
@@ -278,18 +277,31 @@ const isDateUpdating = ref(false);
 
 // Participation mutation for updating confirmed date (companies only)
 const companyParticipationMutation = useCompanyParticipationMutation();
-companyParticipationMutation.companyId.value = props.entityId;
+
+watch(
+  () => props.entityId,
+  (id) => {
+    packageMutation.companyId.value = id;
+    companyParticipationMutation.companyId.value = id;
+  },
+  { immediate: true },
+);
 
 const onConfirmedDateChange = async (newValue: Date | null) => {
   if (!newValue) return;
   try {
     isDateUpdating.value = true;
     const isoDate = newValue.toISOString();
-    companyParticipationMutation.data.value = {
+    const data = {
       ...props.participation,
       confirmed: isoDate,
     };
-    await companyParticipationMutation.mutateAsync();
+    companyParticipationMutation.companyId.value = props.entityId;
+    companyParticipationMutation.data.value = data;
+    await companyParticipationMutation.mutateAsync({
+      companyId: props.entityId,
+      data,
+    });
     toast.success({ title: "Confirmation date updated" });
   } catch (err) {
     console.error("Failed to update confirmation date:", err);
@@ -304,8 +316,12 @@ const onPackageChange = async (newValue: unknown) => {
   if (!v) return;
   try {
     isPackageUpdating.value = true;
+    packageMutation.companyId.value = props.entityId;
     packageMutation.packageId.value = v;
-    await packageMutation.mutateAsync();
+    await packageMutation.mutateAsync({
+      companyId: props.entityId,
+      packageId: v,
+    });
     toast.success({ title: "Package updated" });
   } catch (err) {
     console.error("Failed to update package:", err);

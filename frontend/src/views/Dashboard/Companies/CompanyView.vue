@@ -129,23 +129,23 @@ watch(activeTab, (tab) => {
   router.replace({ query: { ...route.query, tab } });
 });
 
-const companyId = route.params.companyId;
+const companyId = computed(() => route.params.companyId as string);
 const { data: company } = useQuery({
-  key: () => ["company", companyId],
-  query: () => getCompanyById(companyId as string),
+  key: () => ["company", companyId.value],
+  query: () => getCompanyById(companyId.value),
 });
 
 const { data: representativesData, isLoading: isRepresentativesLoading } =
   useQuery({
-    key: () => ["company-representatives", companyId],
-    query: () => getCompanyRepresentatives(companyId as string),
+    key: () => ["company-representatives", companyId.value],
+    query: () => getCompanyRepresentatives(companyId.value),
   });
 
 const representatives = computed(() => representativesData.value?.data);
 
 const handleCompanyUpdated = () => {
   // Invalidate the company query to refresh the data
-  queryCache.invalidateQueries({ key: ["company", companyId] });
+  queryCache.invalidateQueries({ key: ["company", companyId.value] });
 };
 
 const eventStore = useEventStore();

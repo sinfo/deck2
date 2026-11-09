@@ -26,15 +26,50 @@ import { useEventStore } from "@/stores/event";
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
 import { ref } from "vue";
 
+export interface UpdateSpeakerStatusVariables {
+  speakerId: string;
+  status: string;
+}
+
+export interface UpdateSpeakerStepVariables {
+  speakerId: string;
+  step: number;
+}
+
+export interface PostSpeakerThreadVariables {
+  speakerId?: string;
+  id?: string;
+  threadData?: CreateThread;
+  data?: CreateThread;
+}
+
+interface PostSpeakerThreadContext {
+  key: string[];
+  oldVal: ParticipationCommunications[];
+  targetId?: string;
+}
+
+export interface UpdateSpeakerParticipationVariables {
+  speakerId: string;
+  data: UpdateSpeakerParticipationData;
+}
+
 export const useSpeakerParticipationStepMutation = defineMutation(() => {
   const speakerId = ref<string>();
   const step = ref<number>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () =>
-      updateSpeakerParticipationStep(speakerId.value!, step.value!),
-    onSettled: () => {
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars?: UpdateSpeakerStepVariables) => {
+      const targetId = vars?.speakerId ?? speakerId.value!;
+      const targetStep = vars?.step ?? step.value!;
+      return updateSpeakerParticipationStep(targetId, targetStep);
+    },
+    onSettled: (_data, _err, vars) => {
+      const targetId = vars?.speakerId ?? speakerId.value;
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["speaker", targetId] });
+      }
       queryCache.invalidateQueries({ key: ["speakers"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
@@ -42,6 +77,7 @@ export const useSpeakerParticipationStepMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     speakerId,
     step,
@@ -52,12 +88,18 @@ export const useSpeakerParticipationStatusMutation = defineMutation(() => {
   const speakerId = ref<string>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: (status: string) =>
-      updateSpeakerParticipationStatus(speakerId.value!, status),
-    onSettled: () => {
-      if (speakerId.value) {
-        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars: UpdateSpeakerStatusVariables | string) => {
+      const targetId =
+        typeof vars === "object" ? vars.speakerId : speakerId.value!;
+      const targetStatus = typeof vars === "object" ? vars.status : vars;
+      return updateSpeakerParticipationStatus(targetId, targetStatus);
+    },
+    onSettled: (_data, _err, vars) => {
+      const targetId =
+        typeof vars === "object" ? vars.speakerId : speakerId.value;
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["speaker", targetId] });
       }
       queryCache.invalidateQueries({ key: ["speakers"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
@@ -66,19 +108,32 @@ export const useSpeakerParticipationStatusMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     speakerId,
   };
 });
 
+export interface CreateSpeakerParticipationVariables {
+  speakerId: string;
+}
+
 export const useCreateSpeakerParticipationMutation = defineMutation(() => {
   const speakerId = ref<string>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () => createSpeakerParticipation(speakerId.value!),
-    onSettled: () => {
-      queryCache.invalidateQueries({ key: ["speaker", speakerId.value!] });
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars?: CreateSpeakerParticipationVariables | string) => {
+      const targetId =
+        typeof vars === "string" ? vars : (vars?.speakerId ?? speakerId.value!);
+      return createSpeakerParticipation(targetId);
+    },
+    onSettled: (_data, _err, vars) => {
+      const targetId =
+        typeof vars === "string" ? vars : (vars?.speakerId ?? speakerId.value);
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["speaker", targetId] });
+      }
       queryCache.invalidateQueries({ key: ["speakers"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
@@ -86,6 +141,7 @@ export const useCreateSpeakerParticipationMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     speakerId,
   };
@@ -122,11 +178,17 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
   const authStore = useAuthStore();
   const eventStore = useEventStore();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () => postSpeakerThread(speakerId.value!, threadData.value!),
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars?: PostSpeakerThreadVariables) => {
+      const targetId = vars?.speakerId ?? vars?.id ?? speakerId.value!;
+      const targetData = vars?.threadData ?? vars?.data ?? threadData.value!;
+      return postSpeakerThread(targetId, targetData);
+    },
 
-    onMutate: () => {
-      const key = ["speaker-communications", speakerId.value!];
+    onMutate: (vars?: PostSpeakerThreadVariables) => {
+      const targetId = vars?.speakerId ?? vars?.id ?? speakerId.value!;
+      const targetData = vars?.threadData ?? vars?.data ?? threadData.value!;
+      const key = ["speaker-communications", targetId];
 
       const oldVal =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -134,7 +196,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       const tempThreadId = crypto.randomUUID();
       const tempPostId = crypto.randomUUID();
 
-      const kind = threadData.value?.kind;
+      const kind = targetData?.kind;
       if (!kind) {
         throw new Error("Thread kind is required for optimistic update");
       }
@@ -149,7 +211,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
-        channel: threadData.value?.channel,
+        channel: targetData?.channel,
         comments: [],
         posted: now,
         status: ThreadStatus.ThreadStatusPending,
@@ -157,8 +219,9 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
           id: tempPostId,
           member: memberId,
           posted: new Date().toISOString(),
-          text: threadData.value?.text ?? "",
+          text: targetData?.text ?? "",
         },
+        meeting: undefined,
       };
 
       const currentEventId = eventStore.selectedEvent?.id ?? 0;
@@ -181,6 +244,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
         oldVal,
         currentEventId,
         tempThreadId,
+        targetId,
       };
     },
 
@@ -205,19 +269,40 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       queryCache.setQueryData<ParticipationCommunications[]>(key, patched);
     },
 
-    onError: (err, _vars, ctx) => {
-      if (ctx?.key && ctx?.oldVal) {
+    onError: (err, vars, ctx) => {
+      const context = ctx as PostSpeakerThreadContext | undefined;
+      const targetId =
+        vars?.speakerId ?? vars?.id ?? context?.targetId ?? speakerId.value;
+      const targetKey =
+        context?.key ??
+        (targetId ? ["speaker-communications", targetId] : undefined);
+      if (targetKey && context?.oldVal) {
         queryCache.setQueryData<ParticipationCommunications[]>(
-          ctx.key,
-          ctx.oldVal,
+          targetKey,
+          context.oldVal,
         );
       }
       console.error("Create speaker thread failed:", err);
+    },
+
+    onSettled: (_data, _err, vars, ctx) => {
+      const context = ctx as PostSpeakerThreadContext | undefined;
+      const targetId =
+        vars?.speakerId ?? vars?.id ?? context?.targetId ?? speakerId.value;
+      if (targetId) {
+        queryCache.invalidateQueries({
+          key: ["speaker-communications", targetId],
+        });
+        queryCache.invalidateQueries({ key: ["speaker", targetId] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+      queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     speakerId,
     threadData,
@@ -228,12 +313,24 @@ export const useSpeakerParticipationMutation = defineMutation(() => {
   const speakerId = ref<string>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: (variables: UpdateSpeakerParticipationData) =>
-      updateSpeakerParticipation(speakerId.value!, variables),
-    onSettled: () => {
-      if (speakerId.value) {
-        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (
+      variables:
+        | UpdateSpeakerParticipationData
+        | UpdateSpeakerParticipationVariables,
+    ) => {
+      const targetId =
+        "speakerId" in variables ? variables.speakerId : speakerId.value!;
+      const targetData = "data" in variables ? variables.data : variables;
+      return updateSpeakerParticipation(targetId, targetData);
+    },
+    onSettled: (_data, _err, variables) => {
+      const targetId =
+        variables && "speakerId" in variables
+          ? variables.speakerId
+          : speakerId.value;
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["speaker", targetId] });
       }
       queryCache.invalidateQueries({ key: ["speakers"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
@@ -242,6 +339,7 @@ export const useSpeakerParticipationMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     speakerId,
   };

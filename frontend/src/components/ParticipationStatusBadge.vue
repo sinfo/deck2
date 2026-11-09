@@ -86,10 +86,16 @@ const selectStatus = async (status: ParticipationStatus) => {
 
     if (props.entityType === "company") {
       companyStatusMutation.companyId.value = props.entityId;
-      await companyStatusMutation.mutateAsync(status);
+      await companyStatusMutation.mutateAsync({
+        companyId: props.entityId,
+        status,
+      });
     } else {
       speakerStatusMutation.speakerId.value = props.entityId;
-      await speakerStatusMutation.mutateAsync(status);
+      await speakerStatusMutation.mutateAsync({
+        speakerId: props.entityId,
+        status,
+      });
     }
 
     emit("update:status", status);

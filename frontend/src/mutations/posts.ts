@@ -1,4 +1,4 @@
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
 import { updatePost } from "@/api/posts";
 import type {
@@ -12,6 +12,13 @@ import type { EntityType } from "@/mutations/threads.ts";
 const hasEntry = (t: ThreadWithEntry): t is ThreadWithEntry & { entry: Post } =>
   !!t.entry;
 
+export interface UpdatePostVariables {
+  postId?: string;
+  text?: string;
+  entityType?: EntityType;
+  entityId?: string;
+}
+
 export const useUpdatePostMutation = defineMutation(() => {
   const postId = ref<string>();
   const text = ref<string>("");
@@ -20,21 +27,29 @@ export const useUpdatePostMutation = defineMutation(() => {
   const entityId = ref<string>("");
 
   const queryCache = useQueryCache();
-  const commsKey = computed(
-    () => [`${entityType.value}-communications`, entityId.value] as const,
-  );
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () => updatePost(postId.value!, { text: text.value! }),
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars?: UpdatePostVariables) => {
+      const targetPostId = vars?.postId ?? postId.value!;
+      const targetText = vars?.text ?? text.value!;
+      return updatePost(targetPostId, { text: targetText });
+    },
 
     // optimistic update
-    onMutate: () => {
-      const key = commsKey.value;
+    onMutate: (vars?: UpdatePostVariables) => {
+      const targetEntityType = vars?.entityType ?? entityType.value;
+      const targetEntityId = vars?.entityId ?? entityId.value;
+      const targetPostId = vars?.postId ?? postId.value;
+      const targetText = vars?.text ?? text.value;
+
+      const key = [
+        `${targetEntityType}-communications`,
+        targetEntityId,
+      ] as const;
 
       const prev =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
 
-      const newText = text.value;
       const updatedAt = new Date().toISOString();
 
       const next = prev.map((bucket) => {
@@ -45,10 +60,10 @@ export const useUpdatePostMutation = defineMutation(() => {
             const k = String(t.entry.id);
             return [
               k,
-              k === postId.value
+              k === targetPostId
                 ? {
                     ...t,
-                    entry: { ...t.entry, text: newText, updated: updatedAt },
+                    entry: { ...t.entry, text: targetText, updated: updatedAt },
                   }
                 : t,
             ] as const;
@@ -80,6 +95,7 @@ export const useUpdatePostMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     postId,
     text,

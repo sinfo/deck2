@@ -1,9 +1,15 @@
 import { deleteThread } from "@/api/threads.ts";
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
 import type { ParticipationCommunications } from "@/dto/threads.ts";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 
 export type EntityType = "speaker" | "company";
+
+export interface DeleteThreadVariables {
+  threadId?: string;
+  entityType?: EntityType;
+  entityId?: string;
+}
 
 export const useDeleteThreadMutation = defineMutation(() => {
   const threadId = ref<string>("");
@@ -11,15 +17,21 @@ export const useDeleteThreadMutation = defineMutation(() => {
   const entityId = ref<string>("");
 
   const queryCache = useQueryCache();
-  const commsKey = computed(() => [
-    `${entityType.value}-communications`,
-    entityId.value,
-  ]);
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () => deleteThread(threadId.value),
-    onMutate: () => {
-      const key = commsKey.value;
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars?: DeleteThreadVariables) => {
+      const targetThreadId = vars?.threadId ?? threadId.value;
+      return deleteThread(targetThreadId);
+    },
+    onMutate: (vars?: DeleteThreadVariables) => {
+      const targetEntityType = vars?.entityType ?? entityType.value;
+      const targetEntityId = vars?.entityId ?? entityId.value;
+      const targetThreadId = vars?.threadId ?? threadId.value;
+
+      const key = [
+        `${targetEntityType}-communications`,
+        targetEntityId,
+      ] as const;
 
       const prev =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -27,7 +39,7 @@ export const useDeleteThreadMutation = defineMutation(() => {
       const next = prev.map((bucket) => ({
         ...bucket,
         communications: bucket.communications.filter(
-          (t) => String(t.id) !== String(threadId.value),
+          (t) => String(t.id) !== String(targetThreadId),
         ),
       }));
 
@@ -48,6 +60,7 @@ export const useDeleteThreadMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     threadId,
     entityType,
