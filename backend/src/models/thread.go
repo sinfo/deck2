@@ -1,7 +1,6 @@
 package models
 
 import (
-	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -50,24 +49,11 @@ const (
 	ThreadChannelOther    ThreadChannel = "OTHER"
 )
 
-// Normalize returns the canonical ThreadChannel, mapping synonyms like "OUTRO" to ThreadChannelOther
-func (tc ThreadChannel) Normalize() (ThreadChannel, bool) {
-	switch strings.ToUpper(strings.TrimSpace(string(tc))) {
-	case string(ThreadChannelGmail):
-		return ThreadChannelGmail, true
-	case string(ThreadChannelLinkedIn):
-		return ThreadChannelLinkedIn, true
-	case string(ThreadChannelOther), "OUTRO":
-		return ThreadChannelOther, true
-	default:
-		return "", false
-	}
-}
-
 // IsValid checks the validity of the thread channel
 func (tc ThreadChannel) IsValid() bool {
-	_, ok := tc.Normalize()
-	return ok
+	return tc == ThreadChannelGmail ||
+		tc == ThreadChannelLinkedIn ||
+		tc == ThreadChannelOther
 }
 
 type Thread struct {
@@ -76,7 +62,7 @@ type Thread struct {
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
 	// Time posted
-	Posted  time.Time `json:"posted" bson:"posted"`
+	Posted time.Time `json:"posted" bson:"posted"`
 
 	// Entry is an _id of Post (see models.Post).
 	Entry primitive.ObjectID `json:"entry" bson:"entry"`
@@ -113,7 +99,7 @@ type ThreadWithEntry struct {
 	ID primitive.ObjectID `json:"id" bson:"_id"`
 
 	// Time posted
-	Posted  time.Time `json:"posted" bson:"posted"`
+	Posted time.Time `json:"posted" bson:"posted"`
 
 	// Entry is an _id of Post (see models.Post).
 	Entry *Post `json:"entry" bson:"entry"`

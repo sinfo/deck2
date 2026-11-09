@@ -398,12 +398,8 @@ func (acd *addThreadData) ParseBody(body io.Reader) error {
 		return errors.New("invalid kind")
 	}
 
-	if acd.Channel != nil {
-		normalized, ok := acd.Channel.Normalize()
-		if !ok {
-			return errors.New("invalid channel")
-		}
-		*acd.Channel = normalized
+	if acd.Channel != nil && !acd.Channel.IsValid() {
+		return errors.New("invalid channel")
 	}
 
 	if *acd.Kind == models.ThreadKindMeeting && acd.Meeting == nil {
