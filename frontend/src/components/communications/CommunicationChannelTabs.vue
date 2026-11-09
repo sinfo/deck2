@@ -80,6 +80,37 @@
           type="button"
           class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
           :class="[
+            channel === 'calls'
+              ? 'bg-zinc-800 text-white font-medium shadow-xs dark:bg-zinc-700'
+              : 'bg-background hover:bg-muted text-muted-foreground border',
+          ]"
+          @click="channel = 'calls'"
+        >
+          <Phone
+            class="w-3 h-3"
+            :class="
+              channel === 'calls'
+                ? 'text-white'
+                : 'text-zinc-500 dark:text-zinc-400'
+            "
+          />
+          <span>Chamadas</span>
+          <span
+            class="text-[10px] px-1.5 py-0.2 rounded-full"
+            :class="[
+              channel === 'calls'
+                ? 'bg-white/20 text-white'
+                : 'bg-muted text-muted-foreground',
+            ]"
+          >
+            {{ callsCount }}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          class="text-xs px-2.5 py-1 rounded-full transition-colors flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 cursor-pointer"
+          :class="[
             channel === 'other'
               ? 'bg-zinc-800 text-white font-medium shadow-xs dark:bg-zinc-700'
               : 'bg-background hover:bg-muted text-muted-foreground border',
@@ -147,7 +178,7 @@
 
 <script setup lang="ts">
 import { GmailIcon, LinkedInIcon } from "@/components/icons";
-import { Layers, MessageSquare } from "lucide-vue-next";
+import { Layers, MessageSquare, Phone } from "lucide-vue-next";
 import type { ChannelTab, ThreadGroupInfo } from "./utils";
 
 const channel = defineModel<ChannelTab>("channel", { required: true });
@@ -157,6 +188,7 @@ defineProps<{
   totalCount: number;
   gmailCount: number;
   linkedInCount: number;
+  callsCount: number;
   otherCount: number;
   gmailThreadTabs: ThreadGroupInfo[];
 }>();

@@ -1,12 +1,145 @@
 <template>
   <div
+    v-if="thread.kind === ThreadKind.ThreadKindPhoneCall"
+    class="w-full flex items-center gap-2 sm:gap-3 py-1 group/call"
+  >
+    <div class="h-px bg-border flex-1 min-w-3"></div>
+
+    <div
+      class="w-full max-w-md sm:max-w-lg shrink-0 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-muted/40 dark:bg-zinc-900/50 p-3 sm:p-3.5 shadow-2xs space-y-2 transition-all hover:border-zinc-300 dark:hover:border-zinc-700"
+    >
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <div
+            class="w-7 h-7 rounded-full bg-zinc-200/80 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-300/60 dark:border-zinc-700 shadow-2xs"
+          >
+            <Phone class="w-3.5 h-3.5" />
+          </div>
+          <div class="min-w-0 flex items-center gap-1.5 flex-wrap">
+            <span class="font-semibold text-xs text-foreground">
+              Chamada Telefónica
+            </span>
+            <span class="text-xs text-muted-foreground">•</span>
+            <div
+              class="flex items-center gap-1 text-xs text-muted-foreground min-w-0"
+            >
+              <Image
+                v-if="getAuthorAvatar(getMessageAuthor(thread))"
+                :src="getAuthorAvatar(getMessageAuthor(thread))"
+                :alt="getAuthorDisplayName(thread)"
+                class="w-4 h-4 rounded-full object-cover shrink-0"
+              />
+              <span
+                class="truncate max-w-[140px] text-foreground/80 font-medium text-[11px]"
+              >
+                {{ getAuthorDisplayName(thread) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1 shrink-0">
+          <span
+            class="text-[11px] text-muted-foreground select-none cursor-help hover:opacity-100"
+            :title="formatFullDateTime(thread.posted)"
+          >
+            {{ formatDate(thread.posted) }}
+          </span>
+
+          <div
+            class="flex items-center ml-1 opacity-70 group-hover/call:opacity-100 transition-opacity"
+          >
+            <button
+              class="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              title="Edit"
+              aria-label="Edit message"
+              :disabled="isDeleting"
+              @click="emit('start-edit', thread)"
+            >
+              <Pencil :size="13" :stroke-width="2" />
+            </button>
+            <button
+              class="p-1 rounded hover:bg-destructive/10 text-destructive/80 hover:text-destructive transition-colors disabled:opacity-50 cursor-pointer"
+              title="Delete"
+              aria-label="Delete message"
+              :disabled="isDeleting || isSaving"
+              @click="emit('request-delete', thread)"
+            >
+              <Trash2 :size="13" :stroke-width="2" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit mode -->
+      <div v-if="isEditing" class="text-sm min-w-0 space-y-2 pt-1">
+        <Textarea
+          v-model="editableText"
+          class="w-full resize-none min-h-[60px] max-h-[160px] bg-background text-foreground text-xs"
+          :disabled="isSaving"
+        />
+        <div class="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-7 text-xs bg-background text-foreground hover:bg-muted"
+            :disabled="isSaving"
+            @click="emit('cancel-edit')"
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            class="h-7 text-xs bg-zinc-800 hover:bg-zinc-700 text-white dark:bg-zinc-200 dark:hover:bg-zinc-300 dark:text-zinc-900 font-medium"
+            :disabled="!editableText.trim() || isSaving"
+            @click="emit('save-edit')"
+          >
+            {{ isSaving ? "Saving..." : "Save" }}
+          </Button>
+        </div>
+      </div>
+
+      <div v-else class="text-xs text-foreground/90 leading-relaxed pt-0.5">
+        <div v-if="thread.entry?.text" class="whitespace-pre-wrap break-words">
+          {{ thread.entry.text }}
+        </div>
+        <div v-else class="italic text-muted-foreground text-xs">
+          Sem notas adicionais
+        </div>
+
+        <div
+          v-if="
+            thread.entry?.updated &&
+            thread.entry.updated !== thread.entry.posted
+          "
+          class="flex items-center justify-end gap-1 text-[10px] text-muted-foreground mt-1"
+          :title="`Edited ${formatFullDateTime(thread.entry.updated)}`"
+        >
+          <Pencil class="w-2.5 h-2.5" />
+          <span class="italic">Edited</span>
+        </div>
+      </div>
+
+      <div
+        v-if="thread.comments.length > 0"
+        class="text-[11px] opacity-75 border-t border-border pt-1.5"
+      >
+        💬 {{ thread.comments.length }} comment{{
+          thread.comments.length === 1 ? "" : "s"
+        }}
+      </div>
+    </div>
+
+    <div class="h-px bg-border flex-1 min-w-3"></div>
+  </div>
+
+  <div
+    v-else
     :class="[
       'flex gap-2',
-      thread.kind === ThreadKind.ThreadKindPhoneCall
-        ? 'justify-center'
-        : getMessageDirection(thread.kind) === 'outgoing'
-          ? 'justify-end'
-          : 'justify-start',
+      getMessageDirection(thread.kind) === 'outgoing'
+        ? 'justify-end'
+        : 'justify-start',
     ]"
   >
     <!-- Author avatar for messages (including phone calls) -->
@@ -244,28 +377,6 @@
             </div>
           </div>
 
-          <!-- Phone call indicator -->
-          <div
-            v-else-if="thread.kind === ThreadKind.ThreadKindPhoneCall"
-            class="text-sm italic flex items-center justify-between gap-2"
-          >
-            <div class="flex items-center gap-2">
-              <span class="text-lg">📞</span>
-              <span>Phone call</span>
-            </div>
-            <span
-              class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
-              :class="[
-                getMessageDirection(thread.kind) === 'outgoing'
-                  ? 'text-white/70'
-                  : 'text-muted-foreground',
-              ]"
-              :title="formatFullDateTime(thread.posted)"
-            >
-              {{ formatDate(thread.posted) }}
-            </span>
-          </div>
-
           <!-- Meeting indicator -->
           <div
             v-else-if="thread.meeting"
@@ -338,7 +449,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { Pencil, Trash2 } from "lucide-vue-next";
+import { Pencil, Trash2, Phone } from "lucide-vue-next";
 import { GmailIcon } from "@/components/icons";
 import { ThreadKind, type ThreadWithEntry } from "@/dto/threads";
 import type { Company } from "@/dto/companies";

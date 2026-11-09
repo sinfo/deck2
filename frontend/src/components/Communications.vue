@@ -190,6 +190,7 @@
           v-if="
             isContactedWithoutThread &&
             selectedChannelTab !== 'linkedin' &&
+            selectedChannelTab !== 'calls' &&
             selectedChannelTab !== 'other'
           "
           class="mx-3 mt-2 mb-1 p-2.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2 flex-shrink-0"
@@ -220,6 +221,7 @@
           :total-count="sortedCommunications.length"
           :gmail-count="gmailCommunicationsCount"
           :linked-in-count="linkedInCommunicationsCount"
+          :calls-count="callsCount"
           :other-count="otherCommunicationsCount"
           :gmail-thread-tabs="availableGmailThreadTabs"
         />
@@ -243,6 +245,10 @@
                   v-else-if="selectedChannelTab === 'gmail'"
                   class="w-10 h-10"
                 />
+                <Phone
+                  v-else-if="selectedChannelTab === 'calls'"
+                  class="w-10 h-10 text-muted-foreground/60"
+                />
                 <MessageSquare
                   v-else
                   class="w-10 h-10 text-muted-foreground/60"
@@ -254,11 +260,17 @@
                     ? "Sem comunicações do LinkedIn"
                     : selectedChannelTab === "gmail"
                       ? "Sem comunicações do Gmail"
-                      : "Sem comunicações de Outro"
+                      : selectedChannelTab === "calls"
+                        ? "Sem registos de chamadas"
+                        : "Sem comunicações de Outro"
                 }}
               </div>
               <div class="text-xs opacity-70 mt-1">
-                Alterne para a aba "All" ou envie uma mensagem neste canal.
+                {{
+                  selectedChannelTab === "calls"
+                    ? 'Alterne para a aba "All" ou registe uma chamada abaixo.'
+                    : 'Alterne para a aba "All" ou envie uma mensagem neste canal.'
+                }}
               </div>
             </div>
           </div>
@@ -385,7 +397,14 @@ import type { ParticipationStatus } from "@/dto";
 import { humanReadableParticipationStatus } from "@/dto";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
 import { GmailIcon, LinkedInIcon } from "@/components/icons";
-import { RefreshCw, AlertTriangle, MailWarning, Link2 } from "lucide-vue-next";
+import {
+  RefreshCw,
+  AlertTriangle,
+  MailWarning,
+  Link2,
+  Phone,
+  MessageSquare,
+} from "lucide-vue-next";
 import { Badge } from "@/components/ui/badge";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
@@ -520,6 +539,7 @@ const sortedCommunications = computed<ThreadWithEntry[]>(() => {
 const {
   selectedChannelTab,
   selectedGmailThreadTab,
+  callsCount,
   gmailCommunicationsCount,
   linkedInCommunicationsCount,
   otherCommunicationsCount,
@@ -635,10 +655,22 @@ watch(
   (newTab) => {
     if (newTab === "linkedin") {
       messageChannel.value = ThreadChannel.LinkedIn;
+      if (messageKind.value === ThreadKind.ThreadKindPhoneCall) {
+        messageKind.value = ThreadKind.ThreadKindTo;
+      }
     } else if (newTab === "gmail") {
       messageChannel.value = ThreadChannel.Gmail;
+      if (messageKind.value === ThreadKind.ThreadKindPhoneCall) {
+        messageKind.value = ThreadKind.ThreadKindTo;
+      }
+    } else if (newTab === "calls") {
+      messageChannel.value = ThreadChannel.Other;
+      messageKind.value = ThreadKind.ThreadKindPhoneCall;
     } else if (newTab === "other") {
       messageChannel.value = ThreadChannel.Other;
+      if (messageKind.value === ThreadKind.ThreadKindPhoneCall) {
+        messageKind.value = ThreadKind.ThreadKindTo;
+      }
     }
     selectedGmailThreadTab.value = "all";
   },
