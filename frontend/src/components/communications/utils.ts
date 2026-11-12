@@ -114,7 +114,7 @@ export const getThreadChannel = (thread: ThreadWithEntry): ThreadChannel => {
 
 export const getBubbleClasses = (thread: ThreadWithEntry): string => {
   if (thread.kind === ThreadKind.ThreadKindPhoneCall) {
-    return "bg-purple-100 text-purple-900 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-200 dark:border-purple-900";
+    return "bg-purple-100 text-purple-900 dark:bg-purple-950/60 dark:text-purple-200";
   }
 
   const isOutgoing = getMessageDirection(thread.kind) === "outgoing";
@@ -122,36 +122,62 @@ export const getBubbleClasses = (thread: ThreadWithEntry): string => {
 
   if (channel === ThreadChannel.LinkedIn) {
     return isOutgoing
-      ? "bg-blue-800 text-white border border-blue-900 shadow-xs dark:bg-blue-900 dark:text-blue-50"
-      : "bg-blue-100 text-blue-950 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-100 dark:border-blue-900/60";
+      ? "bg-blue-100 text-blue-950 shadow-xs dark:bg-blue-950/50 dark:text-blue-100"
+      : "bg-blue-300 text-blue-950 dark:bg-blue-900/70 dark:text-blue-50";
   }
 
   if (channel === ThreadChannel.Other) {
     return isOutgoing
-      ? "bg-zinc-800 text-white border border-zinc-900 shadow-xs dark:bg-zinc-800 dark:text-zinc-50"
-      : "bg-zinc-100 text-zinc-950 border border-zinc-200 dark:bg-zinc-900/60 dark:text-zinc-100 dark:border-zinc-800";
+      ? "bg-zinc-800 text-white shadow-xs dark:bg-zinc-800 dark:text-zinc-50"
+      : "bg-zinc-100 text-zinc-950 dark:bg-zinc-900/60 dark:text-zinc-100";
   }
 
   // Gmail (default)
   return isOutgoing
-    ? "bg-[#712b27] text-white border border-[#5c2927] shadow-xs dark:bg-[#712b27] dark:text-red-50 dark:border-[#5c2927]"
-    : "bg-red-100 text-red-950 border border-red-200 dark:bg-red-950/50 dark:text-red-100 dark:border-red-900/60";
+    ? "bg-red-100 text-red-950 shadow-xs dark:bg-red-950/50 dark:text-red-100"
+    : "bg-red-300 text-red-950 dark:bg-red-900/70 dark:text-red-50";
 };
 
 export const getHeaderCardClasses = (thread: ThreadWithEntry): string => {
-  const isOutgoing = getMessageDirection(thread.kind) === "outgoing";
-  if (isOutgoing) {
-    return "bg-white/10 border-white/20 text-white";
+  if (thread.kind === ThreadKind.ThreadKindPhoneCall) {
+    return "bg-white/80 dark:bg-black/30 border-purple-200/60 dark:border-purple-900/40 text-purple-900 dark:text-purple-200";
   }
+
+  const isOutgoing = getMessageDirection(thread.kind) === "outgoing";
 
   switch (getThreadChannel(thread)) {
     case ThreadChannel.LinkedIn:
-      return "bg-white/80 dark:bg-black/30 border-blue-200/60 dark:border-blue-900/40 text-blue-950 dark:text-blue-200";
+      return "bg-white/85 dark:bg-black/30 border-transparent dark:border-blue-900/40 text-blue-950 dark:text-blue-100";
     case ThreadChannel.Other:
-      return "bg-white/80 dark:bg-black/30 border-zinc-200/60 dark:border-zinc-800 text-zinc-950 dark:text-zinc-200";
+      return isOutgoing
+        ? "bg-white/10 border-white/20 text-white"
+        : "bg-white/80 dark:bg-black/30 border-zinc-200/60 dark:border-zinc-800 text-zinc-950 dark:text-zinc-200";
     default:
-      return "bg-white/80 dark:bg-black/30 border-red-200/60 dark:border-red-900/40 text-red-950 dark:text-red-200";
+      return "bg-white/85 dark:bg-black/30 border-transparent dark:border-red-900/40 text-red-950 dark:text-red-100";
   }
+};
+
+export const getTimestampClasses = (thread: ThreadWithEntry): string => {
+  if (thread.kind === ThreadKind.ThreadKindPhoneCall) {
+    return "text-purple-900/70 dark:text-purple-200/70";
+  }
+
+  const isOutgoing = getMessageDirection(thread.kind) === "outgoing";
+  const channel = getThreadChannel(thread);
+
+  if (channel === ThreadChannel.Gmail) {
+    return isOutgoing
+      ? "text-red-950/75 dark:text-red-100/75"
+      : "text-red-950/75 dark:text-red-50/75";
+  }
+
+  if (channel === ThreadChannel.LinkedIn) {
+    return isOutgoing
+      ? "text-blue-950/75 dark:text-blue-100/75"
+      : "text-blue-950/75 dark:text-blue-50/75";
+  }
+
+  return isOutgoing ? "text-white/70" : "text-muted-foreground";
 };
 
 export const getDividerLabel = (thread: ThreadWithEntry): string => {
