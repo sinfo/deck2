@@ -6,8 +6,9 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 type CompanyRep struct {
 
 	// CompanyRep's ID (_id of mongodb).
-	ID   primitive.ObjectID `json:"id" bson:"_id"`
-	Name string             `json:"name" bson:"name"`
+	ID       primitive.ObjectID `json:"id" bson:"_id"`
+	Name     string             `json:"name" bson:"name"`
+	WorkRole string             `json:"workRole,omitempty" bson:"workRole,omitempty"`
 
 	// Contact is a Contact _id (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
@@ -15,8 +16,9 @@ type CompanyRep struct {
 
 type CompanyRepWithContact struct {
 	// CompanyRep's ID (_id of mongodb).
-	ID   primitive.ObjectID `json:"id" bson:"_id"`
-	Name string             `json:"name" bson:"name"`
+	ID       primitive.ObjectID `json:"id" bson:"_id"`
+	Name     string             `json:"name" bson:"name"`
+	WorkRole string             `json:"workRole,omitempty" bson:"workRole,omitempty"`
 
 	// Contact is the contact information of the representative.
 	Contact *Contact `json:"contact" bson:"contact"`

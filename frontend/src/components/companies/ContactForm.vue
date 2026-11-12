@@ -14,6 +14,19 @@
         />
       </div>
 
+      <!-- Company representative role -->
+      <div v-if="!withoutName" class="space-y-2">
+        <Label for="workRole" class="text-sm font-medium"
+          >Work Role (optional)</Label
+        >
+        <Input
+          id="workRole"
+          v-model="formData.workRole"
+          placeholder="e.g. Talent Acquisition Manager"
+          :disabled="isLoading"
+        />
+      </div>
+
       <!-- Gender Field -->
       <div class="space-y-2">
         <Label class="text-sm font-medium">Gender *</Label>
@@ -331,6 +344,7 @@ const showMoreSocials = ref(false);
 
 const formData = reactive<Required<CreateCompanyRepData>>({
   name: "",
+  workRole: "",
   contact: {
     gender: undefined,
     language: undefined,
@@ -352,6 +366,7 @@ watch(
   (newData) => {
     if (newData && props.mode === "edit") {
       formData.name = newData.name;
+      formData.workRole = newData.workRole || "";
       formData.contact.gender = newData.contact.gender;
       formData.contact.language = newData.contact.language;
       formData.contact.mails =
@@ -422,6 +437,7 @@ const handleSubmit = () => {
   // Clean up empty fields
   const cleanedData: CreateCompanyRepData = {
     name: formData.name?.trim(),
+    workRole: formData.workRole?.trim(),
     contact: {
       gender: formData.contact.gender,
       language: formData.contact.language,

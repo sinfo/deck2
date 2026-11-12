@@ -13,6 +13,9 @@ export const getAllMembers = (filters?: AllMembersFilter) =>
 
 export const getMe = () => instance.get<MemberWithContact>("/me");
 
+export const uploadMyImage = (image: FormData) =>
+  instance.post<Member>("/me/image", image);
+
 export const getMemberById = (id: string) =>
   instance.get<Member>(`/members/${id}`);
 

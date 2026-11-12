@@ -40,6 +40,9 @@
                         "name": {
                             "type": "string"
                         },
+                        "workRole": {
+                            "type": "string"
+                        },
                         "contact": {
                             "type": "object",
                             "required": [

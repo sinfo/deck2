@@ -29,8 +29,9 @@ type GetCompanyRepOptions struct {
 
 // CreateCompanyRepData contains data needed to create a rep
 type CreateCompanyRepData struct {
-	Name    *string            `json:"name" bson:"name"`
-	Contact *CreateContactData `json:"contact" bson:"contact"`
+	Name     *string            `json:"name" bson:"name"`
+	WorkRole *string            `json:"workRole" bson:"workRole"`
+	Contact  *CreateContactData `json:"contact" bson:"contact"`
 }
 
 // ParseBody fills a CreateCompanyRepData
@@ -96,6 +97,9 @@ func (c *CompanyRepsType) CreateCompanyRep(data CreateCompanyRepData) (*models.C
 	ctx := context.Background()
 
 	dataQuery := bson.M{"name": data.Name}
+	if data.WorkRole != nil && *data.WorkRole != "" {
+		dataQuery["workRole"] = *data.WorkRole
+	}
 
 	if data.Contact != nil {
 		contact, err := Contacts.CreateContact(*data.Contact)
@@ -141,6 +145,9 @@ func (c *CompanyRepsType) UpdateCompanyRep(id primitive.ObjectID, data CreateCom
 
 	setDoc := bson.M{
 		"name": data.Name,
+	}
+	if data.WorkRole != nil {
+		setDoc["workRole"] = *data.WorkRole
 	}
 
 	if data.Contact != nil {

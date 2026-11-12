@@ -153,6 +153,17 @@
                   placeholder="Enter representative name"
                   :disabled="isLoading"
                 />
+                <Label
+                  :for="`rep-work-role-${index}`"
+                  class="text-sm font-medium"
+                  >Work Role (optional)</Label
+                >
+                <Input
+                  :id="`rep-work-role-${index}`"
+                  v-model="rep.workRole"
+                  placeholder="e.g. Sales Manager"
+                  :disabled="isLoading"
+                />
               </div>
               <Button
                 variant="outline"
@@ -475,6 +486,7 @@ const createCompanyAndFinish = async () => {
         ) {
           await createCompanyRepresentative(companyId, {
             name: rep.name || "Unnamed Representative",
+            workRole: rep.workRole?.trim(),
             contact: filteredContact,
           });
         }

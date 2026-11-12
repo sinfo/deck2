@@ -1058,9 +1058,10 @@ func getCompanyEmployers(w http.ResponseWriter, r *http.Request) {
 
 		// Create a new CompanyRepWithContact instance
 		repWithContact := &models.CompanyRepWithContact{
-			ID:      rep.ID,
-			Name:    rep.Name,
-			Contact: contact,
+			ID:       rep.ID,
+			Name:     rep.Name,
+			WorkRole: rep.WorkRole,
+			Contact:  contact,
 		}
 
 		reps = append(reps, repWithContact)

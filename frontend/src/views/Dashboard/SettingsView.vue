@@ -29,19 +29,56 @@
         <!-- Personal Information Card -->
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
-              Basic information about your account
-            </CardDescription>
+            <div class="flex items-center justify-between">
+              <div>
+                <CardTitle>Personal Information</CardTitle>
+                <CardDescription>
+                  Basic information about your account
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                :disabled="isUploadingImage"
+                @click="isImageEditMode = !isImageEditMode"
+              >
+                {{ isImageEditMode ? "Cancel" : "Edit" }}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent class="space-y-4">
             <div class="flex items-center space-x-4">
-              <img
-                :src="user.data.img"
-                :alt="user.data.name"
-                class="w-16 h-16 rounded-full object-cover border-2 border-border"
-                @error="handleImageError"
-              />
+              <div class="relative w-16 h-16 shrink-0">
+                <Image
+                  :src="user.data.img"
+                  :alt="user.data.name"
+                  class="w-full h-full rounded-full object-cover border-2 border-border"
+                />
+                <button
+                  v-if="isImageEditMode"
+                  type="button"
+                  aria-label="Change profile picture"
+                  :disabled="isUploadingImage"
+                  :aria-busy="isUploadingImage"
+                  class="absolute inset-0 flex items-center justify-center rounded-full bg-black/30 text-white opacity-0 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-100 disabled:cursor-wait"
+                  @click="imageInput?.click()"
+                >
+                  <LoaderCircle
+                    v-if="isUploadingImage"
+                    class="w-5 h-5 animate-spin"
+                  />
+                  <Pencil v-else class="w-5 h-5" />
+                </button>
+                <input
+                  ref="imageInput"
+                  type="file"
+                  accept="image/*"
+                  aria-label="Profile picture file"
+                  class="hidden"
+                  :disabled="!isImageEditMode || isUploadingImage"
+                  @change="handleImageSelected"
+                />
+              </div>
               <div>
                 <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
                 <p class="text-sm text-muted-foreground">
@@ -52,6 +89,19 @@
                 </p>
               </div>
             </div>
+            <p v-if="isImageEditMode" class="text-sm text-muted-foreground">
+              Select a photo to save it immediately. Maximum size: 10MB.
+            </p>
+            <p
+              v-if="imageError || uploadImageError"
+              role="alert"
+              class="text-sm text-destructive"
+            >
+              {{
+                imageError ||
+                "Failed to update profile picture. Please try again."
+              }}
+            </p>
           </CardContent>
         </Card>
         <!-- Contact Information Card -->
@@ -259,7 +309,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useQuery, useMutation, useQueryCache } from "@pinia/colada";
-import { getMe } from "@/api/members";
+import { getMe, uploadMyImage } from "@/api/members";
+import { Pencil, LoaderCircle } from "lucide-vue-next";
+import Image from "@/components/Image.vue";
+import { useImageUpload } from "@/composables/useImageUpload";
 import { updateContact } from "@/api/contacts";
 import type {
   ContactSocials,
@@ -305,6 +358,45 @@ const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
 });
 
 const authStore = useAuthStore();
+const isImageEditMode = ref(false);
+const imageInput = ref<HTMLInputElement | null>(null);
+const { selectedImageFile, imageError, handleFileChange } = useImageUpload();
+
+const {
+  mutate: uploadImage,
+  isLoading: isUploadingImage,
+  error: uploadImageError,
+} = useMutation({
+  mutation: uploadMyImage,
+  onSuccess: ({ data }) => {
+    if (authStore.member) authStore.member.img = data.img;
+    if (user.value) {
+      queryCache.setQueryData(["me"], {
+        ...user.value,
+        data: { ...user.value.data, img: data.img },
+      });
+    }
+    queryCache.invalidateQueries({ key: ["me"] });
+    queryCache.invalidateQueries({ key: ["member", data.id] });
+    queryCache.invalidateQueries({ key: ["members"] });
+    isImageEditMode.value = false;
+  },
+});
+
+const handleImageSelected = (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  if (!isImageEditMode.value || isUploadingImage.value || !input.files?.[0])
+    return;
+
+  handleFileChange(event);
+  input.value = "";
+  if (imageError.value || !selectedImageFile.value) return;
+
+  const image = new FormData();
+  image.append("image", selectedImageFile.value);
+  uploadImage(image);
+};
+
 const handleUpdateContact = async (data: CreateCompanyRepData) => {
   if (!user.value?.data.contactObject?.id) return;
 
@@ -329,11 +421,6 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
     ...authStore.member?.contactObject,
     ...contactData,
   };
-};
-
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = "/src/assets/noImage.png"; // Fallback image
 };
 
 // Utility functions

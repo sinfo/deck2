@@ -239,6 +239,7 @@ const showMoreSocials = ref(false);
 
 const formData = reactive<Required<CreateCompanyRepData>>({
   name: "",
+  workRole: "",
   contact: {
     mails: [{ mail: "", personal: false }],
     phones: [{ phone: "" }],
