@@ -18,7 +18,7 @@ import { useEventStore } from "@/stores/event";
 import { usePostSpeakerThreadMutation } from "@/mutations/speakers";
 import Communications from "../Communications.vue";
 import { speakerTemplates, createEmailVariable } from "@/lib/templates";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useAuthStore } from "@/stores/auth";
 
 const props = defineProps<{
@@ -30,7 +30,13 @@ const authStore = useAuthStore();
 
 // Setup mutation for posting threads (currently disabled for speakers)
 const postThreadMutation = usePostSpeakerThreadMutation();
-postThreadMutation.speakerId.value = props.speaker.id;
+watch(
+  () => props.speaker.id,
+  (id) => {
+    postThreadMutation.speakerId.value = id;
+  },
+  { immediate: true },
+);
 
 const templates = computed(() =>
   speakerTemplates.map((it) => ({

@@ -268,7 +268,15 @@ const selectedPackageId = ref<string>(
 const packageName = ref<string | null>(null);
 const isPackageUpdating = ref(false);
 const packageMutation = useCompanyParticipationPackageMutation();
-packageMutation.companyId.value = props.companyId;
+
+watch(
+  () => props.companyId,
+  (newId) => {
+    packageMutation.companyId.value = newId;
+    updateMutation.companyId.value = newId;
+  },
+  { immediate: true },
+);
 
 const { toast } = useToast();
 
@@ -356,8 +364,12 @@ const onPackageChange = async () => {
     : "";
   try {
     isPackageUpdating.value = true;
+    packageMutation.companyId.value = props.companyId;
     packageMutation.packageId.value = selectedPackageId.value;
-    await packageMutation.mutate();
+    await packageMutation.mutateAsync({
+      companyId: props.companyId,
+      packageId: selectedPackageId.value,
+    });
     try {
       await pkgQuery.refetch();
       packageName.value = packageData.value?.name || null;
@@ -406,7 +418,10 @@ const saveChanges = async () => {
 
     updateMutation.companyId.value = props.companyId;
     updateMutation.data.value = dataToSend;
-    updateMutation.mutate();
+    await updateMutation.mutateAsync({
+      companyId: props.companyId,
+      data: dataToSend,
+    });
 
     isEditing.value = false;
   } catch (error) {

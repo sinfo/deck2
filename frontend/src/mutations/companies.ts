@@ -30,15 +30,42 @@ import { useEventStore } from "@/stores/event";
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
 import { ref } from "vue";
 
+export interface UpdateCompanyParticipationVariables {
+  companyId: string;
+  data: UpdateCompanyParticipationData;
+}
+
+export interface UpdateCompanyStatusVariables {
+  companyId: string;
+  status: ParticipationStatus;
+}
+
+export interface UpdateCompanyStepVariables {
+  companyId: string;
+  step: number;
+}
+
+export interface UpdateCompanyPackageVariables {
+  companyId: string;
+  packageId: string;
+}
+
 export const useCompanyParticipationMutation = defineMutation(() => {
   const companyId = ref<string>();
   const data = ref<UpdateCompanyParticipationData>();
   const queryCache = useQueryCache();
 
   const { mutate, mutateAsync, ...mutation } = useMutation({
-    mutation: () => updateCompanyParticipation(companyId.value!, data.value!),
-    onSettled: () => {
-      queryCache.invalidateQueries({ key: ["company", companyId.value!] });
+    mutation: (vars?: UpdateCompanyParticipationVariables) => {
+      const targetId = vars?.companyId ?? companyId.value!;
+      const targetData = vars?.data ?? data.value!;
+      return updateCompanyParticipation(targetId, targetData);
+    },
+    onSettled: (_data, _err, vars) => {
+      const targetId = vars?.companyId ?? companyId.value;
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["company", targetId] });
+      }
       queryCache.invalidateQueries({ key: ["companies"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
@@ -53,15 +80,27 @@ export const useCompanyParticipationMutation = defineMutation(() => {
   };
 });
 
+export interface CreateCompanyParticipationVariables {
+  companyId: string;
+  data: AddParticipationData;
+}
+
 export const useCreateCompanyParticipationMutation = defineMutation(() => {
   const companyId = ref<string>();
   const data = ref<AddParticipationData>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () => createCompanyParticipation(companyId.value!, data.value!),
-    onSettled: () => {
-      queryCache.invalidateQueries({ key: ["company", companyId.value!] });
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars?: CreateCompanyParticipationVariables) => {
+      const targetId = vars?.companyId ?? companyId.value!;
+      const targetData = vars?.data ?? data.value!;
+      return createCompanyParticipation(targetId, targetData);
+    },
+    onSettled: (_data, _err, vars) => {
+      const targetId = vars?.companyId ?? companyId.value;
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["company", targetId] });
+      }
       queryCache.invalidateQueries({ key: ["companies"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
@@ -69,6 +108,7 @@ export const useCreateCompanyParticipationMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
     data,
@@ -79,21 +119,29 @@ export const useCompanyParticipationStatusMutation = defineMutation(() => {
   const companyId = ref<string>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: (status: ParticipationStatus) =>
-      updateCompanyParticipationStatus(companyId.value!, status),
-    onSettled: () => {
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars: UpdateCompanyStatusVariables | ParticipationStatus) => {
+      const targetId =
+        typeof vars === "object" ? vars.companyId : companyId.value!;
+      const targetStatus = typeof vars === "object" ? vars.status : vars;
+      return updateCompanyParticipationStatus(targetId, targetStatus);
+    },
+    onSettled: (_data, _err, vars) => {
+      const targetId =
+        typeof vars === "object" ? vars.companyId : companyId.value;
       queryCache.invalidateQueries({ key: ["companies"] });
-      queryCache.invalidateQueries({ key: ["company", companyId.value!] });
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["company", targetId] });
+      }
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
-    status,
   };
 });
 
@@ -102,17 +150,25 @@ export const useCompanyParticipationStepMutation = defineMutation(() => {
   const step = ref<number>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () =>
-      updateCompanyParticipationStep(companyId.value!, step.value!),
-    onSettled: () => {
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars?: UpdateCompanyStepVariables) => {
+      const targetId = vars?.companyId ?? companyId.value!;
+      const targetStep = vars?.step ?? step.value!;
+      return updateCompanyParticipationStep(targetId, targetStep);
+    },
+    onSettled: (_data, _err, vars) => {
+      const targetId = vars?.companyId ?? companyId.value;
       queryCache.invalidateQueries({ key: ["companies"] });
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["company", targetId] });
+      }
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
     step,
@@ -185,16 +241,35 @@ export const useCompanyInfoMutation = defineMutation(() => {
   };
 });
 
+export interface PostCompanyThreadVariables {
+  companyId?: string;
+  id?: string;
+  threadData?: CreateThread;
+  data?: CreateThread;
+}
+
+interface PostCompanyThreadContext {
+  key: string[];
+  oldVal: ParticipationCommunications[];
+  targetId?: string;
+}
+
 export const useCompanyParticipationPackageMutation = defineMutation(() => {
   const companyId = ref<string>();
   const packageId = ref<string>();
   const queryCache = useQueryCache();
 
   const { mutate, mutateAsync, ...mutation } = useMutation({
-    mutation: () =>
-      updateCompanyParticipationPackage(companyId.value!, packageId.value!),
-    onSettled: () => {
-      queryCache.invalidateQueries({ key: ["company", companyId.value!] });
+    mutation: (vars?: UpdateCompanyPackageVariables) => {
+      const targetId = vars?.companyId ?? companyId.value!;
+      const targetPkgId = vars?.packageId ?? packageId.value!;
+      return updateCompanyParticipationPackage(targetId, targetPkgId);
+    },
+    onSettled: (_data, _err, vars) => {
+      const targetId = vars?.companyId ?? companyId.value;
+      if (targetId) {
+        queryCache.invalidateQueries({ key: ["company", targetId] });
+      }
       queryCache.invalidateQueries({ key: ["companies"] });
     },
   });
@@ -215,10 +290,16 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
   const authStore = useAuthStore();
   const eventStore = useEventStore();
 
-  const { mutate, ...mutation } = useMutation({
-    mutation: () => postThread(companyId.value!, threadData.value!),
-    onMutate: () => {
-      const key = ["company-communications", companyId.value!];
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (vars?: PostCompanyThreadVariables) => {
+      const targetId = vars?.companyId ?? vars?.id ?? companyId.value!;
+      const targetData = vars?.threadData ?? vars?.data ?? threadData.value!;
+      return postThread(targetId, targetData);
+    },
+    onMutate: (vars?: PostCompanyThreadVariables) => {
+      const targetId = vars?.companyId ?? vars?.id ?? companyId.value!;
+      const targetData = vars?.threadData ?? vars?.data ?? threadData.value!;
+      const key = ["company-communications", targetId];
 
       const oldVal =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -226,7 +307,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       const tempThreadId = crypto.randomUUID();
       const tempPostId = crypto.randomUUID();
 
-      const kind = threadData.value?.kind;
+      const kind = targetData?.kind;
       if (!kind) throw new Error("Thread kind is required");
       const memberId = authStore.decoded?.id;
       if (!memberId) throw new Error("Authenticated member id is required");
@@ -236,7 +317,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
-        channel: threadData.value?.channel,
+        channel: targetData?.channel,
         comments: [],
         posted: now,
         status: ThreadStatus.ThreadStatusPending,
@@ -244,8 +325,9 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
           id: tempPostId,
           member: memberId,
           posted: new Date().toISOString(),
-          text: threadData.value?.text ?? "",
+          text: targetData?.text ?? "",
         },
+        meeting: undefined,
       };
 
       const currentEventId = eventStore.selectedEvent?.id ?? 0;
@@ -268,6 +350,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
         oldVal,
         currentEventId,
         tempThreadId,
+        targetId,
       };
     },
 
@@ -292,19 +375,40 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       queryCache.setQueryData<ParticipationCommunications[]>(key, patched);
     },
 
-    onError: (err, _vars, ctx) => {
-      if (ctx?.key && ctx?.oldVal) {
+    onError: (err, vars, ctx) => {
+      const context = ctx as PostCompanyThreadContext | undefined;
+      const targetId =
+        vars?.companyId ?? vars?.id ?? context?.targetId ?? companyId.value;
+      const targetKey =
+        context?.key ??
+        (targetId ? ["company-communications", targetId] : undefined);
+      if (targetKey && context?.oldVal) {
         queryCache.setQueryData<ParticipationCommunications[]>(
-          ctx.key,
-          ctx.oldVal,
+          targetKey,
+          context.oldVal,
         );
       }
       console.error("Create company thread failed:", err);
+    },
+
+    onSettled: (_data, _err, vars, ctx) => {
+      const context = ctx as PostCompanyThreadContext | undefined;
+      const targetId =
+        vars?.companyId ?? vars?.id ?? context?.targetId ?? companyId.value;
+      if (targetId) {
+        queryCache.invalidateQueries({
+          key: ["company-communications", targetId],
+        });
+        queryCache.invalidateQueries({ key: ["company", targetId] });
+      }
+      queryCache.invalidateQueries({ key: ["companies"] });
+      queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
     threadData,

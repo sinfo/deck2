@@ -95,15 +95,15 @@ watch(activeTab, (tab) => {
   router.replace({ query: { ...route.query, tab } });
 });
 
-const speakerId = route.params.speakerId;
+const speakerId = computed(() => route.params.speakerId as string);
 const { data: speaker } = useQuery({
-  key: () => ["speaker", speakerId],
-  query: () => getSpeakerById(speakerId as string),
+  key: () => ["speaker", speakerId.value],
+  query: () => getSpeakerById(speakerId.value),
 });
 
 const handleSpeakerUpdated = () => {
   // Invalidate the speaker query to refresh the data
-  queryCache.invalidateQueries({ key: ["speaker", speakerId] });
+  queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
 };
 
 const eventStore = useEventStore();
@@ -119,7 +119,7 @@ const speakerWithParticipation = computed(() => {
 const handleContactUpdated = () => {
   // Invalidate the representatives query to refresh the data
   queryCache.invalidateQueries({
-    key: ["speaker", speakerId],
+    key: ["speaker", speakerId.value],
   });
 };
 </script>

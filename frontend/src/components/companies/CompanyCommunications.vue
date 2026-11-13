@@ -18,7 +18,7 @@ import { useEventStore } from "@/stores/event";
 import { usePostCompanyThreadMutation } from "@/mutations/companies";
 import Communications from "../Communications.vue";
 import { companyTemplates, createEmailVariable } from "@/lib/templates";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 
 const props = defineProps<{
   company: CompanyWithParticipation;
@@ -28,7 +28,13 @@ const eventStore = useEventStore();
 
 // Setup mutation for posting threads
 const postThreadMutation = usePostCompanyThreadMutation();
-postThreadMutation.companyId.value = props.company.id;
+watch(
+  () => props.company.id,
+  (id) => {
+    postThreadMutation.companyId.value = id;
+  },
+  { immediate: true },
+);
 
 const templates = computed(() =>
   companyTemplates.map((it) => ({

@@ -346,6 +346,7 @@ import { ThreadChannel, ThreadKind } from "@/dto/threads";
 import type {
   ParticipationCommunications,
   ThreadWithEntry,
+  CreateThread,
 } from "@/dto/threads";
 import type { Speaker } from "@/dto/speakers";
 import type { Company } from "@/dto/companies";
@@ -446,10 +447,16 @@ const editText = ref("");
 const updatePostMutation = useUpdatePostMutation();
 const deleteThreadMutation = useDeleteThreadMutation();
 
-updatePostMutation.entityType.value = props.entityType;
-updatePostMutation.entityId.value = props.entity.id;
-deleteThreadMutation.entityType.value = props.entityType;
-deleteThreadMutation.entityId.value = props.entity.id;
+watch(
+  () => [props.entityType, props.entity.id] as const,
+  ([type, id]) => {
+    updatePostMutation.entityType.value = type;
+    updatePostMutation.entityId.value = id;
+    deleteThreadMutation.entityType.value = type;
+    deleteThreadMutation.entityId.value = id;
+  },
+  { immediate: true },
+);
 
 const scrollToBottom = () => {
   nextTick(() => {
@@ -595,11 +602,18 @@ const saveEdit = async () => {
   const text = editText.value.trim();
   if (!id || !text) return;
 
+  updatePostMutation.entityType.value = props.entityType;
+  updatePostMutation.entityId.value = props.entity.id;
   updatePostMutation.postId.value = id;
   updatePostMutation.text.value = text;
 
   try {
-    await updatePostMutation.mutateAsync();
+    await updatePostMutation.mutateAsync({
+      entityType: props.entityType,
+      entityId: props.entity.id,
+      postId: id,
+      text,
+    });
     cancelEdit();
     scrollToBottom();
   } catch (e) {
@@ -614,10 +628,16 @@ const requestDelete = async (thread: ThreadWithEntry) => {
   );
   if (!ok) return;
 
+  deleteThreadMutation.entityType.value = props.entityType;
+  deleteThreadMutation.entityId.value = props.entity.id;
   deleteThreadMutation.threadId.value = thread.id;
 
   try {
-    await deleteThreadMutation.mutateAsync();
+    await deleteThreadMutation.mutateAsync({
+      entityType: props.entityType,
+      entityId: props.entity.id,
+      threadId: thread.id,
+    });
   } catch (e) {
     console.error("Delete failed:", e);
   }
@@ -659,15 +679,31 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() || !props.postThreadMutation) return;
 
   try {
-    // Set the thread data for the mutation
-    // eslint-disable-next-line vue/no-mutating-props
-    props.postThreadMutation.threadData.value = {
+    const threadData: CreateThread = {
       text: newMessage.value,
       kind: messageKind.value,
       channel: messageChannel.value,
     };
 
-    await props.postThreadMutation.mutateAsync();
+    if (props.entityType === "company") {
+      await (
+        props.postThreadMutation as ReturnType<
+          typeof usePostCompanyThreadMutation
+        >
+      ).mutateAsync({
+        companyId: props.entity.id,
+        threadData,
+      });
+    } else {
+      await (
+        props.postThreadMutation as ReturnType<
+          typeof usePostSpeakerThreadMutation
+        >
+      ).mutateAsync({
+        speakerId: props.entity.id,
+        threadData,
+      });
+    }
 
     newMessage.value = "";
     selectedTemplate.value = undefined;

@@ -33,7 +33,10 @@ const updateSpeakerStatus = async (
   speakerParticipationStepMutation.step.value = step;
   isUpdatingStatus.value = true;
   try {
-    await speakerParticipationStepMutation.mutateAsync();
+    await speakerParticipationStepMutation.mutateAsync({
+      speakerId: speaker.id,
+      step,
+    });
   } finally {
     isUpdatingStatus.value = false;
   }

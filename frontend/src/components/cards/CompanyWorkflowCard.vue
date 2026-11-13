@@ -92,7 +92,10 @@ const updateCompanyStatus = async (
   companyParticipationStepMutation.step.value = step;
   isUpdatingStatus.value = true;
   try {
-    await companyParticipationStepMutation.mutateAsync();
+    await companyParticipationStepMutation.mutateAsync({
+      companyId: company.id,
+      step,
+    });
   } finally {
     isUpdatingStatus.value = false;
   }
