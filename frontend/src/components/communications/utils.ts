@@ -122,8 +122,8 @@ export const getBubbleClasses = (thread: ThreadWithEntry): string => {
 
   if (channel === ThreadChannel.LinkedIn) {
     return isOutgoing
-      ? "bg-blue-100 text-blue-950 shadow-xs dark:bg-blue-950/50 dark:text-blue-100"
-      : "bg-blue-300 text-blue-950 dark:bg-blue-900/70 dark:text-blue-50";
+      ? "bg-blue-300 text-blue-950 shadow-xs dark:bg-blue-900/70 dark:text-blue-50"
+      : "bg-blue-100 text-blue-950 dark:bg-blue-950/50 dark:text-blue-100";
   }
 
   if (channel === ThreadChannel.Other) {
@@ -134,8 +134,8 @@ export const getBubbleClasses = (thread: ThreadWithEntry): string => {
 
   // Gmail (default)
   return isOutgoing
-    ? "bg-red-100 text-red-950 shadow-xs dark:bg-red-950/50 dark:text-red-100"
-    : "bg-red-300 text-red-950 dark:bg-red-900/70 dark:text-red-50";
+    ? "bg-red-300 text-red-950 shadow-xs dark:bg-red-900/70 dark:text-red-50"
+    : "bg-red-100 text-red-950 dark:bg-red-950/50 dark:text-red-100";
 };
 
 export const getHeaderCardClasses = (thread: ThreadWithEntry): string => {
@@ -167,14 +167,14 @@ export const getTimestampClasses = (thread: ThreadWithEntry): string => {
 
   if (channel === ThreadChannel.Gmail) {
     return isOutgoing
-      ? "text-red-950/75 dark:text-red-100/75"
-      : "text-red-950/75 dark:text-red-50/75";
+      ? "text-red-950/75 dark:text-red-50/75"
+      : "text-red-950/75 dark:text-red-100/75";
   }
 
   if (channel === ThreadChannel.LinkedIn) {
     return isOutgoing
-      ? "text-blue-950/75 dark:text-blue-100/75"
-      : "text-blue-950/75 dark:text-blue-50/75";
+      ? "text-blue-950/75 dark:text-blue-50/75"
+      : "text-blue-950/75 dark:text-blue-100/75";
   }
 
   return isOutgoing ? "text-white/70" : "text-muted-foreground";
