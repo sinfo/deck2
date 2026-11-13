@@ -1,11 +1,13 @@
 <template>
-  <Card class="w-full h-auto lg:h-[650px] 2xl:h-[800px] flex flex-col">
-    <CardHeader class="flex-shrink-0">
+  <Card
+    class="w-full h-auto lg:h-[650px] 2xl:h-[800px] flex flex-col gap-0 py-0"
+  >
+    <CardHeader class="flex-shrink-0 px-4 pt-3 pb-1 sm:px-6 sm:pt-4 sm:pb-1.5">
       <div
         class="flex flex-col sm:flex-row sm:items-center justify-between gap-2"
       >
         <div class="flex-1">
-          <CardTitle class="text-base sm:text-lg"> Communications</CardTitle>
+          <CardTitle class="text-base sm:text-lg">Communications</CardTitle>
           <CardDescription class="text-sm">
             {{ description }}
           </CardDescription>
@@ -29,7 +31,10 @@
             </SelectContent>
           </Select>
         </div>
-        <div class="flex-shrink-0 flex gap-1">
+        <div
+          v-if="authStore.isGoogleAuthenticated"
+          class="flex-shrink-0 flex gap-1"
+        >
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
@@ -44,11 +49,8 @@
                   :disabled="!selectedEventId"
                   @click="openGmailPicker"
                 >
-                  <Mail :size="16" :stroke-width="2" class="mr-1" />
-                  <span v-if="currentParticipationGmailThreadIds.length > 0">
-                    {{ currentParticipationGmailThreadIds.length }} Gmail
-                  </span>
-                  <span v-else>Link Gmail</span>
+                  <GmailIcon class="w-4 h-4 mr-1.5" />
+                  <span>View Threads</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -56,7 +58,7 @@
                   {{
                     currentParticipationGmailThreadIds.length > 0
                       ? `${currentParticipationGmailThreadIds.length} Gmail thread(s) linked`
-                      : "Link Gmail threads to this participation"
+                      : "View and link Gmail threads"
                   }}
                 </p>
               </TooltipContent>
@@ -73,7 +75,7 @@
                     currentParticipationGmailThreadIds.length === 0 ||
                     isSyncing
                   "
-                  @click="syncGmailMessages"
+                  @click="syncGmailMessages()"
                 >
                   <RefreshCw
                     :size="16"
@@ -108,6 +110,13 @@
     </CardHeader>
 
     <CardContent class="flex-1 flex flex-col overflow-hidden p-0">
+      <p
+        v-if="gmailActionError"
+        role="alert"
+        class="px-3 py-2 text-xs text-destructive break-words"
+      >
+        {{ gmailActionError }}
+      </p>
       <div v-if="isLoading" class="flex-1 flex items-center justify-center">
         <div class="text-muted-foreground">Loading communications...</div>
       </div>
@@ -122,9 +131,45 @@
 
       <div
         v-else-if="!sortedCommunications?.length"
-        class="flex-1 flex items-center justify-center"
+        class="flex-1 flex items-center justify-center p-6"
       >
-        <div class="text-center text-muted-foreground">
+        <!-- Notice when entity is contacted but no Gmail thread could be linked -->
+        <div
+          v-if="isContactedWithoutThread"
+          class="text-center max-w-sm mx-auto space-y-3"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto"
+          >
+            <MailWarning class="w-6 h-6" />
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-semibold text-sm">No Gmail thread found</h3>
+            <p class="text-xs text-muted-foreground leading-relaxed">
+              This {{ entityType }} is marked as
+              <strong class="text-foreground font-semibold">{{
+                currentStatusLabel
+              }}</strong
+              >, but no matching email thread was found automatically in Gmail.
+            </p>
+          </div>
+          <div class="pt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              class="gap-1.5 text-xs"
+              @click="openGmailPicker"
+            >
+              <Link2 class="w-3.5 h-3.5" />
+              Link Gmail thread manually
+            </Button>
+          </div>
+          <div v-if="selectedEventId" class="text-[11px] opacity-60">
+            For event: {{ getEventName(selectedEventId) }}
+          </div>
+        </div>
+
+        <div v-else class="text-center text-muted-foreground">
           <div class="text-lg mb-2">💬</div>
           <div>No communications yet</div>
           <div class="text-xs">
@@ -139,263 +184,145 @@
         </div>
       </div>
 
-      <div
-        v-else
-        ref="messagesContainer"
-        class="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
-      >
+      <div v-else class="flex-1 flex flex-col overflow-hidden">
+        <!-- Warning banner when communications exist but Gmail thread is not linked -->
         <div
-          v-for="thread in sortedCommunications"
-          :key="thread.id"
-          :class="[
-            'flex gap-2',
-            thread.kind === ThreadKind.ThreadKindPhoneCall
-              ? 'justify-center'
-              : getMessageDirection(thread.kind) === 'outgoing'
-                ? 'justify-end'
-                : 'justify-start',
-          ]"
+          v-if="
+            isContactedWithoutThread &&
+            selectedChannelTab !== 'linkedin' &&
+            selectedChannelTab !== 'other'
+          "
+          class="mx-3 mt-2 mb-1 p-2.5 rounded-md border border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2 flex-shrink-0"
         >
-          <!-- Author avatar for messages (including phone calls) -->
-          <div class="flex flex-col items-center gap-1">
-            <Image
-              v-if="getAuthorAvatar(getMessageAuthor(thread))"
-              :src="getAuthorAvatar(getMessageAuthor(thread))"
-              :alt="getMessageAuthor(thread)?.name || 'Member'"
-              :class="avatarClasses(thread)"
+          <div class="flex items-center gap-2 min-w-0">
+            <AlertTriangle
+              class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0"
             />
-            <div
-              v-else
-              class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center"
-            >
-              <span class="text-sm font-medium">{{
-                getMessageAuthor(thread)?.name?.charAt(0) || "?"
-              }}</span>
-            </div>
-            <div class="text-xs text-center max-w-20 leading-tight">
-              <div>
-                {{ getFirstName(getMessageAuthor(thread)?.name) }}
-              </div>
-              <div>
-                {{ getLastName(getMessageAuthor(thread)?.name) }}
-              </div>
-            </div>
+            <span class="truncate">
+              Marked as <strong>{{ currentStatusLabel }}</strong
+              >, but no Gmail thread is linked.
+            </span>
           </div>
-
-          <div
-            :class="[
-              'max-w-[85%] sm:max-w-[80%] flex flex-col group/message',
-              getMessageDirection(thread.kind) === 'outgoing'
-                ? 'items-end'
-                : 'items-start',
-            ]"
+          <Button
+            variant="outline"
+            size="sm"
+            class="h-7 text-xs px-2.5 border-amber-500/30 hover:bg-amber-500/20 flex-shrink-0 gap-1"
+            @click="openGmailPicker"
           >
-            <!-- Bubble skin -->
-            <div
-              :class="[
-                'w-full rounded-lg p-2 sm:p-3 space-y-2',
-                thread.kind === ThreadKind.ThreadKindPhoneCall
-                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                  : getMessageDirection(thread.kind) === 'outgoing'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted',
-              ]"
-            >
-              <!-- Message header -->
-              <div class="flex items-center gap-2 text-xs opacity-75">
-                <div class="flex items-center gap-1">
-                  <div
-                    :class="['w-2 h-2 rounded-full', getKindColor(thread.kind)]"
-                  ></div>
-                  <span>{{ getKindLabel(thread.kind) }}</span>
-                </div>
+            <Link2 class="w-3 h-3" />
+            Link thread
+          </Button>
+        </div>
 
-                <div class="flex items-center gap-1">
-                  <div
-                    :class="[
-                      'w-2 h-2 rounded-full',
-                      getStatusColor(thread.status),
-                    ]"
-                  ></div>
-                </div>
+        <CommunicationChannelTabs
+          v-model:channel="selectedChannelTab"
+          v-model:gmail-thread="selectedGmailThreadTab"
+          :total-count="sortedCommunications.length"
+          :gmail-count="gmailCommunicationsCount"
+          :linked-in-count="linkedInCommunicationsCount"
+          :other-count="otherCommunicationsCount"
+          :gmail-thread-tabs="availableGmailThreadTabs"
+        />
 
-                <span>{{ formatDate(thread.posted) }}</span>
-              </div>
-
-              <!-- Edit mode -->
-              <div
-                v-if="editingThreadId === thread.id"
-                class="text-sm space-y-2"
-              >
-                <Textarea
-                  v-model="editText"
-                  class="w-full resize-none min-h-[60px] max-h-[160px]"
-                  :disabled="updatePostMutation?.isLoading?.value"
+        <div
+          ref="messagesContainer"
+          class="flex-1 min-w-0 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
+        >
+          <!-- Filtered empty state -->
+          <div
+            v-if="filteredCommunications.length === 0"
+            class="h-full flex items-center justify-center p-8 text-center text-muted-foreground"
+          >
+            <div class="flex flex-col items-center">
+              <div class="mb-3 flex justify-center">
+                <LinkedInIcon
+                  v-if="selectedChannelTab === 'linkedin'"
+                  class="w-10 h-10 rounded-sm"
                 />
-                <div class="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    class="text-primary"
-                    :disabled="updatePostMutation?.isLoading?.value"
-                    @click="cancelEdit"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    size="sm"
-                    class="border border-white"
-                    :disabled="
-                      !editText.trim() || updatePostMutation?.isLoading?.value
-                    "
-                    @click="saveEdit"
-                  >
-                    {{
-                      updatePostMutation?.isLoading?.value
-                        ? "Saving..."
-                        : "Save"
-                    }}
-                  </Button>
-                </div>
+                <GmailIcon
+                  v-else-if="selectedChannelTab === 'gmail'"
+                  class="w-10 h-10"
+                />
+                <MessageSquare
+                  v-else
+                  class="w-10 h-10 text-muted-foreground/60"
+                />
               </div>
-
-              <!-- VIEW MODE -->
-              <div v-else>
-                <!-- Message content -->
-                <div v-if="thread.entry" class="text-sm">
-                  <div class="whitespace-pre-wrap">{{ thread.entry.text }}</div>
-                  <div
-                    v-if="
-                      thread.entry.updated &&
-                      thread.entry.updated !== thread.entry.posted
-                    "
-                    class="text-xs opacity-60 mt-1"
-                  >
-                    Edited {{ formatDate(thread.entry.updated) }}
-                  </div>
-                </div>
-
-                <!-- Phone call indicator -->
-                <div
-                  v-else-if="thread.kind === ThreadKind.ThreadKindPhoneCall"
-                  class="text-sm italic flex items-center justify-center gap-2"
-                >
-                  <span class="text-lg">📞</span>
-                  <span>Phone call</span>
-                </div>
-
-                <!-- Meeting indicator -->
-                <div v-else-if="thread.meeting" class="text-sm italic">
-                  📅 Meeting scheduled
-                </div>
-
-                <!-- No content fallback -->
-                <div v-else class="text-sm italic opacity-60">
-                  No message content
-                </div>
-              </div>
-
-              <!-- Comments indicator -->
-              <div
-                v-if="thread.comments.length > 0"
-                class="text-xs opacity-75 border-t pt-2"
-              >
-                💬 {{ thread.comments.length }} comment{{
-                  thread.comments.length === 1 ? "" : "s"
+              <div class="text-sm font-medium">
+                {{
+                  selectedChannelTab === "linkedin"
+                    ? "Sem comunicações do LinkedIn"
+                    : selectedChannelTab === "gmail"
+                      ? "Sem comunicações do Gmail"
+                      : "Sem comunicações de Outro"
                 }}
               </div>
-            </div>
-
-            <!-- Actions -->
-            <div :class="['mt-1 transition-opacity opacity-100']">
-              <button
-                class="p-1 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black/10 text-muted-foreground hover:opacity-80"
-                title="Edit"
-                aria-label="Edit message"
-                :disabled="deleteThreadMutation?.isLoading?.value"
-                @click="startEdit(thread)"
-              >
-                <Pencil :size="16" :stroke-width="2" class="align-middle" />
-              </button>
-              <button
-                class="p-1 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive/30 text-destructive hover:opacity-90 disabled:opacity-50"
-                title="Delete"
-                aria-label="Delete message"
-                :disabled="
-                  deleteThreadMutation?.isLoading?.value ||
-                  updatePostMutation?.isLoading?.value
-                "
-                @click="requestDelete(thread)"
-              >
-                <Trash2 :size="16" :stroke-width="2" class="align-middle" />
-              </button>
+              <div class="text-xs opacity-70 mt-1">
+                Alterne para a aba "All" ou envie uma mensagem neste canal.
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Message input area -->
-      <div v-if="canSendMessages" class="flex-shrink-0 border-t p-3 sm:p-4">
-        <!-- Error message -->
-        <div
-          v-if="postThreadMutation?.error.value"
-          class="mb-3 p-2 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm"
-        >
-          <div class="font-medium">Failed to send message</div>
-          <div class="text-xs mt-1">
-            {{ postThreadMutation.error.value.message || "Please try again" }}
-          </div>
-        </div>
+          <template
+            v-for="(thread, index) in filteredCommunications"
+            :key="thread.id"
+          >
+            <!-- Thread visual divider when viewing all and thread changes -->
+            <div
+              v-if="showThreadDivider(index)"
+              class="flex items-center gap-2 my-3 text-xs text-muted-foreground"
+            >
+              <div class="h-px bg-border flex-1"></div>
+              <Badge
+                variant="outline"
+                class="font-normal text-[11px] gap-1 py-0.5"
+              >
+                <LinkedInIcon
+                  v-if="getThreadChannel(thread) === ThreadChannel.LinkedIn"
+                  class="w-3 h-3 rounded-[2px]"
+                />
+                <MessageSquare
+                  v-else-if="getThreadChannel(thread) === ThreadChannel.Other"
+                  class="w-3 h-3 text-zinc-500"
+                />
+                <GmailIcon v-else class="w-3 h-3" />
+                <span class="max-w-[220px] sm:max-w-[320px] truncate">
+                  {{ getDividerLabel(thread) }}
+                </span>
+              </Badge>
+              <div class="h-px bg-border flex-1"></div>
+            </div>
 
-        <div class="flex flex-col sm:flex-row gap-2">
-          <div class="flex-1">
-            <Textarea
-              v-model="newMessage"
-              :disabled="selectedEventId !== latestEvent?.id"
-              placeholder="Type your message..."
-              class="w-full resize-none border rounded-md p-2 text-sm min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px]"
-              @keydown.enter.ctrl="sendMessage"
-              @keydown.enter.meta="sendMessage"
-              @input="onMessageInput"
+            <CommunicationMessage
+              v-model:edit-text="editText"
+              :thread="thread"
+              :entity="entity"
+              :entity-type="entityType"
+              :members-by-id="membersById"
+              :is-editing="editingThreadId === thread.id"
+              :is-saving="updatePostMutation.isLoading.value"
+              :is-deleting="deleteThreadMutation.isLoading.value"
+              @start-edit="startEdit"
+              @cancel-edit="cancelEdit"
+              @save-edit="saveEdit"
+              @request-delete="requestDelete"
             />
-          </div>
-          <div class="flex sm:flex-col gap-2">
-            <Button
-              :disabled="
-                selectedEventId !== latestEvent?.id ||
-                !newMessage.trim() ||
-                postThreadMutation?.isLoading.value
-              "
-              size="sm"
-              class="px-3 flex-1 sm:flex-none"
-              @click="sendMessage"
-            >
-              {{ postThreadMutation?.isLoading.value ? "Sending..." : "Send" }}
-            </Button>
-            <select
-              v-model="messageKind"
-              :disabled="selectedEventId !== latestEvent?.id"
-              class="text-xs border rounded px-2 py-1 flex-1 sm:flex-none"
-            >
-              <option :value="ThreadKind.ThreadKindTo">Outgoing</option>
-              <option :value="ThreadKind.ThreadKindFrom">Incoming</option>
-              <option :value="ThreadKind.ThreadKindPhoneCall">
-                Phone Call
-              </option>
-              <!-- Broken for now <option :value="ThreadKind.ThreadKindMeeting">Meeting</option> -->
-              <option :value="ThreadKind.ThreadKindTemplate">Template</option>
-            </select>
-          </div>
-        </div>
-        <div class="text-xs text-muted-foreground mt-2">
-          Press Ctrl+Enter to send
+          </template>
         </div>
       </div>
-      <div v-else class="flex-shrink-0 border-t p-3 sm:p-4">
-        <div class="text-center text-muted-foreground text-sm">
-          Communications feature coming soon for {{ entityType }}s
-        </div>
-      </div>
+
+      <CommunicationComposer
+        v-model:message="newMessage"
+        v-model:channel="messageChannel"
+        v-model:kind="messageKind"
+        :can-send-messages="canSendMessages"
+        :entity-type="entityType"
+        :disabled="selectedEventId !== latestEvent?.id"
+        :is-sending="postThreadMutation?.isLoading.value ?? false"
+        :error-message="postThreadMutation?.error.value?.message"
+        @send="sendMessage"
+        @message-input="onMessageInput"
+      />
     </CardContent>
   </Card>
 
@@ -406,23 +333,16 @@
     :default-search-query="gmailPickerDefaultQuery"
     @save="handleGmailThreadsSave"
   />
+
+  <MissingGenderDialog v-model:open="isMissingGenderDialogOpen" />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from "vue";
-import { useQuery, useQueryCache } from "@pinia/colada";
+import { ref, computed, watch, nextTick, toRef } from "vue";
+import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import {
-  updateCompanyGmailThreadIds,
-  syncCompanyGmailMessages,
-  type GmailMessageData,
-} from "@/api/companies";
-import {
-  updateSpeakerGmailThreadIds,
-  syncSpeakerGmailMessages,
-} from "@/api/speakers";
-import { ThreadKind, ThreadStatus } from "@/dto/threads";
+import { ThreadChannel, ThreadKind } from "@/dto/threads";
 import type {
   ParticipationCommunications,
   ThreadWithEntry,
@@ -432,8 +352,14 @@ import type { Company } from "@/dto/companies";
 import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
 import { useAuthStore } from "@/stores/auth";
-import { useGmailMessages } from "@/composables/useGmailMessages";
-import { useGoogleAuth } from "@/composables/useGoogleAuth";
+import { useCommunicationGmail } from "@/composables/useCommunicationGmail";
+import { useCommunicationThreads } from "@/composables/useCommunicationThreads";
+import CommunicationChannelTabs from "./communications/CommunicationChannelTabs.vue";
+import CommunicationComposer from "./communications/CommunicationComposer.vue";
+import CommunicationMessage from "./communications/CommunicationMessage.vue";
+import { getDividerLabel, getThreadChannel } from "./communications/utils";
+import { usePostCompanyThreadMutation } from "@/mutations/companies";
+import { usePostSpeakerThreadMutation } from "@/mutations/speakers";
 import Card from "./ui/card/Card.vue";
 import CardContent from "./ui/card/CardContent.vue";
 import CardDescription from "./ui/card/CardDescription.vue";
@@ -447,17 +373,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-import Image from "./Image.vue";
 import {
   EmailTemplate,
   openTemplateInNewTab,
   templateHumanReadableNames,
   type AnyEmailVariableInput,
 } from "@/lib/templates";
+import MissingGenderDialog from "./MissingGenderDialog.vue";
 import type { Event } from "@/dto/events";
-import Textarea from "./ui/textarea/Textarea.vue";
+import type { ParticipationStatus } from "@/dto";
+import { humanReadableParticipationStatus } from "@/dto";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
-import { Pencil, Trash2, Mail, RefreshCw } from "lucide-vue-next";
+import { GmailIcon, LinkedInIcon } from "@/components/icons";
+import { RefreshCw, AlertTriangle, MailWarning, Link2 } from "lucide-vue-next";
+import { Badge } from "@/components/ui/badge";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
 import {
@@ -476,17 +405,20 @@ interface CommunicationsProps {
   entity: Company | Speaker;
   entityType: "company" | "speaker";
   description: string;
-  participations?: Array<{ event: number }>;
+  participations?: Array<{
+    event: number;
+    status?: ParticipationStatus;
+    gmailThreadIds?: string[];
+  }>;
   canSendMessages?: boolean;
   templates?: TemplateWithVariables[];
   fetchCommunications: (
     id: string,
   ) => Promise<{ data: ParticipationCommunications[] }>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  postThreadMutation?: any;
+  postThreadMutation?:
+    | ReturnType<typeof usePostCompanyThreadMutation>
+    | ReturnType<typeof usePostSpeakerThreadMutation>;
 }
-
-type Author = Member | Speaker | Company;
 
 const props = withDefaults(defineProps<CommunicationsProps>(), {
   canSendMessages: false,
@@ -497,22 +429,19 @@ const props = withDefaults(defineProps<CommunicationsProps>(), {
 
 const newMessage = ref("");
 const messageKind = ref<ThreadKind>(ThreadKind.ThreadKindTo);
+const messageChannel = ref<ThreadChannel>(ThreadChannel.Gmail);
 const messagesContainer = ref<HTMLElement>();
 const eventStore = useEventStore();
+const authStore = useAuthStore();
 const selectedEventId = ref<number | null>(
   eventStore.selectedEvent?.id ?? null,
 );
 const selectedTemplate = ref<TemplateWithVariables>();
+const isMissingGenderDialogOpen = ref(false);
 
 const editingThreadId = ref<string | null>(null);
 const editingPostId = ref<string | null>(null);
 const editText = ref("");
-
-// Gmail thread picker state
-const isGmailPickerOpen = ref(false);
-const gmailPickerThreadIds = ref<string[]>([]);
-const gmailPickerDefaultQuery = ref("");
-const queryCache = useQueryCache();
 
 const updatePostMutation = useUpdatePostMutation();
 const deleteThreadMutation = useDeleteThreadMutation();
@@ -562,15 +491,12 @@ const availableEvents = computed(() => {
     }));
 });
 
-const membersById = computed(() => {
-  if (!membersData.value?.data) return new Map();
-
-  const map = new Map();
-  membersData.value.data.forEach((member) => {
-    map.set(member.id, member);
-  });
-  return map;
-});
+const membersById = computed<Map<string, Member>>(
+  () =>
+    new Map(
+      (membersData.value?.data ?? []).map((member) => [member.id, member]),
+    ),
+);
 
 const {
   data: communicationsData,
@@ -591,6 +517,17 @@ const sortedCommunications = computed<ThreadWithEntry[]>(() => {
     ) as ThreadWithEntry[];
 });
 
+const {
+  selectedChannelTab,
+  selectedGmailThreadTab,
+  gmailCommunicationsCount,
+  linkedInCommunicationsCount,
+  otherCommunicationsCount,
+  availableGmailThreadTabs,
+  filteredCommunications,
+  showThreadDivider,
+} = useCommunicationThreads(sortedCommunications);
+
 const onMessageInput = () => {
   props.postThreadMutation?.reset?.();
 };
@@ -610,7 +547,6 @@ const cancelEdit = () => {
   editText.value = "";
 };
 
-// Gmail picker functions
 const currentParticipationGmailThreadIds = computed(() => {
   if (!communicationsData.value || !selectedEventId.value) return [];
   const participation = communicationsData.value.find(
@@ -619,244 +555,40 @@ const currentParticipationGmailThreadIds = computed(() => {
   return participation?.gmailThreadIds || [];
 });
 
-const openGmailPicker = () => {
-  gmailPickerThreadIds.value = [...currentParticipationGmailThreadIds.value];
-  // Default search query is the company/speaker name
-  gmailPickerDefaultQuery.value = props.entity.name;
-  isGmailPickerOpen.value = true;
-};
+const currentParticipation = computed(() => {
+  if (!props.participations || !selectedEventId.value) return null;
+  return (
+    props.participations.find((p) => p.event === selectedEventId.value) || null
+  );
+});
 
-const handleGmailThreadsSave = async (threadIds: string[]) => {
-  try {
-    if (props.entityType === "company") {
-      await updateCompanyGmailThreadIds(props.entity.id, threadIds);
-    } else {
-      await updateSpeakerGmailThreadIds(props.entity.id, threadIds);
-    }
-    // Invalidate the communications query to refresh data
-    queryCache.invalidateQueries({
-      key: [`${props.entityType}-communications`, props.entity.id],
-    });
-    // Auto-sync after linking
-    await syncGmailMessages();
-  } catch (err) {
-    console.error("Failed to update Gmail thread IDs:", err);
-  } finally {
-    gmailPickerThreadIds.value = [];
-  }
-};
+const currentParticipationStatus = computed<ParticipationStatus | undefined>(
+  () => currentParticipation.value?.status,
+);
 
-// Gmail sync functionality
-const authStore = useAuthStore();
-const gmailComposable = useGmailMessages();
-const { requestGoogleToken, error: googleAuthError } = useGoogleAuth();
-const isSyncing = ref(false);
+const currentStatusLabel = computed(() => {
+  const status = currentParticipationStatus.value;
+  return status ? humanReadableParticipationStatus[status] || status : "";
+});
 
-/**
- * Strips HTML tags and converts to clean plain text
- */
-const stripHtmlToText = (html: string): string => {
-  // Create a temporary element to parse HTML
-  const doc = new DOMParser().parseFromString(html, "text/html");
-
-  // Remove script and style elements
-  doc.querySelectorAll("script, style").forEach((el) => el.remove());
-
-  // Replace common block elements with newlines
-  doc.querySelectorAll("br").forEach((el) => el.replaceWith("\n"));
-  doc.querySelectorAll("p, div, tr, li").forEach((el) => {
-    el.prepend(document.createTextNode("\n"));
-    el.append(document.createTextNode("\n"));
-  });
-
-  // Get text content
-  let text = doc.body.textContent || "";
-
-  // Clean up whitespace
-  text = text
-    .replace(/\r\n/g, "\n") // Normalize line endings
-    .replace(/\n{3,}/g, "\n\n") // Max 2 consecutive newlines
-    .replace(/[ \t]+/g, " ") // Collapse multiple spaces/tabs
-    .replace(/^ +/gm, "") // Remove leading spaces on each line
-    .replace(/ +$/gm, "") // Remove trailing spaces on each line
-    .trim();
-
-  return text;
-};
-
-/**
- * Extracts a clean display name from an email address
- * "John Doe <john@example.com>" -> "John Doe"
- * "john@example.com" -> "john@example.com"
- */
-const extractEmailName = (email: string): string => {
-  const match = email.match(/^"?([^"<]+)"?\s*<[^>]+>$/);
-  return match ? match[1].trim() : email;
-};
-
-const syncGmailMessages = async () => {
-  if (!currentParticipationGmailThreadIds.value.length) {
-    return;
-  }
-
-  // Check if Google authentication is needed
-  if (!authStore.isGoogleAuthenticated) {
-    const success = await requestGoogleToken();
-    if (!success) {
-      console.error(
-        "Failed to authenticate with Google: ",
-        googleAuthError.value,
-      );
-      return;
-    }
-  }
-
-  isSyncing.value = true;
-
-  try {
-    // Fetch all messages from linked Gmail threads
-    const allMessages: GmailMessageData[] = [];
-
-    for (const gmailThreadId of currentParticipationGmailThreadIds.value) {
-      // Get all messages in this thread using the threads API
-      const threadMessages = await gmailComposable.getMessagesByThreadId(
-        gmailThreadId,
-        { format: "full" },
-      );
-
-      // Check if re-authentication is needed (token expired during request)
-      if (gmailComposable.needsReauth.value) {
-        const success = await requestGoogleToken();
-        if (!success) {
-          console.error("Failed to re-authenticate with Google");
-          return;
-        }
-        // Retry the current thread after re-authentication
-        const retryMessages = await gmailComposable.getMessagesByThreadId(
-          gmailThreadId,
-          { format: "full" },
-        );
-        if (gmailComposable.needsReauth.value) {
-          console.error("Still unable to authenticate after retry");
-          return;
-        }
-        threadMessages.push(...retryMessages);
-      }
-
-      for (const msg of threadMessages) {
-        const from = gmailComposable.getHeaderValue(msg, "From") || "Unknown";
-        const to = gmailComposable.getHeaderValue(msg, "To") || "";
-        const subject =
-          gmailComposable.getHeaderValue(msg, "Subject") || "(No subject)";
-        const dateStr = gmailComposable.getHeaderValue(msg, "Date") || "";
-
-        // Parse date to ISO format
-        let isoDate = "";
-        if (dateStr) {
-          try {
-            isoDate = new Date(dateStr).toISOString();
-          } catch {
-            isoDate = new Date(parseInt(msg.internalDate)).toISOString();
-          }
-        } else {
-          isoDate = new Date(parseInt(msg.internalDate)).toISOString();
-        }
-
-        // Get message body - prefer plain text, fallback to HTML
-        let body =
-          gmailComposable.getMessageBody(msg, false) || msg.snippet || "";
-
-        // If the body looks like HTML, convert it to plain text
-        if (body.includes("<") && body.includes(">")) {
-          body = stripHtmlToText(body);
-        }
-
-        // Clean up the body further - remove excessive quoted content
-        // First, normalize multi-line quote headers (e.g., "On Fri, 16 Jan 2026 at 09:40, Name <\nemail@example.com> wrote:")
-        const normalizedBody = body.replace(
-          /^(On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2},\s+[^<]+)<\s*\n\s*([^>]+@[^>]+)>\s*wrote:/gim,
-          "$1<$2> wrote:",
-        );
-
-        // Remove common email quote markers
-        const lines = normalizedBody.split("\n");
-        const cleanedLines: string[] = [];
-        let foundQuoteStart = false;
-
-        for (const line of lines) {
-          // Detect start of quoted content
-          if (
-            line.match(/^On\s+.+\s+wrote:?\s*$/i) || // "On Wed, 17 Dec 2025 at 07:05, Name wrote:"
-            line.match(/^On\s+\w{3},?\s+\w{3}\s+\d{1,2},?\s+\d{4}/i) || // "On Wed, Nov 26, 2025" or "On Wed Nov 26 2025"
-            line.match(/^On\s+\w{3},?\s+\d{1,2}\s+\w{3}/i) || // "On Wed, 17 Dec" (start of quote attribution)
-            line.match(/^On\s+\d{1,2}\s+\w{3}\s+\d{4}/i) || // "On 17 Dec 2025"
-            line.match(
-              /^On\s+\w{3},\s+\d{1,2}\s+\w{3}\s+\d{4}\s+at\s+\d{1,2}:\d{2}/i,
-            ) || // "On Fri, 16 Jan 2026 at 09:40"
-            line.match(/wrote:\s*$/) || // Any line ending with "wrote:"
-            line.match(/^>/) || // Quoted line starting with >
-            line.match(/^-{3,}\s*Original Message\s*-{3,}$/i) ||
-            line.match(/^_{3,}$/) ||
-            line.match(/^From:.*Sent:.*To:/i) ||
-            line.match(/^-{2,}\s*Forwarded message\s*-{2,}$/i) ||
-            line.match(/<[^>]+@[^>]+>\s*wrote:?\s*$/i) || // "<email@example.com> wrote:"
-            line.match(/^[^>]*<\s*$/) || // Line ending with just "<" (email split across lines)
-            line.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+>\s*wrote:?\s*$/i) // "email@example.com> wrote:" (continuation of split line)
-          ) {
-            foundQuoteStart = true;
-          }
-
-          if (!foundQuoteStart) {
-            cleanedLines.push(line);
-          }
-        }
-
-        // Use cleaned content if we removed quotes, otherwise use original
-        const cleanBody =
-          cleanedLines.length > 0 ? cleanedLines.join("\n").trim() : body;
-
-        // Determine if outgoing (sent by us)
-        const userEmail = authStore.member?.sinfoid
-          ? `${authStore.member.sinfoid}@sinfo.org`
-          : "";
-        const isOutgoing =
-          from.toLowerCase().includes("@sinfo.org") ||
-          from.toLowerCase().includes(userEmail.toLowerCase());
-
-        allMessages.push({
-          messageId: msg.id,
-          threadId: msg.threadId,
-          subject,
-          from: extractEmailName(from),
-          to: extractEmailName(to),
-          date: isoDate,
-          body: cleanBody,
-          isOutgoing,
-        });
-      }
-    }
-
-    if (allMessages.length === 0) {
-      return;
-    }
-
-    // Send to backend for sync
-    if (props.entityType === "company") {
-      await syncCompanyGmailMessages(props.entity.id, allMessages);
-    } else {
-      await syncSpeakerGmailMessages(props.entity.id, allMessages);
-    }
-
-    // Refresh communications
-    queryCache.invalidateQueries({
-      key: [`${props.entityType}-communications`, props.entity.id],
-    });
-  } catch (err) {
-    console.error("Failed to sync Gmail messages:", err);
-  } finally {
-    isSyncing.value = false;
-  }
-};
+const {
+  isGmailPickerOpen,
+  gmailPickerThreadIds,
+  gmailPickerDefaultQuery,
+  isSyncing,
+  gmailActionError,
+  isContactedWithoutThread,
+  openGmailPicker,
+  handleGmailThreadsSave,
+  syncGmailMessages,
+  checkAvailableGmailThreads,
+} = useCommunicationGmail({
+  entity: toRef(props, "entity"),
+  entityType: toRef(props, "entityType"),
+  eventId: selectedEventId,
+  linkedThreadIds: currentParticipationGmailThreadIds,
+  communications: sortedCommunications,
+});
 
 const saveEdit = async () => {
   const id = editingPostId.value;
@@ -867,15 +599,11 @@ const saveEdit = async () => {
   updatePostMutation.text.value = text;
 
   try {
-    updatePostMutation.mutate();
+    await updatePostMutation.mutateAsync();
+    cancelEdit();
+    scrollToBottom();
   } catch (e) {
     console.error("Edit failed:", e);
-    return;
-  } finally {
-    editingThreadId.value = null;
-    editingPostId.value = null;
-    editText.value = "";
-    scrollToBottom();
   }
 };
 
@@ -889,56 +617,30 @@ const requestDelete = async (thread: ThreadWithEntry) => {
   deleteThreadMutation.threadId.value = thread.id;
 
   try {
-    deleteThreadMutation.mutate();
+    await deleteThreadMutation.mutateAsync();
   } catch (e) {
     console.error("Delete failed:", e);
   }
 };
 
-// Watch for changes in communications and scroll to bottom
 watch(
-  () => sortedCommunications.value,
-  () => {
-    scrollToBottom();
-  },
-  { flush: "post" },
+  [filteredCommunications, selectedEventId, isLoading],
+  () => scrollToBottom(),
+  { flush: "post", immediate: true },
 );
 
-// Watch for when data is first loaded and scroll to bottom
+// Watch for changes in the selected channel or sub-thread tab and scroll to bottom
 watch(
-  () => communicationsData.value,
-  (newData) => {
-    if (newData) {
-      scrollToBottom();
+  () => selectedChannelTab.value,
+  (newTab) => {
+    if (newTab === "linkedin") {
+      messageChannel.value = ThreadChannel.LinkedIn;
+    } else if (newTab === "gmail") {
+      messageChannel.value = ThreadChannel.Gmail;
+    } else if (newTab === "other") {
+      messageChannel.value = ThreadChannel.Other;
     }
-  },
-  { immediate: true },
-);
-
-// Watch for loading state changes to ensure scroll happens after data loads
-watch(
-  () => isLoading.value,
-  (loading, wasLoading) => {
-    // When loading finishes, and we have data, scroll to bottom
-    if (wasLoading && !loading && sortedCommunications.value.length > 0) {
-      // Add a small delay to ensure DOM has updated
-      setTimeout(() => {
-        scrollToBottom();
-      }, 100);
-    }
-  },
-);
-
-// Watch for selected event changes and scroll to bottom
-watch(
-  () => selectedEventId.value,
-  () => {
-    // Small delay to let the filtered communications update
-    setTimeout(() => {
-      if (sortedCommunications.value.length > 0) {
-        scrollToBottom();
-      }
-    }, 50);
+    selectedGmailThreadTab.value = "all";
   },
 );
 
@@ -953,138 +655,6 @@ watch(
   { immediate: true },
 );
 
-const getMessageDirection = (kind: ThreadKind): "incoming" | "outgoing" => {
-  return kind === ThreadKind.ThreadKindTo ||
-    kind === ThreadKind.ThreadKindTemplate ||
-    kind === ThreadKind.ThreadKindPhoneCall
-    ? "outgoing"
-    : "incoming";
-};
-
-const getMessageAuthor = (thread: ThreadWithEntry): Author | null => {
-  const direction = getMessageDirection(thread.kind);
-
-  // For phone calls, always show the member who made the call
-  if (thread.kind === ThreadKind.ThreadKindPhoneCall && thread.entry?.member) {
-    return getMemberById(thread.entry.member);
-  }
-
-  if (direction === "outgoing" && thread.entry?.member) {
-    return getMemberById(thread.entry?.member);
-  } else if (direction === "incoming") {
-    return props.entity;
-  }
-  return null;
-};
-
-const getAuthorAvatar = (entity: Author | null): string | undefined => {
-  if (!entity) return undefined;
-
-  if ("imgs" in entity) {
-    return entity.imgs?.internal;
-  } else if ("img" in entity) {
-    return entity.img;
-  }
-
-  return undefined;
-};
-
-const avatarClasses = (thread: ThreadWithEntry) => {
-  const direction = getMessageDirection(thread.kind);
-
-  // People related avatars: always circular
-  if (direction === "outgoing" || props.entityType === "speaker") {
-    return ["w-8 h-8 object-cover", "rounded-full"];
-  }
-
-  return [
-    "w-8 h-8 bg-white p-1",
-    "object-contain",
-    "rounded-sm",
-    "border border-gray-100",
-    "shadow-sm",
-    "sm:rounded-none",
-    "sm:w-9",
-    "sm:h-9",
-    "md:w-12",
-    "md:h-10",
-    "md:rounded-md",
-  ];
-};
-
-const getKindLabel = (kind: ThreadKind): string => {
-  switch (kind) {
-    case ThreadKind.ThreadKindTo:
-      return "Sent";
-    case ThreadKind.ThreadKindFrom:
-      return "Received";
-    case ThreadKind.ThreadKindPhoneCall:
-      return "Phone Call";
-    case ThreadKind.ThreadKindMeeting:
-      return "Meeting";
-    case ThreadKind.ThreadKindTemplate:
-      return "Template";
-    default:
-      return "Unknown";
-  }
-};
-
-const getKindColor = (kind: ThreadKind): string => {
-  switch (kind) {
-    case ThreadKind.ThreadKindTo:
-      return "bg-blue-500";
-    case ThreadKind.ThreadKindFrom:
-      return "bg-green-500";
-    case ThreadKind.ThreadKindPhoneCall:
-      return "bg-purple-500";
-    case ThreadKind.ThreadKindMeeting:
-      return "bg-orange-500";
-    case ThreadKind.ThreadKindTemplate:
-      return "bg-gray-500";
-    default:
-      return "bg-gray-400";
-  }
-};
-
-const getStatusColor = (status: ThreadStatus): string => {
-  switch (status) {
-    case ThreadStatus.ThreadStatusApproved:
-      return "bg-green-500";
-    case ThreadStatus.ThreadStatusReviewed:
-      return "bg-yellow-500";
-    case ThreadStatus.ThreadStatusPending:
-      return "bg-red-500";
-    default:
-      return "bg-gray-400";
-  }
-};
-
-const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInDays = Math.floor(
-    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
-  );
-
-  if (diffInDays === 0) {
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  } else if (diffInDays === 1) {
-    return "Yesterday";
-  } else if (diffInDays < 7) {
-    return date.toLocaleDateString("en-US", { weekday: "short" });
-  } else {
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
-};
-
 const sendMessage = async () => {
   if (!newMessage.value.trim() || !props.postThreadMutation) return;
 
@@ -1094,33 +664,22 @@ const sendMessage = async () => {
     props.postThreadMutation.threadData.value = {
       text: newMessage.value,
       kind: messageKind.value,
+      channel: messageChannel.value,
     };
 
-    await props.postThreadMutation.mutate();
+    await props.postThreadMutation.mutateAsync();
 
     newMessage.value = "";
     selectedTemplate.value = undefined;
 
     scrollToBottom();
+
+    if (messageChannel.value === ThreadChannel.Gmail) {
+      checkAvailableGmailThreads();
+    }
   } catch (error) {
     console.error("Failed to send message:", error);
   }
-};
-
-const getMemberById = (memberId: string) => {
-  return membersById.value.get(memberId);
-};
-
-const getFirstName = (fullName: string | undefined): string => {
-  if (!fullName) return "Unknown";
-  const parts = fullName.trim().split(/\s+/);
-  return parts[0] || "Unknown";
-};
-
-const getLastName = (fullName: string | undefined): string => {
-  if (!fullName) return "";
-  const parts = fullName.trim().split(/\s+/);
-  return parts[1] || "";
 };
 
 const getEventName = (eventId: number): string => {
@@ -1134,8 +693,16 @@ watch(
     if (!newTemplate) return;
 
     const { template, variables } = newTemplate;
+
+    if (template.endsWith("_PT") && !authStore.member?.contactObject?.gender) {
+      selectedTemplate.value = undefined;
+      isMissingGenderDialogOpen.value = true;
+      return;
+    }
+
     openTemplateInNewTab(template, variables);
 
+    messageChannel.value = ThreadChannel.Gmail;
     messageKind.value = ThreadKind.ThreadKindTemplate;
     newMessage.value = `Send "${templateHumanReadableNames[template]}" template`;
   },

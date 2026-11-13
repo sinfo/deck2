@@ -5,12 +5,16 @@ import {
   createSpeakerParticipation,
   postSpeakerThread,
   uploadSpeakerInternalImage,
+  uploadSpeakerPublicImage,
+  uploadSpeakerCompanyImage,
   updateSpeakerParticipationStatus,
+  updateSpeakerTasks,
 } from "@/api/speakers";
 import type {
   UpdateSpeakerData,
   UpdateSpeakerParticipationData,
 } from "@/dto/speakers";
+import type { SpeakerTasks } from "@/dto/tasks";
 import {
   ThreadStatus,
   type CreateThread,
@@ -134,17 +138,24 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       if (!kind) {
         throw new Error("Thread kind is required for optimistic update");
       }
+      const memberId = authStore.decoded?.id;
+      if (!memberId) {
+        throw new Error(
+          "Authenticated member id is required for optimistic update",
+        );
+      }
       const now = new Date().toISOString();
 
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
+        channel: threadData.value?.channel,
         comments: [],
         posted: now,
         status: ThreadStatus.ThreadStatusPending,
         entry: {
           id: tempPostId,
-          member: authStore.decoded?.id,
+          member: memberId,
           posted: new Date().toISOString(),
           text: threadData.value?.text ?? "",
         },
@@ -257,5 +268,76 @@ export const useSpeakerImageUploadMutation = defineMutation(() => {
     ...mutation,
     speakerId,
     imageData,
+  };
+});
+
+export const useSpeakerPublicImageUploadMutation = defineMutation(() => {
+  const speakerId = ref<string>();
+  const imageData = ref<FormData>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: () =>
+      uploadSpeakerPublicImage(speakerId.value!, imageData.value!),
+    onSettled: () => {
+      if (speakerId.value) {
+        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    speakerId,
+    imageData,
+  };
+});
+
+export const useSpeakerCompanyImageUploadMutation = defineMutation(() => {
+  const speakerId = ref<string>();
+  const imageData = ref<FormData>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: () =>
+      uploadSpeakerCompanyImage(speakerId.value!, imageData.value!),
+    onSettled: () => {
+      if (speakerId.value) {
+        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    speakerId,
+    imageData,
+  };
+});
+
+export const useSpeakerTasksMutation = defineMutation(() => {
+  const speakerId = ref<string>();
+  const queryCache = useQueryCache();
+
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (tasks: SpeakerTasks) =>
+      updateSpeakerTasks(speakerId.value!, tasks),
+    onSettled: () => {
+      if (speakerId.value) {
+        queryCache.invalidateQueries({ key: ["speaker", speakerId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["speakers"] });
+    },
+  });
+
+  return {
+    mutate,
+    mutateAsync,
+    ...mutation,
+    speakerId,
   };
 });

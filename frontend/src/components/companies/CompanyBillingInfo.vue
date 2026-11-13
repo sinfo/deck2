@@ -44,21 +44,27 @@
             <span class="text-sm font-medium text-muted-foreground"
               >Company Name:</span
             >
-            <p class="text-sm">{{ company?.billingInfo?.name }}</p>
+            <p class="text-sm wrap-anywhere">
+              {{ company?.billingInfo?.name }}
+            </p>
           </div>
 
           <div>
             <span class="text-sm font-medium text-muted-foreground"
               >Address:</span
             >
-            <p class="text-sm">{{ company?.billingInfo?.address }}</p>
+            <p class="text-sm wrap-anywhere">
+              {{ company?.billingInfo?.address }}
+            </p>
           </div>
 
           <div>
             <span class="text-sm font-medium text-muted-foreground"
               >Tax ID (TIN):</span
             >
-            <p class="text-sm">{{ company?.billingInfo?.tin }}</p>
+            <p class="text-sm wrap-anywhere">
+              {{ company?.billingInfo?.tin }}
+            </p>
           </div>
         </div>
 
@@ -80,7 +86,6 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useAuthStore } from "@/stores/auth";
 import { useCompanyBillingMutation } from "@/mutations/companies";
 import type { Company, CompanyBillingInfo } from "@/dto/companies";
 import Card from "../ui/card/Card.vue";
@@ -92,6 +97,7 @@ import Button from "../ui/button/Button.vue";
 import BillingForm from "./BillingForm.vue";
 import EmptyStateCard from "../ui/EmptyStateCard.vue";
 import ContractDownload from "./ContractDownload.vue";
+import { usePermissions } from "@/composables/usePermissions";
 
 interface Props {
   company?: Company;
@@ -122,14 +128,7 @@ const hasBillingInfo = computed(() => {
 const billingMutation = useCompanyBillingMutation();
 const { mutate: updateBilling, isLoading: isUpdating } = billingMutation;
 
-const authStore = useAuthStore();
-const canSeeContract = computed(
-  () =>
-    authStore.isAuthenticated &&
-    authStore.decoded &&
-    ((authStore.decoded as { role?: string }).role === "COORDINATOR" ||
-      (authStore.decoded as { role?: string }).role === "ADMIN"),
-);
+const { isCoordinatorOrAdmin: canSeeContract } = usePermissions();
 
 const startEditing = () => {
   isEditing.value = true;
