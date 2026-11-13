@@ -89,12 +89,6 @@ const router = createRouter({
             ),
           meta: { roles: ["COORDINATOR", "ADMIN"] },
         },
-        {
-          path: "gmail",
-          name: "gmail-messages",
-          component: () =>
-            import("./views/Dashboard/Gmail/GmailMessagesView.vue"),
-        },
       ],
     },
   ],
