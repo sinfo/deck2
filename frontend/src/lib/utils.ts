@@ -15,6 +15,7 @@ const statusOrder = [
   "CONTACTED",
   "SELECTED",
   "ON_HOLD",
+  "NOT_SELECTED",
   "SUGGESTED",
   "REJECTED",
   "GIVEN_UP",

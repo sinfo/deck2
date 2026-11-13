@@ -7,7 +7,9 @@ import {
   createCompanyParticipation,
   postThread,
   uploadCompanyInternalImage,
+  uploadCompanyPublicImage,
   updateRepresentativeOrder,
+  updateCompanyTasks,
 } from "@/api/companies";
 import type { ParticipationStatus } from "@/dto";
 import type {
@@ -16,6 +18,7 @@ import type {
   AddParticipationData,
   CompanyBillingInfo,
 } from "@/dto/companies";
+import type { CompanyTasks } from "@/dto/tasks";
 import {
   ThreadStatus,
   type CreateThread,
@@ -32,7 +35,7 @@ export const useCompanyParticipationMutation = defineMutation(() => {
   const data = ref<UpdateCompanyParticipationData>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
+  const { mutate, mutateAsync, ...mutation } = useMutation({
     mutation: () => updateCompanyParticipation(companyId.value!, data.value!),
     onSettled: () => {
       queryCache.invalidateQueries({ key: ["company", companyId.value!] });
@@ -43,6 +46,7 @@ export const useCompanyParticipationMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
     data,
@@ -186,7 +190,7 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
   const packageId = ref<string>();
   const queryCache = useQueryCache();
 
-  const { mutate, ...mutation } = useMutation({
+  const { mutate, mutateAsync, ...mutation } = useMutation({
     mutation: () =>
       updateCompanyParticipationPackage(companyId.value!, packageId.value!),
     onSettled: () => {
@@ -197,6 +201,7 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
 
   return {
     mutate,
+    mutateAsync,
     ...mutation,
     companyId,
     packageId,
@@ -223,18 +228,21 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
 
       const kind = threadData.value?.kind;
       if (!kind) throw new Error("Thread kind is required");
+      const memberId = authStore.decoded?.id;
+      if (!memberId) throw new Error("Authenticated member id is required");
 
       const now = new Date().toISOString();
 
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
+        channel: threadData.value?.channel,
         comments: [],
         posted: now,
         status: ThreadStatus.ThreadStatusPending,
         entry: {
           id: tempPostId,
-          member: authStore.decoded?.id,
+          member: memberId,
           posted: new Date().toISOString(),
           text: threadData.value?.text ?? "",
         },
@@ -327,6 +335,30 @@ export const useCompanyImageUploadMutation = defineMutation(() => {
   };
 });
 
+export const useCompanyPublicImageUploadMutation = defineMutation(() => {
+  const companyId = ref<string>();
+  const imageData = ref<FormData>();
+  const queryCache = useQueryCache();
+
+  const { mutate, ...mutation } = useMutation({
+    mutation: () =>
+      uploadCompanyPublicImage(companyId.value!, imageData.value!),
+    onSettled: () => {
+      if (companyId.value) {
+        queryCache.invalidateQueries({ key: ["company", companyId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["companies"] });
+    },
+  });
+
+  return {
+    mutate,
+    ...mutation,
+    companyId,
+    imageData,
+  };
+});
+
 export const useUpdateRepresentativeOrderMutation = defineMutation(() => {
   const companyId = ref<string>();
   const representativeIds = ref<string[]>();
@@ -348,5 +380,28 @@ export const useUpdateRepresentativeOrderMutation = defineMutation(() => {
     ...mutation,
     companyId,
     representativeIds,
+  };
+});
+
+export const useCompanyTasksMutation = defineMutation(() => {
+  const companyId = ref<string>();
+  const queryCache = useQueryCache();
+
+  const { mutate, mutateAsync, ...mutation } = useMutation({
+    mutation: (tasks: CompanyTasks) =>
+      updateCompanyTasks(companyId.value!, tasks),
+    onSettled: () => {
+      if (companyId.value) {
+        queryCache.invalidateQueries({ key: ["company", companyId.value] });
+      }
+      queryCache.invalidateQueries({ key: ["companies"] });
+    },
+  });
+
+  return {
+    mutate,
+    mutateAsync,
+    ...mutation,
+    companyId,
   };
 });

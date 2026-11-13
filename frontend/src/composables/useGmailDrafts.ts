@@ -49,10 +49,13 @@ export const useGmailDrafts = () => {
    * Handle API response and check for auth errors
    */
   const handleAuthError = (response: Response): boolean => {
-    if (response.status === 401) {
-      // Token is invalid or expired
+    if (response.status === 401 || response.status === 403) {
+      // Token is invalid, expired, or has insufficient scopes
       authStore.clearGoogleToken();
-      error.value = "Google session expired. Please re-authenticate.";
+      error.value =
+        response.status === 403
+          ? "Insufficient Google permissions. Please re-authenticate."
+          : "Google session expired. Please re-authenticate.";
       needsReauth.value = true;
       return true;
     }

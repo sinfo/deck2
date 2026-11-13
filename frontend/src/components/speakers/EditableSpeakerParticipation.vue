@@ -49,7 +49,7 @@
 
           <div v-if="participation.feedback" class="text-sm">
             <span class="font-medium">Feedback:</span>
-            <div class="mt-1 text-muted-foreground">
+            <div class="mt-1 text-muted-foreground wrap-anywhere">
               {{ participation.feedback }}
             </div>
           </div>
@@ -63,21 +63,21 @@
             "
           >
             <h5 class="text-sm font-medium">Room Details:</h5>
-            <div class="flex flex-row gap-2 items-start">
-              <Badge v-if="participation.room.type" class="text-xs">
+            <div class="min-w-0 flex flex-row gap-2 items-start">
+              <Badge
+                v-if="participation.room.type"
+                class="min-w-0 flex-1 whitespace-normal wrap-anywhere"
+              >
                 {{ participation.room.type }}
               </Badge>
 
-              <Badge
-                v-if="participation.room.cost"
-                class="text-xs bg-amber-400"
-              >
-                {{ participation.room.cost }}€
+              <Badge v-if="participation.room.cost" class="bg-amber-400">
+                {{ formatEuroFromCents(participation.room.cost) }}
               </Badge>
             </div>
 
             <div v-if="participation.room.notes">
-              <div class="mt-1 text-muted-foreground">
+              <div class="mt-1 text-muted-foreground wrap-anywhere">
                 {{ participation.room.notes }}
               </div>
             </div>
@@ -126,7 +126,7 @@
                 <Label for="room-cost">Cost</Label>
                 <input
                   id="room-cost"
-                  v-model.number="editForm.room!.cost"
+                  v-model.number="roomCostEuros"
                   type="number"
                   min="0"
                   step="0.01"
@@ -154,7 +154,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { computed, ref, reactive } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
@@ -189,6 +189,22 @@ const editForm = reactive<UpdateSpeakerParticipationData>({
     notes: props.participation.room?.notes || "",
   },
 });
+
+const roomCostEuros = computed({
+  get: () => (editForm.room?.cost ?? 0) / 100,
+  set: (euros: number | string) => {
+    if (!editForm.room) return;
+
+    const value = Number(String(euros).replace(",", "."));
+    editForm.room.cost = Number.isFinite(value) ? Math.round(value * 100) : 0;
+  },
+});
+
+const formatEuroFromCents = (cents: number) =>
+  new Intl.NumberFormat("pt-PT", {
+    style: "currency",
+    currency: "EUR",
+  }).format(cents / 100);
 
 const { data: eventsData } = useQuery({
   key: () => ["events"],

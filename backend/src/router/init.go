@@ -183,6 +183,7 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/employer", authMember(addEmployer)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/employer/{rep}", authMember(removeEmployer)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/contract/docx", authCoordinator(generateCompanyContractDocx)).Methods("POST")
+	companyRouter.HandleFunc("/{id}/participation/tasks", authMember(updateCompanyTasks)).Methods("PUT")
 
 	// speaker handlers
 	speakerRouter := r.PathPrefix("/speakers").Subrouter()
@@ -211,6 +212,7 @@ func InitializeRouter() {
 	speakerRouter.HandleFunc("/{id}/participation/gmail-threads", authMember(updateSpeakerGmailThreadIds)).Methods("PUT")
 	speakerRouter.HandleFunc("/{id}/participation/gmail-sync", authMember(syncSpeakerGmailMessages)).Methods("POST")
 	speakerRouter.HandleFunc("/{id}/participation", authCoordinator(removeSpeakerParticipation)).Methods("DELETE")
+	speakerRouter.HandleFunc("/{id}/participation/tasks", authMember(updateSpeakerTasks)).Methods("PUT")
 
 	// flightInfo handlers
 	flightInfoRouter := r.PathPrefix("/flightInfo").Subrouter()
