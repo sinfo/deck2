@@ -154,7 +154,7 @@
           <div
             v-for="mail in contact.mails"
             :key="mail.mail"
-            class="group/row flex items-center gap-2 text-sm min-w-0"
+            class="flex items-center gap-2 text-sm min-w-0"
           >
             <MailIcon class="size-3.5 flex-shrink-0 text-muted-foreground" />
             <a
@@ -173,12 +173,7 @@
             </Badge>
             <button
               type="button"
-              class="flex-shrink-0 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity cursor-pointer"
-              :class="
-                copiedEmail === mail.mail
-                  ? 'opacity-100'
-                  : 'opacity-60 sm:opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100'
-              "
+              class="flex-shrink-0 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer"
               :title="copiedEmail === mail.mail ? 'Copied!' : 'Copy email'"
               aria-label="Copy email"
               @click="copyEmail(mail.mail)"

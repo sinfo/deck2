@@ -81,16 +81,22 @@
         <div
           v-for="(rep, index) in orderedRepresentatives"
           :key="rep.id"
+          :ref="(el) => setItemRef(rep.id, el)"
           class="relative"
           :class="{
-            'cursor-grab active:cursor-grabbing': isReorderMode,
-            'opacity-50': draggedId === rep.id,
+            'cursor-grab select-none touch-none': isReorderMode,
+            'z-10 cursor-grabbing': draggedId === rep.id,
+            'transition-transform duration-200 ease-out': draggedId !== rep.id,
           }"
-          :draggable="isReorderMode"
-          @dragstart="onDragStart($event, rep.id)"
-          @dragover="onDragOver($event, index)"
-          @drop.prevent
-          @dragend="draggedId = null"
+          :style="
+            draggedId === rep.id
+              ? { transform: `translateY(${dragOffset}px)` }
+              : undefined
+          "
+          @pointerdown="onPointerDown($event, rep.id)"
+          @pointermove="onPointerMove"
+          @pointerup="onPointerUp"
+          @pointercancel="onPointerUp"
         >
           <!-- Drag handle hint, sits in the card list's left gutter -->
           <GripVerticalIcon
@@ -114,6 +120,7 @@
                 'ring-2 ring-blue-200': isReorderMode,
                 'ring-1 ring-orange-200 shadow-sm':
                   index === 0 && !isReorderMode,
+                'shadow-lg': draggedId === rep.id,
               }"
               @updated="handleContactUpdated"
               @delete="() => handleDeleteRepresentative(rep.id)"
@@ -126,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { ref, computed, nextTick, onMounted, onUnmounted, watch } from "vue";
 import { useMutation, useQueryCache } from "@pinia/colada";
 import type { CompanyRep, CreateCompanyRepData } from "@/dto/companies";
 import {
@@ -313,38 +320,105 @@ const toggleReorderMode = () => {
   isReorderMode.value = !isReorderMode.value;
 };
 
-// Drag and drop reordering (reorder mode only). The list reorders live while
-// dragging; the new order is saved when leaving reorder mode.
+// Drag to reorder (reorder mode only), using pointer events so the card
+// itself follows the pointer and it also works on touch screens. The list
+// reorders live while dragging; the new order is saved when leaving reorder mode.
 const draggedId = ref<string | null>(null);
+const dragOffset = ref(0);
+const itemRefs = new Map<string, HTMLElement>();
+let dragStartY = 0;
+let dragStartTop = 0;
 
-const onDragStart = (event: DragEvent, repId: string) => {
-  if (!isReorderMode.value) return;
+const setItemRef = (repId: string, el: unknown) => {
+  if (el instanceof HTMLElement) itemRefs.set(repId, el);
+  else itemRefs.delete(repId);
+};
+
+const onPointerDown = (event: PointerEvent, repId: string) => {
+  if (!isReorderMode.value || event.button !== 0) return;
+  // Keep the card's own buttons and links clickable
+  if ((event.target as HTMLElement).closest("a, button")) return;
+  const el = itemRefs.get(repId);
+  if (!el) return;
+  el.setPointerCapture(event.pointerId);
   draggedId.value = repId;
-  if (event.dataTransfer) {
-    event.dataTransfer.effectAllowed = "move";
-    // Firefox only starts a drag when some data is set
-    event.dataTransfer.setData("text/plain", repId);
+  dragStartY = event.clientY;
+  dragStartTop = el.offsetTop;
+  dragOffset.value = 0;
+};
+
+// Positions the dragged card under the pointer, clamped to the list
+const updateDragOffset = (clientY: number) => {
+  const el = draggedId.value ? itemRefs.get(draggedId.value) : undefined;
+  if (!el) return 0;
+
+  // offsetTop ignores the transform, so this keeps the card under the
+  // pointer even after it has moved to a new slot in the list
+  const pointerOffset = clientY - dragStartY - (el.offsetTop - dragStartTop);
+
+  // Keep the card inside the list: no higher than the first slot and no
+  // lower than the last one
+  const items = [...itemRefs.values()];
+  const listTop = Math.min(...items.map((item) => item.offsetTop));
+  const listBottom = Math.max(
+    ...items.map((item) => item.offsetTop + item.offsetHeight),
+  );
+  dragOffset.value = Math.min(
+    Math.max(pointerOffset, listTop - el.offsetTop),
+    listBottom - el.offsetHeight - el.offsetTop,
+  );
+  return pointerOffset;
+};
+
+const onPointerMove = async (event: PointerEvent) => {
+  if (!draggedId.value) return;
+  const el = itemRefs.get(draggedId.value);
+  if (!el) return;
+
+  const pointerOffset = updateDragOffset(event.clientY);
+
+  const order = representativeOrder.value;
+  const index = order.indexOf(draggedId.value);
+  // Use where the pointer is pulling the card, not the clamped position:
+  // at the edges the clamped card can never get past its neighbour's middle
+  const center = el.offsetTop + pointerOffset + el.offsetHeight / 2;
+  const middleOf = (id: string | undefined) => {
+    const other = id ? itemRefs.get(id) : undefined;
+    return other ? other.offsetTop + other.offsetHeight / 2 : undefined;
+  };
+
+  const nextMiddle = middleOf(order[index + 1]);
+  const prevMiddle = middleOf(order[index - 1]);
+  let target = index;
+  if (nextMiddle !== undefined && center > nextMiddle) target = index + 1;
+  else if (prevMiddle !== undefined && center < prevMiddle) target = index - 1;
+  if (target === index) return;
+
+  // Swap, then animate the card that was pushed aside from its old slot to
+  // the new one (FLIP), so it slides instead of jumping
+  const neighbour = itemRefs.get(order[target]);
+  const neighbourTop = neighbour?.offsetTop ?? 0;
+
+  const newOrder = [...order];
+  newOrder.splice(index, 1);
+  newOrder.splice(target, 0, draggedId.value);
+  representativeOrder.value = newOrder;
+
+  await nextTick();
+  // Re-anchor the dragged card right away, before the browser paints
+  updateDragOffset(event.clientY);
+
+  if (neighbour) {
+    neighbour.style.transition = "none";
+    neighbour.style.transform = `translateY(${neighbourTop - neighbour.offsetTop}px)`;
+    void neighbour.offsetHeight; // apply the starting position
+    neighbour.style.transition = "";
+    neighbour.style.transform = "";
   }
 };
 
-const onDragOver = (event: DragEvent, targetIndex: number) => {
-  if (!isReorderMode.value || !draggedId.value) return;
-  event.preventDefault();
-  if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
-
-  const fromIndex = representativeOrder.value.indexOf(draggedId.value);
-  if (fromIndex === -1 || fromIndex === targetIndex) return;
-
-  // Only swap once the pointer crosses the middle of the target card,
-  // so cards of different heights don't flicker back and forth
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  const middle = rect.top + rect.height / 2;
-  if (fromIndex < targetIndex && event.clientY < middle) return;
-  if (fromIndex > targetIndex && event.clientY > middle) return;
-
-  const newOrder = [...representativeOrder.value];
-  newOrder.splice(fromIndex, 1);
-  newOrder.splice(targetIndex, 0, draggedId.value);
-  representativeOrder.value = newOrder;
+const onPointerUp = () => {
+  draggedId.value = null;
+  dragOffset.value = 0;
 };
 </script>
