@@ -885,6 +885,11 @@ func getSpeakerThreads(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			channel := thread.Channel
+			if channel == "" {
+				channel = models.ThreadChannelGmail
+			}
+
 			comms = append(comms, &models.ThreadWithEntry{
 				ID:             thread.ID,
 				Posted:         thread.Posted,
@@ -895,6 +900,7 @@ func getSpeakerThreads(w http.ResponseWriter, r *http.Request) {
 				Status:         thread.Status,
 				GmailMessageId: thread.GmailMessageId,
 				GmailThreadId:  thread.GmailThreadId,
+				Channel:        channel,
 			})
 		}
 
@@ -978,11 +984,18 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		meetingIDPointer = &meeting.ID
 	}
 
+	// channel defaults to GMAIL if not specified
+	channel := models.ThreadChannelGmail
+	if atd.Channel != nil {
+		channel = *atd.Channel
+	}
+
 	// only then create the thread
 	var ctd = mongodb.CreateThreadData{
 		Entry:   newPost.ID,
 		Meeting: meetingIDPointer,
 		Kind:    *atd.Kind,
+		Channel: channel,
 	}
 
 	newThread, err := mongodb.Threads.CreateThread(ctd)
@@ -1040,13 +1053,16 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 
 	// build ThreadWithEntry payload to return
 	threadWithEntry := models.ThreadWithEntry{
-		ID:       newThread.ID,
-		Posted:   newThread.Posted,
-		Entry:    newPost,
-		Meeting:  newThread.Meeting,
-		Comments: newThread.Comments,
-		Kind:     newThread.Kind,
-		Status:   newThread.Status,
+		ID:             newThread.ID,
+		Posted:         newThread.Posted,
+		Entry:          newPost,
+		Meeting:        newThread.Meeting,
+		Comments:       newThread.Comments,
+		Kind:           newThread.Kind,
+		Status:         newThread.Status,
+		GmailMessageId: newThread.GmailMessageId,
+		GmailThreadId:  newThread.GmailThreadId,
+		Channel:        newThread.Channel,
 	}
 
 	json.NewEncoder(w).Encode(threadWithEntry)

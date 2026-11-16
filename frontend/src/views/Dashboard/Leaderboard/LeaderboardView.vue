@@ -46,7 +46,7 @@ import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
 import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
-import LeaderboardCard from "@/components/Leaderboard/LeaderboardCard.vue";
+import LeaderboardCard from "@/components/leaderboard/LeaderboardCard.vue";
 import { humanReadableParticipationStatus } from "@/dto";
 // icons are used inside LeaderboardCard
 
