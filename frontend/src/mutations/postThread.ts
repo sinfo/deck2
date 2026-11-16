@@ -31,6 +31,8 @@ export const definePostThreadMutation = (
 
       onMutate: ({ entityId, threadData }: PostThreadVariables) => {
         const key = [`${entityType}-communications`, entityId];
+        // Do not let an older fetch overwrite a newly inserted message.
+        queryCache.cancelQueries({ key, exact: true });
         const current =
           queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
 
@@ -81,19 +83,27 @@ export const definePostThreadMutation = (
         );
         if (!current) return;
 
-        queryCache.setQueryData<ParticipationCommunications[]>(
-          ctx.key,
-          current.map((bucket) =>
-            bucket.event === ctx.eventId
-              ? {
-                  ...bucket,
-                  communications: bucket.communications.map((thread) =>
-                    thread.id === ctx.tempThreadId ? response.data : thread,
-                  ),
-                }
-              : bucket,
-          ),
-        );
+        const bucket = current.find((item) => item.event === ctx.eventId);
+        const threads = bucket?.communications ?? [];
+        const updatedThreads = threads.some(
+          (thread) => thread.id === ctx.tempThreadId,
+        )
+          ? threads.map((thread) =>
+              thread.id === ctx.tempThreadId ? response.data : thread,
+            )
+          : threads.some((thread) => thread.id === response.data.id)
+            ? threads
+            : [...threads, response.data];
+
+        // Another query may have replaced the cache while we were sending.
+        // Reconcile the saved thread without duplicating it.
+        queryCache.setQueryData<ParticipationCommunications[]>(ctx.key, [
+          ...current.filter((item) => item.event !== ctx.eventId),
+          {
+            ...(bucket ?? { event: ctx.eventId }),
+            communications: updatedThreads,
+          },
+        ]);
       },
 
       onError: (error, _vars, ctx) => {
@@ -123,9 +133,8 @@ export const definePostThreadMutation = (
       },
 
       onSettled: (_data, _error, { entityId }: PostThreadVariables) => {
-        queryCache.invalidateQueries({
-          key: [`${entityType}-communications`, entityId],
-        });
+        // The conversation cache is reconciled above; only the related
+        // participation/status queries need to be refreshed.
         queryCache.invalidateQueries({ key: [entityType, entityId] });
         queryCache.invalidateQueries({
           key: [entityType === "company" ? "companies" : "speakers"],

@@ -68,6 +68,7 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
     availableGmailThreadsCount.value = 0;
     if (
       !authStore.isGoogleAuthenticated ||
+      !authStore.hasValidGoogleToken ||
       !hasManualGmailMessage.value ||
       options.linkedThreadIds.value.length > 0
     ) {
@@ -104,8 +105,10 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
       hasManualGmailMessage,
       () => options.entity.value.id,
       options.eventId,
-      options.linkedThreadIds,
-      () => authStore.isGoogleAuthenticated,
+      // The query cache may create a new array for the same linked IDs.
+      // Watching the actual IDs avoids duplicate Gmail lookups on refresh.
+      () => options.linkedThreadIds.value.join("\u0000"),
+      () => authStore.isGoogleAuthenticated && authStore.hasValidGoogleToken,
     ],
     () => void checkAvailableGmailThreads(),
     { immediate: true },
@@ -230,6 +233,5 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
     openGmailPicker,
     handleGmailThreadsSave,
     syncGmailMessages,
-    checkAvailableGmailThreads,
   };
 };
