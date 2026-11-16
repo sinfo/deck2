@@ -30,7 +30,6 @@ const authStore = useAuthStore();
 
 // Setup mutation for posting threads (currently disabled for speakers)
 const postThreadMutation = usePostSpeakerThreadMutation();
-postThreadMutation.speakerId.value = props.speaker.id;
 
 const templates = computed(() =>
   speakerTemplates.map((it) => ({

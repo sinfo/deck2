@@ -659,15 +659,14 @@ const sendMessage = async () => {
   if (!newMessage.value.trim() || !props.postThreadMutation) return;
 
   try {
-    // Set the thread data for the mutation
-    // eslint-disable-next-line vue/no-mutating-props
-    props.postThreadMutation.threadData.value = {
-      text: newMessage.value,
-      kind: messageKind.value,
-      channel: messageChannel.value,
-    };
-
-    await props.postThreadMutation.mutateAsync();
+    await props.postThreadMutation.mutateAsync({
+      entityId: props.entity.id,
+      threadData: {
+        text: newMessage.value,
+        kind: messageKind.value,
+        channel: messageChannel.value,
+      },
+    });
 
     newMessage.value = "";
     selectedTemplate.value = undefined;

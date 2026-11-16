@@ -26,6 +26,7 @@ import {
   type ThreadWithEntry,
 } from "@/dto/threads";
 import { useAuthStore } from "@/stores/auth";
+import type { PostThreadVariables } from "./threads";
 import { useEventStore } from "@/stores/event";
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
 import { ref } from "vue";
@@ -208,29 +209,16 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
   };
 });
 
-interface PostCompanyThreadVariables {
-  companyId?: string;
-  threadData?: CreateThread;
-}
-
 export const usePostCompanyThreadMutation = defineMutation(() => {
-  const companyId = ref<string>();
-  const threadData = ref<CreateThread>();
   const queryCache = useQueryCache();
   const authStore = useAuthStore();
   const eventStore = useEventStore();
 
   const { mutate, ...mutation } = useMutation({
-    mutation: (vars?: PostCompanyThreadVariables) =>
-      postThread(
-        vars?.companyId ?? companyId.value!,
-        vars?.threadData ?? threadData.value!,
-      ),
-    onMutate: (vars?: PostCompanyThreadVariables) => {
-      const targetCompanyId = vars?.companyId ?? companyId.value;
-      const targetThreadData = vars?.threadData ?? threadData.value;
-
-      const key = ["company-communications", targetCompanyId!];
+    mutation: ({ entityId, threadData }: PostThreadVariables) =>
+      postThread(entityId, threadData),
+    onMutate: ({ entityId, threadData }: PostThreadVariables) => {
+      const key = ["company-communications", entityId];
 
       const oldVal =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -238,7 +226,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       const tempThreadId = crypto.randomUUID();
       const tempPostId = crypto.randomUUID();
 
-      const kind = targetThreadData?.kind;
+      const kind = threadData.kind;
       if (!kind) throw new Error("Thread kind is required");
       const memberId = authStore.decoded?.id;
       if (!memberId) throw new Error("Authenticated member id is required");
@@ -248,7 +236,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
-        channel: threadData.value?.channel,
+        channel: threadData.channel,
         comments: [],
         posted: now,
         status: ThreadStatus.ThreadStatusPending,
@@ -256,7 +244,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
           id: tempPostId,
           member: memberId,
           posted: new Date().toISOString(),
-          text: targetThreadData?.text ?? "",
+          text: threadData.text ?? "",
         },
       };
 
@@ -280,7 +268,6 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
         oldVal,
         currentEventId,
         tempThreadId,
-        companyId: targetCompanyId,
       };
     },
 
@@ -315,22 +302,14 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       console.error("Create company thread failed:", err);
     },
 
-    onSettled: (_data, _error, vars, ctx) => {
-      const id = ctx?.companyId ?? vars?.companyId ?? companyId.value;
-      if (id) {
-        queryCache.invalidateQueries({ key: ["company", id] });
-      }
+    onSettled: (_data, _error, { entityId }: PostThreadVariables) => {
+      queryCache.invalidateQueries({ key: ["company", entityId] });
       queryCache.invalidateQueries({ key: ["companies"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 
-  return {
-    mutate,
-    ...mutation,
-    companyId,
-    threadData,
-  };
+  return { mutate, ...mutation };
 });
 
 export const useCompanyImageUploadMutation = defineMutation(() => {

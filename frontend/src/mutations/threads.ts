@@ -1,9 +1,14 @@
 import { deleteThread } from "@/api/threads.ts";
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
-import type { ParticipationCommunications } from "@/dto/threads.ts";
+import type { CreateThread, ParticipationCommunications } from "@/dto/threads.ts";
 import { computed, ref } from "vue";
 
 export type EntityType = "speaker" | "company";
+
+export interface PostThreadVariables {
+  entityId: string;
+  threadData: CreateThread;
+}
 
 export const useDeleteThreadMutation = defineMutation(() => {
   const threadId = ref<string>("");

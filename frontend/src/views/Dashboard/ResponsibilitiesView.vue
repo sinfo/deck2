@@ -187,7 +187,7 @@ const onBulkCompanyEmailSuccess = (
   };
   for (const company of result.success) {
     postCompanyThreadMutation.mutate({
-      companyId: company.entityInfo.id,
+      entityId: company.entityInfo.id,
       threadData,
     });
   }
@@ -204,7 +204,7 @@ const onBulkSpeakerEmailSuccess = (
   };
   for (const speaker of result.success) {
     postSpeakerThreadMutation.mutate({
-      speakerId: speaker.entityInfo.id,
+      entityId: speaker.entityInfo.id,
       threadData,
     });
   }

@@ -22,6 +22,7 @@ import {
   type ThreadWithEntry,
 } from "@/dto/threads";
 import { useAuthStore } from "@/stores/auth";
+import type { PostThreadVariables } from "./threads";
 import { useEventStore } from "@/stores/event";
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
 import { ref } from "vue";
@@ -115,29 +116,16 @@ export const useSpeakerInfoMutation = defineMutation(() => {
   };
 });
 
-interface PostSpeakerThreadVariables {
-  speakerId?: string;
-  threadData?: CreateThread;
-}
-
 export const usePostSpeakerThreadMutation = defineMutation(() => {
-  const speakerId = ref<string>();
-  const threadData = ref<CreateThread>();
   const queryCache = useQueryCache();
   const authStore = useAuthStore();
   const eventStore = useEventStore();
 
   const { mutate, ...mutation } = useMutation({
-    mutation: (vars?: PostSpeakerThreadVariables) =>
-      postSpeakerThread(
-        vars?.speakerId ?? speakerId.value!,
-        vars?.threadData ?? threadData.value!,
-      ),
-    onMutate: (vars?: PostSpeakerThreadVariables) => {
-      const targetSpeakerId = vars?.speakerId ?? speakerId.value;
-      const targetThreadData = vars?.threadData ?? threadData.value;
-
-      const key = ["speaker-communications", targetSpeakerId!];
+    mutation: ({ entityId, threadData }: PostThreadVariables) =>
+      postSpeakerThread(entityId, threadData),
+    onMutate: ({ entityId, threadData }: PostThreadVariables) => {
+      const key = ["speaker-communications", entityId];
 
       const oldVal =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
@@ -145,7 +133,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       const tempThreadId = crypto.randomUUID();
       const tempPostId = crypto.randomUUID();
 
-      const kind = targetThreadData?.kind;
+      const kind = threadData.kind;
       if (!kind) {
         throw new Error("Thread kind is required for optimistic update");
       }
@@ -160,7 +148,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       const valToAdd: ThreadWithEntry = {
         id: tempThreadId,
         kind,
-        channel: threadData.value?.channel,
+        channel: threadData.channel,
         comments: [],
         posted: now,
         status: ThreadStatus.ThreadStatusPending,
@@ -168,7 +156,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
           id: tempPostId,
           member: memberId,
           posted: new Date().toISOString(),
-          text: targetThreadData?.text ?? "",
+          text: threadData.text ?? "",
         },
       };
 
@@ -192,7 +180,6 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
         oldVal,
         currentEventId,
         tempThreadId,
-        speakerId: targetSpeakerId,
       };
     },
 
@@ -227,22 +214,14 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       console.error("Create speaker thread failed:", err);
     },
 
-    onSettled: (_data, _error, vars, ctx) => {
-      const id = ctx?.speakerId ?? vars?.speakerId ?? speakerId.value;
-      if (id) {
-        queryCache.invalidateQueries({ key: ["speaker", id] });
-      }
+    onSettled: (_data, _error, { entityId }: PostThreadVariables) => {
+      queryCache.invalidateQueries({ key: ["speaker", entityId] });
       queryCache.invalidateQueries({ key: ["speakers"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 
-  return {
-    mutate,
-    ...mutation,
-    speakerId,
-    threadData,
-  };
+  return { mutate, ...mutation };
 });
 
 export const useSpeakerParticipationMutation = defineMutation(() => {
