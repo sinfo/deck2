@@ -428,7 +428,6 @@ func deleteThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	participations, err := findCommunicationParticipations(id)
 	if err != nil {
 		http.Error(w, "Could not find associated participation", http.StatusInternalServerError)
@@ -440,7 +439,6 @@ func deleteThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not delete thread: "+err.Error(), http.StatusNotFound)
 		return
 	}
-
 
 	if err := recalculateDeletedCommunicationStatuses(participations, credentials.ID); err != nil {
 		log.Printf("Thread deleted, but participation status could not be updated: %v", err)

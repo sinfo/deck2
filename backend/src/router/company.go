@@ -315,7 +315,7 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
@@ -339,21 +339,21 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete thread and posts (comments) associated to it - only if
-	// thread was deleted sucessfully from speaker participation
+	// thread was deleted successfully from company participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
-
-	credentials, _ := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 	if err := recalculateDeletedCommunicationStatuses(participations, credentials.ID); err != nil {
 		log.Printf("Thread deleted, but participation status could not be updated: %v", err)
 		http.Error(w, "Thread deleted, but participation status update failed", http.StatusInternalServerError)
 		return
 	}
-	if latest, err := mongodb.Companies.GetCompany(id); err == nil {
-		company = latest
+	company, err = mongodb.Companies.GetCompany(id)
+	if err != nil {
+		http.Error(w, "Thread deleted and status updated, but failed to fetch updated company", http.StatusInternalServerError)
+		return
 	}
 	json.NewEncoder(w).Encode(company)
 }
