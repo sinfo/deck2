@@ -208,7 +208,7 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
   };
 });
 
-export interface PostCompanyThreadVariables {
+interface PostCompanyThreadVariables {
   companyId?: string;
   threadData?: CreateThread;
 }
@@ -221,16 +221,11 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
   const eventStore = useEventStore();
 
   const { mutate, ...mutation } = useMutation({
-    mutation: (
-      vars?: PostCompanyThreadVariables,
-      ctx?: { companyId?: string; threadData?: CreateThread },
-    ) => {
-      const targetCompanyId =
-        vars?.companyId ?? ctx?.companyId ?? companyId.value!;
-      const targetThreadData =
-        vars?.threadData ?? ctx?.threadData ?? threadData.value!;
-      return postThread(targetCompanyId, targetThreadData);
-    },
+    mutation: (vars?: PostCompanyThreadVariables) =>
+      postThread(
+        vars?.companyId ?? companyId.value!,
+        vars?.threadData ?? threadData.value!,
+      ),
     onMutate: (vars?: PostCompanyThreadVariables) => {
       const targetCompanyId = vars?.companyId ?? companyId.value;
       const targetThreadData = vars?.threadData ?? threadData.value;
@@ -280,13 +275,11 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       queryCache.setQueryData<ParticipationCommunications[]>(key, newVal);
 
       return {
-        companyId: targetCompanyId,
-        threadData: targetThreadData,
         key,
         oldVal,
         currentEventId,
         tempThreadId,
-        targetCompanyId,
+        companyId: targetCompanyId,
       };
     },
 
@@ -321,19 +314,10 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       console.error("Create company thread failed:", err);
     },
 
-    onSettled: (
-      _data,
-      _error,
-      vars?: PostCompanyThreadVariables,
-      ctx?: { companyId?: string; targetCompanyId?: string },
-    ) => {
-      const idToInvalidate =
-        vars?.companyId ??
-        ctx?.targetCompanyId ??
-        ctx?.companyId ??
-        companyId.value;
-      if (idToInvalidate) {
-        queryCache.invalidateQueries({ key: ["company", idToInvalidate] });
+    onSettled: (_data, _error, vars, ctx) => {
+      const id = ctx?.companyId ?? vars?.companyId ?? companyId.value;
+      if (id) {
+        queryCache.invalidateQueries({ key: ["company", id] });
       }
       queryCache.invalidateQueries({ key: ["companies"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });

@@ -115,7 +115,7 @@ export const useSpeakerInfoMutation = defineMutation(() => {
   };
 });
 
-export interface PostSpeakerThreadVariables {
+interface PostSpeakerThreadVariables {
   speakerId?: string;
   threadData?: CreateThread;
 }
@@ -128,17 +128,11 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
   const eventStore = useEventStore();
 
   const { mutate, ...mutation } = useMutation({
-    mutation: (
-      vars?: PostSpeakerThreadVariables,
-      ctx?: { speakerId?: string; threadData?: CreateThread },
-    ) => {
-      const targetSpeakerId =
-        vars?.speakerId ?? ctx?.speakerId ?? speakerId.value!;
-      const targetThreadData =
-        vars?.threadData ?? ctx?.threadData ?? threadData.value!;
-      return postSpeakerThread(targetSpeakerId, targetThreadData);
-    },
-
+    mutation: (vars?: PostSpeakerThreadVariables) =>
+      postSpeakerThread(
+        vars?.speakerId ?? speakerId.value!,
+        vars?.threadData ?? threadData.value!,
+      ),
     onMutate: (vars?: PostSpeakerThreadVariables) => {
       const targetSpeakerId = vars?.speakerId ?? speakerId.value;
       const targetThreadData = vars?.threadData ?? threadData.value;
@@ -193,13 +187,11 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       queryCache.setQueryData<ParticipationCommunications[]>(key, newVal);
 
       return {
-        speakerId: targetSpeakerId,
-        threadData: targetThreadData,
         key,
         oldVal,
         currentEventId,
         tempThreadId,
-        targetSpeakerId,
+        speakerId: targetSpeakerId,
       };
     },
 
@@ -234,19 +226,10 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       console.error("Create speaker thread failed:", err);
     },
 
-    onSettled: (
-      _data,
-      _error,
-      vars?: PostSpeakerThreadVariables,
-      ctx?: { speakerId?: string; targetSpeakerId?: string },
-    ) => {
-      const idToInvalidate =
-        vars?.speakerId ??
-        ctx?.targetSpeakerId ??
-        ctx?.speakerId ??
-        speakerId.value;
-      if (idToInvalidate) {
-        queryCache.invalidateQueries({ key: ["speaker", idToInvalidate] });
+    onSettled: (_data, _error, vars, ctx) => {
+      const id = ctx?.speakerId ?? vars?.speakerId ?? speakerId.value;
+      if (id) {
+        queryCache.invalidateQueries({ key: ["speaker", id] });
       }
       queryCache.invalidateQueries({ key: ["speakers"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });

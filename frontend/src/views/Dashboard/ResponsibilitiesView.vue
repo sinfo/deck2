@@ -181,18 +181,12 @@ const onBulkCompanyEmailSuccess = (
   template: EmailTemplateCategory,
   result: BulkEmailResult,
 ) => {
-  // For each success, create the template thread
+  const threadData = {
+    kind: ThreadKind.ThreadKindTemplate,
+    text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
+  };
   for (const company of result.success) {
-    const threadData = {
-      kind: ThreadKind.ThreadKindTemplate,
-      text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
-    };
-    postCompanyThreadMutation.companyId.value = company.entityInfo.id;
-    postCompanyThreadMutation.threadData.value = threadData;
-    postCompanyThreadMutation.mutate({
-      companyId: company.entityInfo.id,
-      threadData,
-    });
+    postCompanyThreadMutation.mutate({ companyId: company.entityInfo.id, threadData });
   }
 };
 
@@ -201,18 +195,12 @@ const onBulkSpeakerEmailSuccess = (
   template: EmailTemplateCategory,
   result: BulkEmailResult,
 ) => {
-  // For each success, create the template thread
+  const threadData = {
+    kind: ThreadKind.ThreadKindTemplate,
+    text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
+  };
   for (const speaker of result.success) {
-    const threadData = {
-      kind: ThreadKind.ThreadKindTemplate,
-      text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
-    };
-    postSpeakerThreadMutation.speakerId.value = speaker.entityInfo.id;
-    postSpeakerThreadMutation.threadData.value = threadData;
-    postSpeakerThreadMutation.mutate({
-      speakerId: speaker.entityInfo.id,
-      threadData,
-    });
+    postSpeakerThreadMutation.mutate({ speakerId: speaker.entityInfo.id, threadData });
   }
 };
 
