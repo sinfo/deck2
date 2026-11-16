@@ -126,7 +126,9 @@ const syncEntity = async (
         try {
           await entity.syncMessages(batch);
         } catch (error) {
-          return failure(`saving Gmail messages in Deck: ${errorMessage(error)}`);
+          return failure(
+            `saving Gmail messages in Deck: ${errorMessage(error)}`,
+          );
         }
         synced = true;
       }
