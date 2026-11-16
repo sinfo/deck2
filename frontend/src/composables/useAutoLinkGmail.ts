@@ -110,16 +110,34 @@ export const useAutoLinkGmail = () => {
         const token = await gmail.ensureToken();
         if (!token.ok) {
           error.value = token.error;
+          console.error(
+            `[Gmail sync] Could not authorize SINFO ${eventId}: ${token.error}`,
+          );
           return [];
         }
 
         const scan = await work();
         if (!scan.ok) {
           error.value = scan.error;
+          console.error(
+            `[Gmail sync] Could not start ${kind} sync for SINFO ${eventId}: ${scan.error}`,
+          );
           return [];
         }
 
         results.value = scan.value;
+        const failed = scan.value.filter((item) => item.status === "ERROR");
+        if (failed.length > 0) {
+          console.groupCollapsed(
+            `[Gmail sync] SINFO ${eventId}: ${failed.length} of ${scan.value.length} entities failed (${kind} sync)`,
+          );
+          for (const item of failed) {
+            console.error(
+              `[${item.entityType}] ${item.entityName} (${item.entityId}): ${item.errorMessage ?? "Unknown sync error"}`,
+            );
+          }
+          console.groupEnd();
+        }
         // An empty initial scan must remain eligible for a full retry.
         const previousSync = Number(
           localStorage.getItem(timestampKey(eventId)),
@@ -139,6 +157,9 @@ export const useAutoLinkGmail = () => {
         return scan.value;
       } catch (cause) {
         error.value = errorMessage(cause);
+        console.error(
+          `[Gmail sync] Unexpected error during SINFO ${eventId} ${kind} sync: ${error.value}`,
+        );
         return results.value;
       } finally {
         isAutoLinking.value = false;

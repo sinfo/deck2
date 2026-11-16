@@ -1318,7 +1318,7 @@ func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		log.Println("Error syncing Gmail messages for speaker:", err)
+		log.Printf("Gmail sync failed for speaker %s in SINFO %d (%d messages): %v", speakerID.Hex(), targetEventID, len(data.Messages), err)
 		http.Error(w, "Failed to sync Gmail messages", http.StatusInternalServerError)
 		return
 	}

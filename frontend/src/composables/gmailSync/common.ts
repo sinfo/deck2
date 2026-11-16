@@ -12,6 +12,7 @@ import {
   syncSpeakerGmailMessages,
 } from "@/api/speakers";
 import { getMyResponsibilities } from "@/api/me";
+import { isAxiosError } from "axios";
 import { getAllEvents } from "@/api/events";
 import { useEventStore } from "@/stores/event";
 import type { Company } from "@/dto/companies";
@@ -48,8 +49,28 @@ export const failure = <T>(error: string): SyncResult<T> => ({
   ok: false,
   error,
 });
-export const errorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+// Extract a readable API error without exposing request headers or message data.
+export const errorMessage = (error: unknown): string => {
+  if (!isAxiosError(error)) {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  const data: unknown = error.response?.data;
+  const detail =
+    typeof data === "string"
+      ? data.trim()
+      : data && typeof data === "object" && "message" in data
+        ? data.message
+        : null;
+  const message =
+    typeof detail === "string" && detail.length < 300 && !detail.includes("<")
+      ? detail
+      : error.message;
+
+  return error.response?.status
+    ? `HTTP ${error.response.status}: ${message}`
+    : message;
+};
 
 export interface GmailEntity {
   id: string;

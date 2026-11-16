@@ -615,11 +615,18 @@ const syncThreads = async (silent = false, fullScan = false) => {
       (result) => result.status === "ERROR",
     );
     if (gmailSyncError.value || failedEntities.length > 0) {
+      const examples = failedEntities
+        .slice(0, 2)
+        .map(
+          (item) =>
+            `${item.entityName} (${item.entityType}): ${item.errorMessage ?? "Unknown error"}`,
+        )
+        .join(" | ");
       toast.error({
         title: "Sync Incomplete",
         description:
           gmailSyncError.value ??
-          `Failed to sync ${failedEntities.length} entity/entities. Please retry.`,
+          `${failedEntities.length} of ${results.length} entities failed. ${examples}${failedEntities.length > 2 ? " | See browser console for the complete list." : ""}`,
       });
       return;
     }

@@ -34,18 +34,23 @@ const syncEntity = async (
   const existing = entity.existingThreads;
   const isRecent = options.recentAfterEpoch !== undefined;
   let query: string | undefined;
+  let stage = "loading contact addresses";
 
   try {
     // Normal full sync keeps existing links and only refreshes their messages.
     if (existing.length > 0 && !options.forceReScan && !isRecent) {
       for (let offset = 0; offset < existing.length; offset += 20) {
+        stage = "fetching previously linked Gmail messages";
         const messages = await client.fetchMessages(
           existing.slice(offset, offset + 20),
         );
         if (!messages.ok) throw new Error(messages.error);
         const inEdition = editionMessagesByThread(messages.value, window);
         const batch = [...inEdition.values()].flat();
-        if (batch.length > 0) await entity.syncMessages(batch);
+        if (batch.length > 0) {
+          stage = "saving Gmail messages in Deck";
+          await entity.syncMessages(batch);
+        }
       }
       return entityResult(entity, "ALREADY_LINKED", existing);
     }
@@ -78,12 +83,15 @@ const syncEntity = async (
     const added: string[] = [];
     let synced = false;
 
+    stage = "searching Gmail threads";
     const scanned = await client.scanThreads(query, async (threads) => {
       const ids = threads.map((thread) => thread.id);
       if (ids.length === 0) return success(undefined);
 
       const response = await client.fetchMessages(ids);
-      if (!response.ok) return failure(response.error);
+      if (!response.ok) {
+        return failure(`fetching Gmail thread messages: ${response.error}`);
+      }
 
       const byThread = editionMessagesByThread(response.value, {
         ...window,
@@ -115,14 +123,21 @@ const syncEntity = async (
       }
 
       if (batch.length > 0) {
-        await entity.syncMessages(batch);
+        try {
+          await entity.syncMessages(batch);
+        } catch (error) {
+          return failure(`saving Gmail messages in Deck: ${errorMessage(error)}`);
+        }
         synced = true;
       }
       return success(undefined);
     });
 
     if (!scanned.ok) throw new Error(scanned.error);
-    if (added.length > 0) await entity.updateThreadIds([...found]);
+    if (added.length > 0) {
+      stage = "linking Gmail threads to the participation";
+      await entity.updateThreadIds([...found]);
+    }
 
     if (isRecent && !synced) return null;
     if (!synced) {
@@ -139,7 +154,7 @@ const syncEntity = async (
     });
   } catch (error) {
     return entityResult(entity, "ERROR", existing, 0, {
-      errorMessage: errorMessage(error),
+      errorMessage: `${stage}: ${errorMessage(error)}`,
       searchQueryUsed: query,
     });
   }
