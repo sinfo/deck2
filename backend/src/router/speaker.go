@@ -1013,7 +1013,7 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	} else if newStatus != nil {
 		updatedSpeaker = afterUpdate
 		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-			Kind: models.NotificationKindUpdatedParticipationStatus,
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
 			Speaker: &updatedSpeaker.ID,
 			EventID: currentEvent.ID,
 		})

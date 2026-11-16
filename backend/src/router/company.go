@@ -522,7 +522,7 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	} else if newStatus != nil {
 		updatedCompany = afterUpdate
 		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-			Kind: models.NotificationKindUpdatedParticipationStatus,
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
 			Company: &updatedCompany.ID,
 			EventID: currentEvent.ID,
 		})
