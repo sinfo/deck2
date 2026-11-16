@@ -93,9 +93,15 @@ export const useGmailMessages = () => {
    * Check if Google token is valid before making requests
    */
   const checkAuth = (): boolean => {
-    if (!authStore.isGoogleAuthenticated) {
+    if (!authStore.isGoogleAuthenticated || !authStore.hasValidGoogleToken) {
       error.value = "Google authentication required";
       needsReauth.value = true;
+      return false;
+    }
+    if (!authStore.hasGmailReadScope) {
+      error.value =
+        "Gmail read permission is required. Reconnect Google in Settings.";
+      needsReauth.value = false;
       return false;
     }
     return true;
@@ -105,14 +111,17 @@ export const useGmailMessages = () => {
    * Handle API response and check for auth errors
    */
   const handleAuthError = (response: Response): boolean => {
-    if (response.status === 401 || response.status === 403) {
-      // Token is invalid, expired, or has insufficient scopes
+    if (response.status === 401) {
       authStore.clearGoogleToken();
-      error.value =
-        response.status === 403
-          ? "Insufficient Google permissions. Please re-authenticate."
-          : "Google session expired. Please re-authenticate.";
+      error.value = "Google session expired. Please re-authenticate.";
       needsReauth.value = true;
+      return true;
+    }
+    if (response.status === 403) {
+      // Permission denial is not an expired token. Never launch an
+      // automatic OAuth popup in response to it.
+      error.value = "Gmail access denied. Check permissions in Settings.";
+      needsReauth.value = false;
       return true;
     }
     return false;

@@ -585,8 +585,8 @@ const onGoogleConnected = async (userEmail?: string | null) => {
 const connectGoogle = async () => {
   const userEmail = userConnectedEmail.value;
 
-  // If token is already present and unexpired (e.g. from Deck login), connect immediately without popups
-  if (authStore.hasValidGoogleToken) {
+  // Reuse only a token that already grants Gmail read access.
+  if (authStore.hasValidGoogleToken && authStore.hasGmailReadScope) {
     await onGoogleConnected(userEmail);
     return;
   }

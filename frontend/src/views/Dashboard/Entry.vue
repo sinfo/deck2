@@ -27,12 +27,15 @@ const { toast } = useToast();
 
 const syncedSessionKey = ref<string | null>(null);
 
-// Auto delta-sync recent emails on refresh if connected
+// Only auto-sync with an existing Gmail-readable token: never open a
+// Google consent dialog automatically on page refresh.
 watch(
   () =>
     [
       eventStore.selectedEvent,
-      authStore.isGoogleAuthenticated,
+      authStore.isGoogleAuthenticated &&
+        authStore.hasValidGoogleToken &&
+        authStore.hasGmailReadScope,
       authStore.memberSinfoid,
     ] as const,
   async ([event, isGoogleAuth, sinfoid]) => {

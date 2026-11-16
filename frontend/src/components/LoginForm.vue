@@ -43,6 +43,7 @@ const callback = async (response: CallbackTypes.TokenPopupResponse) => {
     response.access_token,
     expiresIn,
     authStore.sinfoEmail || undefined,
+    response.scope,
   );
   authStore.connectGoogle(authStore.sinfoEmail || undefined);
 
