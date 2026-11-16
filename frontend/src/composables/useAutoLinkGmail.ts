@@ -171,7 +171,7 @@ export const useAutoLinkGmail = () => {
       if (!Number.isFinite(lastSync) || lastSync <= 0) {
         return runFullGmailSync(
           eventId,
-          { onlyMyResponsibilities: true },
+          {},
           gmail,
           (name, completed, total) => {
             currentProcessingEntity.value = name;

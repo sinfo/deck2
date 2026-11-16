@@ -12,6 +12,8 @@ import {
   syncSpeakerGmailMessages,
 } from "@/api/speakers";
 import { getMyResponsibilities } from "@/api/me";
+import { getAllEvents } from "@/api/events";
+import { useEventStore } from "@/stores/event";
 import type { Company } from "@/dto/companies";
 import type { Speaker } from "@/dto/speakers";
 import type { ParticipationStatus } from "@/dto";
@@ -135,6 +137,105 @@ export const loadGmailEntities = async (
   } catch (error) {
     return failure(errorMessage(error));
   }
+};
+
+
+export interface GmailSyncWindow {
+  afterEpoch: number;
+  beforeEpoch: number;
+}
+
+// The preparation window starts after the previous edition ended. Never
+// silently scan the entire mailbox if edition dates are missing.
+export const loadGmailSyncWindow = async (
+  eventId: number,
+): Promise<SyncResult<GmailSyncWindow>> => {
+  if (useEventStore().selectedEvent?.id !== eventId) {
+    return failure("Gmail sync must target the edition selected in Deck");
+  }
+
+  try {
+    const { data: events } = await getAllEvents();
+    const current = events.find((event) => event.id === eventId);
+    const previous = events
+      .filter((event) => event.id < eventId)
+      .sort((a, b) => b.id - a.id)[0];
+
+    if (!current?.end || !previous?.end) {
+      return failure("Edition dates are required for safe Gmail sync");
+    }
+
+    const dayAfter = (value: string): number => {
+      const date = new Date(value);
+      return Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate() + 1,
+      ) / 1000;
+    };
+
+    const afterEpoch = dayAfter(previous.end);
+    const beforeEpoch = dayAfter(current.end);
+    if (
+      !Number.isFinite(afterEpoch) ||
+      !Number.isFinite(beforeEpoch) ||
+      beforeEpoch <= afterEpoch
+    ) {
+      return failure("Invalid edition dates for Gmail sync");
+    }
+
+    return success({ afterEpoch, beforeEpoch });
+  } catch (error) {
+    return failure(errorMessage(error));
+  }
+};
+
+export const normalizeEmails = (emails: string[]): string[] =>
+  [...new Set(emails.map((email) => email.trim().toLowerCase()))].filter(
+    (email) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email),
+  );
+
+export const gmailSearchQuery = (
+  emails: string[],
+  window: GmailSyncWindow,
+  afterEpoch = window.afterEpoch,
+): string =>
+  `after:${Math.max(afterEpoch, window.afterEpoch) - 1} before:${window.beforeEpoch} {${emails
+    .flatMap((email) => [`from:${email}`, `to:${email}`])
+    .join(" ")}}`;
+
+// Gmail returns complete threads, including messages from older editions.
+// Accept a thread only if its latest dated message belongs to this edition,
+// and import only messages inside the selected search window.
+export const editionMessagesByThread = (
+  messages: GmailMessageData[],
+  window: GmailSyncWindow,
+): Map<string, GmailMessageData[]> => {
+  const latest = new Map<string, number>();
+  const inWindow = new Map<string, GmailMessageData[]>();
+  const from = window.afterEpoch * 1000;
+  const until = window.beforeEpoch * 1000;
+
+  for (const message of messages) {
+    const sentAt = Date.parse(message.date);
+    if (!Number.isFinite(sentAt)) continue;
+    latest.set(
+      message.threadId,
+      Math.max(latest.get(message.threadId) ?? 0, sentAt),
+    );
+    if (sentAt < from || sentAt >= until) continue;
+    const batch = inWindow.get(message.threadId) ?? [];
+    batch.push(message);
+    inWindow.set(message.threadId, batch);
+  }
+
+  for (const [id, messages] of inWindow) {
+    const last = latest.get(id)!;
+    if (last < from || last >= until || messages.length === 0) {
+      inWindow.delete(id);
+    }
+  }
+  return inWindow;
 };
 
 export const entityResult = (

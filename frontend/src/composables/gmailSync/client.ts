@@ -50,20 +50,21 @@ export const createGmailSyncClient = (
     }
   };
 
-  const listThreads = async (
+  // Process one Gmail page at a time, keeping only a small batch of thread
+  // IDs and messages in memory instead of collecting the whole mailbox.
+  const scanThreads = async (
     query: string,
-  ): Promise<SyncResult<GmailThreadListItem[]>> => {
+    visitPage: (threads: GmailThreadListItem[]) => Promise<SyncResult<void>>,
+  ): Promise<SyncResult<void>> => {
     const token = await ensureToken();
     if (!token.ok) return failure(token.error);
 
     try {
-      const threads: GmailThreadListItem[] = [];
       let pageToken: string | undefined;
-
       do {
         let response = await gmail.listThreads({
           q: query,
-          maxResults: 50,
+          maxResults: 20,
           pageToken,
         });
 
@@ -72,22 +73,21 @@ export const createGmailSyncClient = (
           if (!reauth.ok) return failure(reauth.error);
           response = await gmail.listThreads({
             q: query,
-            maxResults: 50,
+            maxResults: 20,
             pageToken,
           });
         }
 
         if (!response) {
-          return failure(
-            gmail.error.value ?? "Failed to retrieve Gmail threads",
-          );
+          return failure(gmail.error.value ?? "Failed to retrieve Gmail threads");
         }
 
-        threads.push(...(response.threads ?? []));
+        const processed = await visitPage(response.threads ?? []);
+        if (!processed.ok) return processed;
         pageToken = response.nextPageToken;
       } while (pageToken);
 
-      return success(threads);
+      return success(undefined);
     } catch (error) {
       return failure(errorMessage(error));
     }
@@ -136,7 +136,7 @@ export const createGmailSyncClient = (
     }
   };
 
-  return { ensureToken, listThreads, fetchMessages };
+  return { ensureToken, scanThreads, fetchMessages };
 };
 
 export type GmailSyncClient = ReturnType<typeof createGmailSyncClient>;
