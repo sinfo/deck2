@@ -107,7 +107,8 @@ export const definePostThreadMutation = (
       },
 
       onError: (error, _vars, ctx) => {
-        if (ctx) {
+        // onMutate can fail before providing a complete rollback context.
+        if (ctx?.key && ctx.eventId !== undefined && ctx.tempThreadId) {
           const current = queryCache.getQueryData<
             ParticipationCommunications[]
           >(ctx.key);
