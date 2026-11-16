@@ -94,13 +94,15 @@ func canManageGmailParticipation(
 }
 
 // syncGmailMessagesToThreads processes a batch of Gmail messages:
-// - Deduplicates against existing threads in MongoDB via GmailMessageId
-// - Skips duplicates within the current incoming batch
-// - Preserves message timestamps and direction (From/To)
+// - Deduplicates by GmailMessageId, including duplicates within the incoming batch
+// - Reuses a uniquely matching manual Gmail entry, or removes an identical
+//   manual copy when the Gmail message is already linked to this participation
+// - Preserves message timestamps and direction (From/To) for new records
 // - Creates post and thread records, linking them via the attachThread callback
 func syncGmailMessagesToThreads(
 	messages []GmailMessageData,
 	memberID primitive.ObjectID,
+	participationThreadIDs []primitive.ObjectID,
 	attachThread func(threadID primitive.ObjectID) error,
 ) (int, error) {
 	messageIds := make([]string, 0, len(messages))
@@ -113,6 +115,14 @@ func syncGmailMessagesToThreads(
 	if err != nil {
 		return 0, fmt.Errorf("failed to check existing Gmail threads: %w", err)
 	}
+	manualMatches, err := findManualGmailDuplicates(messages, participationThreadIDs, memberID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to check manual Gmail communications: %w", err)
+	}
+	participationThreads := make(map[primitive.ObjectID]bool, len(participationThreadIDs))
+	for _, threadID := range participationThreadIDs {
+		participationThreads[threadID] = true
+	}
 
 	processedMessageIds := make(map[string]bool)
 	var syncedCount int
@@ -122,13 +132,39 @@ func syncGmailMessagesToThreads(
 			continue
 		}
 
-		if _, exists := existingThreads[msg.MessageId]; exists {
-			continue
-		}
 		if processedMessageIds[msg.MessageId] {
 			continue
 		}
 		processedMessageIds[msg.MessageId] = true
+
+		candidate := manualMatches[msg.MessageId]
+		if existing, exists := existingThreads[msg.MessageId]; exists {
+			// This Gmail ID may belong to a different participation. Never
+			// delete a manual entry unless the synced record belongs here.
+			if candidate != nil && participationThreads[existing.ID] {
+				if _, err := mongodb.Threads.DeleteManualGmailDuplicate(candidate); err != nil {
+					return syncedCount, fmt.Errorf("failed to remove manual Gmail duplicate: %w", err)
+				}
+			}
+			continue
+		}
+
+		if candidate != nil {
+			// Preserve the member's manually logged entry and its thread ID.
+			claimed, err := mongodb.Threads.ClaimManualGmailThread(
+				candidate, msg.MessageId, msg.ThreadId,
+			)
+			if mongo.IsDuplicateKeyError(err) {
+				continue // Another concurrent sync already stored this Gmail ID.
+			}
+			if err != nil {
+				return syncedCount, fmt.Errorf("failed to link manual Gmail communication: %w", err)
+			}
+			if claimed {
+				syncedCount++
+				continue
+			}
+		}
 
 		var postedTime *time.Time
 		if msg.Date != "" {

@@ -205,13 +205,60 @@ func (t *ThreadsType) GetThreadsByGmailMessageIds(gmailMessageIds []string) (map
 	return result, cursor.Err()
 }
 
+// manualGmailFilter protects manual entries against concurrent changes
+// while attaching a Gmail identity or removing a confirmed duplicate.
+func manualGmailFilter(thread *models.Thread) bson.M {
+	return bson.M{
+		"_id":            thread.ID,
+		"entry":          thread.Entry,
+		"posted":         thread.Posted,
+		"kind":           thread.Kind,
+		"status":         models.ThreadStatusPending,
+		"comments":       bson.M{"$size": 0},
+		"meeting":        bson.M{"$exists": false},
+		"gmailMessageId": bson.M{"$in": []interface{}{"", nil}},
+		"channel":        bson.M{"$in": []interface{}{models.ThreadChannelGmail, "", nil}},
+	}
+}
+
+// ClaimManualGmailThread attaches a Gmail identity to the existing manual
+// communication, preserving its text, comments, and participation reference.
+func (t *ThreadsType) ClaimManualGmailThread(thread *models.Thread, messageID, gmailThreadID string) (bool, error) {
+	if messageID == "" || gmailThreadID == "" {
+		return false, errors.New("Gmail identifiers are required")
+	}
+	result, err := t.Collection.UpdateOne(
+		context.Background(),
+		manualGmailFilter(thread),
+		bson.M{"$set": bson.M{"gmailMessageId": messageID, "gmailThreadId": gmailThreadID}},
+	)
+	if err != nil {
+		return false, err
+	}
+	return result.MatchedCount == 1, nil
+}
+
+// DeleteManualGmailDuplicate removes a redundant manual entry only when its
+// thread is still unlinked, without comments or a meeting, and unchanged.
+func (t *ThreadsType) DeleteManualGmailDuplicate(thread *models.Thread) (bool, error) {
+	_, err := t.deleteThread(manualGmailFilter(thread))
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return false, nil
+	}
+	return err == nil, err
+}
+
 // DeleteThread deletes a thread by its ID and cleans up related data.
 func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread, error) {
+	return t.deleteThread(bson.M{"_id": threadID})
+}
+
+func (t *ThreadsType) deleteThread(filter bson.M) (*models.Thread, error) {
 	ctx := context.Background()
 
 	var thread models.Thread
 	if err := t.Collection.
-		FindOneAndDelete(ctx, bson.M{"_id": threadID}).
+		FindOneAndDelete(ctx, filter).
 		Decode(&thread); err != nil {
 		return nil, err
 	}

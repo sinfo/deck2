@@ -1305,7 +1305,15 @@ func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	syncedCount, err := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
+	var participationThreadIDs []primitive.ObjectID
+	for _, participation := range speaker.Participations {
+		if participation.Event == targetEventID {
+			participationThreadIDs = participation.Communications
+			break
+		}
+	}
+
+	syncedCount, err := syncGmailMessagesToThreads(data.Messages, credentials.ID, participationThreadIDs, func(threadID primitive.ObjectID) error {
 		_, err := mongodb.Speakers.AddThread(speakerID, threadID, targetEventID)
 		return err
 	})
