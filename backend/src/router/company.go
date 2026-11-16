@@ -322,6 +322,16 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	participations, err := findCommunicationParticipations(threadID)
+	if err != nil {
+		http.Error(w, "Could not find associated participation", http.StatusInternalServerError)
+		return
+	}
+	if !belongsToParticipation(participations, id, false) {
+		http.Error(w, "Thread not found in company participation", http.StatusNotFound)
+		return
+	}
+
 	company, err := mongodb.Companies.DeleteCompanyThread(id, threadID)
 	if err != nil {
 		http.Error(w, "Company or thread not found: "+err.Error(), http.StatusNotFound)
@@ -335,6 +345,16 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+	credentials, _ := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	if err := recalculateDeletedCommunicationStatuses(participations, credentials.ID); err != nil {
+		log.Printf("Thread deleted, but participation status could not be updated: %v", err)
+		http.Error(w, "Thread deleted, but participation status update failed", http.StatusInternalServerError)
+		return
+	}
+	if latest, err := mongodb.Companies.GetCompany(id); err == nil {
+		company = latest
+	}
 	json.NewEncoder(w).Encode(company)
 }
 

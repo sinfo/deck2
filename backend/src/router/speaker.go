@@ -365,6 +365,16 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	participations, err := findCommunicationParticipations(threadID)
+	if err != nil {
+		http.Error(w, "Could not find associated participation", http.StatusInternalServerError)
+		return
+	}
+	if !belongsToParticipation(participations, id, true) {
+		http.Error(w, "Thread not found in speaker participation", http.StatusNotFound)
+		return
+	}
+
 	speaker, err := mongodb.Speakers.DeleteSpeakerThread(id, threadID)
 	if err != nil {
 		http.Error(w, "Speaker or thread not found: "+err.Error(), http.StatusNotFound)
@@ -378,6 +388,16 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+	credentials, _ := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	if err := recalculateDeletedCommunicationStatuses(participations, credentials.ID); err != nil {
+		log.Printf("Thread deleted, but participation status could not be updated: %v", err)
+		http.Error(w, "Thread deleted, but participation status update failed", http.StatusInternalServerError)
+		return
+	}
+	if latest, err := mongodb.Speakers.GetSpeaker(id); err == nil {
+		speaker = latest
+	}
 	json.NewEncoder(w).Encode(speaker)
 }
 
