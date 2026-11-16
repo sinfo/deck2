@@ -21,7 +21,6 @@ import type {
 import type { CompanyTasks } from "@/dto/tasks";
 import {
   ThreadStatus,
-  type CreateThread,
   type ParticipationCommunications,
   type ThreadWithEntry,
 } from "@/dto/threads";

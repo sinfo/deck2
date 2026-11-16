@@ -17,7 +17,6 @@ import type {
 import type { SpeakerTasks } from "@/dto/tasks";
 import {
   ThreadStatus,
-  type CreateThread,
   type ParticipationCommunications,
   type ThreadWithEntry,
 } from "@/dto/threads";
