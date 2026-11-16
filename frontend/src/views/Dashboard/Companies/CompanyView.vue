@@ -1,5 +1,9 @@
 <template>
-  <div v-if="companyWithParticipation" class="flex flex-col lg:flex-row gap-6">
+  <div
+    v-if="companyWithParticipation"
+    class="flex flex-col lg:flex-row gap-6"
+    :class="{ 'closed-company': !!companyWithParticipation.closure }"
+  >
     <!-- Company information section -->
     <div class="space-y-4 w-full lg:w-96 lg:flex-shrink-0">
       <!-- Bankrupt / banned, merged and rebranded warnings -->
@@ -162,3 +166,14 @@ const companyWithParticipation = computed(() => {
   ) as CompanyWithParticipation;
 });
 </script>
+
+<style scoped>
+/* Reuse the closure banner's muted treatment for every Card on this
+   company's detail page, including cards nested inside other components. */
+.closed-company :deep([data-slot="card"]) {
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--foreground) 30%, transparent);
+  background-color: color-mix(in oklab, var(--muted) 40%, transparent);
+  box-shadow: none;
+}
+</style>

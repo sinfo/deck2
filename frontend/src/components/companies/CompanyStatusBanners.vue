@@ -6,10 +6,10 @@
       role="alert"
       class="rounded-xl border border-dashed border-foreground/30 bg-muted/40 text-foreground"
     >
-      <div class="flex items-start gap-3 px-4 py-3">
+      <div class="flex items-center gap-3 px-4 py-3">
         <component
           :is="closureIcon"
-          class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+          class="h-4 w-4 shrink-0 text-muted-foreground"
         />
         <div class="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <p class="text-sm font-semibold uppercase tracking-wide">
