@@ -186,7 +186,10 @@ const onBulkCompanyEmailSuccess = (
     text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
   };
   for (const company of result.success) {
-    postCompanyThreadMutation.mutate({ companyId: company.entityInfo.id, threadData });
+    postCompanyThreadMutation.mutate({
+      companyId: company.entityInfo.id,
+      threadData,
+    });
   }
 };
 
@@ -200,7 +203,10 @@ const onBulkSpeakerEmailSuccess = (
     text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
   };
   for (const speaker of result.success) {
-    postSpeakerThreadMutation.mutate({ speakerId: speaker.entityInfo.id, threadData });
+    postSpeakerThreadMutation.mutate({
+      speakerId: speaker.entityInfo.id,
+      threadData,
+    });
   }
 };
 

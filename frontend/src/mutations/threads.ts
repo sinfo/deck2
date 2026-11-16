@@ -32,7 +32,12 @@ export const useDeleteThreadMutation = defineMutation(() => {
       }));
 
       queryCache.setQueryData<ParticipationCommunications[]>(key, next);
-      return { key, prev, entityId: entityId.value, entityType: entityType.value };
+      return {
+        key,
+        prev,
+        entityId: entityId.value,
+        entityType: entityType.value,
+      };
     },
 
     // rollback on error

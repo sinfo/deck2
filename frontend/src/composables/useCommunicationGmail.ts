@@ -150,12 +150,26 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
         );
       }
 
-      queryCache.invalidateQueries({
-        key: [
-          `${options.entityType.value}-communications`,
-          options.entity.value.id,
-        ],
-      });
+      await Promise.all([
+        queryCache.invalidateQueries({
+          key: [
+            `${options.entityType.value}-communications`,
+            options.entity.value.id,
+          ],
+        }),
+        queryCache.invalidateQueries({
+          key: [options.entityType.value, options.entity.value.id],
+        }),
+        queryCache.invalidateQueries({
+          key: [
+            options.entityType.value === "company" ? "companies" : "speakers",
+          ],
+        }),
+        queryCache.invalidateQueries({
+          key: ["responsibilities"],
+        }),
+      ]);
+
       return true;
     } catch (cause) {
       console.error("Failed to sync Gmail messages:", cause);
@@ -188,12 +202,13 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
           eventId,
         );
       }
-      queryCache.invalidateQueries({
+      await queryCache.invalidateQueries({
         key: [
           `${options.entityType.value}-communications`,
           options.entity.value.id,
         ],
       });
+
       await syncGmailMessages(threadIds);
       availableGmailThreadsCount.value = 0;
     } catch (cause) {
