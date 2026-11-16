@@ -57,7 +57,9 @@ export const definePostThreadMutation = (
         };
 
         const eventId = eventStore.selectedEvent?.id ?? 0;
-        const existingBucket = current.find((bucket) => bucket.event === eventId);
+        const existingBucket = current.find(
+          (bucket) => bucket.event === eventId,
+        );
         queryCache.setQueryData<ParticipationCommunications[]>(key, [
           ...current.filter((bucket) => bucket.event !== eventId),
           {
@@ -74,8 +76,9 @@ export const definePostThreadMutation = (
 
       onSuccess: (response, _vars, ctx) => {
         if (!ctx) return;
-        const current =
-          queryCache.getQueryData<ParticipationCommunications[]>(ctx.key);
+        const current = queryCache.getQueryData<ParticipationCommunications[]>(
+          ctx.key,
+        );
         if (!current) return;
 
         queryCache.setQueryData<ParticipationCommunications[]>(
@@ -95,8 +98,9 @@ export const definePostThreadMutation = (
 
       onError: (error, _vars, ctx) => {
         if (ctx) {
-          const current =
-            queryCache.getQueryData<ParticipationCommunications[]>(ctx.key);
+          const current = queryCache.getQueryData<
+            ParticipationCommunications[]
+          >(ctx.key);
           if (current) {
             // Only remove this request's temporary thread. Other in-flight
             // requests must keep their own optimistic data.
