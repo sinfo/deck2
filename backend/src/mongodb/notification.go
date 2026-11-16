@@ -23,13 +23,9 @@ var tagRegexCompiler, _ = regexp.Compile(`@[a-zA-Z0-9\.]+`)
 // Notify creates a notification and adds it to every subscriber
 func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotificationData) {
 
-	eventID := data.EventID
-	if eventID == 0 {
-		event, err := Events.GetCurrentEvent()
-		if err != nil {
-			return
-		}
-		eventID = event.ID
+	event, err := Events.GetCurrentEvent()
+	if err != nil {
+		return
 	}
 
 	if !config.Production {
@@ -51,7 +47,7 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 		}
 
 		for _, participation := range company.Participations {
-			if participation.Event == eventID {
+			if participation.Event == event.ID {
 				for _, subscriber := range participation.Subscribers {
 
 					// notify authors only if not running on production mode
@@ -73,7 +69,7 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 		}
 
 		for _, participation := range speaker.Participations {
-			if participation.Event == eventID {
+			if participation.Event == event.ID {
 				for _, subscriber := range participation.Subscribers {
 
 					// notify authors only if not running on production mode
@@ -141,7 +137,6 @@ func (n *NotificationsType) Notify(author primitive.ObjectID, data CreateNotific
 // CreateNotificationData holds data needed to create a notification
 type CreateNotificationData struct {
 	Kind    models.NotificationKind
-	EventID int // Edition to notify; zero uses the current event
 	Post    *primitive.ObjectID
 	Thread  *primitive.ObjectID
 	Speaker *primitive.ObjectID

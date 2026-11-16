@@ -236,11 +236,6 @@ func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread,
 		bson.M{"participations.communications": threadID},
 		bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
 	)
-	_, _ = Companies.Collection.UpdateMany(
-		ctx,
-		bson.M{"participations.communications": threadID},
-		bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
-	)
 
 	return &thread, nil
 }

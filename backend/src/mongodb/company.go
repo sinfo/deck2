@@ -839,7 +839,7 @@ func (c *CompaniesType) DeleteCompanyThread(id, threadID primitive.ObjectID) (*m
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id, "participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
 		return nil, err
 	}
 
@@ -884,20 +884,34 @@ func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID
 
 // UpdateCompanyParticipationStatus updates the participation status for the current event.
 func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.ObjectID, status models.ParticipationStatus) (*models.Company, error) {
+
+	ctx := context.Background()
+	var updatedCompany models.Company
+
 	currentEvent, err := Events.GetCurrentEvent()
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.Background()
-	var updated models.Company
-	filter := bson.M{"_id": companyID, "participations.event": currentEvent.ID}
-	update := bson.M{"$set": bson.M{"participations.$.status": status}}
-	optionsQuery := options.FindOneAndUpdate().SetReturnDocument(options.After)
-	if err := c.Collection.FindOneAndUpdate(ctx, filter, update, optionsQuery).Decode(&updated); err != nil {
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.status": status,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error updating company's status:", err)
 		return nil, err
 	}
+
 	ResetCurrentPublicCompanies()
-	return &updated, nil
+
+	return &updatedCompany, nil
 }
 
 // AutoUpdateParticipationStatus applies the shared forward-only communication rule.

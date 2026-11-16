@@ -902,20 +902,34 @@ func (s *SpeakersType) UpdateSpeakerGmailThreadIds(speakerID primitive.ObjectID,
 
 // UpdateSpeakerParticipationStatus updates the participation status for the current event.
 func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.ObjectID, status models.ParticipationStatus) (*models.Speaker, error) {
+	ctx := context.Background()
+
+	var updatedSpeaker models.Speaker
+
 	currentEvent, err := Events.GetCurrentEvent()
 	if err != nil {
 		return nil, err
 	}
-	ctx := context.Background()
-	var updated models.Speaker
-	filter := bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
-	update := bson.M{"$set": bson.M{"participations.$.status": status}}
-	optionsQuery := options.FindOneAndUpdate().SetReturnDocument(options.After)
-	if err := s.Collection.FindOneAndUpdate(ctx, filter, update, optionsQuery).Decode(&updated); err != nil {
+
+	var updateQuery = bson.M{
+		"$set": bson.M{
+			"participations.$.status": status,
+		},
+	}
+
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+		log.Println("Error updating speaker's status:", err)
 		return nil, err
 	}
+
 	ResetCurrentPublicSpeakers()
-	return &updated, nil
+
+	return &updatedSpeaker, nil
 }
 
 // AutoUpdateParticipationStatus applies the shared forward-only communication rule.
@@ -1029,7 +1043,7 @@ func (s *SpeakersType) DeleteSpeakerThread(id, threadID primitive.ObjectID) (*mo
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id, "participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		return nil, err
 	}
 

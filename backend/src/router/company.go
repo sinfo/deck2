@@ -312,35 +312,13 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	params := mux.Vars(r)
-	id, err := primitive.ObjectIDFromHex(params["id"])
-	if err != nil {
-		http.Error(w, "Invalid company ID", http.StatusBadRequest)
-		return
-	}
-	threadID, err := primitive.ObjectIDFromHex(params["threadID"])
-	if err != nil {
-		http.Error(w, "Invalid thread ID", http.StatusBadRequest)
-		return
-	}
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
 
-	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+
 	if !ok {
-		http.Error(w, "Authentication failed", http.StatusUnauthorized)
-		return
-	}
-
-	thread, err := mongodb.Threads.GetThread(threadID)
-	if err != nil {
-		http.Error(w, "Thread not found", http.StatusNotFound)
-		return
-	}
-	post, err := mongodb.Posts.GetPost(thread.Entry)
-	if err != nil {
-		http.Error(w, "Post not found", http.StatusNotFound)
-		return
-	}
-	if credentials.Role.AccessLevel() != 0 && post.Member != credentials.ID {
-		http.Error(w, "Unauthorized", http.StatusForbidden)
+		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
 		return
 	}
 
@@ -351,7 +329,7 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete thread and posts (comments) associated to it - only if
-	// thread was deleted sucessfully from company participation
+	// thread was deleted sucessfully from speaker participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
@@ -546,7 +524,6 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 			Kind:    models.NotificationKindUpdatedParticipationStatus,
 			Company: &updatedCompany.ID,
-			EventID: currentEvent.ID,
 		})
 	}
 
@@ -1485,11 +1462,15 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Gmail messages were synchronized but participation status could not be updated", http.StatusInternalServerError)
 		return
 	} else if newStatus != nil {
-		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-			Kind: models.NotificationKindUpdatedParticipationStatus,
-			Company: &companyID,
-			EventID: targetEventID,
-		})
+		currentEvent, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			log.Printf("Could not determine event for status notification: %v", err)
+		} else if currentEvent.ID == targetEventID {
+			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+				Kind:    models.NotificationKindUpdatedParticipationStatus,
+				Company: &companyID,
+			})
+		}
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
