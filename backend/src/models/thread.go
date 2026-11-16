@@ -26,14 +26,6 @@ func (tk ThreadKind) IsValid() bool {
 		tk == ThreadKindMeeting
 }
 
-func (tk ThreadKind) IsOutgoing() bool {
-	return tk == ThreadKindTo || tk == ThreadKindTemplate || tk == ThreadKindPhoneCall
-}
-
-func (tk ThreadKind) IsIncoming() bool {
-	return tk == ThreadKindFrom
-}
-
 // ThreadStatus is the status of the thread
 type ThreadStatus string
 

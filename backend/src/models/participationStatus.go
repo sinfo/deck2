@@ -240,3 +240,22 @@ func (s *ParticipationStatus) Parse(status string) error {
 
 	return nil
 }
+
+// NextCommunicationStatus applies only the two automatic forward transitions.
+// Manual statuses, including ON_HOLD and GIVEN_UP, are never overridden.
+func NextCommunicationStatus(current ParticipationStatus, hasOutgoing, hasIncoming bool) ParticipationStatus {
+	switch current {
+	case Selected:
+		if hasOutgoing {
+			if hasIncoming {
+				return InConversations
+			}
+			return Contacted
+		}
+	case Contacted:
+		if hasIncoming {
+			return InConversations
+		}
+	}
+	return current
+}

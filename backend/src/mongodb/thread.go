@@ -150,7 +150,7 @@ func (t *ThreadsType) GetThreadsByIDs(threadIDs []primitive.ObjectID) (map[primi
 	for cursor.Next(ctx) {
 		var thread models.Thread
 		if err := cursor.Decode(&thread); err != nil {
-			continue
+			return nil, err
 		}
 		result[thread.ID] = &thread
 	}
@@ -195,34 +195,6 @@ func (t *ThreadsType) GetThreadsByGmailMessageIds(gmailMessageIds []string) (map
 			return nil, err
 		}
 		result[thread.GmailMessageId] = &thread
-	}
-
-	return result, cursor.Err()
-}
-
-// GetThreads finds threads by multiple thread IDs.
-func (t *ThreadsType) GetThreads(threadIDs []primitive.ObjectID) ([]*models.Thread, error) {
-	ctx := context.Background()
-	result := make([]*models.Thread, 0, len(threadIDs))
-
-	if len(threadIDs) == 0 {
-		return result, nil
-	}
-
-	cursor, err := t.Collection.Find(ctx, bson.M{
-		"_id": bson.M{"$in": threadIDs},
-	})
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	for cursor.Next(ctx) {
-		var thread models.Thread
-		if err := cursor.Decode(&thread); err != nil {
-			continue
-		}
-		result = append(result, &thread)
 	}
 
 	return result, cursor.Err()
