@@ -315,26 +315,11 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
 
-	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
 		return
-	}
-
-	targetEvent := 0
-	if existingCompany, err := mongodb.Companies.GetCompany(id); err == nil && existingCompany != nil {
-		for _, part := range existingCompany.Participations {
-			for _, comm := range part.Communications {
-				if comm == threadID {
-					targetEvent = part.Event
-					break
-				}
-			}
-			if targetEvent != 0 {
-				break
-			}
-		}
 	}
 
 	company, err := mongodb.Companies.DeleteCompanyThread(id, threadID)
@@ -348,14 +333,6 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
-	}
-
-	if afterUpdate, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(company.ID, targetEvent); err == nil && newStatus != nil {
-		company = afterUpdate
-		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-			Kind:    models.NotificationKindUpdatedParticipationStatus,
-			Company: &company.ID,
-		})
 	}
 
 	json.NewEncoder(w).Encode(company)
@@ -454,6 +431,12 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+		return
+	}
+
 	// create the post first
 	cpd := mongodb.CreatePostData{
 		Member: credentials.ID,
@@ -515,7 +498,7 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach the thread to the company participation
-	updatedCompany, err := mongodb.Companies.AddThread(companyID, newThread.ID)
+	updatedCompany, err := mongodb.Companies.AddThread(companyID, newThread.ID, currentEvent.ID)
 	if err != nil {
 		http.Error(w, "Could not add thread to company: "+err.Error(), http.StatusExpectationFailed)
 
@@ -534,14 +517,15 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if afterUpdate, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID); err == nil && newStatus != nil {
+	if afterUpdate, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID, currentEvent.ID); err != nil {
+		log.Printf("Could not auto-update company %s for event %d: %v", companyID.Hex(), currentEvent.ID, err)
+	} else if newStatus != nil {
 		updatedCompany = afterUpdate
-		if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-				Kind:    models.NotificationKindUpdatedParticipationStatus,
-				Company: &updatedCompany.ID,
-			})
-		}
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind: models.NotificationKindUpdatedParticipationStatus,
+			Company: &updatedCompany.ID,
+			EventID: currentEvent.ID,
+		})
 	}
 
 	threadWithEntry := models.ThreadWithEntry{
@@ -1474,15 +1458,14 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if syncedCount > 0 {
-		if _, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID); err == nil && newStatus != nil {
-			if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
-				mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
-					Kind:    models.NotificationKindUpdatedParticipationStatus,
-					Company: &companyID,
-				})
-			}
-		}
+	if _, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID, targetEventID); err != nil {
+		log.Printf("Could not auto-update company %s for event %d after Gmail sync: %v", companyID.Hex(), targetEventID, err)
+	} else if newStatus != nil {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind: models.NotificationKindUpdatedParticipationStatus,
+			Company: &companyID,
+			EventID: targetEventID,
+		})
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
