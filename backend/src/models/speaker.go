@@ -44,6 +44,9 @@ type SpeakerParticipation struct {
 	// GmailThreadIds is an array of Gmail thread IDs linked to this participation.
 	// These are used to sync communications with Gmail.
 	GmailThreadIds []string `json:"gmailThreadIds,omitempty" bson:"gmailThreadIds,omitempty"`
+
+	// Tasks tracks the speaker's task pipeline progress.
+	Tasks SpeakerTasks `json:"tasks" bson:"tasks"`
 }
 
 type SpeakerImages struct {
@@ -68,8 +71,8 @@ type Speaker struct {
 	Name string `json:"name" bson:"name"`
 
 	// Contact is an _id of Contact (see models.Contact).
-	Contact *primitive.ObjectID `json:"contact,omitempty" bson:"contact"`
-	ContactObject *Contact `json:"contactObject,omitempty" bson:"contactObject"`
+	Contact       *primitive.ObjectID `json:"contact,omitempty" bson:"contact"`
+	ContactObject *Contact            `json:"contactObject,omitempty" bson:"contactObject"`
 
 	// Title of the speaker (CEO @ HugeCorportation, for example).
 	Title string `json:"title" bson:"title"`
@@ -77,8 +80,8 @@ type Speaker struct {
 	// Bio of the speaker. Careful, this will be visible on our website!
 	Bio string `json:"bio" bson:"bio"`
 
-  	// Company name
-  	CompanyName string `json:"companyName" bson:"companyName"`
+	// Company name
+	CompanyName string `json:"companyName" bson:"companyName"`
 
 	// This is only visible by the team. Praise and trash talk at will.
 	Notes          string                 `json:"notes" bson:"notes"`
@@ -120,8 +123,8 @@ type SpeakerPublic struct {
 	// Bio of the speaker. Careful, this will be visible on our website!
 	Bio string `json:"bio" bson:"bio"`
 
-  // Company name
-  CompanyName string `json:"companyName,omitempty" bson:"companyName"`
+	// Company name
+	CompanyName string `json:"companyName,omitempty" bson:"companyName"`
 
 	Images         SpeakerImagesPublic          `json:"imgs" bson:"imgs"`
 	Participations []SpeakerParticipationPublic `json:"participation" bson:"participations"`

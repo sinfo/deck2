@@ -76,6 +76,7 @@ interface Props {
   previewAlt?: string;
   previewSize?: "sm" | "md";
   disabled?: boolean;
+  initialUrl?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -85,6 +86,7 @@ const props = withDefaults(defineProps<Props>(), {
   previewAlt: "Image preview",
   previewSize: "md",
   disabled: false,
+  initialUrl: undefined,
 });
 
 const emit = defineEmits<{
@@ -101,6 +103,11 @@ const {
   handleFileChange,
   handleUrlChange,
 } = useImageUpload();
+
+// Seed the preview from the prop if no new file has been chosen yet
+if (props.initialUrl) {
+  imagePreview.value = props.initialUrl;
+}
 
 const previewSizeClass = props.previewSize === "sm" ? "w-20 h-20" : "w-24 h-24";
 

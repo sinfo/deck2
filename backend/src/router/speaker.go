@@ -10,7 +10,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/h2non/filetype"
@@ -359,10 +358,20 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	participations, err := findCommunicationParticipations(threadID)
+	if err != nil {
+		http.Error(w, "Could not find associated participation", http.StatusInternalServerError)
+		return
+	}
+	if !belongsToParticipation(participations, id, true) {
+		http.Error(w, "Thread not found in speaker participation", http.StatusNotFound)
 		return
 	}
 
@@ -373,12 +382,22 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete thread and posts (comments) associated to it - only if
-	// thread was deleted sucessfully from speaker participation
+	// thread was deleted successfully from speaker participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
+	if err := recalculateCommunicationStatuses(participations, credentials.ID); err != nil {
+		log.Printf("Thread deleted, but participation status could not be updated: %v", err)
+		http.Error(w, "Thread deleted, but participation status update failed", http.StatusInternalServerError)
+		return
+	}
+	speaker, err = mongodb.Speakers.GetSpeaker(id)
+	if err != nil {
+		http.Error(w, "Thread deleted and status updated, but failed to fetch updated speaker", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(speaker)
 }
 
@@ -866,14 +885,22 @@ func getSpeakerThreads(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			channel := thread.Channel
+			if channel == "" {
+				channel = models.ThreadChannelGmail
+			}
+
 			comms = append(comms, &models.ThreadWithEntry{
-				ID:       thread.ID,
-				Posted:   thread.Posted,
-				Entry:    post,
-				Meeting:  thread.Meeting,
-				Comments: thread.Comments,
-				Kind:     thread.Kind,
-				Status:   thread.Status,
+				ID:             thread.ID,
+				Posted:         thread.Posted,
+				Entry:          post,
+				Meeting:        thread.Meeting,
+				Comments:       thread.Comments,
+				Kind:           thread.Kind,
+				Status:         thread.Status,
+				GmailMessageId: thread.GmailMessageId,
+				GmailThreadId:  thread.GmailThreadId,
+				Channel:        channel,
 			})
 		}
 
@@ -910,6 +937,12 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Could not determine current event", http.StatusInternalServerError)
 		return
 	}
 
@@ -951,11 +984,18 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		meetingIDPointer = &meeting.ID
 	}
 
+	// channel defaults to GMAIL if not specified
+	channel := models.ThreadChannelGmail
+	if atd.Channel != nil {
+		channel = *atd.Channel
+	}
+
 	// only then create the thread
 	var ctd = mongodb.CreateThreadData{
 		Entry:   newPost.ID,
 		Meeting: meetingIDPointer,
 		Kind:    *atd.Kind,
+		Channel: channel,
 	}
 
 	newThread, err := mongodb.Threads.CreateThread(ctd)
@@ -978,7 +1018,7 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// and finally update the speaker participation with the created thread
-	updatedSpeaker, err := mongodb.Speakers.AddThread(speakerID, newThread.ID)
+	updatedSpeaker, err := mongodb.Speakers.AddThread(speakerID, newThread.ID, currentEvent.ID)
 
 	if err != nil {
 		http.Error(w, "Could not add thread to speaker: "+err.Error(), http.StatusExpectationFailed)
@@ -1001,15 +1041,28 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if afterUpdate, newStatus, err := mongodb.Speakers.AutoUpdateParticipationStatus(speakerID, currentEvent.ID); err != nil {
+		log.Printf("Could not auto-update speaker %s for event %d: %v", speakerID.Hex(), currentEvent.ID, err)
+	} else if newStatus != nil {
+		updatedSpeaker = afterUpdate
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Speaker: &updatedSpeaker.ID,
+		})
+	}
+
 	// build ThreadWithEntry payload to return
 	threadWithEntry := models.ThreadWithEntry{
-		ID:       newThread.ID,
-		Posted:   newThread.Posted,
-		Entry:    newPost,
-		Meeting:  newThread.Meeting,
-		Comments: newThread.Comments,
-		Kind:     newThread.Kind,
-		Status:   newThread.Status,
+		ID:             newThread.ID,
+		Posted:         newThread.Posted,
+		Entry:          newPost,
+		Meeting:        newThread.Meeting,
+		Comments:       newThread.Comments,
+		Kind:           newThread.Kind,
+		Status:         newThread.Status,
+		GmailMessageId: newThread.GmailMessageId,
+		GmailThreadId:  newThread.GmailThreadId,
+		Channel:        newThread.Channel,
 	}
 
 	json.NewEncoder(w).Encode(threadWithEntry)
@@ -1106,7 +1159,42 @@ func removeSpeakerParticipation(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(speaker)
 }
 
+// parseSpeakerGmailEventID validates an explicitly requested edition.
+func parseSpeakerGmailEventID(bodyEvent *int, queryEvent string) (int, error) {
+	if bodyEvent != nil {
+		if *bodyEvent <= 0 {
+			return 0, fmt.Errorf("invalid event ID: %d", *bodyEvent)
+		}
+		return *bodyEvent, nil
+	}
+
+	if queryEvent != "" {
+		eventID, err := strconv.Atoi(queryEvent)
+		if err != nil || eventID <= 0 {
+			return 0, fmt.Errorf("invalid event ID: %q", queryEvent)
+		}
+		return eventID, nil
+	}
+
+	return 0, nil
+}
+
+func canManageSpeakerGmailParticipation(
+	speaker *models.Speaker,
+	memberID primitive.ObjectID,
+	eventID int,
+) (bool, error) {
+	for _, participation := range speaker.Participations {
+		if participation.Event == eventID {
+			return canManageGmailParticipation(memberID, participation.Member, eventID)
+		}
+	}
+	return false, nil
+}
+
 func updateSpeakerGmailThreadIds(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+
 	params := mux.Vars(r)
 	speakerID, err := primitive.ObjectIDFromHex(params["id"])
 	if err != nil {
@@ -1114,14 +1202,14 @@ func updateSpeakerGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 	if !ok {
 		http.Error(w, "Authentication failed", http.StatusUnauthorized)
 		return
 	}
 
-	// Verify speaker exists
-	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+	speaker, err := mongodb.Speakers.GetSpeaker(speakerID)
+	if err != nil {
 		http.Error(w, "Speaker not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
@@ -1132,13 +1220,37 @@ func updateSpeakerGmailThreadIds(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	speaker, err := mongodb.Speakers.UpdateSpeakerGmailThreadIds(speakerID, data.GmailThreadIds)
+	targetEventID, err := parseSpeakerGmailEventID(data.Event, r.URL.Query().Get("event"))
+	if err != nil {
+		http.Error(w, "Invalid event: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if targetEventID == 0 {
+		event, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+			return
+		}
+		targetEventID = event.ID
+	}
+
+	allowed, err := canManageSpeakerGmailParticipation(speaker, credentials.ID, targetEventID)
+	if err != nil {
+		http.Error(w, "Could not verify permissions", http.StatusInternalServerError)
+		return
+	}
+	if !allowed {
+		http.Error(w, "Not authorized for this participation", http.StatusForbidden)
+		return
+	}
+
+	updatedSpeaker, err := mongodb.Speakers.UpdateSpeakerGmailThreadIds(speakerID, data.GmailThreadIds, targetEventID)
 	if err != nil {
 		http.Error(w, "Could not update gmail thread IDs: "+err.Error(), http.StatusExpectationFailed)
 		return
 	}
 
-	json.NewEncoder(w).Encode(speaker)
+	json.NewEncoder(w).Encode(updatedSpeaker)
 }
 
 func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
@@ -1157,8 +1269,8 @@ func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify speaker exists
-	if _, err := mongodb.Speakers.GetSpeaker(speakerID); err != nil {
+	speaker, err := mongodb.Speakers.GetSpeaker(speakerID)
+	if err != nil {
 		http.Error(w, "Speaker not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
@@ -1169,84 +1281,54 @@ func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get existing synced messages to avoid duplicates
-	messageIds := make([]string, len(data.Messages))
-	for i, msg := range data.Messages {
-		messageIds[i] = msg.MessageId
-	}
-	existingThreads, err := mongodb.Threads.GetThreadsByGmailMessageIds(messageIds)
+	targetEventID, err := parseSpeakerGmailEventID(data.Event, r.URL.Query().Get("event"))
 	if err != nil {
-		log.Println("Error checking existing gmail threads:", err)
+		http.Error(w, "Invalid event: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if targetEventID == 0 {
+		event, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+			return
+		}
+		targetEventID = event.ID
 	}
 
-	var syncedCount int
-	for _, msg := range data.Messages {
-		// Skip if already synced
-		if _, exists := existingThreads[msg.MessageId]; exists {
-			continue
-		}
+	allowed, err := canManageSpeakerGmailParticipation(speaker, credentials.ID, targetEventID)
+	if err != nil {
+		http.Error(w, "Could not verify permissions", http.StatusInternalServerError)
+		return
+	}
+	if !allowed {
+		http.Error(w, "Not authorized for this participation", http.StatusForbidden)
+		return
+	}
 
-		// Parse the date
-		var postedTime *time.Time
-		if msg.Date != "" {
-			if parsed, err := time.Parse(time.RFC3339, msg.Date); err == nil {
-				postedTime = &parsed
-			}
-		}
+	syncedCount, err := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
+		_, err := mongodb.Speakers.AddThread(speakerID, threadID, targetEventID)
+		return err
+	})
+	if err != nil {
+		log.Println("Error syncing Gmail messages for speaker:", err)
+		http.Error(w, "Failed to sync Gmail messages", http.StatusInternalServerError)
+		return
+	}
 
-		// Determine thread kind based on direction
-		kind := models.ThreadKindFrom
-		if msg.IsOutgoing {
-			kind = models.ThreadKindTo
-		}
-
-		// Format the message text - just subject as header and body content
-		var formattedText string
-		if msg.Subject != "" && msg.Subject != "(No subject)" {
-			formattedText = fmt.Sprintf("📧 %s\n\n%s", msg.Subject, msg.Body)
-		} else {
-			formattedText = msg.Body
-		}
-
-		// Create post
-		cpd := mongodb.CreatePostData{
-			Member: credentials.ID,
-			Text:   formattedText,
-		}
-
-		newPost, err := mongodb.Posts.CreatePost(cpd)
+	if _, newStatus, err := mongodb.Speakers.AutoUpdateParticipationStatus(speakerID, targetEventID); err != nil {
+		log.Printf("Could not auto-update speaker %s for event %d after Gmail sync: %v", speakerID.Hex(), targetEventID, err)
+		http.Error(w, "Gmail messages were synchronized but participation status could not be updated", http.StatusInternalServerError)
+		return
+	} else if newStatus != nil {
+		currentEvent, err := mongodb.Events.GetCurrentEvent()
 		if err != nil {
-			log.Printf("Error creating post for gmail message %s: %s", msg.MessageId, err)
-			continue
+			log.Printf("Could not determine event for status notification: %v", err)
+		} else if currentEvent.ID == targetEventID {
+			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+				Kind:    models.NotificationKindUpdatedParticipationStatus,
+				Speaker: &speakerID,
+			})
 		}
-
-		// Create thread
-		ctd := mongodb.CreateThreadData{
-			Entry:          newPost.ID,
-			Kind:           kind,
-			GmailMessageId: msg.MessageId,
-			Posted:         postedTime,
-		}
-
-		newThread, err := mongodb.Threads.CreateThread(ctd)
-		if err != nil {
-			log.Printf("Error creating thread for gmail message %s: %s", msg.MessageId, err)
-			// Clean up post
-			mongodb.Posts.DeletePost(newPost.ID)
-			continue
-		}
-
-		// Attach thread to speaker participation
-		_, err = mongodb.Speakers.AddThread(speakerID, newThread.ID)
-		if err != nil {
-			log.Printf("Error attaching thread to speaker for gmail message %s: %s", msg.MessageId, err)
-			// Clean up
-			mongodb.Posts.DeletePost(newPost.ID)
-			mongodb.Threads.DeleteThread(newThread.ID)
-			continue
-		}
-
-		syncedCount++
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{

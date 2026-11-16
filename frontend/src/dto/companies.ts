@@ -1,6 +1,7 @@
 import type { ImplementsParticipationStatus, ObjectID, Participation } from ".";
 import type { Contact, CreateContactData } from "./contacts";
 import type { PackagePublic } from "./packages";
+import type { CompanyTasks } from "./tasks";
 
 export interface CompanyParticipation
   extends ImplementsParticipationStatus,
@@ -15,6 +16,7 @@ export interface CompanyParticipation
   notes: string;
   standDetails?: StandDetails;
   stands?: Stand[];
+  tasks?: CompanyTasks;
 }
 
 export interface Stand {

@@ -7,7 +7,6 @@ import {
   Settings,
   Trophy,
   ChevronDown,
-  Mail,
 } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import type { RouteLocationRaw } from "vue-router";
@@ -54,7 +53,6 @@ const navigation: NavigationItem[] = [
   { name: "Me", to: { name: "dashboard" } },
   { name: "Companies", to: { name: "companies" } },
   { name: "Speakers", to: { name: "speakers" } },
-  { name: "Gmail", to: { name: "gmail-messages" }, icon: Mail },
   { name: "Leaderboard", to: { name: "leaderboard" }, icon: Trophy },
   { name: "Settings", to: { name: "settings" }, icon: Settings },
 ];

@@ -450,7 +450,7 @@ import {
 import { humanReadableParticipationStatus } from "@/dto/index";
 import type { ParticipationStatus } from "@/dto/index";
 import type { CompanyWithParticipation } from "@/dto/companies";
-import type { SpeakerWithParticipation } from "@/dto/speakers";
+import type { SpeakerWithContactAndParticipation } from "@/dto/speakers";
 import {
   useBulkCompanyEmails,
   useBulkSpeakerEmails,
@@ -462,7 +462,7 @@ interface Props {
   size?: "sm" | "default" | "lg" | "icon";
   buttonClass?: string;
   companies?: CompanyWithParticipation[];
-  speakers?: SpeakerWithParticipation[];
+  speakers?: SpeakerWithContactAndParticipation[];
   entityType: "companies" | "speakers";
 }
 
@@ -499,7 +499,7 @@ const speakerBulk = useBulkSpeakerEmails();
 const processBulkEmails = async (
   templateCategory: EmailTemplateCategory,
   statuses: ParticipationStatus[],
-  entities: CompanyWithParticipation[] | SpeakerWithParticipation[],
+  entities: CompanyWithParticipation[] | SpeakerWithContactAndParticipation[],
 ) => {
   if (props.entityType === "companies") {
     return companyBulk.processBulkEmails(
@@ -511,7 +511,7 @@ const processBulkEmails = async (
   return speakerBulk.processBulkEmails(
     templateCategory,
     statuses,
-    entities as SpeakerWithParticipation[],
+    entities as SpeakerWithContactAndParticipation[],
   );
 };
 

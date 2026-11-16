@@ -139,6 +139,8 @@ func (s *SpeakersType) CreateSpeaker(data CreateSpeakerData) (*models.Speaker, e
 	}
 
 	if data.Contact != nil {
+		contact["gender"] = data.Contact.Gender
+		contact["language"] = data.Contact.Language
 		contact["phones"] = data.Contact.Phones
 		contact["mails"] = data.Contact.Mails
 		contact["socials"] = formatContactSocials(data.Contact.Socials)
@@ -862,12 +864,19 @@ func (s *SpeakersType) GetSpeakerParticipationStatusValidSteps(speakerID primiti
 	return nil, errors.New("No participation found")
 }
 
-// UpdateSpeakerGmailThreadIds updates the gmail thread IDs for a speaker's current participation
-func (s *SpeakersType) UpdateSpeakerGmailThreadIds(speakerID primitive.ObjectID, gmailThreadIds []string) (*models.Speaker, error) {
+// UpdateSpeakerGmailThreadIds updates the gmail thread IDs for a speaker's participation in an event (defaults to current event)
+func (s *SpeakersType) UpdateSpeakerGmailThreadIds(speakerID primitive.ObjectID, gmailThreadIds []string, eventID ...int) (*models.Speaker, error) {
 	ctx := context.Background()
-	currentEvent, err := Events.GetCurrentEvent()
-	if err != nil {
-		return nil, err
+
+	var targetEventID int
+	if len(eventID) > 0 && eventID[0] > 0 {
+		targetEventID = eventID[0]
+	} else {
+		currentEvent, err := Events.GetCurrentEvent()
+		if err != nil {
+			return nil, err
+		}
+		targetEventID = currentEvent.ID
 	}
 
 	var updatedSpeaker models.Speaker
@@ -878,7 +887,7 @@ func (s *SpeakersType) UpdateSpeakerGmailThreadIds(speakerID primitive.ObjectID,
 		},
 	}
 
-	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": targetEventID}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
@@ -923,6 +932,20 @@ func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.Obje
 	ResetCurrentPublicSpeakers()
 
 	return &updatedSpeaker, nil
+}
+
+// AutoUpdateParticipationStatus applies the shared forward-only communication rule.
+func (s *SpeakersType) AutoUpdateParticipationStatus(speakerID primitive.ObjectID, eventID int) (*models.Speaker, *models.ParticipationStatus, error) {
+	newStatus, err := autoUpdateParticipationStatus(s.Collection, speakerID, eventID)
+	if err != nil || newStatus == nil {
+		return nil, nil, err
+	}
+	ResetCurrentPublicSpeakers()
+	updated, err := s.GetSpeaker(speakerID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return updated, newStatus, nil
 }
 
 // UpdateSpeakerInternalImage updates the speaker's internal image.
@@ -1022,7 +1045,7 @@ func (s *SpeakersType) DeleteSpeakerThread(id, threadID primitive.ObjectID) (*mo
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id, "participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		return nil, err
 	}
 
@@ -1089,14 +1112,19 @@ func (s *SpeakersType) RemoveSpeakerFlightInfo(speakerID primitive.ObjectID, fli
 	return &updatedSpeaker, nil
 }
 
-// AddThread adds a models.Thread to a speaker's participation's list of communications (related to the current event).
-func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitive.ObjectID) (*models.Speaker, error) {
+// AddThread adds a models.Thread to a speaker's participation's list of communications (related to the specified event, defaults to current event).
+func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitive.ObjectID, eventID ...int) (*models.Speaker, error) {
 	ctx := context.Background()
 
-	currentEvent, err := Events.GetCurrentEvent()
-
-	if err != nil {
-		return nil, err
+	var targetEventID int
+	if len(eventID) > 0 && eventID[0] > 0 {
+		targetEventID = eventID[0]
+	} else {
+		currentEvent, err := Events.GetCurrentEvent()
+		if err != nil {
+			return nil, err
+		}
+		targetEventID = currentEvent.ID
 	}
 
 	var updatedSpeaker models.Speaker
@@ -1107,7 +1135,7 @@ func (s *SpeakersType) AddThread(speakerID primitive.ObjectID, threadID primitiv
 		},
 	}
 
-	var filterQuery = bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+	var filterQuery = bson.M{"_id": speakerID, "participations.event": targetEventID}
 
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
