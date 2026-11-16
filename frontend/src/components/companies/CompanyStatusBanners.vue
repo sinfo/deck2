@@ -4,20 +4,18 @@
     <div
       v-if="company.closure"
       role="alert"
-      class="relative overflow-hidden rounded-xl bg-neutral-800 text-neutral-50 shadow-lg ring-1 ring-red-400/50"
+      class="rounded-xl border border-dashed border-foreground/30 bg-muted/40 text-foreground"
     >
-      <div class="absolute inset-y-0 left-0 w-1.5 bg-red-400/80" />
-      <div class="flex min-h-28 items-center gap-5 py-7 pl-7 pr-6">
-        <div
-          class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-red-400/20 text-red-300"
-        >
-          <component :is="closureIcon" class="h-7 w-7" />
-        </div>
-        <div class="min-w-0 space-y-1">
-          <p class="text-xl font-extrabold uppercase tracking-wider">
+      <div class="flex items-start gap-3 px-4 py-3">
+        <component
+          :is="closureIcon"
+          class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"
+        />
+        <div class="min-w-0 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <p class="text-sm font-semibold uppercase tracking-wide">
             {{ companyClosureLabels[company.closure.type] }}
           </p>
-          <p class="text-sm text-neutral-300">
+          <p class="text-xs text-muted-foreground">
             {{ closureDescription }}
           </p>
         </div>

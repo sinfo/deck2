@@ -4,7 +4,14 @@
     class="fixed inset-0 bg-black/20 z-40 transition-opacity duration-200"
     @click="isDeleteConfirmOpen = false"
   ></div>
-  <Card class="w-full hover:shadow-lg transition-shadow duration-200">
+  <Card
+    class="w-full transition-shadow duration-200"
+    :class="
+      company.closure
+        ? 'border-dashed border-foreground/30 bg-muted/40 shadow-none'
+        : 'hover:shadow-lg'
+    "
+  >
     <CardHeader>
       <div class="flex items-center justify-between mb-4">
         <CardTitle class="text-lg">Company Information</CardTitle>
@@ -72,10 +79,16 @@
             :src="company.imgs?.internal || company.imgs?.public"
             :alt="`${company.name} logo`"
             class="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-lg border"
+            :class="company.closure ? 'grayscale opacity-70' : ''"
           />
         </div>
         <div class="flex-1 min-w-0">
-          <CardTitle class="text-lg truncate">{{ company.name }}</CardTitle>
+          <CardTitle
+            class="text-lg truncate"
+            :class="company.closure ? 'text-muted-foreground' : ''"
+          >
+            {{ company.name }}
+          </CardTitle>
           <div class="flex flex-wrap gap-1 mt-2">
             <ParticipationStatusBadge
               v-if="company.participation?.status"
