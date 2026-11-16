@@ -4,10 +4,10 @@ import "testing"
 
 func TestCommunicationStatus(t *testing.T) {
 	tests := []struct {
-		name                        string
-		current                     ParticipationStatus
-		hasOutgoing, hasIncoming    bool
-		want                        ParticipationStatus
+		name                     string
+		current                  ParticipationStatus
+		hasOutgoing, hasIncoming bool
+		want                     ParticipationStatus
 	}{
 		{"selected unchanged without messages", Selected, false, false, Selected},
 		{"outgoing message marks contacted", Selected, true, false, Contacted},

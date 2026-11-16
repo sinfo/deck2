@@ -69,9 +69,9 @@ func belongsToParticipation(participations []communicationParticipation, entityI
 	return false
 }
 
-// recalculateDeletedCommunicationStatuses keeps the remaining-message status
-// in sync with deletion. Notify() currently targets only the current event.
-func recalculateDeletedCommunicationStatuses(participations []communicationParticipation, authorID primitive.ObjectID) error {
+// recalculateCommunicationStatuses keeps the status consistent after
+// a communication is removed or its direction is edited. Notify() currently targets only the current event.
+func recalculateCommunicationStatuses(participations []communicationParticipation, authorID primitive.ObjectID) error {
 	if len(participations) == 0 {
 		return nil
 	}

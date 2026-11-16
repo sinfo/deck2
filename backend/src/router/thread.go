@@ -355,6 +355,8 @@ func removeCommentFromThread(w http.ResponseWriter, r *http.Request) {
 func updateThread(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
+	var previousKind models.ThreadKind
+	var authorID primitive.ObjectID
 
 	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
 		t, err := mongodb.Threads.GetThread(id)
@@ -363,6 +365,9 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 			return
 		}
+
+		previousKind = t.Kind
+		authorID = credentials.ID
 
 		p, err := mongodb.Posts.GetPost(t.Entry)
 		if err != nil {
@@ -394,6 +399,18 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if thread.Kind != previousKind {
+		participations, err := findCommunicationParticipations(id)
+		if err != nil {
+			http.Error(w, "Could not find associated participation", http.StatusInternalServerError)
+			return
+		}
+		if err := recalculateCommunicationStatuses(participations, authorID); err != nil {
+			log.Printf("Thread updated, but participation status could not be recalculated: %v", err)
+			http.Error(w, "Thread updated, but participation status update failed", http.StatusInternalServerError)
+			return
+		}
+	}
 	json.NewEncoder(w).Encode(thread)
 }
 
@@ -427,7 +444,6 @@ func deleteThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
-
 	participations, err := findCommunicationParticipations(id)
 	if err != nil {
 		http.Error(w, "Could not find associated participation", http.StatusInternalServerError)
@@ -439,8 +455,7 @@ func deleteThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not delete thread: "+err.Error(), http.StatusNotFound)
 		return
 	}
-
-	if err := recalculateDeletedCommunicationStatuses(participations, credentials.ID); err != nil {
+	if err := recalculateCommunicationStatuses(participations, credentials.ID); err != nil {
 		log.Printf("Thread deleted, but participation status could not be updated: %v", err)
 		http.Error(w, "Thread deleted, but participation status update failed", http.StatusInternalServerError)
 		return

@@ -388,7 +388,7 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := recalculateDeletedCommunicationStatuses(participations, credentials.ID); err != nil {
+	if err := recalculateCommunicationStatuses(participations, credentials.ID); err != nil {
 		log.Printf("Thread deleted, but participation status could not be updated: %v", err)
 		http.Error(w, "Thread deleted, but participation status update failed", http.StatusInternalServerError)
 		return
