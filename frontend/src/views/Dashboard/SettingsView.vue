@@ -43,12 +43,39 @@
               </CardHeader>
               <CardContent class="space-y-4">
                 <div class="flex items-center space-x-4">
-                  <img
-                    :src="user.data.img"
-                    :alt="user.data.name"
-                    class="w-16 h-16 rounded-full object-cover border-2 border-border"
-                    @error="handleImageError"
-                  />
+                  <div
+                    class="relative group w-16 h-16 rounded-full overflow-hidden flex-shrink-0"
+                  >
+                    <Image
+                      :src="profileImageUrl"
+                      :alt="`${user.data.name} photo`"
+                      class="w-16 h-16 rounded-full object-cover border-2 border-border"
+                    />
+                    <button
+                      type="button"
+                      class="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition-colors hover:bg-black/50 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:bg-black/50 disabled:cursor-wait"
+                      :disabled="isUploadingImage"
+                      aria-label="Change profile picture"
+                      title="Change profile picture"
+                      @click="triggerFileInput"
+                    >
+                      <div
+                        v-if="isUploadingImage"
+                        class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"
+                      ></div>
+                      <Pencil
+                        v-else
+                        class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                      />
+                    </button>
+                    <input
+                      ref="fileInput"
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      @change="handleImageUpload"
+                    />
+                  </div>
                   <div>
                     <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
                     <p class="text-sm text-muted-foreground">
@@ -413,14 +440,27 @@ import Button from "@/components/ui/button/Button.vue";
 import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
+import Image from "@/components/Image.vue";
+import { useUploadImageMutation } from "@/mutations/me";
+import { useImageUpload } from "@/composables/useImageUpload";
+import { isAxiosError } from "axios";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, RefreshCw, Unplug } from "lucide-vue-next";
+import { Mail, Pencil, RefreshCw, Unplug } from "lucide-vue-next";
 import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
 import { useEventStore } from "@/stores/event";
 import { useToast } from "@/lib/toast";
+
+const fileInput = ref<HTMLInputElement>();
+const {
+  imagePreview,
+  selectedImageFile,
+  imageError,
+  handleFileChange,
+  reset: resetImageUpload,
+} = useImageUpload();
 
 const isEditMode = ref(false);
 const queryCache = useQueryCache();
@@ -449,6 +489,56 @@ const {
   key: ["me"],
   query: getMe,
 });
+
+const cacheBuster = ref(Date.now());
+
+const profileImageUrl = computed(() => {
+  if (imagePreview.value) return imagePreview.value;
+  const img = user.value?.data.img;
+  if (!img) return "";
+  const separator = img.includes("?") ? "&" : "?";
+  return `${img}${separator}t=${cacheBuster.value}`;
+});
+
+const uploadImageMutation = useUploadImageMutation();
+const isUploadingImage = uploadImageMutation.isLoading;
+
+const triggerFileInput = () => fileInput.value?.click();
+
+const handleImageUpload = async (event: Event) => {
+  handleFileChange(event);
+
+  try {
+    if (imageError.value) {
+      toast.error({
+        title: "Failed to update profile picture",
+        description: imageError.value,
+      });
+      return;
+    }
+
+    if (!selectedImageFile.value) return;
+
+    await uploadImageMutation.mutateAsync(selectedImageFile.value);
+    cacheBuster.value = Date.now();
+    toast.success({ title: "Profile picture updated successfully" });
+  } catch (error: unknown) {
+    console.error("Failed to update profile picture:", error);
+    const detail: unknown = isAxiosError(error)
+      ? (error.response?.data ?? error.message)
+      : error instanceof Error
+        ? error.message
+        : "Failed to update profile picture";
+
+    toast.error({
+      title: "Failed to update profile picture",
+      description: typeof detail === "string" ? detail : JSON.stringify(detail),
+    });
+  } finally {
+    resetImageUpload();
+    if (fileInput.value) fileInput.value.value = "";
+  }
+};
 
 // Update contact mutation
 const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
@@ -604,11 +694,6 @@ const disconnectGoogle = () => {
     title: "Gmail Disconnected",
     description: "Your Gmail account has been disconnected.",
   });
-};
-
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = "/src/assets/noImage.png"; // Fallback image
 };
 
 // Utility functions
