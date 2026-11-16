@@ -23,8 +23,8 @@ func autoUpdateParticipationStatus(collection *mongo.Collection, entityID primit
 	for attempt := 0; attempt < maxRetries; attempt++ {
 		var document struct {
 			Participations []struct {
-				Status models.ParticipationStatus `bson:"status"`
-				Communications []primitive.ObjectID `bson:"communications"`
+				Status         models.ParticipationStatus `bson:"status"`
+				Communications []primitive.ObjectID       `bson:"communications"`
 			} `bson:"participations"`
 		}
 		filter := bson.M{"_id": entityID, "participations.event": eventID}
