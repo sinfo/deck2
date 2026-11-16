@@ -69,6 +69,11 @@ const syncEntity = async (
 
     const allowed = new Set(emails);
     query = gmailSearchQuery(emails, window, afterEpoch);
+    // Gmail searches individual messages, not all messages across a thread.
+    // Narrow full scans by edition; recent replies may omit this phrase,
+    // so the incremental scan validates the fetched thread instead.
+    if (!isRecent) query += ` "SINFO ${window.edition}"`;
+    const editionMention = new RegExp(`\\bSINFO\\s+${window.edition}\\b`, "i");
     const found = new Set(existing);
     const added: string[] = [];
     let synced = false;
@@ -84,9 +89,17 @@ const syncEntity = async (
         ...window,
         afterEpoch,
       });
+      // Inspect each candidate thread once, including its older messages.
+      const editionThreads = new Set<string>();
+      for (const message of response.value) {
+        if (editionMention.test(`${message.subject}\n${message.body}`)) {
+          editionThreads.add(message.threadId);
+        }
+      }
       const batch: GmailMessageData[] = [];
 
       for (const [id, messages] of byThread) {
+        if (!editionThreads.has(id)) continue;
         const hasContact = messages.some((message) =>
           [...emailsInHeader(message.from), ...emailsInHeader(message.to)].some(
             (email) => allowed.has(email),

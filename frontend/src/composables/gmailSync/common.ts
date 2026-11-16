@@ -140,11 +140,12 @@ export const loadGmailEntities = async (
 };
 
 export interface GmailSyncWindow {
+  edition: number;
   afterEpoch: number;
   beforeEpoch: number;
 }
 
-// The preparation window starts after the previous edition ended. Never
+// Start one calendar month after the previous edition ended; never
 // silently scan the entire mailbox if edition dates are missing.
 export const loadGmailSyncWindow = async (
   eventId: number,
@@ -171,7 +172,21 @@ export const loadGmailSyncWindow = async (
       return Math.floor(date.getTime() / 1000);
     };
 
-    const afterEpoch = dayAfter(previous.end);
+    // Clamp month-end dates (e.g. Jan 31 -> Feb 28/29).
+    const monthAfter = (value: string): number => {
+      const date = new Date(value);
+      const day = date.getUTCDate();
+      date.setUTCDate(1);
+      date.setUTCMonth(date.getUTCMonth() + 1);
+      const lastDay = new Date(
+        Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
+      ).getUTCDate();
+      date.setUTCDate(Math.min(day, lastDay));
+      date.setUTCHours(0, 0, 0, 0);
+      return Math.floor(date.getTime() / 1000);
+    };
+
+    const afterEpoch = monthAfter(previous.end);
     const beforeEpoch = dayAfter(current.end);
     if (
       !Number.isFinite(afterEpoch) ||
@@ -181,7 +196,7 @@ export const loadGmailSyncWindow = async (
       return failure("Invalid edition dates for Gmail sync");
     }
 
-    return success({ afterEpoch, beforeEpoch });
+    return success({ edition: eventId, afterEpoch, beforeEpoch });
   } catch (error) {
     return failure(errorMessage(error));
   }
