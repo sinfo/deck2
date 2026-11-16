@@ -357,17 +357,6 @@
                         {{ isAutoLinking ? "Syncing..." : "Sync Threads" }}
                       </Button>
                       <Button
-                        as-child
-                        variant="outline"
-                        size="sm"
-                        class="gap-1.5"
-                      >
-                        <RouterLink :to="{ name: 'gmail-messages' }">
-                          <Mail class="w-3.5 h-3.5" />
-                          View Threads
-                        </RouterLink>
-                      </Button>
-                      <Button
                         variant="outline"
                         size="icon"
                         class="h-8 w-8 text-destructive hover:bg-destructive/10"
