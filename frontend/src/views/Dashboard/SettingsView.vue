@@ -51,13 +51,11 @@
                       :alt="`${user.data.name} photo`"
                       class="w-16 h-16 rounded-full object-cover border-2 border-border"
                     />
-                    <div
-                      class="absolute inset-0 rounded-full transition-all flex items-center justify-center"
-                      :class="[
-                        isUploadingImage
-                          ? 'bg-black/50 pointer-events-none'
-                          : 'bg-black/0 group-hover:bg-black/50 cursor-pointer',
-                      ]"
+                    <button
+                      type="button"
+                      class="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition-colors hover:bg-black/50 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:bg-black/50 disabled:cursor-wait"
+                      :disabled="isUploadingImage"
+                      aria-label="Change profile picture"
                       title="Change profile picture"
                       @click="triggerFileInput"
                     >
@@ -67,9 +65,9 @@
                       ></div>
                       <Pencil
                         v-else
-                        class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
                       />
-                    </div>
+                    </button>
                     <input
                       ref="fileInput"
                       type="file"
@@ -454,13 +452,13 @@ import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
 import Image from "@/components/Image.vue";
-import { Pencil } from "lucide-vue-next";
 import { useUploadImageMutation } from "@/mutations/me";
 import { useImageUpload } from "@/composables/useImageUpload";
+import { isAxiosError } from "axios";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, RefreshCw, Unplug } from "lucide-vue-next";
+import { Mail, Pencil, RefreshCw, Unplug } from "lucide-vue-next";
 import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
 import { useEventStore } from "@/stores/event";
@@ -518,37 +516,34 @@ const isUploadingImage = uploadImageMutation.isLoading;
 
 const triggerFileInput = () => fileInput.value?.click();
 
-const handleImageUpload = async (ev: Event) => {
-  handleFileChange(ev);
-
-  if (imageError.value) {
-    toast.error({
-      title: "Failed to update profile picture",
-      description: imageError.value,
-    });
-    resetImageUpload();
-    if (fileInput.value) fileInput.value.value = "";
-    return;
-  }
-
-  const f = selectedImageFile.value;
-  if (!f) return;
+const handleImageUpload = async (event: Event) => {
+  handleFileChange(event);
 
   try {
-    await uploadImageMutation.mutateAsync(f);
+    if (imageError.value) {
+      toast.error({
+        title: "Failed to update profile picture",
+        description: imageError.value,
+      });
+      return;
+    }
+
+    if (!selectedImageFile.value) return;
+
+    await uploadImageMutation.mutateAsync(selectedImageFile.value);
     cacheBuster.value = Date.now();
     toast.success({ title: "Profile picture updated successfully" });
-  } catch (err: unknown) {
-    console.error("Failed to update profile picture:", err);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const axiosErr = err as any;
-    const msg =
-      axiosErr?.response?.data ||
-      axiosErr?.message ||
-      "Failed to update profile picture";
+  } catch (error: unknown) {
+    console.error("Failed to update profile picture:", error);
+    const detail: unknown = isAxiosError(error)
+      ? (error.response?.data ?? error.message)
+      : error instanceof Error
+        ? error.message
+        : "Failed to update profile picture";
+
     toast.error({
       title: "Failed to update profile picture",
-      description: typeof msg === "string" ? msg : JSON.stringify(msg),
+      description: typeof detail === "string" ? detail : JSON.stringify(detail),
     });
   } finally {
     resetImageUpload();

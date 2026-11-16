@@ -7,24 +7,17 @@ export const useUploadImageMutation = defineMutation(() => {
   const queryCache = useQueryCache();
   const authStore = useAuthStore();
 
-  const { mutate, mutateAsync, ...mutation } = useMutation({
-    mutation: (file: File) => uploadMyImage(file),
-    onSettled: async () => {
-      queryCache.invalidateQueries({ key: ["me"] });
+  return useMutation({
+    mutation: uploadMyImage,
+    onSuccess: async () => {
       try {
-        const res = await getMe();
-        if (res.data) {
-          authStore.member = res.data;
-        }
+        const response = await getMe();
+        queryCache.setQueryData(["me"], response);
+        authStore.member = response.data;
       } catch {
-        // ignore
+        // Keep the profile query consistent if the direct refresh fails.
+        queryCache.invalidateQueries({ key: ["me"] });
       }
     },
   });
-
-  return {
-    mutate,
-    mutateAsync,
-    ...mutation,
-  };
 });
