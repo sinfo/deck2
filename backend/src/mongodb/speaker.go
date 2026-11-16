@@ -934,6 +934,20 @@ func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.Obje
 	return &updatedSpeaker, nil
 }
 
+// AutoUpdateParticipationStatus applies the shared forward-only communication rule.
+func (s *SpeakersType) AutoUpdateParticipationStatus(speakerID primitive.ObjectID, eventID int) (*models.Speaker, *models.ParticipationStatus, error) {
+	newStatus, err := autoUpdateParticipationStatus(s.Collection, speakerID, eventID)
+	if err != nil || newStatus == nil {
+		return nil, nil, err
+	}
+	ResetCurrentPublicSpeakers()
+	updated, err := s.GetSpeaker(speakerID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return updated, newStatus, nil
+}
+
 // UpdateSpeakerInternalImage updates the speaker's internal image.
 func (s *SpeakersType) UpdateSpeakerInternalImage(speakerID primitive.ObjectID, url string) (*models.Speaker, error) {
 	ctx := context.Background()
@@ -1031,7 +1045,7 @@ func (s *SpeakersType) DeleteSpeakerThread(id, threadID primitive.ObjectID) (*mo
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id, "participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		return nil, err
 	}
 

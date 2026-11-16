@@ -358,10 +358,20 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	participations, err := findCommunicationParticipations(threadID)
+	if err != nil {
+		http.Error(w, "Could not find associated participation", http.StatusInternalServerError)
+		return
+	}
+	if !belongsToParticipation(participations, id, true) {
+		http.Error(w, "Thread not found in speaker participation", http.StatusNotFound)
 		return
 	}
 
@@ -372,12 +382,22 @@ func deleteSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete thread and posts (comments) associated to it - only if
-	// thread was deleted sucessfully from speaker participation
+	// thread was deleted successfully from speaker participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
+	if err := recalculateCommunicationStatuses(participations, credentials.ID); err != nil {
+		log.Printf("Thread deleted, but participation status could not be updated: %v", err)
+		http.Error(w, "Thread deleted, but participation status update failed", http.StatusInternalServerError)
+		return
+	}
+	speaker, err = mongodb.Speakers.GetSpeaker(id)
+	if err != nil {
+		http.Error(w, "Thread deleted and status updated, but failed to fetch updated speaker", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(speaker)
 }
 
@@ -920,6 +940,12 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+		return
+	}
+
 	// create the post first
 	var cpd = mongodb.CreatePostData{
 		Member: credentials.ID,
@@ -992,7 +1018,7 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// and finally update the speaker participation with the created thread
-	updatedSpeaker, err := mongodb.Speakers.AddThread(speakerID, newThread.ID)
+	updatedSpeaker, err := mongodb.Speakers.AddThread(speakerID, newThread.ID, currentEvent.ID)
 
 	if err != nil {
 		http.Error(w, "Could not add thread to speaker: "+err.Error(), http.StatusExpectationFailed)
@@ -1013,6 +1039,16 @@ func addSpeakerThread(w http.ResponseWriter, r *http.Request) {
 		}
 
 		return
+	}
+
+	if afterUpdate, newStatus, err := mongodb.Speakers.AutoUpdateParticipationStatus(speakerID, currentEvent.ID); err != nil {
+		log.Printf("Could not auto-update speaker %s for event %d: %v", speakerID.Hex(), currentEvent.ID, err)
+	} else if newStatus != nil {
+		updatedSpeaker = afterUpdate
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Speaker: &updatedSpeaker.ID,
+		})
 	}
 
 	// build ThreadWithEntry payload to return
@@ -1277,6 +1313,22 @@ func syncSpeakerGmailMessages(w http.ResponseWriter, r *http.Request) {
 		log.Println("Error syncing Gmail messages for speaker:", err)
 		http.Error(w, "Failed to sync Gmail messages", http.StatusInternalServerError)
 		return
+	}
+
+	if _, newStatus, err := mongodb.Speakers.AutoUpdateParticipationStatus(speakerID, targetEventID); err != nil {
+		log.Printf("Could not auto-update speaker %s for event %d after Gmail sync: %v", speakerID.Hex(), targetEventID, err)
+		http.Error(w, "Gmail messages were synchronized but participation status could not be updated", http.StatusInternalServerError)
+		return
+	} else if newStatus != nil {
+		currentEvent, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			log.Printf("Could not determine event for status notification: %v", err)
+		} else if currentEvent.ID == targetEventID {
+			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+				Kind:    models.NotificationKindUpdatedParticipationStatus,
+				Speaker: &speakerID,
+			})
+		}
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{

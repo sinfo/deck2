@@ -181,14 +181,15 @@ const onBulkCompanyEmailSuccess = (
   template: EmailTemplateCategory,
   result: BulkEmailResult,
 ) => {
-  // For each success, create the template thread
+  const threadData = {
+    kind: ThreadKind.ThreadKindTemplate,
+    text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
+  };
   for (const company of result.success) {
-    postCompanyThreadMutation.companyId.value = company.entityInfo.id;
-    postCompanyThreadMutation.threadData.value = {
-      kind: ThreadKind.ThreadKindTemplate,
-      text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
-    };
-    postCompanyThreadMutation.mutate();
+    postCompanyThreadMutation.mutate({
+      entityId: company.entityInfo.id,
+      threadData,
+    });
   }
 };
 
@@ -197,14 +198,15 @@ const onBulkSpeakerEmailSuccess = (
   template: EmailTemplateCategory,
   result: BulkEmailResult,
 ) => {
-  // For each success, create the template thread
+  const threadData = {
+    kind: ThreadKind.ThreadKindTemplate,
+    text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
+  };
   for (const speaker of result.success) {
-    postSpeakerThreadMutation.speakerId.value = speaker.entityInfo.id;
-    postSpeakerThreadMutation.threadData.value = {
-      kind: ThreadKind.ThreadKindTemplate,
-      text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
-    };
-    postSpeakerThreadMutation.mutate();
+    postSpeakerThreadMutation.mutate({
+      entityId: speaker.entityInfo.id,
+      threadData,
+    });
   }
 };
 

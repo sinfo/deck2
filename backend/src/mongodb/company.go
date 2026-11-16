@@ -839,7 +839,7 @@ func (c *CompaniesType) DeleteCompanyThread(id, threadID primitive.ObjectID) (*m
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id, "participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
 		return nil, err
 	}
 
@@ -914,6 +914,20 @@ func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.Obj
 	ResetCurrentPublicCompanies()
 
 	return &updatedCompany, nil
+}
+
+// AutoUpdateParticipationStatus applies the shared forward-only communication rule.
+func (c *CompaniesType) AutoUpdateParticipationStatus(companyID primitive.ObjectID, eventID int) (*models.Company, *models.ParticipationStatus, error) {
+	newStatus, err := autoUpdateParticipationStatus(c.Collection, companyID, eventID)
+	if err != nil || newStatus == nil {
+		return nil, nil, err
+	}
+	ResetCurrentPublicCompanies()
+	updated, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return updated, newStatus, nil
 }
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
