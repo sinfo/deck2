@@ -900,196 +900,36 @@ func (s *SpeakersType) UpdateSpeakerGmailThreadIds(speakerID primitive.ObjectID,
 	return &updatedSpeaker, nil
 }
 
-// UpdateSpeakerParticipationStatusForEvent updates a speaker's participation status for a specific event.
-func (s *SpeakersType) UpdateSpeakerParticipationStatusForEvent(speakerID primitive.ObjectID, eventID int, status models.ParticipationStatus) (*models.Speaker, error) {
-	ctx := context.Background()
-
-	var updatedSpeaker models.Speaker
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"participations.$.status": status,
-		},
-	}
-
-	var filterQuery = bson.M{"_id": speakerID, "participations.event": eventID}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
-		log.Println("Error updating speaker's status:", err)
-		return nil, err
-	}
-
-	ResetCurrentPublicSpeakers()
-
-	return &updatedSpeaker, nil
-}
-
-func (s *SpeakersType) updateSpeakerParticipationStatusForEventIfCurrent(speakerID primitive.ObjectID, eventID int, currentStatus models.ParticipationStatus, newStatus models.ParticipationStatus) (*models.Speaker, bool, error) {
-	ctx := context.Background()
-
-	var updatedSpeaker models.Speaker
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"participations.$.status": newStatus,
-		},
-	}
-
-	var filterQuery = bson.M{
-		"_id": speakerID,
-		"participations": bson.M{
-			"$elemMatch": bson.M{
-				"event":  eventID,
-				"status": currentStatus,
-			},
-		},
-	}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := s.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, false, nil
-		}
-
-		log.Println("Error conditionally updating speaker's status:", err)
-		return nil, false, err
-	}
-
-	ResetCurrentPublicSpeakers()
-
-	return &updatedSpeaker, true, nil
-}
-
-// UpdateSpeakerParticipationStatusForEventConditional updates a speaker's participation status for a specific event
-// only if its current status matches expectedStatus.
-func (s *SpeakersType) UpdateSpeakerParticipationStatusForEventConditional(
-	speakerID primitive.ObjectID,
-	eventID int,
-	expectedStatus models.ParticipationStatus,
-	status models.ParticipationStatus,
-) (*models.Speaker, error) {
-	updatedSpeaker, _, err := s.updateSpeakerParticipationStatusForEventIfCurrent(speakerID, eventID, expectedStatus, status)
-	return updatedSpeaker, err
-}
-
-// UpdateSpeakerParticipationStatus updates a speaker's participation status
-// related to the current event. This is the method used when one does not want necessarily to follow
-// the state machine described on models.ParticipationStatus.
+// UpdateSpeakerParticipationStatus updates the participation status for the current event.
 func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.ObjectID, status models.ParticipationStatus) (*models.Speaker, error) {
 	currentEvent, err := Events.GetCurrentEvent()
 	if err != nil {
 		return nil, err
 	}
-
-	return s.UpdateSpeakerParticipationStatusForEvent(speakerID, currentEvent.ID, status)
+	ctx := context.Background()
+	var updated models.Speaker
+	filter := bson.M{"_id": speakerID, "participations.event": currentEvent.ID}
+	update := bson.M{"$set": bson.M{"participations.$.status": status}}
+	optionsQuery := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	if err := s.Collection.FindOneAndUpdate(ctx, filter, update, optionsQuery).Decode(&updated); err != nil {
+		return nil, err
+	}
+	ResetCurrentPublicSpeakers()
+	return &updated, nil
 }
 
-func (s *SpeakersType) AutoUpdateParticipationStatus(speakerID primitive.ObjectID, eventIDs ...int) (*models.Speaker, *models.ParticipationStatus, error) {
-	var targetEventID int
-	if len(eventIDs) > 0 && eventIDs[0] > 0 {
-		targetEventID = eventIDs[0]
-	} else {
-		currentEvent, err := Events.GetCurrentEvent()
-		if err != nil {
-			return nil, nil, err
-		}
-		targetEventID = currentEvent.ID
+// AutoUpdateParticipationStatus applies the shared forward-only communication rule.
+func (s *SpeakersType) AutoUpdateParticipationStatus(speakerID primitive.ObjectID, eventID int) (*models.Speaker, *models.ParticipationStatus, error) {
+	newStatus, err := autoUpdateParticipationStatus(s.Collection, speakerID, eventID)
+	if err != nil || newStatus == nil {
+		return nil, nil, err
 	}
-
-	const maxRetries = 5
-
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		speaker, err := s.GetSpeaker(speakerID)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		var participation *models.SpeakerParticipation
-		for i := range speaker.Participations {
-			if speaker.Participations[i].Event == targetEventID {
-				participation = &speaker.Participations[i]
-				break
-			}
-		}
-
-		if participation == nil {
-			return speaker, nil, nil
-		}
-
-		currentStatus := participation.Status
-		if currentStatus == models.Accepted || currentStatus == models.Announced || currentStatus == models.Rejected {
-			return speaker, nil, nil
-		}
-
-		hasOutgoing := false
-		hasIncoming := false
-
-		threadsByID, err := Threads.GetThreadsByIDs(participation.Communications)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		for _, commID := range participation.Communications {
-			thread, exists := threadsByID[commID]
-			if !exists {
-				continue
-			}
-
-			if thread.Kind.IsOutgoing() {
-				hasOutgoing = true
-			}
-			if thread.Kind.IsIncoming() {
-				hasIncoming = true
-			}
-
-			if hasOutgoing && hasIncoming {
-				break
-			}
-		}
-
-		var newStatus models.ParticipationStatus = currentStatus
-
-		if hasOutgoing && hasIncoming {
-			if currentStatus != models.InConversations {
-				newStatus = models.InConversations
-			}
-		} else if hasOutgoing {
-			if currentStatus == models.InConversations || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
-				newStatus = models.Contacted
-			}
-		} else if hasIncoming {
-			if currentStatus == models.Contacted || currentStatus == models.GivenUp || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold {
-				newStatus = models.InConversations
-			}
-		} else {
-			if currentStatus == models.Contacted || currentStatus == models.InConversations {
-				newStatus = models.Selected
-			}
-		}
-
-		if newStatus == currentStatus {
-			return speaker, nil, nil
-		}
-
-		updatedSpeaker, updated, err := s.updateSpeakerParticipationStatusForEventIfCurrent(speakerID, targetEventID, currentStatus, newStatus)
-		if err != nil {
-			return nil, nil, err
-		}
-		if updated {
-			return updatedSpeaker, &newStatus, nil
-		}
-	}
-
-	latestSpeaker, err := s.GetSpeaker(speakerID)
+	ResetCurrentPublicSpeakers()
+	updated, err := s.GetSpeaker(speakerID)
 	if err != nil {
 		return nil, nil, err
 	}
-	return latestSpeaker, nil, nil
+	return updated, newStatus, nil
 }
 
 // UpdateSpeakerInternalImage updates the speaker's internal image.
@@ -1189,7 +1029,7 @@ func (s *SpeakersType) DeleteSpeakerThread(id, threadID primitive.ObjectID) (*mo
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
+	if err := s.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id, "participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedSpeaker); err != nil {
 		return nil, err
 	}
 

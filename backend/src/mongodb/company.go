@@ -839,7 +839,7 @@ func (c *CompaniesType) DeleteCompanyThread(id, threadID primitive.ObjectID) (*m
 	var optionsQuery = options.FindOneAndUpdate()
 	optionsQuery.SetReturnDocument(options.After)
 
-	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": id, "participations.communications": threadID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
 		return nil, err
 	}
 
@@ -882,195 +882,36 @@ func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID
 	return &updatedCompany, nil
 }
 
-// UpdateCompanyParticipationStatusForEvent updates a company's participation status for a specific event.
-func (c *CompaniesType) UpdateCompanyParticipationStatusForEvent(companyID primitive.ObjectID, eventID int, status models.ParticipationStatus) (*models.Company, error) {
-
-	ctx := context.Background()
-	var updatedCompany models.Company
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"participations.$.status": status,
-		},
-	}
-
-	var filterQuery = bson.M{"_id": companyID, "participations.event": eventID}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		log.Println("Error updating company's status:", err)
-		return nil, err
-	}
-
-	ResetCurrentPublicCompanies()
-
-	return &updatedCompany, nil
-}
-
-func (c *CompaniesType) updateCompanyParticipationStatusForEventIfCurrent(companyID primitive.ObjectID, eventID int, currentStatus models.ParticipationStatus, newStatus models.ParticipationStatus) (*models.Company, bool, error) {
-	ctx := context.Background()
-	var updatedCompany models.Company
-
-	var updateQuery = bson.M{
-		"$set": bson.M{
-			"participations.$.status": newStatus,
-		},
-	}
-
-	var filterQuery = bson.M{
-		"_id": companyID,
-		"participations": bson.M{
-			"$elemMatch": bson.M{
-				"event":  eventID,
-				"status": currentStatus,
-			},
-		},
-	}
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, false, nil
-		}
-
-		log.Println("Error conditionally updating company's status:", err)
-		return nil, false, err
-	}
-
-	ResetCurrentPublicCompanies()
-
-	return &updatedCompany, true, nil
-}
-
-// UpdateCompanyParticipationStatusForEventConditional updates a company's participation status for a specific event
-// only if its current status matches expectedStatus.
-func (c *CompaniesType) UpdateCompanyParticipationStatusForEventConditional(
-	companyID primitive.ObjectID,
-	eventID int,
-	expectedStatus models.ParticipationStatus,
-	status models.ParticipationStatus,
-) (*models.Company, error) {
-	updatedCompany, _, err := c.updateCompanyParticipationStatusForEventIfCurrent(companyID, eventID, expectedStatus, status)
-	return updatedCompany, err
-}
-
-// UpdateCompanyParticipationStatus updates a company's participation status
-// related to the current event. This is the method used when one does not want necessarily to follow
-// the state machine described on models.ParticipationStatus.
+// UpdateCompanyParticipationStatus updates the participation status for the current event.
 func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.ObjectID, status models.ParticipationStatus) (*models.Company, error) {
 	currentEvent, err := Events.GetCurrentEvent()
 	if err != nil {
 		return nil, err
 	}
-
-	return c.UpdateCompanyParticipationStatusForEvent(companyID, currentEvent.ID, status)
+	ctx := context.Background()
+	var updated models.Company
+	filter := bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+	update := bson.M{"$set": bson.M{"participations.$.status": status}}
+	optionsQuery := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	if err := c.Collection.FindOneAndUpdate(ctx, filter, update, optionsQuery).Decode(&updated); err != nil {
+		return nil, err
+	}
+	ResetCurrentPublicCompanies()
+	return &updated, nil
 }
 
-func (c *CompaniesType) AutoUpdateParticipationStatus(companyID primitive.ObjectID, eventIDs ...int) (*models.Company, *models.ParticipationStatus, error) {
-	var targetEventID int
-	if len(eventIDs) > 0 && eventIDs[0] > 0 {
-		targetEventID = eventIDs[0]
-	} else {
-		currentEvent, err := Events.GetCurrentEvent()
-		if err != nil {
-			return nil, nil, err
-		}
-		targetEventID = currentEvent.ID
+// AutoUpdateParticipationStatus applies the shared forward-only communication rule.
+func (c *CompaniesType) AutoUpdateParticipationStatus(companyID primitive.ObjectID, eventID int) (*models.Company, *models.ParticipationStatus, error) {
+	newStatus, err := autoUpdateParticipationStatus(c.Collection, companyID, eventID)
+	if err != nil || newStatus == nil {
+		return nil, nil, err
 	}
-
-	const maxRetries = 5
-
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		company, err := c.GetCompany(companyID)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		var participation *models.CompanyParticipation
-		for i := range company.Participations {
-			if company.Participations[i].Event == targetEventID {
-				participation = &company.Participations[i]
-				break
-			}
-		}
-
-		if participation == nil {
-			return company, nil, nil
-		}
-
-		currentStatus := participation.Status
-		if currentStatus == models.Accepted || currentStatus == models.Announced || currentStatus == models.Rejected {
-			return company, nil, nil
-		}
-
-		hasOutgoing := false
-		hasIncoming := false
-
-		threadsByID, err := Threads.GetThreadsByIDs(participation.Communications)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		for _, commID := range participation.Communications {
-			thread, exists := threadsByID[commID]
-			if !exists {
-				continue
-			}
-
-			if thread.Kind.IsOutgoing() {
-				hasOutgoing = true
-			}
-			if thread.Kind.IsIncoming() {
-				hasIncoming = true
-			}
-
-			if hasOutgoing && hasIncoming {
-				break
-			}
-		}
-
-		var newStatus models.ParticipationStatus = currentStatus
-
-		if hasOutgoing && hasIncoming {
-			if currentStatus != models.InConversations {
-				newStatus = models.InConversations
-			}
-		} else if hasOutgoing {
-			if currentStatus == models.InConversations || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold || currentStatus == models.GivenUp {
-				newStatus = models.Contacted
-			}
-		} else if hasIncoming {
-			if currentStatus == models.Contacted || currentStatus == models.GivenUp || currentStatus == models.Suggested || currentStatus == models.Selected || currentStatus == models.OnHold {
-				newStatus = models.InConversations
-			}
-		} else {
-			if currentStatus == models.Contacted || currentStatus == models.InConversations {
-				newStatus = models.Selected
-			}
-		}
-
-		if newStatus == currentStatus {
-			return company, nil, nil
-		}
-
-		updatedCompany, updated, err := c.updateCompanyParticipationStatusForEventIfCurrent(companyID, targetEventID, currentStatus, newStatus)
-		if err != nil {
-			return nil, nil, err
-		}
-		if updated {
-			return updatedCompany, &newStatus, nil
-		}
-	}
-
-	latestCompany, err := c.GetCompany(companyID)
+	ResetCurrentPublicCompanies()
+	updated, err := c.GetCompany(companyID)
 	if err != nil {
 		return nil, nil, err
 	}
-	return latestCompany, nil, nil
+	return updated, newStatus, nil
 }
 
 // UpdateCompanyData is the data used to update a company, using the method UpdateCompany.
