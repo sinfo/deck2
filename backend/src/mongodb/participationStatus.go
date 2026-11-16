@@ -37,7 +37,7 @@ func autoUpdateParticipationStatus(collection *mongo.Collection, entityID primit
 		}
 
 		participation := document.Participations[0]
-		if participation.Status != models.Selected && participation.Status != models.Contacted {
+		if participation.Status != models.Selected && participation.Status != models.Contacted && participation.Status != models.InConversations {
 			return nil, nil
 		}
 		threadsByID, err := Threads.GetThreadsByIDs(participation.Communications)
@@ -53,7 +53,7 @@ func autoUpdateParticipationStatus(collection *mongo.Collection, entityID primit
 			hasOutgoing = hasOutgoing || thread.Kind == models.ThreadKindTo
 			hasIncoming = hasIncoming || thread.Kind == models.ThreadKindFrom
 		}
-		nextStatus := models.NextCommunicationStatus(participation.Status, hasOutgoing, hasIncoming)
+		nextStatus := models.CommunicationStatus(participation.Status, hasOutgoing, hasIncoming)
 		if nextStatus == participation.Status {
 			return nil, nil
 		}
@@ -61,7 +61,7 @@ func autoUpdateParticipationStatus(collection *mongo.Collection, entityID primit
 		result, err := collection.UpdateOne(ctx, bson.M{
 			"_id": entityID,
 			"participations": bson.M{"$elemMatch": bson.M{
-				"event": eventID, "status": participation.Status,
+				"event": eventID, "status": participation.Status, "communications": participation.Communications,
 			}},
 		}, bson.M{"$set": bson.M{"participations.$.status": nextStatus}})
 		if err != nil {

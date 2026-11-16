@@ -230,12 +230,16 @@ func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread,
 		}
 	}
 
-	// Clean up stale references in participations
-	_, _ = Speakers.Collection.UpdateMany(
-		ctx,
-		bson.M{"participations.communications": threadID},
-		bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
-	)
+	// Remove the deleted thread from both types of participations.
+	for _, collection := range []*mongo.Collection{Speakers.Collection, Companies.Collection} {
+		if _, err := collection.UpdateMany(
+			ctx,
+			bson.M{"participations.communications": threadID},
+			bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
+		); err != nil {
+			return nil, err
+		}
+	}
 
 	return &thread, nil
 }
