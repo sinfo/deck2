@@ -139,7 +139,6 @@ export const loadGmailEntities = async (
   }
 };
 
-
 export interface GmailSyncWindow {
   afterEpoch: number;
   beforeEpoch: number;
@@ -167,11 +166,9 @@ export const loadGmailSyncWindow = async (
 
     const dayAfter = (value: string): number => {
       const date = new Date(value);
-      return Date.UTC(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate() + 1,
-      ) / 1000;
+      date.setUTCHours(0, 0, 0, 0);
+      date.setUTCDate(date.getUTCDate() + 1);
+      return Math.floor(date.getTime() / 1000);
     };
 
     const afterEpoch = dayAfter(previous.end);
@@ -199,10 +196,12 @@ export const gmailSearchQuery = (
   emails: string[],
   window: GmailSyncWindow,
   afterEpoch = window.afterEpoch,
-): string =>
-  `after:${Math.max(afterEpoch, window.afterEpoch) - 1} before:${window.beforeEpoch} {${emails
+): string => {
+  const contacts = emails
     .flatMap((email) => [`from:${email}`, `to:${email}`])
-    .join(" ")}}`;
+    .join(" ");
+  return `after:${Math.max(afterEpoch, window.afterEpoch) - 1} before:${window.beforeEpoch} {${contacts}}`;
+};
 
 // Gmail returns complete threads, including messages from older editions.
 // Accept a thread only if its latest dated message belongs to this edition,
@@ -229,11 +228,9 @@ export const editionMessagesByThread = (
     inWindow.set(message.threadId, batch);
   }
 
-  for (const [id, messages] of inWindow) {
-    const last = latest.get(id)!;
-    if (last < from || last >= until || messages.length === 0) {
-      inWindow.delete(id);
-    }
+  for (const id of inWindow.keys()) {
+    const last = latest.get(id) ?? 0;
+    if (last < from || last >= until) inWindow.delete(id);
   }
   return inWindow;
 };

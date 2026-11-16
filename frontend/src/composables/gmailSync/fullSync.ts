@@ -17,6 +17,7 @@ import type {
   SyncResult,
 } from "./common";
 import type { GmailSyncClient } from "./client";
+import type { GmailMessageData } from "@/api/companies";
 
 export interface FullSyncOptions {
   forceReScan?: boolean;
@@ -38,7 +39,9 @@ const syncEntity = async (
     // Normal full sync keeps existing links and only refreshes their messages.
     if (existing.length > 0 && !options.forceReScan && !isRecent) {
       for (let offset = 0; offset < existing.length; offset += 20) {
-        const messages = await client.fetchMessages(existing.slice(offset, offset + 20));
+        const messages = await client.fetchMessages(
+          existing.slice(offset, offset + 20),
+        );
         if (!messages.ok) throw new Error(messages.error);
         const inEdition = editionMessagesByThread(messages.value, window);
         const batch = [...inEdition.values()].flat();
@@ -51,7 +54,11 @@ const syncEntity = async (
     if (emails.length === 0) {
       return isRecent
         ? null
-        : entityResult(entity, existing.length ? "ALREADY_LINKED" : "NOT_FOUND", existing);
+        : entityResult(
+            entity,
+            existing.length ? "ALREADY_LINKED" : "NOT_FOUND",
+            existing,
+          );
     }
 
     const afterEpoch = Math.max(
@@ -77,15 +84,15 @@ const syncEntity = async (
         ...window,
         afterEpoch,
       });
-      const batch = [];
+      const batch: GmailMessageData[] = [];
 
       for (const [id, messages] of byThread) {
-        if (
-          !messages.some((message) =>
-            [...emailsInHeader(message.from), ...emailsInHeader(message.to)]
-              .some((email) => allowed.has(email)),
-          )
-        ) continue;
+        const hasContact = messages.some((message) =>
+          [...emailsInHeader(message.from), ...emailsInHeader(message.to)].some(
+            (email) => allowed.has(email),
+          ),
+        );
+        if (!hasContact) continue;
 
         batch.push(...messages);
         if (!found.has(id)) {

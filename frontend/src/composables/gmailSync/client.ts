@@ -79,7 +79,9 @@ export const createGmailSyncClient = (
         }
 
         if (!response) {
-          return failure(gmail.error.value ?? "Failed to retrieve Gmail threads");
+          return failure(
+            gmail.error.value ?? "Failed to retrieve Gmail threads",
+          );
         }
 
         const processed = await visitPage(response.threads ?? []);
