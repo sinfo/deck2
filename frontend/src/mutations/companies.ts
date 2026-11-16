@@ -219,7 +219,7 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
     onMutate: ({ entityId, threadData }: PostThreadVariables) => {
       const key = ["company-communications", entityId];
 
-      const oldVal =
+      const current =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
 
       const tempThreadId = crypto.randomUUID();
@@ -248,10 +248,10 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
       };
 
       const currentEventId = eventStore.selectedEvent?.id ?? 0;
-      const existingBucket = oldVal.find((it) => it.event === currentEventId);
+      const existingBucket = current.find((it) => it.event === currentEventId);
 
       const newVal: ParticipationCommunications[] = [
-        ...oldVal.filter((it) => it.event !== currentEventId),
+        ...current.filter((it) => it.event !== currentEventId),
         {
           event: currentEventId,
           communications: existingBucket
@@ -264,7 +264,6 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
 
       return {
         key,
-        oldVal,
         currentEventId,
         tempThreadId,
       };
@@ -292,16 +291,32 @@ export const usePostCompanyThreadMutation = defineMutation(() => {
     },
 
     onError: (err, _vars, ctx) => {
-      if (ctx?.key && ctx?.oldVal) {
-        queryCache.setQueryData<ParticipationCommunications[]>(
-          ctx.key,
-          ctx.oldVal,
-        );
+      if (ctx) {
+        const current =
+          queryCache.getQueryData<ParticipationCommunications[]>(ctx.key);
+        if (current) {
+          queryCache.setQueryData<ParticipationCommunications[]>(
+            ctx.key,
+            current.map((bucket) =>
+              bucket.event === ctx.currentEventId
+                ? {
+                    ...bucket,
+                    communications: bucket.communications.filter(
+                      (thread) => thread.id !== ctx.tempThreadId,
+                    ),
+                  }
+                : bucket,
+            ),
+          );
+        }
       }
       console.error("Create company thread failed:", err);
     },
 
     onSettled: (_data, _error, { entityId }: PostThreadVariables) => {
+      queryCache.invalidateQueries({
+        key: ["company-communications", entityId],
+      });
       queryCache.invalidateQueries({ key: ["company", entityId] });
       queryCache.invalidateQueries({ key: ["companies"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });

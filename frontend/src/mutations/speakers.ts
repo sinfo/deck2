@@ -126,7 +126,7 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
     onMutate: ({ entityId, threadData }: PostThreadVariables) => {
       const key = ["speaker-communications", entityId];
 
-      const oldVal =
+      const current =
         queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
 
       const tempThreadId = crypto.randomUUID();
@@ -160,10 +160,10 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
       };
 
       const currentEventId = eventStore.selectedEvent?.id ?? 0;
-      const existingBucket = oldVal.find((it) => it.event === currentEventId);
+      const existingBucket = current.find((it) => it.event === currentEventId);
 
       const newVal: ParticipationCommunications[] = [
-        ...oldVal.filter((it) => it.event !== currentEventId),
+        ...current.filter((it) => it.event !== currentEventId),
         {
           event: currentEventId,
           communications: existingBucket
@@ -176,7 +176,6 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
 
       return {
         key,
-        oldVal,
         currentEventId,
         tempThreadId,
       };
@@ -204,16 +203,32 @@ export const usePostSpeakerThreadMutation = defineMutation(() => {
     },
 
     onError: (err, _vars, ctx) => {
-      if (ctx?.key && ctx?.oldVal) {
-        queryCache.setQueryData<ParticipationCommunications[]>(
-          ctx.key,
-          ctx.oldVal,
-        );
+      if (ctx) {
+        const current =
+          queryCache.getQueryData<ParticipationCommunications[]>(ctx.key);
+        if (current) {
+          queryCache.setQueryData<ParticipationCommunications[]>(
+            ctx.key,
+            current.map((bucket) =>
+              bucket.event === ctx.currentEventId
+                ? {
+                    ...bucket,
+                    communications: bucket.communications.filter(
+                      (thread) => thread.id !== ctx.tempThreadId,
+                    ),
+                  }
+                : bucket,
+            ),
+          );
+        }
       }
       console.error("Create speaker thread failed:", err);
     },
 
     onSettled: (_data, _error, { entityId }: PostThreadVariables) => {
+      queryCache.invalidateQueries({
+        key: ["speaker-communications", entityId],
+      });
       queryCache.invalidateQueries({ key: ["speaker", entityId] });
       queryCache.invalidateQueries({ key: ["speakers"] });
       queryCache.invalidateQueries({ key: ["responsibilities"] });
