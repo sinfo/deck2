@@ -286,8 +286,8 @@ func (t *ThreadsType) deleteThread(filter bson.M) (*models.Thread, error) {
 	for _, collection := range []*mongo.Collection{Speakers.Collection, Companies.Collection} {
 		if _, err := collection.UpdateMany(
 			ctx,
-			bson.M{"participations.communications": threadID},
-			bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
+			bson.M{"participations.communications": thread.ID},
+			bson.M{"$pull": bson.M{"participations.$[].communications": thread.ID}},
 		); err != nil {
 			return nil, err
 		}
