@@ -312,13 +312,35 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	params := mux.Vars(r)
-	id, _ := primitive.ObjectIDFromHex(params["id"])
-	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
+	id, err := primitive.ObjectIDFromHex(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid company ID", http.StatusBadRequest)
+		return
+	}
+	threadID, err := primitive.ObjectIDFromHex(params["threadID"])
+	if err != nil {
+		http.Error(w, "Invalid thread ID", http.StatusBadRequest)
+		return
+	}
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
-
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 	if !ok {
-		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		http.Error(w, "Authentication failed", http.StatusUnauthorized)
+		return
+	}
+
+	thread, err := mongodb.Threads.GetThread(threadID)
+	if err != nil {
+		http.Error(w, "Thread not found", http.StatusNotFound)
+		return
+	}
+	post, err := mongodb.Posts.GetPost(thread.Entry)
+	if err != nil {
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+	if credentials.Role.AccessLevel() != 0 && post.Member != credentials.ID {
+		http.Error(w, "Unauthorized", http.StatusForbidden)
 		return
 	}
 
@@ -1460,6 +1482,8 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 
 	if _, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID, targetEventID); err != nil {
 		log.Printf("Could not auto-update company %s for event %d after Gmail sync: %v", companyID.Hex(), targetEventID, err)
+		http.Error(w, "Gmail messages were synchronized but participation status could not be updated", http.StatusInternalServerError)
+		return
 	} else if newStatus != nil {
 		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
 			Kind: models.NotificationKindUpdatedParticipationStatus,
