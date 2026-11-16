@@ -882,7 +882,9 @@ func (c *CompaniesType) UpdateCompanyGmailThreadIds(companyID primitive.ObjectID
 	return &updatedCompany, nil
 }
 
-// UpdateCompanyParticipationStatus updates the participation status for the current event.
+// UpdateCompanyParticipationStatus updates a company's participation status
+// related to the current event. This is the method used when one does not want necessarily to follow
+// the state machine described on models.ParticipationStatus.
 func (c *CompaniesType) UpdateCompanyParticipationStatus(companyID primitive.ObjectID, status models.ParticipationStatus) (*models.Company, error) {
 
 	ctx := context.Background()

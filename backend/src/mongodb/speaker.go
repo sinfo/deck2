@@ -900,7 +900,9 @@ func (s *SpeakersType) UpdateSpeakerGmailThreadIds(speakerID primitive.ObjectID,
 	return &updatedSpeaker, nil
 }
 
-// UpdateSpeakerParticipationStatus updates the participation status for the current event.
+// UpdateSpeakerParticipationStatus updates a speaker's participation status
+// related to the current event. This is the method used when one does not want necessarily to follow
+// the state machine described on models.ParticipationStatus.
 func (s *SpeakersType) UpdateSpeakerParticipationStatus(speakerID primitive.ObjectID, status models.ParticipationStatus) (*models.Speaker, error) {
 	ctx := context.Background()
 
