@@ -1,6 +1,8 @@
 <template>
   <AlertDialog v-model:open="open">
-    <AlertDialogContent class="flex max-h-[85vh] max-w-2xl flex-col overflow-hidden">
+    <AlertDialogContent
+      class="flex max-h-[85vh] max-w-2xl flex-col overflow-hidden"
+    >
       <AlertDialogHeader>
         <AlertDialogTitle>Gmail sync details</AlertDialogTitle>
         <AlertDialogDescription>

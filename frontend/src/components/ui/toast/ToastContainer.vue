@@ -24,7 +24,7 @@
         v-if="t.action"
         type="button"
         class="mt-2 self-start text-sm font-medium underline underline-offset-2 hover:opacity-75 focus-visible:outline-offset-2"
-        @click="t.action?.onClick(); dismiss(t.id)"
+        @click="handleAction(t.id, t.action?.onClick)"
       >
         {{ t.action.label }}
       </button>
@@ -36,6 +36,11 @@
 import useToast from "@/lib/toast";
 
 const { toasts, dismiss } = useToast();
+
+const handleAction = (id: number, onClick?: () => void) => {
+  onClick?.();
+  dismiss(id);
+};
 
 const toastClass = (type?: string) => {
   switch (type) {
