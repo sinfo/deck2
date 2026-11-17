@@ -6,42 +6,49 @@
       <AlertDialogHeader>
         <AlertDialogTitle>Gmail sync details</AlertDialogTitle>
         <AlertDialogDescription>
-          Review the issues below, then try syncing again. Open technical
-          details if you need more information.
+          Review the issues below, then try syncing again.
         </AlertDialogDescription>
       </AlertDialogHeader>
 
-      <ul class="min-h-0 space-y-3 overflow-y-auto">
-        <li
-          v-for="issue in issues"
-          :key="issue.id"
-          class="rounded-lg border p-3"
-        >
-          <div class="flex items-center justify-between gap-3">
-            <p class="min-w-0 break-words text-sm font-semibold">
-              {{ issue.name }}
-            </p>
-            <span
-              v-if="issue.type"
-              class="shrink-0 text-xs text-muted-foreground"
-            >
-              {{ issue.type }}
-            </span>
-          </div>
-          <p class="mt-1 text-sm text-muted-foreground">
-            {{ readableReason(issue.reason) }}
-          </p>
-          <details class="mt-2 text-xs text-muted-foreground">
-            <summary class="cursor-pointer font-medium hover:underline">
-              Technical details
-            </summary>
-            <p class="mt-2 break-words font-mono">{{ issue.reason }}</p>
-            <p v-if="issue.entityId" class="mt-1 break-all">
-              Entity ID: {{ issue.entityId }}
-            </p>
-          </details>
-        </li>
-      </ul>
+      <div class="min-h-0 overflow-y-auto">
+        <table class="w-full border-separate border-spacing-y-2">
+          <tbody>
+            <tr v-for="issue in issues" :key="issue.id">
+              <td
+                class="rounded-lg border border-red-200 bg-red-50 p-1 dark:border-red-900/60 dark:bg-red-950/30"
+              >
+                <div class="rounded-md bg-card p-3">
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="min-w-0 break-words text-sm font-semibold">
+                      {{ issue.name }}
+                    </p>
+                    <span
+                      v-if="issue.type"
+                      class="shrink-0 text-xs text-red-700 dark:text-red-300"
+                    >
+                      {{ issue.type }}
+                    </span>
+                  </div>
+                  <p class="mt-1 text-sm text-muted-foreground">
+                    {{ readableReason(issue.reason) }}
+                  </p>
+                  <details class="mt-2 text-xs text-muted-foreground">
+                    <summary class="cursor-pointer font-medium hover:underline">
+                      More details
+                    </summary>
+                    <p class="mt-2 break-words font-mono">
+                      {{ issue.reason }}
+                    </p>
+                    <p v-if="issue.entityId" class="mt-1 break-all">
+                      Entity ID: {{ issue.entityId }}
+                    </p>
+                  </details>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <AlertDialogFooter>
         <AlertDialogCancel>Close</AlertDialogCancel>
