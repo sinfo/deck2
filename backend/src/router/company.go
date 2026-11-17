@@ -1488,15 +1488,7 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var participationThreadIDs []primitive.ObjectID
-	for _, participation := range company.Participations {
-		if participation.Event == targetEventID {
-			participationThreadIDs = participation.Communications
-			break
-		}
-	}
-
-	syncedCount, err := syncGmailMessagesToThreads(data.Messages, credentials.ID, participationThreadIDs, func(threadID primitive.ObjectID) error {
+	syncedCount, err := syncGmailMessagesToThreads(data.Messages, credentials.ID, func(threadID primitive.ObjectID) error {
 		_, err := mongodb.Companies.AddThread(companyID, threadID, targetEventID)
 		return err
 	})

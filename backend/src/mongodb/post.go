@@ -67,30 +67,6 @@ func (p *PostsType) GetPost(postID primitive.ObjectID) (*models.Post, error) {
 	return &post, nil
 }
 
-// GetPostsByIDs reads the posts for a single participation in one query.
-func (p *PostsType) GetPostsByIDs(ids []primitive.ObjectID) (map[primitive.ObjectID]*models.Post, error) {
-	result := make(map[primitive.ObjectID]*models.Post, len(ids))
-	if len(ids) == 0 {
-		return result, nil
-	}
-
-	ctx := context.Background()
-	cursor, err := p.Collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}})
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	for cursor.Next(ctx) {
-		var post models.Post
-		if err := cursor.Decode(&post); err != nil {
-			return nil, err
-		}
-		result[post.ID] = &post
-	}
-	return result, cursor.Err()
-}
-
 // DeletePost deletes a post by its ID.
 func (p *PostsType) DeletePost(postID primitive.ObjectID) (*models.Post, error) {
 	ctx = context.Background()
