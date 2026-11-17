@@ -168,7 +168,9 @@ export const useAutoLinkGmail = () => {
     return promise;
   };
 
-  const autoLinkEventEntities = (eventId: number): Promise<EntityLinkResult[]> =>
+  const autoLinkEventEntities = (
+    eventId: number,
+  ): Promise<EntityLinkResult[]> =>
     runSync(eventId, "full", () =>
       runFullGmailSync(eventId, gmail, (name, completed, total) => {
         currentProcessingEntity.value = name;
