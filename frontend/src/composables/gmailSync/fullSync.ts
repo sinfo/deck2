@@ -128,7 +128,8 @@ const syncEntity = async (
 
         for (const assigned of assignedEntities) {
           if (!mentionsGmailEntity(text, assigned.name)) continue;
-          const matched = namedThreads.get(message.threadId) ?? new Set<string>();
+          const matched =
+            namedThreads.get(message.threadId) ?? new Set<string>();
           matched.add(`${assigned.type}:${assigned.id}`);
           namedThreads.set(message.threadId, matched);
         }
