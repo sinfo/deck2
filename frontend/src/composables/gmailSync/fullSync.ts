@@ -117,7 +117,9 @@ export const runFullGmailSync = async (
   const seenThreads = new Set<string>();
 
   onProgress("Searching Gmail", 0, states.length);
-  const visitPage = async (threads: GmailThreadListItem[]): Promise<SyncResult<void>> => {
+  const visitPage = async (
+    threads: GmailThreadListItem[],
+  ): Promise<SyncResult<void>> => {
     const ids = threads
       .map((thread) => thread.id)
       .filter((id) => !seenThreads.has(id));

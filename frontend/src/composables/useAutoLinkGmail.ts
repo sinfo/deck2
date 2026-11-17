@@ -183,14 +183,10 @@ export const useAutoLinkGmail = () => {
       const stored = localStorage.getItem(timestampKey(eventId));
       const lastSync = stored ? Number(stored) : NaN;
       if (!Number.isFinite(lastSync) || lastSync <= 0) {
-        return runFullGmailSync(
-          eventId,
-          gmail,
-          (name, completed, total) => {
-            currentProcessingEntity.value = name;
-            progressPercent.value = Math.round((completed / total) * 100);
-          },
-        );
+        return runFullGmailSync(eventId, gmail, (name, completed, total) => {
+          currentProcessingEntity.value = name;
+          progressPercent.value = Math.round((completed / total) * 100);
+        });
       }
       return runRecentGmailSync(eventId, lastSync, gmail);
     });
