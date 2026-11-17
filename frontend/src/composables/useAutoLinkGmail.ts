@@ -10,7 +10,7 @@ import {
   type EntityLinkResult,
   type SyncResult,
 } from "./gmailSync/common";
-import { runFullGmailSync, type FullSyncOptions } from "./gmailSync/fullSync";
+import { runFullGmailSync } from "./gmailSync/fullSync";
 import { runRecentGmailSync } from "./gmailSync/recentSync";
 
 export type {
@@ -168,12 +168,9 @@ export const useAutoLinkGmail = () => {
     return promise;
   };
 
-  const autoLinkEventEntities = (
-    eventId: number,
-    options: FullSyncOptions = {},
-  ): Promise<EntityLinkResult[]> =>
+  const autoLinkEventEntities = (eventId: number): Promise<EntityLinkResult[]> =>
     runSync(eventId, "full", () =>
-      runFullGmailSync(eventId, options, gmail, (name, completed, total) => {
+      runFullGmailSync(eventId, gmail, (name, completed, total) => {
         currentProcessingEntity.value = name;
         progressPercent.value = Math.round((completed / total) * 100);
       }),
@@ -188,7 +185,6 @@ export const useAutoLinkGmail = () => {
       if (!Number.isFinite(lastSync) || lastSync <= 0) {
         return runFullGmailSync(
           eventId,
-          { forceReScan: true },
           gmail,
           (name, completed, total) => {
             currentProcessingEntity.value = name;

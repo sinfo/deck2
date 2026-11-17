@@ -4,220 +4,207 @@ import {
   entityResult,
   errorMessage,
   failure,
-  gmailSearchQuery,
   loadGmailEntities,
   loadGmailSyncWindow,
   mentionsGmailEntity,
   normalizeEmails,
   success,
 } from "./common";
-import type {
-  EntityLinkResult,
-  GmailEntity,
-  GmailSyncWindow,
-  SyncResult,
-} from "./common";
+import type { EntityLinkResult, GmailEntity, SyncResult } from "./common";
 import type { GmailSyncClient } from "./client";
 import type { GmailMessageData } from "@/api/companies";
 
-export interface FullSyncOptions {
-  forceReScan?: boolean;
-  // Used by incremental sync to search only new correspondence.
-  recentAfterEpoch?: number;
+interface EntityState {
+  entity: GmailEntity;
+  emails: Set<string>;
+  linked: Set<string>;
+  newlyLinked: number;
+  synced: boolean;
+  error?: string;
 }
 
-const syncEntity = async (
-  entity: GmailEntity,
-  client: GmailSyncClient,
-  window: GmailSyncWindow,
-  options: FullSyncOptions,
-  assignedEntities: GmailEntity[],
-): Promise<EntityLinkResult | null> => {
-  const existing = entity.existingThreads;
-  const isRecent = options.recentAfterEpoch !== undefined;
-  let query: string | undefined;
-  let stage = "loading contact addresses";
+// Prefer known contacts; without an email match, a name must identify
+// exactly one assigned company or speaker.
+const matchEntity = (
+  messages: GmailMessageData[],
+  states: EntityState[],
+): EntityState | undefined => {
+  const addresses = messages.flatMap((message) => [
+    ...emailsInHeader(message.from),
+    ...emailsInHeader(message.to),
+  ]);
+  const byEmail = states.filter((state) =>
+    addresses.some((address) => state.emails.has(address)),
+  );
+  if (byEmail.length > 0) return byEmail.length === 1 ? byEmail[0] : undefined;
 
-  try {
-    // Normal full sync keeps existing links and only refreshes their messages.
-    if (existing.length > 0 && !options.forceReScan && !isRecent) {
-      for (let offset = 0; offset < existing.length; offset += 20) {
-        stage = "fetching previously linked Gmail messages";
-        const messages = await client.fetchMessages(
-          existing.slice(offset, offset + 20),
-        );
-        if (!messages.ok) throw new Error(messages.error);
-        const inEdition = editionMessagesByThread(messages.value, window);
-        const batch = [...inEdition.values()].flat();
-        if (batch.length > 0) {
-          stage = "saving Gmail messages in Deck";
-          await entity.syncMessages(batch);
-        }
-      }
-      return entityResult(entity, "ALREADY_LINKED", existing);
-    }
-
-    // Contact information is optional, including when its lookup fails.
-    let emails: string[] = [];
-    try {
-      emails = normalizeEmails(await entity.fetchEmails());
-    } catch (error) {
-      console.warn(
-        `[Gmail sync] Contact lookup unavailable for ${entity.type} ${entity.name}; searching by name: ${errorMessage(error)}`,
-      );
-    }
-
-    const afterEpoch = Math.max(
-      window.afterEpoch,
-      options.recentAfterEpoch ?? window.afterEpoch,
-    );
-    if (afterEpoch >= window.beforeEpoch) return null;
-
-    const allowed = new Set(emails);
-    // Gmail matches query terms within messages, not across entire threads.
-    // Search by name/email, then verify the SINFO edition within the thread.
-    query = gmailSearchQuery(entity.name, emails, window, afterEpoch);
-    if (!query) {
-      return isRecent
-        ? null
-        : entityResult(
-            entity,
-            existing.length ? "ALREADY_LINKED" : "NOT_FOUND",
-            existing,
-          );
-    }
-    const editionMention = new RegExp(`\\bSINFO\\s+${window.edition}\\b`, "i");
-    const found = new Set(existing);
-    const added: string[] = [];
-    let synced = false;
-
-    stage = "searching Gmail threads";
-    const scanned = await client.scanThreads(query, async (threads) => {
-      const ids = threads.map((thread) => thread.id);
-      if (ids.length === 0) return success(undefined);
-
-      const response = await client.fetchMessages(ids);
-      if (!response.ok) {
-        return failure(`fetching Gmail thread messages: ${response.error}`);
-      }
-
-      const byThread = editionMessagesByThread(response.value, {
-        ...window,
-        afterEpoch,
-      });
-      // Inspect each candidate thread once, including its older messages.
-      const editionThreads = new Set<string>();
-      const emailThreads = new Set<string>();
-      const namedThreads = new Map<string, Set<string>>();
-      for (const message of response.value) {
-        const text = [
-          message.subject,
-          message.from,
-          message.to,
-          message.body,
-        ].join("\n");
-        if (editionMention.test(text)) editionThreads.add(message.threadId);
-
-        if (
-          [...emailsInHeader(message.from), ...emailsInHeader(message.to)].some(
-            (email) => allowed.has(email),
-          )
-        ) {
-          emailThreads.add(message.threadId);
-        }
-
-        for (const assigned of assignedEntities) {
-          if (!mentionsGmailEntity(text, assigned.name)) continue;
-          const matched =
-            namedThreads.get(message.threadId) ?? new Set<string>();
-          matched.add(`${assigned.type}:${assigned.id}`);
-          namedThreads.set(message.threadId, matched);
-        }
-      }
-      const batch: GmailMessageData[] = [];
-
-      for (const [id, messages] of byThread) {
-        // An edition mention anywhere in the thread is mandatory. A name-only
-        // match must also be unique among the member's assigned entities.
-        if (!editionThreads.has(id)) continue;
-        const names = namedThreads.get(id);
-        const uniqueNameMatch =
-          names?.size === 1 && names.has(`${entity.type}:${entity.id}`);
-        if (!emailThreads.has(id) && !uniqueNameMatch) continue;
-
-        batch.push(...messages);
-        if (!found.has(id)) {
-          found.add(id);
-          added.push(id);
-        }
-      }
-
-      if (batch.length > 0) {
-        try {
-          await entity.syncMessages(batch);
-        } catch (error) {
-          return failure(
-            `saving Gmail messages in Deck: ${errorMessage(error)}`,
-          );
-        }
-        synced = true;
-      }
-      return success(undefined);
-    });
-
-    if (!scanned.ok) throw new Error(scanned.error);
-    if (added.length > 0) {
-      stage = "linking Gmail threads to the participation";
-      await entity.updateThreadIds([...found]);
-    }
-
-    if (isRecent && !synced) return null;
-    if (!synced) {
-      return entityResult(
-        entity,
-        existing.length ? "ALREADY_LINKED" : "NOT_FOUND",
-        existing,
-        0,
-        { searchQueryUsed: query },
-      );
-    }
-    return entityResult(entity, "SUCCESS", [...found], added.length, {
-      searchQueryUsed: query,
-    });
-  } catch (error) {
-    return entityResult(entity, "ERROR", existing, 0, {
-      errorMessage: `${stage}: ${errorMessage(error)}`,
-      searchQueryUsed: query,
-    });
-  }
+  const byName = states.filter((state) =>
+    messages.some((message) =>
+      mentionsGmailEntity(
+        [message.subject, message.from, message.to, message.body].join("\n"),
+        state.entity.name,
+      ),
+    ),
+  );
+  return byName.length === 1 ? byName[0] : undefined;
 };
 
 export const runFullGmailSync = async (
   eventId: number,
-  options: FullSyncOptions,
   client: GmailSyncClient,
   onProgress: (name: string, completed: number, total: number) => void,
+  recentAfterEpoch?: number,
 ): Promise<SyncResult<EntityLinkResult[]>> => {
   const window = await loadGmailSyncWindow(eventId);
   if (!window.ok) return failure(window.error);
 
-  // Never scan unassigned entities, even during a forced rescan.
   const entities = await loadGmailEntities(eventId, true);
   if (!entities.ok) return failure(entities.error);
+  if (entities.value.length === 0) return success([]);
 
-  const results: EntityLinkResult[] = [];
-  for (const [index, entity] of entities.value.entries()) {
-    onProgress(entity.name, index, entities.value.length);
-    const result = await syncEntity(
+  const afterEpoch = Math.max(
+    window.value.afterEpoch,
+    recentAfterEpoch ?? window.value.afterEpoch,
+  );
+  if (afterEpoch >= window.value.beforeEpoch) return success([]);
+
+  // Load only the signed-in member's assigned entities. Contact email is
+  // optional; names remain available when the contact lookup fails.
+  const states: EntityState[] = [];
+  for (const entity of entities.value) {
+    let emails: string[];
+    try {
+      emails = normalizeEmails(await entity.fetchEmails());
+    } catch {
+      emails = [];
+    }
+    states.push({
       entity,
-      client,
-      window.value,
-      options,
-      entities.value,
-    );
-    if (result) results.push(result);
-    onProgress(entity.name, index + 1, entities.value.length);
+      emails: new Set(emails),
+      linked: new Set(entity.existingThreads),
+      newlyLinked: 0,
+      synced: false,
+    });
   }
 
+  // Initial discovery uses the edition phrase. Recent checks also search
+  // replies that no longer repeat the phrase in their newest message.
+  const isRecent = recentAfterEpoch !== undefined;
+  const query = `after:${afterEpoch - 1} before:${window.value.beforeEpoch}${
+    isRecent ? "" : ` "SINFO ${window.value.edition}"`
+  }`;
+  const editionMention = new RegExp(
+    `\\bSINFO\\s+${window.value.edition}\\b`,
+    "i",
+  );
+  const seenThreads = new Set<string>();
+
+  onProgress("Searching Gmail", 0, states.length);
+  const scanned = await client.scanThreads(query, async (threads) => {
+    const ids = threads
+      .map((thread) => thread.id)
+      .filter((id) => !seenThreads.has(id));
+    if (ids.length === 0) return success(undefined);
+
+    const fetched = await client.fetchMessages(ids);
+    if (!fetched.ok) {
+      return failure(`fetching Gmail thread messages: ${fetched.error}`);
+    }
+    ids.forEach((id) => seenThreads.add(id));
+
+    // Keep only one page of complete conversations in memory.
+    const allMessages = new Map<string, GmailMessageData[]>();
+    for (const message of fetched.value) {
+      const messages = allMessages.get(message.threadId);
+      if (messages) {
+        messages.push(message);
+      } else {
+        allMessages.set(message.threadId, [message]);
+      }
+    }
+    const inEdition = editionMessagesByThread(fetched.value, {
+      ...window.value,
+      afterEpoch,
+    });
+
+    const batches = new Map<
+      EntityState,
+      { messages: GmailMessageData[]; threadIds: string[] }
+    >();
+    for (const [threadId, messages] of inEdition) {
+      const conversation = allMessages.get(threadId);
+      if (
+        !conversation ||
+        !conversation.some((message) =>
+          editionMention.test(`${message.subject}\n${message.body}`),
+        )
+      ) {
+        continue;
+      }
+
+      const state = matchEntity(conversation, states);
+      if (!state || state.error) continue;
+
+      const batch = batches.get(state);
+      if (batch) {
+        batch.messages.push(...messages);
+        batch.threadIds.push(threadId);
+      } else {
+        batches.set(state, { messages: [...messages], threadIds: [threadId] });
+      }
+    }
+
+    for (const [state, batch] of batches) {
+      try {
+        await state.entity.syncMessages(batch.messages);
+        state.synced = true;
+        for (const id of batch.threadIds) {
+          if (!state.linked.has(id)) {
+            state.linked.add(id);
+            state.newlyLinked++;
+          }
+        }
+      } catch (error) {
+        state.error = `saving Gmail messages in Deck: ${errorMessage(error)}`;
+      }
+    }
+    return success(undefined);
+  });
+
+  const results: EntityLinkResult[] = [];
+  for (const [index, state] of states.entries()) {
+    onProgress(state.entity.name, index, states.length);
+    if (state.newlyLinked > 0) {
+      try {
+        await state.entity.updateThreadIds([...state.linked]);
+      } catch (error) {
+        state.error = `linking Gmail threads to the participation: ${errorMessage(error)}`;
+      }
+    }
+
+    if (!isRecent || state.synced || state.error) {
+      results.push(
+        entityResult(
+          state.entity,
+          state.error
+            ? "ERROR"
+            : state.synced
+              ? "SUCCESS"
+              : state.linked.size > 0
+                ? "ALREADY_LINKED"
+                : "NOT_FOUND",
+          [...state.linked],
+          state.newlyLinked,
+          {
+            ...(state.error ? { errorMessage: state.error } : {}),
+            searchQueryUsed: query,
+          },
+        ),
+      );
+    }
+    onProgress(state.entity.name, index + 1, states.length);
+  }
+
+  if (!scanned.ok) return failure(scanned.error);
   return success(results);
 };

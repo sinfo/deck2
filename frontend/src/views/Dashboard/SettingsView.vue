@@ -643,7 +643,7 @@ const syncThreads = async (silent = false, fullScan = false) => {
 
   try {
     const results = fullScan
-      ? await autoLinkEventEntities(eventId, { forceReScan: true })
+      ? await autoLinkEventEntities(eventId)
       : await syncRecentGmailUpdates(eventId);
     const failedEntities = results.filter(
       (result) => result.status === "ERROR",

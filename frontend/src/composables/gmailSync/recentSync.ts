@@ -11,10 +11,7 @@ export const runRecentGmailSync = (
 ): Promise<SyncResult<EntityLinkResult[]>> =>
   runFullGmailSync(
     eventId,
-    {
-      forceReScan: true,
-      recentAfterEpoch: Math.max(0, Math.floor(lastSyncTime / 1000) - 180),
-    },
     client,
     () => {},
+    Math.max(0, Math.floor(lastSyncTime / 1000) - 180),
   );
