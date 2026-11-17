@@ -4,6 +4,7 @@ import {
   entityResult,
   errorMessage,
   failure,
+  gmailSearchQuery,
   loadGmailEntities,
   loadGmailSyncWindow,
   mentionsGmailEntity,
@@ -13,6 +14,7 @@ import {
 import type { EntityLinkResult, GmailEntity, SyncResult } from "./common";
 import type { GmailSyncClient } from "./client";
 import type { GmailMessageData } from "@/api/companies";
+import type { GmailThreadListItem } from "../useGmailMessages";
 
 interface EntityState {
   entity: GmailEntity;
@@ -87,12 +89,27 @@ export const runFullGmailSync = async (
     });
   }
 
-  // Initial discovery uses the edition phrase. Recent checks also search
-  // replies that no longer repeat the phrase in their newest message.
+  // Full discovery uses one edition search. Keep recent searches scoped to
+  // assigned entities until we optimize incremental updates separately.
   const isRecent = recentAfterEpoch !== undefined;
-  const query = `after:${afterEpoch - 1} before:${window.value.beforeEpoch}${
-    isRecent ? "" : ` "SINFO ${window.value.edition}"`
-  }`;
+  const queries = isRecent
+    ? [
+        ...new Set(
+          states
+            .map((state) =>
+              gmailSearchQuery(
+                state.entity.name,
+                [...state.emails],
+                window.value,
+                afterEpoch,
+              ),
+            )
+            .filter(Boolean),
+        ),
+      ]
+    : [
+        `after:${afterEpoch - 1} before:${window.value.beforeEpoch} "SINFO ${window.value.edition}"`,
+      ];
   const editionMention = new RegExp(
     `\\bSINFO\\s+${window.value.edition}\\b`,
     "i",
@@ -100,7 +117,7 @@ export const runFullGmailSync = async (
   const seenThreads = new Set<string>();
 
   onProgress("Searching Gmail", 0, states.length);
-  const scanned = await client.scanThreads(query, async (threads) => {
+  const visitPage = async (threads: GmailThreadListItem[]): Promise<SyncResult<void>> => {
     const ids = threads
       .map((thread) => thread.id)
       .filter((id) => !seenThreads.has(id));
@@ -169,7 +186,16 @@ export const runFullGmailSync = async (
       }
     }
     return success(undefined);
-  });
+  };
+
+  let scanError: string | undefined;
+  for (const query of queries) {
+    const scanned = await client.scanThreads(query, visitPage);
+    if (!scanned.ok) {
+      scanError = scanned.error;
+      break;
+    }
+  }
 
   const results: EntityLinkResult[] = [];
   for (const [index, state] of states.entries()) {
@@ -195,16 +221,13 @@ export const runFullGmailSync = async (
                 : "NOT_FOUND",
           [...state.linked],
           state.newlyLinked,
-          {
-            ...(state.error ? { errorMessage: state.error } : {}),
-            searchQueryUsed: query,
-          },
+          state.error ? { errorMessage: state.error } : {},
         ),
       );
     }
     onProgress(state.entity.name, index + 1, states.length);
   }
 
-  if (!scanned.ok) return failure(scanned.error);
+  if (scanError !== undefined) return failure(scanError);
   return success(results);
 };
