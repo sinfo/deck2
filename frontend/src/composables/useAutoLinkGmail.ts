@@ -130,15 +130,9 @@ export const useAutoLinkGmail = () => {
         results.value = scan.value;
         const failed = scan.value.filter((item) => item.status === "ERROR");
         if (failed.length > 0) {
-          console.groupCollapsed(
-            `[Gmail sync] SINFO ${eventId}: ${failed.length} of ${scan.value.length} entities failed (${kind} sync)`,
+          console.warn(
+            `[Gmail sync] SINFO ${eventId}: ${failed.length} of ${scan.value.length} entities failed (${kind} sync). View details in Settings.`,
           );
-          for (const item of failed) {
-            console.error(
-              `[${item.entityType}] ${item.entityName} (${item.entityId}): ${item.errorMessage ?? "Unknown sync error"}`,
-            );
-          }
-          console.groupEnd();
         }
         // An empty initial scan must remain eligible for a full retry.
         const previousSync = Number(

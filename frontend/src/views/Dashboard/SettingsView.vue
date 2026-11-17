@@ -418,6 +418,11 @@
       </div>
     </div>
   </div>
+  <GmailSyncErrorDialog
+    v-model:open="syncDetailsOpen"
+    :failures="syncFailures"
+    :general-error="syncGeneralError"
+  />
 </template>
 
 <script setup lang="ts">
@@ -455,6 +460,8 @@ import {
 } from "@/composables/useAutoLinkGmail";
 import { useEventStore } from "@/stores/event";
 import { useToast } from "@/lib/toast";
+import GmailSyncErrorDialog from "@/components/GmailSyncErrorDialog.vue";
+import type { EntityLinkResult } from "@/composables/gmailSync/common";
 
 const fileInput = ref<HTMLInputElement>();
 const {
@@ -469,6 +476,31 @@ const isEditMode = ref(false);
 const queryCache = useQueryCache();
 const eventStore = useEventStore();
 const { toast } = useToast();
+const syncDetailsOpen = ref(false);
+const syncFailures = ref<EntityLinkResult[]>([]);
+const syncGeneralError = ref<string | null>(null);
+
+const showSyncFailure = (
+  failures: EntityLinkResult[],
+  message: string | null = null,
+) => {
+  syncFailures.value = failures;
+  syncGeneralError.value = message;
+  toast.error({
+    title: "Gmail Sync Incomplete",
+    description: failures.length
+      ? `${failures.length} assigned companies or speakers couldn't sync.`
+      : "Gmail sync couldn't finish.",
+    duration: 12000,
+    action: {
+      label: "View details",
+      onClick: () => {
+        syncDetailsOpen.value = true;
+      },
+    },
+  });
+};
+
 const {
   requestGoogleToken,
   isSigningIn,
@@ -617,19 +649,7 @@ const syncThreads = async (silent = false, fullScan = false) => {
       (result) => result.status === "ERROR",
     );
     if (gmailSyncError.value || failedEntities.length > 0) {
-      const examples = failedEntities
-        .slice(0, 2)
-        .map(
-          (item) =>
-            `${item.entityName} (${item.entityType}): ${item.errorMessage ?? "Unknown error"}`,
-        )
-        .join(" | ");
-      toast.error({
-        title: "Sync Incomplete",
-        description:
-          gmailSyncError.value ??
-          `${failedEntities.length} of ${results.length} entities failed. ${examples}${failedEntities.length > 2 ? " | See browser console for the complete list." : ""}`,
-      });
+      showSyncFailure(failedEntities, gmailSyncError.value);
       return;
     }
     const newlyLinked = results.reduce(
@@ -664,11 +684,10 @@ const syncThreads = async (silent = false, fullScan = false) => {
     });
   } catch (err) {
     console.error("Failed to sync threads:", err);
-    toast.error({
-      title: "Sync Failed",
-      description:
-        err instanceof Error ? err.message : "Failed to sync Gmail threads.",
-    });
+    showSyncFailure(
+      [],
+      err instanceof Error ? err.message : "Failed to sync Gmail threads.",
+    );
   }
 };
 
