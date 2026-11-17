@@ -375,7 +375,7 @@
                         size="sm"
                         class="gap-1.5"
                         :disabled="isAutoLinking"
-                        @click="() => syncThreads(false)"
+                        @click="() => syncThreads(false, true)"
                       >
                         <RefreshCw
                           class="w-3.5 h-3.5"
@@ -449,7 +449,10 @@ import type { CreateCompanyRepData } from "@/dto/companies";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Pencil, RefreshCw, Unplug } from "lucide-vue-next";
 import { useGoogleAuth } from "@/composables/useGoogleAuth";
-import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
+import {
+  isContactedParticipationStatus,
+  useAutoLinkGmail,
+} from "@/composables/useAutoLinkGmail";
 import { useEventStore } from "@/stores/event";
 import { useToast } from "@/lib/toast";
 
@@ -640,15 +643,26 @@ const syncThreads = async (silent = false, fullScan = false) => {
         Math.max(result.linkedThreadsCount - result.newlyLinkedCount, 0),
       0,
     );
+    const unmatched = results.filter(
+      (result) =>
+        result.status === "NOT_FOUND" &&
+        isContactedParticipationStatus(result.participationStatus),
+    );
+    if (unmatched.length > 0) {
+      toast.warning({
+        title: "Gmail Sync Finished — Unmatched Contacts",
+        description: `${newlyLinked} new thread(s) linked. ${unmatched.length} contacted ${unmatched.length === 1 ? "entity has" : "entities have"} no matching SINFO ${eventId} conversation. Review the entity name or link the thread manually.`,
+      });
+      return;
+    }
+
     toast.success({
       title: "Sync Complete",
       description:
         newlyLinked > 0
           ? `Linked ${newlyLinked} new thread(s). Total ${alreadyLinked + newlyLinked} thread(s) in sync.`
-          : "Email communications are up to date.",
+          : "No additional Gmail threads matched this edition.",
     });
-
-    warnUnlinkedContacted(results);
   } catch (err) {
     console.error("Failed to sync threads:", err);
     toast.error({

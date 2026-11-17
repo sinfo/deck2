@@ -58,8 +58,10 @@ export const useAutoLinkGmail = () => {
   const scopeKey = (eventId: number): string =>
     `${auth.memberSinfoid || auth.decoded?.sinfoid?.toLowerCase().trim() || "unknown"}:${eventId}`;
 
+  // Earlier sync timestamps may have been recorded without finding threads
+  // whose contact email was missing. Rescan once before using delta search.
   const timestampKey = (eventId: number): string =>
-    `gmail_last_sync_timestamp_${scopeKey(eventId)}`;
+    `gmail_last_sync_v2_timestamp_${scopeKey(eventId)}`;
 
   const getUnlinkedContacted = (
     list: EntityLinkResult[] = results.value,
@@ -192,7 +194,7 @@ export const useAutoLinkGmail = () => {
       if (!Number.isFinite(lastSync) || lastSync <= 0) {
         return runFullGmailSync(
           eventId,
-          {},
+          { forceReScan: true },
           gmail,
           (name, completed, total) => {
             currentProcessingEntity.value = name;

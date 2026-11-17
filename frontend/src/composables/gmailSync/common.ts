@@ -228,15 +228,38 @@ export const normalizeEmails = (emails: string[]): string[] =>
     (email) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email),
   );
 
+// Use entity name or known contact email to discover candidates. An absent
+// contact email must not prevent discovery; empty signals never scan the mailbox.
 export const gmailSearchQuery = (
+  name: string,
   emails: string[],
   window: GmailSyncWindow,
   afterEpoch = window.afterEpoch,
 ): string => {
-  const contacts = emails
-    .flatMap((email) => [`from:${email}`, `to:${email}`])
-    .join(" ");
-  return `after:${Math.max(afterEpoch, window.afterEpoch) - 1} before:${window.beforeEpoch} {${contacts}}`;
+  const safeName = name.replace(/[{}"]/g, " ").replace(/\s+/g, " ").trim();
+  const signals = [
+    ...(safeName.length >= 3 ? [`"${safeName}"`] : []),
+    ...emails.flatMap((email) => [`from:${email}`, `to:${email}`]),
+  ];
+  if (signals.length === 0) return "";
+
+  return `after:${Math.max(afterEpoch, window.afterEpoch) - 1} before:${window.beforeEpoch} {${signals.join(" ")}}`;
+};
+
+// Require whole-name matches, ignoring capitalization, accents, and punctuation.
+const normalizeEntityText = (value: string): string =>
+  value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+
+export const mentionsGmailEntity = (text: string, name: string): boolean => {
+  const normalizedName = normalizeEntityText(name);
+  if (normalizedName.length < 3) return false;
+
+  return ` ${normalizeEntityText(text)} `.includes(` ${normalizedName} `);
 };
 
 // Gmail returns complete threads, including messages from older editions.

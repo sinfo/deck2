@@ -7,6 +7,7 @@ import {
   gmailSearchQuery,
   loadGmailEntities,
   loadGmailSyncWindow,
+  mentionsGmailEntity,
   normalizeEmails,
   success,
 } from "./common";
@@ -30,6 +31,7 @@ const syncEntity = async (
   client: GmailSyncClient,
   window: GmailSyncWindow,
   options: FullSyncOptions,
+  assignedEntities: GmailEntity[],
 ): Promise<EntityLinkResult | null> => {
   const existing = entity.existingThreads;
   const isRecent = options.recentAfterEpoch !== undefined;
@@ -55,15 +57,14 @@ const syncEntity = async (
       return entityResult(entity, "ALREADY_LINKED", existing);
     }
 
-    const emails = normalizeEmails(await entity.fetchEmails());
-    if (emails.length === 0) {
-      return isRecent
-        ? null
-        : entityResult(
-            entity,
-            existing.length ? "ALREADY_LINKED" : "NOT_FOUND",
-            existing,
-          );
+    // Contact information is optional, including when its lookup fails.
+    let emails: string[] = [];
+    try {
+      emails = normalizeEmails(await entity.fetchEmails());
+    } catch (error) {
+      console.warn(
+        `[Gmail sync] Contact lookup unavailable for ${entity.type} ${entity.name}; searching by name: ${errorMessage(error)}`,
+      );
     }
 
     const afterEpoch = Math.max(
@@ -73,11 +74,18 @@ const syncEntity = async (
     if (afterEpoch >= window.beforeEpoch) return null;
 
     const allowed = new Set(emails);
-    query = gmailSearchQuery(emails, window, afterEpoch);
-    // Gmail searches individual messages, not all messages across a thread.
-    // Narrow full scans by edition; recent replies may omit this phrase,
-    // so the incremental scan validates the fetched thread instead.
-    if (!isRecent) query += ` "SINFO ${window.edition}"`;
+    // Gmail matches query terms within messages, not across entire threads.
+    // Search by name/email, then verify the SINFO edition within the thread.
+    query = gmailSearchQuery(entity.name, emails, window, afterEpoch);
+    if (!query) {
+      return isRecent
+        ? null
+        : entityResult(
+            entity,
+            existing.length ? "ALREADY_LINKED" : "NOT_FOUND",
+            existing,
+          );
+    }
     const editionMention = new RegExp(`\\bSINFO\\s+${window.edition}\\b`, "i");
     const found = new Set(existing);
     const added: string[] = [];
@@ -99,21 +107,42 @@ const syncEntity = async (
       });
       // Inspect each candidate thread once, including its older messages.
       const editionThreads = new Set<string>();
+      const emailThreads = new Set<string>();
+      const namedThreads = new Map<string, Set<string>>();
       for (const message of response.value) {
-        if (editionMention.test(`${message.subject}\n${message.body}`)) {
-          editionThreads.add(message.threadId);
+        const text = [
+          message.subject,
+          message.from,
+          message.to,
+          message.body,
+        ].join("\n");
+        if (editionMention.test(text)) editionThreads.add(message.threadId);
+
+        if (
+          [...emailsInHeader(message.from), ...emailsInHeader(message.to)].some(
+            (email) => allowed.has(email),
+          )
+        ) {
+          emailThreads.add(message.threadId);
+        }
+
+        for (const assigned of assignedEntities) {
+          if (!mentionsGmailEntity(text, assigned.name)) continue;
+          const matched = namedThreads.get(message.threadId) ?? new Set<string>();
+          matched.add(`${assigned.type}:${assigned.id}`);
+          namedThreads.set(message.threadId, matched);
         }
       }
       const batch: GmailMessageData[] = [];
 
       for (const [id, messages] of byThread) {
+        // An edition mention anywhere in the thread is mandatory. A name-only
+        // match must also be unique among the member's assigned entities.
         if (!editionThreads.has(id)) continue;
-        const hasContact = messages.some((message) =>
-          [...emailsInHeader(message.from), ...emailsInHeader(message.to)].some(
-            (email) => allowed.has(email),
-          ),
-        );
-        if (!hasContact) continue;
+        const names = namedThreads.get(id);
+        const uniqueNameMatch =
+          names?.size === 1 && names.has(`${entity.type}:${entity.id}`);
+        if (!emailThreads.has(id) && !uniqueNameMatch) continue;
 
         batch.push(...messages);
         if (!found.has(id)) {
@@ -178,7 +207,13 @@ export const runFullGmailSync = async (
   const results: EntityLinkResult[] = [];
   for (const [index, entity] of entities.value.entries()) {
     onProgress(entity.name, index, entities.value.length);
-    const result = await syncEntity(entity, client, window.value, options);
+    const result = await syncEntity(
+      entity,
+      client,
+      window.value,
+      options,
+      entities.value,
+    );
     if (result) results.push(result);
     onProgress(entity.name, index + 1, entities.value.length);
   }
