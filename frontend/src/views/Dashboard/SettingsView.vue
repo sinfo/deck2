@@ -478,7 +478,6 @@ const {
   isAutoLinking,
   autoLinkEventEntities,
   syncRecentGmailUpdates,
-  warnUnlinkedContacted,
   error: gmailSyncError,
 } = useAutoLinkGmail();
 
