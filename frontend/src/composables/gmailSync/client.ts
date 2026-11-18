@@ -194,9 +194,7 @@ export const createGmailSyncClient = (
   // for conversations that have new messages.
   const getChangedThreadIds = async (
     startHistoryId: string,
-  ): Promise<
-    SyncResult<{ historyId: string; threadIds: string[] } | null>
-  > => {
+  ): Promise<SyncResult<{ historyId: string; threadIds: string[] } | null>> => {
     const ids = new Set<string>();
     let pageToken: string | undefined;
 
