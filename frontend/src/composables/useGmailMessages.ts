@@ -88,26 +88,28 @@ interface GmailApiError {
 }
 
 const gmailErrorDetails = async (response: Response) => {
-  const data = (await response.json().catch(() => null)) as GmailApiError | null;
+  const data: GmailApiError | null = await response.json().catch(() => null);
   return {
     reason: data?.error?.errors?.[0]?.reason,
     message: data?.error?.message,
   };
 };
 
-export const gmailResponseError = async (response: Response): Promise<string> => {
+export const gmailResponseError = async (
+  response: Response,
+): Promise<string> => {
   const { reason, message } = await gmailErrorDetails(response);
   if (
     response.status === 429 ||
     /^(userRateLimitExceeded|rateLimitExceeded)$/.test(reason ?? "")
   ) {
-    return `Gmail rate limit reached (HTTP ${response.status}${reason ? `, ${reason}` : ""}). Try again later.`;
+    return `Gmail rate limit reached (${reason ?? response.status}). Try again later.`;
   }
   if (reason === "dailyLimitExceeded") {
     return "Gmail daily quota exceeded. Contact an administrator.";
   }
   if (response.status === 403) {
-    return `Gmail access denied (HTTP 403${reason ? `, ${reason}` : ""}). Check permissions in Settings.`;
+    return `Gmail access denied (${reason ?? "HTTP 403"}). Check permissions in Settings.`;
   }
   return `Gmail API HTTP ${response.status}: ${message ?? response.statusText}`;
 };
