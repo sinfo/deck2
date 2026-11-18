@@ -228,24 +228,6 @@ export const normalizeEmails = (emails: string[]): string[] =>
     (email) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email),
   );
 
-// Recent searches remain scoped to names and known contacts, avoiding a
-// mailbox-wide download of unrelated new mail.
-export const gmailSearchQuery = (
-  name: string,
-  emails: string[],
-  window: GmailSyncWindow,
-  afterEpoch: number,
-): string => {
-  const safeName = name.replace(/[{}"]/g, " ").replace(/\s+/g, " ").trim();
-  const signals = [
-    ...(safeName.length >= 3 ? [`"${safeName}"`] : []),
-    ...emails.flatMap((email) => [`from:${email}`, `to:${email}`]),
-  ];
-  if (signals.length === 0) return "";
-
-  return `after:${afterEpoch - 1} before:${window.beforeEpoch} {${signals.join(" ")}}`;
-};
-
 // Require whole-name matches, ignoring capitalization, accents, and punctuation.
 const normalizeEntityText = (value: string): string =>
   value

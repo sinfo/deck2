@@ -7,6 +7,8 @@ import { useGmailMessages } from "./useGmailMessages";
 import { createGmailSyncClient } from "./gmailSync/client";
 import {
   errorMessage,
+  failure,
+  success,
   type EntityLinkResult,
   type SyncResult,
 } from "./gmailSync/common";
@@ -42,6 +44,11 @@ const currentProcessingEntity = ref("");
 const results = ref<EntityLinkResult[]>([]);
 const error = ref<string | null>(null);
 const activeSyncPromises = new Map<string, Promise<EntityLinkResult[]>>();
+
+interface SyncReport {
+  entities: EntityLinkResult[];
+  historyId?: string;
+}
 let lastWarnTimestamp = 0;
 
 export const useAutoLinkGmail = () => {
@@ -58,10 +65,28 @@ export const useAutoLinkGmail = () => {
   const scopeKey = (eventId: number): string =>
     `${auth.memberSinfoid || auth.decoded?.sinfoid?.toLowerCase().trim() || "unknown"}:${eventId}`;
 
-  // Earlier sync timestamps may have been recorded without finding threads
-  // whose contact email was missing. Rescan once before using delta search.
-  const timestampKey = (eventId: number): string =>
-    `gmail_last_sync_v2_timestamp_${scopeKey(eventId)}`;
+  const historyKey = (eventId: number): string =>
+    `gmail_history_id_${scopeKey(eventId)}:${(auth.connectedGoogleEmail ?? auth.sinfoEmail ?? "").toLowerCase()}`;
+
+  const withHistory = (
+    scan: SyncResult<EntityLinkResult[]>,
+    historyId?: string,
+  ): SyncResult<SyncReport> =>
+    scan.ok
+      ? success({ entities: scan.value, historyId })
+      : failure(scan.error);
+
+  const syncFull = async (eventId: number): Promise<SyncResult<SyncReport>> => {
+    // Capture the position before scanning to avoid missing incoming replies.
+    const checkpoint = await gmail.getHistoryId();
+    return withHistory(
+      await runFullGmailSync(eventId, gmail, (name, completed, total) => {
+        currentProcessingEntity.value = name;
+        progressPercent.value = Math.round((completed / total) * 100);
+      }),
+      checkpoint.ok ? checkpoint.value : undefined,
+    );
+  };
 
   const getUnlinkedContacted = (
     list: EntityLinkResult[] = results.value,
@@ -92,7 +117,7 @@ export const useAutoLinkGmail = () => {
   const runSync = (
     eventId: number,
     kind: "full" | "recent",
-    work: () => Promise<SyncResult<EntityLinkResult[]>>,
+    work: () => Promise<SyncResult<SyncReport>>,
   ): Promise<EntityLinkResult[]> => {
     const key = scopeKey(eventId);
     const running = activeSyncPromises.get(key);
@@ -105,9 +130,6 @@ export const useAutoLinkGmail = () => {
       hasScanned.value = false;
       progressPercent.value = 0;
       currentProcessingEntity.value = "";
-      // Record when the scan starts, so messages arriving mid-scan aren't skipped.
-      const startedAt = Date.now();
-
       try {
         const token = await gmail.ensureToken();
         if (!token.ok) {
@@ -127,30 +149,26 @@ export const useAutoLinkGmail = () => {
           return [];
         }
 
-        results.value = scan.value;
-        const failed = scan.value.filter((item) => item.status === "ERROR");
+        results.value = scan.value.entities;
+        const failed = results.value.filter((item) => item.status === "ERROR");
         if (failed.length > 0) {
           console.warn(
-            `[Gmail sync] SINFO ${eventId}: ${failed.length} of ${scan.value.length} entities failed (${kind} sync). View details in Settings.`,
+            `[Gmail sync] SINFO ${eventId}: ${failed.length} of ${results.value.length} entities failed (${kind} sync). View details in Settings.`,
           );
         }
-        // An empty initial scan must remain eligible for a full retry.
-        const previousSync = Number(
-          localStorage.getItem(timestampKey(eventId)),
-        );
-        const hadPreviousSync =
-          Number.isFinite(previousSync) && previousSync > 0;
+        // Advance the mailbox checkpoint only after successful processing.
         if (
-          !scan.value.some((item) => item.status === "ERROR") &&
-          (scan.value.length > 0 || (kind === "recent" && hadPreviousSync))
+          scan.value.historyId &&
+          failed.length === 0 &&
+          (results.value.length > 0 || kind === "recent")
         ) {
-          localStorage.setItem(timestampKey(eventId), String(startedAt));
+          localStorage.setItem(historyKey(eventId), scan.value.historyId);
         }
 
         queryCache.invalidateQueries({ key: ["company-communications"] });
         queryCache.invalidateQueries({ key: ["speaker-communications"] });
         queryCache.invalidateQueries({ key: ["my-responsibilities"] });
-        return scan.value;
+        return results.value;
       } catch (cause) {
         error.value = errorMessage(cause);
         console.error(
@@ -169,26 +187,24 @@ export const useAutoLinkGmail = () => {
   };
 
   const autoLinkEventEntities = (eventId: number) =>
-    runSync(eventId, "full", () =>
-      runFullGmailSync(eventId, gmail, (name, completed, total) => {
-        currentProcessingEntity.value = name;
-        progressPercent.value = Math.round((completed / total) * 100);
-      }),
-    );
+    runSync(eventId, "full", () => syncFull(eventId));
 
   const syncRecentGmailUpdates = (
     eventId: number,
   ): Promise<EntityLinkResult[]> =>
     runSync(eventId, "recent", async () => {
-      const stored = localStorage.getItem(timestampKey(eventId));
-      const lastSync = stored ? Number(stored) : NaN;
-      if (!Number.isFinite(lastSync) || lastSync <= 0) {
-        return runFullGmailSync(eventId, gmail, (name, completed, total) => {
-          currentProcessingEntity.value = name;
-          progressPercent.value = Math.round((completed / total) * 100);
-        });
-      }
-      return runRecentGmailSync(eventId, lastSync, gmail);
+      const historyId = localStorage.getItem(historyKey(eventId));
+      if (!historyId) return syncFull(eventId);
+
+      const changes = await gmail.getChangedThreadIds(historyId);
+      if (!changes.ok) return failure(changes.error);
+      // An expired history ID requires a new baseline.
+      if (!changes.value) return syncFull(eventId);
+
+      return withHistory(
+        await runRecentGmailSync(eventId, changes.value.threadIds, gmail),
+        changes.value.historyId,
+      );
     });
 
   // Public helper for the Gmail Threads view: no locally thrown exceptions.
