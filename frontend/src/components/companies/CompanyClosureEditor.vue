@@ -1,11 +1,10 @@
 <template>
   <div class="space-y-3">
-    <div>
-      <h3 class="text-sm font-medium">Company Status</h3>
-      <p class="text-xs text-muted-foreground">
-        Mark the company as bankrupt or banned. Changes are saved immediately.
-      </p>
-    </div>
+    <EditSectionHeading
+      title="Company Status"
+      :icon="ActivityIcon"
+      description="Mark the company as bankrupt or banned. Changes are saved immediately."
+    />
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div class="space-y-2">
@@ -48,6 +47,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { ActivityIcon } from "lucide-vue-next";
 import {
   companyClosureLabels,
   type Company,
@@ -58,6 +58,7 @@ import { fromDateInputValue, toDateInputValue } from "@/lib/utils";
 import Input from "../ui/input/Input.vue";
 import Label from "../ui/label/Label.vue";
 import { NativeSelect } from "../ui/native-select";
+import EditSectionHeading from "./EditSectionHeading.vue";
 
 const props = defineProps<{
   company: Company;

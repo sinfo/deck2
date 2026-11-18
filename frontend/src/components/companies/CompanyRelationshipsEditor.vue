@@ -1,12 +1,10 @@
 <template>
   <div class="space-y-4">
-    <div>
-      <h3 class="text-sm font-medium">Company Relationships</h3>
-      <p class="text-xs text-muted-foreground">
-        Acquisitions, mergers and rebrands. Changes are saved immediately and
-        also shown on the related company.
-      </p>
-    </div>
+    <EditSectionHeading
+      title="Company Relationships"
+      :icon="NetworkIcon"
+      description="Acquisitions, mergers and rebrands. Changes are saved immediately and also shown on the related company."
+    />
 
     <!-- Existing relationships -->
     <ul v-if="relationships?.length" class="space-y-2">
@@ -130,7 +128,7 @@
 import { computed, ref } from "vue";
 import { useQuery } from "@pinia/colada";
 import createFuzzySearch from "@nozbe/microfuzz";
-import { XIcon } from "lucide-vue-next";
+import { NetworkIcon, XIcon } from "lucide-vue-next";
 import { getAllCompanies } from "@/api/companies";
 import {
   companyRelationshipLabels,
@@ -150,6 +148,7 @@ import Input from "../ui/input/Input.vue";
 import Label from "../ui/label/Label.vue";
 import { NativeSelect } from "../ui/native-select";
 import Image from "../Image.vue";
+import EditSectionHeading from "./EditSectionHeading.vue";
 
 const MAX_SEARCH_RESULTS = 8;
 

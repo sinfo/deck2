@@ -27,33 +27,21 @@
       v-for="rel in terminalRelationships"
       :key="`${rel.type}-${rel.company}`"
       role="status"
-      class="relative overflow-hidden rounded-xl bg-amber-50 text-amber-950 shadow-md ring-1 ring-amber-300 dark:bg-amber-950/40 dark:text-amber-100 dark:ring-amber-700"
+      class="rounded-xl border border-dashed border-foreground/30 bg-muted/40 text-foreground"
     >
-      <div class="absolute inset-y-0 left-0 w-1.5 bg-amber-400" />
-      <div class="flex min-h-28 items-center gap-5 py-6 pl-7 pr-6">
-        <div
-          class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-amber-200/70 text-amber-700 dark:bg-amber-800/50 dark:text-amber-200"
-        >
-          <component
-            :is="rel.type === 'MERGED_INTO' ? GitMergeIcon : RefreshCwIcon"
-            class="h-7 w-7"
-          />
-        </div>
-        <div class="min-w-0 space-y-2">
-          <p
-            class="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300"
-          >
+      <div class="flex items-center gap-3 px-4 py-3">
+        <component
+          :is="rel.type === 'MERGED_INTO' ? GitMergeIcon : RefreshCwIcon"
+          class="h-4 w-4 shrink-0 text-muted-foreground"
+        />
+        <div class="min-w-0 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <p class="text-sm font-semibold uppercase tracking-wide">
             {{ companyRelationshipLabels[rel.type] }}
           </p>
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <RelatedCompanyChip :company="rel" size="lg" />
-            <span
-              v-if="rel.since"
-              class="text-sm text-amber-800 dark:text-amber-300"
-            >
-              since {{ formatMonthYear(rel.since) }}
-            </span>
-          </div>
+          <RelatedCompanyChip :company="rel" />
+          <span v-if="rel.since" class="text-xs text-muted-foreground">
+            since {{ formatMonthYear(rel.since) }}
+          </span>
         </div>
       </div>
     </div>
