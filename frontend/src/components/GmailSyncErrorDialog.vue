@@ -99,15 +99,18 @@ const issues = computed(() => [
 
 const readableReason = (reason: string): string => {
   const error = reason.toLowerCase();
+  if (/daily.?limit|daily quota/.test(error)) {
+    return "Gmail's daily request limit was reached. Contact an administrator.";
+  }
+  if (/\b429\b|rate.?limit|quota/.test(error)) {
+    return "Gmail is temporarily limiting requests. Try again later.";
+  }
   if (
     /\b(401|403|unauthorized|forbidden)\b|permission|scope|token|authentication/.test(
       error,
     )
   ) {
     return "Gmail access was denied. Reconnect your Google account and try again.";
-  }
-  if (/\b429\b|rate limit|quota/.test(error)) {
-    return "Gmail is temporarily limiting requests. Try again later.";
   }
   if (/saving gmail messages|linking gmail threads/.test(error)) {
     return "Deck couldn't save or link this conversation. Please try again.";

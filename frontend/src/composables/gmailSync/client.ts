@@ -1,7 +1,11 @@
 import type { useAuthStore } from "@/stores/auth";
 import type { GmailMessageData } from "@/api/companies";
 import type { useGoogleAuth } from "../useGoogleAuth";
-import type { useGmailMessages } from "../useGmailMessages";
+import {
+  fetchGmail,
+  gmailResponseError,
+  type useGmailMessages,
+} from "../useGmailMessages";
 import {
   errorMessage,
   failure,
@@ -153,9 +157,11 @@ export const createGmailSyncClient = (
 
     try {
       const request = () =>
-        fetch(url, {
-          headers: { Authorization: `Bearer ${auth.googleAccessToken}` },
-        });
+        fetchGmail(() =>
+          fetch(url, {
+            headers: { Authorization: `Bearer ${auth.googleAccessToken}` },
+          }),
+        );
       let response = await request();
       if (response.status === 401) {
         const reauth = await retryAuth();
@@ -164,13 +170,10 @@ export const createGmailSyncClient = (
       }
 
       if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
         return {
           ok: false,
           status: response.status,
-          error: body?.error?.message ?? `Gmail API HTTP ${response.status}`,
+          error: await gmailResponseError(response),
         };
       }
 
