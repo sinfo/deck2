@@ -194,7 +194,9 @@ export const createGmailSyncClient = (
   // for conversations that have new messages.
   const getChangedThreadIds = async (
     startHistoryId: string,
-  ): Promise<SyncResult<{ historyId: string; threadIds: string[] } | null>> => {
+  ): Promise<
+    SyncResult<{ historyId: string; threadIds: string[] } | null>
+  > => {
     const ids = new Set<string>();
     let pageToken: string | undefined;
 
@@ -222,7 +224,10 @@ export const createGmailSyncClient = (
 
       if (!response.value.nextPageToken) {
         return response.value.historyId
-          ? success({ historyId: response.value.historyId, threadIds: [...ids] })
+          ? success({
+              historyId: response.value.historyId,
+              threadIds: [...ids],
+            })
           : failure("Gmail history response has no history ID");
       }
       pageToken = response.value.nextPageToken;

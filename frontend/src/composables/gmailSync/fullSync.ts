@@ -164,7 +164,9 @@ export const runFullGmailSync = async (
   let scanError: string | undefined;
   if (changedThreadIds) {
     for (let index = 0; index < changedThreadIds.length; index += 20) {
-      const visited = await visitPage(changedThreadIds.slice(index, index + 20));
+      const visited = await visitPage(
+        changedThreadIds.slice(index, index + 20),
+      );
       if (!visited.ok) {
         scanError = visited.error;
         break;
