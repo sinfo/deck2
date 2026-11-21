@@ -37,23 +37,24 @@ func autoUpdateParticipationStatus(collection *mongo.Collection, entityID primit
 		}
 
 		participation := document.Participations[0]
-		if participation.Status != models.Selected && participation.Status != models.Contacted && participation.Status != models.InConversations {
+		if participation.Status != models.Selected && participation.Status != models.Contacted {
 			return nil, nil
 		}
 		threadsByID, err := Threads.GetThreadsByIDs(participation.Communications)
 		if err != nil {
 			return nil, fmt.Errorf("load participation communications: %w", err)
 		}
-		var hasOutgoing, hasIncoming bool
+		var hasOutgoing, hasManualIncoming bool
 		for _, threadID := range participation.Communications {
 			thread, exists := threadsByID[threadID]
 			if !exists {
 				return nil, fmt.Errorf("communication %s is missing", threadID.Hex())
 			}
 			hasOutgoing = hasOutgoing || thread.Kind == models.ThreadKindTo
-			hasIncoming = hasIncoming || thread.Kind == models.ThreadKindFrom
+			// Manual Gmail entries use the GMAIL channel too; imported messages have a Gmail message ID.
+			hasManualIncoming = hasManualIncoming || (thread.Kind == models.ThreadKindFrom && thread.GmailMessageId == "")
 		}
-		nextStatus := models.CommunicationStatus(participation.Status, hasOutgoing, hasIncoming)
+		nextStatus := models.CommunicationStatus(participation.Status, hasOutgoing, hasManualIncoming)
 		if nextStatus == participation.Status {
 			return nil, nil
 		}

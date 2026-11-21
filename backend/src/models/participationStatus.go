@@ -241,19 +241,18 @@ func (s *ParticipationStatus) Parse(status string) error {
 	return nil
 }
 
-// CommunicationStatus derives the status from the remaining outgoing and incoming
-// messages. Other statuses represent deliberate decisions and are not changed.
-func CommunicationStatus(current ParticipationStatus, hasOutgoing, hasIncoming bool) ParticipationStatus {
+// CommunicationStatus advances participation based on recorded communications.
+// Only manually recorded incoming messages establish an active conversation.
+func CommunicationStatus(current ParticipationStatus, hasOutgoing, hasManualIncoming bool) ParticipationStatus {
 	switch current {
-	case Selected, Contacted, InConversations:
-		if !hasOutgoing {
-			return Selected
+	case Selected:
+		if hasOutgoing {
+			return Contacted
 		}
-		if hasIncoming {
+	case Contacted:
+		if hasManualIncoming {
 			return InConversations
 		}
-		return Contacted
-	default:
-		return current
 	}
+	return current
 }
