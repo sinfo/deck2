@@ -5,6 +5,7 @@ type ToastRecord = {
   title?: string;
   description?: string;
   type?: "info" | "success" | "error" | "warning";
+  action?: { label: string; onClick: () => void };
 };
 
 const state = reactive<{ toasts: ToastRecord[] }>({ toasts: [] });
@@ -19,6 +20,7 @@ export function useToast() {
       title: t.title,
       description: t.description,
       type: t.type || "info",
+      action: t.action,
     };
     state.toasts.push(record);
     const duration = t.duration ?? 4000;

@@ -83,6 +83,58 @@ export interface GmailThread {
   messages: GmailMessage[];
 }
 
+interface GmailApiError {
+  error?: { message?: string; errors?: { reason?: string }[] };
+}
+
+const gmailErrorDetails = async (response: Response) => {
+  const data: GmailApiError | null = await response.json().catch(() => null);
+  return {
+    reason: data?.error?.errors?.[0]?.reason,
+    message: data?.error?.message,
+  };
+};
+
+export const gmailResponseError = async (
+  response: Response,
+): Promise<string> => {
+  const { reason, message } = await gmailErrorDetails(response);
+  if (
+    response.status === 429 ||
+    /^(userRateLimitExceeded|rateLimitExceeded)$/.test(reason ?? "")
+  ) {
+    return `Gmail rate limit reached (${reason ?? response.status}). Try again later.`;
+  }
+  if (reason === "dailyLimitExceeded") {
+    return "Gmail daily quota exceeded. Contact an administrator.";
+  }
+  if (response.status === 403) {
+    return `Gmail access denied (${reason ?? "HTTP 403"}). Check permissions in Settings.`;
+  }
+  return `Gmail API HTTP ${response.status}: ${message ?? response.statusText}`;
+};
+
+// Two retries at most: 1s, then 2s. Permission errors are never retried.
+export const fetchGmail = async (
+  request: () => Promise<Response>,
+): Promise<Response> => {
+  for (let attempt = 0; ; attempt++) {
+    const response = await request();
+    const retryable =
+      response.status === 429 ||
+      [500, 502, 503, 504].includes(response.status) ||
+      (response.status === 403 &&
+        /^(userRateLimitExceeded|rateLimitExceeded)$/.test(
+          (await gmailErrorDetails(response.clone())).reason ?? "",
+        ));
+
+    if (!retryable || attempt === 2) return response;
+    await new Promise<void>((resolve) =>
+      setTimeout(resolve, 1000 * 2 ** attempt),
+    );
+  }
+};
+
 export const useGmailMessages = () => {
   const authStore = useAuthStore();
   const isLoading = ref(false);
@@ -232,23 +284,17 @@ export const useGmailMessages = () => {
       const queryString = params.toString();
       const url = `https://gmail.googleapis.com/gmail/v1/users/me/threads${queryString ? `?${queryString}` : ""}`;
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${authStore.googleAccessToken}`,
-        },
-      });
+      const response = await fetchGmail(() =>
+        fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${authStore.googleAccessToken}`,
+          },
+        }),
+      );
 
-      if (handleAuthError(response)) {
-        return null;
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          `Gmail API error: ${errorData.error?.message || response.statusText}`,
-        );
-      }
+      if (response.status === 401 && handleAuthError(response)) return null;
+      if (!response.ok) throw new Error(await gmailResponseError(response));
 
       const result: GmailThreadsListResponse = await response.json();
       return result;
@@ -611,23 +657,17 @@ export const useGmailMessages = () => {
       // Use the threads.get endpoint to get all messages in a thread
       const url = `https://gmail.googleapis.com/gmail/v1/users/me/threads/${threadId}${queryString ? `?${queryString}` : ""}`;
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${authStore.googleAccessToken}`,
-        },
-      });
+      const response = await fetchGmail(() =>
+        fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${authStore.googleAccessToken}`,
+          },
+        }),
+      );
 
-      if (handleAuthError(response)) {
-        return [];
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          `Gmail API error: ${errorData.error?.message || response.statusText}`,
-        );
-      }
+      if (response.status === 401 && handleAuthError(response)) return [];
+      if (!response.ok) throw new Error(await gmailResponseError(response));
 
       const result = await response.json();
       return result.messages || [];

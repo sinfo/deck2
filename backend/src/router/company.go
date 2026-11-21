@@ -1493,7 +1493,7 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		log.Println("Error syncing Gmail messages for company:", err)
+		log.Printf("Gmail sync failed for company %s in SINFO %d (%d messages): %v", companyID.Hex(), targetEventID, len(data.Messages), err)
 		http.Error(w, "Failed to sync Gmail messages", http.StatusInternalServerError)
 		return
 	}
