@@ -4,23 +4,23 @@ import "testing"
 
 func TestCommunicationStatus(t *testing.T) {
 	tests := []struct {
-		name                     string
-		current                  ParticipationStatus
-		hasOutgoing, hasIncoming bool
-		want                     ParticipationStatus
+		name                           string
+		current                        ParticipationStatus
+		hasOutgoing, hasManualIncoming bool
+		want                           ParticipationStatus
 	}{
-		{"selected unchanged without messages", Selected, false, false, Selected},
-		{"outgoing message marks contacted", Selected, true, false, Contacted},
-		{"incoming alone does not mark contacted", Selected, false, true, Selected},
-		{"both messages mark in conversations", Selected, true, true, InConversations},
-		{"contacted stays without incoming", Contacted, true, false, Contacted},
-		{"incoming marks in conversations", Contacted, true, true, InConversations},
-		{"removing last outgoing reverts to selected", Contacted, false, false, Selected},
-		{"contacted without outgoing reverts to selected", Contacted, false, true, Selected},
-		{"removing last reply reverts to contacted", InConversations, true, false, Contacted},
-		{"removing last outgoing reverts to selected", InConversations, false, true, Selected},
-		{"removing all messages reverts to selected", InConversations, false, false, Selected},
-		{"in conversations remains when both exist", InConversations, true, true, InConversations},
+		{"selected without communication", Selected, false, false, Selected},
+		{"outgoing marks selected as contacted", Selected, true, false, Contacted},
+		{"manual incoming cannot skip selected", Selected, false, true, Selected},
+		{"selected advances only one step", Selected, true, true, Contacted},
+		{"gmail incoming does not advance contacted", Contacted, true, false, Contacted},
+		{"manual incoming advances contacted", Contacted, true, true, InConversations},
+		{"manual incoming advances manually set contacted", Contacted, false, true, InConversations},
+		{"contacted survives deleting outgoing communication", Contacted, false, false, Contacted},
+		{"in conversations survives gmail resync", InConversations, true, false, InConversations},
+		{"in conversations survives deleting all communications", InConversations, false, false, InConversations},
+		{"in conversations survives deleting outgoing communication", InConversations, false, true, InConversations},
+		{"in conversations remains with all communications", InConversations, true, true, InConversations},
 		{"on hold preserved", OnHold, false, false, OnHold},
 		{"given up preserved", GivenUp, false, false, GivenUp},
 		{"rejected preserved", Rejected, false, false, Rejected},
@@ -31,8 +31,8 @@ func TestCommunicationStatus(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := CommunicationStatus(tc.current, tc.hasOutgoing, tc.hasIncoming); got != tc.want {
-				t.Errorf("CommunicationStatus(%q, %t, %t) = %q, want %q", tc.current, tc.hasOutgoing, tc.hasIncoming, got, tc.want)
+			if got := CommunicationStatus(tc.current, tc.hasOutgoing, tc.hasManualIncoming); got != tc.want {
+				t.Errorf("CommunicationStatus(%q, %t, %t) = %q, want %q", tc.current, tc.hasOutgoing, tc.hasManualIncoming, got, tc.want)
 			}
 		})
 	}
