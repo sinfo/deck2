@@ -15,6 +15,7 @@
 
     <!-- Stepper Container -->
     <Stepper
+      :key="tasksRevision"
       v-model="currentStep"
       orientation="vertical"
       :linear="false"
@@ -236,6 +237,7 @@ const speakerMutation = useSpeakerTasksMutation();
 speakerMutation.speakerId.value = props.entityId;
 
 const isSaving = ref(false);
+const tasksRevision = ref(0);
 
 // Provide saving state to all child task components so they can disable themselves
 provide(TASKS_SAVING_KEY, isSaving);
@@ -284,6 +286,7 @@ function scheduleSave(delayMs = 600) {
         emptyCompanyTasks(),
         props.participation?.tasks ?? {},
       );
+      tasksRevision.value++;
       setTimeout(() => {
         isSyncing = false;
       }, 0);
