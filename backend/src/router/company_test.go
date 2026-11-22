@@ -1974,6 +1974,24 @@ func TestCompanyOwnershipRelationships(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, len(parentCompany.Relationships), 0)
 	assert.Equal(t, len(childCompany.Relationships), 0)
+
+	// The ownership can also be created from "Owns" and removed from "Part of".
+	assert.Equal(t, addRelationshipRequest(t, parent.ID, models.ParentOf, child.ID).Code, http.StatusOK)
+	childCompany, err = mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(childCompany.Relationships), 1)
+	assert.Equal(t, childCompany.Relationships[0].Type, models.SubsidiaryOf)
+
+	childPath := "/companies/" + child.ID.Hex() + "/relationships/" + parent.ID.Hex()
+	res, err = executeRequest("DELETE", childPath+"?type=SUBSIDIARY_OF", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+	parentCompany, err = mongodb.Companies.GetCompany(parent.ID)
+	assert.NilError(t, err)
+	childCompany, err = mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(parentCompany.Relationships), 0)
+	assert.Equal(t, len(childCompany.Relationships), 0)
 }
 
 func TestCompanyOwnershipCycle(t *testing.T) {
