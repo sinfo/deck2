@@ -16,9 +16,7 @@
 
       <!-- Company representative role -->
       <div v-if="!withoutName" class="space-y-2">
-        <Label for="workRole" class="text-sm font-medium"
-          >Work Role (optional)</Label
-        >
+        <Label for="workRole" class="text-sm font-medium">Work Role</Label>
         <Input
           id="workRole"
           v-model="formData.workRole"
