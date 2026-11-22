@@ -34,7 +34,12 @@ const { data: relationships } = useCompanyRelationshipsQuery(
   () => props.companyId,
 );
 
-const typeOrder: CompanyRelationshipType[] = ["REBRANDED_FROM", "ABSORBED"];
+const typeOrder: CompanyRelationshipType[] = [
+  "SUBSIDIARY_OF",
+  "PARENT_OF",
+  "ABSORBED",
+  "REBRANDED_FROM",
+];
 
 const groups = computed(() =>
   typeOrder

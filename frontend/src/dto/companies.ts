@@ -56,14 +56,20 @@ export interface Company {
   closure?: CompanyClosure;
 }
 
-export type CompanyRelationshipType = "ABSORBED" | "REBRANDED_FROM";
+export type CompanyRelationshipType =
+  | "SUBSIDIARY_OF"
+  | "PARENT_OF"
+  | "ABSORBED"
+  | "REBRANDED_FROM";
 
-// Relationships only describe the current company's historical predecessors.
+// Keep the stored ABSORBED value while showing the merger under one clear label.
 export const companyRelationshipLabels: Record<
   CompanyRelationshipType,
   string
 > = {
-  ABSORBED: "Absorbed",
+  SUBSIDIARY_OF: "Part of",
+  PARENT_OF: "Owns",
+  ABSORBED: "Merged with",
   REBRANDED_FROM: "Formerly known as",
 };
 

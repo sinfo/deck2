@@ -1914,6 +1914,88 @@ func TestAddCompanyRelationshipMultiple(t *testing.T) {
 	assert.Equal(t, len(absorbedCompany.Relationships), 0)
 }
 
+func TestCompanyOwnershipRelationships(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	parent := createRelationshipTestCompany(t, "The Linux Foundation")
+	child := createRelationshipTestCompany(t, "Independent Member")
+
+	// Recording "Part of" also records "Owns" on the parent.
+	assert.Equal(t, addRelationshipRequest(t, child.ID, models.SubsidiaryOf, parent.ID).Code, http.StatusOK)
+
+	childCompany, err := mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, childCompany.Name, "Independent Member")
+	assert.Equal(t, len(childCompany.Relationships), 1)
+	assert.Equal(t, childCompany.Relationships[0].Type, models.SubsidiaryOf)
+	assert.Equal(t, childCompany.Relationships[0].Company, parent.ID)
+
+	parentCompany, err := mongodb.Companies.GetCompany(parent.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, parentCompany.Name, "The Linux Foundation")
+	assert.Equal(t, len(parentCompany.Relationships), 1)
+	assert.Equal(t, parentCompany.Relationships[0].Type, models.ParentOf)
+	assert.Equal(t, parentCompany.Relationships[0].Company, child.ID)
+
+	// Adding the same ownership from the reverse side must not duplicate it.
+	assert.Equal(t, addRelationshipRequest(t, parent.ID, models.ParentOf, child.ID).Code, http.StatusConflict)
+
+	since := time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
+	b, err := json.Marshal(mongodb.UpdateCompanyRelationshipData{Since: &since})
+	assert.NilError(t, err)
+
+	path := "/companies/" + parent.ID.Hex() + "/relationships/" + child.ID.Hex()
+	res, err := executeRequest("PUT", path+"?type=PARENT_OF", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	parentCompany, err = mongodb.Companies.GetCompany(parent.ID)
+	assert.NilError(t, err)
+	childCompany, err = mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Assert(t, parentCompany.Relationships[0].Since.Equal(since))
+	assert.Assert(t, childCompany.Relationships[0].Since.Equal(since))
+
+	// Removing ownership from the parent also removes its inverse on the child.
+	res, err = executeRequest("DELETE", path+"?type=PARENT_OF", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	parentCompany, err = mongodb.Companies.GetCompany(parent.ID)
+	assert.NilError(t, err)
+	childCompany, err = mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(parentCompany.Relationships), 0)
+	assert.Equal(t, len(childCompany.Relationships), 0)
+}
+
+func TestCompanyOwnershipCycle(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	grandparent := createRelationshipTestCompany(t, "Grandparent")
+	parent := createRelationshipTestCompany(t, "Parent")
+	child := createRelationshipTestCompany(t, "Child")
+
+	assert.Equal(t, addRelationshipRequest(t, child.ID, models.SubsidiaryOf, parent.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, parent.ID, models.SubsidiaryOf, grandparent.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, grandparent.ID, models.SubsidiaryOf, child.ID).Code, http.StatusConflict)
+	assert.Equal(t, addRelationshipRequest(t, child.ID, models.ParentOf, parent.ID).Code, http.StatusConflict)
+}
+
 func TestAddCompanyRelationshipInvalid(t *testing.T) {
 	ctx := context.Background()
 	defer mongodb.Events.Collection.Drop(ctx)
@@ -1928,7 +2010,7 @@ func TestAddCompanyRelationshipInvalid(t *testing.T) {
 	previous := createRelationshipTestCompany(t, "Y&R")
 
 	for _, kind := range []models.CompanyRelationshipType{
-		"SUBSIDIARY_OF", "PARENT_OF", "MERGED_INTO", "REBRANDED_TO", "UNKNOWN",
+		"MERGED_INTO", "REBRANDED_TO", "UNKNOWN",
 	} {
 		assert.Equal(t, addRelationshipRequest(t, current.ID, kind, previous.ID).Code, http.StatusBadRequest)
 	}

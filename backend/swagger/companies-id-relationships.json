@@ -3,7 +3,7 @@
         "tags": [
             "companies"
         ],
-        "summary": "Gets a company's historical predecessors, with each related company's name and image",
+        "summary": "Gets a company's relationships, with each related company's name and image",
         "operationId": "getCompanyRelationships",
         "produces": [
             "application/json"
@@ -24,7 +24,7 @@
         ],
         "responses": {
             "200": {
-                "description": "Company's historical predecessors",
+                "description": "Company's relationships",
                 "schema": {
                     "type": "array",
                     "items": {
@@ -47,7 +47,7 @@
         "tags": [
             "companies"
         ],
-        "summary": "Adds a historical predecessor to the current company",
+        "summary": "Adds a company relationship (ownership is mirrored on both companies)",
         "operationId": "addCompanyRelationship",
         "consumes": [
             "application/json"

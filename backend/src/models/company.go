@@ -121,25 +121,46 @@ type Company struct {
 	// Contact is an _id of Contact (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
 
-	// Historical predecessors of the current company (absorbed companies and former identities).
+	// Company ownership and historical mergers or former identities.
 	Relationships []CompanyRelationship `json:"relationships,omitempty" bson:"relationships,omitempty"`
 
 	// Closure is set when the company went bankrupt or was banned. Nil means the company is operating normally.
 	Closure *CompanyClosure `json:"closure,omitempty" bson:"closure,omitempty"`
 }
 
-// CompanyRelationshipType describes a historical predecessor of the current company.
+// CompanyRelationshipType describes ownership or a historical company relationship.
 type CompanyRelationshipType string
 
 const (
-	// Absorbed means the related company was merged into this company.
+	// SubsidiaryOf means this company belongs to the related company.
+	SubsidiaryOf CompanyRelationshipType = "SUBSIDIARY_OF"
+	// ParentOf means this company owns the related company.
+	ParentOf CompanyRelationshipType = "PARENT_OF"
+	// Absorbed means the related company merged into this company.
+	// The stored name is kept for compatibility; the UI calls this "Merged with".
 	Absorbed CompanyRelationshipType = "ABSORBED"
 	// RebrandedFrom means this company was previously known as the related company.
 	RebrandedFrom CompanyRelationshipType = "REBRANDED_FROM"
 )
 
+func (t CompanyRelationshipType) IsOwnership() bool {
+	return t == SubsidiaryOf || t == ParentOf
+}
+
 func (t CompanyRelationshipType) IsValid() bool {
-	return t == Absorbed || t == RebrandedFrom
+	return t.IsOwnership() || t == Absorbed || t == RebrandedFrom
+}
+
+// Inverse returns the ownership relationship as seen from the other company.
+func (t CompanyRelationshipType) Inverse() CompanyRelationshipType {
+	switch t {
+	case SubsidiaryOf:
+		return ParentOf
+	case ParentOf:
+		return SubsidiaryOf
+	default:
+		return ""
+	}
 }
 
 // CompanyRelationship links a company to another one.

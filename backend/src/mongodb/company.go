@@ -1576,8 +1576,8 @@ func (crd *CompanyRelationshipData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-// reachesHistory checks whether a predecessor already links back to the current company.
-func (c *CompaniesType) reachesHistory(from, to primitive.ObjectID) (bool, error) {
+// reachesRelationship checks for cycles using ownership or historical links.
+func (c *CompaniesType) reachesRelationship(from, to primitive.ObjectID, ownership bool) (bool, error) {
 	visited := map[primitive.ObjectID]bool{from: true}
 	current := []primitive.ObjectID{from}
 
@@ -1593,7 +1593,11 @@ func (c *CompaniesType) reachesHistory(from, to primitive.ObjectID) (bool, error
 			}
 
 			for _, rel := range company.Relationships {
-				if !rel.Type.IsValid() {
+				if ownership {
+					if rel.Type != models.SubsidiaryOf {
+						continue
+					}
+				} else if rel.Type != models.Absorbed && rel.Type != models.RebrandedFrom {
 					continue
 				}
 				if rel.Company == to {
@@ -1611,7 +1615,7 @@ func (c *CompaniesType) reachesHistory(from, to primitive.ObjectID) (bool, error
 	return false, nil
 }
 
-// AddCompanyRelationship records a predecessor on the current company only.
+// AddCompanyRelationship records a link, mirroring ownership on both companies.
 func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, data CompanyRelationshipData) (*models.Company, error) {
 	ctx := context.Background()
 	relType := *data.Type
@@ -1636,7 +1640,12 @@ func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, dat
 		}
 	}
 
-	cycle, err := c.reachesHistory(targetID, companyID)
+	// Ownership follows child -> parent; history follows current -> predecessor.
+	from, to := targetID, companyID
+	if relType == models.ParentOf {
+		from, to = companyID, targetID
+	}
+	cycle, err := c.reachesRelationship(from, to, relType.IsOwnership())
 	if err != nil {
 		return nil, err
 	}
@@ -1670,19 +1679,61 @@ func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, dat
 		return nil, err
 	}
 
+	if relType.IsOwnership() {
+		inverse := models.CompanyRelationship{
+			Type:    relType.Inverse(),
+			Company: companyID,
+			Since:   data.Since,
+		}
+		inverseFilter := bson.M{
+			"_id": targetID,
+			"relationships": bson.M{
+				"$not": bson.M{"$elemMatch": bson.M{"type": inverse.Type, "company": companyID}},
+			},
+		}
+		result, inverseErr := c.Collection.UpdateOne(ctx, inverseFilter,
+			bson.M{"$push": bson.M{"relationships": inverse}})
+		if inverseErr != nil || result.MatchedCount == 0 {
+			if _, rollbackErr := c.Collection.UpdateOne(ctx, bson.M{"_id": companyID},
+				bson.M{"$pull": bson.M{"relationships": bson.M{"type": relType, "company": targetID}}}); rollbackErr != nil {
+				log.Println("error rolling back company ownership:", rollbackErr)
+			}
+			if inverseErr != nil {
+				return nil, inverseErr
+			}
+			return nil, ErrRelationshipExists
+		}
+	}
+
 	return &updated, nil
 }
 
-// RemoveCompanyRelationship removes a recorded predecessor from the current company.
+// RemoveCompanyRelationship removes a link, including inverse ownership.
 func (c *CompaniesType) RemoveCompanyRelationship(companyID, targetID primitive.ObjectID, relType models.CompanyRelationshipType) (*models.Company, error) {
 	ctx := context.Background()
+
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	var removed *models.CompanyRelationship
+	for i := range company.Relationships {
+		if company.Relationships[i].Type == relType && company.Relationships[i].Company == targetID {
+			removed = &company.Relationships[i]
+			break
+		}
+	}
+	if removed == nil {
+		return nil, ErrRelationshipNotFound
+	}
+
 	filter := bson.M{
 		"_id": companyID,
 		"relationships": bson.M{"$elemMatch": bson.M{"type": relType, "company": targetID}},
 	}
-
 	var updated models.Company
-	err := c.Collection.FindOneAndUpdate(ctx, filter,
+	err = c.Collection.FindOneAndUpdate(ctx, filter,
 		bson.M{"$pull": bson.M{"relationships": bson.M{"type": relType, "company": targetID}}},
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	).Decode(&updated)
@@ -1692,6 +1743,19 @@ func (c *CompaniesType) RemoveCompanyRelationship(companyID, targetID primitive.
 		}
 		log.Println("error removing company relationship:", err)
 		return nil, err
+	}
+
+	if relType.IsOwnership() {
+		_, err = c.Collection.UpdateOne(ctx, bson.M{"_id": targetID}, bson.M{
+			"$pull": bson.M{"relationships": bson.M{"type": relType.Inverse(), "company": companyID}},
+		})
+		if err != nil {
+			if _, rollbackErr := c.Collection.UpdateOne(ctx, bson.M{"_id": companyID},
+				bson.M{"$push": bson.M{"relationships": *removed}}); rollbackErr != nil {
+				log.Println("error restoring removed relationship:", rollbackErr)
+			}
+			return nil, err
+		}
 	}
 
 	return &updated, nil
@@ -1743,7 +1807,7 @@ func (c *CompaniesType) GetCompanyRelationships(companyID primitive.ObjectID) ([
 		return nil, err
 	}
 
-	// Keep the order in which the historical relationships were added.
+	// Keep the order in which relationships were added.
 	for _, rel := range company.Relationships {
 		if !rel.Type.IsValid() {
 			continue
@@ -1805,8 +1869,24 @@ func (c *CompaniesType) setRelationshipSince(companyID, targetID primitive.Objec
 	return c.Collection.UpdateOne(ctx, filterQuery, updateQuery)
 }
 
-// UpdateCompanyRelationship updates a predecessor's date on the current company.
+// UpdateCompanyRelationship updates the date, mirroring ownership changes.
 func (c *CompaniesType) UpdateCompanyRelationship(companyID, targetID primitive.ObjectID, relType models.CompanyRelationshipType, data UpdateCompanyRelationshipData) (*models.Company, error) {
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	var current *models.CompanyRelationship
+	for i := range company.Relationships {
+		if company.Relationships[i].Type == relType && company.Relationships[i].Company == targetID {
+			current = &company.Relationships[i]
+			break
+		}
+	}
+	if current == nil {
+		return nil, ErrRelationshipNotFound
+	}
+
 	result, err := c.setRelationshipSince(companyID, targetID, relType, data.Since)
 	if err != nil {
 		log.Println("error updating company relationship:", err)
@@ -1814,6 +1894,19 @@ func (c *CompaniesType) UpdateCompanyRelationship(companyID, targetID primitive.
 	}
 	if result.MatchedCount == 0 {
 		return nil, ErrRelationshipNotFound
+	}
+
+	if relType.IsOwnership() {
+		result, inverseErr := c.setRelationshipSince(targetID, companyID, relType.Inverse(), data.Since)
+		if inverseErr != nil || result.MatchedCount == 0 {
+			if _, rollbackErr := c.setRelationshipSince(companyID, targetID, relType, current.Since); rollbackErr != nil {
+				log.Println("error restoring relationship date:", rollbackErr)
+			}
+			if inverseErr != nil {
+				return nil, inverseErr
+			}
+			return nil, ErrRelationshipNotFound
+		}
 	}
 
 	return c.GetCompany(companyID)

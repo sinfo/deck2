@@ -170,7 +170,7 @@ const fuzzySearch = computed(() =>
   createFuzzySearch(otherCompanies.value, { getText: (c) => [c.name] }),
 );
 
-const newType = ref<CompanyRelationshipType>("REBRANDED_FROM");
+const newType = ref<CompanyRelationshipType>("SUBSIDIARY_OF");
 const search = ref("");
 const isSearchOpen = ref(false);
 const errorMessage = ref("");
@@ -194,7 +194,7 @@ const toErrorMessage = (error: unknown) => {
     .response;
   switch (response?.status) {
     case 409:
-      return "This historical relationship already exists or would create a cycle.";
+      return "This relationship already exists or would create a cycle.";
     case 404:
       return "Company not found.";
     default:

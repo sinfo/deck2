@@ -4,6 +4,8 @@
         "type": {
             "type": "string",
             "enum": [
+                "SUBSIDIARY_OF",
+                "PARENT_OF",
                 "ABSORBED",
                 "REBRANDED_FROM"
             ]
