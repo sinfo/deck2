@@ -53,10 +53,10 @@
     <p v-else class="text-xs text-muted-foreground">No relationships yet.</p>
 
     <!-- New relationship: created as soon as a company is chosen -->
-    <div class="min-w-0 space-y-3 rounded-md border border-dashed p-3">
+    <div class="min-w-0 space-y-3">
       <div class="space-y-2">
         <Label for="relationship-type" class="text-sm font-medium">
-          This company…
+          Relationship type
         </Label>
         <NativeSelect
           id="relationship-type"
@@ -65,7 +65,7 @@
           :disabled="isAdding"
         >
           <option
-            v-for="[type, label] in relationshipOptions"
+            v-for="(label, type) in companyRelationshipLabels"
             :key="type"
             :value="type"
           >
@@ -147,9 +147,6 @@ import Image from "../Image.vue";
 import EditSectionHeading from "./EditSectionHeading.vue";
 
 const MAX_SEARCH_RESULTS = 8;
-const relationshipOptions = Object.entries(companyRelationshipLabels).filter(
-  ([type]) => type !== "REBRANDED_TO",
-);
 
 const props = defineProps<{
   companyId: string;
@@ -173,7 +170,7 @@ const fuzzySearch = computed(() =>
   createFuzzySearch(otherCompanies.value, { getText: (c) => [c.name] }),
 );
 
-const newType = ref<CompanyRelationshipType>("SUBSIDIARY_OF");
+const newType = ref<CompanyRelationshipType>("REBRANDED_FROM");
 const search = ref("");
 const isSearchOpen = ref(false);
 const errorMessage = ref("");
@@ -197,7 +194,7 @@ const toErrorMessage = (error: unknown) => {
     .response;
   switch (response?.status) {
     case 409:
-      return "This relationship already exists or would create a cycle.";
+      return "This historical relationship already exists or would create a cycle.";
     case 404:
       return "Company not found.";
     default:

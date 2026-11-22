@@ -1857,7 +1857,6 @@ func addRelationshipRequest(t *testing.T, companyID primitive.ObjectID, relType 
 
 func TestAddCompanyRelationship(t *testing.T) {
 	ctx := context.Background()
-
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Companies.Collection.Drop(ctx)
 	defer mongodb.Contacts.Collection.Drop(ctx)
@@ -1866,30 +1865,27 @@ func TestAddCompanyRelationship(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	wpp := createRelationshipTestCompany(t, "WPP")
-	vml := createRelationshipTestCompany(t, "VML")
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
 
-	res := addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, wpp.ID)
+	res := addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID)
 	assert.Equal(t, res.Code, http.StatusOK)
 
-	var updatedCompany models.Company
-	json.NewDecoder(res.Body).Decode(&updatedCompany)
+	var updated models.Company
+	assert.NilError(t, json.NewDecoder(res.Body).Decode(&updated))
+	assert.Equal(t, updated.Name, "VML")
+	assert.Equal(t, len(updated.Relationships), 1)
+	assert.Equal(t, updated.Relationships[0].Type, models.RebrandedFrom)
+	assert.Equal(t, updated.Relationships[0].Company, previous.ID)
 
-	assert.Equal(t, len(updatedCompany.Relationships), 1)
-	assert.Equal(t, updatedCompany.Relationships[0].Type, models.SubsidiaryOf)
-	assert.Equal(t, updatedCompany.Relationships[0].Company, wpp.ID)
-
-	// The inverse relationship is stored on the related company
-	updatedWpp, err := mongodb.Companies.GetCompany(wpp.ID)
+	// Historical relationships point only from the current company to its predecessor.
+	oldCompany, err := mongodb.Companies.GetCompany(previous.ID)
 	assert.NilError(t, err)
-	assert.Equal(t, len(updatedWpp.Relationships), 1)
-	assert.Equal(t, updatedWpp.Relationships[0].Type, models.ParentOf)
-	assert.Equal(t, updatedWpp.Relationships[0].Company, vml.ID)
+	assert.Equal(t, len(oldCompany.Relationships), 0)
 }
 
 func TestAddCompanyRelationshipMultiple(t *testing.T) {
 	ctx := context.Background()
-
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Companies.Collection.Drop(ctx)
 	defer mongodb.Contacts.Collection.Drop(ctx)
@@ -1898,27 +1894,28 @@ func TestAddCompanyRelationshipMultiple(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	wpp := createRelationshipTestCompany(t, "WPP")
-	vml := createRelationshipTestCompany(t, "VML")
-	yr := createRelationshipTestCompany(t, "Y&R")
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	acquired := createRelationshipTestCompany(t, "Acquired Company")
 
-	// A company can absorb several companies, and combine different relationship types
-	assert.Equal(t, addRelationshipRequest(t, wpp.ID, models.Absorbed, vml.ID).Code, http.StatusOK)
-	assert.Equal(t, addRelationshipRequest(t, wpp.ID, models.Absorbed, yr.ID).Code, http.StatusOK)
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.RebrandedFrom, yr.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.Absorbed, acquired.ID).Code, http.StatusOK)
 
-	updatedWpp, err := mongodb.Companies.GetCompany(wpp.ID)
+	updated, err := mongodb.Companies.GetCompany(current.ID)
 	assert.NilError(t, err)
-	assert.Equal(t, len(updatedWpp.Relationships), 2)
+	assert.Equal(t, len(updated.Relationships), 2)
 
-	updatedYr, err := mongodb.Companies.GetCompany(yr.ID)
+	oldCompany, err := mongodb.Companies.GetCompany(previous.ID)
 	assert.NilError(t, err)
-	assert.Equal(t, len(updatedYr.Relationships), 2)
+	assert.Equal(t, len(oldCompany.Relationships), 0)
+
+	absorbedCompany, err := mongodb.Companies.GetCompany(acquired.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(absorbedCompany.Relationships), 0)
 }
 
 func TestAddCompanyRelationshipInvalid(t *testing.T) {
 	ctx := context.Background()
-
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Companies.Collection.Drop(ctx)
 	defer mongodb.Contacts.Collection.Drop(ctx)
@@ -1927,31 +1924,27 @@ func TestAddCompanyRelationshipInvalid(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	wpp := createRelationshipTestCompany(t, "WPP")
-	vml := createRelationshipTestCompany(t, "VML")
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
 
-	// Unknown type
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.CompanyRelationshipType("SOMETHING"), wpp.ID).Code, http.StatusBadRequest)
+	for _, kind := range []models.CompanyRelationshipType{
+		"SUBSIDIARY_OF", "PARENT_OF", "MERGED_INTO", "REBRANDED_TO", "UNKNOWN",
+	} {
+		assert.Equal(t, addRelationshipRequest(t, current.ID, kind, previous.ID).Code, http.StatusBadRequest)
+	}
 
-	// Related to itself
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, vml.ID).Code, http.StatusBadRequest)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, current.ID).Code, http.StatusBadRequest)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, primitive.NewObjectID()).Code, http.StatusNotFound)
 
-	// Related company does not exist
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, primitive.NewObjectID()).Code, http.StatusNotFound)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusConflict)
 
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, wpp.ID).Code, http.StatusOK)
-
-	// Duplicated
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, wpp.ID).Code, http.StatusConflict)
-
-	// Cycle, from both sides
-	assert.Equal(t, addRelationshipRequest(t, wpp.ID, models.SubsidiaryOf, vml.ID).Code, http.StatusConflict)
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.ParentOf, wpp.ID).Code, http.StatusConflict)
+	// A predecessor cannot point back to its successor, even with a different type.
+	assert.Equal(t, addRelationshipRequest(t, previous.ID, models.Absorbed, current.ID).Code, http.StatusConflict)
 }
 
 func TestGetCompanyRelationships(t *testing.T) {
 	ctx := context.Background()
-
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Companies.Collection.Drop(ctx)
 	defer mongodb.Contacts.Collection.Drop(ctx)
@@ -1960,22 +1953,26 @@ func TestGetCompanyRelationships(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	wpp := createRelationshipTestCompany(t, "WPP")
-	vml := createRelationshipTestCompany(t, "VML")
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
 
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, wpp.ID).Code, http.StatusOK)
+	// Legacy forward-looking records are preserved in storage but never returned as history.
+	_, err := mongodb.Companies.Collection.UpdateOne(ctx, bson.M{"_id": current.ID}, bson.M{
+		"$push": bson.M{"relationships": bson.M{"type": "MERGED_INTO", "company": previous.ID}},
+	})
+	assert.NilError(t, err)
 
-	res, err := executeRequest("GET", "/companies/"+wpp.ID.Hex()+"/relationships", nil)
+	res, err := executeRequest("GET", "/companies/"+current.ID.Hex()+"/relationships", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
 	var related []models.RelatedCompany
-	json.NewDecoder(res.Body).Decode(&related)
-
+	assert.NilError(t, json.NewDecoder(res.Body).Decode(&related))
 	assert.Equal(t, len(related), 1)
-	assert.Equal(t, related[0].Type, models.ParentOf)
-	assert.Equal(t, related[0].Company, vml.ID)
-	assert.Equal(t, related[0].Name, "VML")
+	assert.Equal(t, related[0].Type, models.RebrandedFrom)
+	assert.Equal(t, related[0].Company, previous.ID)
+	assert.Equal(t, related[0].Name, "Y&R")
 
 	res, err = executeRequest("GET", "/companies/"+primitive.NewObjectID().Hex()+"/relationships", nil)
 	assert.NilError(t, err)
@@ -1984,7 +1981,6 @@ func TestGetCompanyRelationships(t *testing.T) {
 
 func TestRemoveCompanyRelationship(t *testing.T) {
 	ctx := context.Background()
-
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Companies.Collection.Drop(ctx)
 	defer mongodb.Contacts.Collection.Drop(ctx)
@@ -1993,34 +1989,30 @@ func TestRemoveCompanyRelationship(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	wpp := createRelationshipTestCompany(t, "WPP")
-	vml := createRelationshipTestCompany(t, "VML")
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
 
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, wpp.ID).Code, http.StatusOK)
-
-	// Invalid type
-	res, err := executeRequest("DELETE", "/companies/"+wpp.ID.Hex()+"/relationships/"+vml.ID.Hex()+"?type=SOMETHING", nil)
+	url := "/companies/" + current.ID.Hex() + "/relationships/" + previous.ID.Hex()
+	res, err := executeRequest("DELETE", url+"?type=MERGED_INTO", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 
-	// Removing from the other side also removes the inverse
-	res, err = executeRequest("DELETE", "/companies/"+wpp.ID.Hex()+"/relationships/"+vml.ID.Hex()+"?type=PARENT_OF", nil)
+	res, err = executeRequest("DELETE", url+"?type=REBRANDED_FROM", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
-	updatedVml, err := mongodb.Companies.GetCompany(vml.ID)
+	updated, err := mongodb.Companies.GetCompany(current.ID)
 	assert.NilError(t, err)
-	assert.Equal(t, len(updatedVml.Relationships), 0)
+	assert.Equal(t, len(updated.Relationships), 0)
 
-	// Already removed
-	res, err = executeRequest("DELETE", "/companies/"+wpp.ID.Hex()+"/relationships/"+vml.ID.Hex()+"?type=PARENT_OF", nil)
+	res, err = executeRequest("DELETE", url+"?type=REBRANDED_FROM", nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 }
 
 func TestDeleteCompanyRemovesRelationships(t *testing.T) {
 	ctx := context.Background()
-
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Companies.Collection.Drop(ctx)
 	defer mongodb.Contacts.Collection.Drop(ctx)
@@ -2029,23 +2021,21 @@ func TestDeleteCompanyRemovesRelationships(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	wpp := createRelationshipTestCompany(t, "WPP")
-	vml := createRelationshipTestCompany(t, "VML")
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
 
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, wpp.ID).Code, http.StatusOK)
-
-	res, err := executeRequest("DELETE", "/companies/"+vml.ID.Hex(), nil)
+	res, err := executeRequest("DELETE", "/companies/"+previous.ID.Hex(), nil)
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
-	updatedWpp, err := mongodb.Companies.GetCompany(wpp.ID)
+	updated, err := mongodb.Companies.GetCompany(current.ID)
 	assert.NilError(t, err)
-	assert.Equal(t, len(updatedWpp.Relationships), 0)
+	assert.Equal(t, len(updated.Relationships), 0)
 }
 
 func TestUpdateCompanyRelationship(t *testing.T) {
 	ctx := context.Background()
-
 	defer mongodb.Events.Collection.Drop(ctx)
 	defer mongodb.Companies.Collection.Drop(ctx)
 	defer mongodb.Contacts.Collection.Drop(ctx)
@@ -2054,48 +2044,40 @@ func TestUpdateCompanyRelationship(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	wpp := createRelationshipTestCompany(t, "WPP")
-	vml := createRelationshipTestCompany(t, "VML")
-
-	assert.Equal(t, addRelationshipRequest(t, vml.ID, models.SubsidiaryOf, wpp.ID).Code, http.StatusOK)
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
 
 	since := time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC)
-	b, errMarshal := json.Marshal(mongodb.UpdateCompanyRelationshipData{Since: &since})
-	assert.NilError(t, errMarshal)
+	b, err := json.Marshal(mongodb.UpdateCompanyRelationshipData{Since: &since})
+	assert.NilError(t, err)
 
-	// Updating from the other side also updates the inverse
-	res, err := executeRequest("PUT", "/companies/"+wpp.ID.Hex()+"/relationships/"+vml.ID.Hex()+"?type=PARENT_OF", bytes.NewBuffer(b))
+	url := "/companies/" + current.ID.Hex() + "/relationships/" + previous.ID.Hex()
+	res, err := executeRequest("PUT", url+"?type=REBRANDED_FROM", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
-	updatedWpp, err := mongodb.Companies.GetCompany(wpp.ID)
+	updated, err := mongodb.Companies.GetCompany(current.ID)
 	assert.NilError(t, err)
-	assert.Equal(t, updatedWpp.Relationships[0].Since.Equal(since), true)
+	assert.Assert(t, updated.Relationships[0].Since.Equal(since))
 
-	updatedVml, err := mongodb.Companies.GetCompany(vml.ID)
+	oldCompany, err := mongodb.Companies.GetCompany(previous.ID)
 	assert.NilError(t, err)
-	assert.Equal(t, updatedVml.Relationships[0].Since.Equal(since), true)
+	assert.Equal(t, len(oldCompany.Relationships), 0)
 
-	// A null date removes it from both sides
-	res, err = executeRequest("PUT", "/companies/"+vml.ID.Hex()+"/relationships/"+wpp.ID.Hex()+"?type=SUBSIDIARY_OF", bytes.NewBufferString(`{"since": null}`))
+	res, err = executeRequest("PUT", url+"?type=REBRANDED_FROM", bytes.NewBufferString(`{"since": null}`))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusOK)
 
-	updatedWpp, err = mongodb.Companies.GetCompany(wpp.ID)
+	updated, err = mongodb.Companies.GetCompany(current.ID)
 	assert.NilError(t, err)
-	assert.Assert(t, updatedWpp.Relationships[0].Since == nil)
+	assert.Assert(t, updated.Relationships[0].Since == nil)
 
-	updatedVml, err = mongodb.Companies.GetCompany(vml.ID)
-	assert.NilError(t, err)
-	assert.Assert(t, updatedVml.Relationships[0].Since == nil)
-
-	// Relationship that does not exist
-	res, err = executeRequest("PUT", "/companies/"+vml.ID.Hex()+"/relationships/"+wpp.ID.Hex()+"?type=MERGED_INTO", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", url+"?type=ABSORBED", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusNotFound)
 
-	// Invalid type
-	res, err = executeRequest("PUT", "/companies/"+vml.ID.Hex()+"/relationships/"+wpp.ID.Hex()+"?type=SOMETHING", bytes.NewBuffer(b))
+	res, err = executeRequest("PUT", url+"?type=REBRANDED_TO", bytes.NewBuffer(b))
 	assert.NilError(t, err)
 	assert.Equal(t, res.Code, http.StatusBadRequest)
 }

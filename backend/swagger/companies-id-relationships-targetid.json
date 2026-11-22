@@ -3,7 +3,7 @@
         "tags": [
             "companies"
         ],
-        "summary": "Updates the date of a relationship, on both the company and the related company",
+        "summary": "Updates the date of a historical predecessor on the current company",
         "operationId": "updateCompanyRelationship",
         "consumes": [
             "application/json"
@@ -38,11 +38,7 @@
                 "required": true,
                 "type": "string",
                 "enum": [
-                    "SUBSIDIARY_OF",
-                    "PARENT_OF",
-                    "MERGED_INTO",
                     "ABSORBED",
-                    "REBRANDED_TO",
                     "REBRANDED_FROM"
                 ]
             },
@@ -84,7 +80,7 @@
         "tags": [
             "companies"
         ],
-        "summary": "Removes a relationship from a company, and its inverse from the related company",
+        "summary": "Removes a historical predecessor from the current company",
         "operationId": "removeCompanyRelationship",
         "produces": [
             "application/json"
@@ -116,11 +112,7 @@
                 "required": true,
                 "type": "string",
                 "enum": [
-                    "SUBSIDIARY_OF",
-                    "PARENT_OF",
-                    "MERGED_INTO",
                     "ABSORBED",
-                    "REBRANDED_TO",
                     "REBRANDED_FROM"
                 ]
             }

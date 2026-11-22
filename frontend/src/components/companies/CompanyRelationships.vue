@@ -34,13 +34,7 @@ const { data: relationships } = useCompanyRelationshipsQuery(
   () => props.companyId,
 );
 
-// MERGED_INTO and REBRANDED_TO are shown above the card (see CompanyStatusBanners).
-const typeOrder: CompanyRelationshipType[] = [
-  "SUBSIDIARY_OF",
-  "REBRANDED_FROM",
-  "PARENT_OF",
-  "ABSORBED",
-];
+const typeOrder: CompanyRelationshipType[] = ["REBRANDED_FROM", "ABSORBED"];
 
 const groups = computed(() =>
   typeOrder

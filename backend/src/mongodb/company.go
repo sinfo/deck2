@@ -1551,9 +1551,6 @@ var (
 	ErrRelationshipNotFound = errors.New("relationship not found")
 )
 
-// maxRelationshipDepth limits how far the cycle detection walks up the relationships.
-const maxRelationshipDepth = 20
-
 // CompanyRelationshipData is the data used to add a relationship between two companies.
 type CompanyRelationshipData struct {
 	Type    *models.CompanyRelationshipType `json:"type"`
@@ -1579,17 +1576,13 @@ func (crd *CompanyRelationshipData) ParseBody(body io.Reader) error {
 	return nil
 }
 
-// reachesUp checks if, starting at `from` and following only relationships that point up
-// (SUBSIDIARY_OF, MERGED_INTO, REBRANDED_TO), it is possible to reach `to`.
-func (c *CompaniesType) reachesUp(from, to primitive.ObjectID) (bool, error) {
-
+// reachesHistory checks whether a predecessor already links back to the current company.
+func (c *CompaniesType) reachesHistory(from, to primitive.ObjectID) (bool, error) {
 	visited := map[primitive.ObjectID]bool{from: true}
 	current := []primitive.ObjectID{from}
 
-	for depth := 0; depth < maxRelationshipDepth && len(current) > 0; depth++ {
-
+	for len(current) > 0 {
 		var next []primitive.ObjectID
-
 		for _, id := range current {
 			company, err := c.GetCompany(id)
 			if err != nil {
@@ -1600,7 +1593,7 @@ func (c *CompaniesType) reachesUp(from, to primitive.ObjectID) (bool, error) {
 			}
 
 			for _, rel := range company.Relationships {
-				if !rel.Type.PointsUp() {
+				if !rel.Type.IsValid() {
 					continue
 				}
 				if rel.Company == to {
@@ -1612,18 +1605,15 @@ func (c *CompaniesType) reachesUp(from, to primitive.ObjectID) (bool, error) {
 				}
 			}
 		}
-
 		current = next
 	}
 
 	return false, nil
 }
 
-// AddCompanyRelationship adds a relationship to a company and its inverse to the related company.
+// AddCompanyRelationship records a predecessor on the current company only.
 func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, data CompanyRelationshipData) (*models.Company, error) {
-
 	ctx := context.Background()
-
 	relType := *data.Type
 	targetID := *data.Company
 
@@ -1646,14 +1636,7 @@ func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, dat
 		}
 	}
 
-	// The relationship goes from `lower` (owned/old) up to `upper` (owner/new).
-	// If `upper` already reaches `lower` going up, adding it would create a cycle.
-	lower, upper := companyID, targetID
-	if !relType.PointsUp() {
-		lower, upper = targetID, companyID
-	}
-
-	cycle, err := c.reachesUp(upper, lower)
+	cycle, err := c.reachesHistory(targetID, companyID)
 	if err != nil {
 		return nil, err
 	}
@@ -1667,30 +1650,19 @@ func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, dat
 		Since:   data.Since,
 	}
 
-	inverse := models.CompanyRelationship{
-		Type:    relType.Inverse(),
-		Company: companyID,
-		Since:   data.Since,
-	}
-
-	var updatedCompany models.Company
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	// Only push if the same relationship is not there yet (guards against concurrent requests).
-	var filterQuery = bson.M{
+	filter := bson.M{
 		"_id": companyID,
 		"relationships": bson.M{
 			"$not": bson.M{"$elemMatch": bson.M{"type": relType, "company": targetID}},
 		},
 	}
 
-	var updateQuery = bson.M{
-		"$push": bson.M{"relationships": relationship},
-	}
-
-	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+	var updated models.Company
+	err = c.Collection.FindOneAndUpdate(ctx, filter,
+		bson.M{"$push": bson.M{"relationships": relationship}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&updated)
+	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, ErrRelationshipExists
 		}
@@ -1698,86 +1670,31 @@ func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, dat
 		return nil, err
 	}
 
-	var inverseFilterQuery = bson.M{
-		"_id": targetID,
-		"relationships": bson.M{
-			"$not": bson.M{"$elemMatch": bson.M{"type": inverse.Type, "company": companyID}},
-		},
-	}
-
-	var inverseUpdateQuery = bson.M{
-		"$push": bson.M{"relationships": inverse},
-	}
-
-	if _, err := c.Collection.UpdateOne(ctx, inverseFilterQuery, inverseUpdateQuery); err != nil {
-		log.Println("error adding inverse company relationship, rolling back:", err)
-
-		// No transactions available: undo the first write so both sides stay consistent.
-		if _, rollbackErr := c.Collection.UpdateOne(ctx, bson.M{"_id": companyID}, bson.M{
-			"$pull": bson.M{"relationships": bson.M{"type": relType, "company": targetID}},
-		}); rollbackErr != nil {
-			log.Println("error rolling back company relationship:", rollbackErr)
-		}
-
-		return nil, err
-	}
-
-	return &updatedCompany, nil
+	return &updated, nil
 }
 
-// RemoveCompanyRelationship removes a relationship from a company and its inverse from the related company.
-func (c *CompaniesType) RemoveCompanyRelationship(companyID primitive.ObjectID, targetID primitive.ObjectID, relType models.CompanyRelationshipType) (*models.Company, error) {
-
+// RemoveCompanyRelationship removes a recorded predecessor from the current company.
+func (c *CompaniesType) RemoveCompanyRelationship(companyID, targetID primitive.ObjectID, relType models.CompanyRelationshipType) (*models.Company, error) {
 	ctx := context.Background()
+	filter := bson.M{
+		"_id": companyID,
+		"relationships": bson.M{"$elemMatch": bson.M{"type": relType, "company": targetID}},
+	}
 
-	company, err := c.GetCompany(companyID)
+	var updated models.Company
+	err := c.Collection.FindOneAndUpdate(ctx, filter,
+		bson.M{"$pull": bson.M{"relationships": bson.M{"type": relType, "company": targetID}}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&updated)
 	if err != nil {
-		return nil, err
-	}
-
-	var removed *models.CompanyRelationship
-	for i := range company.Relationships {
-		if company.Relationships[i].Company == targetID && company.Relationships[i].Type == relType {
-			removed = &company.Relationships[i]
-			break
+		if err == mongo.ErrNoDocuments {
+			return nil, ErrRelationshipNotFound
 		}
-	}
-
-	if removed == nil {
-		return nil, ErrRelationshipNotFound
-	}
-
-	var updatedCompany models.Company
-
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	var updateQuery = bson.M{
-		"$pull": bson.M{"relationships": bson.M{"type": relType, "company": targetID}},
-	}
-
-	if err := c.Collection.FindOneAndUpdate(ctx, bson.M{"_id": companyID}, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
 		log.Println("error removing company relationship:", err)
 		return nil, err
 	}
 
-	// The related company may have been deleted in the meantime, so a non-match is fine.
-	if _, err := c.Collection.UpdateOne(ctx, bson.M{"_id": targetID}, bson.M{
-		"$pull": bson.M{"relationships": bson.M{"type": relType.Inverse(), "company": companyID}},
-	}); err != nil {
-		log.Println("error removing inverse company relationship, rolling back:", err)
-
-		// No transactions available: restore the first write so both sides stay consistent.
-		if _, rollbackErr := c.Collection.UpdateOne(ctx, bson.M{"_id": companyID}, bson.M{
-			"$push": bson.M{"relationships": *removed},
-		}); rollbackErr != nil {
-			log.Println("error rolling back company relationship removal:", rollbackErr)
-		}
-
-		return nil, err
-	}
-
-	return &updatedCompany, nil
+	return &updated, nil
 }
 
 // GetCompanyRelationships gets a company's relationships, resolved with each related company's name and image.
@@ -1797,7 +1714,12 @@ func (c *CompaniesType) GetCompanyRelationships(companyID primitive.ObjectID) ([
 
 	ids := make([]primitive.ObjectID, 0, len(company.Relationships))
 	for _, rel := range company.Relationships {
-		ids = append(ids, rel.Company)
+		if rel.Type.IsValid() {
+			ids = append(ids, rel.Company)
+		}
+	}
+	if len(ids) == 0 {
+		return related, nil
 	}
 
 	findOptions := options.Find().SetProjection(bson.M{"name": 1, "imgs": 1})
@@ -1821,8 +1743,11 @@ func (c *CompaniesType) GetCompanyRelationships(companyID primitive.ObjectID) ([
 		return nil, err
 	}
 
-	// Keep the order in which the relationships were added.
+	// Keep the order in which the historical relationships were added.
 	for _, rel := range company.Relationships {
+		if !rel.Type.IsValid() {
+			continue
+		}
 		other, ok := companies[rel.Company]
 		if !ok {
 			continue
@@ -1880,41 +1805,15 @@ func (c *CompaniesType) setRelationshipSince(companyID, targetID primitive.Objec
 	return c.Collection.UpdateOne(ctx, filterQuery, updateQuery)
 }
 
-// UpdateCompanyRelationship updates the date of a relationship on both companies.
-func (c *CompaniesType) UpdateCompanyRelationship(companyID primitive.ObjectID, targetID primitive.ObjectID, relType models.CompanyRelationshipType, data UpdateCompanyRelationshipData) (*models.Company, error) {
-
-	company, err := c.GetCompany(companyID)
+// UpdateCompanyRelationship updates a predecessor's date on the current company.
+func (c *CompaniesType) UpdateCompanyRelationship(companyID, targetID primitive.ObjectID, relType models.CompanyRelationshipType, data UpdateCompanyRelationshipData) (*models.Company, error) {
+	result, err := c.setRelationshipSince(companyID, targetID, relType, data.Since)
 	if err != nil {
-		return nil, err
-	}
-
-	var current *models.CompanyRelationship
-	for i := range company.Relationships {
-		if company.Relationships[i].Company == targetID && company.Relationships[i].Type == relType {
-			current = &company.Relationships[i]
-			break
-		}
-	}
-
-	if current == nil {
-		return nil, ErrRelationshipNotFound
-	}
-
-	if _, err := c.setRelationshipSince(companyID, targetID, relType, data.Since); err != nil {
 		log.Println("error updating company relationship:", err)
 		return nil, err
 	}
-
-	// The related company may have been deleted in the meantime, so a non-match is fine.
-	if _, err := c.setRelationshipSince(targetID, companyID, relType.Inverse(), data.Since); err != nil {
-		log.Println("error updating inverse company relationship, rolling back:", err)
-
-		// No transactions available: restore the previous date so both sides stay consistent.
-		if _, rollbackErr := c.setRelationshipSince(companyID, targetID, relType, current.Since); rollbackErr != nil {
-			log.Println("error rolling back company relationship update:", rollbackErr)
-		}
-
-		return nil, err
+	if result.MatchedCount == 0 {
+		return nil, ErrRelationshipNotFound
 	}
 
 	return c.GetCompany(companyID)

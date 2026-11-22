@@ -4,11 +4,7 @@
         "type": {
             "type": "string",
             "enum": [
-                "SUBSIDIARY_OF",
-                "PARENT_OF",
-                "MERGED_INTO",
                 "ABSORBED",
-                "REBRANDED_TO",
                 "REBRANDED_FROM"
             ]
         },
