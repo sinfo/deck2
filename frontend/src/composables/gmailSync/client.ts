@@ -1,6 +1,7 @@
 import type { useAuthStore } from "@/stores/auth";
 import type { GmailMessageData } from "@/api/companies";
 import type { useGoogleAuth } from "../useGoogleAuth";
+import { isAutomaticGmailResponse } from "./automaticReplies";
 import {
   fetchGmail,
   gmailResponseError,
@@ -110,6 +111,7 @@ export const createGmailSyncClient = (
 
   const fetchMessages = async (
     threadIds: string[],
+    excludeAutomatic: boolean,
   ): Promise<SyncResult<GmailMessageData[]>> => {
     if (threadIds.length === 0) return success([]);
     const token = await ensureToken();
@@ -134,6 +136,7 @@ export const createGmailSyncClient = (
         if (gmail.error.value) return failure(gmail.error.value);
 
         for (const message of threadMessages) {
+          if (excludeAutomatic && isAutomaticGmailResponse(message)) continue;
           messages.push(
             prepareGmailMessage(
               message,

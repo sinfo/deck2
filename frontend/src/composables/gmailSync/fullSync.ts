@@ -99,7 +99,7 @@ export const runFullGmailSync = async (
     const ids = threadIds.filter((id) => !seenThreads.has(id));
     if (ids.length === 0) return success(undefined);
 
-    const fetched = await client.fetchMessages(ids);
+    const fetched = await client.fetchMessages(ids, true);
     if (!fetched.ok) {
       return failure(`fetching Gmail thread messages: ${fetched.error}`);
     }

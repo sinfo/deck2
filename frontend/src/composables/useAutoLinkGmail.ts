@@ -210,7 +210,7 @@ export const useAutoLinkGmail = () => {
   // Public helper for the Gmail Threads view: no locally thrown exceptions.
   const fetchMessagesForThreads = async (threadIds: string[]) => {
     error.value = null;
-    const response = await gmail.fetchMessages(threadIds);
+    const response = await gmail.fetchMessages(threadIds, false);
     if (!response.ok) {
       error.value = response.error;
       return [];
