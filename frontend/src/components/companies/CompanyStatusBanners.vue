@@ -6,20 +6,20 @@
       role="alert"
       class="rounded-xl border border-dashed text-foreground"
       :class="
-        company.closure.type === 'BANKRUPT'
+        isBankrupt
           ? 'border-amber-500/40 bg-amber-500/10'
           : 'border-foreground/30 bg-muted/40'
       "
     >
       <div
         class="flex items-start gap-3 px-4"
-        :class="company.closure.type === 'BANKRUPT' ? 'py-4' : 'py-3'"
+        :class="isBankrupt ? 'py-4' : 'py-3'"
       >
         <component
           :is="closureIcon"
           class="shrink-0"
           :class="
-            company.closure.type === 'BANKRUPT'
+            isBankrupt
               ? 'mt-0.5 h-5 w-5 text-amber-700 dark:text-amber-400'
               : 'h-4 w-4 text-muted-foreground'
           "
@@ -27,13 +27,13 @@
         <div class="min-w-0 space-y-1">
           <p
             class="font-semibold uppercase tracking-wide"
-            :class="company.closure.type === 'BANKRUPT' ? 'text-base' : 'text-sm'"
+            :class="isBankrupt ? 'text-base' : 'text-sm'"
           >
             {{ companyClosureLabels[company.closure.type] }}
           </p>
           <p
             class="text-muted-foreground leading-snug"
-            :class="company.closure.type === 'BANKRUPT' ? 'text-sm' : 'text-xs'"
+            :class="isBankrupt ? 'text-sm' : 'text-xs'"
           >
             {{ closureDescription }}
           </p>
@@ -98,6 +98,8 @@ const terminalRelationships = computed(() =>
     (rel) => rel.type === "MERGED_INTO" || rel.type === "REBRANDED_TO",
   ),
 );
+
+const isBankrupt = computed(() => props.company.closure?.type === "BANKRUPT");
 
 const closureIcon = computed(() =>
   props.company.closure?.type === "BANNED" ? BanIcon : TriangleAlertIcon,

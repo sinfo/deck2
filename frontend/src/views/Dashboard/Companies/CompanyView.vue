@@ -167,12 +167,17 @@ const companyWithParticipation = computed(() => {
   ) as CompanyWithParticipation;
 });
 
-provide(companyArchiveConfirmationKey, () =>
-  companyWithParticipation.value?.closure?.type !== "BANKRUPT" ||
-  window.confirm(
+const confirmCompanyChange = (): boolean => {
+  if (companyWithParticipation.value?.closure?.type !== "BANKRUPT") {
+    return true;
+  }
+
+  return window.confirm(
     "This company went bankrupt and is no longer operating. Its page is preserved for historical reference and should only be updated when necessary.\n\nAre you sure you want to make this change?",
-  ),
-);
+  );
+};
+
+provide(companyArchiveConfirmationKey, confirmCompanyChange);
 </script>
 
 <style scoped>
