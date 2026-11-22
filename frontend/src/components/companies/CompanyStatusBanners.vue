@@ -40,20 +40,13 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
-import {
-  BanIcon,
-  TriangleAlertIcon,
-} from "lucide-vue-next";
-import {
-  companyClosureLabels,
-  type Company,
-} from "@/dto/companies";
+import { BanIcon, TriangleAlertIcon } from "lucide-vue-next";
+import { companyClosureLabels, type Company } from "@/dto/companies";
 import { formatMonthYear } from "@/lib/utils";
 
 const props = defineProps<{
