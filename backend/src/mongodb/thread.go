@@ -21,12 +21,31 @@ type ThreadsType struct {
 	Collection *mongo.Collection
 }
 
+// EnsureIndexes makes sure the indexes are created
+func (t *ThreadsType) EnsureIndexes() error {
+	// index that prevents duplicate Gmail messages from being synchronized.
+	_, err := t.Collection.Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.D{{Key: "gmailMessageId", Value: 1}},
+			Options: options.Index().
+				SetUnique(true).
+				SetPartialFilterExpression(bson.M{
+					"gmailMessageId": bson.M{"$gt": ""},
+				}),
+		},
+	)
+	return err
+}
+
 // CreateThreadData holds data needed to create a thread
 type CreateThreadData struct {
 	Entry          primitive.ObjectID
 	Meeting        *primitive.ObjectID
 	Kind           models.ThreadKind
+	Channel        models.ThreadChannel
 	GmailMessageId string
+	GmailThreadId  string
 	Posted         *time.Time
 }
 
@@ -74,8 +93,16 @@ func (t *ThreadsType) CreateThread(data CreateThreadData) (*models.Thread, error
 		query["meeting"] = *data.Meeting
 	}
 
+	if data.Channel != "" {
+		query["channel"] = data.Channel
+	}
+
 	if data.GmailMessageId != "" {
 		query["gmailMessageId"] = data.GmailMessageId
+	}
+
+	if data.GmailThreadId != "" {
+		query["gmailThreadId"] = data.GmailThreadId
 	}
 
 	insertResult, err := t.Collection.InsertOne(ctx, query)
@@ -105,6 +132,35 @@ func (t *ThreadsType) GetThread(threadID primitive.ObjectID) (*models.Thread, er
 	}
 
 	return &thread, nil
+}
+
+// GetThreadsByIDs finds threads by multiple thread IDs.
+// Returns a map of threadID -> thread for quick lookup.
+func (t *ThreadsType) GetThreadsByIDs(threadIDs []primitive.ObjectID) (map[primitive.ObjectID]*models.Thread, error) {
+	ctx := context.Background()
+	result := make(map[primitive.ObjectID]*models.Thread)
+
+	if len(threadIDs) == 0 {
+		return result, nil
+	}
+
+	cursor, err := t.Collection.Find(ctx, bson.M{
+		"_id": bson.M{"$in": threadIDs},
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var thread models.Thread
+		if err := cursor.Decode(&thread); err != nil {
+			return nil, err
+		}
+		result[thread.ID] = &thread
+	}
+
+	return result, cursor.Err()
 }
 
 // GetThreadByGmailMessageId finds a thread by its Gmail message ID.
@@ -141,7 +197,7 @@ func (t *ThreadsType) GetThreadsByGmailMessageIds(gmailMessageIds []string) (map
 	for cursor.Next(ctx) {
 		var thread models.Thread
 		if err := cursor.Decode(&thread); err != nil {
-			continue
+			return nil, err
 		}
 		result[thread.GmailMessageId] = &thread
 	}
@@ -179,12 +235,16 @@ func (t *ThreadsType) DeleteThread(threadID primitive.ObjectID) (*models.Thread,
 		}
 	}
 
-	// Clean up stale references in participations
-	_, _ = Speakers.Collection.UpdateMany(
-		ctx,
-		bson.M{"participations.communications": threadID},
-		bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
-	)
+	// Remove the deleted thread from both types of participations.
+	for _, collection := range []*mongo.Collection{Speakers.Collection, Companies.Collection} {
+		if _, err := collection.UpdateMany(
+			ctx,
+			bson.M{"participations.communications": threadID},
+			bson.M{"$pull": bson.M{"participations.$[].communications": threadID}},
+		); err != nil {
+			return nil, err
+		}
+	}
 
 	return &thread, nil
 }
@@ -239,59 +299,35 @@ func (t *ThreadsType) RemoveCommentFromThread(threadID primitive.ObjectID, postI
 	return &updatedThread, nil
 }
 
+// UpdateThread updates a thread's kind and optionally its meeting reference.
+// Replacing the reference does not delete the previously linked meeting.
 func (t *ThreadsType) UpdateThread(threadID primitive.ObjectID, data UpdateThreadData) (*models.Thread, error) {
 	ctx := context.Background()
 
-	thread, err := t.GetThread(threadID)
-	if err != nil {
-		return nil, err
+	if !data.Kind.IsValid() {
+		return nil, errors.New("thread kind not valid")
 	}
 
-	if !thread.Kind.IsValid() {
-		return nil, errors.New("Thread kind not valid")
-	}
-
-	var updateQuery primitive.M
+	updates := bson.M{"kind": data.Kind}
 	if data.Meeting != nil {
 		if _, err := Meetings.GetMeeting(*data.Meeting); err != nil {
 			return nil, err
 		}
-		updateQuery = bson.M{
-			"$set": bson.M{
-				"meeting": data.Meeting,
-				"kind":    data.Kind,
-			},
-		}
-	} else {
-		updateQuery = bson.M{
-			"$set": bson.M{
-				"kind": data.Kind,
-			},
-		}
+		updates["meeting"] = *data.Meeting
 	}
 
-	var optionsQuery = options.FindOneAndUpdate()
-	optionsQuery.SetReturnDocument(options.After)
-
-	var filterQuery = bson.M{
-		"_id": threadID,
-	}
-
+	options := options.FindOneAndUpdate().SetReturnDocument(options.After)
 	var updatedThread models.Thread
-
-	if err = t.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedThread); err != nil {
+	if err := t.Collection.FindOneAndUpdate(
+		ctx,
+		bson.M{"_id": threadID},
+		bson.M{"$set": updates},
+		options,
+	).Decode(&updatedThread); err != nil {
 		return nil, err
 	}
 
-	if thread.Meeting != nil {
-		_, err := Meetings.DeleteMeeting(*thread.Meeting)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	return &updatedThread, nil
-
 }
 
 // FindByPost finds the thread that contains the given post either as entry or as a comment
@@ -309,7 +345,7 @@ func (t *ThreadsType) FindByPost(postID primitive.ObjectID) (*models.Thread, err
 
 	err := t.Collection.FindOne(ctx, filter).Decode(&thread)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
 		}
 		return nil, err

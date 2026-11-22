@@ -8,13 +8,26 @@
     >
       <div class="flex items-start justify-between gap-2">
         <div class="font-medium">{{ t.title || t.type || "Info" }}</div>
-        <button class="text-xs text-muted-foreground" @click="dismiss(t.id)">
+        <button
+          type="button"
+          class="text-xs text-muted-foreground"
+          aria-label="Dismiss notification"
+          @click="dismiss(t.id)"
+        >
           ×
         </button>
       </div>
       <div v-if="t.description" class="text-sm text-muted-foreground mt-1">
         {{ t.description }}
       </div>
+      <button
+        v-if="t.action"
+        type="button"
+        class="mt-2 self-start text-sm font-medium underline underline-offset-2 hover:opacity-75 focus-visible:outline-offset-2"
+        @click="handleAction(t.id, t.action?.onClick)"
+      >
+        {{ t.action.label }}
+      </button>
     </div>
   </div>
 </template>
@@ -23,6 +36,11 @@
 import useToast from "@/lib/toast";
 
 const { toasts, dismiss } = useToast();
+
+const handleAction = (id: number, onClick?: () => void) => {
+  onClick?.();
+  dismiss(id);
+};
 
 const toastClass = (type?: string) => {
   switch (type) {

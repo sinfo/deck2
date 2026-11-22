@@ -13,7 +13,7 @@
         class="flex-1 w-0.5 min-h-4 my-1 !bg-muted"
       />
     </div>
-    <div class="flex-1" :class="{ 'pb-4': !isLast }">
+    <div class="flex-1 min-w-0" :class="{ 'pb-4': !isLast }">
       <Collapsible v-model:open="isOpen" class="w-full">
         <Card class="p-4">
           <div

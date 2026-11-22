@@ -236,9 +236,9 @@
                 >
                   <p><strong>Dear {{.Speaker}},</strong></p>
                   <p>
-                    I’m {{.MemberName}}, a proud member of SINFO. On behalf of
-                    the team organizing SINFO {{.Edition}}, we would be thrilled
-                    if you would accept this invitation to speak at our event.
+                    I’m {{.Member}}, a proud member of SINFO. On behalf of the
+                    team organizing SINFO {{.Edition}}, we would be thrilled if
+                    you would accept this invitation to speak at our event.
                   </p>
 
                   <p>
@@ -334,8 +334,9 @@
                           valign="middle"
                         >
                           <b
-                            >The week from {{.EventStart.Format "2th"}} to
-                            {{.EventEnd.Format "2th of January, 2006"}}</b
+                            >The week from {{.EventStartDay}} to
+                            {{.EventEndDay}} of {{.EventEndMonth}},
+                            {{.EventEndYear}}</b
                           >
                         </td>
                       </tr>
@@ -450,8 +451,8 @@
               <tr>
                 <td class="full-width-image">
                   <img
-                    src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/{{.Edition}}-sinfo/templates/images/keynote.png"
-                    alt="/static/{{.Edition}}-sinfo/templates/images/keynote.png"
+                    src="https://sinfo.ams3.cdn.digitaloceanspaces.com/static/{{.Edition}}-sinfo/templates/images/keynote.jpg"
+                    alt="/static/{{.Edition}}-sinfo/templates/images/keynote.jpg"
                     style="
                       text-align: center;
                       border: none;
@@ -484,7 +485,7 @@
                 "
               >
                 <p>
-                  <strong>Some of our previous speakers and keynotes:</strong>
+                  <strong>Some of our previous speakers:</strong>
                 </p>
               </td>
               <!-- Background Image with Text : END -->
@@ -506,48 +507,6 @@
                   >
                     <tr>
                       <td width="25%" class="stack-column-center">
-                        <a
-                          href="https://youtu.be/8LhlLrrYG7Y?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
-                          target="_blank"
-                        >
-                          <table
-                            cellspacing="0"
-                            cellpadding="0"
-                            style="border: none"
-                          >
-                            <tr>
-                              <td style="padding: 10px; text-align: center">
-                                <img
-                                  src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/690b36da16af63cb350c71e9"
-                                  style="border-radius: 50%; border: none"
-                                  width="125"
-                                  height="125"
-                                  alt="manuel"
-                                  class="fluid"
-                                />
-                              </td>
-                            </tr>
-                            <tr>
-                              <td
-                                style="
-                                  font-family: sans-serif;
-                                  font-size: 15px;
-                                  mso-height-rule: exactly;
-                                  line-height: 20px;
-                                  color: #555555;
-                                  padding: 0 10px 10px;
-                                  text-align: center;
-                                "
-                                class="center-on-narrow"
-                              >
-                                <strong>Goncalo Torres</strong><br />
-                                OpenAI
-                              </td>
-                            </tr>
-                          </table>
-                        </a>
-                      </td>
-                      <td width="25%" class="stack-column-center">
                         <table
                           cellspacing="0"
                           cellpadding="0"
@@ -556,11 +515,11 @@
                           <tr>
                             <td style="padding: 10px; text-align: center">
                               <img
-                                src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/69161ee37fef9d13bee61991"
+                                src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/690b36da16af63cb350c71e9"
                                 style="border-radius: 50%; border: none"
                                 width="125"
                                 height="125"
-                                alt="cody"
+                                alt="gonçalo"
                                 class="fluid"
                               />
                             </td>
@@ -578,15 +537,57 @@
                               "
                               class="center-on-narrow"
                             >
-                              <strong>Jose M. Alvarez</strong><br />
-                              NVIDIA
+                              <strong>Gonçalo Torres</strong><br />
+                              OpenAI
                             </td>
                           </tr>
                         </table>
                       </td>
                       <td width="25%" class="stack-column-center">
                         <a
-                          href="https://youtu.be/6cfqQONk2no?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
+                          href="https://www.youtube.com/watch?v=xsKat9S6qjg"
+                          target="_blank"
+                        >
+                          <table
+                            cellspacing="0"
+                            cellpadding="0"
+                            style="border: none"
+                          >
+                            <tr>
+                              <td style="padding: 10px; text-align: center">
+                                <img
+                                  src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/69161ee37fef9d13bee61991"
+                                  style="border-radius: 50%; border: none"
+                                  width="125"
+                                  height="125"
+                                  alt="jose"
+                                  class="fluid"
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td
+                                style="
+                                  font-family: sans-serif;
+                                  font-size: 15px;
+                                  mso-height-rule: exactly;
+                                  line-height: 20px;
+                                  color: #555555;
+                                  padding: 0 10px 10px;
+                                  text-align: center;
+                                "
+                                class="center-on-narrow"
+                              >
+                                <strong>José M. Álvarez</strong><br />
+                                NVIDIA
+                              </td>
+                            </tr>
+                          </table>
+                        </a>
+                      </td>
+                      <td width="25%" class="stack-column-center">
+                        <a
+                          href="https://www.youtube.com/watch?v=DnOpXJQzWOI"
                           target="_blank"
                         >
                           <table
@@ -601,7 +602,7 @@
                                   style="border-radius: 50%; border: none"
                                   width="125"
                                   height="125"
-                                  alt="amanda"
+                                  alt="kemer"
                                   class="fluid"
                                 />
                               </td>
@@ -620,7 +621,7 @@
                                 class="center-on-narrow"
                               >
                                 <strong>Kemer Stevenson</strong><br />
-                                Oracle
+                                Walt Disney Animation Studios
                               </td>
                             </tr>
                           </table>
@@ -628,7 +629,7 @@
                       </td>
                       <td width="25%" class="stack-column-center">
                         <a
-                          href="https://youtu.be/03m8UZt0Bjs?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
+                          href="https://www.youtube.com/watch?v=vTdjOKyen94"
                           target="_blank"
                         >
                           <table
@@ -643,7 +644,7 @@
                                   style="border-radius: 50%; border: none"
                                   width="125"
                                   height="125"
-                                  alt="abby"
+                                  alt="grant"
                                   class="fluid"
                                 />
                               </td>
@@ -678,92 +679,82 @@
                   >
                     <tr>
                       <td width="25%" class="stack-column-center">
-                        <a
-                          href="https://youtu.be/03m8UZt0Bjs?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
-                          target="_blank"
+                        <table
+                          cellspacing="0"
+                          cellpadding="0"
+                          style="border: none"
                         >
-                          <table
-                            cellspacing="0"
-                            cellpadding="0"
-                            style="border: none"
-                          >
-                            <tr>
-                              <td style="padding: 10px; text-align: center">
-                                <img
-                                  src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/66a0e0aa8d9f35b1d1ca2fdb"
-                                  style="border-radius: 50%; border: none"
-                                  width="125"
-                                  height="125"
-                                  alt="joseph"
-                                  class="fluid"
-                                />
-                              </td>
-                            </tr>
-                            <tr>
-                              <td
-                                style="
-                                  font-family: sans-serif;
-                                  font-size: 15px;
-                                  mso-height-rule: exactly;
-                                  line-height: 20px;
-                                  color: #555555;
-                                  padding: 0 10px 10px;
-                                  text-align: center;
-                                "
-                                class="center-on-narrow"
-                              >
-                                <strong>Katie Gamanji</strong><br />
-                                Riot Games
-                              </td>
-                            </tr>
-                          </table>
-                        </a>
+                          <tr>
+                            <td style="padding: 10px; text-align: center">
+                              <img
+                                src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/66a0e0aa8d9f35b1d1ca2fdb"
+                                style="border-radius: 50%; border: none"
+                                width="125"
+                                height="125"
+                                alt="katie"
+                                class="fluid"
+                              />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td
+                              style="
+                                font-family: sans-serif;
+                                font-size: 15px;
+                                mso-height-rule: exactly;
+                                line-height: 20px;
+                                color: #555555;
+                                padding: 0 10px 10px;
+                                text-align: center;
+                              "
+                              class="center-on-narrow"
+                            >
+                              <strong>Katie Gamanji</strong><br />
+                              Apple
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                      <td width="25%" class="stack-column-center">
+                        <table
+                          cellspacing="0"
+                          cellpadding="0"
+                          style="border: none"
+                        >
+                          <tr>
+                            <td style="padding: 10px; text-align: center">
+                              <img
+                                src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/697b916dbbab45879708d93e"
+                                style="border-radius: 50%; border: none"
+                                width="125"
+                                height="125"
+                                alt="amit"
+                                class="fluid"
+                              />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td
+                              style="
+                                font-family: sans-serif;
+                                font-size: 15px;
+                                mso-height-rule: exactly;
+                                line-height: 20px;
+                                color: #555555;
+                                padding: 0 10px 10px;
+                                text-align: center;
+                              "
+                              class="center-on-narrow"
+                            >
+                              <strong>Amit Vadi</strong><br />
+                              Google DeepMind
+                            </td>
+                          </tr>
+                        </table>
                       </td>
                       <td width="25%" class="stack-column-center">
                         <a
-                          href="https://youtu.be/xZjjMCqh224?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
-                          target="_blank"
-                        >
-                          <table
-                            cellspacing="0"
-                            cellpadding="0"
-                            style="border: none"
-                          >
-                            <tr>
-                              <td style="padding: 10px; text-align: center">
-                                <img
-                                  src="https://static.sinfo.org/deck2/sinfo-33/speakers/public/697b916dbbab45879708d93e"
-                                  style="border-radius: 50%; border: none"
-                                  width="125"
-                                  height="125"
-                                  alt="roger"
-                                  class="fluid"
-                                />
-                              </td>
-                            </tr>
-                            <tr>
-                              <td
-                                style="
-                                  font-family: sans-serif;
-                                  font-size: 15px;
-                                  mso-height-rule: exactly;
-                                  line-height: 20px;
-                                  color: #555555;
-                                  padding: 0 10px 10px;
-                                  text-align: center;
-                                "
-                                class="center-on-narrow"
-                              >
-                                <strong>Amit Vadi</strong><br />
-                                Google DeepMind
-                              </td>
-                            </tr>
-                          </table>
-                        </a>
-                      </td>
-                      <td width="25%" class="stack-column-center">
-                        <a
-                          href="https://youtu.be/Jpgw8ssJXFQ?list=PLHn5vdo55AT2KMEmCzw989EzPpMhRYuNY"
+                          href="https://www.youtube.com/watch?v=F7HLpli1NLE"
                           target="_blank"
                         >
                           <table
@@ -778,7 +769,7 @@
                                   style="border-radius: 50%; border: none"
                                   width="125"
                                   height="125"
-                                  alt="avneet"
+                                  alt="cristina"
                                   class="fluid"
                                 />
                               </td>
@@ -797,7 +788,7 @@
                                 class="center-on-narrow"
                               >
                                 <strong>Dr. Cristina Cifuentes</strong><br />
-                                Walt Disney Animation Studios
+                                Oracle
                               </td>
                             </tr>
                           </table>
@@ -816,7 +807,7 @@
                                 style="border-radius: 50%; border: none"
                                 width="125"
                                 height="125"
-                                alt="benjamin"
+                                alt="zoe"
                                 class="fluid"
                               />
                             </td>
@@ -834,8 +825,8 @@
                               "
                               class="center-on-narrow"
                             >
-                              <strong>Zoe Sams</strong><br />
-                              Apple<br />
+                              <strong>Zoë Sams</strong><br />
+                              Riot Games<br />
                             </td>
                           </tr>
                         </table>

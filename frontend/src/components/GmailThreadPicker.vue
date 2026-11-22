@@ -2,9 +2,9 @@
   <AlertDialog v-model:open="isOpen">
     <AlertDialogContent class="max-w-3xl max-h-[80vh] flex flex-col">
       <AlertDialogHeader class="flex-shrink-0">
-        <AlertDialogTitle>Link Gmail Threads</AlertDialogTitle>
+        <AlertDialogTitle>Gmail Threads</AlertDialogTitle>
         <AlertDialogDescription>
-          Search and select Gmail threads to link to this communication.
+          Search, view, and select Gmail threads to link to this communication.
         </AlertDialogDescription>
       </AlertDialogHeader>
 

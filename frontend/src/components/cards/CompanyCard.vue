@@ -85,7 +85,7 @@
         </div>
         <div class="flex-1 min-w-0">
           <CardTitle
-            class="text-lg truncate"
+            class="text-lg wrap-anywhere"
             :class="company.closure ? 'text-muted-foreground' : ''"
           >
             {{ company.name }}
@@ -115,7 +115,7 @@
       <div v-if="company.description" class="relative">
         <CardDescription
           :class="[
-            'transition-all duration-300 ease-in-out whitespace-pre-wrap',
+            'transition-all duration-300 ease-in-out whitespace-pre-wrap wrap-anywhere',
             isDescriptionExpanded ? '' : 'line-clamp-3',
           ]"
         >

@@ -26,238 +26,407 @@
 
       <!-- Settings Content -->
       <div v-else-if="user" class="space-y-6">
-        <!-- Personal Information Card -->
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
-              Basic information about your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent class="space-y-4">
-            <div class="flex items-center space-x-4">
-              <img
-                :src="user.data.img"
-                :alt="user.data.name"
-                class="w-16 h-16 rounded-full object-cover border-2 border-border"
-                @error="handleImageError"
-              />
-              <div>
-                <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
-                <p class="text-sm text-muted-foreground">
-                  IST ID: {{ user.data.istid }}
-                </p>
-                <p class="text-sm text-muted-foreground">
-                  SINFO ID: {{ user.data.sinfoid }}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <!-- Contact Information Card -->
-        <Card>
-          <CardHeader>
-            <div class="flex items-center justify-between">
-              <div>
-                <CardTitle>Contact Information</CardTitle>
+        <Tabs default-value="profile" class="space-y-6">
+          <TabsList class="grid w-full max-w-xs grid-cols-2">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="applications">Applications</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="profile" class="space-y-6">
+            <!-- Personal Information Card -->
+            <Card>
+              <CardHeader>
+                <CardTitle>Personal Information</CardTitle>
                 <CardDescription>
-                  Manage your contact details and preferences
+                  Basic information about your account
                 </CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                :disabled="isSaving"
-                @click="isEditMode = !isEditMode"
-              >
-                {{ isEditMode ? "Cancel" : "Edit" }}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <!-- View Mode -->
-            <div v-if="!isEditMode" class="space-y-4">
-              <!-- Contact Details Display -->
-              <div v-if="user.data.contactObject" class="space-y-4">
-                <!-- Gender and Language -->
-                <div class="flex gap-4">
-                  <div v-if="user.data.contactObject.gender" class="space-y-1">
-                    <Label class="text-sm font-medium text-muted-foreground"
-                      >Gender</Label
-                    >
-                    <Badge variant="secondary" class="text-sm">
-                      {{ formatGender(user.data.contactObject.gender) }}
-                    </Badge>
-                  </div>
+              </CardHeader>
+              <CardContent class="space-y-4">
+                <div class="flex items-center space-x-4">
                   <div
-                    v-if="user.data.contactObject.language"
-                    class="space-y-1"
+                    class="relative group w-16 h-16 rounded-full overflow-hidden flex-shrink-0"
                   >
-                    <Label class="text-sm font-medium text-muted-foreground"
-                      >Language</Label
+                    <Image
+                      :src="profileImageUrl"
+                      :alt="`${user.data.name} photo`"
+                      class="w-16 h-16 rounded-full object-cover border-2 border-border"
+                    />
+                    <button
+                      type="button"
+                      class="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition-colors hover:bg-black/50 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:bg-black/50 disabled:cursor-wait"
+                      :disabled="isUploadingImage"
+                      aria-label="Change profile picture"
+                      title="Change profile picture"
+                      @click="triggerFileInput"
                     >
-                    <Badge variant="outline" class="text-sm">
-                      {{ formatLanguage(user.data.contactObject.language) }}
-                    </Badge>
+                      <div
+                        v-if="isUploadingImage"
+                        class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"
+                      ></div>
+                      <Pencil
+                        v-else
+                        class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                      />
+                    </button>
+                    <input
+                      ref="fileInput"
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      @change="handleImageUpload"
+                    />
+                  </div>
+                  <div>
+                    <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
+                    <p class="text-sm text-muted-foreground">
+                      IST ID: {{ user.data.istid }}
+                    </p>
+                    <p class="text-sm text-muted-foreground">
+                      SINFO ID: {{ user.data.sinfoid }}
+                    </p>
                   </div>
                 </div>
-
-                <!-- Email Addresses -->
-                <div
-                  v-if="user.data.contactObject.mails.length"
-                  class="space-y-2"
-                >
-                  <Label class="text-sm font-medium text-muted-foreground"
-                    >Email Addresses</Label
+              </CardContent>
+            </Card>
+            <!-- Contact Information Card -->
+            <Card>
+              <CardHeader>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Contact Information</CardTitle>
+                    <CardDescription>
+                      Manage your contact details and preferences
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    :disabled="isSaving"
+                    @click="isEditMode = !isEditMode"
                   >
-                  <div class="space-y-1">
-                    <div
-                      v-for="mail in user.data.contactObject.mails"
-                      :key="mail.mail"
-                      class="flex items-center gap-2 text-sm"
-                    >
-                      <a
-                        :href="`mailto:${mail.mail}`"
-                        class="text-primary hover:underline"
+                    {{ isEditMode ? "Cancel" : "Edit" }}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <!-- View Mode -->
+                <div v-if="!isEditMode" class="space-y-4">
+                  <!-- Contact Details Display -->
+                  <div v-if="user.data.contactObject" class="space-y-4">
+                    <!-- Gender and Language -->
+                    <div class="flex gap-4">
+                      <div
+                        v-if="user.data.contactObject.gender"
+                        class="space-y-1"
                       >
-                        {{ mail.mail }}
-                      </a>
-                      <div class="flex gap-1">
-                        <Badge
-                          v-if="mail.personal"
-                          variant="secondary"
-                          class="text-xs"
+                        <Label class="text-sm font-medium text-muted-foreground"
+                          >Gender</Label
                         >
-                          Personal
+                        <Badge variant="secondary" class="text-sm">
+                          {{ formatGender(user.data.contactObject.gender) }}
+                        </Badge>
+                      </div>
+                      <div
+                        v-if="user.data.contactObject.language"
+                        class="space-y-1"
+                      >
+                        <Label class="text-sm font-medium text-muted-foreground"
+                          >Language</Label
+                        >
+                        <Badge variant="outline" class="text-sm">
+                          {{ formatLanguage(user.data.contactObject.language) }}
                         </Badge>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                <!-- Phone Numbers -->
-                <div
-                  v-if="user.data.contactObject.phones.length"
-                  class="space-y-2"
-                >
-                  <Label class="text-sm font-medium text-muted-foreground"
-                    >Phone Numbers</Label
-                  >
-                  <div class="space-y-1">
+                    <!-- Email Addresses -->
                     <div
-                      v-for="phone in user.data.contactObject.phones"
-                      :key="phone.phone"
-                      class="flex items-center gap-2 text-sm"
+                      v-if="user.data.contactObject.mails.length"
+                      class="space-y-2"
                     >
-                      <a
-                        :href="`tel:${phone.phone}`"
-                        class="text-primary hover:underline"
+                      <Label class="text-sm font-medium text-muted-foreground"
+                        >Email Addresses</Label
                       >
-                        {{ phone.phone }}
-                      </a>
+                      <div class="space-y-1">
+                        <div
+                          v-for="mail in user.data.contactObject.mails"
+                          :key="mail.mail"
+                          class="flex items-center gap-2 text-sm"
+                        >
+                          <a
+                            :href="`mailto:${mail.mail}`"
+                            class="text-primary hover:underline"
+                          >
+                            {{ mail.mail }}
+                          </a>
+                          <div class="flex gap-1">
+                            <Badge
+                              v-if="mail.personal"
+                              variant="secondary"
+                              class="text-xs"
+                            >
+                              Personal
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Phone Numbers -->
+                    <div
+                      v-if="user.data.contactObject.phones.length"
+                      class="space-y-2"
+                    >
+                      <Label class="text-sm font-medium text-muted-foreground"
+                        >Phone Numbers</Label
+                      >
+                      <div class="space-y-1">
+                        <div
+                          v-for="phone in user.data.contactObject.phones"
+                          :key="phone.phone"
+                          class="flex items-center gap-2 text-sm"
+                        >
+                          <a
+                            :href="`tel:${phone.phone}`"
+                            class="text-primary hover:underline"
+                          >
+                            {{ phone.phone }}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Social Media -->
+                    <div
+                      v-if="hasSocials(user.data.contactObject.socials)"
+                      class="space-y-2"
+                    >
+                      <Label class="text-sm font-medium text-muted-foreground"
+                        >Social Media</Label
+                      >
+                      <div class="flex flex-wrap gap-2">
+                        <a
+                          v-if="user.data.contactObject.socials.linkedin"
+                          :href="
+                            linkedinUrl(
+                              user.data.contactObject.socials.linkedin,
+                            )
+                          "
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                        >
+                          LinkedIn
+                        </a>
+                        <a
+                          v-if="user.data.contactObject.socials.twitter"
+                          :href="
+                            twitterUrl(user.data.contactObject.socials.twitter)
+                          "
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-sky-100 text-sky-700 rounded hover:bg-sky-200 transition-colors"
+                        >
+                          Twitter
+                        </a>
+                        <a
+                          v-if="user.data.contactObject.socials.facebook"
+                          :href="
+                            facebookUrl(
+                              user.data.contactObject.socials.facebook,
+                            )
+                          "
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                        >
+                          Facebook
+                        </a>
+                        <a
+                          v-if="user.data.contactObject.socials.github"
+                          :href="
+                            githubUrl(user.data.contactObject.socials.github)
+                          "
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                        >
+                          GitHub
+                        </a>
+                        <a
+                          v-if="user.data.contactObject.socials.skype"
+                          :href="`skype:${user.data.contactObject.socials.skype}?chat`"
+                          class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-cyan-100 text-cyan-700 rounded hover:bg-cyan-200 transition-colors"
+                        >
+                          Skype
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Social Media -->
-                <div
-                  v-if="hasSocials(user.data.contactObject.socials)"
-                  class="space-y-2"
-                >
-                  <Label class="text-sm font-medium text-muted-foreground"
-                    >Social Media</Label
-                  >
-                  <div class="flex flex-wrap gap-2">
-                    <a
-                      v-if="user.data.contactObject.socials.linkedin"
-                      :href="
-                        linkedinUrl(user.data.contactObject.socials.linkedin)
-                      "
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                  <!-- Empty State -->
+                  <div v-else class="text-center py-8 text-muted-foreground">
+                    <p>No contact information available</p>
+                    <Button
+                      variant="outline"
+                      class="mt-2"
+                      @click="isEditMode = true"
                     >
-                      LinkedIn
-                    </a>
-                    <a
-                      v-if="user.data.contactObject.socials.twitter"
-                      :href="
-                        twitterUrl(user.data.contactObject.socials.twitter)
-                      "
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-sky-100 text-sky-700 rounded hover:bg-sky-200 transition-colors"
-                    >
-                      Twitter
-                    </a>
-                    <a
-                      v-if="user.data.contactObject.socials.facebook"
-                      :href="
-                        facebookUrl(user.data.contactObject.socials.facebook)
-                      "
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
-                    >
-                      Facebook
-                    </a>
-                    <a
-                      v-if="user.data.contactObject.socials.github"
-                      :href="githubUrl(user.data.contactObject.socials.github)"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-                    >
-                      GitHub
-                    </a>
-                    <a
-                      v-if="user.data.contactObject.socials.skype"
-                      :href="`skype:${user.data.contactObject.socials.skype}?chat`"
-                      class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-cyan-100 text-cyan-700 rounded hover:bg-cyan-200 transition-colors"
-                    >
-                      Skype
-                    </a>
+                      Add Contact Information
+                    </Button>
                   </div>
                 </div>
-              </div>
 
-              <!-- Empty State -->
-              <div v-else class="text-center py-8 text-muted-foreground">
-                <p>No contact information available</p>
-                <Button
-                  variant="outline"
-                  class="mt-2"
-                  @click="isEditMode = true"
+                <!-- Edit Mode -->
+                <div v-if="isEditMode && user.data.contactObject">
+                  <ContactForm
+                    mode="edit"
+                    without-name
+                    :initial-data="{
+                      id: user.data.contactObject.id,
+                      name: user.data.name,
+                      contact: user.data.contactObject,
+                    }"
+                    :is-loading="isSaving"
+                    @submit="handleUpdateContact"
+                    @cancel="isEditMode = false"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="applications" class="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Connected Applications</CardTitle>
+                <CardDescription>
+                  These are the applications that you have connected to your
+                  Deck account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent class="space-y-6">
+                <!-- Gmail Application Item -->
+                <div
+                  class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-lg border gap-4 transition-colors"
+                  :class="
+                    authStore.isGoogleAuthenticated ? 'bg-card' : 'bg-muted/20'
+                  "
                 >
-                  Add Contact Information
-                </Button>
-              </div>
-            </div>
+                  <div class="flex items-start gap-3.5">
+                    <div
+                      class="w-10 h-10 rounded-lg bg-red-500/10 text-red-600 flex items-center justify-center flex-shrink-0 mt-0.5"
+                    >
+                      <Mail class="w-5 h-5" />
+                    </div>
+                    <div class="space-y-1">
+                      <div class="flex items-center gap-2">
+                        <h4 class="font-semibold text-base leading-none">
+                          Gmail
+                        </h4>
+                        <Badge
+                          :variant="
+                            authStore.isGoogleAuthenticated
+                              ? 'default'
+                              : 'secondary'
+                          "
+                          class="text-xs"
+                          :class="
+                            authStore.isGoogleAuthenticated
+                              ? 'bg-emerald-600 hover:bg-emerald-600 text-white'
+                              : ''
+                          "
+                        >
+                          {{
+                            authStore.isGoogleAuthenticated
+                              ? isAutoLinking
+                                ? "Syncing..."
+                                : "Connected"
+                              : "Disconnected"
+                          }}
+                        </Badge>
+                      </div>
+                      <p class="text-sm text-muted-foreground">
+                        Automatically link and sync email threads with your
+                        companies and speakers communications.
+                      </p>
+                      <p
+                        v-if="userConnectedEmail"
+                        class="text-xs text-muted-foreground"
+                      >
+                        {{
+                          authStore.isGoogleAuthenticated
+                            ? "Connected as"
+                            : "Account:"
+                        }}
+                        <span class="font-medium text-foreground">{{
+                          userConnectedEmail
+                        }}</span>
+                      </p>
+                    </div>
+                  </div>
 
-            <!-- Edit Mode -->
-            <div v-if="isEditMode && user.data.contactObject">
-              <ContactForm
-                mode="edit"
-                without-name
-                :initial-data="{
-                  id: user.data.contactObject.id,
-                  name: user.data.name,
-                  contact: user.data.contactObject,
-                }"
-                :is-loading="isSaving"
-                @submit="handleUpdateContact"
-                @cancel="isEditMode = false"
-              />
-            </div>
-          </CardContent>
-        </Card>
+                  <div
+                    class="flex items-center gap-2 self-end sm:self-center flex-shrink-0"
+                  >
+                    <template v-if="authStore.isGoogleAuthenticated">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        class="gap-1.5"
+                        :disabled="isAutoLinking"
+                        @click="() => syncThreads(false, true)"
+                      >
+                        <RefreshCw
+                          class="w-3.5 h-3.5"
+                          :class="{ 'animate-spin': isAutoLinking }"
+                        />
+                        {{ isAutoLinking ? "Syncing..." : "Sync Threads" }}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        class="h-8 w-8 text-destructive hover:bg-destructive/10"
+                        :disabled="isAutoLinking"
+                        aria-label="Disconnect Gmail"
+                        title="Disconnect Gmail"
+                        @click="disconnectGoogle"
+                      >
+                        <Unplug class="w-4 h-4" />
+                      </Button>
+                    </template>
+                    <template v-else>
+                      <Button
+                        size="sm"
+                        class="bg-red-600 hover:bg-red-700 text-white font-medium px-4"
+                        :disabled="isSigningIn || isAutoLinking"
+                        @click="connectGoogle"
+                      >
+                        {{
+                          isSigningIn || isAutoLinking
+                            ? "Connecting..."
+                            : "Connect"
+                        }}
+                      </Button>
+                    </template>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   </div>
+  <GmailSyncErrorDialog
+    v-model:open="syncDetailsOpen"
+    :failures="syncFailures"
+    :general-error="syncGeneralError"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useQuery, useMutation, useQueryCache } from "@pinia/colada";
 import { getMe } from "@/api/members";
 import { updateContact } from "@/api/contacts";
@@ -276,11 +445,73 @@ import Button from "@/components/ui/button/Button.vue";
 import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
+import Image from "@/components/Image.vue";
+import { useUploadImageMutation } from "@/mutations/me";
+import { useImageUpload } from "@/composables/useImageUpload";
+import { isAxiosError } from "axios";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Mail, Pencil, RefreshCw, Unplug } from "lucide-vue-next";
+import { useGoogleAuth } from "@/composables/useGoogleAuth";
+import {
+  isContactedParticipationStatus,
+  useAutoLinkGmail,
+} from "@/composables/useAutoLinkGmail";
+import { useEventStore } from "@/stores/event";
+import { useToast } from "@/lib/toast";
+import GmailSyncErrorDialog from "@/components/GmailSyncErrorDialog.vue";
+import type { EntityLinkResult } from "@/composables/gmailSync/common";
+
+const fileInput = ref<HTMLInputElement>();
+const {
+  imagePreview,
+  selectedImageFile,
+  imageError,
+  handleFileChange,
+  reset: resetImageUpload,
+} = useImageUpload();
 
 const isEditMode = ref(false);
 const queryCache = useQueryCache();
+const eventStore = useEventStore();
+const { toast } = useToast();
+const syncDetailsOpen = ref(false);
+const syncFailures = ref<EntityLinkResult[]>([]);
+const syncGeneralError = ref<string | null>(null);
+
+const showSyncFailure = (
+  failures: EntityLinkResult[],
+  message: string | null = null,
+) => {
+  syncFailures.value = failures;
+  syncGeneralError.value = message;
+  toast.error({
+    title: "Gmail Sync Incomplete",
+    description: failures.length
+      ? `${failures.length} assigned companies or speakers couldn't sync.`
+      : "Gmail sync couldn't finish.",
+    duration: 12000,
+    action: {
+      label: "View details",
+      onClick: () => {
+        syncDetailsOpen.value = true;
+      },
+    },
+  });
+};
+
+const {
+  requestGoogleToken,
+  isSigningIn,
+  error: googleAuthError,
+} = useGoogleAuth();
+const {
+  isAutoLinking,
+  autoLinkEventEntities,
+  syncRecentGmailUpdates,
+  error: gmailSyncError,
+} = useAutoLinkGmail();
 
 // Fetch user data
 const {
@@ -292,6 +523,56 @@ const {
   key: ["me"],
   query: getMe,
 });
+
+const cacheBuster = ref(Date.now());
+
+const profileImageUrl = computed(() => {
+  if (imagePreview.value) return imagePreview.value;
+  const img = user.value?.data.img;
+  if (!img) return "";
+  const separator = img.includes("?") ? "&" : "?";
+  return `${img}${separator}t=${cacheBuster.value}`;
+});
+
+const uploadImageMutation = useUploadImageMutation();
+const isUploadingImage = uploadImageMutation.isLoading;
+
+const triggerFileInput = () => fileInput.value?.click();
+
+const handleImageUpload = async (event: Event) => {
+  handleFileChange(event);
+
+  try {
+    if (imageError.value) {
+      toast.error({
+        title: "Failed to update profile picture",
+        description: imageError.value,
+      });
+      return;
+    }
+
+    if (!selectedImageFile.value) return;
+
+    await uploadImageMutation.mutateAsync(selectedImageFile.value);
+    cacheBuster.value = Date.now();
+    toast.success({ title: "Profile picture updated successfully" });
+  } catch (error: unknown) {
+    console.error("Failed to update profile picture:", error);
+    const detail: unknown = isAxiosError(error)
+      ? (error.response?.data ?? error.message)
+      : error instanceof Error
+        ? error.message
+        : "Failed to update profile picture";
+
+    toast.error({
+      title: "Failed to update profile picture",
+      description: typeof detail === "string" ? detail : JSON.stringify(detail),
+    });
+  } finally {
+    resetImageUpload();
+    if (fileInput.value) fileInput.value.value = "";
+  }
+};
 
 // Update contact mutation
 const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
@@ -331,9 +612,127 @@ const handleUpdateContact = async (data: CreateCompanyRepData) => {
   };
 };
 
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = "/src/assets/noImage.png"; // Fallback image
+const userConnectedEmail = computed(() => {
+  return (
+    authStore.connectedGoogleEmail ||
+    (user.value?.data?.sinfoid
+      ? `${user.value.data.sinfoid}@sinfo.org`
+      : authStore.sinfoEmail)
+  );
+});
+
+const syncThreads = async (silent = false, fullScan = false) => {
+  const eventId = eventStore.selectedEvent?.id;
+  if (!eventId) {
+    if (!silent) {
+      toast.warning({
+        title: "No Edition Selected",
+        description: "Please select an event edition before syncing threads.",
+      });
+    }
+    return;
+  }
+
+  if (!silent) {
+    toast.info({
+      title: "Syncing Gmail Threads",
+      description:
+        "Checking recent communications for your assigned companies...",
+    });
+  }
+
+  try {
+    const results = fullScan
+      ? await autoLinkEventEntities(eventId)
+      : await syncRecentGmailUpdates(eventId);
+    const failedEntities = results.filter(
+      (result) => result.status === "ERROR",
+    );
+    if (gmailSyncError.value || failedEntities.length > 0) {
+      showSyncFailure(failedEntities, gmailSyncError.value);
+      return;
+    }
+    const newlyLinked = results.reduce(
+      (count, result) => count + result.newlyLinkedCount,
+      0,
+    );
+    const alreadyLinked = results.reduce(
+      (count, result) =>
+        count +
+        Math.max(result.linkedThreadsCount - result.newlyLinkedCount, 0),
+      0,
+    );
+    const unmatched = results.filter(
+      (result) =>
+        result.status === "NOT_FOUND" &&
+        isContactedParticipationStatus(result.participationStatus),
+    );
+    if (unmatched.length > 0) {
+      toast.warning({
+        title: "Gmail Sync Finished — Unmatched Contacts",
+        description: `${newlyLinked} new thread(s) linked. ${unmatched.length} contacted ${unmatched.length === 1 ? "entity has" : "entities have"} no matching SINFO ${eventId} conversation. Review the entity name or link the thread manually.`,
+      });
+      return;
+    }
+
+    toast.success({
+      title: "Sync Complete",
+      description:
+        newlyLinked > 0
+          ? `Linked ${newlyLinked} new thread(s). Total ${alreadyLinked + newlyLinked} thread(s) in sync.`
+          : "No additional Gmail threads matched this edition.",
+    });
+  } catch (err) {
+    console.error("Failed to sync threads:", err);
+    showSyncFailure(
+      [],
+      err instanceof Error ? err.message : "Failed to sync Gmail threads.",
+    );
+  }
+};
+
+const onGoogleConnected = async (userEmail?: string | null) => {
+  authStore.connectGoogle();
+  toast.success({
+    title: "Gmail Connected",
+    description: `Connected as ${userEmail || "SINFO member"}. Starting automatic sync...`,
+  });
+  await syncThreads(true);
+};
+
+const connectGoogle = async () => {
+  const userEmail = userConnectedEmail.value;
+
+  // Reuse only a token that already grants Gmail read access.
+  if (authStore.hasValidGoogleToken && authStore.hasGmailReadScope) {
+    await onGoogleConnected(userEmail);
+    return;
+  }
+
+  // Otherwise request token directly targeting the SINFO account without account picker
+  const success = await requestGoogleToken({
+    prompt: "",
+    hint: userEmail ?? undefined,
+  });
+
+  if (success) {
+    await onGoogleConnected(userConnectedEmail.value);
+  } else {
+    toast.error({
+      title: "Connection Failed",
+      description:
+        googleAuthError.value ||
+        "Could not connect to your SINFO Gmail account.",
+    });
+  }
+};
+
+const disconnectGoogle = () => {
+  authStore.disconnectGoogle();
+  toast.info({
+    title: "Gmail Disconnected",
+    description: "Your Gmail account has been disconnected.",
+  });
 };
 
 // Utility functions

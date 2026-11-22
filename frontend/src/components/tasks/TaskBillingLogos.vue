@@ -42,15 +42,15 @@
             v-if="hasBillingInfo && !isEditingBilling"
             class="p-3 bg-muted/50 rounded-md space-y-1"
           >
-            <p class="text-sm">
+            <p class="text-sm wrap-anywhere">
               <span class="font-medium">Name:</span>
               {{ billingInfo?.name }}
             </p>
-            <p class="text-sm">
+            <p class="text-sm wrap-anywhere">
               <span class="font-medium">Address:</span>
               {{ billingInfo?.address }}
             </p>
-            <p class="text-sm">
+            <p class="text-sm wrap-anywhere">
               <span class="font-medium">TIN:</span>
               {{ billingInfo?.tin }}
             </p>

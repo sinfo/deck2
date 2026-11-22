@@ -240,3 +240,20 @@ func (s *ParticipationStatus) Parse(status string) error {
 
 	return nil
 }
+
+// CommunicationStatus derives the status from the remaining outgoing and incoming
+// messages. Other statuses represent deliberate decisions and are not changed.
+func CommunicationStatus(current ParticipationStatus, hasOutgoing, hasIncoming bool) ParticipationStatus {
+	switch current {
+	case Selected, Contacted, InConversations:
+		if !hasOutgoing {
+			return Selected
+		}
+		if hasIncoming {
+			return InConversations
+		}
+		return Contacted
+	default:
+		return current
+	}
+}

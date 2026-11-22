@@ -28,7 +28,6 @@ const eventStore = useEventStore();
 
 // Setup mutation for posting threads
 const postThreadMutation = usePostCompanyThreadMutation();
-postThreadMutation.companyId.value = props.company.id;
 
 const templates = computed(() =>
   companyTemplates.map((it) => ({

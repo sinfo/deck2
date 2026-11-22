@@ -150,7 +150,7 @@ import BulkEmailDialogTrigger from "@/components/BulkEmailDialogTrigger.vue";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { CompanyWithParticipation } from "@/dto/companies";
-import type { SpeakerWithParticipation } from "@/dto/speakers";
+import type { SpeakerWithContactAndParticipation } from "@/dto/speakers";
 import { useSortByParticipationStatus } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { useEventStore } from "@/stores/event";
@@ -181,14 +181,15 @@ const onBulkCompanyEmailSuccess = (
   template: EmailTemplateCategory,
   result: BulkEmailResult,
 ) => {
-  // For each success, create the template thread
+  const threadData = {
+    kind: ThreadKind.ThreadKindTemplate,
+    text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
+  };
   for (const company of result.success) {
-    postCompanyThreadMutation.companyId.value = company.entityInfo.id;
-    postCompanyThreadMutation.threadData.value = {
-      kind: ThreadKind.ThreadKindTemplate,
-      text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
-    };
-    postCompanyThreadMutation.mutate();
+    postCompanyThreadMutation.mutate({
+      entityId: company.entityInfo.id,
+      threadData,
+    });
   }
 };
 
@@ -197,14 +198,15 @@ const onBulkSpeakerEmailSuccess = (
   template: EmailTemplateCategory,
   result: BulkEmailResult,
 ) => {
-  // For each success, create the template thread
+  const threadData = {
+    kind: ThreadKind.ThreadKindTemplate,
+    text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
+  };
   for (const speaker of result.success) {
-    postSpeakerThreadMutation.speakerId.value = speaker.entityInfo.id;
-    postSpeakerThreadMutation.threadData.value = {
-      kind: ThreadKind.ThreadKindTemplate,
-      text: `Bulk draft of "${templateCategoryHumanReadable[template]}" template`,
-    };
-    postSpeakerThreadMutation.mutate();
+    postSpeakerThreadMutation.mutate({
+      entityId: speaker.entityInfo.id,
+      threadData,
+    });
   }
 };
 
@@ -245,7 +247,7 @@ const currentSpeakersParticipation = computed(() =>
             (participation) =>
               participation.event === eventStore.selectedEvent?.id,
           ),
-        }) as SpeakerWithParticipation,
+        }) as SpeakerWithContactAndParticipation,
     )
     .filter(
       (speaker) =>

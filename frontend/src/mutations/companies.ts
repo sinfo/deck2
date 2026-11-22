@@ -29,14 +29,7 @@ import type {
   UpdateCompanyRelationshipData,
 } from "@/dto/companies";
 import type { CompanyTasks } from "@/dto/tasks";
-import {
-  ThreadStatus,
-  type CreateThread,
-  type ParticipationCommunications,
-  type ThreadWithEntry,
-} from "@/dto/threads";
-import { useAuthStore } from "@/stores/auth";
-import { useEventStore } from "@/stores/event";
+import { definePostThreadMutation } from "./postThread";
 import {
   defineMutation,
   useMutation,
@@ -223,105 +216,10 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
   };
 });
 
-export const usePostCompanyThreadMutation = defineMutation(() => {
-  const companyId = ref<string>();
-  const threadData = ref<CreateThread>();
-  const queryCache = useQueryCache();
-  const authStore = useAuthStore();
-  const eventStore = useEventStore();
-
-  const { mutate, ...mutation } = useMutation({
-    mutation: () => postThread(companyId.value!, threadData.value!),
-    onMutate: () => {
-      const key = ["company-communications", companyId.value!];
-
-      const oldVal =
-        queryCache.getQueryData<ParticipationCommunications[]>(key) ?? [];
-
-      const tempThreadId = crypto.randomUUID();
-      const tempPostId = crypto.randomUUID();
-
-      const kind = threadData.value?.kind;
-      if (!kind) throw new Error("Thread kind is required");
-
-      const now = new Date().toISOString();
-
-      const valToAdd: ThreadWithEntry = {
-        id: tempThreadId,
-        kind,
-        comments: [],
-        posted: now,
-        status: ThreadStatus.ThreadStatusPending,
-        entry: {
-          id: tempPostId,
-          member: authStore.decoded?.id,
-          posted: new Date().toISOString(),
-          text: threadData.value?.text ?? "",
-        },
-      };
-
-      const currentEventId = eventStore.selectedEvent?.id ?? 0;
-      const existingBucket = oldVal.find((it) => it.event === currentEventId);
-
-      const newVal: ParticipationCommunications[] = [
-        ...oldVal.filter((it) => it.event !== currentEventId),
-        {
-          event: currentEventId,
-          communications: existingBucket
-            ? existingBucket.communications.concat(valToAdd)
-            : [valToAdd],
-        },
-      ];
-
-      queryCache.setQueryData<ParticipationCommunications[]>(key, newVal);
-
-      return {
-        key,
-        oldVal,
-        currentEventId,
-        tempThreadId,
-      };
-    },
-
-    onSuccess: (res, _vars, ctx) => {
-      if (!ctx) return;
-      const { key, currentEventId, tempThreadId } = ctx;
-
-      const newThread = res.data;
-      const prev = queryCache.getQueryData<ParticipationCommunications[]>(key);
-      if (!prev) return;
-
-      const patched = prev.map((bucket) => {
-        if (bucket.event !== currentEventId) return bucket;
-        return {
-          ...bucket,
-          communications: bucket.communications.map((t) =>
-            String(t.id) === String(tempThreadId) ? newThread : t,
-          ),
-        };
-      });
-
-      queryCache.setQueryData<ParticipationCommunications[]>(key, patched);
-    },
-
-    onError: (err, _vars, ctx) => {
-      if (ctx?.key && ctx?.oldVal) {
-        queryCache.setQueryData<ParticipationCommunications[]>(
-          ctx.key,
-          ctx.oldVal,
-        );
-      }
-      console.error("Create company thread failed:", err);
-    },
-  });
-
-  return {
-    mutate,
-    ...mutation,
-    companyId,
-    threadData,
-  };
-});
+export const usePostCompanyThreadMutation = definePostThreadMutation(
+  "company",
+  postThread,
+);
 
 export const useCompanyImageUploadMutation = defineMutation(() => {
   const companyId = ref<string>();

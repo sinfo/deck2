@@ -57,7 +57,7 @@
 
           <div v-if="participation.notes" class="text-sm">
             <span class="font-medium">Notes:</span>
-            <div class="mt-1 text-muted-foreground">
+            <div class="mt-1 text-muted-foreground wrap-anywhere">
               {{ participation.notes }}
             </div>
           </div>

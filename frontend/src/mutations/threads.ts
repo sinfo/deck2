@@ -1,9 +1,18 @@
 import { deleteThread } from "@/api/threads.ts";
 import { defineMutation, useMutation, useQueryCache } from "@pinia/colada";
-import type { ParticipationCommunications } from "@/dto/threads.ts";
+import type {
+  CreateThread,
+  ParticipationCommunications,
+  ThreadKind,
+} from "@/dto/threads.ts";
 import { computed, ref } from "vue";
 
 export type EntityType = "speaker" | "company";
+
+export interface PostThreadVariables {
+  entityId: string;
+  threadData: CreateThread & { kind: ThreadKind };
+}
 
 export const useDeleteThreadMutation = defineMutation(() => {
   const threadId = ref<string>("");
@@ -32,7 +41,12 @@ export const useDeleteThreadMutation = defineMutation(() => {
       }));
 
       queryCache.setQueryData<ParticipationCommunications[]>(key, next);
-      return { key, prev };
+      return {
+        key,
+        prev,
+        entityId: entityId.value,
+        entityType: entityType.value,
+      };
     },
 
     // rollback on error
@@ -43,6 +57,16 @@ export const useDeleteThreadMutation = defineMutation(() => {
           ctx.prev,
         );
       }
+    },
+
+    onSettled: (_res, _err, _vars, ctx) => {
+      const id = ctx?.entityId ?? entityId.value;
+      const type = ctx?.entityType ?? entityType.value;
+      if (id) queryCache.invalidateQueries({ key: [type, id] });
+      queryCache.invalidateQueries({
+        key: [type === "company" ? "companies" : "speakers"],
+      });
+      queryCache.invalidateQueries({ key: ["responsibilities"] });
     },
   });
 
