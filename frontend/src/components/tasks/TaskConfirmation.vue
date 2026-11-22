@@ -312,9 +312,10 @@ const onPackageChange = async (newValue: unknown) => {
   const v = newValue == null ? "" : String(newValue);
   if (!v) return;
   if (!confirmCompanyChange()) {
-    selectedPackageId.value = props.participation?.package
-      ? String(props.participation.package)
-      : "";
+    selectedPackageId.value =
+      isCompanyParticipation(props.participation) && props.participation.package
+        ? String(props.participation.package)
+        : "";
     return;
   }
   try {
