@@ -52,11 +52,11 @@
       </div>
 
       <!-- Editing Form -->
-      <div v-if="isEditing">
-        <div class="mb-8 space-y-8">
+      <div v-if="isEditing" class="min-w-0 w-full">
+        <div class="mb-8 min-w-0 space-y-8">
           <CompanyRelationshipsEditor :company-id="company.id" />
           <CompanyClosureEditor :company="company" />
-          <EditSectionHeading title="Company Details" :icon="Building2Icon" />
+          <EditSectionHeading title="Company Details" />
         </div>
         <CompanyInfoForm
           :initial-data="{
@@ -188,7 +188,7 @@ import CompanyRelationshipsEditor from "../companies/CompanyRelationshipsEditor.
 import CompanyClosureEditor from "../companies/CompanyClosureEditor.vue";
 import EditSectionHeading from "../companies/EditSectionHeading.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Building2Icon, TrashIcon } from "lucide-vue-next";
+import { TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
 

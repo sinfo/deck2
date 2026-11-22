@@ -1,17 +1,13 @@
 <template>
-  <div class="space-y-4">
-    <EditSectionHeading
-      title="Company Relationships"
-      :icon="NetworkIcon"
-      description="Acquisitions, mergers and rebrands. Changes are saved immediately and also shown on the related company."
-    />
+  <div class="min-w-0 w-full space-y-4">
+    <EditSectionHeading title="Company Relationships" />
 
     <!-- Existing relationships -->
     <ul v-if="relationships?.length" class="space-y-2">
       <li
         v-for="rel in relationships"
         :key="`${rel.type}-${rel.company}`"
-        class="space-y-1.5 rounded-md border px-2 py-1.5 text-sm"
+        class="min-w-0 space-y-1.5 rounded-md border px-2 py-1.5 text-sm"
       >
         <div class="flex items-center gap-2">
           <span class="text-muted-foreground whitespace-nowrap">
@@ -57,7 +53,7 @@
     <p v-else class="text-xs text-muted-foreground">No relationships yet.</p>
 
     <!-- New relationship: created as soon as a company is chosen -->
-    <div class="space-y-3 rounded-md border border-dashed p-3">
+    <div class="min-w-0 space-y-3 rounded-md border border-dashed p-3">
       <div class="space-y-2">
         <Label for="relationship-type" class="text-sm font-medium">
           This company…
@@ -69,7 +65,7 @@
           :disabled="isAdding"
         >
           <option
-            v-for="(label, type) in companyRelationshipLabels"
+            v-for="[type, label] in relationshipOptions"
             :key="type"
             :value="type"
           >
@@ -128,7 +124,7 @@
 import { computed, ref } from "vue";
 import { useQuery } from "@pinia/colada";
 import createFuzzySearch from "@nozbe/microfuzz";
-import { NetworkIcon, XIcon } from "lucide-vue-next";
+import { XIcon } from "lucide-vue-next";
 import { getAllCompanies } from "@/api/companies";
 import {
   companyRelationshipLabels,
@@ -151,6 +147,9 @@ import Image from "../Image.vue";
 import EditSectionHeading from "./EditSectionHeading.vue";
 
 const MAX_SEARCH_RESULTS = 8;
+const relationshipOptions = Object.entries(companyRelationshipLabels).filter(
+  ([type]) => type !== "REBRANDED_TO",
+);
 
 const props = defineProps<{
   companyId: string;

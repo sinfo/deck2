@@ -1,10 +1,6 @@
 <template>
-  <div class="space-y-3">
-    <EditSectionHeading
-      title="Company Status"
-      :icon="ActivityIcon"
-      description="Mark the company as bankrupt or banned. Changes are saved immediately."
-    />
+  <div class="min-w-0 w-full space-y-3">
+    <EditSectionHeading title="Company Status" />
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <div class="space-y-2">
@@ -47,7 +43,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { ActivityIcon } from "lucide-vue-next";
 import {
   companyClosureLabels,
   type Company,
