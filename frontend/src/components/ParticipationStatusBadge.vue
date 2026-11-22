@@ -1,5 +1,5 @@
 <template>
-  <Popover :open="isStatusMenuOpen" @update:open="isStatusMenuOpen = $event">
+  <Popover :open="isStatusMenuOpen" @update:open="setStatusMenuOpen">
     <PopoverTrigger as-child>
       <Badge
         :class="participationStatusColor[currentStatus]?.background"
@@ -76,11 +76,16 @@ watch(
 import { useCompanyParticipationStatusMutation } from "@/mutations/companies";
 import { useSpeakerParticipationStatusMutation } from "@/mutations/speakers";
 
+const setStatusMenuOpen = (open: boolean) => {
+  if (open && !confirmCompanyChange()) return;
+  isStatusMenuOpen.value = open;
+};
+
 const companyStatusMutation = useCompanyParticipationStatusMutation();
 const speakerStatusMutation = useSpeakerParticipationStatusMutation();
 
 const selectStatus = async (status: ParticipationStatus) => {
-  if (status === currentStatus.value || !confirmCompanyChange()) {
+  if (status === currentStatus.value) {
     isStatusMenuOpen.value = false;
     return;
   }

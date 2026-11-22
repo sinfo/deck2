@@ -35,7 +35,7 @@
 
           <!-- Action buttons -->
           <div v-if="canEdit" class="flex gap-2">
-            <Popover v-model:open="isEditFormOpen">
+            <Popover :open="isEditFormOpen" @update:open="setEditFormOpen">
               <PopoverTrigger as-child>
                 <Button variant="outline" size="sm" :disabled="isSaving">
                   Edit
@@ -72,7 +72,11 @@
               </PopoverContent>
             </Popover>
 
-            <Popover v-if="canDelete" v-model:open="isDeleteConfirmOpen">
+            <Popover
+              v-if="canDelete"
+              :open="isDeleteConfirmOpen"
+              @update:open="setDeleteConfirmOpen"
+            >
               <PopoverTrigger as-child>
                 <Button
                   variant="outline"
@@ -292,6 +296,16 @@ const popoverSide = computed(() => {
 
 const isEditFormOpen = ref(false);
 const isDeleteConfirmOpen = ref(false);
+
+const setEditFormOpen = (open: boolean) => {
+  if (open && !confirmCompanyChange()) return;
+  isEditFormOpen.value = open;
+};
+
+const setDeleteConfirmOpen = (open: boolean) => {
+  if (open && !confirmCompanyChange()) return;
+  isDeleteConfirmOpen.value = open;
+};
 const queryCache = useQueryCache();
 
 const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
@@ -308,7 +322,7 @@ const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
 });
 
 const handleUpdateContact = async (data: CreateCompanyRepData) => {
-  if (!props.contact?.id || !confirmCompanyChange()) return;
+  if (!props.contact?.id) return;
 
   // Extract contact data from the form data
   const contactData: CreateContactData = {

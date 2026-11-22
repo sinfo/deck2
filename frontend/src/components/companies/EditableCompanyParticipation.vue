@@ -288,6 +288,7 @@ const { data: membersData } = useQuery({
 });
 
 const startEditing = () => {
+  if (!confirmCompanyChange()) return;
   // entering edit mode for participation
   isEditing.value = true;
   editForm.member = props.participation.member;
@@ -358,10 +359,6 @@ const onPackageChange = async () => {
     ? String(props.participation.package)
     : "";
   if (selectedPackageId.value === previous) return;
-  if (!confirmCompanyChange()) {
-    selectedPackageId.value = previous;
-    return;
-  }
   try {
     isPackageUpdating.value = true;
     packageMutation.packageId.value = selectedPackageId.value;
@@ -404,7 +401,6 @@ const cancelEditing = () => {
 };
 
 const saveChanges = async () => {
-  if (!confirmCompanyChange()) return;
   isSaving.value = true;
 
   try {

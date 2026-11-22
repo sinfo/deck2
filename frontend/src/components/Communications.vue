@@ -47,7 +47,7 @@
                       : '',
                   ]"
                   :disabled="!selectedEventId"
-                  @click="openGmailPicker"
+                  @click="openGmailPickerForEdit"
                 >
                   <GmailIcon class="w-4 h-4 mr-1.5" />
                   <span>View Threads</span>
@@ -158,7 +158,7 @@
               variant="outline"
               size="sm"
               class="gap-1.5 text-xs"
-              @click="openGmailPicker"
+              @click="openGmailPickerForEdit"
             >
               <Link2 class="w-3.5 h-3.5" />
               Link Gmail thread manually
@@ -207,7 +207,7 @@
             variant="outline"
             size="sm"
             class="h-7 text-xs px-2.5 border-amber-500/30 hover:bg-amber-500/20 flex-shrink-0 gap-1"
-            @click="openGmailPicker"
+            @click="openGmailPickerForEdit"
           >
             <Link2 class="w-3 h-3" />
             Link thread
@@ -331,7 +331,7 @@
     v-model:open="isGmailPickerOpen"
     :initial-thread-ids="gmailPickerThreadIds"
     :default-search-query="gmailPickerDefaultQuery"
-    @save="confirmCompanyChange() && handleGmailThreadsSave($event)"
+    @save="handleGmailThreadsSave"
   />
 
   <MissingGenderDialog v-model:open="isMissingGenderDialogOpen" />
@@ -536,7 +536,7 @@ const onMessageInput = () => {
 };
 
 const startEdit = (thread: ThreadWithEntry) => {
-  if (!thread.entry) return;
+  if (!thread.entry || !confirmCompanyChange()) return;
 
   editingThreadId.value = thread.id;
   editingPostId.value = thread.entry.id;
@@ -592,10 +592,15 @@ const {
   communications: sortedCommunications,
 });
 
+const openGmailPickerForEdit = () => {
+  if (!confirmCompanyChange()) return;
+  openGmailPicker();
+};
+
 const saveEdit = async () => {
   const id = editingPostId.value;
   const text = editText.value.trim();
-  if (!id || !text || !confirmCompanyChange()) return;
+  if (!id || !text) return;
 
   updatePostMutation.postId.value = id;
   updatePostMutation.text.value = text;

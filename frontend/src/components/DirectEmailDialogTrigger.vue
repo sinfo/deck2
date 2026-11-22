@@ -193,6 +193,7 @@ const availableTemplates = computed(() => {
 });
 
 const openDialog = () => {
+  if (!confirmCompanyChange()) return;
   isDialogOpen.value = true;
 };
 
@@ -242,8 +243,6 @@ const handleSendEmail = async () => {
   if (!selectedTemplate.value || selectedEmails.value.length === 0) {
     return;
   }
-  if (!confirmCompanyChange()) return;
-
   // reset previous result
   sendResult.value = null;
 

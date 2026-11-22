@@ -134,6 +134,7 @@ const { mutate: updateBilling, isLoading: isUpdating } = billingMutation;
 const { isCoordinatorOrAdmin: canSeeContract } = usePermissions();
 
 const startEditing = () => {
+  if (!confirmCompanyChange()) return;
   isEditing.value = true;
 };
 
@@ -142,7 +143,7 @@ const cancelEditing = () => {
 };
 
 const handleSubmit = async (billingInfo: CompanyBillingInfo) => {
-  if (!props.company?.id || !confirmCompanyChange()) return;
+  if (!props.company?.id) return;
 
   billingMutation.companyId.value = props.company.id;
   billingMutation.billingInfo.value = billingInfo;

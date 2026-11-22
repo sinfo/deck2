@@ -181,6 +181,7 @@ const billingMutation = useCompanyBillingMutation();
 const { mutate: updateBilling, isLoading: isUpdatingBilling } = billingMutation;
 
 const startEditingBilling = () => {
+  if (!confirmCompanyChange()) return;
   isEditingBilling.value = true;
 };
 
@@ -189,7 +190,7 @@ const cancelEditingBilling = () => {
 };
 
 const handleBillingSubmit = async (data: CompanyBillingInfo) => {
-  if (!props.entityId || !confirmCompanyChange()) return;
+  if (!props.entityId) return;
 
   billingMutation.companyId.value = props.entityId;
   billingMutation.billingInfo.value = data;

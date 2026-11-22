@@ -20,7 +20,7 @@
           >
             <GripVerticalIcon class="w-4 h-4" />
           </Button>
-          <Popover v-model:open="isAddFormOpen">
+          <Popover :open="isAddFormOpen" @update:open="setAddFormOpen">
             <PopoverTrigger as-child>
               <Button variant="outline" size="sm"> Add </Button>
             </PopoverTrigger>
@@ -75,7 +75,7 @@
         v-if="!representatives.length"
         class="text-center text-muted-foreground py-8"
         title="Click here to add representatives"
-        @click="isAddFormOpen = true"
+        @click="setAddFormOpen(true)"
       />
 
       <div v-else class="space-y-4">
@@ -197,6 +197,11 @@ const props = defineProps<{
 const queryCache = useQueryCache();
 const isAddFormOpen = ref(false);
 
+const setAddFormOpen = (open: boolean) => {
+  if (open && !confirmCompanyChange()) return;
+  isAddFormOpen.value = open;
+};
+
 // Reorder state
 const isReorderMode = ref(false);
 const representativeOrder = ref<string[]>([]);
@@ -293,7 +298,6 @@ const { mutateAsync: deleteRep, isLoading: isDeleting } = useMutation({
 const updateOrderMutation = useUpdateRepresentativeOrderMutation();
 
 const handleCreateRepresentative = async (data: CreateCompanyRepData) => {
-  if (!confirmCompanyChange()) return;
   try {
     // If we're in reorder mode, save the current order before exiting
     if (isReorderMode.value) {
@@ -316,7 +320,6 @@ const handleContactUpdated = () => {
 };
 
 const handleDeleteRepresentative = async (repId: string) => {
-  if (!confirmCompanyChange()) return;
   try {
     await deleteRep(repId);
 
@@ -350,8 +353,8 @@ const updateRepresentativeOrder = async (orderIds: string[]) => {
 
 // Reorder functions
 const toggleReorderMode = () => {
+  if (!isReorderMode.value && !confirmCompanyChange()) return;
   if (isReorderMode.value) {
-    if (!confirmCompanyChange()) return;
     // If we're exiting, make update order backend call
     updateRepresentativeOrder(representativeOrder.value);
   }
