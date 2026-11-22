@@ -161,6 +161,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useMutation, useQueryCache } from "@pinia/colada";
 import type { CompanyRep, CreateCompanyRepData } from "@/dto/companies";
@@ -185,6 +186,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import ContactForm from "./ContactForm.vue";
 import ContactCard from "../ContactCard.vue";
 import EmptyStateCard from "../ui/EmptyStateCard.vue";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 const props = defineProps<{
   representatives: CompanyRep[];
@@ -290,6 +293,7 @@ const { mutateAsync: deleteRep, isLoading: isDeleting } = useMutation({
 const updateOrderMutation = useUpdateRepresentativeOrderMutation();
 
 const handleCreateRepresentative = async (data: CreateCompanyRepData) => {
+  if (!confirmCompanyChange()) return;
   try {
     // If we're in reorder mode, save the current order before exiting
     if (isReorderMode.value) {
@@ -312,6 +316,7 @@ const handleContactUpdated = () => {
 };
 
 const handleDeleteRepresentative = async (repId: string) => {
+  if (!confirmCompanyChange()) return;
   try {
     await deleteRep(repId);
 
@@ -346,6 +351,7 @@ const updateRepresentativeOrder = async (orderIds: string[]) => {
 // Reorder functions
 const toggleReorderMode = () => {
   if (isReorderMode.value) {
+    if (!confirmCompanyChange()) return;
     // If we're exiting, make update order backend call
     updateRepresentativeOrder(representativeOrder.value);
   }

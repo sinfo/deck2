@@ -75,7 +75,7 @@
                     currentParticipationGmailThreadIds.length === 0 ||
                     isSyncing
                   "
-                  @click="syncGmailMessages()"
+                  @click="confirmCompanyChange() && syncGmailMessages()"
                 >
                   <RefreshCw
                     :size="16"
@@ -331,13 +331,14 @@
     v-model:open="isGmailPickerOpen"
     :initial-thread-ids="gmailPickerThreadIds"
     :default-search-query="gmailPickerDefaultQuery"
-    @save="handleGmailThreadsSave"
+    @save="confirmCompanyChange() && handleGmailThreadsSave($event)"
   />
 
   <MissingGenderDialog v-model:open="isMissingGenderDialogOpen" />
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, watch, nextTick, toRef } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
@@ -395,6 +396,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface TemplateWithVariables {
   template: EmailTemplate;
@@ -592,7 +595,7 @@ const {
 const saveEdit = async () => {
   const id = editingPostId.value;
   const text = editText.value.trim();
-  if (!id || !text) return;
+  if (!id || !text || !confirmCompanyChange()) return;
 
   updatePostMutation.postId.value = id;
   updatePostMutation.text.value = text;
@@ -611,7 +614,7 @@ const requestDelete = async (thread: ThreadWithEntry) => {
   const ok = window.confirm(
     "Delete this message? This action cannot be undone.",
   );
-  if (!ok) return;
+  if (!ok || !confirmCompanyChange()) return;
 
   deleteThreadMutation.threadId.value = thread.id;
 
@@ -674,7 +677,8 @@ watch(
 
 const sendMessage = async () => {
   const text = newMessage.value;
-  if (!text.trim() || !props.postThreadMutation) return;
+  if (!text.trim() || !props.postThreadMutation || !confirmCompanyChange())
+    return;
 
   const entityId = props.entity.id;
   const eventId = selectedEventId.value;

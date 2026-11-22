@@ -161,6 +161,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed } from "vue";
 import type {
   CompanyWithParticipation,
@@ -190,6 +191,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Building2Icon, TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 const props = defineProps<{
   company: CompanyWithParticipation;
@@ -315,7 +318,7 @@ const canDelete = computed(() => {
 });
 
 const handleDelete = async () => {
-  if (!props.company?.id) return;
+  if (!props.company?.id || !confirmCompanyChange()) return;
   isDeleting.value = true;
   try {
     await deleteCompany(props.company.id);

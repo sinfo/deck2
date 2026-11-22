@@ -132,6 +132,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
 import { useCreateCompanyParticipationMutation } from "@/mutations/companies";
@@ -157,6 +158,8 @@ import { useQuery } from "@pinia/colada";
 import { computed } from "vue";
 import Image from "./Image.vue";
 import EmptyStateCard from "./ui/EmptyStateCard.vue";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 type Participation = CompanyParticipation | SpeakerParticipation;
 
@@ -254,7 +257,7 @@ const isSpeakerParticipation = (
 };
 
 const createParticipation = async () => {
-  if (isCreatingParticipation.value) return;
+  if (isCreatingParticipation.value || !confirmCompanyChange()) return;
 
   const currentEvent = getCurrentEvent();
   if (!currentEvent) return;

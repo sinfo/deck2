@@ -85,6 +85,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed } from "vue";
 import { useCompanyBillingMutation } from "@/mutations/companies";
 import type { Company, CompanyBillingInfo } from "@/dto/companies";
@@ -98,6 +99,8 @@ import BillingForm from "./BillingForm.vue";
 import EmptyStateCard from "../ui/EmptyStateCard.vue";
 import ContractDownload from "./ContractDownload.vue";
 import { usePermissions } from "@/composables/usePermissions";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   company?: Company;
@@ -139,7 +142,7 @@ const cancelEditing = () => {
 };
 
 const handleSubmit = async (billingInfo: CompanyBillingInfo) => {
-  if (!props.company?.id) return;
+  if (!props.company?.id || !confirmCompanyChange()) return;
 
   billingMutation.companyId.value = props.company.id;
   billingMutation.billingInfo.value = billingInfo;

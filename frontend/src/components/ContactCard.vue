@@ -223,6 +223,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useMutation, useQueryCache } from "@pinia/colada";
 import type { Contact } from "@/dto/contacts";
@@ -239,6 +240,8 @@ import ContactForm from "./companies/ContactForm.vue";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { ClipboardIcon, CheckIcon } from "lucide-vue-next";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   contact?: Contact;
@@ -305,7 +308,7 @@ const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
 });
 
 const handleUpdateContact = async (data: CreateCompanyRepData) => {
-  if (!props.contact?.id) return;
+  if (!props.contact?.id || !confirmCompanyChange()) return;
 
   // Extract contact data from the form data
   const contactData: CreateContactData = {

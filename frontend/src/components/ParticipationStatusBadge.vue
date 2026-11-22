@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, watch } from "vue";
 import {
   humanReadableParticipationStatus,
@@ -43,6 +44,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ChevronDown, Loader2 } from "lucide-vue-next";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   status: ParticipationStatus;
@@ -77,6 +80,10 @@ const companyStatusMutation = useCompanyParticipationStatusMutation();
 const speakerStatusMutation = useSpeakerParticipationStatusMutation();
 
 const selectStatus = async (status: ParticipationStatus) => {
+  if (status === currentStatus.value || !confirmCompanyChange()) {
+    isStatusMenuOpen.value = false;
+    return;
+  }
   const previous = currentStatus.value;
   currentStatus.value = status;
   isStatusMenuOpen.value = false;

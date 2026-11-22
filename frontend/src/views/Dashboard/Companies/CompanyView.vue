@@ -101,6 +101,7 @@
 import { getCompanyById, getCompanyRepresentatives } from "@/api/companies";
 import CompanyCard from "@/components/cards/CompanyCard.vue";
 import CompanyStatusBanners from "@/components/companies/CompanyStatusBanners.vue";
+import { companyArchiveConfirmationKey } from "@/composables/useCompanyArchiveConfirmation";
 import CompanyBillingInfo from "@/components/companies/CompanyBillingInfo.vue";
 import CompanyContacts from "@/components/companies/CompanyContacts.vue";
 import DirectEmailDialogTrigger from "@/components/DirectEmailDialogTrigger.vue";
@@ -109,7 +110,7 @@ import { withCurrentParticipation } from "@/lib/utils";
 import { useEventStore } from "@/stores/event";
 
 import { useQuery, useQueryCache } from "@pinia/colada";
-import { computed, ref, watch } from "vue";
+import { computed, provide, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Info from "./Info/Info.vue";
 import TabsList from "@/components/ui/tabs/TabsList.vue";
@@ -165,6 +166,13 @@ const companyWithParticipation = computed(() => {
     eventStore.selectedEvent,
   ) as CompanyWithParticipation;
 });
+
+provide(companyArchiveConfirmationKey, () =>
+  companyWithParticipation.value?.closure?.type !== "BANKRUPT" ||
+  window.confirm(
+    "This company went bankrupt and is no longer operating. Its page is preserved for historical reference and should only be updated when necessary.\n\nAre you sure you want to make this change?",
+  ),
+);
 </script>
 
 <style scoped>

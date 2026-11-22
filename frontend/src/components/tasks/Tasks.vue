@@ -142,6 +142,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, reactive, watch, provide } from "vue";
 import type { EntityType } from "@/dto/tasks";
 import {
@@ -187,6 +188,8 @@ import TaskMaterials from "./TaskMaterials.vue";
 import TaskHotel from "./TaskHotel.vue";
 import TaskTestSchedule from "./TaskTestSchedule.vue";
 import TaskImages from "./TaskImages.vue";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   entityType: EntityType;
@@ -274,6 +277,18 @@ function scheduleSave(delayMs = 600) {
   saveTimer = setTimeout(async () => {
     saveTimer = null;
     if (isSaving.value) return; // already saving
+    if (props.entityType === "company" && !confirmCompanyChange()) {
+      isSyncing = true;
+      Object.assign(
+        companyTasks,
+        emptyCompanyTasks(),
+        props.participation?.tasks ?? {},
+      );
+      setTimeout(() => {
+        isSyncing = false;
+      }, 0);
+      return;
+    }
     isSaving.value = true;
     try {
       if (props.entityType === "company") {

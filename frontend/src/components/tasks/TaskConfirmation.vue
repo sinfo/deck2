@@ -105,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, watch } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
@@ -141,6 +142,8 @@ import { updateContact } from "@/api/contacts";
 import useToast from "@/lib/toast";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import { CalendarCheck } from "lucide-vue-next";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   entityId: string;
@@ -282,6 +285,12 @@ companyParticipationMutation.companyId.value = props.entityId;
 
 const onConfirmedDateChange = async (newValue: Date | null) => {
   if (!newValue) return;
+  if (!confirmCompanyChange()) {
+    confirmedDate.value = isCompanyParticipation(props.participation)
+      ? parseIsoToDate(props.participation?.confirmed || null)
+      : null;
+    return;
+  }
   try {
     isDateUpdating.value = true;
     const isoDate = newValue.toISOString();
@@ -302,6 +311,12 @@ const onConfirmedDateChange = async (newValue: Date | null) => {
 const onPackageChange = async (newValue: unknown) => {
   const v = newValue == null ? "" : String(newValue);
   if (!v) return;
+  if (!confirmCompanyChange()) {
+    selectedPackageId.value = props.participation?.package
+      ? String(props.participation.package)
+      : "";
+    return;
+  }
   try {
     isPackageUpdating.value = true;
     packageMutation.packageId.value = v;

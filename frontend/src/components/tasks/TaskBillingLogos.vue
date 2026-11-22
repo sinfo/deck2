@@ -119,6 +119,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, watch } from "vue";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -144,6 +145,8 @@ import Button from "@/components/ui/button/Button.vue";
 import EmptyStateCard from "@/components/ui/EmptyStateCard.vue";
 import StatusToggleBadge from "./StatusToggleBadge.vue";
 import { useCompanyBillingMutation } from "@/mutations/companies";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   entityType: EntityType;
@@ -186,7 +189,7 @@ const cancelEditingBilling = () => {
 };
 
 const handleBillingSubmit = async (data: CompanyBillingInfo) => {
-  if (!props.entityId) return;
+  if (!props.entityId || !confirmCompanyChange()) return;
 
   billingMutation.companyId.value = props.entityId;
   billingMutation.billingInfo.value = data;
