@@ -1,40 +1,29 @@
 <template>
   <div v-if="company.closure" class="space-y-3">
-    <!-- Bankrupt / banned -->
     <div
-      v-if="company.closure"
       role="alert"
       class="rounded-xl border border-dashed text-foreground"
       :class="
         isBankrupt
           ? 'border-amber-500/40 bg-amber-500/10'
-          : 'border-foreground/30 bg-muted/40'
+          : 'border-red-500/40 bg-red-500/10'
       "
     >
-      <div
-        class="flex items-start gap-3 px-4"
-        :class="isBankrupt ? 'py-4' : 'py-3'"
-      >
+      <div class="flex items-start gap-3 px-4 py-4">
         <component
           :is="closureIcon"
           class="shrink-0"
           :class="
             isBankrupt
               ? 'mt-0.5 h-5 w-5 text-amber-700 dark:text-amber-400'
-              : 'h-4 w-4 text-muted-foreground'
+              : 'mt-0.5 h-5 w-5 text-red-700 dark:text-red-400'
           "
         />
         <div class="min-w-0 space-y-1">
-          <p
-            class="font-semibold uppercase tracking-wide"
-            :class="isBankrupt ? 'text-base' : 'text-sm'"
-          >
+          <p class="text-base font-semibold uppercase tracking-wide">
             {{ companyClosureLabels[company.closure.type] }}
           </p>
-          <p
-            class="text-muted-foreground leading-snug"
-            :class="isBankrupt ? 'text-sm' : 'text-xs'"
-          >
+          <p class="text-sm leading-snug text-muted-foreground">
             {{ closureDescription }}
           </p>
         </div>
@@ -66,9 +55,10 @@ const closureDescription = computed(() => {
   const date = closure.since ? formatMonthYear(closure.since) : null;
 
   if (closure.type === "BANNED") {
-    return date
+    const ban = date
       ? `This company has been banned since ${date}.`
       : "This company is banned.";
+    return `${ban} This page is retained for historical reference and should only be updated when necessary.`;
   }
 
   const bankruptcy = date

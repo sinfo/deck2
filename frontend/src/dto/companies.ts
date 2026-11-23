@@ -62,14 +62,14 @@ export type CompanyRelationshipType =
   | "ABSORBED"
   | "REBRANDED_FROM";
 
-// Keep the stored ABSORBED value while showing the merger under one clear label.
+// Keep the stored ABSORBED value while making the merger direction explicit.
 export const companyRelationshipLabels: Record<
   CompanyRelationshipType,
   string
 > = {
   SUBSIDIARY_OF: "Part of",
   PARENT_OF: "Owns",
-  ABSORBED: "Merged with",
+  ABSORBED: "Merged into this company",
   REBRANDED_FROM: "Formerly known as",
 };
 
