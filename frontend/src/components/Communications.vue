@@ -273,7 +273,9 @@
                 variant="outline"
                 class="max-w-[85%] flex-col gap-0.5 whitespace-normal bg-muted/50 px-3 py-1.5 text-center font-normal"
               >
-                <span class="flex items-center justify-center gap-1.5 font-medium">
+                <span
+                  class="flex items-center justify-center gap-1.5 font-medium"
+                >
                   <History class="h-3.5 w-3.5 shrink-0" />
                   {{ item.milestone.label }}
                 </span>
