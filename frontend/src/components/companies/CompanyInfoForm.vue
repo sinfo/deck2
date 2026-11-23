@@ -2,10 +2,10 @@
   <div class="flex flex-col h-full">
     <!-- Form Content -->
     <div class="flex-1 space-y-6">
-      <!-- Company Name Field -->
+      <!-- Name Field -->
       <div class="space-y-2">
         <Label for="company-name" class="text-sm font-medium"
-          >Company Name *</Label
+          >Name *</Label
         >
         <Input
           id="company-name"
@@ -71,7 +71,10 @@
     </div>
 
     <!-- Form Actions -->
-    <div class="flex justify-end gap-3 pt-6 border-t">
+    <div
+      class="flex justify-end gap-3 pt-6"
+      :class="{ 'border-t': mode !== 'edit' }"
+    >
       <Button variant="outline" :disabled="isLoading" @click="$emit('cancel')">
         Cancel
       </Button>

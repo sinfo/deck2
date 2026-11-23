@@ -12,7 +12,13 @@
         : 'hover:shadow-lg'
     "
   >
-    <CardHeader>
+    <CardHeader
+      :class="
+        isEditing
+          ? 'h-[min(70vh,40rem)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden'
+          : ''
+      "
+    >
       <div class="flex items-center justify-between mb-4">
         <CardTitle class="text-lg">Company Information</CardTitle>
         <div class="flex items-center gap-2">
@@ -52,9 +58,13 @@
       </div>
 
       <!-- Editing Form -->
-      <div v-if="isEditing" class="min-w-0 w-full">
+      <div
+        v-if="isEditing"
+        class="-mx-6 h-full min-h-0 min-w-0 overflow-y-auto px-6 pb-6"
+      >
         <EditSectionHeading title="Company Details" />
         <CompanyInfoForm
+          class="mt-5"
           :initial-data="{
             name: company.name,
             description: company.description,
