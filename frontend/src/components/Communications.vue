@@ -630,7 +630,10 @@ const timelineItems = computed<TimelineItem[]>(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const groups = new Map<string, Extract<TimelineItem, { kind: "milestone" }>>();
+  const groups = new Map<
+    string,
+    Extract<TimelineItem, { kind: "milestone" }>
+  >();
   for (const milestone of relationshipMilestones.value) {
     const date = milestone.since?.slice(0, 10) ?? "undated";
     const group = groups.get(date);
