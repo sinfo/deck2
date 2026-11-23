@@ -67,6 +67,7 @@
         :disabled="isLoading"
         @file-selected="handleImageSelected"
       />
+      <slot name="after-fields" />
     </div>
 
     <!-- Form Actions -->

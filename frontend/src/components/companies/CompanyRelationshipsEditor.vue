@@ -1,6 +1,6 @@
 <template>
   <div class="min-w-0 w-full space-y-4">
-    <EditSectionHeading title="Company Relationships" />
+    <EditSectionHeading title="Company Relationships" divider />
 
     <!-- Existing relationships -->
     <ul v-if="relationships?.length" class="space-y-2">
@@ -54,7 +54,7 @@
 
     <!-- New relationship: created as soon as a company is chosen -->
     <div class="min-w-0 space-y-3">
-      <div class="space-y-2">
+      <div class="space-y-2 [&_[data-slot=native-select-wrapper]]:w-full">
         <Label for="relationship-type" class="text-sm font-medium">
           Relationship type
         </Label>

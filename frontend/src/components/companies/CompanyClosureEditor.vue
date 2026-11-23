@@ -1,9 +1,9 @@
 <template>
   <div class="min-w-0 w-full space-y-3">
-    <EditSectionHeading title="Company Status" />
+    <EditSectionHeading title="Company Status" divider />
 
-    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <div class="space-y-2">
+    <div class="space-y-3">
+      <div class="space-y-2 [&_[data-slot=native-select-wrapper]]:w-full">
         <Label for="closure-type" class="text-sm font-medium">Status</Label>
         <NativeSelect
           id="closure-type"
@@ -23,11 +23,12 @@
         </NativeSelect>
       </div>
 
-      <div v-if="selectedType" class="space-y-2">
+      <div v-if="selectedType" class="flex flex-wrap items-center gap-3">
         <Label for="closure-since" class="text-sm font-medium">Since</Label>
         <Input
           id="closure-since"
           type="date"
+          class="w-full max-w-48 flex-1"
           :model-value="toDateInputValue(company.closure?.since)"
           :disabled="isLoading"
           @change="handleDateChange"

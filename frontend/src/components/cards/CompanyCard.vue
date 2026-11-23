@@ -53,11 +53,7 @@
 
       <!-- Editing Form -->
       <div v-if="isEditing" class="min-w-0 w-full">
-        <div class="mb-8 min-w-0 space-y-8">
-          <CompanyRelationshipsEditor :company-id="company.id" />
-          <CompanyClosureEditor :company="company" />
-          <EditSectionHeading title="Company Details" />
-        </div>
+        <EditSectionHeading title="Company Details" />
         <CompanyInfoForm
           :initial-data="{
             name: company.name,
@@ -70,7 +66,14 @@
           @submit="handleSubmit"
           @cancel="cancelEditing"
           @image-selected="handleImageSelected"
-        />
+        >
+          <template #after-fields>
+            <div class="space-y-8 pt-4">
+              <CompanyRelationshipsEditor :company-id="company.id" />
+              <CompanyClosureEditor :company="company" />
+            </div>
+          </template>
+        </CompanyInfoForm>
       </div>
 
       <!-- Display Mode -->
