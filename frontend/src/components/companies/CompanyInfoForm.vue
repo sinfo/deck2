@@ -4,9 +4,7 @@
     <div class="flex-1 space-y-6">
       <!-- Name Field -->
       <div class="space-y-2">
-        <Label for="company-name" class="text-sm font-medium"
-          >Name *</Label
-        >
+        <Label for="company-name" class="text-sm font-medium">Name *</Label>
         <Input
           id="company-name"
           v-model="formData.name"
