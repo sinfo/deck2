@@ -130,7 +130,9 @@
       </div>
 
       <div
-        v-else-if="!sortedCommunications?.length && !relationshipMilestones.length"
+        v-else-if="
+          !sortedCommunications?.length && !relationshipMilestones.length
+        "
         class="flex-1 flex items-center justify-center p-6"
       >
         <!-- Notice when entity is contacted but no Gmail thread could be linked -->
@@ -301,11 +303,15 @@
                 class="font-normal text-[11px] gap-1 py-0.5"
               >
                 <LinkedInIcon
-                  v-if="getThreadChannel(item.thread) === ThreadChannel.LinkedIn"
+                  v-if="
+                    getThreadChannel(item.thread) === ThreadChannel.LinkedIn
+                  "
                   class="w-3 h-3 rounded-[2px]"
                 />
                 <MessageSquare
-                  v-else-if="getThreadChannel(item.thread) === ThreadChannel.Other"
+                  v-else-if="
+                    getThreadChannel(item.thread) === ThreadChannel.Other
+                  "
                   class="w-3 h-3 text-zinc-500"
                 />
                 <GmailIcon v-else class="w-3 h-3" />
