@@ -664,6 +664,34 @@ func setCompanyPackage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// deleteCompanyPackage removes the package from a company's participation on the current event.
+func deleteCompanyPackage(w http.ResponseWriter, r *http.Request) {
+
+	params := mux.Vars(r)
+	companyID, _ := primitive.ObjectIDFromHex(params["id"])
+
+	if _, err := mongodb.Companies.GetCompany(companyID); err != nil {
+		http.Error(w, "Invalid company ID: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	updatedCompany, err := mongodb.Companies.RemovePackage(companyID)
+	if err != nil {
+		http.Error(w, "Could not remove company's package: "+err.Error(), http.StatusExpectationFailed)
+		return
+	}
+
+	json.NewEncoder(w).Encode(updatedCompany)
+
+	// notify
+	if credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials); ok {
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindDeletedParticipationPackage,
+			Company: &updatedCompany.ID,
+		})
+	}
+}
+
 func addCompanyParticipationBilling(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()

@@ -1365,6 +1365,39 @@ func (c *CompaniesType) UpdatePackage(companyID primitive.ObjectID, packageID pr
 	return &updatedCompany, nil
 }
 
+// RemovePackage removes the package of a company's participation related to the current event.
+func (c *CompaniesType) RemovePackage(companyID primitive.ObjectID) (*models.Company, error) {
+
+	ctx := context.Background()
+	currentEvent, err := Events.GetCurrentEvent()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$unset": bson.M{
+			"participations.$.package": "",
+		},
+	}
+
+	var filterQuery = bson.M{"_id": companyID, "participations.event": currentEvent.ID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("Error removing company's participation's package:", err)
+		return nil, err
+	}
+
+	ResetCurrentPublicCompanies()
+
+	return &updatedCompany, nil
+}
+
 // UpdateBilling updates the billing of a company's participation related to the current event.
 // Uses a models.Billing ID to store this information.
 func (c *CompaniesType) UpdateBilling(companyID primitive.ObjectID, billingID primitive.ObjectID, event int) (*models.Company, error) {
