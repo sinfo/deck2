@@ -123,6 +123,7 @@
                   <SelectValue placeholder="Select package" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem :value="NO_PACKAGE_VALUE">None</SelectItem>
                   <SelectItem
                     v-for="opt in packageOptions"
                     :key="opt.id"
@@ -170,13 +171,16 @@ import useToast from "@/lib/toast";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import { useCompanyParticipationMutation } from "@/mutations/companies";
+import {
+  useCompanyParticipationMutation,
+  useCompanyParticipationPackageMutation,
+  useDeleteCompanyParticipationPackageMutation,
+} from "@/mutations/companies";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import MemberSelect from "@/components/members/MemberSelect.vue";
-import { useCompanyParticipationPackageMutation } from "@/mutations/companies";
 import { usePackagesQuery, usePackageQuery } from "@/mutations/packages";
 import { usePermissions } from "@/composables/usePermissions";
 import type { Package } from "@/dto/packages";
@@ -255,11 +259,18 @@ const editForm = reactive<UpdateCompanyParticipationData>({
   notes: props.participation.notes,
 });
 
+const NO_PACKAGE_VALUE = "none";
+
 const selectedPackageId = ref<string>(
-  props.participation.package ? String(props.participation.package) : "",
+  props.participation.package
+    ? String(props.participation.package)
+    : NO_PACKAGE_VALUE,
 );
 const packageMutation = useCompanyParticipationPackageMutation();
 packageMutation.companyId.value = props.companyId;
+
+const deletePackageMutation = useDeleteCompanyParticipationPackageMutation();
+deletePackageMutation.companyId.value = props.companyId;
 
 const { toast } = useToast();
 
@@ -316,14 +327,14 @@ const startEditing = () => {
   editForm.notes = props.participation.notes;
   selectedPackageId.value = props.participation.package
     ? String(props.participation.package)
-    : "";
+    : NO_PACKAGE_VALUE;
 };
 
 watch(
   () => props.participation.package,
   (newVal) => {
     if (!isEditing.value) {
-      selectedPackageId.value = newVal ? String(newVal) : "";
+      selectedPackageId.value = newVal ? String(newVal) : NO_PACKAGE_VALUE;
     }
   },
 );
@@ -332,7 +343,7 @@ const cancelEditing = () => {
   isEditing.value = false;
   selectedPackageId.value = props.participation.package
     ? String(props.participation.package)
-    : "";
+    : NO_PACKAGE_VALUE;
 };
 
 const saveChanges = async () => {
@@ -342,10 +353,19 @@ const saveChanges = async () => {
     const currentPkgId = props.participation.package
       ? String(props.participation.package)
       : "";
-    const packageChanged =
-      selectedPackageId.value && selectedPackageId.value !== currentPkgId;
 
-    if (packageChanged) {
+    if (
+      (selectedPackageId.value === NO_PACKAGE_VALUE ||
+        !selectedPackageId.value) &&
+      currentPkgId
+    ) {
+      deletePackageMutation.companyId.value = props.companyId;
+      await deletePackageMutation.mutateAsync();
+    } else if (
+      selectedPackageId.value &&
+      selectedPackageId.value !== NO_PACKAGE_VALUE &&
+      selectedPackageId.value !== currentPkgId
+    ) {
       packageMutation.companyId.value = props.companyId;
       packageMutation.packageId.value = selectedPackageId.value;
       await packageMutation.mutateAsync();

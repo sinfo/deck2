@@ -172,6 +172,8 @@ func InitializeRouter() {
 	companyRouter.HandleFunc("/{id}/participation/status/{step}", authMember(stepCompanyStatus)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package", authCoordinator(addCompanyPackage)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/package/{packageID}", authMember(setCompanyPackage)).Methods("PUT")
+	companyRouter.HandleFunc("/{id}/participation/package", authMember(deleteCompanyPackage)).Methods("DELETE")
+	companyRouter.HandleFunc("/{id}/participation/package/{packageID}", authMember(deleteCompanyPackage)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/participation/billing", authCoordinator(addCompanyParticipationBilling)).Methods("POST")
 	companyRouter.HandleFunc("/{id}/participation/billing/{billingID}", authCoordinator(deleteCompanyParticipationBilling)).Methods("DELETE")
 	companyRouter.HandleFunc("/{id}/threads", authMember(getCompanyThreads)).Methods("GET")

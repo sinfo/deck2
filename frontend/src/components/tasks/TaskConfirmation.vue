@@ -20,6 +20,7 @@
             <SelectValue placeholder="Select a package" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem :value="NO_PACKAGE_VALUE">None</SelectItem>
             <SelectItem
               v-for="pkg in packageOptions"
               :key="pkg.id"
@@ -134,6 +135,7 @@ import type {
 import type { Package } from "@/dto/packages";
 import {
   useCompanyParticipationPackageMutation,
+  useDeleteCompanyParticipationPackageMutation,
   useCompanyParticipationMutation,
 } from "@/mutations/companies";
 import { usePackagesQuery } from "@/mutations/packages";
@@ -190,21 +192,31 @@ const packageOptions = computed(() => {
   return pkgs.map((p) => ({ id: String(p.id), name: p.name }));
 });
 
+const NO_PACKAGE_VALUE = "none";
+
 // Package mutation (companies only)
 const packageMutation = useCompanyParticipationPackageMutation();
 packageMutation.companyId.value = props.entityId;
 
+const deletePackageMutation = useDeleteCompanyParticipationPackageMutation();
+deletePackageMutation.companyId.value = props.entityId;
+
 const selectedPackageId = ref<string>(
   isCompanyParticipation(props.participation) && props.participation?.package
     ? String(props.participation.package)
-    : "",
+    : NO_PACKAGE_VALUE,
 );
 const isPackageUpdating = ref(false);
 
 // Get package name from the packages data
 const currentPackageName = computed(() => {
   if (props.entityType !== "company") return "";
-  if (!selectedPackageId.value || !packagesData.value) return "";
+  if (
+    !selectedPackageId.value ||
+    selectedPackageId.value === NO_PACKAGE_VALUE ||
+    !packagesData.value
+  )
+    return "";
   const pkg = (packagesData.value as Package[]).find(
     (p) => String(p.id) === selectedPackageId.value,
   );
@@ -214,7 +226,12 @@ const currentPackageName = computed(() => {
 // Get current package items
 const currentPackage = computed(() => {
   if (props.entityType !== "company") return null;
-  if (!selectedPackageId.value || !packagesData.value) return null;
+  if (
+    !selectedPackageId.value ||
+    selectedPackageId.value === NO_PACKAGE_VALUE ||
+    !packagesData.value
+  )
+    return null;
   return (
     (packagesData.value as Package[]).find(
       (p) => String(p.id) === selectedPackageId.value,
@@ -304,9 +321,16 @@ const onPackageChange = async (newValue: unknown) => {
   if (!v) return;
   try {
     isPackageUpdating.value = true;
-    packageMutation.packageId.value = v;
-    await packageMutation.mutateAsync();
-    toast.success({ title: "Package updated" });
+    if (v === NO_PACKAGE_VALUE) {
+      deletePackageMutation.companyId.value = props.entityId;
+      await deletePackageMutation.mutateAsync();
+      toast.success({ title: "Package removed" });
+    } else {
+      packageMutation.companyId.value = props.entityId;
+      packageMutation.packageId.value = v;
+      await packageMutation.mutateAsync();
+      toast.success({ title: "Package updated" });
+    }
   } catch (err) {
     console.error("Failed to update package:", err);
     toast.error({ title: "Failed to update package" });
@@ -322,7 +346,7 @@ watch(
       ? props.participation?.package
       : undefined,
   (newVal) => {
-    selectedPackageId.value = newVal ? String(newVal) : "";
+    selectedPackageId.value = newVal ? String(newVal) : NO_PACKAGE_VALUE;
   },
 );
 

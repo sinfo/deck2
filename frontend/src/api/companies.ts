@@ -53,6 +53,9 @@ export const updateCompanyParticipationPackage = (
 ) =>
   instance.put<Company>(`/companies/${id}/participation/package/${packageId}`);
 
+export const deleteCompanyParticipationPackage = (id: string) =>
+  instance.delete<Company>(`/companies/${id}/participation/package`);
+
 export const updateCompanyParticipationStatus = (id: string, status: string) =>
   instance.put<Company>(`/companies/${id}/participation/status/${status}`);
 

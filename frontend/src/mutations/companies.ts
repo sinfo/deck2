@@ -2,6 +2,7 @@ import {
   updateCompany,
   updateCompanyParticipation,
   updateCompanyParticipationPackage,
+  deleteCompanyParticipationPackage,
   updateCompanyParticipationStatus,
   updateCompanyParticipationStep,
   createCompanyParticipation,
@@ -207,6 +208,28 @@ export const useCompanyParticipationPackageMutation = defineMutation(() => {
     packageId,
   };
 });
+
+export const useDeleteCompanyParticipationPackageMutation = defineMutation(
+  () => {
+    const companyId = ref<string>();
+    const queryCache = useQueryCache();
+
+    const { mutate, mutateAsync, ...mutation } = useMutation({
+      mutation: () => deleteCompanyParticipationPackage(companyId.value!),
+      onSettled: () => {
+        queryCache.invalidateQueries({ key: ["company", companyId.value!] });
+        queryCache.invalidateQueries({ key: ["companies"] });
+      },
+    });
+
+    return {
+      mutate,
+      mutateAsync,
+      ...mutation,
+      companyId,
+    };
+  },
+);
 
 export const usePostCompanyThreadMutation = defineMutation(() => {
   const companyId = ref<string>();
