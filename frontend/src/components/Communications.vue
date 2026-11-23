@@ -273,20 +273,21 @@
               <div class="h-px min-w-3 flex-1 bg-border"></div>
               <Badge
                 variant="outline"
-                class="max-w-[85%] flex-col gap-0.5 whitespace-normal bg-muted/50 px-3 py-1.5 text-center font-normal"
+                class="max-w-[85%] gap-1 py-0.5 font-normal text-[11px]"
               >
-                <span
-                  class="flex items-center justify-center gap-1.5 font-medium"
-                >
-                  <History class="h-3.5 w-3.5 shrink-0" />
+                <Image
+                  :src="item.milestone.img"
+                  :alt="`${item.milestone.companyName} logo`"
+                  class="h-3 w-3 shrink-0 rounded-[2px] bg-white object-contain"
+                />
+                <span class="max-w-[220px] truncate sm:max-w-[320px]">
                   {{ item.milestone.label }}
                 </span>
-                <span class="text-[10px] text-muted-foreground">
-                  {{
-                    item.milestone.since
-                      ? formatMilestoneDate(item.milestone.since)
-                      : "Date not recorded"
-                  }}
+                <span
+                  v-if="item.milestone.since"
+                  class="shrink-0 text-muted-foreground"
+                >
+                  · {{ formatMilestoneDate(item.milestone.since) }}
                 </span>
               </Badge>
               <div class="h-px min-w-3 flex-1 bg-border"></div>
@@ -388,6 +389,7 @@ import { useCommunicationThreads } from "@/composables/useCommunicationThreads";
 import CommunicationChannelTabs from "./communications/CommunicationChannelTabs.vue";
 import CommunicationComposer from "./communications/CommunicationComposer.vue";
 import CommunicationMessage from "./communications/CommunicationMessage.vue";
+import Image from "./Image.vue";
 import { getDividerLabel, getThreadChannel } from "./communications/utils";
 import { usePostCompanyThreadMutation } from "@/mutations/companies";
 import { usePostSpeakerThreadMutation } from "@/mutations/speakers";
@@ -416,13 +418,7 @@ import type { ParticipationStatus } from "@/dto";
 import { humanReadableParticipationStatus } from "@/dto";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
 import { GmailIcon, LinkedInIcon } from "@/components/icons";
-import {
-  RefreshCw,
-  AlertTriangle,
-  MailWarning,
-  Link2,
-  History,
-} from "lucide-vue-next";
+import { RefreshCw, AlertTriangle, MailWarning, Link2 } from "lucide-vue-next";
 import { Badge } from "@/components/ui/badge";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
@@ -590,6 +586,8 @@ const relationshipMilestones = computed(() =>
         return {
           id: `${relationship.type}-${relationship.company}`,
           label,
+          img: relationship.img,
+          companyName: relationship.name,
           since: relationship.since,
         };
       })
@@ -624,13 +622,18 @@ const timelineItems = computed<TimelineItem[]>(() => {
 
   if (selectedChannelTab.value !== "all") return items;
 
+  // An undated landmark precedes messages sent today.
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   for (const milestone of relationshipMilestones.value) {
-    const date = milestone.since ? new Date(milestone.since).getTime() : NaN;
     items.push({
       kind: "milestone",
       key: `milestone-${milestone.id}`,
       milestone,
-      timestamp: Number.isFinite(date) ? date : Infinity,
+      timestamp: milestone.since
+        ? new Date(milestone.since).getTime()
+        : today.getTime(),
     });
   }
 
