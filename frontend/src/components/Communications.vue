@@ -268,12 +268,12 @@
           <template v-for="item in timelineItems" :key="item.key">
             <div
               v-if="item.kind === 'milestone'"
-              class="my-3 flex items-center gap-2 text-xs text-muted-foreground"
+              class="my-3 flex items-center gap-2 text-muted-foreground"
             >
-              <div class="h-px min-w-3 flex-1 bg-border"></div>
+              <div class="h-[1.5px] min-w-3 flex-1 bg-border"></div>
               <Badge
                 variant="outline"
-                class="max-w-[85%] flex-wrap gap-x-2 gap-y-1 py-0.5 font-normal text-[11px]"
+                class="max-w-[85%] flex-wrap gap-x-2.5 gap-y-1 px-2.5 py-1 text-xs font-normal"
               >
                 <template
                   v-for="(milestone, index) in item.milestones"
@@ -284,7 +284,7 @@
                     <Image
                       :src="milestone.img"
                       :alt="`${milestone.companyName} logo`"
-                      class="h-3 w-3 shrink-0 rounded-[2px] bg-white object-contain"
+                      class="h-4 w-4 shrink-0 rounded-[2px] bg-white object-contain"
                     />
                     <span class="whitespace-normal">{{ milestone.label }}</span>
                   </span>
@@ -293,7 +293,7 @@
                   · {{ formatMilestoneDate(item.since) }}
                 </span>
               </Badge>
-              <div class="h-px min-w-3 flex-1 bg-border"></div>
+              <div class="h-[1.5px] min-w-3 flex-1 bg-border"></div>
             </div>
 
             <!-- Thread visual divider when viewing all and thread changes -->
