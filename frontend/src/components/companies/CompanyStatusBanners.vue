@@ -58,7 +58,8 @@ const closureDescription = computed(() => {
     const ban = date
       ? `This company has been banned since ${date}.`
       : "This company is banned.";
-    return `${ban} This page is retained for historical reference and should only be updated when necessary.`;
+    return `${ban} This page is retained for historical reference and should only be updated when necessary.
+    Please contact coordination if you need any further information.`;
   }
 
   const bankruptcy = date
