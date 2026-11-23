@@ -273,21 +273,24 @@
               <div class="h-px min-w-3 flex-1 bg-border"></div>
               <Badge
                 variant="outline"
-                class="max-w-[85%] gap-1 py-0.5 font-normal text-[11px]"
+                class="max-w-[85%] flex-wrap gap-x-2 gap-y-1 py-0.5 font-normal text-[11px]"
               >
-                <Image
-                  :src="item.milestone.img"
-                  :alt="`${item.milestone.companyName} logo`"
-                  class="h-3 w-3 shrink-0 rounded-[2px] bg-white object-contain"
-                />
-                <span class="max-w-[220px] truncate sm:max-w-[320px]">
-                  {{ item.milestone.label }}
-                </span>
-                <span
-                  v-if="item.milestone.since"
-                  class="shrink-0 text-muted-foreground"
+                <template
+                  v-for="(milestone, index) in item.milestones"
+                  :key="milestone.id"
                 >
-                  · {{ formatMilestoneDate(item.milestone.since) }}
+                  <span v-if="index" class="text-muted-foreground">·</span>
+                  <span class="inline-flex min-w-0 items-center gap-1">
+                    <Image
+                      :src="milestone.img"
+                      :alt="`${milestone.companyName} logo`"
+                      class="h-3 w-3 shrink-0 rounded-[2px] bg-white object-contain"
+                    />
+                    <span class="whitespace-normal">{{ milestone.label }}</span>
+                  </span>
+                </template>
+                <span v-if="item.since" class="shrink-0 text-muted-foreground">
+                  · {{ formatMilestoneDate(item.since) }}
                 </span>
               </Badge>
               <div class="h-px min-w-3 flex-1 bg-border"></div>
@@ -605,7 +608,8 @@ type TimelineItem =
   | {
       kind: "milestone";
       key: string;
-      milestone: (typeof relationshipMilestones.value)[number];
+      milestones: typeof relationshipMilestones.value;
+      since?: string;
       timestamp: number;
     };
 
@@ -626,18 +630,31 @@ const timelineItems = computed<TimelineItem[]>(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const groups = new Map<string, Extract<TimelineItem, { kind: "milestone" }>>();
   for (const milestone of relationshipMilestones.value) {
-    items.push({
+    const date = milestone.since?.slice(0, 10) ?? "undated";
+    const group = groups.get(date);
+    if (group) {
+      group.milestones.push(milestone);
+      continue;
+    }
+    groups.set(date, {
       kind: "milestone",
-      key: `milestone-${milestone.id}`,
-      milestone,
+      key: `milestone-${date}`,
+      milestones: [milestone],
+      since: milestone.since,
       timestamp: milestone.since
         ? new Date(milestone.since).getTime()
         : today.getTime(),
     });
   }
 
-  return items.sort((a, b) => a.timestamp - b.timestamp);
+  items.push(...groups.values());
+  return items.sort(
+    (a, b) =>
+      a.timestamp - b.timestamp ||
+      (a.kind === b.kind ? 0 : a.kind === "milestone" ? -1 : 1),
+  );
 });
 
 const formatMilestoneDate = (date: string) =>
