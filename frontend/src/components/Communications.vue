@@ -408,13 +408,7 @@ import type { ParticipationStatus } from "@/dto";
 import { humanReadableParticipationStatus } from "@/dto";
 import { useUpdatePostMutation } from "@/mutations/posts.ts";
 import { GmailIcon, LinkedInIcon } from "@/components/icons";
-import {
-  RefreshCw,
-  AlertTriangle,
-  MailWarning,
-  Link2,
-  History,
-} from "lucide-vue-next";
+import { RefreshCw, AlertTriangle, MailWarning, Link2, History } from "lucide-vue-next";
 import { Badge } from "@/components/ui/badge";
 import { useDeleteThreadMutation } from "@/mutations/threads.ts";
 import GmailThreadPicker from "./GmailThreadPicker.vue";
@@ -456,6 +450,7 @@ const props = withDefaults(defineProps<CommunicationsProps>(), {
   canSendMessages: false,
   templates: () => [],
   participations: () => [],
+  companyRelationships: () => [],
   postThreadMutation: undefined,
 });
 
