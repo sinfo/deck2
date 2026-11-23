@@ -226,7 +226,7 @@
 
         <div
           ref="messagesContainer"
-          class="flex-1 min-w-0 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth"
+          class="flex-1 min-w-0 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4"
         >
           <!-- Filtered empty state -->
           <div
@@ -456,7 +456,7 @@ const scrollToBottom = () => {
     if (messagesContainer.value) {
       messagesContainer.value.scrollTo({
         top: messagesContainer.value.scrollHeight,
-        behavior: "smooth",
+        behavior: "auto",
       });
     }
   });
@@ -581,7 +581,6 @@ const {
   openGmailPicker,
   handleGmailThreadsSave,
   syncGmailMessages,
-  checkAvailableGmailThreads,
 } = useCommunicationGmail({
   entity: toRef(props, "entity"),
   entityType: toRef(props, "entityType"),
@@ -623,10 +622,28 @@ const requestDelete = async (thread: ThreadWithEntry) => {
   }
 };
 
+// Changing the viewed conversation should not animate through its history.
 watch(
-  [filteredCommunications, selectedEventId, isLoading],
+  [selectedEventId, selectedChannelTab, selectedGmailThreadTab, isLoading],
   () => scrollToBottom(),
   { flush: "post", immediate: true },
+);
+
+// Scroll for newly added messages only if the user was near the bottom.
+// Replacing an optimistic thread with the saved thread keeps the same count.
+watch(
+  () => filteredCommunications.value.length,
+  (count, previousCount) => {
+    if (count <= previousCount) return;
+    const container = messagesContainer.value;
+    if (
+      container &&
+      container.scrollHeight - container.scrollTop - container.clientHeight <=
+        120
+    ) {
+      scrollToBottom();
+    }
+  },
 );
 
 // Watch for changes in the selected channel or sub-thread tab and scroll to bottom
@@ -656,28 +673,38 @@ watch(
 );
 
 const sendMessage = async () => {
-  if (!newMessage.value.trim() || !props.postThreadMutation) return;
+  const text = newMessage.value;
+  if (!text.trim() || !props.postThreadMutation) return;
+
+  const entityId = props.entity.id;
+  const eventId = selectedEventId.value;
+  const threadData = {
+    text,
+    kind: messageKind.value,
+    channel: messageChannel.value,
+  };
+
+  // The optimistic mutation inserts the message before the request completes.
+  // Clear the composer immediately rather than holding the draft until then.
+  newMessage.value = "";
+  selectedTemplate.value = undefined;
 
   try {
-    // Set the thread data for the mutation
-    // eslint-disable-next-line vue/no-mutating-props
-    props.postThreadMutation.threadData.value = {
-      text: newMessage.value,
-      kind: messageKind.value,
-      channel: messageChannel.value,
-    };
-
-    await props.postThreadMutation.mutateAsync();
-
-    newMessage.value = "";
-    selectedTemplate.value = undefined;
-
+    const request = props.postThreadMutation.mutateAsync({
+      entityId,
+      threadData,
+    });
     scrollToBottom();
-
-    if (messageChannel.value === ThreadChannel.Gmail) {
-      checkAvailableGmailThreads();
-    }
+    await request;
   } catch (error) {
+    // Don't overwrite a newer draft or restore one on a different entity.
+    if (
+      !newMessage.value &&
+      props.entity.id === entityId &&
+      selectedEventId.value === eventId
+    ) {
+      newMessage.value = text;
+    }
     console.error("Failed to send message:", error);
   }
 };

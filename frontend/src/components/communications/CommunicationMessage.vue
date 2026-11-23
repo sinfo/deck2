@@ -24,12 +24,23 @@
         <span class="text-sm font-medium">{{ getAuthorInitials(thread) }}</span>
       </div>
       <div class="text-xs text-center max-w-20 leading-tight">
-        <div>
-          {{ getFirstName(getAuthorDisplayName(thread)) }}
+        <div
+          v-if="
+            entityType === 'company' &&
+            getMessageDirection(thread.kind) === 'incoming'
+          "
+          class="break-words"
+        >
+          {{ getAuthorDisplayName(thread) }}
         </div>
-        <div>
-          {{ getLastName(getAuthorDisplayName(thread)) }}
-        </div>
+        <template v-else>
+          <div>
+            {{ getFirstName(getAuthorDisplayName(thread)) }}
+          </div>
+          <div>
+            {{ getLastName(getAuthorDisplayName(thread)) }}
+          </div>
+        </template>
       </div>
     </div>
 
@@ -54,12 +65,7 @@
             thread.kind !== ThreadKind.ThreadKindTo &&
             thread.kind !== ThreadKind.ThreadKindFrom
           "
-          class="flex items-center gap-1 font-medium text-xs mb-1"
-          :class="[
-            getMessageDirection(thread.kind) === 'outgoing'
-              ? 'text-white/90'
-              : 'text-foreground/90',
-          ]"
+          class="flex items-center gap-1 font-medium text-xs mb-1 opacity-90"
         >
           <div
             :class="['w-2 h-2 rounded-full', getKindColor(thread.kind)]"
@@ -148,11 +154,7 @@
                   </span>
                   <div
                     class="flex items-center gap-1.5 text-[11px] shrink-0 whitespace-nowrap select-none"
-                    :class="[
-                      getMessageDirection(thread.kind) === 'outgoing'
-                        ? 'text-white/70'
-                        : 'text-muted-foreground',
-                    ]"
+                    :class="getTimestampClasses(thread)"
                   >
                     <span
                       v-if="
@@ -180,11 +182,7 @@
               <div
                 v-else
                 class="flex items-center justify-end gap-1.5 text-[11px] select-none pt-1"
-                :class="[
-                  getMessageDirection(thread.kind) === 'outgoing'
-                    ? 'text-white/70'
-                    : 'text-muted-foreground',
-                ]"
+                :class="getTimestampClasses(thread)"
               >
                 <span
                   v-if="
@@ -216,11 +214,7 @@
               <!-- Date & Edited status (in bottom-right corner) -->
               <div
                 class="flex items-center justify-end gap-1.5 mt-1 select-none text-[11px]"
-                :class="[
-                  getMessageDirection(thread.kind) === 'outgoing'
-                    ? 'text-white/70'
-                    : 'text-muted-foreground',
-                ]"
+                :class="getTimestampClasses(thread)"
               >
                 <span
                   v-if="
@@ -255,11 +249,7 @@
             </div>
             <span
               class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
-              :class="[
-                getMessageDirection(thread.kind) === 'outgoing'
-                  ? 'text-white/70'
-                  : 'text-muted-foreground',
-              ]"
+              :class="getTimestampClasses(thread)"
               :title="formatFullDateTime(thread.posted)"
             >
               {{ formatDate(thread.posted) }}
@@ -274,11 +264,7 @@
             <span>📅 Meeting scheduled</span>
             <span
               class="text-[11px] shrink-0 whitespace-nowrap not-italic select-none cursor-help hover:opacity-100"
-              :class="[
-                getMessageDirection(thread.kind) === 'outgoing'
-                  ? 'text-white/70'
-                  : 'text-muted-foreground',
-              ]"
+              :class="getTimestampClasses(thread)"
               :title="formatFullDateTime(thread.posted)"
             >
               {{ formatDate(thread.posted) }}
@@ -354,6 +340,7 @@ import {
   formatFullDateTime,
   getBubbleClasses,
   getHeaderCardClasses,
+  getTimestampClasses,
   getKindLabel,
   getKindColor,
   getMessageDirection,
@@ -398,6 +385,9 @@ const getMessageAuthor = (thread: ThreadWithEntry): Author | null => {
 };
 
 const getAuthorDisplayName = (thread: ThreadWithEntry): string => {
+  if (getMessageDirection(thread.kind) === "incoming") {
+    return props.entity.name || "Unknown";
+  }
   const email = parseEmailText(thread.entry?.text);
   if (email.isEmail && email.from) {
     const match = email.from.match(/^([^<]+)<[^>]+>/);

@@ -315,10 +315,20 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	threadID, _ := primitive.ObjectIDFromHex(params["threadID"])
 
-	_, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
+	credentials, ok := r.Context().Value(credentialsKey).(models.AuthorizationCredentials)
 
 	if !ok {
 		http.Error(w, "Could not parse credentials", http.StatusBadRequest)
+		return
+	}
+
+	participations, err := findCommunicationParticipations(threadID)
+	if err != nil {
+		http.Error(w, "Could not find associated participation", http.StatusInternalServerError)
+		return
+	}
+	if !belongsToParticipation(participations, id, false) {
+		http.Error(w, "Thread not found in company participation", http.StatusNotFound)
 		return
 	}
 
@@ -329,12 +339,22 @@ func deleteCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Delete thread and posts (comments) associated to it - only if
-	// thread was deleted sucessfully from speaker participation
+	// thread was deleted successfully from company participation
 	if _, err := mongodb.Threads.DeleteThread(threadID); err != nil {
 		http.Error(w, "Thread not found: "+err.Error(), http.StatusNotFound)
 		return
 	}
 
+	if err := recalculateCommunicationStatuses(participations, credentials.ID); err != nil {
+		log.Printf("Thread deleted, but participation status could not be updated: %v", err)
+		http.Error(w, "Thread deleted, but participation status update failed", http.StatusInternalServerError)
+		return
+	}
+	company, err = mongodb.Companies.GetCompany(id)
+	if err != nil {
+		http.Error(w, "Thread deleted and status updated, but failed to fetch updated company", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(company)
 }
 
@@ -436,6 +456,12 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	currentEvent, err := mongodb.Events.GetCurrentEvent()
+	if err != nil {
+		http.Error(w, "Could not determine current event", http.StatusInternalServerError)
+		return
+	}
+
 	// create the post first
 	cpd := mongodb.CreatePostData{
 		Member: credentials.ID,
@@ -504,7 +530,7 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// attach the thread to the company participation
-	updatedCompany, err := mongodb.Companies.AddThread(companyID, newThread.ID)
+	updatedCompany, err := mongodb.Companies.AddThread(companyID, newThread.ID, currentEvent.ID)
 	if err != nil {
 		http.Error(w, "Could not add thread to company: "+err.Error(), http.StatusExpectationFailed)
 
@@ -521,6 +547,16 @@ func addCompanyThread(w http.ResponseWriter, r *http.Request) {
 			log.Printf("error deleting thread: %s\n", derr.Error())
 		}
 		return
+	}
+
+	if afterUpdate, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID, currentEvent.ID); err != nil {
+		log.Printf("Could not auto-update company %s for event %d: %v", companyID.Hex(), currentEvent.ID, err)
+	} else if newStatus != nil {
+		updatedCompany = afterUpdate
+		mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+			Kind:    models.NotificationKindUpdatedParticipationStatus,
+			Company: &updatedCompany.ID,
+		})
 	}
 
 	threadWithEntry := models.ThreadWithEntry{
@@ -1485,9 +1521,25 @@ func syncCompanyGmailMessages(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
-		log.Println("Error syncing Gmail messages for company:", err)
+		log.Printf("Gmail sync failed for company %s in SINFO %d (%d messages): %v", companyID.Hex(), targetEventID, len(data.Messages), err)
 		http.Error(w, "Failed to sync Gmail messages", http.StatusInternalServerError)
 		return
+	}
+
+	if _, newStatus, err := mongodb.Companies.AutoUpdateParticipationStatus(companyID, targetEventID); err != nil {
+		log.Printf("Could not auto-update company %s for event %d after Gmail sync: %v", companyID.Hex(), targetEventID, err)
+		http.Error(w, "Gmail messages were synchronized but participation status could not be updated", http.StatusInternalServerError)
+		return
+	} else if newStatus != nil {
+		currentEvent, err := mongodb.Events.GetCurrentEvent()
+		if err != nil {
+			log.Printf("Could not determine event for status notification: %v", err)
+		} else if currentEvent.ID == targetEventID {
+			mongodb.Notifications.Notify(credentials.ID, mongodb.CreateNotificationData{
+				Kind:    models.NotificationKindUpdatedParticipationStatus,
+				Company: &companyID,
+			})
+		}
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{

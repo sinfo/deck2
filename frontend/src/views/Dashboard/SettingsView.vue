@@ -43,12 +43,39 @@
               </CardHeader>
               <CardContent class="space-y-4">
                 <div class="flex items-center space-x-4">
-                  <img
-                    :src="user.data.img"
-                    :alt="user.data.name"
-                    class="w-16 h-16 rounded-full object-cover border-2 border-border"
-                    @error="handleImageError"
-                  />
+                  <div
+                    class="relative group w-16 h-16 rounded-full overflow-hidden flex-shrink-0"
+                  >
+                    <Image
+                      :src="profileImageUrl"
+                      :alt="`${user.data.name} photo`"
+                      class="w-16 h-16 rounded-full object-cover border-2 border-border"
+                    />
+                    <button
+                      type="button"
+                      class="absolute inset-0 flex items-center justify-center rounded-full bg-black/0 transition-colors hover:bg-black/50 focus-visible:bg-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:bg-black/50 disabled:cursor-wait"
+                      :disabled="isUploadingImage"
+                      aria-label="Change profile picture"
+                      title="Change profile picture"
+                      @click="triggerFileInput"
+                    >
+                      <div
+                        v-if="isUploadingImage"
+                        class="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"
+                      ></div>
+                      <Pencil
+                        v-else
+                        class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                      />
+                    </button>
+                    <input
+                      ref="fileInput"
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      @change="handleImageUpload"
+                    />
+                  </div>
                   <div>
                     <h3 class="text-lg font-semibold">{{ user.data.name }}</h3>
                     <p class="text-sm text-muted-foreground">
@@ -348,24 +375,13 @@
                         size="sm"
                         class="gap-1.5"
                         :disabled="isAutoLinking"
-                        @click="() => syncThreads(false)"
+                        @click="() => syncThreads(false, true)"
                       >
                         <RefreshCw
                           class="w-3.5 h-3.5"
                           :class="{ 'animate-spin': isAutoLinking }"
                         />
                         {{ isAutoLinking ? "Syncing..." : "Sync Threads" }}
-                      </Button>
-                      <Button
-                        as-child
-                        variant="outline"
-                        size="sm"
-                        class="gap-1.5"
-                      >
-                        <RouterLink :to="{ name: 'gmail-messages' }">
-                          <Mail class="w-3.5 h-3.5" />
-                          View Threads
-                        </RouterLink>
                       </Button>
                       <Button
                         variant="outline"
@@ -402,6 +418,11 @@
       </div>
     </div>
   </div>
+  <GmailSyncErrorDialog
+    v-model:open="syncDetailsOpen"
+    :failures="syncFailures"
+    :general-error="syncGeneralError"
+  />
 </template>
 
 <script setup lang="ts">
@@ -424,19 +445,62 @@ import Button from "@/components/ui/button/Button.vue";
 import Badge from "@/components/ui/badge/Badge.vue";
 import Label from "@/components/ui/label/Label.vue";
 import ContactForm from "@/components/companies/ContactForm.vue";
+import Image from "@/components/Image.vue";
+import { useUploadImageMutation } from "@/mutations/me";
+import { useImageUpload } from "@/composables/useImageUpload";
+import { isAxiosError } from "axios";
 import { useAuthStore } from "@/stores/auth";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, RefreshCw, Unplug } from "lucide-vue-next";
+import { Mail, Pencil, RefreshCw, Unplug } from "lucide-vue-next";
 import { useGoogleAuth } from "@/composables/useGoogleAuth";
-import { useAutoLinkGmail } from "@/composables/useAutoLinkGmail";
+import {
+  isContactedParticipationStatus,
+  useAutoLinkGmail,
+} from "@/composables/useAutoLinkGmail";
 import { useEventStore } from "@/stores/event";
 import { useToast } from "@/lib/toast";
+import GmailSyncErrorDialog from "@/components/GmailSyncErrorDialog.vue";
+import type { EntityLinkResult } from "@/composables/gmailSync/common";
+
+const fileInput = ref<HTMLInputElement>();
+const {
+  imagePreview,
+  selectedImageFile,
+  imageError,
+  handleFileChange,
+  reset: resetImageUpload,
+} = useImageUpload();
 
 const isEditMode = ref(false);
 const queryCache = useQueryCache();
 const eventStore = useEventStore();
 const { toast } = useToast();
+const syncDetailsOpen = ref(false);
+const syncFailures = ref<EntityLinkResult[]>([]);
+const syncGeneralError = ref<string | null>(null);
+
+const showSyncFailure = (
+  failures: EntityLinkResult[],
+  message: string | null = null,
+) => {
+  syncFailures.value = failures;
+  syncGeneralError.value = message;
+  toast.error({
+    title: "Gmail Sync Incomplete",
+    description: failures.length
+      ? `${failures.length} assigned companies or speakers couldn't sync.`
+      : "Gmail sync couldn't finish.",
+    duration: 12000,
+    action: {
+      label: "View details",
+      onClick: () => {
+        syncDetailsOpen.value = true;
+      },
+    },
+  });
+};
+
 const {
   requestGoogleToken,
   isSigningIn,
@@ -446,7 +510,6 @@ const {
   isAutoLinking,
   autoLinkEventEntities,
   syncRecentGmailUpdates,
-  warnUnlinkedContacted,
   error: gmailSyncError,
 } = useAutoLinkGmail();
 
@@ -460,6 +523,56 @@ const {
   key: ["me"],
   query: getMe,
 });
+
+const cacheBuster = ref(Date.now());
+
+const profileImageUrl = computed(() => {
+  if (imagePreview.value) return imagePreview.value;
+  const img = user.value?.data.img;
+  if (!img) return "";
+  const separator = img.includes("?") ? "&" : "?";
+  return `${img}${separator}t=${cacheBuster.value}`;
+});
+
+const uploadImageMutation = useUploadImageMutation();
+const isUploadingImage = uploadImageMutation.isLoading;
+
+const triggerFileInput = () => fileInput.value?.click();
+
+const handleImageUpload = async (event: Event) => {
+  handleFileChange(event);
+
+  try {
+    if (imageError.value) {
+      toast.error({
+        title: "Failed to update profile picture",
+        description: imageError.value,
+      });
+      return;
+    }
+
+    if (!selectedImageFile.value) return;
+
+    await uploadImageMutation.mutateAsync(selectedImageFile.value);
+    cacheBuster.value = Date.now();
+    toast.success({ title: "Profile picture updated successfully" });
+  } catch (error: unknown) {
+    console.error("Failed to update profile picture:", error);
+    const detail: unknown = isAxiosError(error)
+      ? (error.response?.data ?? error.message)
+      : error instanceof Error
+        ? error.message
+        : "Failed to update profile picture";
+
+    toast.error({
+      title: "Failed to update profile picture",
+      description: typeof detail === "string" ? detail : JSON.stringify(detail),
+    });
+  } finally {
+    resetImageUpload();
+    if (fileInput.value) fileInput.value.value = "";
+  }
+};
 
 // Update contact mutation
 const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({
@@ -530,18 +643,13 @@ const syncThreads = async (silent = false, fullScan = false) => {
 
   try {
     const results = fullScan
-      ? await autoLinkEventEntities(eventId, { forceReScan: true })
+      ? await autoLinkEventEntities(eventId)
       : await syncRecentGmailUpdates(eventId);
     const failedEntities = results.filter(
       (result) => result.status === "ERROR",
     );
     if (gmailSyncError.value || failedEntities.length > 0) {
-      toast.error({
-        title: "Sync Incomplete",
-        description:
-          gmailSyncError.value ??
-          `Failed to sync ${failedEntities.length} entity/entities. Please retry.`,
-      });
+      showSyncFailure(failedEntities, gmailSyncError.value);
       return;
     }
     const newlyLinked = results.reduce(
@@ -554,22 +662,32 @@ const syncThreads = async (silent = false, fullScan = false) => {
         Math.max(result.linkedThreadsCount - result.newlyLinkedCount, 0),
       0,
     );
+    const unmatched = results.filter(
+      (result) =>
+        result.status === "NOT_FOUND" &&
+        isContactedParticipationStatus(result.participationStatus),
+    );
+    if (unmatched.length > 0) {
+      toast.warning({
+        title: "Gmail Sync Finished — Unmatched Contacts",
+        description: `${newlyLinked} new thread(s) linked. ${unmatched.length} contacted ${unmatched.length === 1 ? "entity has" : "entities have"} no matching SINFO ${eventId} conversation. Review the entity name or link the thread manually.`,
+      });
+      return;
+    }
+
     toast.success({
       title: "Sync Complete",
       description:
         newlyLinked > 0
           ? `Linked ${newlyLinked} new thread(s). Total ${alreadyLinked + newlyLinked} thread(s) in sync.`
-          : "Email communications are up to date.",
+          : "No additional Gmail threads matched this edition.",
     });
-
-    warnUnlinkedContacted(results);
   } catch (err) {
     console.error("Failed to sync threads:", err);
-    toast.error({
-      title: "Sync Failed",
-      description:
-        err instanceof Error ? err.message : "Failed to sync Gmail threads.",
-    });
+    showSyncFailure(
+      [],
+      err instanceof Error ? err.message : "Failed to sync Gmail threads.",
+    );
   }
 };
 
@@ -585,8 +703,8 @@ const onGoogleConnected = async (userEmail?: string | null) => {
 const connectGoogle = async () => {
   const userEmail = userConnectedEmail.value;
 
-  // If token is already present and unexpired (e.g. from Deck login), connect immediately without popups
-  if (authStore.hasValidGoogleToken) {
+  // Reuse only a token that already grants Gmail read access.
+  if (authStore.hasValidGoogleToken && authStore.hasGmailReadScope) {
     await onGoogleConnected(userEmail);
     return;
   }
@@ -615,11 +733,6 @@ const disconnectGoogle = () => {
     title: "Gmail Disconnected",
     description: "Your Gmail account has been disconnected.",
   });
-};
-
-const handleImageError = (event: Event) => {
-  const img = event.target as HTMLImageElement;
-  img.src = "/src/assets/noImage.png"; // Fallback image
 };
 
 // Utility functions

@@ -162,6 +162,7 @@ export const useGoogleAuth = () => {
         response.access_token,
         expiresIn,
         userInfo.email,
+        response.scope,
       );
       authStore.connectGoogle(userInfo.email);
     } catch (err) {
@@ -197,7 +198,7 @@ export const useGoogleAuth = () => {
       hint?: string;
     } = {},
   ): Promise<boolean> => {
-    if (authStore.hasValidGoogleToken) {
+    if (authStore.hasValidGoogleToken && authStore.hasGmailReadScope) {
       return true;
     }
 
@@ -216,6 +217,7 @@ export const useGoogleAuth = () => {
           response.access_token,
           expiresIn,
           userInfo.email,
+          response.scope,
         );
         authStore.connectGoogle(userInfo.email);
       },

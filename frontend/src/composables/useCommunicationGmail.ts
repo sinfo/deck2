@@ -68,6 +68,8 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
     availableGmailThreadsCount.value = 0;
     if (
       !authStore.isGoogleAuthenticated ||
+      !authStore.hasValidGoogleToken ||
+      !authStore.hasGmailReadScope ||
       !hasManualGmailMessage.value ||
       options.linkedThreadIds.value.length > 0
     ) {
@@ -104,8 +106,13 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
       hasManualGmailMessage,
       () => options.entity.value.id,
       options.eventId,
-      options.linkedThreadIds,
-      () => authStore.isGoogleAuthenticated,
+      // The query cache may create a new array for the same linked IDs.
+      // Watching the actual IDs avoids duplicate Gmail lookups on refresh.
+      () => options.linkedThreadIds.value.join("\u0000"),
+      () =>
+        authStore.isGoogleAuthenticated &&
+        authStore.hasValidGoogleToken &&
+        authStore.hasGmailReadScope,
     ],
     () => void checkAvailableGmailThreads(),
     { immediate: true },
@@ -150,12 +157,26 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
         );
       }
 
-      queryCache.invalidateQueries({
-        key: [
-          `${options.entityType.value}-communications`,
-          options.entity.value.id,
-        ],
-      });
+      await Promise.all([
+        queryCache.invalidateQueries({
+          key: [
+            `${options.entityType.value}-communications`,
+            options.entity.value.id,
+          ],
+        }),
+        queryCache.invalidateQueries({
+          key: [options.entityType.value, options.entity.value.id],
+        }),
+        queryCache.invalidateQueries({
+          key: [
+            options.entityType.value === "company" ? "companies" : "speakers",
+          ],
+        }),
+        queryCache.invalidateQueries({
+          key: ["responsibilities"],
+        }),
+      ]);
+
       return true;
     } catch (cause) {
       console.error("Failed to sync Gmail messages:", cause);
@@ -188,12 +209,13 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
           eventId,
         );
       }
-      queryCache.invalidateQueries({
+      await queryCache.invalidateQueries({
         key: [
           `${options.entityType.value}-communications`,
           options.entity.value.id,
         ],
       });
+
       await syncGmailMessages(threadIds);
       availableGmailThreadsCount.value = 0;
     } catch (cause) {
@@ -215,6 +237,5 @@ export const useCommunicationGmail = (options: CommunicationGmailOptions) => {
     openGmailPicker,
     handleGmailThreadsSave,
     syncGmailMessages,
-    checkAvailableGmailThreads,
   };
 };

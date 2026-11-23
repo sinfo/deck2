@@ -28,6 +28,7 @@ const GOOGLE_STORAGE_KEYS = {
   ACCESS_TOKEN: "googleAccessToken",
   TOKEN_EXPIRY: "googleAccessTokenExpiry",
   CONNECTED_EMAIL: "googleConnectedEmail",
+  GRANTED_SCOPES: "googleGrantedScopes",
 } as const;
 
 export const useAuthStore = defineStore("auth", () => {
@@ -133,6 +134,7 @@ export const useAuthStore = defineStore("auth", () => {
   const connectedGoogleEmail = ref<string | null>(null);
   const googleAccessToken = ref<string | null>(null);
   const googleAccessTokenExpiry = ref<number | null>(null);
+  const googleGrantedScopes = ref<string | null>(null);
 
   const loadGoogleStateForMember = (sinfoid: string | null) => {
     if (!sinfoid) {
@@ -140,6 +142,7 @@ export const useAuthStore = defineStore("auth", () => {
       connectedGoogleEmail.value = null;
       googleAccessToken.value = null;
       googleAccessTokenExpiry.value = null;
+      googleGrantedScopes.value = null;
       return;
     }
 
@@ -149,6 +152,7 @@ export const useAuthStore = defineStore("auth", () => {
     const emailKey = getScopedKey(GOOGLE_STORAGE_KEYS.CONNECTED_EMAIL, sinfoid);
     const tokenKey = getScopedKey(GOOGLE_STORAGE_KEYS.ACCESS_TOKEN, sinfoid);
     const expiryKey = getScopedKey(GOOGLE_STORAGE_KEYS.TOKEN_EXPIRY, sinfoid);
+    const scopesKey = getScopedKey(GOOGLE_STORAGE_KEYS.GRANTED_SCOPES, sinfoid);
 
     isGoogleConnected.value = connKey
       ? localStorage.getItem(connKey) === "true"
@@ -159,6 +163,9 @@ export const useAuthStore = defineStore("auth", () => {
     googleAccessToken.value = tokenKey ? localStorage.getItem(tokenKey) : null;
     const expiryVal = expiryKey ? localStorage.getItem(expiryKey) : null;
     googleAccessTokenExpiry.value = expiryVal ? Number(expiryVal) : null;
+    googleGrantedScopes.value = scopesKey
+      ? localStorage.getItem(scopesKey)
+      : null;
   };
 
   watch(
@@ -184,6 +191,18 @@ export const useAuthStore = defineStore("auth", () => {
     return true;
   });
 
+  // Only scopes confirmed by Google authorize background Gmail reads.
+  // Older sessions with no scope record must reconnect explicitly.
+  const hasGmailReadScope = computed(() =>
+    (googleGrantedScopes.value?.split(/\s+/) ?? []).some((scope) =>
+      [
+        "https://www.googleapis.com/auth/gmail.readonly",
+        "https://www.googleapis.com/auth/gmail.modify",
+        "https://mail.google.com/",
+      ].includes(scope),
+    ),
+  );
+
   // Explicit manual connection by the user
   const connectGoogle = (emailOrSinfoid?: string | null) => {
     isGoogleConnected.value = true;
@@ -205,8 +224,10 @@ export const useAuthStore = defineStore("auth", () => {
     token: string,
     expiresIn: number = 3600,
     email?: string,
+    grantedScopes?: string,
   ) => {
     googleAccessToken.value = token;
+    googleGrantedScopes.value = grantedScopes ?? null;
     // Calculate expiry timestamp (subtract 60 seconds for safety margin)
     const expiryTime = Date.now() + (expiresIn - 60) * 1000;
     googleAccessTokenExpiry.value = expiryTime;
@@ -224,6 +245,14 @@ export const useAuthStore = defineStore("auth", () => {
     );
     if (tokenKey) localStorage.setItem(tokenKey, token);
     if (expiryKey) localStorage.setItem(expiryKey, String(expiryTime));
+    const scopesKey = getScopedKey(
+      GOOGLE_STORAGE_KEYS.GRANTED_SCOPES,
+      targetSinfoid,
+    );
+    if (scopesKey) {
+      if (grantedScopes) localStorage.setItem(scopesKey, grantedScopes);
+      else localStorage.removeItem(scopesKey);
+    }
 
     if (email) {
       connectedGoogleEmail.value = email;
@@ -239,10 +268,13 @@ export const useAuthStore = defineStore("auth", () => {
   const clearGoogleToken = () => {
     googleAccessToken.value = null;
     googleAccessTokenExpiry.value = null;
+    googleGrantedScopes.value = null;
     const tokenKey = getScopedKey(GOOGLE_STORAGE_KEYS.ACCESS_TOKEN);
     const expiryKey = getScopedKey(GOOGLE_STORAGE_KEYS.TOKEN_EXPIRY);
+    const scopesKey = getScopedKey(GOOGLE_STORAGE_KEYS.GRANTED_SCOPES);
     if (tokenKey) localStorage.removeItem(tokenKey);
     if (expiryKey) localStorage.removeItem(expiryKey);
+    if (scopesKey) localStorage.removeItem(scopesKey);
   };
 
   // Explicit manual disconnection by the user
@@ -302,6 +334,7 @@ export const useAuthStore = defineStore("auth", () => {
     googleAccessTokenExpiry,
     isGoogleAuthenticated,
     hasValidGoogleToken,
+    hasGmailReadScope,
     connectGoogle,
     setGoogleToken,
     clearGoogleToken,
