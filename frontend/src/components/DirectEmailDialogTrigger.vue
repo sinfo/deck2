@@ -119,6 +119,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, watch } from "vue";
 import { Button } from "@/components/ui/button";
 import {
@@ -148,6 +149,8 @@ import {
   EmailTemplateCategory,
   templateCategoryHumanReadable,
 } from "@/lib/templates";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   size?: "sm" | "default" | "lg" | "icon";
@@ -190,6 +193,7 @@ const availableTemplates = computed(() => {
 });
 
 const openDialog = () => {
+  if (!confirmCompanyChange()) return;
   isDialogOpen.value = true;
 };
 
@@ -239,7 +243,6 @@ const handleSendEmail = async () => {
   if (!selectedTemplate.value || selectedEmails.value.length === 0) {
     return;
   }
-
   // reset previous result
   sendResult.value = null;
 

@@ -171,6 +171,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, reactive, watch, computed } from "vue";
 import useToast from "@/lib/toast";
 import { useQuery } from "@pinia/colada";
@@ -199,6 +200,8 @@ import {
 } from "@/components/ui/select";
 import Image from "../Image.vue";
 import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   participation: CompanyParticipation;
@@ -285,6 +288,7 @@ const { data: membersData } = useQuery({
 });
 
 const startEditing = () => {
+  if (!confirmCompanyChange()) return;
   // entering edit mode for participation
   isEditing.value = true;
   editForm.member = props.participation.member;
@@ -354,6 +358,7 @@ const onPackageChange = async () => {
   const previous = props.participation.package
     ? String(props.participation.package)
     : "";
+  if (selectedPackageId.value === previous) return;
   try {
     isPackageUpdating.value = true;
     packageMutation.packageId.value = selectedPackageId.value;

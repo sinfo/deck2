@@ -89,3 +89,20 @@ export const toBase64 = (str: string) => {
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 };
+
+// Dates picked with <input type="date"> are stored at UTC midnight, so they are
+// formatted in UTC too, avoiding an off-by-one day in other timezones.
+export const formatMonthYear = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+
+// ISO date-time -> "YYYY-MM-DD", the value of an <input type="date">.
+export const toDateInputValue = (iso?: string) =>
+  iso ? new Date(iso).toISOString().slice(0, 10) : "";
+
+// "YYYY-MM-DD" from an <input type="date"> -> ISO date-time at UTC midnight.
+export const fromDateInputValue = (value: string) =>
+  value ? new Date(value).toISOString() : null;

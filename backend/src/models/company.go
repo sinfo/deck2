@@ -120,6 +120,96 @@ type Company struct {
 
 	// Contact is an _id of Contact (see models.Contact).
 	Contact primitive.ObjectID `json:"contact" bson:"contact"`
+
+	// Company ownership and historical mergers or former identities.
+	Relationships []CompanyRelationship `json:"relationships,omitempty" bson:"relationships,omitempty"`
+
+	// Closure is set when the company went bankrupt or was banned. Nil means the company is operating normally.
+	Closure *CompanyClosure `json:"closure,omitempty" bson:"closure,omitempty"`
+}
+
+// CompanyRelationshipType describes ownership or a historical company relationship.
+type CompanyRelationshipType string
+
+const (
+	// SubsidiaryOf means this company belongs to the related company.
+	SubsidiaryOf CompanyRelationshipType = "SUBSIDIARY_OF"
+	// ParentOf means this company owns the related company.
+	ParentOf CompanyRelationshipType = "PARENT_OF"
+	// Absorbed means the related company merged into this company.
+	// The stored name is kept for compatibility; the UI calls this "Merged with".
+	Absorbed CompanyRelationshipType = "ABSORBED"
+	// RebrandedFrom means this company was previously known as the related company.
+	RebrandedFrom CompanyRelationshipType = "REBRANDED_FROM"
+)
+
+func (t CompanyRelationshipType) IsOwnership() bool {
+	return t == SubsidiaryOf || t == ParentOf
+}
+
+func (t CompanyRelationshipType) IsValid() bool {
+	return t.IsOwnership() || t == Absorbed || t == RebrandedFrom
+}
+
+// Inverse returns the ownership relationship as seen from the other company.
+func (t CompanyRelationshipType) Inverse() CompanyRelationshipType {
+	switch t {
+	case SubsidiaryOf:
+		return ParentOf
+	case ParentOf:
+		return SubsidiaryOf
+	default:
+		return ""
+	}
+}
+
+// CompanyRelationship links a company to another one.
+type CompanyRelationship struct {
+	Type CompanyRelationshipType `json:"type" bson:"type"`
+
+	// Company is the related company's _id (see models.Company).
+	Company primitive.ObjectID `json:"company" bson:"company"`
+
+	// When the acquisition, merger or rebrand happened.
+	Since *time.Time `json:"since,omitempty" bson:"since,omitempty"`
+}
+
+// RelatedCompany is a CompanyRelationship resolved with the related company's name and image.
+type RelatedCompany struct {
+	Type CompanyRelationshipType `json:"type"`
+
+	// Company is the related company's _id (see models.Company).
+	Company primitive.ObjectID `json:"company"`
+
+	Name string `json:"name"`
+
+	// Related company's image (internal, or public as fallback).
+	Image string `json:"img,omitempty"`
+
+	Since *time.Time `json:"since,omitempty"`
+}
+
+// CompanyClosureType describes why the team should no longer work with a company.
+type CompanyClosureType string
+
+const (
+	// Bankrupt means the company went bankrupt.
+	Bankrupt CompanyClosureType = "BANKRUPT"
+	// Banned means the company is banned.
+	Banned CompanyClosureType = "BANNED"
+)
+
+// IsValid checks if the closure type is a known one.
+func (t CompanyClosureType) IsValid() bool {
+	return t == Bankrupt || t == Banned
+}
+
+// CompanyClosure marks a company as bankrupt or banned.
+type CompanyClosure struct {
+	Type CompanyClosureType `json:"type" bson:"type"`
+
+	// When the company went bankrupt or was banned.
+	Since *time.Time `json:"since,omitempty" bson:"since,omitempty"`
 }
 
 // CompanyParticipationPublic stores a company's participation info to be shown to everyone publicly.

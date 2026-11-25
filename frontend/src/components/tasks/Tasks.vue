@@ -15,6 +15,7 @@
 
     <!-- Stepper Container -->
     <Stepper
+      :key="tasksRevision"
       v-model="currentStep"
       orientation="vertical"
       :linear="false"
@@ -142,6 +143,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, reactive, watch, provide } from "vue";
 import type { EntityType } from "@/dto/tasks";
 import {
@@ -188,6 +190,8 @@ import TaskHotel from "./TaskHotel.vue";
 import TaskTestSchedule from "./TaskTestSchedule.vue";
 import TaskImages from "./TaskImages.vue";
 
+const confirmCompanyChange = useCompanyArchiveConfirmation();
+
 interface Props {
   entityType: EntityType;
   entityId: string;
@@ -233,6 +237,7 @@ const speakerMutation = useSpeakerTasksMutation();
 speakerMutation.speakerId.value = props.entityId;
 
 const isSaving = ref(false);
+const tasksRevision = ref(0);
 
 // Provide saving state to all child task components so they can disable themselves
 provide(TASKS_SAVING_KEY, isSaving);
@@ -274,6 +279,19 @@ function scheduleSave(delayMs = 600) {
   saveTimer = setTimeout(async () => {
     saveTimer = null;
     if (isSaving.value) return; // already saving
+    if (props.entityType === "company" && !confirmCompanyChange()) {
+      isSyncing = true;
+      Object.assign(
+        companyTasks,
+        emptyCompanyTasks(),
+        props.participation?.tasks ?? {},
+      );
+      tasksRevision.value++;
+      setTimeout(() => {
+        isSyncing = false;
+      }, 0);
+      return;
+    }
     isSaving.value = true;
     try {
       if (props.entityType === "company") {

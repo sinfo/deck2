@@ -91,6 +91,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed } from "vue";
 import TaskTimelineItem from "./TaskTimelineItem.vue";
 import ImageUpload from "@/components/ImageUpload.vue";
@@ -103,6 +104,8 @@ import {
   useSpeakerCompanyImageUploadMutation,
 } from "@/mutations/speakers";
 import useToast from "@/lib/toast";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   entityId: string;
@@ -132,6 +135,7 @@ companyPublicMutation.companyId.value = props.entityId;
 const isUploading = ref(false);
 
 async function handleCompanyPublicFile(file: File) {
+  if (!confirmCompanyChange()) return;
   const fd = new FormData();
   fd.append("image", file);
   companyPublicMutation.imageData.value = fd;

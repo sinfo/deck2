@@ -35,7 +35,7 @@
 
           <!-- Action buttons -->
           <div v-if="canEdit" class="flex gap-2">
-            <Popover v-model:open="isEditFormOpen">
+            <Popover :open="isEditFormOpen" @update:open="setEditFormOpen">
               <PopoverTrigger as-child>
                 <Button variant="outline" size="sm" :disabled="isSaving">
                   Edit
@@ -72,7 +72,11 @@
               </PopoverContent>
             </Popover>
 
-            <Popover v-if="canDelete" v-model:open="isDeleteConfirmOpen">
+            <Popover
+              v-if="canDelete"
+              :open="isDeleteConfirmOpen"
+              @update:open="setDeleteConfirmOpen"
+            >
               <PopoverTrigger as-child>
                 <Button
                   variant="outline"
@@ -223,6 +227,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useMutation, useQueryCache } from "@pinia/colada";
 import type { Contact } from "@/dto/contacts";
@@ -239,6 +244,8 @@ import ContactForm from "./companies/ContactForm.vue";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import type { CreateCompanyRepData } from "@/dto/companies";
 import { ClipboardIcon, CheckIcon } from "lucide-vue-next";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   contact?: Contact;
@@ -289,6 +296,16 @@ const popoverSide = computed(() => {
 
 const isEditFormOpen = ref(false);
 const isDeleteConfirmOpen = ref(false);
+
+const setEditFormOpen = (open: boolean) => {
+  if (open && !confirmCompanyChange()) return;
+  isEditFormOpen.value = open;
+};
+
+const setDeleteConfirmOpen = (open: boolean) => {
+  if (open && !confirmCompanyChange()) return;
+  isDeleteConfirmOpen.value = open;
+};
 const queryCache = useQueryCache();
 
 const { mutate: updateContactMutation, isLoading: isSaving } = useMutation({

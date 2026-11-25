@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"testing"
 	"time"
@@ -1837,4 +1838,407 @@ func TestRemoveEmployer(t *testing.T) {
 
 	assert.Equal(t, company.ID, newCompany.ID)
 	assert.Equal(t, len(company.Employers), 1)
+}
+
+func createRelationshipTestCompany(t *testing.T, name string) *models.Company {
+	company, err := mongodb.Companies.CreateCompany(mongodb.CreateCompanyData{Name: &name})
+	assert.NilError(t, err)
+	return company
+}
+
+func addRelationshipRequest(t *testing.T, companyID primitive.ObjectID, relType models.CompanyRelationshipType, targetID primitive.ObjectID) *httptest.ResponseRecorder {
+	b, errMarshal := json.Marshal(mongodb.CompanyRelationshipData{Type: &relType, Company: &targetID})
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("POST", "/companies/"+companyID.Hex()+"/relationships", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	return res
+}
+
+func TestAddCompanyRelationship(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+
+	res := addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var updated models.Company
+	assert.NilError(t, json.NewDecoder(res.Body).Decode(&updated))
+	assert.Equal(t, updated.Name, "VML")
+	assert.Equal(t, len(updated.Relationships), 1)
+	assert.Equal(t, updated.Relationships[0].Type, models.RebrandedFrom)
+	assert.Equal(t, updated.Relationships[0].Company, previous.ID)
+
+	// Historical relationships point only from the current company to its predecessor.
+	oldCompany, err := mongodb.Companies.GetCompany(previous.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(oldCompany.Relationships), 0)
+}
+
+func TestAddCompanyRelationshipMultiple(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	acquired := createRelationshipTestCompany(t, "Acquired Company")
+
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.Absorbed, acquired.ID).Code, http.StatusOK)
+
+	updated, err := mongodb.Companies.GetCompany(current.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(updated.Relationships), 2)
+
+	oldCompany, err := mongodb.Companies.GetCompany(previous.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(oldCompany.Relationships), 0)
+
+	absorbedCompany, err := mongodb.Companies.GetCompany(acquired.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(absorbedCompany.Relationships), 0)
+}
+
+func TestCompanyOwnershipRelationships(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	parent := createRelationshipTestCompany(t, "The Linux Foundation")
+	child := createRelationshipTestCompany(t, "Independent Member")
+
+	// Recording "Part of" also records "Owns" on the parent.
+	assert.Equal(t, addRelationshipRequest(t, child.ID, models.SubsidiaryOf, parent.ID).Code, http.StatusOK)
+
+	childCompany, err := mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, childCompany.Name, "Independent Member")
+	assert.Equal(t, len(childCompany.Relationships), 1)
+	assert.Equal(t, childCompany.Relationships[0].Type, models.SubsidiaryOf)
+	assert.Equal(t, childCompany.Relationships[0].Company, parent.ID)
+
+	parentCompany, err := mongodb.Companies.GetCompany(parent.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, parentCompany.Name, "The Linux Foundation")
+	assert.Equal(t, len(parentCompany.Relationships), 1)
+	assert.Equal(t, parentCompany.Relationships[0].Type, models.ParentOf)
+	assert.Equal(t, parentCompany.Relationships[0].Company, child.ID)
+
+	// Adding the same ownership from the reverse side must not duplicate it.
+	assert.Equal(t, addRelationshipRequest(t, parent.ID, models.ParentOf, child.ID).Code, http.StatusConflict)
+
+	since := time.Date(2024, time.January, 1, 0, 0, 0, 0, time.UTC)
+	b, err := json.Marshal(mongodb.UpdateCompanyRelationshipData{Since: &since})
+	assert.NilError(t, err)
+
+	path := "/companies/" + parent.ID.Hex() + "/relationships/" + child.ID.Hex()
+	res, err := executeRequest("PUT", path+"?type=PARENT_OF", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	parentCompany, err = mongodb.Companies.GetCompany(parent.ID)
+	assert.NilError(t, err)
+	childCompany, err = mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Assert(t, parentCompany.Relationships[0].Since.Equal(since))
+	assert.Assert(t, childCompany.Relationships[0].Since.Equal(since))
+
+	// Removing ownership from the parent also removes its inverse on the child.
+	res, err = executeRequest("DELETE", path+"?type=PARENT_OF", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	parentCompany, err = mongodb.Companies.GetCompany(parent.ID)
+	assert.NilError(t, err)
+	childCompany, err = mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(parentCompany.Relationships), 0)
+	assert.Equal(t, len(childCompany.Relationships), 0)
+
+	// The ownership can also be created from "Owns" and removed from "Part of".
+	assert.Equal(t, addRelationshipRequest(t, parent.ID, models.ParentOf, child.ID).Code, http.StatusOK)
+	childCompany, err = mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(childCompany.Relationships), 1)
+	assert.Equal(t, childCompany.Relationships[0].Type, models.SubsidiaryOf)
+
+	childPath := "/companies/" + child.ID.Hex() + "/relationships/" + parent.ID.Hex()
+	res, err = executeRequest("DELETE", childPath+"?type=SUBSIDIARY_OF", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+	parentCompany, err = mongodb.Companies.GetCompany(parent.ID)
+	assert.NilError(t, err)
+	childCompany, err = mongodb.Companies.GetCompany(child.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(parentCompany.Relationships), 0)
+	assert.Equal(t, len(childCompany.Relationships), 0)
+}
+
+func TestCompanyOwnershipCycle(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	grandparent := createRelationshipTestCompany(t, "Grandparent")
+	parent := createRelationshipTestCompany(t, "Parent")
+	child := createRelationshipTestCompany(t, "Child")
+
+	assert.Equal(t, addRelationshipRequest(t, child.ID, models.SubsidiaryOf, parent.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, parent.ID, models.SubsidiaryOf, grandparent.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, grandparent.ID, models.SubsidiaryOf, child.ID).Code, http.StatusConflict)
+	assert.Equal(t, addRelationshipRequest(t, child.ID, models.ParentOf, parent.ID).Code, http.StatusConflict)
+}
+
+func TestAddCompanyRelationshipInvalid(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+
+	for _, kind := range []models.CompanyRelationshipType{
+		"MERGED_INTO", "REBRANDED_TO", "UNKNOWN",
+	} {
+		assert.Equal(t, addRelationshipRequest(t, current.ID, kind, previous.ID).Code, http.StatusBadRequest)
+	}
+
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, current.ID).Code, http.StatusBadRequest)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, primitive.NewObjectID()).Code, http.StatusNotFound)
+
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusConflict)
+
+	// A predecessor cannot point back to its successor, even with a different type.
+	assert.Equal(t, addRelationshipRequest(t, previous.ID, models.Absorbed, current.ID).Code, http.StatusConflict)
+}
+
+func TestGetCompanyRelationships(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
+
+	// Legacy forward-looking records are preserved in storage but never returned as history.
+	_, err := mongodb.Companies.Collection.UpdateOne(ctx, bson.M{"_id": current.ID}, bson.M{
+		"$push": bson.M{"relationships": bson.M{"type": "MERGED_INTO", "company": previous.ID}},
+	})
+	assert.NilError(t, err)
+
+	res, err := executeRequest("GET", "/companies/"+current.ID.Hex()+"/relationships", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var related []models.RelatedCompany
+	assert.NilError(t, json.NewDecoder(res.Body).Decode(&related))
+	assert.Equal(t, len(related), 1)
+	assert.Equal(t, related[0].Type, models.RebrandedFrom)
+	assert.Equal(t, related[0].Company, previous.ID)
+	assert.Equal(t, related[0].Name, "Y&R")
+
+	res, err = executeRequest("GET", "/companies/"+primitive.NewObjectID().Hex()+"/relationships", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestRemoveCompanyRelationship(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
+
+	url := "/companies/" + current.ID.Hex() + "/relationships/" + previous.ID.Hex()
+	res, err := executeRequest("DELETE", url+"?type=MERGED_INTO", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	res, err = executeRequest("DELETE", url+"?type=REBRANDED_FROM", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	updated, err := mongodb.Companies.GetCompany(current.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(updated.Relationships), 0)
+
+	res, err = executeRequest("DELETE", url+"?type=REBRANDED_FROM", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+}
+
+func TestDeleteCompanyRemovesRelationships(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
+
+	res, err := executeRequest("DELETE", "/companies/"+previous.ID.Hex(), nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	updated, err := mongodb.Companies.GetCompany(current.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(updated.Relationships), 0)
+}
+
+func TestUpdateCompanyRelationship(t *testing.T) {
+	ctx := context.Background()
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	current := createRelationshipTestCompany(t, "VML")
+	previous := createRelationshipTestCompany(t, "Y&R")
+	assert.Equal(t, addRelationshipRequest(t, current.ID, models.RebrandedFrom, previous.ID).Code, http.StatusOK)
+
+	since := time.Date(2023, time.October, 1, 0, 0, 0, 0, time.UTC)
+	b, err := json.Marshal(mongodb.UpdateCompanyRelationshipData{Since: &since})
+	assert.NilError(t, err)
+
+	url := "/companies/" + current.ID.Hex() + "/relationships/" + previous.ID.Hex()
+	res, err := executeRequest("PUT", url+"?type=REBRANDED_FROM", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	updated, err := mongodb.Companies.GetCompany(current.ID)
+	assert.NilError(t, err)
+	assert.Assert(t, updated.Relationships[0].Since.Equal(since))
+
+	oldCompany, err := mongodb.Companies.GetCompany(previous.ID)
+	assert.NilError(t, err)
+	assert.Equal(t, len(oldCompany.Relationships), 0)
+
+	res, err = executeRequest("PUT", url+"?type=REBRANDED_FROM", bytes.NewBufferString(`{"since": null}`))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	updated, err = mongodb.Companies.GetCompany(current.ID)
+	assert.NilError(t, err)
+	assert.Assert(t, updated.Relationships[0].Since == nil)
+
+	res, err = executeRequest("PUT", url+"?type=ABSORBED", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
+	res, err = executeRequest("PUT", url+"?type=REBRANDED_TO", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+}
+
+func TestCompanyClosure(t *testing.T) {
+	ctx := context.Background()
+
+	defer mongodb.Events.Collection.Drop(ctx)
+	defer mongodb.Companies.Collection.Drop(ctx)
+	defer mongodb.Contacts.Collection.Drop(ctx)
+
+	if _, err := mongodb.Events.Collection.InsertOne(ctx, bson.M{"_id": Event1.ID, "name": Event1.Name}); err != nil {
+		log.Fatal(err)
+	}
+
+	company := createRelationshipTestCompany(t, "Lehman Brothers")
+
+	since := time.Date(2008, time.September, 15, 0, 0, 0, 0, time.UTC)
+	closureType := models.Bankrupt
+	b, errMarshal := json.Marshal(mongodb.CompanyClosureData{Type: &closureType, Since: &since})
+	assert.NilError(t, errMarshal)
+
+	res, err := executeRequest("PUT", "/companies/"+company.ID.Hex()+"/closure", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var updatedCompany models.Company
+	json.NewDecoder(res.Body).Decode(&updatedCompany)
+
+	assert.Assert(t, updatedCompany.Closure != nil)
+	assert.Equal(t, updatedCompany.Closure.Type, models.Bankrupt)
+	assert.Equal(t, updatedCompany.Closure.Since.Equal(since), true)
+
+	// Changing to banned, without a date, replaces the previous closure
+	res, err = executeRequest("PUT", "/companies/"+company.ID.Hex()+"/closure", bytes.NewBufferString(`{"type": "BANNED"}`))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	var bannedCompany models.Company
+	json.NewDecoder(res.Body).Decode(&bannedCompany)
+
+	assert.Assert(t, bannedCompany.Closure != nil)
+	assert.Equal(t, bannedCompany.Closure.Type, models.Banned)
+	assert.Assert(t, bannedCompany.Closure.Since == nil)
+
+	// Invalid type
+	res, err = executeRequest("PUT", "/companies/"+company.ID.Hex()+"/closure", bytes.NewBufferString(`{"type": "SOMETHING"}`))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusBadRequest)
+
+	// Company not found
+	res, err = executeRequest("PUT", "/companies/"+primitive.NewObjectID().Hex()+"/closure", bytes.NewBuffer(b))
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusNotFound)
+
+	// Operating again
+	res, err = executeRequest("DELETE", "/companies/"+company.ID.Hex()+"/closure", nil)
+	assert.NilError(t, err)
+	assert.Equal(t, res.Code, http.StatusOK)
+
+	updated, err := mongodb.Companies.GetCompany(company.ID)
+	assert.NilError(t, err)
+	assert.Assert(t, updated.Closure == nil)
 }

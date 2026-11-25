@@ -4,8 +4,21 @@
     class="fixed inset-0 bg-black/20 z-40 transition-opacity duration-200"
     @click="isDeleteConfirmOpen = false"
   ></div>
-  <Card class="w-full hover:shadow-lg transition-shadow duration-200">
-    <CardHeader>
+  <Card
+    class="w-full transition-shadow duration-200"
+    :class="
+      company.closure
+        ? 'border-dashed border-foreground/30 bg-muted/40 shadow-none'
+        : 'hover:shadow-lg'
+    "
+  >
+    <CardHeader
+      :class="
+        isEditing
+          ? 'h-[min(70vh,40rem)] grid-rows-[auto_minmax(0,1fr)] overflow-hidden'
+          : ''
+      "
+    >
       <div class="flex items-center justify-between mb-4">
         <CardTitle class="text-lg">Company Information</CardTitle>
         <div class="flex items-center gap-2">
@@ -45,8 +58,13 @@
       </div>
 
       <!-- Editing Form -->
-      <div v-if="isEditing">
+      <div
+        v-if="isEditing"
+        class="-mx-6 h-full min-h-0 min-w-0 overflow-y-auto px-6 pb-6"
+      >
+        <EditSectionHeading title="Company Details" />
         <CompanyInfoForm
+          class="mt-5"
           :initial-data="{
             name: company.name,
             description: company.description,
@@ -58,7 +76,14 @@
           @submit="handleSubmit"
           @cancel="cancelEditing"
           @image-selected="handleImageSelected"
-        />
+        >
+          <template #after-fields>
+            <div class="space-y-8 pt-4">
+              <CompanyRelationshipsEditor :company-id="company.id" />
+              <CompanyClosureEditor :company="company" />
+            </div>
+          </template>
+        </CompanyInfoForm>
       </div>
 
       <!-- Display Mode -->
@@ -68,12 +93,16 @@
             :src="company.imgs?.internal || company.imgs?.public"
             :alt="`${company.name} logo`"
             class="w-20 h-20 sm:w-24 sm:h-24 object-contain rounded-lg border"
+            :class="company.closure ? 'grayscale opacity-70' : ''"
           />
         </div>
         <div class="flex-1 min-w-0">
-          <CardTitle class="text-lg wrap-anywhere">{{
-            company.name
-          }}</CardTitle>
+          <CardTitle
+            class="text-lg wrap-anywhere"
+            :class="company.closure ? 'text-muted-foreground' : ''"
+          >
+            {{ company.name }}
+          </CardTitle>
           <div class="flex flex-wrap gap-1 mt-2">
             <ParticipationStatusBadge
               v-if="company.participation?.status"
@@ -94,6 +123,8 @@
     </CardHeader>
 
     <CardContent v-if="!isEditing" class="space-y-3">
+      <CompanyRelationships :company-id="company.id" />
+
       <div v-if="company.description" class="relative">
         <CardDescription
           :class="[
@@ -143,6 +174,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed } from "vue";
 import type {
   CompanyWithParticipation,
@@ -164,10 +196,16 @@ import Badge from "../ui/badge/Badge.vue";
 import Button from "../ui/button/Button.vue";
 import Image from "../Image.vue";
 import CompanyInfoForm from "../companies/CompanyInfoForm.vue";
+import CompanyRelationships from "../companies/CompanyRelationships.vue";
+import CompanyRelationshipsEditor from "../companies/CompanyRelationshipsEditor.vue";
+import CompanyClosureEditor from "../companies/CompanyClosureEditor.vue";
+import EditSectionHeading from "../companies/EditSectionHeading.vue";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { TrashIcon } from "lucide-vue-next";
 import ConfirmDelete from "@/components/ConfirmDelete.vue";
 import ParticipationStatusBadge from "@/components/ParticipationStatusBadge.vue";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 const props = defineProps<{
   company: CompanyWithParticipation;
@@ -293,7 +331,7 @@ const canDelete = computed(() => {
 });
 
 const handleDelete = async () => {
-  if (!props.company?.id) return;
+  if (!props.company?.id || !confirmCompanyChange()) return;
   isDeleting.value = true;
   try {
     await deleteCompany(props.company.id);

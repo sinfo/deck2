@@ -4,6 +4,7 @@
     entity-type="company"
     description="Communication history with company representatives"
     :participations="company.participations"
+    :company-relationships="relationships"
     can-send-messages
     :templates="templates"
     :fetch-communications="getCompanyCommunications"
@@ -15,7 +16,10 @@
 import { getCompanyCommunications } from "@/api/companies";
 import type { CompanyWithParticipation } from "@/dto/companies";
 import { useEventStore } from "@/stores/event";
-import { usePostCompanyThreadMutation } from "@/mutations/companies";
+import {
+  useCompanyRelationshipsQuery,
+  usePostCompanyThreadMutation,
+} from "@/mutations/companies";
 import Communications from "../Communications.vue";
 import { companyTemplates, createEmailVariable } from "@/lib/templates";
 import { computed } from "vue";
@@ -23,6 +27,10 @@ import { computed } from "vue";
 const props = defineProps<{
   company: CompanyWithParticipation;
 }>();
+
+const { data: relationships } = useCompanyRelationshipsQuery(
+  () => props.company.id,
+);
 
 const eventStore = useEventStore();
 

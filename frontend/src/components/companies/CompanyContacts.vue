@@ -20,7 +20,7 @@
           >
             <GripVerticalIcon class="w-4 h-4" />
           </Button>
-          <Popover v-model:open="isAddFormOpen">
+          <Popover :open="isAddFormOpen" @update:open="setAddFormOpen">
             <PopoverTrigger as-child>
               <Button variant="outline" size="sm"> Add </Button>
             </PopoverTrigger>
@@ -75,7 +75,7 @@
         v-if="!representatives.length"
         class="text-center text-muted-foreground py-8"
         title="Click here to add representatives"
-        @click="isAddFormOpen = true"
+        @click="setAddFormOpen(true)"
       />
 
       <div v-else class="space-y-4">
@@ -161,6 +161,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useMutation, useQueryCache } from "@pinia/colada";
 import type { CompanyRep, CreateCompanyRepData } from "@/dto/companies";
@@ -186,6 +187,8 @@ import ContactForm from "./ContactForm.vue";
 import ContactCard from "../ContactCard.vue";
 import EmptyStateCard from "../ui/EmptyStateCard.vue";
 
+const confirmCompanyChange = useCompanyArchiveConfirmation();
+
 const props = defineProps<{
   representatives: CompanyRep[];
   companyId: string;
@@ -193,6 +196,11 @@ const props = defineProps<{
 
 const queryCache = useQueryCache();
 const isAddFormOpen = ref(false);
+
+const setAddFormOpen = (open: boolean) => {
+  if (open && !confirmCompanyChange()) return;
+  isAddFormOpen.value = open;
+};
 
 // Reorder state
 const isReorderMode = ref(false);
@@ -345,6 +353,7 @@ const updateRepresentativeOrder = async (orderIds: string[]) => {
 
 // Reorder functions
 const toggleReorderMode = () => {
+  if (!isReorderMode.value && !confirmCompanyChange()) return;
   if (isReorderMode.value) {
     // If we're exiting, make update order backend call
     updateRepresentativeOrder(representativeOrder.value);

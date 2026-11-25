@@ -1,0 +1,96 @@
+{
+    "put": {
+        "tags": [
+            "companies"
+        ],
+        "summary": "Marks a company as bankrupt or banned",
+        "operationId": "setCompanyClosure",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the company",
+                "required": true,
+                "type": "string"
+            },
+            {
+                "in": "body",
+                "name": "payload",
+                "description": "Closure type and, optionally, its date",
+                "required": true,
+                "schema": {
+                    "$ref": "./models/company-closure.json"
+                }
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated company",
+                "schema": {
+                    "$ref": "./models/company.json"
+                }
+            },
+            "400": {
+                "description": "Invalid company ID or payload"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Couldn't find company"
+            }
+        }
+    },
+    "delete": {
+        "tags": [
+            "companies"
+        ],
+        "summary": "Marks a company as operating again",
+        "operationId": "removeCompanyClosure",
+        "produces": [
+            "application/json"
+        ],
+        "security": [
+            {
+                "Bearer": []
+            }
+        ],
+        "parameters": [
+            {
+                "in": "path",
+                "name": "id",
+                "description": "ID of the company",
+                "required": true,
+                "type": "string"
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "Updated company",
+                "schema": {
+                    "$ref": "./models/company.json"
+                }
+            },
+            "400": {
+                "description": "Invalid company ID"
+            },
+            "401": {
+                "description": "Unauthorized"
+            },
+            "404": {
+                "description": "Couldn't find company"
+            }
+        }
+    }
+}

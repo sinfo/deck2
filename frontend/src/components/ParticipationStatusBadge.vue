@@ -1,5 +1,5 @@
 <template>
-  <Popover :open="isStatusMenuOpen" @update:open="isStatusMenuOpen = $event">
+  <Popover :open="isStatusMenuOpen" @update:open="setStatusMenuOpen">
     <PopoverTrigger as-child>
       <Badge
         :class="participationStatusColor[currentStatus]?.background"
@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, watch } from "vue";
 import {
   humanReadableParticipationStatus,
@@ -43,6 +44,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ChevronDown, Loader2 } from "lucide-vue-next";
+
+const confirmCompanyChange = useCompanyArchiveConfirmation();
 
 interface Props {
   status: ParticipationStatus;
@@ -73,10 +76,19 @@ watch(
 import { useCompanyParticipationStatusMutation } from "@/mutations/companies";
 import { useSpeakerParticipationStatusMutation } from "@/mutations/speakers";
 
+const setStatusMenuOpen = (open: boolean) => {
+  if (open && !confirmCompanyChange()) return;
+  isStatusMenuOpen.value = open;
+};
+
 const companyStatusMutation = useCompanyParticipationStatusMutation();
 const speakerStatusMutation = useSpeakerParticipationStatusMutation();
 
 const selectStatus = async (status: ParticipationStatus) => {
+  if (status === currentStatus.value) {
+    isStatusMenuOpen.value = false;
+    return;
+  }
   const previous = currentStatus.value;
   currentStatus.value = status;
   isStatusMenuOpen.value = false;

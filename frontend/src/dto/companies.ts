@@ -52,6 +52,61 @@ export interface Company {
   billingInfo?: CompanyBillingInfo;
   participations: CompanyParticipation[];
   contact: ObjectID;
+  relationships?: CompanyRelationship[];
+  closure?: CompanyClosure;
+}
+
+export type CompanyRelationshipType =
+  | "SUBSIDIARY_OF"
+  | "PARENT_OF"
+  | "ABSORBED"
+  | "REBRANDED_FROM";
+
+// Retain the stored ABSORBED value for existing merger relationships.
+export const companyRelationshipLabels: Record<
+  CompanyRelationshipType,
+  string
+> = {
+  SUBSIDIARY_OF: "Part of",
+  PARENT_OF: "Owns",
+  ABSORBED: "Merged with",
+  REBRANDED_FROM: "Formerly known as",
+};
+
+export interface CompanyRelationship {
+  type: CompanyRelationshipType;
+  company: ObjectID;
+  since?: string;
+}
+
+// A CompanyRelationship resolved with the related company's name and image.
+export interface RelatedCompany extends CompanyRelationship {
+  name: string;
+  img?: string;
+}
+
+export interface AddCompanyRelationshipData {
+  type: CompanyRelationshipType;
+  company: ObjectID;
+  since?: string;
+}
+
+export interface UpdateCompanyRelationshipData {
+  // null removes the date.
+  since: string | null;
+}
+
+export type CompanyClosureType = "BANKRUPT" | "BANNED";
+
+export const companyClosureLabels: Record<CompanyClosureType, string> = {
+  BANKRUPT: "Bankrupt",
+  BANNED: "Banned",
+};
+
+// Set when the company went bankrupt or was banned.
+export interface CompanyClosure {
+  type: CompanyClosureType;
+  since?: string;
 }
 
 export interface CompanyParticipationPublic {

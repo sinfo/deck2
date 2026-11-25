@@ -1,7 +1,14 @@
 <template>
-  <div v-if="companyWithParticipation" class="flex flex-col lg:flex-row gap-6">
+  <div
+    v-if="companyWithParticipation"
+    class="flex flex-col lg:flex-row gap-6"
+    :class="{ 'closed-company': !!companyWithParticipation.closure }"
+  >
     <!-- Company information section -->
     <div class="space-y-4 w-full lg:w-96 lg:flex-shrink-0">
+      <!-- Bankrupt / banned, merged and rebranded warnings -->
+      <CompanyStatusBanners :company="companyWithParticipation" />
+
       <!-- Company Card -->
       <CompanyCard
         :company="companyWithParticipation"
@@ -93,6 +100,8 @@
 <script setup lang="ts">
 import { getCompanyById, getCompanyRepresentatives } from "@/api/companies";
 import CompanyCard from "@/components/cards/CompanyCard.vue";
+import CompanyStatusBanners from "@/components/companies/CompanyStatusBanners.vue";
+import { companyArchiveConfirmationKey } from "@/composables/useCompanyArchiveConfirmation";
 import CompanyBillingInfo from "@/components/companies/CompanyBillingInfo.vue";
 import CompanyContacts from "@/components/companies/CompanyContacts.vue";
 import DirectEmailDialogTrigger from "@/components/DirectEmailDialogTrigger.vue";
@@ -101,7 +110,7 @@ import { withCurrentParticipation } from "@/lib/utils";
 import { useEventStore } from "@/stores/event";
 
 import { useQuery, useQueryCache } from "@pinia/colada";
-import { computed, ref, watch } from "vue";
+import { computed, provide, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Info from "./Info/Info.vue";
 import TabsList from "@/components/ui/tabs/TabsList.vue";
@@ -157,4 +166,27 @@ const companyWithParticipation = computed(() => {
     eventStore.selectedEvent,
   ) as CompanyWithParticipation;
 });
+
+const confirmCompanyChange = (): boolean => {
+  if (companyWithParticipation.value?.closure?.type !== "BANKRUPT") {
+    return true;
+  }
+
+  return window.confirm(
+    "This company went bankrupt and is no longer operating. Its page is preserved for historical reference and should only be updated when necessary.\n\nAre you sure you want to make this change?",
+  );
+};
+
+provide(companyArchiveConfirmationKey, confirmCompanyChange);
 </script>
+
+<style scoped>
+/* Reuse the closure banner's muted treatment for every Card on this
+   company's detail page, including cards nested inside other components. */
+.closed-company :deep([data-slot="card"]) {
+  border-style: dashed;
+  border-color: color-mix(in oklab, var(--foreground) 30%, transparent);
+  background-color: color-mix(in oklab, var(--muted) 40%, transparent);
+  box-shadow: none;
+}
+</style>

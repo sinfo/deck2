@@ -40,84 +40,88 @@
               </AccordionTrigger>
               <AccordionContent class="px-0 pt-4">
                 <div class="space-y-4">
-                  <Card
+                  <template
                     v-for="participation in pastParticipations"
                     :key="participation.event"
-                    class="p-4"
                   >
-                    <div class="space-y-3">
-                      <div class="flex items-center justify-between">
-                        <h4 class="font-medium">
-                          {{ getEventName(participation.event) }}
-                        </h4>
-                        <Badge
-                          :class="
-                            participationStatusColor[participation.status]
-                              ?.background
-                          "
-                          class="text-xs"
-                        >
-                          {{
-                            humanReadableParticipationStatus[
-                              participation.status
-                            ]
-                          }}
-                        </Badge>
-                      </div>
-
-                      <div
-                        class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start"
-                      >
-                        <div class="flex items-center gap-2">
-                          <Image
-                            :src="getMember(participation.member)?.img"
-                            :alt="getMember(participation.member)?.name"
-                            class="w-8 h-8 rounded-full object-cover border"
-                          />
-                          <div>
-                            <div class="text-sm font-medium">
-                              {{ getMember(participation.member)?.name }}
-                            </div>
-                            <div class="text-xs text-muted-foreground">
-                              Responsible
-                            </div>
-                          </div>
+                    <CompanyParticipationLandmark
+                      :relationships="landmarks.get(participation.event)"
+                    />
+                    <Card class="p-4">
+                      <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                          <h4 class="font-medium">
+                            {{ getEventName(participation.event) }}
+                          </h4>
+                          <Badge
+                            :class="
+                              participationStatusColor[participation.status]
+                                ?.background
+                            "
+                            class="text-xs"
+                          >
+                            {{
+                              humanReadableParticipationStatus[
+                                participation.status
+                              ]
+                            }}
+                          </Badge>
                         </div>
 
-                        <template v-if="isCompanyParticipation(participation)">
-                          <div
-                            v-if="hasDate(participation.confirmed)"
-                            class="text-sm"
-                          >
-                            <span class="font-medium">Confirmed:</span>
-                            <div class="mt-1 text-muted-foreground">
-                              {{ formatDate(participation.confirmed) }}
-                            </div>
-                          </div>
-
-                          <div v-if="participation.notes" class="text-sm">
-                            <span class="font-medium">Notes:</span>
-                            <div class="mt-1 text-muted-foreground">
-                              {{ participation.notes }}
-                            </div>
-                          </div>
-
-                          <div
-                            v-if="participation.partner"
-                            class="flex items-center gap-1"
-                          >
-                            <Badge variant="secondary" class="text-xs"
-                              >Partner</Badge
-                            >
-                          </div>
-                        </template>
-                        <template
-                          v-else-if="isSpeakerParticipation(participation)"
+                        <div
+                          class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start"
                         >
-                        </template>
+                          <div class="flex items-center gap-2">
+                            <Image
+                              :src="getMember(participation.member)?.img"
+                              :alt="getMember(participation.member)?.name"
+                              class="w-8 h-8 rounded-full object-cover border"
+                            />
+                            <div>
+                              <div class="text-sm font-medium">
+                                {{ getMember(participation.member)?.name }}
+                              </div>
+                              <div class="text-xs text-muted-foreground">
+                                Responsible
+                              </div>
+                            </div>
+                          </div>
+
+                          <template v-if="isCompanyParticipation(participation)">
+                            <div
+                              v-if="hasDate(participation.confirmed)"
+                              class="text-sm"
+                            >
+                              <span class="font-medium">Confirmed:</span>
+                              <div class="mt-1 text-muted-foreground">
+                                {{ formatDate(participation.confirmed) }}
+                              </div>
+                            </div>
+
+                            <div v-if="participation.notes" class="text-sm">
+                              <span class="font-medium">Notes:</span>
+                              <div class="mt-1 text-muted-foreground">
+                                {{ participation.notes }}
+                              </div>
+                            </div>
+
+                            <div
+                              v-if="participation.partner"
+                              class="flex items-center gap-1"
+                            >
+                              <Badge variant="secondary" class="text-xs"
+                                >Partner</Badge
+                              >
+                            </div>
+                          </template>
+                          <template
+                            v-else-if="isSpeakerParticipation(participation)"
+                          >
+                          </template>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
+                    </Card>
+                  </template>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -132,9 +136,13 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { getAllEvents } from "@/api/events";
 import { getAllMembers } from "@/api/members";
-import { useCreateCompanyParticipationMutation } from "@/mutations/companies";
+import {
+  useCompanyRelationshipsQuery,
+  useCreateCompanyParticipationMutation,
+} from "@/mutations/companies";
 import { useCreateSpeakerParticipationMutation } from "@/mutations/speakers";
 import {
   Accordion,
@@ -144,10 +152,12 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
+import CompanyParticipationLandmark from "./companies/CompanyParticipationLandmark.vue";
 import EditableCompanyParticipation from "./companies/EditableCompanyParticipation.vue";
 import EditableSpeakerParticipation from "./speakers/EditableSpeakerParticipation.vue";
 import type { CompanyParticipation } from "@/dto/companies";
 import type { SpeakerParticipation } from "@/dto/speakers";
+import { groupParticipationLandmarks } from "@/lib/companyParticipationLandmarks";
 import {
   humanReadableParticipationStatus,
   participationStatusColor,
@@ -158,6 +168,8 @@ import { computed } from "vue";
 import Image from "./Image.vue";
 import EmptyStateCard from "./ui/EmptyStateCard.vue";
 
+const confirmCompanyChange = useCompanyArchiveConfirmation();
+
 type Participation = CompanyParticipation | SpeakerParticipation;
 
 interface Props {
@@ -167,6 +179,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const { data: relationships } = useCompanyRelationshipsQuery(() =>
+  props.entityType === "company" ? props.entityId : undefined,
+);
 
 const { data: eventsData } = useQuery({
   key: () => ["events"],
@@ -217,6 +233,14 @@ const pastParticipations = computed(() => {
   return sortedParticipations.value.filter((p) => p.event !== currentEvent.id);
 });
 
+const landmarks = computed(() =>
+  groupParticipationLandmarks(
+    sortedParticipations.value,
+    eventsData.value?.data ?? [],
+    relationships.value ?? [],
+  ),
+);
+
 const getEventName = (eventId: number) => {
   if (!eventsData.value?.data) return `Event ${eventId}`;
   const event = eventsData.value.data.find((e) => e.id === eventId);
@@ -254,7 +278,7 @@ const isSpeakerParticipation = (
 };
 
 const createParticipation = async () => {
-  if (isCreatingParticipation.value) return;
+  if (isCreatingParticipation.value || !confirmCompanyChange()) return;
 
   const currentEvent = getCurrentEvent();
   if (!currentEvent) return;

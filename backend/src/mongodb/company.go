@@ -1090,6 +1090,14 @@ func (c *CompaniesType) DeleteCompany(companyID primitive.ObjectID) (*models.Com
 	// Ignore error, if contact doesn't exist, it's ok.
 	Contacts.DeleteContact(company.Contact)
 
+	// Remove the inverse relationships from the related companies.
+	if _, err := c.Collection.UpdateMany(ctx,
+		bson.M{"relationships.company": companyID},
+		bson.M{"$pull": bson.M{"relationships": bson.M{"company": companyID}}},
+	); err != nil {
+		log.Println("error removing relationships to deleted company:", err)
+	}
+
 	return &company, nil
 }
 
@@ -1530,4 +1538,447 @@ func (c *CompaniesType) FindThread(threadID primitive.ObjectID) (*models.Company
 	}
 
 	return nil, nil
+}
+
+var (
+	// ErrRelationshipSelf is returned when trying to relate a company with itself.
+	ErrRelationshipSelf = errors.New("a company cannot be related to itself")
+	// ErrRelationshipExists is returned when the exact same relationship already exists.
+	ErrRelationshipExists = errors.New("relationship already exists")
+	// ErrRelationshipCycle is returned when the relationship would create a cycle.
+	ErrRelationshipCycle = errors.New("relationship would create a cycle")
+	// ErrRelationshipNotFound is returned when the relationship to remove does not exist.
+	ErrRelationshipNotFound = errors.New("relationship not found")
+)
+
+// CompanyRelationshipData is the data used to add a relationship between two companies.
+type CompanyRelationshipData struct {
+	Type    *models.CompanyRelationshipType `json:"type"`
+	Company *primitive.ObjectID             `json:"company"`
+	Since   *time.Time                      `json:"since"`
+}
+
+// ParseBody fills the CompanyRelationshipData from a body
+func (crd *CompanyRelationshipData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(crd); err != nil {
+		return err
+	}
+
+	if crd.Type == nil || !crd.Type.IsValid() {
+		return errors.New("invalid relationship type")
+	}
+
+	if crd.Company == nil || crd.Company.IsZero() {
+		return errors.New("invalid company")
+	}
+
+	return nil
+}
+
+// reachesRelationship checks for cycles using ownership or historical links.
+func (c *CompaniesType) reachesRelationship(from, to primitive.ObjectID, ownership bool) (bool, error) {
+	visited := map[primitive.ObjectID]bool{from: true}
+	current := []primitive.ObjectID{from}
+
+	for len(current) > 0 {
+		var next []primitive.ObjectID
+		for _, id := range current {
+			company, err := c.GetCompany(id)
+			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					continue
+				}
+				return false, err
+			}
+
+			for _, rel := range company.Relationships {
+				if ownership {
+					if rel.Type != models.SubsidiaryOf {
+						continue
+					}
+				} else if rel.Type != models.Absorbed && rel.Type != models.RebrandedFrom {
+					continue
+				}
+				if rel.Company == to {
+					return true, nil
+				}
+				if !visited[rel.Company] {
+					visited[rel.Company] = true
+					next = append(next, rel.Company)
+				}
+			}
+		}
+		current = next
+	}
+
+	return false, nil
+}
+
+// AddCompanyRelationship records a link, mirroring ownership on both companies.
+func (c *CompaniesType) AddCompanyRelationship(companyID primitive.ObjectID, data CompanyRelationshipData) (*models.Company, error) {
+	ctx := context.Background()
+	relType := *data.Type
+	targetID := *data.Company
+
+	if companyID == targetID {
+		return nil, ErrRelationshipSelf
+	}
+
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := c.GetCompany(targetID); err != nil {
+		return nil, err
+	}
+
+	for _, rel := range company.Relationships {
+		if rel.Company == targetID && rel.Type == relType {
+			return nil, ErrRelationshipExists
+		}
+	}
+
+	// Ownership follows child -> parent; history follows current -> predecessor.
+	from, to := targetID, companyID
+	if relType == models.ParentOf {
+		from, to = companyID, targetID
+	}
+	cycle, err := c.reachesRelationship(from, to, relType.IsOwnership())
+	if err != nil {
+		return nil, err
+	}
+	if cycle {
+		return nil, ErrRelationshipCycle
+	}
+
+	relationship := models.CompanyRelationship{
+		Type:    relType,
+		Company: targetID,
+		Since:   data.Since,
+	}
+
+	filter := bson.M{
+		"_id": companyID,
+		"relationships": bson.M{
+			"$not": bson.M{"$elemMatch": bson.M{"type": relType, "company": targetID}},
+		},
+	}
+
+	var updated models.Company
+	err = c.Collection.FindOneAndUpdate(ctx, filter,
+		bson.M{"$push": bson.M{"relationships": relationship}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&updated)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, ErrRelationshipExists
+		}
+		log.Println("error adding company relationship:", err)
+		return nil, err
+	}
+
+	if relType.IsOwnership() {
+		inverse := models.CompanyRelationship{
+			Type:    relType.Inverse(),
+			Company: companyID,
+			Since:   data.Since,
+		}
+		inverseFilter := bson.M{
+			"_id": targetID,
+			"relationships": bson.M{
+				"$not": bson.M{"$elemMatch": bson.M{"type": inverse.Type, "company": companyID}},
+			},
+		}
+		result, inverseErr := c.Collection.UpdateOne(ctx, inverseFilter,
+			bson.M{"$push": bson.M{"relationships": inverse}})
+		if inverseErr != nil || result.MatchedCount == 0 {
+			if _, rollbackErr := c.Collection.UpdateOne(ctx, bson.M{"_id": companyID},
+				bson.M{"$pull": bson.M{"relationships": bson.M{"type": relType, "company": targetID}}}); rollbackErr != nil {
+				log.Println("error rolling back company ownership:", rollbackErr)
+			}
+			if inverseErr != nil {
+				return nil, inverseErr
+			}
+			return nil, ErrRelationshipExists
+		}
+	}
+
+	return &updated, nil
+}
+
+// RemoveCompanyRelationship removes a link, including inverse ownership.
+func (c *CompaniesType) RemoveCompanyRelationship(companyID, targetID primitive.ObjectID, relType models.CompanyRelationshipType) (*models.Company, error) {
+	ctx := context.Background()
+
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	var removed *models.CompanyRelationship
+	for i := range company.Relationships {
+		if company.Relationships[i].Type == relType && company.Relationships[i].Company == targetID {
+			removed = &company.Relationships[i]
+			break
+		}
+	}
+	if removed == nil {
+		return nil, ErrRelationshipNotFound
+	}
+
+	filter := bson.M{
+		"_id": companyID,
+		"relationships": bson.M{"$elemMatch": bson.M{"type": relType, "company": targetID}},
+	}
+	var updated models.Company
+	err = c.Collection.FindOneAndUpdate(ctx, filter,
+		bson.M{"$pull": bson.M{"relationships": bson.M{"type": relType, "company": targetID}}},
+		options.FindOneAndUpdate().SetReturnDocument(options.After),
+	).Decode(&updated)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, ErrRelationshipNotFound
+		}
+		log.Println("error removing company relationship:", err)
+		return nil, err
+	}
+
+	if relType.IsOwnership() {
+		_, err = c.Collection.UpdateOne(ctx, bson.M{"_id": targetID}, bson.M{
+			"$pull": bson.M{"relationships": bson.M{"type": relType.Inverse(), "company": companyID}},
+		})
+		if err != nil {
+			if _, rollbackErr := c.Collection.UpdateOne(ctx, bson.M{"_id": companyID},
+				bson.M{"$push": bson.M{"relationships": *removed}}); rollbackErr != nil {
+				log.Println("error restoring removed relationship:", rollbackErr)
+			}
+			return nil, err
+		}
+	}
+
+	return &updated, nil
+}
+
+// GetCompanyRelationships gets a company's relationships, resolved with each related company's name and image.
+func (c *CompaniesType) GetCompanyRelationships(companyID primitive.ObjectID) ([]models.RelatedCompany, error) {
+
+	ctx := context.Background()
+	related := make([]models.RelatedCompany, 0)
+
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(company.Relationships) == 0 {
+		return related, nil
+	}
+
+	ids := make([]primitive.ObjectID, 0, len(company.Relationships))
+	for _, rel := range company.Relationships {
+		if rel.Type.IsValid() {
+			ids = append(ids, rel.Company)
+		}
+	}
+	if len(ids) == 0 {
+		return related, nil
+	}
+
+	findOptions := options.Find().SetProjection(bson.M{"name": 1, "imgs": 1})
+
+	cur, err := c.Collection.Find(ctx, bson.M{"_id": bson.M{"$in": ids}}, findOptions)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	companies := make(map[primitive.ObjectID]models.Company)
+	for cur.Next(ctx) {
+		var other models.Company
+		if err := cur.Decode(&other); err != nil {
+			return nil, err
+		}
+		companies[other.ID] = other
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, err
+	}
+
+	// Keep the order in which relationships were added.
+	for _, rel := range company.Relationships {
+		if !rel.Type.IsValid() {
+			continue
+		}
+		other, ok := companies[rel.Company]
+		if !ok {
+			continue
+		}
+
+		image := other.Images.Internal
+		if image == "" {
+			image = other.Images.Public
+		}
+
+		related = append(related, models.RelatedCompany{
+			Type:    rel.Type,
+			Company: rel.Company,
+			Name:    other.Name,
+			Image:   image,
+			Since:   rel.Since,
+		})
+	}
+
+	return related, nil
+}
+
+// UpdateCompanyRelationshipData is the data used to update a relationship between two companies.
+type UpdateCompanyRelationshipData struct {
+	// Since is the new date of the relationship. Nil removes the date.
+	Since *time.Time `json:"since"`
+}
+
+// ParseBody fills the UpdateCompanyRelationshipData from a body
+func (ucrd *UpdateCompanyRelationshipData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ucrd); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// setRelationshipSince sets (or removes, if nil) the date of one relationship of a company.
+func (c *CompaniesType) setRelationshipSince(companyID, targetID primitive.ObjectID, relType models.CompanyRelationshipType, since *time.Time) (*mongo.UpdateResult, error) {
+
+	ctx := context.Background()
+
+	var filterQuery = bson.M{
+		"_id":           companyID,
+		"relationships": bson.M{"$elemMatch": bson.M{"type": relType, "company": targetID}},
+	}
+
+	// The positional operator "$" targets the array element matched by $elemMatch in the filter.
+	var updateQuery = bson.M{"$unset": bson.M{"relationships.$.since": ""}}
+	if since != nil {
+		updateQuery = bson.M{"$set": bson.M{"relationships.$.since": *since}}
+	}
+
+	return c.Collection.UpdateOne(ctx, filterQuery, updateQuery)
+}
+
+// UpdateCompanyRelationship updates the date, mirroring ownership changes.
+func (c *CompaniesType) UpdateCompanyRelationship(companyID, targetID primitive.ObjectID, relType models.CompanyRelationshipType, data UpdateCompanyRelationshipData) (*models.Company, error) {
+	company, err := c.GetCompany(companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	var current *models.CompanyRelationship
+	for i := range company.Relationships {
+		if company.Relationships[i].Type == relType && company.Relationships[i].Company == targetID {
+			current = &company.Relationships[i]
+			break
+		}
+	}
+	if current == nil {
+		return nil, ErrRelationshipNotFound
+	}
+
+	result, err := c.setRelationshipSince(companyID, targetID, relType, data.Since)
+	if err != nil {
+		log.Println("error updating company relationship:", err)
+		return nil, err
+	}
+	if result.MatchedCount == 0 {
+		return nil, ErrRelationshipNotFound
+	}
+
+	if relType.IsOwnership() {
+		result, inverseErr := c.setRelationshipSince(targetID, companyID, relType.Inverse(), data.Since)
+		if inverseErr != nil || result.MatchedCount == 0 {
+			if _, rollbackErr := c.setRelationshipSince(companyID, targetID, relType, current.Since); rollbackErr != nil {
+				log.Println("error restoring relationship date:", rollbackErr)
+			}
+			if inverseErr != nil {
+				return nil, inverseErr
+			}
+			return nil, ErrRelationshipNotFound
+		}
+	}
+
+	return c.GetCompany(companyID)
+}
+
+// CompanyClosureData is the data used to mark a company as bankrupt or banned.
+type CompanyClosureData struct {
+	Type  *models.CompanyClosureType `json:"type"`
+	Since *time.Time                 `json:"since"`
+}
+
+// ParseBody fills the CompanyClosureData from a body
+func (ccd *CompanyClosureData) ParseBody(body io.Reader) error {
+
+	if err := json.NewDecoder(body).Decode(ccd); err != nil {
+		return err
+	}
+
+	if ccd.Type == nil || !ccd.Type.IsValid() {
+		return errors.New("invalid closure type")
+	}
+
+	return nil
+}
+
+// SetCompanyClosure marks a company as bankrupt or banned.
+func (c *CompaniesType) SetCompanyClosure(companyID primitive.ObjectID, data CompanyClosureData) (*models.Company, error) {
+
+	ctx := context.Background()
+	var updatedCompany models.Company
+
+	closure := models.CompanyClosure{
+		Type:  *data.Type,
+		Since: data.Since,
+	}
+
+	var updateQuery = bson.M{
+		"$set": bson.M{"closure": closure},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("error setting company closure:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
+}
+
+// RemoveCompanyClosure marks a company as operating again.
+func (c *CompaniesType) RemoveCompanyClosure(companyID primitive.ObjectID) (*models.Company, error) {
+
+	ctx := context.Background()
+	var updatedCompany models.Company
+
+	var updateQuery = bson.M{
+		"$unset": bson.M{"closure": ""},
+	}
+
+	var filterQuery = bson.M{"_id": companyID}
+
+	var optionsQuery = options.FindOneAndUpdate()
+	optionsQuery.SetReturnDocument(options.After)
+
+	if err := c.Collection.FindOneAndUpdate(ctx, filterQuery, updateQuery, optionsQuery).Decode(&updatedCompany); err != nil {
+		log.Println("error removing company closure:", err)
+		return nil, err
+	}
+
+	return &updatedCompany, nil
 }

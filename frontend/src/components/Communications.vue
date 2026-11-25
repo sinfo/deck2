@@ -47,7 +47,7 @@
                       : '',
                   ]"
                   :disabled="!selectedEventId"
-                  @click="openGmailPicker"
+                  @click="openGmailPickerForEdit"
                 >
                   <GmailIcon class="w-4 h-4 mr-1.5" />
                   <span>View Threads</span>
@@ -75,7 +75,7 @@
                     currentParticipationGmailThreadIds.length === 0 ||
                     isSyncing
                   "
-                  @click="syncGmailMessages()"
+                  @click="confirmCompanyChange() && syncGmailMessages()"
                 >
                   <RefreshCw
                     :size="16"
@@ -130,7 +130,9 @@
       </div>
 
       <div
-        v-else-if="!sortedCommunications?.length"
+        v-else-if="
+          !sortedCommunications?.length && !relationshipMilestones.length
+        "
         class="flex-1 flex items-center justify-center p-6"
       >
         <!-- Notice when entity is contacted but no Gmail thread could be linked -->
@@ -158,7 +160,7 @@
               variant="outline"
               size="sm"
               class="gap-1.5 text-xs"
-              @click="openGmailPicker"
+              @click="openGmailPickerForEdit"
             >
               <Link2 class="w-3.5 h-3.5" />
               Link Gmail thread manually
@@ -207,7 +209,7 @@
             variant="outline"
             size="sm"
             class="h-7 text-xs px-2.5 border-amber-500/30 hover:bg-amber-500/20 flex-shrink-0 gap-1"
-            @click="openGmailPicker"
+            @click="openGmailPickerForEdit"
           >
             <Link2 class="w-3 h-3" />
             Link thread
@@ -230,7 +232,7 @@
         >
           <!-- Filtered empty state -->
           <div
-            v-if="filteredCommunications.length === 0"
+            v-if="timelineItems.length === 0"
             class="h-full flex items-center justify-center p-8 text-center text-muted-foreground"
           >
             <div class="flex flex-col items-center">
@@ -263,13 +265,40 @@
             </div>
           </div>
 
-          <template
-            v-for="(thread, index) in filteredCommunications"
-            :key="thread.id"
-          >
+          <template v-for="item in timelineItems" :key="item.key">
+            <div
+              v-if="item.kind === 'milestone'"
+              class="my-3 flex items-center gap-2 text-muted-foreground"
+            >
+              <div class="h-[1.5px] min-w-3 flex-1 bg-border"></div>
+              <Badge
+                variant="outline"
+                class="max-w-[85%] flex-wrap gap-x-2.5 gap-y-1 px-2.5 py-1 text-xs font-normal"
+              >
+                <template
+                  v-for="(milestone, index) in item.milestones"
+                  :key="milestone.id"
+                >
+                  <span v-if="index" class="text-muted-foreground">·</span>
+                  <span class="inline-flex min-w-0 items-center gap-1">
+                    <Image
+                      :src="milestone.img"
+                      :alt="`${milestone.companyName} logo`"
+                      class="h-4 w-4 shrink-0 rounded-[2px] bg-white object-contain"
+                    />
+                    <span class="whitespace-normal">{{ milestone.label }}</span>
+                  </span>
+                </template>
+                <span v-if="item.since" class="shrink-0 text-muted-foreground">
+                  · {{ formatMilestoneDate(item.since) }}
+                </span>
+              </Badge>
+              <div class="h-[1.5px] min-w-3 flex-1 bg-border"></div>
+            </div>
+
             <!-- Thread visual divider when viewing all and thread changes -->
             <div
-              v-if="showThreadDivider(index)"
+              v-else-if="showThreadDivider(item.index)"
               class="flex items-center gap-2 my-3 text-xs text-muted-foreground"
             >
               <div class="h-px bg-border flex-1"></div>
@@ -278,28 +307,33 @@
                 class="font-normal text-[11px] gap-1 py-0.5"
               >
                 <LinkedInIcon
-                  v-if="getThreadChannel(thread) === ThreadChannel.LinkedIn"
+                  v-if="
+                    getThreadChannel(item.thread) === ThreadChannel.LinkedIn
+                  "
                   class="w-3 h-3 rounded-[2px]"
                 />
                 <MessageSquare
-                  v-else-if="getThreadChannel(thread) === ThreadChannel.Other"
+                  v-else-if="
+                    getThreadChannel(item.thread) === ThreadChannel.Other
+                  "
                   class="w-3 h-3 text-zinc-500"
                 />
                 <GmailIcon v-else class="w-3 h-3" />
                 <span class="max-w-[220px] sm:max-w-[320px] truncate">
-                  {{ getDividerLabel(thread) }}
+                  {{ getDividerLabel(item.thread) }}
                 </span>
               </Badge>
               <div class="h-px bg-border flex-1"></div>
             </div>
 
             <CommunicationMessage
+              v-if="item.kind === 'message'"
               v-model:edit-text="editText"
-              :thread="thread"
+              :thread="item.thread"
               :entity="entity"
               :entity-type="entityType"
               :members-by-id="membersById"
-              :is-editing="editingThreadId === thread.id"
+              :is-editing="editingThreadId === item.thread.id"
               :is-saving="updatePostMutation.isLoading.value"
               :is-deleting="deleteThreadMutation.isLoading.value"
               @start-edit="startEdit"
@@ -338,6 +372,7 @@
 </template>
 
 <script setup lang="ts">
+import { useCompanyArchiveConfirmation } from "@/composables/useCompanyArchiveConfirmation";
 import { ref, computed, watch, nextTick, toRef } from "vue";
 import { useQuery } from "@pinia/colada";
 import { getAllEvents } from "@/api/events";
@@ -348,7 +383,7 @@ import type {
   ThreadWithEntry,
 } from "@/dto/threads";
 import type { Speaker } from "@/dto/speakers";
-import type { Company } from "@/dto/companies";
+import type { Company, RelatedCompany } from "@/dto/companies";
 import type { Member } from "@/dto/members";
 import { useEventStore } from "@/stores/event";
 import { useAuthStore } from "@/stores/auth";
@@ -357,7 +392,9 @@ import { useCommunicationThreads } from "@/composables/useCommunicationThreads";
 import CommunicationChannelTabs from "./communications/CommunicationChannelTabs.vue";
 import CommunicationComposer from "./communications/CommunicationComposer.vue";
 import CommunicationMessage from "./communications/CommunicationMessage.vue";
+import Image from "./Image.vue";
 import { getDividerLabel, getThreadChannel } from "./communications/utils";
+import { getEditionRelationshipLandmarks } from "@/lib/companyCommunicationLandmarks";
 import { usePostCompanyThreadMutation } from "@/mutations/companies";
 import { usePostSpeakerThreadMutation } from "@/mutations/speakers";
 import Card from "./ui/card/Card.vue";
@@ -396,6 +433,8 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 
+const confirmCompanyChange = useCompanyArchiveConfirmation();
+
 interface TemplateWithVariables {
   template: EmailTemplate;
   variables: AnyEmailVariableInput[];
@@ -410,6 +449,7 @@ interface CommunicationsProps {
     status?: ParticipationStatus;
     gmailThreadIds?: string[];
   }>;
+  companyRelationships?: RelatedCompany[];
   canSendMessages?: boolean;
   templates?: TemplateWithVariables[];
   fetchCommunications: (
@@ -424,6 +464,7 @@ const props = withDefaults(defineProps<CommunicationsProps>(), {
   canSendMessages: false,
   templates: () => [],
   participations: () => [],
+  companyRelationships: () => [],
   postThreadMutation: undefined,
 });
 
@@ -528,12 +569,112 @@ const {
   showThreadDivider,
 } = useCommunicationThreads(sortedCommunications);
 
+const relationshipMilestones = computed(() =>
+  props.entityType === "company" && selectedChannelTab.value === "all"
+    ? getEditionRelationshipLandmarks(
+        props.participations,
+        eventsData.value?.data ?? [],
+        selectedEventId.value,
+        props.companyRelationships,
+        sortedCommunications.value,
+      ).map((relationship) => {
+        let label: string;
+        switch (relationship.type) {
+          case "ABSORBED":
+            label = `${relationship.name} merged into ${props.entity.name}`;
+            break;
+          case "REBRANDED_FROM":
+            label = `${relationship.name} became ${props.entity.name}`;
+            break;
+          case "SUBSIDIARY_OF":
+            label = `${props.entity.name} became part of ${relationship.name}`;
+            break;
+          case "PARENT_OF":
+            label = `${props.entity.name} acquired ${relationship.name}`;
+            break;
+        }
+        return {
+          id: `${relationship.type}-${relationship.company}`,
+          label,
+          img: relationship.img,
+          companyName: relationship.name,
+          since: relationship.since,
+        };
+      })
+    : [],
+);
+
+type TimelineItem =
+  | {
+      kind: "message";
+      key: string;
+      thread: ThreadWithEntry;
+      index: number;
+      timestamp: number;
+    }
+  | {
+      kind: "milestone";
+      key: string;
+      milestones: typeof relationshipMilestones.value;
+      since?: string;
+      timestamp: number;
+    };
+
+const timelineItems = computed<TimelineItem[]>(() => {
+  const items: TimelineItem[] = filteredCommunications.value.map(
+    (thread, index) => ({
+      kind: "message",
+      key: `message-${thread.id}`,
+      thread,
+      index,
+      timestamp: new Date(thread.posted).getTime(),
+    }),
+  );
+
+  if (selectedChannelTab.value !== "all") return items;
+
+  const groups = new Map<
+    string,
+    Extract<TimelineItem, { kind: "milestone" }>
+  >();
+  for (const milestone of relationshipMilestones.value) {
+    const date = milestone.since.slice(0, 10);
+    const group = groups.get(date);
+    if (group) {
+      group.milestones.push(milestone);
+      continue;
+    }
+    groups.set(date, {
+      kind: "milestone",
+      key: `milestone-${date}`,
+      milestones: [milestone],
+      since: milestone.since,
+      timestamp: new Date(milestone.since).getTime(),
+    });
+  }
+
+  items.push(...groups.values());
+  return items.sort(
+    (a, b) =>
+      a.timestamp - b.timestamp ||
+      (a.kind === b.kind ? 0 : a.kind === "milestone" ? -1 : 1),
+  );
+});
+
+const formatMilestoneDate = (date: string) =>
+  new Date(date).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
 const onMessageInput = () => {
   props.postThreadMutation?.reset?.();
 };
 
 const startEdit = (thread: ThreadWithEntry) => {
-  if (!thread.entry) return;
+  if (!thread.entry || !confirmCompanyChange()) return;
 
   editingThreadId.value = thread.id;
   editingPostId.value = thread.entry.id;
@@ -589,6 +730,11 @@ const {
   communications: sortedCommunications,
 });
 
+const openGmailPickerForEdit = () => {
+  if (!confirmCompanyChange()) return;
+  openGmailPicker();
+};
+
 const saveEdit = async () => {
   const id = editingPostId.value;
   const text = editText.value.trim();
@@ -611,7 +757,7 @@ const requestDelete = async (thread: ThreadWithEntry) => {
   const ok = window.confirm(
     "Delete this message? This action cannot be undone.",
   );
-  if (!ok) return;
+  if (!ok || !confirmCompanyChange()) return;
 
   deleteThreadMutation.threadId.value = thread.id;
 
@@ -674,7 +820,8 @@ watch(
 
 const sendMessage = async () => {
   const text = newMessage.value;
-  if (!text.trim() || !props.postThreadMutation) return;
+  if (!text.trim() || !props.postThreadMutation || !confirmCompanyChange())
+    return;
 
   const entityId = props.entity.id;
   const eventId = selectedEventId.value;
