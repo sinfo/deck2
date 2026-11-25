@@ -394,6 +394,7 @@ import CommunicationComposer from "./communications/CommunicationComposer.vue";
 import CommunicationMessage from "./communications/CommunicationMessage.vue";
 import Image from "./Image.vue";
 import { getDividerLabel, getThreadChannel } from "./communications/utils";
+import { getEditionRelationshipLandmarks } from "@/lib/companyCommunicationLandmarks";
 import { usePostCompanyThreadMutation } from "@/mutations/companies";
 import { usePostSpeakerThreadMutation } from "@/mutations/speakers";
 import Card from "./ui/card/Card.vue";
@@ -569,8 +570,14 @@ const {
 } = useCommunicationThreads(sortedCommunications);
 
 const relationshipMilestones = computed(() =>
-  props.entityType === "company"
-    ? (props.companyRelationships ?? []).map((relationship) => {
+  props.entityType === "company" && selectedChannelTab.value === "all"
+    ? getEditionRelationshipLandmarks(
+        props.participations,
+        eventsData.value?.data ?? [],
+        selectedEventId.value,
+        props.companyRelationships,
+        sortedCommunications.value,
+      ).map((relationship) => {
         let label: string;
         switch (relationship.type) {
           case "ABSORBED":
@@ -626,16 +633,12 @@ const timelineItems = computed<TimelineItem[]>(() => {
 
   if (selectedChannelTab.value !== "all") return items;
 
-  // An undated landmark precedes messages sent today.
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   const groups = new Map<
     string,
     Extract<TimelineItem, { kind: "milestone" }>
   >();
   for (const milestone of relationshipMilestones.value) {
-    const date = milestone.since?.slice(0, 10) ?? "undated";
+    const date = milestone.since.slice(0, 10);
     const group = groups.get(date);
     if (group) {
       group.milestones.push(milestone);
@@ -646,9 +649,7 @@ const timelineItems = computed<TimelineItem[]>(() => {
       key: `milestone-${date}`,
       milestones: [milestone],
       since: milestone.since,
-      timestamp: milestone.since
-        ? new Date(milestone.since).getTime()
-        : today.getTime(),
+      timestamp: new Date(milestone.since).getTime(),
     });
   }
 

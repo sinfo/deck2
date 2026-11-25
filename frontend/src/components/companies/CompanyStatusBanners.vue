@@ -19,7 +19,7 @@
               : 'h-6 w-6 text-red-700 dark:text-red-400'
           "
         />
-        <p class="min-w-0 text-base font-normal leading-relaxed text-muted-foreground">
+        <p class="min-w-0 text-sm font-normal leading-relaxed">
           {{ closureDescription }}
         </p>
       </div>
