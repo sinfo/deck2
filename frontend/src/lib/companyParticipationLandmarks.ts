@@ -8,14 +8,14 @@ const dateValue = (date?: string) =>
     : NaN;
 
 // Participations are ordered from the most recent edition to the oldest.
-// Each group precedes the edition with its key; null means before all editions.
+// Each group precedes the older edition of a gap between two participations.
 export function groupParticipationLandmarks(
   participations: readonly Participation[],
   events: readonly Event[],
   relationships: readonly RelatedCompany[],
 ) {
-  const groups = new Map<number | null, RelatedCompany[]>();
-  if (!participations.length || !relationships.length) return groups;
+  const groups = new Map<number, RelatedCompany[]>();
+  if (participations.length < 2 || !relationships.length) return groups;
 
   const eventDates = new Map(events.map((event) => [event.id, event.begin]));
   const anchors = participations.map(({ event }) => ({
@@ -32,17 +32,15 @@ export function groupParticipationLandmarks(
     .filter((change) => Number.isFinite(change.date))
     .sort((a, b) => b.date - a.date);
 
-  const oldestDate = anchors[anchors.length - 1].date;
   for (const { relationship, date } of changes) {
-    // Only place changes in gaps whose boundaries are known.
+    // Both adjacent participations must have known dates.
     const anchor = anchors.find(
       (anchor, index) =>
-        date >= anchor.date &&
-        (index === 0 || date < anchors[index - 1].date),
+        index > 0 && date >= anchor.date && date < anchors[index - 1].date,
     );
-    if (!anchor && !(date < oldestDate)) continue;
+    if (!anchor) continue;
 
-    const event = anchor?.event ?? null;
+    const event = anchor.event;
     const group = groups.get(event);
     if (group) {
       group.push(relationship);

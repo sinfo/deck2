@@ -3,10 +3,6 @@
     <CardHeader class="w-full pt-6">
       <h2 class="text-lg font-semibold mb-4">Participations</h2>
       <div v-if="sortedParticipations.length > 0" class="space-y-4">
-        <CompanyParticipationLandmark
-          v-if="currentParticipation"
-          :relationships="landmarks.get(currentParticipation.event)"
-        />
         <div v-if="currentParticipation">
           <div class="flex items-center gap-2 mb-3">
             <h4 class="text-sm font-medium text-muted-foreground">Current</h4>
@@ -34,9 +30,6 @@
             @click="createParticipation"
           />
         </div>
-        <CompanyParticipationLandmark
-          :relationships="landmarks.get(pastParticipations[0]?.event ?? null)"
-        />
         <div v-if="pastParticipations.length > 0">
           <Accordion type="single" collapsible class="w-full">
             <AccordionItem value="pastParticipations">
@@ -48,11 +41,10 @@
               <AccordionContent class="px-0 pt-4">
                 <div class="space-y-4">
                   <template
-                    v-for="(participation, index) in pastParticipations"
+                    v-for="participation in pastParticipations"
                     :key="participation.event"
                   >
                     <CompanyParticipationLandmark
-                      v-if="index > 0"
                       :relationships="landmarks.get(participation.event)"
                     />
                     <Card class="p-4">
@@ -130,9 +122,6 @@
                       </div>
                     </Card>
                   </template>
-                  <CompanyParticipationLandmark
-                    :relationships="landmarks.get(null)"
-                  />
                 </div>
               </AccordionContent>
             </AccordionItem>
